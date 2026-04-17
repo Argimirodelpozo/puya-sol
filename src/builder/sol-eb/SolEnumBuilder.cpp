@@ -22,10 +22,7 @@ std::unique_ptr<InstanceBuilder> SolEnumBuilder::compare(
 	{
 		unsigned numMembers = m_enumType->numberOfMembers();
 		auto validateEnum = [&](std::shared_ptr<awst::Expression> val) {
-			auto maxVal = std::make_shared<awst::IntegerConstant>();
-			maxVal->sourceLocation = _loc;
-			maxVal->wtype = awst::WType::uint64Type();
-			maxVal->value = std::to_string(numMembers);
+			auto maxVal = awst::makeIntegerConstant(std::to_string(numMembers), _loc);
 
 			auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 			cmp->sourceLocation = _loc;
@@ -64,10 +61,7 @@ std::unique_ptr<InstanceBuilder> SolEnumBuilder::compare(
 std::unique_ptr<InstanceBuilder> SolEnumBuilder::bool_eval(
 	awst::SourceLocation const& _loc, bool _negate)
 {
-	auto zero = std::make_shared<awst::IntegerConstant>();
-	zero->sourceLocation = _loc;
-	zero->wtype = awst::WType::uint64Type();
-	zero->value = "0";
+	auto zero = awst::makeIntegerConstant("0", _loc);
 
 	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 	cmp->sourceLocation = _loc;

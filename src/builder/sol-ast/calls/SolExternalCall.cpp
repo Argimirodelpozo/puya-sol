@@ -19,10 +19,7 @@ static constexpr int TxnTypeAppl = 6;
 std::shared_ptr<awst::Expression> SolExternalCall::makeUint64(
 	std::string _value, awst::SourceLocation const& _loc)
 {
-	auto c = std::make_shared<awst::IntegerConstant>();
-	c->sourceLocation = _loc;
-	c->wtype = awst::WType::uint64Type();
-	c->value = std::move(_value);
+	auto c = awst::makeIntegerConstant(std::move(_value), _loc);
 	return c;
 }
 

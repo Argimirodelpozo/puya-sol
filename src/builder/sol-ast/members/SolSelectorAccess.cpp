@@ -23,14 +23,8 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::makeSelectorExpr(std::strin
 	keccak->opCode = "keccak256";
 	keccak->stackArgs.push_back(std::move(sigConst));
 
-	auto zero = std::make_shared<awst::IntegerConstant>();
-	zero->sourceLocation = m_loc;
-	zero->wtype = awst::WType::uint64Type();
-	zero->value = "0";
-	auto four = std::make_shared<awst::IntegerConstant>();
-	four->sourceLocation = m_loc;
-	four->wtype = awst::WType::uint64Type();
-	four->value = "4";
+	auto zero = awst::makeIntegerConstant("0", m_loc);
+	auto four = awst::makeIntegerConstant("4", m_loc);
 
 	auto extract = std::make_shared<awst::IntrinsicCall>();
 	extract->sourceLocation = m_loc;

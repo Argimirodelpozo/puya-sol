@@ -27,10 +27,7 @@ static constexpr int TxnTypeAppl = 6;
 std::shared_ptr<awst::Expression> InnerCallHandlers::makeUint64(
 	std::string _value, awst::SourceLocation const& _loc)
 {
-	auto e = std::make_shared<awst::IntegerConstant>();
-	e->sourceLocation = _loc;
-	e->wtype = awst::WType::uint64Type();
-	e->value = std::move(_value);
+	auto e = awst::makeIntegerConstant(std::move(_value), _loc);
 	return e;
 }
 

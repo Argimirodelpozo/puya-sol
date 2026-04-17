@@ -69,14 +69,8 @@ std::shared_ptr<awst::Expression> SolTupleExpression::toAwst()
 							fullEncode->value = std::move(val);
 
 							// Extract last N/8 bytes
-							auto startConst = std::make_shared<awst::IntegerConstant>();
-							startConst->sourceLocation = m_loc;
-							startConst->wtype = awst::WType::uint64Type();
-							startConst->value = std::to_string(8 - arc4uint->n() / 8);
-							auto lenConst = std::make_shared<awst::IntegerConstant>();
-							lenConst->sourceLocation = m_loc;
-							lenConst->wtype = awst::WType::uint64Type();
-							lenConst->value = std::to_string(arc4uint->n() / 8);
+							auto startConst = awst::makeIntegerConstant(std::to_string(8 - arc4uint->n() / 8), m_loc);
+							auto lenConst = awst::makeIntegerConstant(std::to_string(arc4uint->n() / 8), m_loc);
 
 							auto extract = std::make_shared<awst::IntrinsicCall>();
 							extract->sourceLocation = m_loc;

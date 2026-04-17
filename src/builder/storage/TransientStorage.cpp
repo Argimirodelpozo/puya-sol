@@ -58,10 +58,7 @@ std::shared_ptr<awst::Statement> TransientStorage::buildInit(
 {
 	// __transient = bzero(size) — always at least MAX_SLOTS for assembly tload/tstore
 	unsigned sz = std::max(blobSize(), MAX_SLOTS * SLOT_SIZE);
-	auto size = std::make_shared<awst::IntegerConstant>();
-	size->sourceLocation = _loc;
-	size->wtype = awst::WType::uint64Type();
-	size->value = std::to_string(sz);
+	auto size = awst::makeIntegerConstant(std::to_string(sz), _loc);
 
 	auto bzero = std::make_shared<awst::IntrinsicCall>();
 	bzero->sourceLocation = _loc;
@@ -163,10 +160,7 @@ std::shared_ptr<awst::Statement> TransientStorage::buildWrite(
 		zeros->sourceLocation = _loc;
 		zeros->wtype = awst::WType::bytesType();
 		zeros->opCode = "bzero";
-		auto sz = std::make_shared<awst::IntegerConstant>();
-		sz->sourceLocation = _loc;
-		sz->wtype = awst::WType::uint64Type();
-		sz->value = "32";
+		auto sz = awst::makeIntegerConstant("32", _loc);
 		zeros->stackArgs.push_back(std::move(sz));
 
 		// b| pads shorter operand to match longer (both become 32+ bytes)
@@ -196,10 +190,7 @@ std::shared_ptr<awst::Statement> TransientStorage::buildWrite(
 		prefix->sourceLocation = _loc;
 		prefix->wtype = awst::WType::bytesType();
 		prefix->opCode = "bzero";
-		auto twentyFour = std::make_shared<awst::IntegerConstant>();
-		twentyFour->sourceLocation = _loc;
-		twentyFour->wtype = awst::WType::uint64Type();
-		twentyFour->value = "24";
+		auto twentyFour = awst::makeIntegerConstant("24", _loc);
 		prefix->stackArgs.push_back(std::move(twentyFour));
 
 		auto cat = std::make_shared<awst::IntrinsicCall>();

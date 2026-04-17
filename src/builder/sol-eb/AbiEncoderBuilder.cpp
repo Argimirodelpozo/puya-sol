@@ -21,10 +21,7 @@ public:
 std::shared_ptr<awst::Expression> AbiEncoderBuilder::makeUint64(
 	std::string _value, awst::SourceLocation const& _loc)
 {
-	auto e = std::make_shared<awst::IntegerConstant>();
-	e->sourceLocation = _loc;
-	e->wtype = awst::WType::uint64Type();
-	e->value = std::move(_value);
+	auto e = awst::makeIntegerConstant(std::move(_value), _loc);
 	return e;
 }
 
@@ -389,10 +386,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 				std::shared_ptr<awst::Expression> packed;
 				for (int j = 0; j < len; ++j)
 				{
-					auto idx = std::make_shared<awst::IntegerConstant>();
-					idx->sourceLocation = _loc;
-					idx->wtype = awst::WType::uint64Type();
-					idx->value = std::to_string(j);
+					auto idx = awst::makeIntegerConstant(std::to_string(j), _loc);
 
 					auto indexExpr = std::make_shared<awst::IndexExpression>();
 					indexExpr->sourceLocation = _loc;
@@ -553,10 +547,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeWithSelector(
 		}
 
 		// Left-pad to ≥4 bytes then extract the last 4 bytes.
-		auto bzeroSize = std::make_shared<awst::IntegerConstant>();
-		bzeroSize->sourceLocation = _loc;
-		bzeroSize->wtype = awst::WType::uint64Type();
-		bzeroSize->value = "4";
+		auto bzeroSize = awst::makeIntegerConstant("4", _loc);
 		auto zeros = std::make_shared<awst::IntrinsicCall>();
 		zeros->sourceLocation = _loc;
 		zeros->wtype = awst::WType::bytesType();
@@ -576,10 +567,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeWithSelector(
 		lenCall->opCode = "len";
 		lenCall->stackArgs.push_back(cat);
 
-		auto four = std::make_shared<awst::IntegerConstant>();
-		four->sourceLocation = _loc;
-		four->wtype = awst::WType::uint64Type();
-		four->value = "4";
+		auto four = awst::makeIntegerConstant("4", _loc);
 
 		auto offset = std::make_shared<awst::IntrinsicCall>();
 		offset->sourceLocation = _loc;
@@ -1239,10 +1227,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 				rawLen->opCode = "len";
 				rawLen->stackArgs.push_back(asBytes);
 
-				auto two = std::make_shared<awst::IntegerConstant>();
-				two->sourceLocation = _loc;
-				two->wtype = awst::WType::uint64Type();
-				two->value = "2";
+				auto two = awst::makeIntegerConstant("2", _loc);
 
 				auto contentBytes = std::make_shared<awst::UInt64BinaryOperation>();
 				contentBytes->sourceLocation = _loc;
@@ -1251,10 +1236,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 				contentBytes->op = awst::UInt64BinaryOperator::Sub;
 				contentBytes->right = std::move(two);
 
-				auto elemSize = std::make_shared<awst::IntegerConstant>();
-				elemSize->sourceLocation = _loc;
-				elemSize->wtype = awst::WType::uint64Type();
-				elemSize->value = std::to_string(elemByteSize);
+				auto elemSize = awst::makeIntegerConstant(std::to_string(elemByteSize), _loc);
 
 				auto lenExpr = std::make_shared<awst::UInt64BinaryOperation>();
 				lenExpr->sourceLocation = _loc;

@@ -54,10 +54,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					lenCall->opCode = "len";
 					lenCall->stackArgs.push_back(readVal);
 
-					auto one = std::make_shared<awst::IntegerConstant>();
-					one->sourceLocation = loc;
-					one->wtype = awst::WType::uint64Type();
-					one->value = "1";
+					auto one = awst::makeIntegerConstant("1", loc);
 					auto newLen = std::make_shared<awst::UInt64BinaryOperation>();
 					newLen->sourceLocation = loc;
 					newLen->wtype = awst::WType::uint64Type();
@@ -66,10 +63,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					newLen->right = std::move(one);
 
 					// extract3(readVal, 0, len-1)
-					auto zero = std::make_shared<awst::IntegerConstant>();
-					zero->sourceLocation = loc;
-					zero->wtype = awst::WType::uint64Type();
-					zero->value = "0";
+					auto zero = awst::makeIntegerConstant("0", loc);
 
 					auto extract = std::make_shared<awst::IntrinsicCall>();
 					extract->sourceLocation = loc;
@@ -568,14 +562,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMemoryArray(
 				itob->opCode = "itob";
 				itob->stackArgs.push_back(std::move(byteVal));
 
-				auto seven = std::make_shared<awst::IntegerConstant>();
-				seven->sourceLocation = m_loc;
-				seven->wtype = awst::WType::uint64Type();
-				seven->value = "7";
-				auto one = std::make_shared<awst::IntegerConstant>();
-				one->sourceLocation = m_loc;
-				one->wtype = awst::WType::uint64Type();
-				one->value = "1";
+				auto seven = awst::makeIntegerConstant("7", m_loc);
+				auto one = awst::makeIntegerConstant("1", m_loc);
 
 				auto extract = std::make_shared<awst::IntrinsicCall>();
 				extract->sourceLocation = m_loc;

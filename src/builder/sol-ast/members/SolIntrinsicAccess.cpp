@@ -23,10 +23,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 	// code should read global GenesisHash in assembly instead.
 	if (baseName == "block" && member == "chainid")
 	{
-		auto c = std::make_shared<awst::IntegerConstant>();
-		c->sourceLocation = m_loc;
-		c->wtype = awst::WType::biguintType();
-		c->value = "1";
+		auto c = awst::makeIntegerConstant("1", m_loc, awst::WType::biguintType());
 		return c;
 	}
 
@@ -35,10 +32,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 	{
 		Logger::instance().warning(
 			"block.difficulty returns 0 on AVM — Algorand has no proof-of-work.", m_loc);
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = m_loc;
-		zero->wtype = awst::WType::biguintType();
-		zero->value = "0";
+		auto zero = awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType());
 		return zero;
 	}
 
@@ -51,10 +45,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 	{
 		Logger::instance().warning(
 			"block." + member + " returns 0 on AVM — no EIP-1559 base fee concept.", m_loc);
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = m_loc;
-		zero->wtype = awst::WType::biguintType();
-		zero->value = "0";
+		auto zero = awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType());
 		return zero;
 	}
 
@@ -67,10 +58,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 	{
 		Logger::instance().warning(
 			"block.gaslimit returns 70000 on AVM — no direct analog for EVM block gas limit.", m_loc);
-		auto val = std::make_shared<awst::IntegerConstant>();
-		val->sourceLocation = m_loc;
-		val->wtype = awst::WType::biguintType();
-		val->value = "70000";
+		auto val = awst::makeIntegerConstant("70000", m_loc, awst::WType::biguintType());
 		return val;
 	}
 
@@ -86,10 +74,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		round->opCode = "global";
 		round->immediates = {std::string("Round")};
 
-		auto two = std::make_shared<awst::IntegerConstant>();
-		two->sourceLocation = m_loc;
-		two->wtype = awst::WType::uint64Type();
-		two->value = "2";
+		auto two = awst::makeIntegerConstant("2", m_loc);
 
 		auto prevRound = std::make_shared<awst::UInt64BinaryOperation>();
 		prevRound->sourceLocation = m_loc;
@@ -122,10 +107,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		groupIdx->opCode = "txn";
 		groupIdx->immediates = {std::string("GroupIndex")};
 
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = m_loc;
-		zero->wtype = awst::WType::uint64Type();
-		zero->value = "0";
+		auto zero = awst::makeIntegerConstant("0", m_loc);
 		auto hasPayment = std::make_shared<awst::NumericComparisonExpression>();
 		hasPayment->sourceLocation = m_loc;
 		hasPayment->wtype = awst::WType::boolType();
@@ -138,10 +120,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		groupIdx2->wtype = awst::WType::uint64Type();
 		groupIdx2->opCode = "txn";
 		groupIdx2->immediates = {std::string("GroupIndex")};
-		auto one = std::make_shared<awst::IntegerConstant>();
-		one->sourceLocation = m_loc;
-		one->wtype = awst::WType::uint64Type();
-		one->value = "1";
+		auto one = awst::makeIntegerConstant("1", m_loc);
 		auto payIdx = std::make_shared<awst::UInt64BinaryOperation>();
 		payIdx->sourceLocation = m_loc;
 		payIdx->wtype = awst::WType::uint64Type();
@@ -156,10 +135,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		amount->immediates = {std::string("Amount")};
 		amount->stackArgs.push_back(std::move(payIdx));
 
-		auto zeroVal = std::make_shared<awst::IntegerConstant>();
-		zeroVal->sourceLocation = m_loc;
-		zeroVal->wtype = awst::WType::uint64Type();
-		zeroVal->value = "0";
+		auto zeroVal = awst::makeIntegerConstant("0", m_loc);
 
 		auto cond = std::make_shared<awst::ConditionalExpression>();
 		cond->sourceLocation = m_loc;
@@ -210,10 +186,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		numAppArgs->opCode = "txn";
 		numAppArgs->immediates = {std::string("NumAppArgs")};
 
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = m_loc;
-		zero->wtype = awst::WType::uint64Type();
-		zero->value = "0";
+		auto zero = awst::makeIntegerConstant("0", m_loc);
 
 		auto hasData = std::make_shared<awst::NumericComparisonExpression>();
 		hasData->sourceLocation = m_loc;
@@ -226,10 +199,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		std::shared_ptr<awst::Expression> calldataConcat;
 		for (int slot = 0; slot < 16; ++slot)
 		{
-			auto slotIdx = std::make_shared<awst::IntegerConstant>();
-			slotIdx->sourceLocation = m_loc;
-			slotIdx->wtype = awst::WType::uint64Type();
-			slotIdx->value = std::to_string(slot);
+			auto slotIdx = awst::makeIntegerConstant(std::to_string(slot), m_loc);
 
 			auto numArgsCheck = std::make_shared<awst::IntrinsicCall>();
 			numArgsCheck->sourceLocation = m_loc;
@@ -237,10 +207,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 			numArgsCheck->opCode = "txn";
 			numArgsCheck->immediates = {std::string("NumAppArgs")};
 
-			auto slotIdxCmp = std::make_shared<awst::IntegerConstant>();
-			slotIdxCmp->sourceLocation = m_loc;
-			slotIdxCmp->wtype = awst::WType::uint64Type();
-			slotIdxCmp->value = std::to_string(slot);
+			auto slotIdxCmp = awst::makeIntegerConstant(std::to_string(slot), m_loc);
 
 			auto slotPresent = std::make_shared<awst::NumericComparisonExpression>();
 			slotPresent->sourceLocation = m_loc;
@@ -255,10 +222,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 			slotBytes->opCode = "txna";
 			slotBytes->immediates = {std::string("ApplicationArgs"), slot};
 
-			auto bzeroSize = std::make_shared<awst::IntegerConstant>();
-			bzeroSize->sourceLocation = m_loc;
-			bzeroSize->wtype = awst::WType::uint64Type();
-			bzeroSize->value = "0";
+			auto bzeroSize = awst::makeIntegerConstant("0", m_loc);
 			auto emptyBytes = std::make_shared<awst::IntrinsicCall>();
 			emptyBytes->sourceLocation = m_loc;
 			emptyBytes->wtype = awst::WType::bytesType();
@@ -288,10 +252,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 			}
 		}
 
-		auto bzeroSize2 = std::make_shared<awst::IntegerConstant>();
-		bzeroSize2->sourceLocation = m_loc;
-		bzeroSize2->wtype = awst::WType::uint64Type();
-		bzeroSize2->value = "0";
+		auto bzeroSize2 = awst::makeIntegerConstant("0", m_loc);
 		auto emptyAll = std::make_shared<awst::IntrinsicCall>();
 		emptyAll->sourceLocation = m_loc;
 		emptyAll->wtype = awst::WType::bytesType();

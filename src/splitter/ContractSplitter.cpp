@@ -1299,10 +1299,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 		// Guard: only callable once (before auth state is set)
 		{
 			auto currentO = makeIntrinsic("app_global_get", {}, {makeBytesKey("o")}, awst::WType::uint64Type());
-			auto zero = std::make_shared<awst::IntegerConstant>();
-			zero->sourceLocation = loc;
-			zero->wtype = awst::WType::uint64Type();
-			zero->value = "0";
+			auto zero = awst::makeIntegerConstant("0", loc);
 			auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 			cmp->sourceLocation = loc;
 			cmp->wtype = awst::WType::boolType();
@@ -1436,10 +1433,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 		return awst::makeBytesConstant(v, loc);
 	};
 	auto makeUint64 = [&](std::string const& v) {
-		auto val = std::make_shared<awst::IntegerConstant>();
-		val->sourceLocation = loc;
-		val->wtype = awst::WType::uint64Type();
-		val->value = v;
+		auto val = awst::makeIntegerConstant(v, loc);
 		return val;
 	};
 	auto makeAssertExpr = [&](std::shared_ptr<awst::Expression> cond, std::string msg) {
@@ -1826,10 +1820,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 		return awst::makeBytesConstant(v, loc);
 	};
 	auto makeUint64 = [&](std::string const& v) {
-		auto val = std::make_shared<awst::IntegerConstant>();
-		val->sourceLocation = loc;
-		val->wtype = awst::WType::uint64Type();
-		val->value = v;
+		auto val = awst::makeIntegerConstant(v, loc);
 		return val;
 	};
 	auto makeAssertExpr = [&](std::shared_ptr<awst::Expression> cond, std::string msg) {
@@ -2329,10 +2320,7 @@ std::vector<std::shared_ptr<awst::Statement>> ContractSplitter::buildValidationB
 		return awst::makeUtf8BytesConstant(k, _loc);
 	};
 	auto makeUint64 = [&](std::string const& v) {
-		auto val = std::make_shared<awst::IntegerConstant>();
-		val->sourceLocation = _loc;
-		val->wtype = awst::WType::uint64Type();
-		val->value = v;
+		auto val = awst::makeIntegerConstant(v, _loc);
 		return val;
 	};
 	auto makeAssert = [&](std::shared_ptr<awst::Expression> cond, std::string msg) {

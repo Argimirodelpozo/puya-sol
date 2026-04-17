@@ -192,6 +192,27 @@ struct IntegerConstant: Expression
 	std::string value; // use string for biguint support
 };
 
+// Construct an IntegerConstant. wtype defaults to uint64Type(); pass biguintType()
+// for values > 2^64 or for biguint contexts.
+inline std::shared_ptr<IntegerConstant> makeIntegerConstant(
+	std::string value,
+	SourceLocation loc,
+	WType const* wtype = WType::uint64Type())
+{
+	auto node = std::make_shared<IntegerConstant>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->value = std::move(value);
+	return node;
+}
+
+// Convenience for compile-time known uint64 values (no to_string ceremony).
+inline std::shared_ptr<IntegerConstant> makeU64Const(
+	uint64_t value, SourceLocation loc)
+{
+	return makeIntegerConstant(std::to_string(value), std::move(loc));
+}
+
 struct BoolConstant: Expression
 {
 	std::string nodeType() const override { return "BoolConstant"; }

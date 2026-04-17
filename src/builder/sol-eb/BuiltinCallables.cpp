@@ -104,10 +104,7 @@ static void emitModByZeroCheck(
 	awst::SourceLocation const& _loc)
 {
 	// assert(modulus != 0, "modulo by zero") — prevents optimizer from eliminating
-	auto zero = std::make_shared<awst::IntegerConstant>();
-	zero->sourceLocation = _loc;
-	zero->wtype = awst::WType::biguintType();
-	zero->value = "0";
+	auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 
 	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 	cmp->sourceLocation = _loc;
@@ -214,10 +211,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleSelfdestruct(
 		typeVal->wtype = awst::WType::uint64Type();
 		typeVal->value = "1"; // pay
 
-		auto feeVal = std::make_shared<awst::IntegerConstant>();
-		feeVal->sourceLocation = _loc;
-		feeVal->wtype = awst::WType::uint64Type();
-		feeVal->value = "0";
+		auto feeVal = awst::makeIntegerConstant("0", _loc);
 
 		auto amountVal = std::make_shared<awst::IntegerConstant>();
 		amountVal->sourceLocation = _loc;
@@ -344,10 +338,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	};
 
 	auto mkU64 = [&](std::string const& _val) {
-		auto c = std::make_shared<awst::IntegerConstant>();
-		c->sourceLocation = _loc;
-		c->wtype = awst::WType::uint64Type();
-		c->value = _val;
+		auto c = awst::makeIntegerConstant(_val, _loc);
 		return c;
 	};
 
@@ -449,14 +440,8 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	hash->stackArgs.push_back(std::move(pubkeyConcat));
 
 	// extract3(hash, 12, 20) → last 20 bytes = Ethereum address
-	auto off12 = std::make_shared<awst::IntegerConstant>();
-	off12->sourceLocation = _loc;
-	off12->wtype = awst::WType::uint64Type();
-	off12->value = "12";
-	auto len20 = std::make_shared<awst::IntegerConstant>();
-	len20->sourceLocation = _loc;
-	len20->wtype = awst::WType::uint64Type();
-	len20->value = "20";
+	auto off12 = awst::makeIntegerConstant("12", _loc);
+	auto len20 = awst::makeIntegerConstant("20", _loc);
 	auto addr20 = std::make_shared<awst::IntrinsicCall>();
 	addr20->sourceLocation = _loc;
 	addr20->wtype = awst::WType::bytesType();
@@ -470,10 +455,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	pad12->sourceLocation = _loc;
 	pad12->wtype = awst::WType::bytesType();
 	pad12->opCode = "bzero";
-	auto twelve = std::make_shared<awst::IntegerConstant>();
-	twelve->sourceLocation = _loc;
-	twelve->wtype = awst::WType::uint64Type();
-	twelve->value = "12";
+	auto twelve = awst::makeIntegerConstant("12", _loc);
 	pad12->stackArgs.push_back(std::move(twelve));
 
 	auto paddedAddr = std::make_shared<awst::IntrinsicCall>();

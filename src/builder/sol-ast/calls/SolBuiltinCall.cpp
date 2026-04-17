@@ -43,10 +43,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		indexExpr = TypeCoercion::implicitNumericCast(
 			std::move(indexExpr), awst::WType::uint64Type(), m_loc);
 
-		auto two = std::make_shared<awst::IntegerConstant>();
-		two->sourceLocation = m_loc;
-		two->wtype = awst::WType::uint64Type();
-		two->value = "2";
+		auto two = awst::makeIntegerConstant("2", m_loc);
 
 		auto withinRange = std::make_shared<awst::NumericComparisonExpression>();
 		withinRange->sourceLocation = m_loc;
@@ -61,10 +58,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		round->opCode = "global";
 		round->immediates = {std::string("Round")};
 
-		auto two2 = std::make_shared<awst::IntegerConstant>();
-		two2->sourceLocation = m_loc;
-		two2->wtype = awst::WType::uint64Type();
-		two2->value = "2";
+		auto two2 = awst::makeIntegerConstant("2", m_loc);
 
 		auto prevRound = std::make_shared<awst::UInt64BinaryOperation>();
 		prevRound->sourceLocation = m_loc;
@@ -125,10 +119,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		{
 			std::ostringstream oss;
 			oss << *slotOpt;
-			auto ic = std::make_shared<awst::IntegerConstant>();
-			ic->sourceLocation = m_loc;
-			ic->wtype = awst::WType::biguintType();
-			ic->value = oss.str();
+			auto ic = awst::makeIntegerConstant(oss.str(), m_loc, awst::WType::biguintType());
 			return ic;
 		}
 
@@ -158,10 +149,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		h1Int->expr = std::move(h1);
 
 		// minus1 = h1_int - 1
-		auto one = std::make_shared<awst::IntegerConstant>();
-		one->sourceLocation = m_loc;
-		one->wtype = awst::WType::biguintType();
-		one->value = "1";
+		auto one = awst::makeIntegerConstant("1", m_loc, awst::WType::biguintType());
 
 		auto sub = std::make_shared<awst::BigUIntBinaryOperation>();
 		sub->sourceLocation = m_loc;
@@ -176,10 +164,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		minusBytesCast->wtype = awst::WType::bytesType();
 		minusBytesCast->expr = std::move(sub);
 
-		auto padLen = std::make_shared<awst::IntegerConstant>();
-		padLen->sourceLocation = m_loc;
-		padLen->wtype = awst::WType::uint64Type();
-		padLen->value = "32";
+		auto padLen = awst::makeIntegerConstant("32", m_loc);
 
 		auto padBytes = std::make_shared<awst::IntrinsicCall>();
 		padBytes->sourceLocation = m_loc;
@@ -202,15 +187,9 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		h2->stackArgs.push_back(std::move(minus1Bytes));
 
 		// Top 31 bytes of h2
-		auto top31Start = std::make_shared<awst::IntegerConstant>();
-		top31Start->sourceLocation = m_loc;
-		top31Start->wtype = awst::WType::uint64Type();
-		top31Start->value = "0";
+		auto top31Start = awst::makeIntegerConstant("0", m_loc);
 
-		auto top31Len = std::make_shared<awst::IntegerConstant>();
-		top31Len->sourceLocation = m_loc;
-		top31Len->wtype = awst::WType::uint64Type();
-		top31Len->value = "31";
+		auto top31Len = awst::makeIntegerConstant("31", m_loc);
 
 		auto top31 = std::make_shared<awst::IntrinsicCall>();
 		top31->sourceLocation = m_loc;
@@ -279,10 +258,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::handleBlockhash()
 	round->opCode = "global";
 	round->immediates = {std::string("Round")};
 
-	auto two = std::make_shared<awst::IntegerConstant>();
-	two->sourceLocation = m_loc;
-	two->wtype = awst::WType::uint64Type();
-	two->value = "2";
+	auto two = awst::makeIntegerConstant("2", m_loc);
 
 	auto prevRound = std::make_shared<awst::UInt64BinaryOperation>();
 	prevRound->sourceLocation = m_loc;

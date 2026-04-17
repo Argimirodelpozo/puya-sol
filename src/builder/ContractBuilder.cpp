@@ -889,10 +889,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 						reinterpret->wtype = awst::WType::bytesType();
 						reinterpret->expr = std::move(argRef);
 
-						auto padWidth = std::make_shared<awst::IntegerConstant>();
-						padWidth->sourceLocation = loc;
-						padWidth->wtype = awst::WType::uint64Type();
-						padWidth->value = "32";
+						auto padWidth = awst::makeIntegerConstant("32", loc);
 
 						auto pad = std::make_shared<awst::IntrinsicCall>();
 						pad->sourceLocation = loc;
@@ -913,10 +910,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 						lenCall->opCode = "len";
 						lenCall->stackArgs.push_back(cat);
 
-						auto width32 = std::make_shared<awst::IntegerConstant>();
-						width32->sourceLocation = loc;
-						width32->wtype = awst::WType::uint64Type();
-						width32->value = "32";
+						auto width32 = awst::makeIntegerConstant("32", loc);
 
 						auto offset = std::make_shared<awst::IntrinsicCall>();
 						offset->sourceLocation = loc;
@@ -925,10 +919,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 						offset->stackArgs.push_back(std::move(lenCall));
 						offset->stackArgs.push_back(std::move(width32));
 
-						auto width32b = std::make_shared<awst::IntegerConstant>();
-						width32b->sourceLocation = loc;
-						width32b->wtype = awst::WType::uint64Type();
-						width32b->value = "32";
+						auto width32b = awst::makeIntegerConstant("32", loc);
 
 						auto extract = std::make_shared<awst::IntrinsicCall>();
 						extract->sourceLocation = loc;
@@ -1092,10 +1083,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 						pv->name = pname;
 						pv->wtype = awst::WType::uint64Type();
 
-						auto mv = std::make_shared<awst::IntegerConstant>();
-						mv->sourceLocation = loc;
-						mv->wtype = awst::WType::uint64Type();
-						mv->value = std::to_string(memberCount - 1);
+						auto mv = awst::makeIntegerConstant(std::to_string(memberCount - 1), loc);
 
 						auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 						cmp->sourceLocation = loc;
@@ -1443,10 +1431,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		appIdCheck->immediates = {std::string("ApplicationID")};
 		appIdCheck->wtype = awst::WType::uint64Type();
 
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = method.sourceLocation;
-		zero->wtype = awst::WType::uint64Type();
-		zero->value = "0";
+		auto zero = awst::makeIntegerConstant("0", method.sourceLocation);
 
 		auto isCreate = std::make_shared<awst::NumericComparisonExpression>();
 		isCreate->sourceLocation = method.sourceLocation;
@@ -1517,19 +1502,13 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				}
 				else if (wtype == awst::WType::biguintType())
 				{
-					auto val = std::make_shared<awst::IntegerConstant>();
-					val->sourceLocation = method.sourceLocation;
-					val->wtype = awst::WType::biguintType();
-					val->value = "0";
+					auto val = awst::makeIntegerConstant("0", method.sourceLocation, awst::WType::biguintType());
 					defaultVal = val;
 				}
 				else if (wtype == awst::WType::boolType()
 					|| wtype == awst::WType::uint64Type())
 				{
-					auto val = std::make_shared<awst::IntegerConstant>();
-					val->sourceLocation = method.sourceLocation;
-					val->wtype = awst::WType::uint64Type();
-					val->value = "0";
+					auto val = awst::makeIntegerConstant("0", method.sourceLocation);
 					defaultVal = val;
 				}
 				else if (wtype->kind() == awst::WTypeKind::ReferenceArray
@@ -1717,10 +1696,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					len->wtype = awst::WType::uint64Type();
 					len->stackArgs.push_back(readArg);
 
-					auto eight = std::make_shared<awst::IntegerConstant>();
-					eight->sourceLocation = method.sourceLocation;
-					eight->wtype = awst::WType::uint64Type();
-					eight->value = "8";
+					auto eight = awst::makeIntegerConstant("8", method.sourceLocation);
 
 					auto offset = std::make_shared<awst::UInt64BinaryOperation>();
 					offset->sourceLocation = method.sourceLocation;
@@ -1735,10 +1711,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					extract->wtype = awst::WType::bytesType();
 					extract->stackArgs.push_back(std::move(readArg));
 					extract->stackArgs.push_back(std::move(offset));
-					auto eight2 = std::make_shared<awst::IntegerConstant>();
-					eight2->sourceLocation = method.sourceLocation;
-					eight2->wtype = awst::WType::uint64Type();
-					eight2->value = "8";
+					auto eight2 = awst::makeIntegerConstant("8", method.sourceLocation);
 					extract->stackArgs.push_back(std::move(eight2));
 
 					auto btoi = std::make_shared<awst::IntrinsicCall>();
@@ -1905,10 +1878,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			// Set __ctor_pending = 1 in create block.
 			auto pendingKey = awst::makeUtf8BytesConstant("__ctor_pending", method.sourceLocation);
 
-			auto one = std::make_shared<awst::IntegerConstant>();
-			one->sourceLocation = method.sourceLocation;
-			one->wtype = awst::WType::uint64Type();
-			one->value = "1";
+			auto one = awst::makeIntegerConstant("1", method.sourceLocation);
 
 			auto setPending = std::make_shared<awst::IntrinsicCall>();
 			setPending->sourceLocation = method.sourceLocation;
@@ -2000,10 +1970,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			// Clear flag: __ctor_pending = 0
 			auto clearKey = awst::makeUtf8BytesConstant("__ctor_pending", method.sourceLocation);
 
-			auto zeroVal = std::make_shared<awst::IntegerConstant>();
-			zeroVal->sourceLocation = method.sourceLocation;
-			zeroVal->wtype = awst::WType::uint64Type();
-			zeroVal->value = "0";
+			auto zeroVal = awst::makeIntegerConstant("0", method.sourceLocation);
 
 			auto clearPending = std::make_shared<awst::IntrinsicCall>();
 			clearPending->sourceLocation = method.sourceLocation;
@@ -2116,10 +2083,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 							}
 						}
 				}
-				auto boxSize = std::make_shared<awst::IntegerConstant>();
-				boxSize->sourceLocation = method.sourceLocation;
-				boxSize->wtype = awst::WType::uint64Type();
-				boxSize->value = std::to_string(boxSizeVal);
+				auto boxSize = awst::makeIntegerConstant(std::to_string(boxSizeVal), method.sourceLocation);
 
 				auto boxCreate = std::make_shared<awst::IntrinsicCall>();
 				boxCreate->sourceLocation = method.sourceLocation;
@@ -2436,10 +2400,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 	// Each app call gets fresh scratch space, so we must initialize on every call.
 	// store 0, bzero(4096) — pre-allocate a 4KB memory blob
 	{
-		auto blobSize = std::make_shared<awst::IntegerConstant>();
-		blobSize->sourceLocation = method.sourceLocation;
-		blobSize->wtype = awst::WType::uint64Type();
-		blobSize->value = std::to_string(AssemblyBuilder::SLOT_SIZE);
+		auto blobSize = awst::makeIntegerConstant(std::to_string(AssemblyBuilder::SLOT_SIZE), method.sourceLocation);
 
 		auto bzeroCall = std::make_shared<awst::IntrinsicCall>();
 		bzeroCall->sourceLocation = method.sourceLocation;
@@ -2659,10 +2620,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			numAppArgs->opCode = "txn";
 			numAppArgs->immediates = {std::string("NumAppArgs")};
 
-			auto zero = std::make_shared<awst::IntegerConstant>();
-			zero->sourceLocation = method.sourceLocation;
-			zero->wtype = awst::WType::uint64Type();
-			zero->value = "0";
+			auto zero = awst::makeIntegerConstant("0", method.sourceLocation);
 
 			auto isBareCall = std::make_shared<awst::NumericComparisonExpression>();
 			isBareCall->sourceLocation = method.sourceLocation;
@@ -3176,10 +3134,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					var->name = retParams[0]->name();
 					var->wtype = awst::WType::uint64Type();
 
-					auto maxVal = std::make_shared<awst::IntegerConstant>();
-					maxVal->sourceLocation = method.sourceLocation;
-					maxVal->wtype = awst::WType::uint64Type();
-					maxVal->value = std::to_string(numMembers);
+					auto maxVal = awst::makeIntegerConstant(std::to_string(numMembers), method.sourceLocation);
 
 					auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 					cmp->sourceLocation = method.sourceLocation;
@@ -3532,10 +3487,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				-> std::shared_ptr<awst::Expression>
 			{
 				uint64_t mask = (uint64_t(1) << bits) - 1;
-				auto maskConst = std::make_shared<awst::IntegerConstant>();
-				maskConst->sourceLocation = loc;
-				maskConst->wtype = awst::WType::uint64Type();
-				maskConst->value = std::to_string(mask);
+				auto maskConst = awst::makeIntegerConstant(std::to_string(mask), loc);
 				auto bitAnd = std::make_shared<awst::UInt64BinaryOperation>();
 				bitAnd->sourceLocation = loc;
 				bitAnd->wtype = awst::WType::uint64Type();
@@ -3715,10 +3667,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 						paramCheck1->sourceLocation = loc;
 						paramCheck1->name = param->name();
 						paramCheck1->wtype = awst::WType::uint64Type();
-						auto maxPosConst = std::make_shared<awst::IntegerConstant>();
-						maxPosConst->sourceLocation = loc;
-						maxPosConst->wtype = awst::WType::uint64Type();
-						maxPosConst->value = std::to_string(maxPos);
+						auto maxPosConst = awst::makeIntegerConstant(std::to_string(maxPos), loc);
 						auto cmpPos = std::make_shared<awst::NumericComparisonExpression>();
 						cmpPos->sourceLocation = loc;
 						cmpPos->wtype = awst::WType::boolType();
@@ -3730,10 +3679,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 						paramCheck2->sourceLocation = loc;
 						paramCheck2->name = param->name();
 						paramCheck2->wtype = awst::WType::uint64Type();
-						auto minNegConst = std::make_shared<awst::IntegerConstant>();
-						minNegConst->sourceLocation = loc;
-						minNegConst->wtype = awst::WType::uint64Type();
-						minNegConst->value = std::to_string(minNeg);
+						auto minNegConst = awst::makeIntegerConstant(std::to_string(minNeg), loc);
 						auto cmpNeg = std::make_shared<awst::NumericComparisonExpression>();
 						cmpNeg->sourceLocation = loc;
 						cmpNeg->wtype = awst::WType::boolType();
@@ -3767,10 +3713,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					paramCheck->name = param->name();
 					paramCheck->wtype = awst::WType::uint64Type();
 
-					auto maxVal = std::make_shared<awst::IntegerConstant>();
-					maxVal->sourceLocation = loc;
-					maxVal->wtype = awst::WType::uint64Type();
-					maxVal->value = std::to_string(mask);
+					auto maxVal = awst::makeIntegerConstant(std::to_string(mask), loc);
 
 					auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 					cmp->sourceLocation = loc;
@@ -3790,10 +3733,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				paramVar->name = param->name();
 				paramVar->wtype = awst::WType::uint64Type();
 
-				auto maskConst = std::make_shared<awst::IntegerConstant>();
-				maskConst->sourceLocation = loc;
-				maskConst->wtype = awst::WType::uint64Type();
-				maskConst->value = std::to_string(mask);
+				auto maskConst = awst::makeIntegerConstant(std::to_string(mask), loc);
 
 				auto bitAnd = std::make_shared<awst::UInt64BinaryOperation>();
 				bitAnd->sourceLocation = loc;
@@ -3840,10 +3780,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 						: param->name();
 					paramVar->wtype = awst::WType::uint64Type();
 
-					auto one = std::make_shared<awst::IntegerConstant>();
-					one->sourceLocation = loc;
-					one->wtype = awst::WType::uint64Type();
-					one->value = "1";
+					auto one = awst::makeIntegerConstant("1", loc);
 
 					auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 					cmp->sourceLocation = loc;
@@ -3876,10 +3813,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 						: param->name();
 					paramVar->wtype = awst::WType::uint64Type();
 
-					auto maxVal = std::make_shared<awst::IntegerConstant>();
-					maxVal->sourceLocation = loc;
-					maxVal->wtype = awst::WType::uint64Type();
-					maxVal->value = std::to_string(memberCount - 1);
+					auto maxVal = awst::makeIntegerConstant(std::to_string(memberCount - 1), loc);
 
 					auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 					cmp->sourceLocation = loc;
@@ -3962,15 +3896,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 		if (budgetForFunc > 0)
 		{
-			auto budgetVal = std::make_shared<awst::IntegerConstant>();
-			budgetVal->sourceLocation = method.sourceLocation;
-			budgetVal->wtype = awst::WType::uint64Type();
-			budgetVal->value = std::to_string(budgetForFunc);
+			auto budgetVal = awst::makeIntegerConstant(std::to_string(budgetForFunc), method.sourceLocation);
 
-			auto feeSource = std::make_shared<awst::IntegerConstant>();
-			feeSource->sourceLocation = method.sourceLocation;
-			feeSource->wtype = awst::WType::uint64Type();
-			feeSource->value = "0";
+			auto feeSource = awst::makeIntegerConstant("0", method.sourceLocation);
 
 			auto call = std::make_shared<awst::PuyaLibCall>();
 			call->sourceLocation = method.sourceLocation;
@@ -4813,10 +4741,7 @@ void ContractBuilder::buildStorageDispatch(
 	loc.file = m_sourceFile;
 
 	auto makeUint64 = [&](std::string const& val) {
-		auto c = std::make_shared<awst::IntegerConstant>();
-		c->sourceLocation = loc;
-		c->wtype = awst::WType::uint64Type();
-		c->value = val;
+		auto c = awst::makeIntegerConstant(val, loc);
 		return c;
 	};
 

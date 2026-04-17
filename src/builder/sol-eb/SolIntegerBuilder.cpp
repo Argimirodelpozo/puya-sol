@@ -45,10 +45,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::promoteToBigUInt(
 	// For integer constants, produce a biguint constant directly
 	if (auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(_expr.get()))
 	{
-		auto bigConst = std::make_shared<awst::IntegerConstant>();
-		bigConst->sourceLocation = _loc;
-		bigConst->wtype = awst::WType::biguintType();
-		bigConst->value = intConst->value;
+		auto bigConst = awst::makeIntegerConstant(intConst->value, _loc, awst::WType::biguintType());
 		return bigConst;
 	}
 
@@ -174,10 +171,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 		if (m_ctx.inUncheckedBlock && !m_signed && m_bits < 64)
 		{
 			uint64_t pow2N = uint64_t(1) << m_bits;
-			auto powConst = std::make_shared<awst::IntegerConstant>();
-			powConst->sourceLocation = _loc;
-			powConst->wtype = awst::WType::uint64Type();
-			powConst->value = std::to_string(pow2N);
+			auto powConst = awst::makeIntegerConstant(std::to_string(pow2N), _loc);
 
 			auto aPlusPow = std::make_shared<awst::UInt64BinaryOperation>();
 			aPlusPow->sourceLocation = _loc;
@@ -201,10 +195,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 		// AVM `exp` asserts on 0^0. Solidity defines 0**0 = 1.
 		e->op = awst::UInt64BinaryOperator::Pow;
 
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = _loc;
-		zero->wtype = awst::WType::uint64Type();
-		zero->value = "0";
+		auto zero = awst::makeIntegerConstant("0", _loc);
 
 		auto cond = std::make_shared<awst::NumericComparisonExpression>();
 		cond->sourceLocation = _loc;
@@ -213,10 +204,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 		cond->op = awst::NumericComparison::Eq;
 		cond->rhs = std::move(zero);
 
-		auto one = std::make_shared<awst::IntegerConstant>();
-		one->sourceLocation = _loc;
-		one->wtype = awst::WType::uint64Type();
-		one->value = "1";
+		auto one = awst::makeIntegerConstant("1", _loc);
 
 		auto ternary = std::make_shared<awst::ConditionalExpression>();
 		ternary->sourceLocation = _loc;
@@ -230,10 +218,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 		if (m_ctx.inUncheckedBlock && !m_signed && m_bits < 64)
 		{
 			uint64_t modVal = uint64_t(1) << m_bits;
-			auto modConst = std::make_shared<awst::IntegerConstant>();
-			modConst->sourceLocation = _loc;
-			modConst->wtype = awst::WType::uint64Type();
-			modConst->value = std::to_string(modVal);
+			auto modConst = awst::makeIntegerConstant(std::to_string(modVal), _loc);
 			auto masked = std::make_shared<awst::UInt64BinaryOperation>();
 			masked->sourceLocation = _loc;
 			masked->wtype = awst::WType::uint64Type();
@@ -262,10 +247,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 		if (needsWrap)
 		{
 			uint64_t modVal = uint64_t(1) << m_bits;
-			auto modConst = std::make_shared<awst::IntegerConstant>();
-			modConst->sourceLocation = _loc;
-			modConst->wtype = awst::WType::uint64Type();
-			modConst->value = std::to_string(modVal);
+			auto modConst = awst::makeIntegerConstant(std::to_string(modVal), _loc);
 
 			auto masked = std::make_shared<awst::UInt64BinaryOperation>();
 			masked->sourceLocation = _loc;
@@ -322,10 +304,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::compare(
 			static const solidity::u256 twoPow64("18446744073709551616");
 			if (val < twoPow63) return;
 			solidity::u256 wrapped = val % twoPow64;
-			auto e = std::make_shared<awst::IntegerConstant>();
-			e->sourceLocation = _loc;
-			e->wtype = awst::WType::uint64Type();
-			e->value = wrapped.str();
+			auto e = awst::makeIntegerConstant(wrapped.str(), _loc);
 			wide = std::move(e);
 		}
 		catch (...) {}
@@ -353,10 +332,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::compare(
 		{
 			// XOR with 2^255 for biguint
 			solidity::u256 signBitVal = solidity::u256(1) << 255;
-			auto signBit = std::make_shared<awst::IntegerConstant>();
-			signBit->sourceLocation = _loc;
-			signBit->wtype = awst::WType::biguintType();
-			signBit->value = signBitVal.str();
+			auto signBit = awst::makeIntegerConstant(signBitVal.str(), _loc, awst::WType::biguintType());
 
 			auto xorL = std::make_shared<awst::BigUIntBinaryOperation>();
 			xorL->sourceLocation = _loc;
@@ -366,10 +342,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::compare(
 			xorL->right = signBit;
 			lhs = std::move(xorL);
 
-			auto signBit2 = std::make_shared<awst::IntegerConstant>();
-			signBit2->sourceLocation = _loc;
-			signBit2->wtype = awst::WType::biguintType();
-			signBit2->value = signBitVal.str();
+			auto signBit2 = awst::makeIntegerConstant(signBitVal.str(), _loc, awst::WType::biguintType());
 
 			auto xorR = std::make_shared<awst::BigUIntBinaryOperation>();
 			xorR->sourceLocation = _loc;
@@ -395,10 +368,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::compare(
 			xorL->right = signBit;
 			lhs = std::move(xorL);
 
-			auto signBit2 = std::make_shared<awst::IntegerConstant>();
-			signBit2->sourceLocation = _loc;
-			signBit2->wtype = awst::WType::uint64Type();
-			signBit2->value = "9223372036854775808";
+			auto signBit2 = awst::makeIntegerConstant("9223372036854775808", _loc);
 
 			auto xorR = std::make_shared<awst::UInt64BinaryOperation>();
 			xorR->sourceLocation = _loc;
@@ -474,17 +444,11 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 					{
 						solidity::u256 mod256 = solidity::u256(1) << 256;
 						solidity::u256 result = mod256 - solidity::u256(val);
-						auto e = std::make_shared<awst::IntegerConstant>();
-						e->sourceLocation = _loc;
-						e->wtype = awst::WType::biguintType();
-						e->value = result.str();
+						auto e = awst::makeIntegerConstant(result.str(), _loc, awst::WType::biguintType());
 						return wrap(std::move(e));
 					}
 					unsigned long long result = (UINT64_MAX - val) + 1ULL;
-					auto e = std::make_shared<awst::IntegerConstant>();
-					e->sourceLocation = _loc;
-					e->wtype = awst::WType::uint64Type();
-					e->value = std::to_string(result);
+					auto e = awst::makeIntegerConstant(std::to_string(result), _loc);
 					return wrap(std::move(e));
 				}
 			}
@@ -510,10 +474,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			if (!m_isBigUInt)
 			{
 				// Mask to N bits first (uint64 may hold wider two's complement)
-				auto maskConst = std::make_shared<awst::IntegerConstant>();
-				maskConst->sourceLocation = _loc;
-				maskConst->wtype = awst::WType::uint64Type();
-				maskConst->value = std::to_string((uint64_t(1) << m_bits) - 1);
+				auto maskConst = awst::makeIntegerConstant(std::to_string((uint64_t(1) << m_bits) - 1), _loc);
 
 				auto masked = std::make_shared<awst::UInt64BinaryOperation>();
 				masked->sourceLocation = _loc;
@@ -536,10 +497,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 				cmpOperand = std::move(cast);
 			}
 
-			auto halfConst = std::make_shared<awst::IntegerConstant>();
-			halfConst->sourceLocation = _loc;
-			halfConst->wtype = awst::WType::biguintType();
-			halfConst->value = halfNStr;
+			auto halfConst = awst::makeIntegerConstant(halfNStr, _loc, awst::WType::biguintType());
 
 			auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 			cmp->sourceLocation = _loc;
@@ -575,10 +533,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			castBack->wtype = awst::WType::biguintType();
 			castBack->expr = std::move(bitInvert);
 
-			auto one = std::make_shared<awst::IntegerConstant>();
-			one->sourceLocation = _loc;
-			one->wtype = awst::WType::biguintType();
-			one->value = "1";
+			auto one = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType());
 
 			auto addOne = std::make_shared<awst::BigUIntBinaryOperation>();
 			addOne->sourceLocation = _loc;
@@ -588,10 +543,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			addOne->right = std::move(one);
 
 			// Mod 2^256 to handle -0 overflow (2^256 wraps to 0)
-			auto modConst = std::make_shared<awst::IntegerConstant>();
-			modConst->sourceLocation = _loc;
-			modConst->wtype = awst::WType::biguintType();
-			modConst->value = kPow2_256;
+			auto modConst = awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
 
 			auto wrapped = std::make_shared<awst::BigUIntBinaryOperation>();
 			wrapped->sourceLocation = _loc;
@@ -631,10 +583,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			sub->right = std::move(castBiguint);
 
 			// mod 2^64 to wrap
-			auto pow2_64_2 = std::make_shared<awst::IntegerConstant>();
-			pow2_64_2->sourceLocation = _loc;
-			pow2_64_2->wtype = awst::WType::biguintType();
-			pow2_64_2->value = "18446744073709551616";
+			auto pow2_64_2 = awst::makeIntegerConstant("18446744073709551616", _loc, awst::WType::biguintType());
 
 			auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
 			mod->sourceLocation = _loc;
@@ -679,10 +628,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			std::ostringstream oss;
 			oss << mask;
 
-			auto maxVal = std::make_shared<awst::IntegerConstant>();
-			maxVal->sourceLocation = _loc;
-			maxVal->wtype = awst::WType::uint64Type();
-			maxVal->value = oss.str();
+			auto maxVal = awst::makeIntegerConstant(oss.str(), _loc);
 
 			auto e = std::make_shared<awst::UInt64BinaryOperation>();
 			e->sourceLocation = _loc;
@@ -706,10 +652,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 std::unique_ptr<InstanceBuilder> SolIntegerBuilder::bool_eval(
 	awst::SourceLocation const& _loc, bool _negate)
 {
-	auto zero = std::make_shared<awst::IntegerConstant>();
-	zero->sourceLocation = _loc;
-	zero->wtype = m_isBigUInt ? awst::WType::biguintType() : awst::WType::uint64Type();
-	zero->value = "0";
+	auto zero = awst::makeIntegerConstant("0", _loc, m_isBigUInt ? awst::WType::biguintType() : awst::WType::uint64Type());
 
 	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 	cmp->sourceLocation = _loc;
@@ -799,10 +742,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildBigUIntShift(
 	awst::SourceLocation const& _loc)
 {
 	// bzero(32)
-	auto thirtyTwo = std::make_shared<awst::IntegerConstant>();
-	thirtyTwo->sourceLocation = _loc;
-	thirtyTwo->wtype = awst::WType::uint64Type();
-	thirtyTwo->value = "32";
+	auto thirtyTwo = awst::makeIntegerConstant("32", _loc);
 
 	auto bzero = std::make_shared<awst::IntrinsicCall>();
 	bzero->sourceLocation = _loc;
@@ -811,10 +751,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildBigUIntShift(
 	bzero->stackArgs.push_back(std::move(thirtyTwo));
 
 	// 255 - n
-	auto twoFiftyFive = std::make_shared<awst::IntegerConstant>();
-	twoFiftyFive->sourceLocation = _loc;
-	twoFiftyFive->wtype = awst::WType::uint64Type();
-	twoFiftyFive->value = "255";
+	auto twoFiftyFive = awst::makeIntegerConstant("255", _loc);
 
 	auto bitIdx = std::make_shared<awst::UInt64BinaryOperation>();
 	bitIdx->sourceLocation = _loc;
@@ -824,10 +761,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildBigUIntShift(
 	bitIdx->op = awst::UInt64BinaryOperator::Sub;
 
 	// setbit(bzero(32), 255-n, 1)
-	auto one = std::make_shared<awst::IntegerConstant>();
-	one->sourceLocation = _loc;
-	one->wtype = awst::WType::uint64Type();
-	one->value = "1";
+	auto one = awst::makeIntegerConstant("1", _loc);
 
 	auto setbit = std::make_shared<awst::IntrinsicCall>();
 	setbit->sourceLocation = _loc;
@@ -884,10 +818,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildBigUIntExp(
 		return v;
 	};
 	auto makeConst = [&](std::string const& value) {
-		auto c = std::make_shared<awst::IntegerConstant>();
-		c->sourceLocation = _loc;
-		c->wtype = awst::WType::biguintType();
-		c->value = value;
+		auto c = awst::makeIntegerConstant(value, _loc, awst::WType::biguintType());
 		return c;
 	};
 	auto makeAssign = [&](std::string const& target, std::shared_ptr<awst::Expression> value) {
@@ -1005,10 +936,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildWrappingSubtract(
 	}
 
 	// (a + 2^256 - b) % 2^256
-	auto pow256 = std::make_shared<awst::IntegerConstant>();
-	pow256->sourceLocation = _loc;
-	pow256->wtype = awst::WType::biguintType();
-	pow256->value = kPow2_256;
+	auto pow256 = awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
 
 	auto addPow = std::make_shared<awst::BigUIntBinaryOperation>();
 	addPow->sourceLocation = _loc;
@@ -1035,10 +963,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::wrapMod256(
 	std::shared_ptr<awst::Expression> _expr,
 	awst::SourceLocation const& _loc)
 {
-	auto pow256 = std::make_shared<awst::IntegerConstant>();
-	pow256->sourceLocation = _loc;
-	pow256->wtype = awst::WType::biguintType();
-	pow256->value = kPow2_256;
+	auto pow256 = awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
 
 	auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
 	mod->sourceLocation = _loc;
@@ -1064,10 +989,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildSignedModDiv(
 		"57896044618658097711785492504343953926634992332820282019728792003956564819968";
 
 	auto makeConst = [&](char const* val) {
-		auto c = std::make_shared<awst::IntegerConstant>();
-		c->sourceLocation = _loc;
-		c->wtype = awst::WType::biguintType();
-		c->value = val;
+		auto c = awst::makeIntegerConstant(val, _loc, awst::WType::biguintType());
 		return c;
 	};
 

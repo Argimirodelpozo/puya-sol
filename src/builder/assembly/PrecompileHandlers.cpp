@@ -149,10 +149,7 @@ void AssemblyBuilder::handleEcRecover(
 	auto s = padTo32Bytes(readMemSlot(_inputOffset + 0x60, _loc), _loc);
 
 	// 2. Compute recovery_id = v - 27 as uint64
-	auto twentySeven = std::make_shared<awst::IntegerConstant>();
-	twentySeven->sourceLocation = _loc;
-	twentySeven->wtype = awst::WType::biguintType();
-	twentySeven->value = "27";
+	auto twentySeven = awst::makeIntegerConstant("27", _loc, awst::WType::biguintType());
 
 	auto vMinus27 = makeBigUIntBinOp(
 		std::move(vBiguint), awst::BigUIntBinaryOperator::Sub,
@@ -241,14 +238,8 @@ void AssemblyBuilder::handleEcRecover(
 	hash->stackArgs.push_back(std::move(pubkeyConcat));
 
 	// 7. extract3(hash, 12, 20) → last 20 bytes (Ethereum address)
-	auto off12 = std::make_shared<awst::IntegerConstant>();
-	off12->sourceLocation = _loc;
-	off12->wtype = awst::WType::uint64Type();
-	off12->value = "12";
-	auto len20 = std::make_shared<awst::IntegerConstant>();
-	len20->sourceLocation = _loc;
-	len20->wtype = awst::WType::uint64Type();
-	len20->value = "20";
+	auto off12 = awst::makeIntegerConstant("12", _loc);
+	auto len20 = awst::makeIntegerConstant("20", _loc);
 
 	auto addr = std::make_shared<awst::IntrinsicCall>();
 	addr->sourceLocation = _loc;
@@ -263,10 +254,7 @@ void AssemblyBuilder::handleEcRecover(
 	pad12->sourceLocation = _loc;
 	pad12->wtype = awst::WType::bytesType();
 	pad12->opCode = "bzero";
-	auto twelve = std::make_shared<awst::IntegerConstant>();
-	twelve->sourceLocation = _loc;
-	twelve->wtype = awst::WType::uint64Type();
-	twelve->value = "12";
+	auto twelve = awst::makeIntegerConstant("12", _loc);
 	pad12->stackArgs.push_back(std::move(twelve));
 
 	auto paddedAddr = std::make_shared<awst::IntrinsicCall>();
@@ -307,14 +295,8 @@ void AssemblyBuilder::handleSha256Precompile(
 		auto partialSlot = padTo32Bytes(readMemSlot(partialOff, _loc), _loc);
 
 		// Truncate to just the remainder bytes: extract3(padded, 0, remainder)
-		auto offZero = std::make_shared<awst::IntegerConstant>();
-		offZero->sourceLocation = _loc;
-		offZero->wtype = awst::WType::uint64Type();
-		offZero->value = "0";
-		auto remLen = std::make_shared<awst::IntegerConstant>();
-		remLen->sourceLocation = _loc;
-		remLen->wtype = awst::WType::uint64Type();
-		remLen->value = std::to_string(remainder);
+		auto offZero = awst::makeIntegerConstant("0", _loc);
+		auto remLen = awst::makeIntegerConstant(std::to_string(remainder), _loc);
 
 		auto truncated = std::make_shared<awst::IntrinsicCall>();
 		truncated->sourceLocation = _loc;
@@ -446,10 +428,7 @@ void AssemblyBuilder::handleModExp(
 	// Helper: make a biguint constant
 	auto makeConst = [&](std::string const& value) -> std::shared_ptr<awst::IntegerConstant>
 	{
-		auto c = std::make_shared<awst::IntegerConstant>();
-		c->sourceLocation = _loc;
-		c->wtype = awst::WType::biguintType();
-		c->value = value;
+		auto c = awst::makeIntegerConstant(value, _loc, awst::WType::biguintType());
 		return c;
 	};
 
@@ -565,15 +544,9 @@ void AssemblyBuilder::handleIdentityPrecompile(
 {
 	// Identity precompile: copy input region to output region in the memory blob.
 	// extract3(__evm_memory, inputOffset, inputSize) → replace3(__evm_memory, outputOffset, data)
-	auto inOffConst = std::make_shared<awst::IntegerConstant>();
-	inOffConst->sourceLocation = _loc;
-	inOffConst->wtype = awst::WType::uint64Type();
-	inOffConst->value = std::to_string(_inputOffset);
+	auto inOffConst = awst::makeIntegerConstant(std::to_string(_inputOffset), _loc);
 
-	auto inSizeConst = std::make_shared<awst::IntegerConstant>();
-	inSizeConst->sourceLocation = _loc;
-	inSizeConst->wtype = awst::WType::uint64Type();
-	inSizeConst->value = std::to_string(_inputSize);
+	auto inSizeConst = awst::makeIntegerConstant(std::to_string(_inputSize), _loc);
 
 	auto extractData = std::make_shared<awst::IntrinsicCall>();
 	extractData->sourceLocation = _loc;
@@ -583,10 +556,7 @@ void AssemblyBuilder::handleIdentityPrecompile(
 	extractData->stackArgs.push_back(std::move(inOffConst));
 	extractData->stackArgs.push_back(std::move(inSizeConst));
 
-	auto outOffConst = std::make_shared<awst::IntegerConstant>();
-	outOffConst->sourceLocation = _loc;
-	outOffConst->wtype = awst::WType::uint64Type();
-	outOffConst->value = std::to_string(_outputOffset);
+	auto outOffConst = awst::makeIntegerConstant(std::to_string(_outputOffset), _loc);
 
 	auto replace = std::make_shared<awst::IntrinsicCall>();
 	replace->sourceLocation = _loc;

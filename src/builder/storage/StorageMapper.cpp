@@ -279,10 +279,7 @@ std::shared_ptr<awst::Expression> StorageMapper::biguintSlotToBtoi(
 	sub8->wtype = awst::WType::uint64Type();
 	sub8->left = std::move(lenOp);
 	sub8->op = awst::UInt64BinaryOperator::Sub;
-	auto eight = std::make_shared<awst::IntegerConstant>();
-	eight->sourceLocation = _loc;
-	eight->wtype = awst::WType::uint64Type();
-	eight->value = "8";
+	auto eight = awst::makeIntegerConstant("8", _loc);
 	sub8->right = std::move(eight);
 
 	// extract3(castToBytes, len-8, 8)
@@ -292,10 +289,7 @@ std::shared_ptr<awst::Expression> StorageMapper::biguintSlotToBtoi(
 	last8->opCode = "extract3";
 	last8->stackArgs.push_back(std::move(castToBytes));
 	last8->stackArgs.push_back(std::move(sub8));
-	auto eight2 = std::make_shared<awst::IntegerConstant>();
-	eight2->sourceLocation = _loc;
-	eight2->wtype = awst::WType::uint64Type();
-	eight2->value = "8";
+	auto eight2 = awst::makeIntegerConstant("8", _loc);
 	last8->stackArgs.push_back(std::move(eight2));
 
 	// btoi(last8)

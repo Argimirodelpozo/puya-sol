@@ -178,10 +178,7 @@ void AssemblyBuilder::buildStatement(
 					bzero32->sourceLocation = loc;
 					bzero32->wtype = awst::WType::bytesType();
 					bzero32->opCode = "bzero";
-					auto size32 = std::make_shared<awst::IntegerConstant>();
-					size32->sourceLocation = loc;
-					size32->wtype = awst::WType::uint64Type();
-					size32->value = "32";
+					auto size32 = awst::makeIntegerConstant("32", loc);
 					bzero32->stackArgs.push_back(size32);
 
 					auto bor = std::make_shared<awst::IntrinsicCall>();
@@ -202,16 +199,10 @@ void AssemblyBuilder::buildStatement(
 					minus->wtype = awst::WType::uint64Type();
 					minus->left = std::move(lenCall);
 					minus->op = awst::UInt64BinaryOperator::Sub;
-					auto thirtyTwo = std::make_shared<awst::IntegerConstant>();
-					thirtyTwo->sourceLocation = loc;
-					thirtyTwo->wtype = awst::WType::uint64Type();
-					thirtyTwo->value = "32";
+					auto thirtyTwo = awst::makeIntegerConstant("32", loc);
 					minus->right = thirtyTwo;
 
-					auto width = std::make_shared<awst::IntegerConstant>();
-					width->sourceLocation = loc;
-					width->wtype = awst::WType::uint64Type();
-					width->value = "32";
+					auto width = awst::makeIntegerConstant("32", loc);
 
 					auto extract = std::make_shared<awst::IntrinsicCall>();
 					extract->sourceLocation = loc;
@@ -385,20 +376,14 @@ void AssemblyBuilder::buildVariableDeclaration(
 			if (!value)
 			{
 				// Expression failed to translate (error already logged), use zero fallback
-				auto zero = std::make_shared<awst::IntegerConstant>();
-				zero->sourceLocation = loc;
-				zero->wtype = awst::WType::biguintType();
-				zero->value = "0";
+				auto zero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
 				value = std::move(zero);
 			}
 		}
 		else
 		{
 			// Default: zero
-			auto zero = std::make_shared<awst::IntegerConstant>();
-			zero->sourceLocation = loc;
-			zero->wtype = awst::WType::biguintType();
-			zero->value = "0";
+			auto zero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
 			value = std::move(zero);
 		}
 
@@ -559,10 +544,7 @@ void AssemblyBuilder::buildAssignment(
 	if (!value)
 	{
 		// Expression failed to translate (error already logged), use zero fallback
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = loc;
-		zero->wtype = target->wtype;
-		zero->value = "0";
+		auto zero = awst::makeIntegerConstant("0", loc, target->wtype);
 		value = std::move(zero);
 	}
 
@@ -591,14 +573,8 @@ void AssemblyBuilder::buildAssignment(
 				// padTo32Bytes: ensures exactly 32 bytes big-endian
 				auto padded = padTo32Bytes(std::move(biguintVal), loc);
 				// Extract first N bytes (EVM left-aligned)
-				auto zero = std::make_shared<awst::IntegerConstant>();
-				zero->sourceLocation = loc;
-				zero->wtype = awst::WType::uint64Type();
-				zero->value = "0";
-				auto lenConst = std::make_shared<awst::IntegerConstant>();
-				lenConst->sourceLocation = loc;
-				lenConst->wtype = awst::WType::uint64Type();
-				lenConst->value = std::to_string(n);
+				auto zero = awst::makeIntegerConstant("0", loc);
+				auto lenConst = awst::makeIntegerConstant(std::to_string(n), loc);
 				auto extract = std::make_shared<awst::IntrinsicCall>();
 				extract->sourceLocation = loc;
 				extract->wtype = awst::WType::bytesType();
@@ -649,10 +625,7 @@ void AssemblyBuilder::buildAssignment(
 					std::ostringstream maskStr;
 					maskStr << mask;
 
-					auto maskConst = std::make_shared<awst::IntegerConstant>();
-					maskConst->sourceLocation = loc;
-					maskConst->wtype = awst::WType::biguintType();
-					maskConst->value = maskStr.str();
+					auto maskConst = awst::makeIntegerConstant(maskStr.str(), loc, awst::WType::biguintType());
 
 					auto andOp = std::make_shared<awst::BigUIntBinaryOperation>();
 					andOp->sourceLocation = loc;
@@ -977,10 +950,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 		target->name = retName;
 		target->wtype = awst::WType::biguintType();
 
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = _loc;
-		zero->wtype = awst::WType::biguintType();
-		zero->value = "0";
+		auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 
 		auto assign = std::make_shared<awst::AssignmentStatement>();
 		assign->sourceLocation = _loc;

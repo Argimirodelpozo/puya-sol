@@ -81,10 +81,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		}
 
 		auto makeBiguintConst = [&](std::string const& val) {
-			auto c = std::make_shared<awst::IntegerConstant>();
-			c->sourceLocation = m_loc;
-			c->wtype = awst::WType::biguintType();
-			c->value = val;
+			auto c = awst::makeIntegerConstant(val, m_loc, awst::WType::biguintType());
 			return c;
 		};
 
@@ -219,10 +216,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			castBytes->wtype = awst::WType::bytesType();
 			castBytes->expr = std::move(negated);
 
-			auto eight = std::make_shared<awst::IntegerConstant>();
-			eight->sourceLocation = m_loc;
-			eight->wtype = awst::WType::uint64Type();
-			eight->value = "8";
+			auto eight = awst::makeIntegerConstant("8", m_loc);
 			auto bz = std::make_shared<awst::IntrinsicCall>();
 			bz->sourceLocation = m_loc;
 			bz->wtype = awst::WType::bytesType();
@@ -239,10 +233,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			lenCall->wtype = awst::WType::uint64Type();
 			lenCall->opCode = "len";
 			lenCall->stackArgs.push_back(cat);
-			auto eight2 = std::make_shared<awst::IntegerConstant>();
-			eight2->sourceLocation = m_loc;
-			eight2->wtype = awst::WType::uint64Type();
-			eight2->value = "8";
+			auto eight2 = awst::makeIntegerConstant("8", m_loc);
 			auto start = std::make_shared<awst::IntrinsicCall>();
 			start->sourceLocation = m_loc;
 			start->wtype = awst::WType::uint64Type();
@@ -281,19 +272,13 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 				solidity::u256 negVal = pow256 - val;
 				std::ostringstream oss;
 				oss << negVal;
-				auto result = std::make_shared<awst::IntegerConstant>();
-				result->sourceLocation = m_loc;
-				result->wtype = awst::WType::biguintType();
-				result->value = oss.str();
+				auto result = awst::makeIntegerConstant(oss.str(), m_loc, awst::WType::biguintType());
 				return result;
 			}
 		}
 
 		// Non-constant unsigned negation: 0 - x
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = m_loc;
-		zero->wtype = awst::WType::biguintType();
-		zero->value = "0";
+		auto zero = awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType());
 		auto e = std::make_shared<awst::BigUIntBinaryOperation>();
 		e->sourceLocation = m_loc;
 		e->wtype = awst::WType::biguintType();
@@ -322,18 +307,12 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 				solidity::u256 negVal = pow256 - val;
 				std::ostringstream oss;
 				oss << negVal;
-				auto result = std::make_shared<awst::IntegerConstant>();
-				result->sourceLocation = m_loc;
-				result->wtype = awst::WType::biguintType();
-				result->value = oss.str();
+				auto result = awst::makeIntegerConstant(oss.str(), m_loc, awst::WType::biguintType());
 				return result;
 			}
 		}
 	}
-	auto zero2 = std::make_shared<awst::IntegerConstant>();
-	zero2->sourceLocation = m_loc;
-	zero2->wtype = _operand->wtype;
-	zero2->value = "0";
+	auto zero2 = awst::makeIntegerConstant("0", m_loc, _operand->wtype);
 	if (_operand->wtype == awst::WType::uint64Type())
 	{
 		auto e = std::make_shared<awst::UInt64BinaryOperation>();
@@ -373,10 +352,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleBitNot(
 		std::ostringstream oss;
 		oss << mask;
 
-		auto maxVal = std::make_shared<awst::IntegerConstant>();
-		maxVal->sourceLocation = m_loc;
-		maxVal->wtype = awst::WType::uint64Type();
-		maxVal->value = oss.str();
+		auto maxVal = awst::makeIntegerConstant(oss.str(), m_loc);
 		auto xorOp = std::make_shared<awst::UInt64BinaryOperation>();
 		xorOp->sourceLocation = m_loc;
 		xorOp->wtype = awst::WType::uint64Type();
@@ -469,10 +445,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 			}
 
 			auto makeBConst = [&](std::string const& v) {
-				auto c = std::make_shared<awst::IntegerConstant>();
-				c->sourceLocation = m_loc;
-				c->wtype = awst::WType::biguintType();
-				c->value = v;
+				auto c = awst::makeIntegerConstant(v, m_loc, awst::WType::biguintType());
 				return c;
 			};
 
@@ -578,10 +551,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 				castBytes->sourceLocation = m_loc;
 				castBytes->wtype = awst::WType::bytesType();
 				castBytes->expr = std::move(mod);
-				auto eight = std::make_shared<awst::IntegerConstant>();
-				eight->sourceLocation = m_loc;
-				eight->wtype = awst::WType::uint64Type();
-				eight->value = "8";
+				auto eight = awst::makeIntegerConstant("8", m_loc);
 				auto bz = std::make_shared<awst::IntrinsicCall>();
 				bz->sourceLocation = m_loc;
 				bz->wtype = awst::WType::bytesType();
@@ -598,10 +568,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 				lenCall->wtype = awst::WType::uint64Type();
 				lenCall->opCode = "len";
 				lenCall->stackArgs.push_back(cat);
-				auto eight2 = std::make_shared<awst::IntegerConstant>();
-				eight2->sourceLocation = m_loc;
-				eight2->wtype = awst::WType::uint64Type();
-				eight2->value = "8";
+				auto eight2 = awst::makeIntegerConstant("8", m_loc);
 				auto start = std::make_shared<awst::IntrinsicCall>();
 				start->sourceLocation = m_loc;
 				start->wtype = awst::WType::uint64Type();
@@ -620,10 +587,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 		}
 		else if (isBigUInt(base->wtype))
 		{
-			auto one = std::make_shared<awst::IntegerConstant>();
-			one->sourceLocation = m_loc;
-			one->wtype = awst::WType::biguintType();
-			one->value = "1";
+			auto one = awst::makeIntegerConstant("1", m_loc, awst::WType::biguintType());
 			auto bin = std::make_shared<awst::BigUIntBinaryOperation>();
 			bin->sourceLocation = m_loc;
 			bin->wtype = awst::WType::biguintType();
@@ -634,10 +598,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 		}
 		else
 		{
-			auto one = std::make_shared<awst::IntegerConstant>();
-			one->sourceLocation = m_loc;
-			one->wtype = awst::WType::uint64Type();
-			one->value = "1";
+			auto one = awst::makeIntegerConstant("1", m_loc);
 			auto bin = std::make_shared<awst::UInt64BinaryOperation>();
 			bin->sourceLocation = m_loc;
 			bin->wtype = awst::WType::uint64Type();
@@ -815,10 +776,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 
 		for (unsigned j = 0; j < slotCount; ++j)
 		{
-			auto jConst = std::make_shared<awst::IntegerConstant>();
-			jConst->sourceLocation = m_loc;
-			jConst->wtype = awst::WType::biguintType();
-			jConst->value = std::to_string(j);
+			auto jConst = awst::makeIntegerConstant(std::to_string(j), m_loc, awst::WType::biguintType());
 
 			auto slotJ = std::make_shared<awst::BigUIntBinaryOperation>();
 			slotJ->sourceLocation = m_loc;
@@ -829,10 +787,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 
 			auto btoi = builder::StorageMapper::biguintSlotToBtoi(slotJ, m_loc);
 
-			auto zeroVal = std::make_shared<awst::IntegerConstant>();
-			zeroVal->sourceLocation = m_loc;
-			zeroVal->wtype = awst::WType::biguintType();
-			zeroVal->value = "0";
+			auto zeroVal = awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType());
 
 			auto call = std::make_shared<awst::SubroutineCallExpression>();
 			call->sourceLocation = m_loc;

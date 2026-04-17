@@ -49,15 +49,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 		{
 			uint64_t relativeOffset = *offset - m_localConstants[elem.paramName];
 
-			auto offArg = std::make_shared<awst::IntegerConstant>();
-			offArg->sourceLocation = _loc;
-			offArg->wtype = awst::WType::uint64Type();
-			offArg->value = std::to_string(relativeOffset);
+			auto offArg = awst::makeIntegerConstant(std::to_string(relativeOffset), _loc);
 
-			auto lenArg = std::make_shared<awst::IntegerConstant>();
-			lenArg->sourceLocation = _loc;
-			lenArg->wtype = awst::WType::uint64Type();
-			lenArg->value = "32";
+			auto lenArg = awst::makeIntegerConstant("32", _loc);
 
 			auto extractCall = std::make_shared<awst::IntrinsicCall>();
 			extractCall->sourceLocation = _loc;
@@ -80,10 +74,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 	Logger::instance().warning(
 		"calldataload at unknown offset " + std::to_string(*offset) + ", returning 0", _loc
 	);
-	auto zero = std::make_shared<awst::IntegerConstant>();
-	zero->sourceLocation = _loc;
-	zero->wtype = awst::WType::biguintType();
-	zero->value = "0";
+	auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 	return zero;
 }
 
@@ -332,10 +323,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 			// extract3(__evm_memory, offset, length) → keccak256
 			auto offsetU64 = offsetToUint64(_args[0], _loc);
 
-			auto lenConst = std::make_shared<awst::IntegerConstant>();
-			lenConst->sourceLocation = _loc;
-			lenConst->wtype = awst::WType::uint64Type();
-			lenConst->value = std::to_string(*length);
+			auto lenConst = awst::makeIntegerConstant(std::to_string(*length), _loc);
 
 			auto data = std::make_shared<awst::IntrinsicCall>();
 			data->sourceLocation = _loc;
@@ -449,15 +437,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 		// Read from the memory blob and truncate to exact length
 		Logger::instance().warning("keccak256 with sub-32-byte input, using partial slot", _loc);
 		{
-			auto offsetConst = std::make_shared<awst::IntegerConstant>();
-			offsetConst->sourceLocation = _loc;
-			offsetConst->wtype = awst::WType::uint64Type();
-			offsetConst->value = std::to_string(*offset);
+			auto offsetConst = awst::makeIntegerConstant(std::to_string(*offset), _loc);
 
-			auto lenConst = std::make_shared<awst::IntegerConstant>();
-			lenConst->sourceLocation = _loc;
-			lenConst->wtype = awst::WType::uint64Type();
-			lenConst->value = std::to_string(*length);
+			auto lenConst = awst::makeIntegerConstant(std::to_string(*length), _loc);
 
 			auto data = std::make_shared<awst::IntrinsicCall>();
 			data->sourceLocation = _loc;
@@ -528,10 +510,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 		zeroBytes->sourceLocation = _loc;
 		zeroBytes->wtype = awst::WType::bytesType();
 		zeroBytes->opCode = "bzero";
-		auto thirtyTwo = std::make_shared<awst::IntegerConstant>();
-		thirtyTwo->sourceLocation = _loc;
-		thirtyTwo->wtype = awst::WType::uint64Type();
-		thirtyTwo->value = "32";
+		auto thirtyTwo = awst::makeIntegerConstant("32", _loc);
 		zeroBytes->stackArgs.push_back(std::move(thirtyTwo));
 
 		auto keccak = std::make_shared<awst::IntrinsicCall>();
@@ -580,15 +559,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 				int fieldSize = computeARC4ByteSize(fieldType);
 
 				// extract3(structBytes, fieldByteOffset, fieldSize)
-				auto offExpr = std::make_shared<awst::IntegerConstant>();
-				offExpr->sourceLocation = _loc;
-				offExpr->wtype = awst::WType::uint64Type();
-				offExpr->value = std::to_string(fieldByteOffset);
+				auto offExpr = awst::makeIntegerConstant(std::to_string(fieldByteOffset), _loc);
 
-				auto lenExpr = std::make_shared<awst::IntegerConstant>();
-				lenExpr->sourceLocation = _loc;
-				lenExpr->wtype = awst::WType::uint64Type();
-				lenExpr->value = std::to_string(fieldSize);
+				auto lenExpr = awst::makeIntegerConstant(std::to_string(fieldSize), _loc);
 
 				auto extract = std::make_shared<awst::IntrinsicCall>();
 				extract->sourceLocation = _loc;
@@ -659,10 +632,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleReturndatasize(
 )
 {
 	// On AVM there is no return data concept — return 0
-	auto zero = std::make_shared<awst::IntegerConstant>();
-	zero->sourceLocation = _loc;
-	zero->wtype = awst::WType::biguintType();
-	zero->value = "0";
+	auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 	return zero;
 }
 

@@ -17,15 +17,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemSlot(
 {
 	// Read 32 bytes from the memory blob at a constant offset.
 	// extract3(__evm_memory, offset, 32) → cast to biguint
-	auto offsetConst = std::make_shared<awst::IntegerConstant>();
-	offsetConst->sourceLocation = _loc;
-	offsetConst->wtype = awst::WType::uint64Type();
-	offsetConst->value = std::to_string(_offset);
+	auto offsetConst = awst::makeIntegerConstant(std::to_string(_offset), _loc);
 
-	auto len32 = std::make_shared<awst::IntegerConstant>();
-	len32->sourceLocation = _loc;
-	len32->wtype = awst::WType::uint64Type();
-	len32->value = "32";
+	auto len32 = awst::makeIntegerConstant("32", _loc);
 
 	auto extract = std::make_shared<awst::IntrinsicCall>();
 	extract->sourceLocation = _loc;
@@ -56,10 +50,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::padTo32Bytes(
 	zeroBytes->sourceLocation = _loc;
 	zeroBytes->wtype = awst::WType::bytesType();
 	zeroBytes->opCode = "bzero";
-	auto sz = std::make_shared<awst::IntegerConstant>();
-	sz->sourceLocation = _loc;
-	sz->wtype = awst::WType::uint64Type();
-	sz->value = "32";
+	auto sz = awst::makeIntegerConstant("32", _loc);
 	zeroBytes->stackArgs.push_back(sz);
 
 	auto concatPad = std::make_shared<awst::IntrinsicCall>();
@@ -75,10 +66,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::padTo32Bytes(
 	lenCall->opCode = "len";
 	lenCall->stackArgs.push_back(concatPad);
 
-	auto n32 = std::make_shared<awst::IntegerConstant>();
-	n32->sourceLocation = _loc;
-	n32->wtype = awst::WType::uint64Type();
-	n32->value = "32";
+	auto n32 = awst::makeIntegerConstant("32", _loc);
 
 	auto startOff = std::make_shared<awst::IntrinsicCall>();
 	startOff->sourceLocation = _loc;
@@ -93,10 +81,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::padTo32Bytes(
 	extract->opCode = "extract3";
 	extract->stackArgs.push_back(concatPad);
 	extract->stackArgs.push_back(std::move(startOff));
-	auto n32e = std::make_shared<awst::IntegerConstant>();
-	n32e->sourceLocation = _loc;
-	n32e->wtype = awst::WType::uint64Type();
-	n32e->value = "32";
+	auto n32e = awst::makeIntegerConstant("32", _loc);
 	extract->stackArgs.push_back(n32e);
 
 	return extract;
@@ -112,15 +97,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::concatSlots(
 	uint64_t byteOffset = _baseOffset + static_cast<uint64_t>(_startSlot) * 0x20;
 	uint64_t byteLen = static_cast<uint64_t>(_count) * 0x20;
 
-	auto offsetConst = std::make_shared<awst::IntegerConstant>();
-	offsetConst->sourceLocation = _loc;
-	offsetConst->wtype = awst::WType::uint64Type();
-	offsetConst->value = std::to_string(byteOffset);
+	auto offsetConst = awst::makeIntegerConstant(std::to_string(byteOffset), _loc);
 
-	auto lenConst = std::make_shared<awst::IntegerConstant>();
-	lenConst->sourceLocation = _loc;
-	lenConst->wtype = awst::WType::uint64Type();
-	lenConst->value = std::to_string(byteLen);
+	auto lenConst = awst::makeIntegerConstant(std::to_string(byteLen), _loc);
 
 	auto extract = std::make_shared<awst::IntrinsicCall>();
 	extract->sourceLocation = _loc;
@@ -144,14 +123,8 @@ void AssemblyBuilder::storeResultToMemory(
 	if (_isBoolResult)
 	{
 		// Bool result → convert to 32-byte biguint (1 or 0), store at offset
-		auto one = std::make_shared<awst::IntegerConstant>();
-		one->sourceLocation = _loc;
-		one->wtype = awst::WType::biguintType();
-		one->value = "1";
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = _loc;
-		zero->wtype = awst::WType::biguintType();
-		zero->value = "0";
+		auto one = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType());
+		auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 
 		auto cond = std::make_shared<awst::ConditionalExpression>();
 		cond->sourceLocation = _loc;
@@ -162,10 +135,7 @@ void AssemblyBuilder::storeResultToMemory(
 
 		auto padded = padTo32Bytes(std::move(cond), _loc);
 
-		auto offsetConst = std::make_shared<awst::IntegerConstant>();
-		offsetConst->sourceLocation = _loc;
-		offsetConst->wtype = awst::WType::uint64Type();
-		offsetConst->value = std::to_string(_outputOffset);
+		auto offsetConst = awst::makeIntegerConstant(std::to_string(_outputOffset), _loc);
 
 		auto replace = std::make_shared<awst::IntrinsicCall>();
 		replace->sourceLocation = _loc;
@@ -194,10 +164,7 @@ void AssemblyBuilder::storeResultToMemory(
 
 		auto padded = padTo32Bytes(std::move(storeVal), _loc);
 
-		auto offsetConst = std::make_shared<awst::IntegerConstant>();
-		offsetConst->sourceLocation = _loc;
-		offsetConst->wtype = awst::WType::uint64Type();
-		offsetConst->value = std::to_string(_outputOffset);
+		auto offsetConst = awst::makeIntegerConstant(std::to_string(_outputOffset), _loc);
 
 		auto replace = std::make_shared<awst::IntrinsicCall>();
 		replace->sourceLocation = _loc;
@@ -239,15 +206,9 @@ void AssemblyBuilder::storeResultToMemory(
 		resultRead->wtype = awst::WType::bytesType();
 
 		// extract3(result, i*32, 32)
-		auto slotStart = std::make_shared<awst::IntegerConstant>();
-		slotStart->sourceLocation = _loc;
-		slotStart->wtype = awst::WType::uint64Type();
-		slotStart->value = std::to_string(i * 32);
+		auto slotStart = awst::makeIntegerConstant(std::to_string(i * 32), _loc);
 
-		auto slotLen = std::make_shared<awst::IntegerConstant>();
-		slotLen->sourceLocation = _loc;
-		slotLen->wtype = awst::WType::uint64Type();
-		slotLen->value = "32";
+		auto slotLen = awst::makeIntegerConstant("32", _loc);
 
 		auto extractSlot = std::make_shared<awst::IntrinsicCall>();
 		extractSlot->sourceLocation = _loc;
@@ -258,10 +219,7 @@ void AssemblyBuilder::storeResultToMemory(
 		extractSlot->stackArgs.push_back(slotLen);
 
 		// replace3(__evm_memory, outOff, chunk)
-		auto offsetConst = std::make_shared<awst::IntegerConstant>();
-		offsetConst->sourceLocation = _loc;
-		offsetConst->wtype = awst::WType::uint64Type();
-		offsetConst->value = std::to_string(outOff);
+		auto offsetConst = awst::makeIntegerConstant(std::to_string(outOff), _loc);
 
 		auto replace = std::make_shared<awst::IntrinsicCall>();
 		replace->sourceLocation = _loc;

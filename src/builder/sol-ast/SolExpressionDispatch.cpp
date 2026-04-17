@@ -105,10 +105,7 @@ std::shared_ptr<awst::Expression> buildExpression(
 		auto* wtype = _ctx.typeMapper.map(node->annotation().type);
 		if (wtype == awst::WType::uint64Type() || wtype == awst::WType::biguintType())
 		{
-			auto e = std::make_shared<awst::IntegerConstant>();
-			e->sourceLocation = loc;
-			e->wtype = wtype;
-			e->value = "0";
+			auto e = awst::makeIntegerConstant("0", loc, wtype);
 			return e;
 		}
 		if (wtype == awst::WType::boolType())

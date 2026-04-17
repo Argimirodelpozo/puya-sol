@@ -65,10 +65,7 @@ std::unique_ptr<InstanceBuilder> SolStringBuilder::bool_eval(
 	len->opCode = "len";
 	len->stackArgs.push_back(resolve());
 
-	auto zero = std::make_shared<awst::IntegerConstant>();
-	zero->sourceLocation = _loc;
-	zero->wtype = awst::WType::uint64Type();
-	zero->value = "0";
+	auto zero = awst::makeIntegerConstant("0", _loc);
 
 	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 	cmp->sourceLocation = _loc;
@@ -135,10 +132,7 @@ std::unique_ptr<InstanceBuilder> SolDynamicBytesBuilder::bool_eval(
 	len->opCode = "len";
 	len->stackArgs.push_back(resolve());
 
-	auto zero = std::make_shared<awst::IntegerConstant>();
-	zero->sourceLocation = _loc;
-	zero->wtype = awst::WType::uint64Type();
-	zero->value = "0";
+	auto zero = awst::makeIntegerConstant("0", _loc);
 
 	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 	cmp->sourceLocation = _loc;

@@ -40,16 +40,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildLiteral(
 
 	if (_lit.kind == solidity::yul::LiteralKind::Number)
 	{
-		auto node = std::make_shared<awst::IntegerConstant>();
-		node->sourceLocation = loc;
-		node->wtype = awst::WType::biguintType();
-
 		// Convert u256 to decimal string
 		auto const& val = _lit.value.value();
 		std::ostringstream oss;
 		oss << val;
-		node->value = oss.str();
-		return node;
+		return awst::makeIntegerConstant(oss.str(), loc, awst::WType::biguintType());
 	}
 	else if (_lit.kind == solidity::yul::LiteralKind::Boolean)
 	{
@@ -81,14 +76,10 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildLiteral(
 			else
 			{
 				// Empty string or no hint — use the numeric value
-				auto node = std::make_shared<awst::IntegerConstant>();
-				node->sourceLocation = loc;
-				node->wtype = awst::WType::biguintType();
 				auto const& val = _lit.value.value();
 				std::ostringstream oss;
 				oss << val;
-				node->value = oss.str();
-				return node;
+				return awst::makeIntegerConstant(oss.str(), loc, awst::WType::biguintType());
 			}
 		}
 		else
@@ -133,10 +124,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 			auto cIt = m_constants.find(name);
 			if (cIt != m_constants.end())
 			{
-				auto node = std::make_shared<awst::IntegerConstant>();
-				node->sourceLocation = loc;
-				node->wtype = awst::WType::biguintType();
-				node->value = cIt->second;
+				auto node = awst::makeIntegerConstant(cIt->second, loc, awst::WType::biguintType());
 				return node;
 			}
 			// Fallback: check storageSlotVars for __slot_ marker
@@ -156,19 +144,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 			auto constIt = m_constants.find(name);
 			if (constIt != m_constants.end())
 			{
-				auto node = std::make_shared<awst::IntegerConstant>();
-				node->sourceLocation = loc;
-				node->wtype = awst::WType::biguintType();
-				node->value = constIt->second;
+				auto node = awst::makeIntegerConstant(constIt->second, loc, awst::WType::biguintType());
 				return node;
 			}
 			auto it = m_localConstants.find(baseName);
 			if (it != m_localConstants.end())
 			{
-				auto node = std::make_shared<awst::IntegerConstant>();
-				node->sourceLocation = loc;
-				node->wtype = awst::WType::biguintType();
-				node->value = std::to_string(it->second);
+				auto node = awst::makeIntegerConstant(std::to_string(it->second), loc, awst::WType::biguintType());
 				return node;
 			}
 		}
@@ -197,10 +179,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 	auto constIt = m_constants.find(name);
 	if (constIt != m_constants.end())
 	{
-		auto node = std::make_shared<awst::IntegerConstant>();
-		node->sourceLocation = loc;
-		node->wtype = awst::WType::biguintType();
-		node->value = constIt->second;
+		auto node = awst::makeIntegerConstant(constIt->second, loc, awst::WType::biguintType());
 		return node;
 	}
 
@@ -228,10 +207,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 			pad->sourceLocation = loc;
 			pad->wtype = awst::WType::bytesType();
 			pad->opCode = "bzero";
-			auto padSize = std::make_shared<awst::IntegerConstant>();
-			padSize->sourceLocation = loc;
-			padSize->wtype = awst::WType::uint64Type();
-			padSize->value = std::to_string(padLen);
+			auto padSize = awst::makeIntegerConstant(std::to_string(padLen), loc);
 			pad->stackArgs.push_back(std::move(padSize));
 
 			auto cat = std::make_shared<awst::IntrinsicCall>();
@@ -358,10 +334,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	{
 		// extcodesize(addr) → on AVM, return 1 (treat all addresses as having code)
 		Logger::instance().warning("extcodesize() stubbed as 1 (no AVM equivalent)", loc);
-		auto one = std::make_shared<awst::IntegerConstant>();
-		one->sourceLocation = loc;
-		one->wtype = awst::WType::biguintType();
-		one->value = "1";
+		auto one = awst::makeIntegerConstant("1", loc, awst::WType::biguintType());
 		return one;
 	}
 	if (funcName == "extcodehash")
@@ -379,10 +352,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 
 		if (args.empty())
 		{
-			auto zero = std::make_shared<awst::IntegerConstant>();
-			zero->sourceLocation = loc;
-			zero->wtype = awst::WType::biguintType();
-			zero->value = "0";
+			auto zero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
 			return zero;
 		}
 
@@ -426,10 +396,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		// arg > 2 → return hash, else 0. Empty/small addresses (0, 1,
 		// 2) match the "no code" EVM semantics; real contract addresses
 		// are always larger than that.
-		auto threshold = std::make_shared<awst::IntegerConstant>();
-		threshold->sourceLocation = loc;
-		threshold->wtype = awst::WType::biguintType();
-		threshold->value = "100";
+		auto threshold = awst::makeIntegerConstant("100", loc, awst::WType::biguintType());
 
 		auto addrExpr = args[0];
 		// addrExpr may be account / application / biguint — coerce to
@@ -462,10 +429,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		auto addrExprForZero = addrExpr;
 		auto addrExprForLarge = addrExpr;
 
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = loc;
-		zero->wtype = awst::WType::biguintType();
-		zero->value = "0";
+		auto zero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
 
 		// keccak256 of empty bytes (EVM constant)
 		auto emptyHash = awst::makeBytesConstant(
@@ -487,10 +451,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		isLarge->op = awst::NumericComparison::Gt;
 		isLarge->rhs = std::move(threshold);
 
-		auto zeroLit = std::make_shared<awst::IntegerConstant>();
-		zeroLit->sourceLocation = loc;
-		zeroLit->wtype = awst::WType::biguintType();
-		zeroLit->value = "0";
+		auto zeroLit = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
 		auto isZero = std::make_shared<awst::NumericComparisonExpression>();
 		isZero->sourceLocation = loc;
 		isZero->wtype = awst::WType::boolType();
@@ -564,10 +525,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		round->opCode = "global";
 		round->immediates = {std::string("Round")};
 
-		auto two = std::make_shared<awst::IntegerConstant>();
-		two->sourceLocation = loc;
-		two->wtype = awst::WType::uint64Type();
-		two->value = "2";
+		auto two = awst::makeIntegerConstant("2", loc);
 
 		auto prevRound = std::make_shared<awst::UInt64BinaryOperation>();
 		prevRound->sourceLocation = loc;
@@ -593,10 +551,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 			// Return seed for index < 2, zero otherwise. Mirrors the
 			// 2-slot EVM mock harness.
 			auto indexArg = args[0];
-			auto twoLit = std::make_shared<awst::IntegerConstant>();
-			twoLit->sourceLocation = loc;
-			twoLit->wtype = awst::WType::biguintType();
-			twoLit->value = "2";
+			auto twoLit = awst::makeIntegerConstant("2", loc, awst::WType::biguintType());
 			auto withinRange = std::make_shared<awst::NumericComparisonExpression>();
 			withinRange->sourceLocation = loc;
 			withinRange->wtype = awst::WType::boolType();
@@ -604,10 +559,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 			withinRange->op = awst::NumericComparison::Lt;
 			withinRange->rhs = std::move(twoLit);
 
-			auto zero = std::make_shared<awst::IntegerConstant>();
-			zero->sourceLocation = loc;
-			zero->wtype = awst::WType::biguintType();
-			zero->value = "0";
+			auto zero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
 
 			auto cond = std::make_shared<awst::ConditionalExpression>();
 			cond->sourceLocation = loc;
@@ -663,10 +615,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		// Stub: return 0 for EVM-specific block properties with no AVM equivalent
 		Logger::instance().warning(
 			funcName + "() has no AVM equivalent, returning 0", loc);
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = loc;
-		zero->wtype = awst::WType::biguintType();
-		zero->value = "0";
+		auto zero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
 		return zero;
 	}
 	if (funcName == "chainid")
@@ -677,10 +626,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		// differentiation should use `global GenesisHash` directly in
 		// assembly instead.
 		Logger::instance().debug("chainid() stubbed as 1 for AVM", loc);
-		auto c = std::make_shared<awst::IntegerConstant>();
-		c->sourceLocation = loc;
-		c->wtype = awst::WType::biguintType();
-		c->value = "1";
+		auto c = awst::makeIntegerConstant("1", loc, awst::WType::biguintType());
 		return c;
 	}
 	if (funcName == "codesize")
@@ -700,10 +646,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		// bytecode length will still misbehave but at least compile.
 		Logger::instance().warning(
 			"codesize() stubbed as 50 (no AVM equivalent)", loc);
-		auto c = std::make_shared<awst::IntegerConstant>();
-		c->sourceLocation = loc;
-		c->wtype = awst::WType::biguintType();
-		c->value = "50";
+		auto c = awst::makeIntegerConstant("50", loc, awst::WType::biguintType());
 		return c;
 	}
 	if (funcName == "clz")
@@ -714,10 +657,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		if (args.empty())
 		{
 			Logger::instance().warning("clz() called with no args", loc);
-			auto zero = std::make_shared<awst::IntegerConstant>();
-			zero->sourceLocation = loc;
-			zero->wtype = awst::WType::biguintType();
-			zero->value = "256";
+			auto zero = awst::makeIntegerConstant("256", loc, awst::WType::biguintType());
 			return zero;
 		}
 		auto x = args[0];
@@ -746,10 +686,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		bitlen->opCode = "bitlen";
 		bitlen->stackArgs.push_back(std::move(x));
 
-		auto c256 = std::make_shared<awst::IntegerConstant>();
-		c256->sourceLocation = loc;
-		c256->wtype = awst::WType::uint64Type();
-		c256->value = "256";
+		auto c256 = awst::makeIntegerConstant("256", loc);
 
 		auto sub = std::make_shared<awst::UInt64BinaryOperation>();
 		sub->sourceLocation = loc;
@@ -801,10 +738,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		Logger::instance().warning(
 			funcName + " in pure expression context; use let/assign form for precompile support", loc
 		);
-		auto one = std::make_shared<awst::IntegerConstant>();
-		one->sourceLocation = loc;
-		one->wtype = awst::WType::biguintType();
-		one->value = "1";
+		auto one = awst::makeIntegerConstant("1", loc, awst::WType::biguintType());
 		return one;
 	}
 
@@ -840,10 +774,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	if (funcName == "delegatecall")
 	{
 		Logger::instance().warning("delegatecall() stubbed as success (1)", loc);
-		auto one = std::make_shared<awst::IntegerConstant>();
-		one->sourceLocation = loc;
-		one->wtype = awst::WType::biguintType();
-		one->value = "1";
+		auto one = awst::makeIntegerConstant("1", loc, awst::WType::biguintType());
 		return one;
 	}
 
@@ -854,10 +785,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 			"create2() has no AVM equivalent (requires inner app creation txn), returning zero address",
 			loc
 		);
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = loc;
-		zero->wtype = awst::WType::biguintType();
-		zero->value = "0";
+		auto zero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
 		return zero;
 	}
 
@@ -865,10 +793,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	if (funcName == "calldatasize")
 	{
 		Logger::instance().warning("calldatasize() has no AVM equivalent, returning 0", loc);
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = loc;
-		zero->wtype = awst::WType::biguintType();
-		zero->value = "0";
+		auto zero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
 		return zero;
 	}
 
@@ -876,20 +801,14 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	if (funcName == "calldatacopy")
 	{
 		Logger::instance().warning("calldatacopy() has no AVM equivalent (skipped)", loc);
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = loc;
-		zero->wtype = awst::WType::biguintType();
-		zero->value = "0";
+		auto zero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
 		return zero;
 	}
 
 	Logger::instance().warning(
 		"unsupported Yul builtin function: " + funcName + ", returning 0", loc
 	);
-	auto fallbackZero = std::make_shared<awst::IntegerConstant>();
-	fallbackZero->sourceLocation = loc;
-	fallbackZero->wtype = awst::WType::biguintType();
-	fallbackZero->value = "0";
+	auto fallbackZero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
 	return fallbackZero;
 }
 

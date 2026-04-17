@@ -44,10 +44,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleMload(
 	// extract3(__evm_memory, offset, 32) → cast to biguint
 	auto offsetU64 = offsetToUint64(_args[0], _loc);
 
-	auto len32 = std::make_shared<awst::IntegerConstant>();
-	len32->sourceLocation = _loc;
-	len32->wtype = awst::WType::uint64Type();
-	len32->value = "32";
+	auto len32 = awst::makeIntegerConstant("32", _loc);
 
 	auto extract = std::make_shared<awst::IntrinsicCall>();
 	extract->sourceLocation = _loc;
@@ -163,10 +160,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryHandleBytesMemoryRead(
 	offsetU64->stackArgs.push_back(std::move(offsetBytes));
 
 	// Length: 32 bytes
-	auto lenArg = std::make_shared<awst::IntegerConstant>();
-	lenArg->sourceLocation = _loc;
-	lenArg->wtype = awst::WType::uint64Type();
-	lenArg->value = "32";
+	auto lenArg = awst::makeIntegerConstant("32", _loc);
 
 	// extract3(param, offset, 32)
 	auto extract = std::make_shared<awst::IntrinsicCall>();
@@ -265,10 +259,7 @@ bool AssemblyBuilder::tryHandleBytesMemoryWrite(
 	auto padded = padTo32Bytes(ensureBiguint(valueExpr, _loc), _loc);
 
 	// extract3(padded, 0, len(x))
-	auto zero = std::make_shared<awst::IntegerConstant>();
-	zero->sourceLocation = _loc;
-	zero->wtype = awst::WType::uint64Type();
-	zero->value = "0";
+	auto zero = awst::makeIntegerConstant("0", _loc);
 
 	auto extract = std::make_shared<awst::IntrinsicCall>();
 	extract->sourceLocation = _loc;
@@ -370,14 +361,8 @@ void AssemblyBuilder::handleMstore8(
 	auto offsetU64 = offsetToUint64(_args[0], _loc);
 	auto padded = padTo32Bytes(ensureBiguint(_args[1], _loc), _loc);
 
-	auto start = std::make_shared<awst::IntegerConstant>();
-	start->sourceLocation = _loc;
-	start->wtype = awst::WType::uint64Type();
-	start->value = "31";
-	auto len = std::make_shared<awst::IntegerConstant>();
-	len->sourceLocation = _loc;
-	len->wtype = awst::WType::uint64Type();
-	len->value = "1";
+	auto start = awst::makeIntegerConstant("31", _loc);
+	auto len = awst::makeIntegerConstant("1", _loc);
 
 	auto lowByte = std::make_shared<awst::IntrinsicCall>();
 	lowByte->sourceLocation = _loc;
@@ -449,15 +434,9 @@ void AssemblyBuilder::handleReturn(
 		);
 
 		// Read the return region from the memory blob: extract3(blob, offset, size)
-		auto offsetU64 = std::make_shared<awst::IntegerConstant>();
-		offsetU64->sourceLocation = _loc;
-		offsetU64->wtype = awst::WType::uint64Type();
-		offsetU64->value = std::to_string(*returnOffset);
+		auto offsetU64 = awst::makeIntegerConstant(std::to_string(*returnOffset), _loc);
 
-		auto sizeU64 = std::make_shared<awst::IntegerConstant>();
-		sizeU64->sourceLocation = _loc;
-		sizeU64->wtype = awst::WType::uint64Type();
-		sizeU64->value = std::to_string(*returnSize);
+		auto sizeU64 = awst::makeIntegerConstant(std::to_string(*returnSize), _loc);
 
 		auto extract = std::make_shared<awst::IntrinsicCall>();
 		extract->sourceLocation = _loc;
@@ -504,10 +483,7 @@ void AssemblyBuilder::handleReturn(
 	if (m_returnType == awst::WType::boolType()
 		&& returnValue->wtype != awst::WType::boolType())
 	{
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = _loc;
-		zero->wtype = awst::WType::biguintType();
-		zero->value = "0";
+		auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 
 		auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 		cmp->sourceLocation = _loc;

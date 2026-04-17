@@ -283,14 +283,8 @@ std::shared_ptr<awst::Expression> SolAssignment::handleBytesElementAssignment(
 		itob->wtype = awst::WType::bytesType();
 		itob->opCode = "itob";
 		itob->stackArgs.push_back(std::move(_value));
-		auto seven = std::make_shared<awst::IntegerConstant>();
-		seven->sourceLocation = m_loc;
-		seven->wtype = awst::WType::uint64Type();
-		seven->value = "7";
-		auto one = std::make_shared<awst::IntegerConstant>();
-		one->sourceLocation = m_loc;
-		one->wtype = awst::WType::uint64Type();
-		one->value = "1";
+		auto seven = awst::makeIntegerConstant("7", m_loc);
+		auto one = awst::makeIntegerConstant("1", m_loc);
 		auto extract = std::make_shared<awst::IntrinsicCall>();
 		extract->sourceLocation = m_loc;
 		extract->wtype = awst::WType::bytesType();
@@ -609,10 +603,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 			unsigned numMembers = enumType->numberOfMembers();
 			auto val = builder::TypeCoercion::implicitNumericCast(value, awst::WType::uint64Type(), m_loc);
 
-			auto maxVal = std::make_shared<awst::IntegerConstant>();
-			maxVal->sourceLocation = m_loc;
-			maxVal->wtype = awst::WType::uint64Type();
-			maxVal->value = std::to_string(numMembers);
+			auto maxVal = awst::makeIntegerConstant(std::to_string(numMembers), m_loc);
 
 			auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 			cmp->sourceLocation = m_loc;
@@ -649,10 +640,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 			for (unsigned j = 0; j < len; ++j)
 			{
 				// slot + j
-				auto jConst = std::make_shared<awst::IntegerConstant>();
-				jConst->sourceLocation = m_loc;
-				jConst->wtype = awst::WType::biguintType();
-				jConst->value = std::to_string(j);
+				auto jConst = awst::makeIntegerConstant(std::to_string(j), m_loc, awst::WType::biguintType());
 
 				auto slotJ = std::make_shared<awst::BigUIntBinaryOperation>();
 				slotJ->sourceLocation = m_loc;
@@ -678,10 +666,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 				sub8->wtype = awst::WType::uint64Type();
 				sub8->left = std::move(lenOp);
 				sub8->op = awst::UInt64BinaryOperator::Sub;
-				auto eight = std::make_shared<awst::IntegerConstant>();
-				eight->sourceLocation = m_loc;
-				eight->wtype = awst::WType::uint64Type();
-				eight->value = "8";
+				auto eight = awst::makeIntegerConstant("8", m_loc);
 				sub8->right = std::move(eight);
 				auto last8 = std::make_shared<awst::IntrinsicCall>();
 				last8->sourceLocation = m_loc;
@@ -689,10 +674,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 				last8->opCode = "extract3";
 				last8->stackArgs.push_back(std::move(castBytes));
 				last8->stackArgs.push_back(std::move(sub8));
-				auto eight2 = std::make_shared<awst::IntegerConstant>();
-				eight2->sourceLocation = m_loc;
-				eight2->wtype = awst::WType::uint64Type();
-				eight2->value = "8";
+				auto eight2 = awst::makeIntegerConstant("8", m_loc);
 				last8->stackArgs.push_back(std::move(eight2));
 				auto btoi = std::make_shared<awst::IntrinsicCall>();
 				btoi->sourceLocation = m_loc;
@@ -701,10 +683,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 				btoi->stackArgs.push_back(std::move(last8));
 
 				// value[j]
-				auto idx = std::make_shared<awst::IntegerConstant>();
-				idx->sourceLocation = m_loc;
-				idx->wtype = awst::WType::uint64Type();
-				idx->value = std::to_string(j);
+				auto idx = awst::makeIntegerConstant(std::to_string(j), m_loc);
 
 				auto elemExpr = std::make_shared<awst::IndexExpression>();
 				elemExpr->sourceLocation = m_loc;
@@ -766,10 +745,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 				m_ctx.pendingStatements.push_back(std::move(stmt));
 			}
 			// Return a dummy value (void-like, the writes are in pending)
-			auto zero = std::make_shared<awst::IntegerConstant>();
-			zero->sourceLocation = m_loc;
-			zero->wtype = awst::WType::biguintType();
-			zero->value = "0";
+			auto zero = awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType());
 			return zero;
 		}
 	}
@@ -826,10 +802,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 		stmt->expr = std::move(call);
 		m_ctx.pendingStatements.push_back(std::move(stmt));
 
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = m_loc;
-		zero->wtype = awst::WType::biguintType();
-		zero->value = "0";
+		auto zero = awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType());
 		return zero;
 	}
 

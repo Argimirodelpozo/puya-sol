@@ -1790,10 +1790,7 @@ void FunctionSplitter::convertToValueBasedIO(
 		baseVar->name = w.paramName;
 		idxExpr->base = baseVar;
 
-		auto indexConst = std::make_shared<awst::IntegerConstant>();
-		indexConst->sourceLocation = _parent->sourceLocation;
-		indexConst->wtype = awst::WType::uint64Type();
-		indexConst->value = std::to_string(w.index);
+		auto indexConst = awst::makeIntegerConstant(std::to_string(w.index), _parent->sourceLocation);
 		idxExpr->index = indexConst;
 
 		assign->target = idxExpr;

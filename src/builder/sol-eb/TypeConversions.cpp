@@ -98,10 +98,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToInteger(
 		if (targetBits < 256)
 		{
 			solidity::u256 mask = (solidity::u256(1) << targetBits) - 1;
-			auto maskConst = std::make_shared<awst::IntegerConstant>();
-			maskConst->sourceLocation = _loc;
-			maskConst->wtype = awst::WType::biguintType();
-			maskConst->value = mask.str();
+			auto maskConst = awst::makeIntegerConstant(mask.str(), _loc, awst::WType::biguintType());
 
 			auto masked = std::make_shared<awst::BigUIntBinaryOperation>();
 			masked->sourceLocation = _loc;
@@ -176,10 +173,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToBool(
 	// integer → bool: x != 0
 	if (_arg->wtype == awst::WType::uint64Type() || _arg->wtype == awst::WType::biguintType())
 	{
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = _loc;
-		zero->wtype = _arg->wtype;
-		zero->value = "0";
+		auto zero = awst::makeIntegerConstant("0", _loc, _arg->wtype);
 
 		auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 		cmp->sourceLocation = _loc;
@@ -207,10 +201,7 @@ std::shared_ptr<awst::Expression> TypeConversionRegistry::leftPadToN(
 	int _n,
 	awst::SourceLocation const& _loc)
 {
-	auto nConst = std::make_shared<awst::IntegerConstant>();
-	nConst->sourceLocation = _loc;
-	nConst->wtype = awst::WType::uint64Type();
-	nConst->value = std::to_string(_n);
+	auto nConst = awst::makeIntegerConstant(std::to_string(_n), _loc);
 
 	auto padding = std::make_shared<awst::IntrinsicCall>();
 	padding->sourceLocation = _loc;
@@ -231,10 +222,7 @@ std::shared_ptr<awst::Expression> TypeConversionRegistry::leftPadToN(
 	paddedLen->opCode = "len";
 	paddedLen->stackArgs.push_back(padded);
 
-	auto nConst2 = std::make_shared<awst::IntegerConstant>();
-	nConst2->sourceLocation = _loc;
-	nConst2->wtype = awst::WType::uint64Type();
-	nConst2->value = std::to_string(_n);
+	auto nConst2 = awst::makeIntegerConstant(std::to_string(_n), _loc);
 
 	auto offset = std::make_shared<awst::UInt64BinaryOperation>();
 	offset->sourceLocation = _loc;
@@ -243,10 +231,7 @@ std::shared_ptr<awst::Expression> TypeConversionRegistry::leftPadToN(
 	offset->op = awst::UInt64BinaryOperator::Sub;
 	offset->right = std::move(nConst2);
 
-	auto nConst3 = std::make_shared<awst::IntegerConstant>();
-	nConst3->sourceLocation = _loc;
-	nConst3->wtype = awst::WType::uint64Type();
-	nConst3->value = std::to_string(_n);
+	auto nConst3 = awst::makeIntegerConstant(std::to_string(_n), _loc);
 
 	auto extract = std::make_shared<awst::IntrinsicCall>();
 	extract->sourceLocation = _loc;
@@ -338,14 +323,8 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 		if (byteWidth < 8)
 		{
 			// Truncate: extract last byteWidth bytes from 8-byte itob result
-			auto off = std::make_shared<awst::IntegerConstant>();
-			off->sourceLocation = _loc;
-			off->wtype = awst::WType::uint64Type();
-			off->value = std::to_string(8 - byteWidth);
-			auto len = std::make_shared<awst::IntegerConstant>();
-			len->sourceLocation = _loc;
-			len->wtype = awst::WType::uint64Type();
-			len->value = std::to_string(byteWidth);
+			auto off = awst::makeIntegerConstant(std::to_string(8 - byteWidth), _loc);
+			auto len = awst::makeIntegerConstant(std::to_string(byteWidth), _loc);
 
 			auto extract = std::make_shared<awst::IntrinsicCall>();
 			extract->sourceLocation = _loc;
@@ -408,10 +387,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 			if (tgtLen > srcLen)
 			{
 				// Right-pad: concat(input, bzero(N-M))
-				auto padSize = std::make_shared<awst::IntegerConstant>();
-				padSize->sourceLocation = _loc;
-				padSize->wtype = awst::WType::uint64Type();
-				padSize->value = std::to_string(tgtLen - srcLen);
+				auto padSize = awst::makeIntegerConstant(std::to_string(tgtLen - srcLen), _loc);
 				auto pad = std::make_shared<awst::IntrinsicCall>();
 				pad->sourceLocation = _loc;
 				pad->wtype = awst::WType::bytesType();
@@ -428,14 +404,8 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 			else
 			{
 				// Left-truncate: extract(0, N)
-				auto zero = std::make_shared<awst::IntegerConstant>();
-				zero->sourceLocation = _loc;
-				zero->wtype = awst::WType::uint64Type();
-				zero->value = "0";
-				auto len = std::make_shared<awst::IntegerConstant>();
-				len->sourceLocation = _loc;
-				len->wtype = awst::WType::uint64Type();
-				len->value = std::to_string(tgtLen);
+				auto zero = awst::makeIntegerConstant("0", _loc);
+				auto len = awst::makeIntegerConstant(std::to_string(tgtLen), _loc);
 				auto extract = std::make_shared<awst::IntrinsicCall>();
 				extract->sourceLocation = _loc;
 				extract->wtype = awst::WType::bytesType();
@@ -483,10 +453,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToEnum(
 
 	// EVM reverts with Panic(0x21) if value >= numMembers
 	unsigned numMembers = enumType->numberOfMembers();
-	auto maxVal = std::make_shared<awst::IntegerConstant>();
-	maxVal->sourceLocation = _loc;
-	maxVal->wtype = awst::WType::uint64Type();
-	maxVal->value = std::to_string(numMembers);
+	auto maxVal = awst::makeIntegerConstant(std::to_string(numMembers), _loc);
 
 	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 	cmp->sourceLocation = _loc;

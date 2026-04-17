@@ -498,10 +498,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 						else if (rpType == awst::WType::uint64Type()
 							|| rpType == awst::WType::biguintType())
 						{
-							auto def = std::make_shared<awst::IntegerConstant>();
-							def->sourceLocation = loc;
-							def->wtype = rpType;
-							def->value = "0";
+							auto def = awst::makeIntegerConstant("0", loc, rpType);
 							zeroVal = std::move(def);
 						}
 						else if (rpType && rpType->kind() == awst::WTypeKind::Bytes)
@@ -824,10 +821,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					else if (rpType == awst::WType::uint64Type()
 						|| rpType == awst::WType::biguintType())
 					{
-						auto def = std::make_shared<awst::IntegerConstant>();
-						def->sourceLocation = loc;
-						def->wtype = rpType;
-						def->value = "0";
+						auto def = awst::makeIntegerConstant("0", loc, rpType);
 						zeroVal = std::move(def);
 					}
 					else

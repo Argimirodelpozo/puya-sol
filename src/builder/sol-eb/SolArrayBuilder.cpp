@@ -90,10 +90,7 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 
 		auto cmpLhs = TypeCoercion::implicitNumericCast(
 			tmpVar, awst::WType::uint64Type(), _loc);
-		auto maxVal = std::make_shared<awst::IntegerConstant>();
-		maxVal->sourceLocation = _loc;
-		maxVal->wtype = awst::WType::uint64Type();
-		maxVal->value = std::to_string(numMembers);
+		auto maxVal = awst::makeIntegerConstant(std::to_string(numMembers), _loc);
 
 		auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 		cmp->sourceLocation = _loc;

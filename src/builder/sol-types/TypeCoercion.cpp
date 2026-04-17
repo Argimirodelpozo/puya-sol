@@ -48,10 +48,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::implicitNumericCast(
 		toBytes->expr = std::move(_expr);
 
 		// bzero(8) — 8 zero bytes padding
-		auto eight = std::make_shared<awst::IntegerConstant>();
-		eight->sourceLocation = _loc;
-		eight->wtype = awst::WType::uint64Type();
-		eight->value = "8";
+		auto eight = awst::makeIntegerConstant("8", _loc);
 
 		auto padding = std::make_shared<awst::IntrinsicCall>();
 		padding->sourceLocation = _loc;
@@ -75,10 +72,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::implicitNumericCast(
 		paddedLen->stackArgs.push_back(padded);
 
 		// paddedLen - 8 → offset
-		auto eight2 = std::make_shared<awst::IntegerConstant>();
-		eight2->sourceLocation = _loc;
-		eight2->wtype = awst::WType::uint64Type();
-		eight2->value = "8";
+		auto eight2 = awst::makeIntegerConstant("8", _loc);
 
 		auto offset = std::make_shared<awst::UInt64BinaryOperation>();
 		offset->sourceLocation = _loc;
@@ -88,10 +82,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::implicitNumericCast(
 		offset->right = std::move(eight2);
 
 		// extract3(padded, offset, 8) → last 8 bytes
-		auto eight3 = std::make_shared<awst::IntegerConstant>();
-		eight3->sourceLocation = _loc;
-		eight3->wtype = awst::WType::uint64Type();
-		eight3->value = "8";
+		auto eight3 = awst::makeIntegerConstant("8", _loc);
 
 		auto extract = std::make_shared<awst::IntrinsicCall>();
 		extract->sourceLocation = _loc;
@@ -153,10 +144,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint256(
 	if (_bits < 256)
 	{
 		solidity::u256 maskVal = (solidity::u256(1) << _bits) - 1;
-		auto maskConst = std::make_shared<awst::IntegerConstant>();
-		maskConst->sourceLocation = _loc;
-		maskConst->wtype = awst::WType::biguintType();
-		maskConst->value = maskVal.str();
+		auto maskConst = awst::makeIntegerConstant(maskVal.str(), _loc, awst::WType::biguintType());
 
 		auto masked = std::make_shared<awst::BigUIntBinaryOperation>();
 		masked->sourceLocation = _loc;
@@ -175,10 +163,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint256(
 	boost::multiprecision::uint512_t offset_wide = pow256_wide - (boost::multiprecision::uint512_t(1) << _bits);
 	std::string offsetStr = offset_wide.str();
 
-	auto threshConst = std::make_shared<awst::IntegerConstant>();
-	threshConst->sourceLocation = _loc;
-	threshConst->wtype = awst::WType::biguintType();
-	threshConst->value = threshold.str();
+	auto threshConst = awst::makeIntegerConstant(threshold.str(), _loc, awst::WType::biguintType());
 
 	auto cond = std::make_shared<awst::NumericComparisonExpression>();
 	cond->sourceLocation = _loc;
@@ -187,10 +172,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint256(
 	cond->op = awst::NumericComparison::Gte;
 	cond->rhs = threshConst;
 
-	auto offsetConst = std::make_shared<awst::IntegerConstant>();
-	offsetConst->sourceLocation = _loc;
-	offsetConst->wtype = awst::WType::biguintType();
-	offsetConst->value = offsetStr;
+	auto offsetConst = awst::makeIntegerConstant(offsetStr, _loc, awst::WType::biguintType());
 
 	auto add = std::make_shared<awst::BigUIntBinaryOperation>();
 	add->sourceLocation = _loc;
@@ -200,10 +182,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint256(
 	add->right = std::move(offsetConst);
 
 	// Mod 2^256 to keep within 32 bytes
-	auto pow256Const = std::make_shared<awst::IntegerConstant>();
-	pow256Const->sourceLocation = _loc;
-	pow256Const->wtype = awst::WType::biguintType();
-	pow256Const->value = kPow2_256;
+	auto pow256Const = awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
 
 	auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
 	mod->sourceLocation = _loc;
@@ -345,18 +324,12 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 	// Integer types → IntegerConstant
 	if (_type == awst::WType::uint64Type())
 	{
-		auto val = std::make_shared<awst::IntegerConstant>();
-		val->sourceLocation = _loc;
-		val->wtype = awst::WType::uint64Type();
-		val->value = "0";
+		auto val = awst::makeIntegerConstant("0", _loc);
 		return val;
 	}
 	if (_type == awst::WType::biguintType())
 	{
-		auto val = std::make_shared<awst::IntegerConstant>();
-		val->sourceLocation = _loc;
-		val->wtype = awst::WType::biguintType();
-		val->value = "0";
+		auto val = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 		return val;
 	}
 	if (_type->kind() == awst::WTypeKind::ARC4UIntN)
@@ -451,10 +424,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeZeroBytesRuntime(
 	awst::WType const* _targetType,
 	awst::SourceLocation const& _loc)
 {
-	auto size = std::make_shared<awst::IntegerConstant>();
-	size->sourceLocation = _loc;
-	size->wtype = awst::WType::uint64Type();
-	size->value = std::to_string(_n);
+	auto size = awst::makeIntegerConstant(std::to_string(_n), _loc);
 
 	auto bzero = std::make_shared<awst::IntrinsicCall>();
 	bzero->sourceLocation = _loc;
@@ -683,10 +653,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 					srcBytes->wtype = awst::WType::bytesType();
 					srcBytes->expr = std::move(_expr);
 
-					auto padSize = std::make_shared<awst::IntegerConstant>();
-					padSize->sourceLocation = _loc;
-					padSize->wtype = awst::WType::uint64Type();
-					padSize->value = std::to_string(diffBytes);
+					auto padSize = awst::makeIntegerConstant(std::to_string(diffBytes), _loc);
 					auto pad = std::make_shared<awst::IntrinsicCall>();
 					pad->sourceLocation = _loc;
 					pad->wtype = awst::WType::bytesType();
@@ -822,10 +789,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 						srcBytes->expr = std::move(_expr);
 
 						int padBytes = targetWidth - sourceWidth;
-						auto padSize = std::make_shared<awst::IntegerConstant>();
-						padSize->sourceLocation = _loc;
-						padSize->wtype = awst::WType::uint64Type();
-						padSize->value = std::to_string(padBytes);
+						auto padSize = awst::makeIntegerConstant(std::to_string(padBytes), _loc);
 						auto pad = std::make_shared<awst::IntrinsicCall>();
 						pad->sourceLocation = _loc;
 						pad->wtype = awst::WType::bytesType();
@@ -897,10 +861,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 		itob->opCode = "itob";
 		itob->stackArgs.push_back(std::move(idBytes));
 
-		auto padSize = std::make_shared<awst::IntegerConstant>();
-		padSize->sourceLocation = _loc;
-		padSize->wtype = awst::WType::uint64Type();
-		padSize->value = "24";
+		auto padSize = awst::makeIntegerConstant("24", _loc);
 		auto pad = std::make_shared<awst::IntrinsicCall>();
 		pad->sourceLocation = _loc;
 		pad->wtype = awst::WType::bytesType();
@@ -955,10 +916,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 	if (_targetType == awst::WType::boolType()
 		&& _expr->wtype == awst::WType::uint64Type())
 	{
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = _loc;
-		zero->wtype = awst::WType::uint64Type();
-		zero->value = "0";
+		auto zero = awst::makeIntegerConstant("0", _loc);
 		auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 		cmp->sourceLocation = _loc;
 		cmp->wtype = awst::WType::boolType();

@@ -87,10 +87,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 				unsigned numMembers = enumType->numberOfMembers();
 				auto val = builder::TypeCoercion::implicitNumericCast(translated, awst::WType::uint64Type(), m_loc);
 
-				auto maxVal = std::make_shared<awst::IntegerConstant>();
-				maxVal->sourceLocation = m_loc;
-				maxVal->wtype = awst::WType::uint64Type();
-				maxVal->value = std::to_string(numMembers);
+				auto maxVal = awst::makeIntegerConstant(std::to_string(numMembers), m_loc);
 
 				auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 				cmp->sourceLocation = m_loc;
@@ -139,14 +136,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 		hash->opCode = "keccak256";
 		hash->stackArgs.push_back(std::move(sigBytes));
 
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = m_loc;
-		zero->wtype = awst::WType::uint64Type();
-		zero->value = "0";
-		auto four = std::make_shared<awst::IntegerConstant>();
-		four->sourceLocation = m_loc;
-		four->wtype = awst::WType::uint64Type();
-		four->value = "4";
+		auto zero = awst::makeIntegerConstant("0", m_loc);
+		auto four = awst::makeIntegerConstant("4", m_loc);
 
 		auto selector = std::make_shared<awst::IntrinsicCall>();
 		selector->sourceLocation = m_loc;

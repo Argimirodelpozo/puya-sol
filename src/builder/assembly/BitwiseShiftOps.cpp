@@ -112,10 +112,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildPowerOf2(
 
 		// Safe btoi: extract last 8 bytes to avoid btoi overflow (> 8 bytes fails)
 		// Pattern: concat(bzero(8), bytes) → extract3(result, len-8, 8) → btoi
-		auto eight = std::make_shared<awst::IntegerConstant>();
-		eight->sourceLocation = _loc;
-		eight->wtype = awst::WType::uint64Type();
-		eight->value = "8";
+		auto eight = awst::makeIntegerConstant("8", _loc);
 
 		auto bzeroCall = std::make_shared<awst::IntrinsicCall>();
 		bzeroCall->sourceLocation = _loc;
@@ -136,10 +133,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildPowerOf2(
 		lenCall->opCode = "len";
 		lenCall->stackArgs.push_back(cat);
 
-		auto eight2 = std::make_shared<awst::IntegerConstant>();
-		eight2->sourceLocation = _loc;
-		eight2->wtype = awst::WType::uint64Type();
-		eight2->value = "8";
+		auto eight2 = awst::makeIntegerConstant("8", _loc);
 
 		auto start = std::make_shared<awst::IntrinsicCall>();
 		start->sourceLocation = _loc;
@@ -148,10 +142,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildPowerOf2(
 		start->stackArgs.push_back(std::move(lenCall));
 		start->stackArgs.push_back(eight2);
 
-		auto eight3 = std::make_shared<awst::IntegerConstant>();
-		eight3->sourceLocation = _loc;
-		eight3->wtype = awst::WType::uint64Type();
-		eight3->value = "8";
+		auto eight3 = awst::makeIntegerConstant("8", _loc);
 
 		auto extract = std::make_shared<awst::IntrinsicCall>();
 		extract->sourceLocation = _loc;
@@ -170,10 +161,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildPowerOf2(
 	}
 
 	// bzero(32) — 256-bit zero buffer
-	auto thirtyTwo = std::make_shared<awst::IntegerConstant>();
-	thirtyTwo->sourceLocation = _loc;
-	thirtyTwo->wtype = awst::WType::uint64Type();
-	thirtyTwo->value = "32";
+	auto thirtyTwo = awst::makeIntegerConstant("32", _loc);
 
 	auto bzero = std::make_shared<awst::IntrinsicCall>();
 	bzero->sourceLocation = _loc;
@@ -183,10 +171,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildPowerOf2(
 
 	// Clamp shift amount to 0..255 — EVM shifts mod 256 implicitly,
 	// but puya optimizer may strip wrapMod256 from intermediates
-	auto twoFiftySix = std::make_shared<awst::IntegerConstant>();
-	twoFiftySix->sourceLocation = _loc;
-	twoFiftySix->wtype = awst::WType::uint64Type();
-	twoFiftySix->value = "256";
+	auto twoFiftySix = awst::makeIntegerConstant("256", _loc);
 
 	auto clampedShift = std::make_shared<awst::UInt64BinaryOperation>();
 	clampedShift->sourceLocation = _loc;
@@ -196,10 +181,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildPowerOf2(
 	clampedShift->op = awst::UInt64BinaryOperator::Mod;
 
 	// 255 - shift: setbit uses MSB-first ordering, so bit (255-n) = 2^n
-	auto twoFiftyFive = std::make_shared<awst::IntegerConstant>();
-	twoFiftyFive->sourceLocation = _loc;
-	twoFiftyFive->wtype = awst::WType::uint64Type();
-	twoFiftyFive->value = "255";
+	auto twoFiftyFive = awst::makeIntegerConstant("255", _loc);
 
 	auto bitIdx = std::make_shared<awst::UInt64BinaryOperation>();
 	bitIdx->sourceLocation = _loc;
@@ -209,10 +191,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildPowerOf2(
 	bitIdx->op = awst::UInt64BinaryOperator::Sub;
 
 	// setbit(bzero(32), 255-shift, 1) → bytes with only bit `shift` set
-	auto one = std::make_shared<awst::IntegerConstant>();
-	one->sourceLocation = _loc;
-	one->wtype = awst::WType::uint64Type();
-	one->value = "1";
+	auto one = awst::makeIntegerConstant("1", _loc);
 
 	auto setbit = std::make_shared<awst::IntrinsicCall>();
 	setbit->sourceLocation = _loc;
@@ -309,10 +288,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleByte(
 	}
 
 	// extract3(padded, n, 1)
-	auto one = std::make_shared<awst::IntegerConstant>();
-	one->sourceLocation = _loc;
-	one->wtype = awst::WType::uint64Type();
-	one->value = "1";
+	auto one = awst::makeIntegerConstant("1", _loc);
 
 	auto extract = std::make_shared<awst::IntrinsicCall>();
 	extract->sourceLocation = _loc;
@@ -378,15 +354,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 
 	// Build: signBit = (x >> (bitPos - 1)) & 1
 	// Using shr pattern: x / 2^(bitPos-1) mod 2
-	auto shiftAmt = std::make_shared<awst::IntegerConstant>();
-	shiftAmt->sourceLocation = _loc;
-	shiftAmt->wtype = awst::WType::biguintType();
-	shiftAmt->value = "1"; // 2^(bitPos-1) via pow2
+	auto shiftAmt = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType()); // 2^(bitPos-1) via pow2
 
-	auto shiftConst = std::make_shared<awst::IntegerConstant>();
-	shiftConst->sourceLocation = _loc;
-	shiftConst->wtype = awst::WType::uint64Type();
-	shiftConst->value = std::to_string(bitPos - 1);
+	auto shiftConst = awst::makeIntegerConstant(std::to_string(bitPos - 1), _loc);
 
 	auto pow2shift = buildPowerOf2(std::move(shiftConst), _loc);
 
@@ -394,18 +364,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 	auto shifted = makeBigUIntBinOp(x, awst::BigUIntBinaryOperator::FloorDiv, pow2shift, _loc);
 
 	// ... mod 2
-	auto two = std::make_shared<awst::IntegerConstant>();
-	two->sourceLocation = _loc;
-	two->wtype = awst::WType::biguintType();
-	two->value = "2";
+	auto two = awst::makeIntegerConstant("2", _loc, awst::WType::biguintType());
 
 	auto signBit = makeBigUIntBinOp(shifted, awst::BigUIntBinaryOperator::Mod, two, _loc);
 
 	// signBit != 0  (i.e., sign bit is set)
-	auto zero = std::make_shared<awst::IntegerConstant>();
-	zero->sourceLocation = _loc;
-	zero->wtype = awst::WType::biguintType();
-	zero->value = "0";
+	auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 
 	auto isNeg = std::make_shared<awst::NumericComparisonExpression>();
 	isNeg->sourceLocation = _loc;
@@ -415,26 +379,17 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 	isNeg->rhs = zero;
 
 	// lowMask = 2^bitPos - 1
-	auto bitPosConst = std::make_shared<awst::IntegerConstant>();
-	bitPosConst->sourceLocation = _loc;
-	bitPosConst->wtype = awst::WType::uint64Type();
-	bitPosConst->value = std::to_string(bitPos);
+	auto bitPosConst = awst::makeIntegerConstant(std::to_string(bitPos), _loc);
 
 	auto pow2BitPos = buildPowerOf2(std::move(bitPosConst), _loc);
 
-	auto oneBI = std::make_shared<awst::IntegerConstant>();
-	oneBI->sourceLocation = _loc;
-	oneBI->wtype = awst::WType::biguintType();
-	oneBI->value = "1";
+	auto oneBI = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType());
 
 	auto lowMask = makeBigUIntBinOp(pow2BitPos, awst::BigUIntBinaryOperator::Sub, oneBI, _loc);
 
 	// highMask = ~lowMask in 256 bits = (2^256 - 1) - lowMask
 	// Use MAX_UINT256 = 2^256 - 1
-	auto maxU256 = std::make_shared<awst::IntegerConstant>();
-	maxU256->sourceLocation = _loc;
-	maxU256->wtype = awst::WType::biguintType();
-	maxU256->value = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
+	auto maxU256 = awst::makeIntegerConstant("115792089237316195423570985008687907853269984665640564039457584007913129639935", _loc, awst::WType::biguintType());
 
 	auto highMask = makeBigUIntBinOp(maxU256, awst::BigUIntBinaryOperator::Sub, lowMask, _loc);
 
@@ -463,17 +418,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 
 	// Positive case: x & lowMask (clear all bits above bitPos)
 	// Re-create lowMask (can't reuse shared_ptr after move)
-	auto bitPosConst2 = std::make_shared<awst::IntegerConstant>();
-	bitPosConst2->sourceLocation = _loc;
-	bitPosConst2->wtype = awst::WType::uint64Type();
-	bitPosConst2->value = std::to_string(bitPos);
+	auto bitPosConst2 = awst::makeIntegerConstant(std::to_string(bitPos), _loc);
 
 	auto pow2BitPos2 = buildPowerOf2(std::move(bitPosConst2), _loc);
 
-	auto oneBI2 = std::make_shared<awst::IntegerConstant>();
-	oneBI2->sourceLocation = _loc;
-	oneBI2->wtype = awst::WType::biguintType();
-	oneBI2->value = "1";
+	auto oneBI2 = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType());
 
 	auto lowMask2 = makeBigUIntBinOp(pow2BitPos2, awst::BigUIntBinaryOperator::Sub, oneBI2, _loc);
 

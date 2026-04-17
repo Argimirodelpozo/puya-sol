@@ -93,26 +93,17 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 				// the common empty-array case works.
 				if (elemSize == 0)
 				{
-					auto zeroLen = std::make_shared<awst::IntegerConstant>();
-					zeroLen->sourceLocation = m_loc;
-					zeroLen->wtype = awst::WType::uint64Type();
-					zeroLen->value = "0";
+					auto zeroLen = awst::makeIntegerConstant("0", m_loc);
 					return zeroLen;
 				}
 
-				auto elemSizeConst = std::make_shared<awst::IntegerConstant>();
-				elemSizeConst->sourceLocation = m_loc;
-				elemSizeConst->wtype = awst::WType::uint64Type();
-				elemSizeConst->value = std::to_string(elemSize);
+				auto elemSizeConst = awst::makeIntegerConstant(std::to_string(elemSize), m_loc);
 
 				// Guard against box_len returning 0 (uninitialised box):
 				// `(0 - 2) / elemSize` underflows. Use `max(len, 2)` so the
 				// subtraction always stays non-negative, yielding 0 for
 				// empty boxes.
-				auto two = std::make_shared<awst::IntegerConstant>();
-				two->sourceLocation = m_loc;
-				two->wtype = awst::WType::uint64Type();
-				two->value = "2";
+				auto two = awst::makeIntegerConstant("2", m_loc);
 
 				auto lenGe2 = std::make_shared<awst::NumericComparisonExpression>();
 				lenGe2->sourceLocation = m_loc;
@@ -129,10 +120,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 				safeLen->falseExpr = std::move(two);
 
 				// Subtract 2-byte ARC4 length header before dividing
-				auto headerSize = std::make_shared<awst::IntegerConstant>();
-				headerSize->sourceLocation = m_loc;
-				headerSize->wtype = awst::WType::uint64Type();
-				headerSize->value = "2";
+				auto headerSize = awst::makeIntegerConstant("2", m_loc);
 				auto dataLen = std::make_shared<awst::UInt64BinaryOperation>();
 				dataLen->sourceLocation = m_loc;
 				dataLen->wtype = awst::WType::uint64Type();
@@ -158,10 +146,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 	{
 		if (fixedBytes->length().has_value())
 		{
-			auto c = std::make_shared<awst::IntegerConstant>();
-			c->sourceLocation = m_loc;
-			c->wtype = awst::WType::uint64Type();
-			c->value = std::to_string(*fixedBytes->length());
+			auto c = awst::makeIntegerConstant(std::to_string(*fixedBytes->length()), m_loc);
 			return c;
 		}
 	}

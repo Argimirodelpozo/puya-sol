@@ -90,10 +90,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 	if (!_funcDef)
 	{
 		// Zero-initialized function pointer
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = _loc;
-		zero->wtype = awst::WType::uint64Type();
-		zero->value = "0";
+		auto zero = awst::makeIntegerConstant("0", _loc);
 		return zero;
 	}
 
@@ -148,10 +145,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 		zeroAppId->sourceLocation = _loc;
 		zeroAppId->wtype = awst::WType::bytesType();
 		zeroAppId->opCode = "itob";
-		auto zeroConst = std::make_shared<awst::IntegerConstant>();
-		zeroConst->sourceLocation = _loc;
-		zeroConst->wtype = awst::WType::uint64Type();
-		zeroConst->value = "0";
+		auto zeroConst = awst::makeIntegerConstant("0", _loc);
 		zeroAppId->stackArgs.push_back(std::move(zeroConst));
 
 		// itob(funcId)[:4] — internal ID in selector slot
@@ -159,10 +153,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 		idItob->sourceLocation = _loc;
 		idItob->wtype = awst::WType::bytesType();
 		idItob->opCode = "itob";
-		auto idConst = std::make_shared<awst::IntegerConstant>();
-		idConst->sourceLocation = _loc;
-		idConst->wtype = awst::WType::uint64Type();
-		idConst->value = std::to_string(funcId);
+		auto idConst = awst::makeIntegerConstant(std::to_string(funcId), _loc);
 		idItob->stackArgs.push_back(std::move(idConst));
 		auto idBytes4 = std::make_shared<awst::IntrinsicCall>();
 		idBytes4->sourceLocation = _loc;
@@ -186,10 +177,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 	auto it = s_targets.find(_funcDef->id());
 	unsigned funcId = (it != s_targets.end()) ? it->second.id : 0;
 
-	auto idConst = std::make_shared<awst::IntegerConstant>();
-	idConst->sourceLocation = _loc;
-	idConst->wtype = awst::WType::uint64Type();
-	idConst->value = std::to_string(funcId);
+	auto idConst = awst::makeIntegerConstant(std::to_string(funcId), _loc);
 	return idConst;
 }
 
@@ -214,14 +202,8 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		// sentinel) and route to internal dispatch, otherwise inner txn.
 
 		// Extract appId: btoi(extract(_ptr, 0, 8))
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = _loc;
-		zero->wtype = awst::WType::uint64Type();
-		zero->value = "0";
-		auto eight = std::make_shared<awst::IntegerConstant>();
-		eight->sourceLocation = _loc;
-		eight->wtype = awst::WType::uint64Type();
-		eight->value = "8";
+		auto zero = awst::makeIntegerConstant("0", _loc);
+		auto eight = awst::makeIntegerConstant("8", _loc);
 
 		auto extractAppId = std::make_shared<awst::IntrinsicCall>();
 		extractAppId->sourceLocation = _loc;
@@ -243,10 +225,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		isSelf->wtype = awst::WType::boolType();
 		isSelf->lhs = appId; // shared
 		isSelf->op = awst::NumericComparison::Eq;
-		auto zeroCheck = std::make_shared<awst::IntegerConstant>();
-		zeroCheck->sourceLocation = _loc;
-		zeroCheck->wtype = awst::WType::uint64Type();
-		zeroCheck->value = "0";
+		auto zeroCheck = awst::makeIntegerConstant("0", _loc);
 		isSelf->rhs = std::move(zeroCheck);
 
 		// Self-call path: extract internal ID from selector slot, dispatch
@@ -548,10 +527,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 			idVar->wtype = awst::WType::uint64Type();
 			idVar->name = "__funcptr_id";
 
-			auto idConst = std::make_shared<awst::IntegerConstant>();
-			idConst->sourceLocation = _loc;
-			idConst->wtype = awst::WType::uint64Type();
-			idConst->value = std::to_string(entry->id);
+			auto idConst = awst::makeIntegerConstant(std::to_string(entry->id), _loc);
 
 			auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 			cmp->sourceLocation = _loc;

@@ -87,10 +87,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::tryConstantFold()
 			static const solidity::u256 uint64Max("18446744073709551615");
 			if (resultType == awst::WType::uint64Type() && val > uint64Max)
 				resultType = awst::WType::biguintType();
-			auto e = std::make_shared<awst::IntegerConstant>();
-			e->sourceLocation = m_loc;
-			e->wtype = resultType;
-			e->value = val.str();
+			auto e = awst::makeIntegerConstant(val.str(), m_loc, resultType);
 			return e;
 		}
 	}
@@ -257,18 +254,12 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 	}
 
 	auto makeConst = [&](std::string const& val) -> std::shared_ptr<awst::Expression> {
-		auto c = std::make_shared<awst::IntegerConstant>();
-		c->sourceLocation = m_loc;
-		c->wtype = isBiguint ? awst::WType::biguintType() : awst::WType::uint64Type();
-		c->value = val;
+		auto c = awst::makeIntegerConstant(val, m_loc, isBiguint ? awst::WType::biguintType() : awst::WType::uint64Type());
 		return c;
 	};
 
 	auto makeBiguintConst = [&](std::string const& val) -> std::shared_ptr<awst::Expression> {
-		auto c = std::make_shared<awst::IntegerConstant>();
-		c->sourceLocation = m_loc;
-		c->wtype = awst::WType::biguintType();
-		c->value = val;
+		auto c = awst::makeIntegerConstant(val, m_loc, awst::WType::biguintType());
 		return c;
 	};
 
@@ -590,10 +581,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 		cast->expr = std::move(rawResult);
 
 		// concat(bzero(8), bytes) then extract last 8 bytes → btoi
-		auto eight = std::make_shared<awst::IntegerConstant>();
-		eight->sourceLocation = m_loc;
-		eight->wtype = awst::WType::uint64Type();
-		eight->value = "8";
+		auto eight = awst::makeIntegerConstant("8", m_loc);
 
 		auto bz = std::make_shared<awst::IntrinsicCall>();
 		bz->sourceLocation = m_loc;
@@ -614,10 +602,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 		lenCall->opCode = "len";
 		lenCall->stackArgs.push_back(cat);
 
-		auto eight2 = std::make_shared<awst::IntegerConstant>();
-		eight2->sourceLocation = m_loc;
-		eight2->wtype = awst::WType::uint64Type();
-		eight2->value = "8";
+		auto eight2 = awst::makeIntegerConstant("8", m_loc);
 
 		auto start = std::make_shared<awst::IntrinsicCall>();
 		start->sourceLocation = m_loc;
@@ -662,10 +647,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 	}
 
 	auto makeBiguintConst = [&](std::string const& val) {
-		auto c = std::make_shared<awst::IntegerConstant>();
-		c->sourceLocation = m_loc;
-		c->wtype = awst::WType::biguintType();
-		c->value = val;
+		auto c = awst::makeIntegerConstant(val, m_loc, awst::WType::biguintType());
 		return c;
 	};
 
@@ -887,10 +869,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 	}
 
 	auto makeBiguintConst = [&](std::string const& val) {
-		auto c = std::make_shared<awst::IntegerConstant>();
-		c->sourceLocation = m_loc;
-		c->wtype = awst::WType::biguintType();
-		c->value = val;
+		auto c = awst::makeIntegerConstant(val, m_loc, awst::WType::biguintType());
 		return c;
 	};
 
@@ -1108,10 +1087,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 		castBytes->wtype = awst::WType::bytesType();
 		castBytes->expr = std::move(finalResult);
 
-		auto eight = std::make_shared<awst::IntegerConstant>();
-		eight->sourceLocation = m_loc;
-		eight->wtype = awst::WType::uint64Type();
-		eight->value = "8";
+		auto eight = awst::makeIntegerConstant("8", m_loc);
 		auto bz = std::make_shared<awst::IntrinsicCall>();
 		bz->sourceLocation = m_loc;
 		bz->wtype = awst::WType::bytesType();
@@ -1128,10 +1104,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 		lenCall->wtype = awst::WType::uint64Type();
 		lenCall->opCode = "len";
 		lenCall->stackArgs.push_back(cat);
-		auto eight2 = std::make_shared<awst::IntegerConstant>();
-		eight2->sourceLocation = m_loc;
-		eight2->wtype = awst::WType::uint64Type();
-		eight2->value = "8";
+		auto eight2 = awst::makeIntegerConstant("8", m_loc);
 		auto start = std::make_shared<awst::IntrinsicCall>();
 		start->sourceLocation = m_loc;
 		start->wtype = awst::WType::uint64Type();

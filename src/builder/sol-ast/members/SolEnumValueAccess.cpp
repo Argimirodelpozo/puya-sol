@@ -23,10 +23,7 @@ std::shared_ptr<awst::Expression> SolEnumValueAccess::toAwst()
 		++index;
 	}
 
-	auto e = std::make_shared<awst::IntegerConstant>();
-	e->sourceLocation = m_loc;
-	e->wtype = awst::WType::uint64Type();
-	e->value = std::to_string(index);
+	auto e = awst::makeIntegerConstant(std::to_string(index), m_loc);
 	return e;
 }
 

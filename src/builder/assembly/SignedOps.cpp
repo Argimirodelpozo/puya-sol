@@ -31,10 +31,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTload(
 	slotU64->opCode = "btoi";
 	slotU64->stackArgs.push_back(std::move(slotBytes));
 
-	auto thirtyTwo = std::make_shared<awst::IntegerConstant>();
-	thirtyTwo->sourceLocation = _loc;
-	thirtyTwo->wtype = awst::WType::uint64Type();
-	thirtyTwo->value = "32";
+	auto thirtyTwo = awst::makeIntegerConstant("32", _loc);
 
 	auto offset = std::make_shared<awst::UInt64BinaryOperation>();
 	offset->sourceLocation = _loc;
@@ -49,10 +46,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTload(
 	blob->name = "__transient";
 	blob->wtype = awst::WType::bytesType();
 
-	auto thirtyTwo2 = std::make_shared<awst::IntegerConstant>();
-	thirtyTwo2->sourceLocation = _loc;
-	thirtyTwo2->wtype = awst::WType::uint64Type();
-	thirtyTwo2->value = "32";
+	auto thirtyTwo2 = awst::makeIntegerConstant("32", _loc);
 
 	auto extract = std::make_shared<awst::IntrinsicCall>();
 	extract->sourceLocation = _loc;
@@ -93,10 +87,7 @@ void AssemblyBuilder::handleTstore(
 	slotU64->opCode = "btoi";
 	slotU64->stackArgs.push_back(std::move(slotBytes));
 
-	auto thirtyTwo = std::make_shared<awst::IntegerConstant>();
-	thirtyTwo->sourceLocation = _loc;
-	thirtyTwo->wtype = awst::WType::uint64Type();
-	thirtyTwo->value = "32";
+	auto thirtyTwo = awst::makeIntegerConstant("32", _loc);
 
 	auto offset = std::make_shared<awst::UInt64BinaryOperation>();
 	offset->sourceLocation = _loc;
@@ -115,10 +106,7 @@ void AssemblyBuilder::handleTstore(
 	zeros->sourceLocation = _loc;
 	zeros->wtype = awst::WType::bytesType();
 	zeros->opCode = "bzero";
-	auto sz = std::make_shared<awst::IntegerConstant>();
-	sz->sourceLocation = _loc;
-	sz->wtype = awst::WType::uint64Type();
-	sz->value = "32";
+	auto sz = awst::makeIntegerConstant("32", _loc);
 	zeros->stackArgs.push_back(std::move(sz));
 
 	auto padded = std::make_shared<awst::IntrinsicCall>();
@@ -168,13 +156,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::isNegative256(
 	// For uint64 (64-bit): sign bit at position 63, threshold = 2^63
 	// This matters when uint64 variables hold two's complement values after
 	// coercion back from biguint (e.g., signextend result coerced to uint64).
-	auto halfMax = std::make_shared<awst::IntegerConstant>();
-	halfMax->sourceLocation = _loc;
-	halfMax->wtype = awst::WType::biguintType();
-	if (_origType && _origType == awst::WType::uint64Type())
-		halfMax->value = "9223372036854775808"; // 2^63
-	else
-		halfMax->value = "57896044618658097711785492504343953926634992332820282019728792003956564819968"; // 2^255
+	auto halfMax = awst::makeIntegerConstant(
+		_origType && _origType == awst::WType::uint64Type()
+			? "9223372036854775808" // 2^63
+			: "57896044618658097711785492504343953926634992332820282019728792003956564819968", // 2^255
+		_loc, awst::WType::biguintType());
 
 	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 	cmp->sourceLocation = _loc;
@@ -194,17 +180,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::negate256(
 	// Equivalent: (2^256 - val) mod 2^256
 
 	// For biguint, we do: MAX_UINT256 - val + 1
-	auto maxU256 = std::make_shared<awst::IntegerConstant>();
-	maxU256->sourceLocation = _loc;
-	maxU256->wtype = awst::WType::biguintType();
-	maxU256->value = "115792089237316195423570985008687907853269984665640564039457584007913129639935"; // 2^256 - 1
+	auto maxU256 = awst::makeIntegerConstant(
+		"115792089237316195423570985008687907853269984665640564039457584007913129639935", // 2^256 - 1
+		_loc, awst::WType::biguintType());
 
 	auto sub = makeBigUIntBinOp(maxU256, awst::BigUIntBinaryOperator::Sub, _val, _loc);
 
-	auto one = std::make_shared<awst::IntegerConstant>();
-	one->sourceLocation = _loc;
-	one->wtype = awst::WType::biguintType();
-	one->value = "1";
+	auto one = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType());
 
 	return makeBigUIntBinOp(sub, awst::BigUIntBinaryOperator::Add, one, _loc);
 }
@@ -357,17 +339,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSlt(
 	{
 		if (aConst->value == "0")
 		{
-			auto zero = std::make_shared<awst::IntegerConstant>();
-			zero->sourceLocation = _loc;
-			zero->wtype = awst::WType::biguintType();
-			zero->value = "0";
-			auto signThreshold = std::make_shared<awst::IntegerConstant>();
-			signThreshold->sourceLocation = _loc;
-			signThreshold->wtype = awst::WType::biguintType();
-			if (origTypeB && origTypeB == awst::WType::uint64Type())
-				signThreshold->value = "9223372036854775808"; // 2^63
-			else
-				signThreshold->value = "57896044618658097711785492504343953926634992332820282019728792003956564819968"; // 2^255
+			auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
+			auto signThreshold = awst::makeIntegerConstant(
+				origTypeB && origTypeB == awst::WType::uint64Type()
+					? "9223372036854775808" // 2^63
+					: "57896044618658097711785492504343953926634992332820282019728792003956564819968", // 2^255
+				_loc, awst::WType::biguintType());
 			// x > 0
 			auto gtZero = std::make_shared<awst::NumericComparisonExpression>();
 			gtZero->sourceLocation = _loc;
@@ -497,10 +474,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSar(
 	else
 		shiftU64 = shiftAmt;
 
-	auto twoFiftySix = std::make_shared<awst::IntegerConstant>();
-	twoFiftySix->sourceLocation = _loc;
-	twoFiftySix->wtype = awst::WType::uint64Type();
-	twoFiftySix->value = "256";
+	auto twoFiftySix = awst::makeIntegerConstant("256", _loc);
 
 	auto complementShift = std::make_shared<awst::UInt64BinaryOperation>();
 	complementShift->sourceLocation = _loc;
@@ -512,17 +486,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSar(
 	auto pow2Complement = buildPowerOf2(complementShift, _loc);
 
 	// fillMask = MAX_UINT256 - pow2Complement + 1
-	auto maxU256 = std::make_shared<awst::IntegerConstant>();
-	maxU256->sourceLocation = _loc;
-	maxU256->wtype = awst::WType::biguintType();
-	maxU256->value = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
+	auto maxU256 = awst::makeIntegerConstant("115792089237316195423570985008687907853269984665640564039457584007913129639935", _loc, awst::WType::biguintType());
 
 	auto sub1 = makeBigUIntBinOp(maxU256, awst::BigUIntBinaryOperator::Sub, pow2Complement, _loc);
 
-	auto one = std::make_shared<awst::IntegerConstant>();
-	one->sourceLocation = _loc;
-	one->wtype = awst::WType::biguintType();
-	one->value = "1";
+	auto one = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType());
 
 	auto fillMask = makeBigUIntBinOp(sub1, awst::BigUIntBinaryOperator::Add, one, _loc);
 

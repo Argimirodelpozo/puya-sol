@@ -141,10 +141,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleIszero(
 
 	auto arg = ensureBiguint(_args[0], _loc);
 
-	auto zero = std::make_shared<awst::IntegerConstant>();
-	zero->sourceLocation = _loc;
-	zero->wtype = awst::WType::biguintType();
-	zero->value = "0";
+	auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 
 	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 	cmp->sourceLocation = _loc;

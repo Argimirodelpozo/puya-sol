@@ -231,10 +231,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 							std::shared_ptr<awst::Expression> result;
 							if (dstLen > srcLen)
 							{
-								auto padSize = std::make_shared<awst::IntegerConstant>();
-								padSize->sourceLocation = m_loc;
-								padSize->wtype = awst::WType::uint64Type();
-								padSize->value = std::to_string(dstLen - srcLen);
+								auto padSize = awst::makeIntegerConstant(std::to_string(dstLen - srcLen), m_loc);
 								auto pad = std::make_shared<awst::IntrinsicCall>();
 								pad->sourceLocation = m_loc;
 								pad->wtype = awst::WType::bytesType();
@@ -250,14 +247,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 							}
 							else
 							{
-								auto zero = std::make_shared<awst::IntegerConstant>();
-								zero->sourceLocation = m_loc;
-								zero->wtype = awst::WType::uint64Type();
-								zero->value = "0";
-								auto width = std::make_shared<awst::IntegerConstant>();
-								width->sourceLocation = m_loc;
-								width->wtype = awst::WType::uint64Type();
-								width->value = std::to_string(dstLen);
+								auto zero = awst::makeIntegerConstant("0", m_loc);
+								auto width = awst::makeIntegerConstant(std::to_string(dstLen), m_loc);
 								auto extract = std::make_shared<awst::IntrinsicCall>();
 								extract->sourceLocation = m_loc;
 								extract->wtype = awst::WType::bytesType();
@@ -383,10 +374,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 					auto val = builder::TypeCoercion::implicitNumericCast(
 						stmt->value, awst::WType::uint64Type(), m_loc);
 
-					auto maxVal = std::make_shared<awst::IntegerConstant>();
-					maxVal->sourceLocation = m_loc;
-					maxVal->wtype = awst::WType::uint64Type();
-					maxVal->value = std::to_string(numMembers);
+					auto maxVal = awst::makeIntegerConstant(std::to_string(numMembers), m_loc);
 
 					auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 					cmp->sourceLocation = m_loc;

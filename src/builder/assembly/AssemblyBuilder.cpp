@@ -218,10 +218,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 			std::ostringstream maskStr;
 			maskStr << mask;
 
-			auto maskConst = std::make_shared<awst::IntegerConstant>();
-			maskConst->sourceLocation = loc;
-			maskConst->wtype = awst::WType::biguintType();
-			maskConst->value = maskStr.str();
+			auto maskConst = awst::makeIntegerConstant(maskStr.str(), loc, awst::WType::biguintType());
 
 			auto andOp = std::make_shared<awst::BigUIntBinaryOperation>();
 			andOp->sourceLocation = loc;
@@ -301,10 +298,7 @@ void AssemblyBuilder::initializeMemoryBlob(
 			base->name = m_arrayParamName;
 			base->wtype = m_arrayParamType;
 
-			auto index = std::make_shared<awst::IntegerConstant>();
-			index->sourceLocation = loc;
-			index->wtype = awst::WType::uint64Type();
-			index->value = std::to_string(i);
+			auto index = awst::makeIntegerConstant(std::to_string(i), loc);
 
 			auto indexExpr = std::make_shared<awst::IndexExpression>();
 			indexExpr->sourceLocation = loc;
@@ -315,10 +309,7 @@ void AssemblyBuilder::initializeMemoryBlob(
 			// Pad to 32 bytes and write into blob
 			auto padded = padTo32Bytes(std::move(indexExpr), loc);
 
-			auto offsetConst = std::make_shared<awst::IntegerConstant>();
-			offsetConst->sourceLocation = loc;
-			offsetConst->wtype = awst::WType::uint64Type();
-			offsetConst->value = std::to_string(offset);
+			auto offsetConst = awst::makeIntegerConstant(std::to_string(offset), loc);
 
 			auto replace = std::make_shared<awst::IntrinsicCall>();
 			replace->sourceLocation = loc;
@@ -499,10 +490,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::accessFlatElement(
 		int outerIndex = _flatIndex / innerSize;
 		int innerFlatIndex = _flatIndex % innerSize;
 
-		auto index = std::make_shared<awst::IntegerConstant>();
-		index->sourceLocation = _loc;
-		index->wtype = awst::WType::uint64Type();
-		index->value = std::to_string(outerIndex);
+		auto index = awst::makeIntegerConstant(std::to_string(outerIndex), _loc);
 
 		auto indexExpr = std::make_shared<awst::IndexExpression>();
 		indexExpr->sourceLocation = _loc;
@@ -527,10 +515,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::accessFlatElement(
 		int outerIndex = _flatIndex / innerSize;
 		int innerFlatIndex = _flatIndex % innerSize;
 
-		auto index = std::make_shared<awst::IntegerConstant>();
-		index->sourceLocation = _loc;
-		index->wtype = awst::WType::uint64Type();
-		index->value = std::to_string(outerIndex);
+		auto index = awst::makeIntegerConstant(std::to_string(outerIndex), _loc);
 
 		auto indexExpr = std::make_shared<awst::IndexExpression>();
 		indexExpr->sourceLocation = _loc;
@@ -644,15 +629,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBiguint(
 	if (_expr->wtype == awst::WType::boolType())
 	{
 		// bool → biguint: (expr ? 1 : 0)
-		auto one = std::make_shared<awst::IntegerConstant>();
-		one->sourceLocation = _loc;
-		one->wtype = awst::WType::biguintType();
-		one->value = "1";
+		auto one = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType());
 
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = _loc;
-		zero->wtype = awst::WType::biguintType();
-		zero->value = "0";
+		auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 
 		auto cond = std::make_shared<awst::ConditionalExpression>();
 		cond->sourceLocation = _loc;
@@ -697,10 +676,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBiguint(
 		+ "' in assembly arithmetic, coercing to biguint(0)",
 		_loc
 	);
-	auto zero = std::make_shared<awst::IntegerConstant>();
-	zero->sourceLocation = _loc;
-	zero->wtype = awst::WType::biguintType();
-	zero->value = "0";
+	auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 	return zero;
 }
 
@@ -719,10 +695,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBool(
 	// Yul uses non-zero = true. Convert biguint/uint64 to bool via != 0
 	if (_expr->wtype == awst::WType::biguintType())
 	{
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = _loc;
-		zero->wtype = awst::WType::biguintType();
-		zero->value = "0";
+		auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 
 		auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 		cmp->sourceLocation = _loc;
@@ -735,10 +708,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBool(
 
 	if (_expr->wtype == awst::WType::uint64Type())
 	{
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = _loc;
-		zero->wtype = awst::WType::uint64Type();
-		zero->value = "0";
+		auto zero = awst::makeIntegerConstant("0", _loc);
 
 		auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 		cmp->sourceLocation = _loc;
@@ -772,10 +742,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::makeTwoPow256(
 	awst::SourceLocation const& _loc
 )
 {
-	auto c = std::make_shared<awst::IntegerConstant>();
-	c->sourceLocation = _loc;
-	c->wtype = awst::WType::biguintType();
-	c->value = kPow2_256;
+	auto c = awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
 	return c;
 }
 
@@ -796,15 +763,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::safeDivMod(
 {
 	// EVM div/mod by zero returns 0; AVM panics.
 	// Emit: right != 0 ? left op right : 0
-	auto zero = std::make_shared<awst::IntegerConstant>();
-	zero->sourceLocation = _loc;
-	zero->wtype = awst::WType::biguintType();
-	zero->value = "0";
+	auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 
-	auto zeroForCmp = std::make_shared<awst::IntegerConstant>();
-	zeroForCmp->sourceLocation = _loc;
-	zeroForCmp->wtype = awst::WType::biguintType();
-	zeroForCmp->value = "0";
+	auto zeroForCmp = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 
 	auto cond = std::make_shared<awst::NumericComparisonExpression>();
 	cond->sourceLocation = _loc;
@@ -836,10 +797,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::safeBtoi(
 	cast->wtype = awst::WType::bytesType();
 	cast->expr = std::move(_biguintExpr);
 
-	auto eight = std::make_shared<awst::IntegerConstant>();
-	eight->sourceLocation = _loc;
-	eight->wtype = awst::WType::uint64Type();
-	eight->value = "8";
+	auto eight = awst::makeIntegerConstant("8", _loc);
 
 	auto bzeroCall = std::make_shared<awst::IntrinsicCall>();
 	bzeroCall->sourceLocation = _loc;
@@ -860,10 +818,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::safeBtoi(
 	lenCall->opCode = "len";
 	lenCall->stackArgs.push_back(cat);
 
-	auto eight2 = std::make_shared<awst::IntegerConstant>();
-	eight2->sourceLocation = _loc;
-	eight2->wtype = awst::WType::uint64Type();
-	eight2->value = "8";
+	auto eight2 = awst::makeIntegerConstant("8", _loc);
 
 	auto start = std::make_shared<awst::IntrinsicCall>();
 	start->sourceLocation = _loc;

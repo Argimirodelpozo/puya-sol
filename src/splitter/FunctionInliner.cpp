@@ -1132,10 +1132,7 @@ std::shared_ptr<awst::Expression> FunctionInliner::deepCopyExpr(
 	if (type == "IntegerConstant")
 	{
 		auto& src = static_cast<awst::IntegerConstant const&>(*_expr);
-		auto n = std::make_shared<awst::IntegerConstant>();
-		n->sourceLocation = src.sourceLocation;
-		n->wtype = src.wtype;
-		n->value = src.value;
+		auto n = awst::makeIntegerConstant(src.value, src.sourceLocation, src.wtype);
 		return n;
 	}
 	if (type == "BoolConstant")

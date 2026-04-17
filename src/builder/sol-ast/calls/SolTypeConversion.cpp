@@ -116,10 +116,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleEnumConversion()
 		std::move(argExpr), awst::WType::uint64Type(), m_loc);
 
 	unsigned numMembers = enumType->numberOfMembers();
-	auto maxVal = std::make_shared<awst::IntegerConstant>();
-	maxVal->sourceLocation = m_loc;
-	maxVal->wtype = awst::WType::uint64Type();
-	maxVal->value = std::to_string(numMembers);
+	auto maxVal = awst::makeIntegerConstant(std::to_string(numMembers), m_loc);
 
 	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 	cmp->sourceLocation = m_loc;
@@ -207,10 +204,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
 			unsigned targetBits = intType->numBits();
 			if (targetBits < 64)
 			{
-				auto mask = std::make_shared<awst::IntegerConstant>();
-				mask->sourceLocation = m_loc;
-				mask->wtype = awst::WType::uint64Type();
-				mask->value = std::to_string((uint64_t(1) << targetBits) - 1);
+				auto mask = awst::makeIntegerConstant(std::to_string((uint64_t(1) << targetBits) - 1), m_loc);
 
 				auto bitAnd = std::make_shared<awst::UInt64BinaryOperation>();
 				bitAnd->sourceLocation = m_loc;
@@ -292,15 +286,9 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
 				extract->wtype = awst::WType::bytesType();
 				extract->opCode = "extract3";
 				extract->stackArgs.push_back(bytesSource);
-				auto off = std::make_shared<awst::IntegerConstant>();
-				off->sourceLocation = m_loc;
-				off->wtype = awst::WType::uint64Type();
-				off->value = std::to_string(i * elemSize);
+				auto off = awst::makeIntegerConstant(std::to_string(i * elemSize), m_loc);
 				extract->stackArgs.push_back(std::move(off));
-				auto len = std::make_shared<awst::IntegerConstant>();
-				len->sourceLocation = m_loc;
-				len->wtype = awst::WType::uint64Type();
-				len->value = std::to_string(elemSize);
+				auto len = awst::makeIntegerConstant(std::to_string(elemSize), m_loc);
 				extract->stackArgs.push_back(std::move(len));
 
 				if (elemType == awst::WType::biguintType())
@@ -370,10 +358,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
 				srcBytes = std::move(toBytes);
 			}
 
-			auto padSize = std::make_shared<awst::IntegerConstant>();
-			padSize->sourceLocation = m_loc;
-			padSize->wtype = awst::WType::uint64Type();
-			padSize->value = std::to_string(targetWidth);
+			auto padSize = awst::makeIntegerConstant(std::to_string(targetWidth), m_loc);
 			auto pad = std::make_shared<awst::IntrinsicCall>();
 			pad->sourceLocation = m_loc;
 			pad->wtype = awst::WType::bytesType();
@@ -387,14 +372,8 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
 			cat->stackArgs.push_back(std::move(srcBytes));
 			cat->stackArgs.push_back(std::move(pad));
 
-			auto zero = std::make_shared<awst::IntegerConstant>();
-			zero->sourceLocation = m_loc;
-			zero->wtype = awst::WType::uint64Type();
-			zero->value = "0";
-			auto width = std::make_shared<awst::IntegerConstant>();
-			width->sourceLocation = m_loc;
-			width->wtype = awst::WType::uint64Type();
-			width->value = std::to_string(targetWidth);
+			auto zero = awst::makeIntegerConstant("0", m_loc);
+			auto width = awst::makeIntegerConstant(std::to_string(targetWidth), m_loc);
 			auto extract = std::make_shared<awst::IntrinsicCall>();
 			extract->sourceLocation = m_loc;
 			extract->wtype = awst::WType::bytesType();
@@ -426,10 +405,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
 			if (targetWidth > sourceWidth)
 			{
 				// Right-pad: concat(input, bzero(N-M))
-				auto padSize = std::make_shared<awst::IntegerConstant>();
-				padSize->sourceLocation = m_loc;
-				padSize->wtype = awst::WType::uint64Type();
-				padSize->value = std::to_string(targetWidth - sourceWidth);
+				auto padSize = awst::makeIntegerConstant(std::to_string(targetWidth - sourceWidth), m_loc);
 				auto pad = std::make_shared<awst::IntrinsicCall>();
 				pad->sourceLocation = m_loc;
 				pad->wtype = awst::WType::bytesType();
@@ -446,14 +422,8 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
 			else
 			{
 				// Truncate: extract3(input, 0, N)
-				auto zero = std::make_shared<awst::IntegerConstant>();
-				zero->sourceLocation = m_loc;
-				zero->wtype = awst::WType::uint64Type();
-				zero->value = "0";
-				auto width = std::make_shared<awst::IntegerConstant>();
-				width->sourceLocation = m_loc;
-				width->wtype = awst::WType::uint64Type();
-				width->value = std::to_string(targetWidth);
+				auto zero = awst::makeIntegerConstant("0", m_loc);
+				auto width = awst::makeIntegerConstant(std::to_string(targetWidth), m_loc);
 				auto extract = std::make_shared<awst::IntrinsicCall>();
 				extract->sourceLocation = m_loc;
 				extract->wtype = awst::WType::bytesType();
@@ -508,10 +478,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::applyNarrowingMask(
 		}
 		if (targetBits < 64 && (targetBits < sourceBits || (sourceIsSigned && !targetIntType->isSigned())))
 		{
-			auto mask = std::make_shared<awst::IntegerConstant>();
-			mask->sourceLocation = m_loc;
-			mask->wtype = awst::WType::uint64Type();
-			mask->value = std::to_string((uint64_t(1) << targetBits) - 1);
+			auto mask = awst::makeIntegerConstant(std::to_string((uint64_t(1) << targetBits) - 1), m_loc);
 			auto bitAnd = std::make_shared<awst::UInt64BinaryOperation>();
 			bitAnd->sourceLocation = m_loc;
 			bitAnd->wtype = awst::WType::uint64Type();
@@ -531,10 +498,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::applyNarrowingMask(
 		if (targetBits < sourceBits && targetBits < 256)
 		{
 			solidity::u256 maskVal = (solidity::u256(1) << targetBits) - 1;
-			auto mask = std::make_shared<awst::IntegerConstant>();
-			mask->sourceLocation = m_loc;
-			mask->wtype = awst::WType::biguintType();
-			mask->value = maskVal.str();
+			auto mask = awst::makeIntegerConstant(maskVal.str(), m_loc, awst::WType::biguintType());
 			auto bitAnd = std::make_shared<awst::BigUIntBinaryOperation>();
 			bitAnd->sourceLocation = m_loc;
 			bitAnd->wtype = awst::WType::biguintType();
@@ -617,10 +581,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleBiguintToBytes(
 std::shared_ptr<awst::Expression> SolTypeConversion::leftPadToN(
 	std::shared_ptr<awst::Expression> _expr, int _n)
 {
-	auto nConst = std::make_shared<awst::IntegerConstant>();
-	nConst->sourceLocation = m_loc;
-	nConst->wtype = awst::WType::uint64Type();
-	nConst->value = std::to_string(_n);
+	auto nConst = awst::makeIntegerConstant(std::to_string(_n), m_loc);
 
 	auto pad = std::make_shared<awst::IntrinsicCall>();
 	pad->sourceLocation = m_loc;
@@ -641,10 +602,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::leftPadToN(
 	lenExpr->opCode = "len";
 	lenExpr->stackArgs.push_back(cat);
 
-	auto nConst2 = std::make_shared<awst::IntegerConstant>();
-	nConst2->sourceLocation = m_loc;
-	nConst2->wtype = awst::WType::uint64Type();
-	nConst2->value = std::to_string(_n);
+	auto nConst2 = awst::makeIntegerConstant(std::to_string(_n), m_loc);
 
 	auto offset = std::make_shared<awst::UInt64BinaryOperation>();
 	offset->sourceLocation = m_loc;
@@ -653,10 +611,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::leftPadToN(
 	offset->right = std::move(nConst2);
 	offset->op = awst::UInt64BinaryOperator::Sub;
 
-	auto nConst3 = std::make_shared<awst::IntegerConstant>();
-	nConst3->sourceLocation = m_loc;
-	nConst3->wtype = awst::WType::uint64Type();
-	nConst3->value = std::to_string(_n);
+	auto nConst3 = awst::makeIntegerConstant(std::to_string(_n), m_loc);
 
 	auto extract = std::make_shared<awst::IntrinsicCall>();
 	extract->sourceLocation = m_loc;
@@ -671,15 +626,9 @@ std::shared_ptr<awst::Expression> SolTypeConversion::leftPadToN(
 std::shared_ptr<awst::Expression> SolTypeConversion::extractLastN(
 	std::shared_ptr<awst::Expression> _expr, int _n)
 {
-	auto offsetConst = std::make_shared<awst::IntegerConstant>();
-	offsetConst->sourceLocation = m_loc;
-	offsetConst->wtype = awst::WType::uint64Type();
-	offsetConst->value = std::to_string(8 - _n);
+	auto offsetConst = awst::makeIntegerConstant(std::to_string(8 - _n), m_loc);
 
-	auto widthConst = std::make_shared<awst::IntegerConstant>();
-	widthConst->sourceLocation = m_loc;
-	widthConst->wtype = awst::WType::uint64Type();
-	widthConst->value = std::to_string(_n);
+	auto widthConst = awst::makeIntegerConstant(std::to_string(_n), m_loc);
 
 	auto extract = std::make_shared<awst::IntrinsicCall>();
 	extract->sourceLocation = m_loc;

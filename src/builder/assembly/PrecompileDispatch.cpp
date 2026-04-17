@@ -74,10 +74,7 @@ void AssemblyBuilder::handlePrecompileCall(
 			}
 			else
 			{
-				auto val = std::make_shared<awst::IntegerConstant>();
-				val->sourceLocation = _loc;
-				val->wtype = awst::WType::biguintType();
-				val->value = "1";
+				auto val = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType());
 				assignStmt->value = std::move(val);
 			}
 			_out.push_back(std::move(assignStmt));
@@ -176,10 +173,7 @@ void AssemblyBuilder::handlePrecompileCall(
 		}
 		else
 		{
-			auto intVal = std::make_shared<awst::IntegerConstant>();
-			intVal->sourceLocation = _loc;
-			intVal->wtype = awst::WType::biguintType();
-			intVal->value = success ? "1" : "0";
+			auto intVal = awst::makeIntegerConstant(success ? "1" : "0", _loc, awst::WType::biguintType());
 			val = std::move(intVal);
 		}
 

@@ -298,10 +298,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			// to avoid itob(0) producing 8 zero bytes vs biguint(0) = empty bytes.
 			if (auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(operand.get()))
 			{
-				auto bigConst = std::make_shared<awst::IntegerConstant>();
-				bigConst->sourceLocation = _loc;
-				bigConst->wtype = awst::WType::biguintType();
-				bigConst->value = intConst->value;
+				auto bigConst = awst::makeIntegerConstant(intConst->value, _loc, awst::WType::biguintType());
 				operand = std::move(bigConst);
 				return;
 			}
@@ -483,10 +480,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			auto shiftAmt = implicitNumericCast(std::move(_right), awst::WType::uint64Type(), _loc);
 
 			// bzero(32) — 256-bit zero buffer
-			auto thirtyTwo = std::make_shared<awst::IntegerConstant>();
-			thirtyTwo->sourceLocation = _loc;
-			thirtyTwo->wtype = awst::WType::uint64Type();
-			thirtyTwo->value = "32";
+			auto thirtyTwo = awst::makeIntegerConstant("32", _loc);
 
 			auto bzero = std::make_shared<awst::IntrinsicCall>();
 			bzero->sourceLocation = _loc;
@@ -495,10 +489,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			bzero->stackArgs.push_back(std::move(thirtyTwo));
 
 			// 255 - n: setbit uses MSB-first ordering, so bit (255-n) = 2^n
-			auto twoFiftyFive = std::make_shared<awst::IntegerConstant>();
-			twoFiftyFive->sourceLocation = _loc;
-			twoFiftyFive->wtype = awst::WType::uint64Type();
-			twoFiftyFive->value = "255";
+			auto twoFiftyFive = awst::makeIntegerConstant("255", _loc);
 
 			auto bitIdx = std::make_shared<awst::UInt64BinaryOperation>();
 			bitIdx->sourceLocation = _loc;
@@ -508,10 +499,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			bitIdx->op = awst::UInt64BinaryOperator::Sub;
 
 			// setbit(bzero(32), 255-n, 1) → bytes with only bit n set
-			auto one = std::make_shared<awst::IntegerConstant>();
-			one->sourceLocation = _loc;
-			one->wtype = awst::WType::uint64Type();
-			one->value = "1";
+			auto one = awst::makeIntegerConstant("1", _loc);
 
 			auto setbit = std::make_shared<awst::IntrinsicCall>();
 			setbit->sourceLocation = _loc;
@@ -558,10 +546,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 
 			// Biguint subtraction needs wrapping mod 2^256 to avoid AVM underflow.
 			// Pattern: (a + 2^256 - b) % 2^256
-			auto pow256 = std::make_shared<awst::IntegerConstant>();
-			pow256->sourceLocation = _loc;
-			pow256->wtype = awst::WType::biguintType();
-			pow256->value = kPow2_256;
+			auto pow256 = awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
 
 			auto addPow = std::make_shared<awst::BigUIntBinaryOperation>();
 			addPow->sourceLocation = _loc;
@@ -577,10 +562,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			diff->op = awst::BigUIntBinaryOperator::Sub;
 			diff->right = std::move(_right);
 
-			auto pow256b = std::make_shared<awst::IntegerConstant>();
-			pow256b->sourceLocation = _loc;
-			pow256b->wtype = awst::WType::biguintType();
-			pow256b->value = kPow2_256;
+			auto pow256b = awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
 
 			auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
 			mod->sourceLocation = _loc;
@@ -612,10 +594,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			};
 			auto makeConst = [&](std::string const& value) -> std::shared_ptr<awst::IntegerConstant>
 			{
-				auto c = std::make_shared<awst::IntegerConstant>();
-				c->sourceLocation = _loc;
-				c->wtype = awst::WType::biguintType();
-				c->value = value;
+				auto c = awst::makeIntegerConstant(value, _loc, awst::WType::biguintType());
 				return c;
 			};
 			auto makeAssign = [&](
@@ -755,10 +734,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 				|| _op == Token::Sub || _op == Token::AssignSub
 				|| _op == Token::Mul || _op == Token::AssignMul))
 		{
-			auto pow256 = std::make_shared<awst::IntegerConstant>();
-			pow256->sourceLocation = _loc;
-			pow256->wtype = awst::WType::biguintType();
-			pow256->value = kPow2_256;
+			auto pow256 = awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
 
 			auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
 			mod->sourceLocation = _loc;
@@ -792,10 +768,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			// Wrap: y == 0 ? 1 : x ** y
 			e->op = awst::UInt64BinaryOperator::Pow;
 
-			auto zero = std::make_shared<awst::IntegerConstant>();
-			zero->sourceLocation = _loc;
-			zero->wtype = awst::WType::uint64Type();
-			zero->value = "0";
+			auto zero = awst::makeIntegerConstant("0", _loc);
 
 			auto cond = std::make_shared<awst::NumericComparisonExpression>();
 			cond->sourceLocation = _loc;
@@ -804,10 +777,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			cond->op = awst::NumericComparison::Eq;
 			cond->rhs = std::move(zero);
 
-			auto one = std::make_shared<awst::IntegerConstant>();
-			one->sourceLocation = _loc;
-			one->wtype = awst::WType::uint64Type();
-			one->value = "1";
+			auto one = awst::makeIntegerConstant("1", _loc);
 
 			auto ternary = std::make_shared<awst::ConditionalExpression>();
 			ternary->sourceLocation = _loc;
@@ -878,10 +848,7 @@ std::shared_ptr<awst::IntegerConstant> ExpressionBuilder::makeUint64(
 	std::string _value, awst::SourceLocation const& _loc
 )
 {
-	auto e = std::make_shared<awst::IntegerConstant>();
-	e->sourceLocation = _loc;
-	e->wtype = awst::WType::uint64Type();
-	e->value = std::move(_value);
+	auto e = awst::makeIntegerConstant(std::move(_value), _loc);
 	return e;
 }
 

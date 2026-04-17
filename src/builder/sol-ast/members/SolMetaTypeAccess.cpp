@@ -90,22 +90,16 @@ std::shared_ptr<awst::Expression> SolMetaTypeAccess::toAwst()
 					val = "0";
 			}
 
-			auto e = std::make_shared<awst::IntegerConstant>();
-			e->sourceLocation = m_loc;
-			e->wtype = wtype;
-			e->value = val;
+			auto e = awst::makeIntegerConstant(val, m_loc, wtype);
 			return e;
 		}
 
 		// type(EnumType).max / .min
 		if (auto const* enumType = dynamic_cast<EnumType const*>(typeArg))
 		{
-			auto e = std::make_shared<awst::IntegerConstant>();
-			e->sourceLocation = m_loc;
-			e->wtype = awst::WType::uint64Type();
-			e->value = (member == "max")
+			auto e = awst::makeIntegerConstant((member == "max")
 				? std::to_string(enumType->numberOfMembers() - 1)
-				: std::string("0");
+				: std::string("0"), m_loc);
 			return e;
 		}
 	}
