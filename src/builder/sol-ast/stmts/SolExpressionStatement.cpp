@@ -186,12 +186,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 							bytes[i] = static_cast<unsigned char>(val & 0xFF);
 							val >>= 8;
 						}
-						auto bc = std::make_shared<awst::BytesConstant>();
-						bc->sourceLocation = m_loc;
-						bc->wtype = expectedType;
-						bc->encoding = awst::BytesEncoding::Base16;
-						bc->value = bytes;
-						stmt->value = std::move(bc);
+						stmt->value = awst::makeBytesConstant(
+							std::move(bytes), m_loc, awst::BytesEncoding::Base16, expectedType);
 					}
 					else if (auto const* strConst = dynamic_cast<awst::StringConstant const*>(stmt->value.get()))
 					{
@@ -203,12 +199,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 							auto const& s = strConst->value;
 							for (size_t i = 0; i < s.size() && i < bytes.size(); ++i)
 								bytes[i] = static_cast<unsigned char>(s[i]);
-							auto bc = std::make_shared<awst::BytesConstant>();
-							bc->sourceLocation = m_loc;
-							bc->wtype = expectedType;
-							bc->encoding = awst::BytesEncoding::Base16;
-							bc->value = bytes;
-							stmt->value = std::move(bc);
+							stmt->value = awst::makeBytesConstant(
+								std::move(bytes), m_loc, awst::BytesEncoding::Base16, expectedType);
 						}
 					}
 					else if (stmt->value->wtype && stmt->value->wtype->kind() == awst::WTypeKind::Bytes)

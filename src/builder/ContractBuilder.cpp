@@ -528,13 +528,8 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		ctorPendingState.sourceLocation = contract->approvalProgram.sourceLocation;
 		ctorPendingState.storageKind = awst::AppStorageKind::AppGlobal;
 		ctorPendingState.storageWType = awst::WType::uint64Type();
-		auto key = std::make_shared<awst::BytesConstant>();
-		key->sourceLocation = ctorPendingState.sourceLocation;
-		key->wtype = awst::WType::bytesType();
-		key->encoding = awst::BytesEncoding::Utf8;
-		std::string keyStr = "__ctor_pending";
-		key->value = std::vector<uint8_t>(keyStr.begin(), keyStr.end());
-		ctorPendingState.key = key;
+		ctorPendingState.key = awst::makeUtf8BytesConstant(
+			"__ctor_pending", ctorPendingState.sourceLocation);
 		contract->appState.push_back(std::move(ctorPendingState));
 
 		contract->methods.push_back(std::move(*m_postInitMethod));
@@ -865,12 +860,8 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 
 				// Build the box key from the getter arguments.
 				// Each arg is converted to bytes, concatenated, then sha256-hashed.
-				auto prefix = std::make_shared<awst::BytesConstant>();
-				prefix->sourceLocation = loc;
-				prefix->wtype = awst::WType::boxKeyType();
-				prefix->encoding = awst::BytesEncoding::Utf8;
-				std::string varName = var->name();
-				prefix->value = std::vector<uint8_t>(varName.begin(), varName.end());
+				auto prefix = awst::makeUtf8BytesConstant(
+					var->name(), loc, awst::WType::boxKeyType());
 
 				std::vector<std::shared_ptr<awst::Expression>> keyParts;
 				for (size_t i = 0; i < getter.args.size(); ++i)
@@ -1493,12 +1484,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				auto* wtype = m_typeMapper.map(var->type());
 
 				// Build key
-				auto key = std::make_shared<awst::BytesConstant>();
-				key->sourceLocation = method.sourceLocation;
-				key->wtype = awst::WType::bytesType();
-				key->encoding = awst::BytesEncoding::Utf8;
-				std::string keyStr = var->name();
-				key->value = std::vector<uint8_t>(keyStr.begin(), keyStr.end());
+				auto key = awst::makeUtf8BytesConstant(var->name(), method.sourceLocation);
 
 				// Build initial value: use explicit initializer if present,
 				// otherwise default to zero/empty.
@@ -1567,13 +1553,12 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					if (auto const* bw = dynamic_cast<awst::BytesWType const*>(wtype))
 						if (bw->length().has_value() && *bw->length() > 0)
 							bytesLen = static_cast<int>(*bw->length());
-					auto val = std::make_shared<awst::BytesConstant>();
-					val->sourceLocation = method.sourceLocation;
-					val->wtype = wtype && wtype->kind() == awst::WTypeKind::Bytes
-						? wtype : awst::WType::bytesType();
-					val->encoding = awst::BytesEncoding::Base16;
-					val->value = std::vector<uint8_t>(static_cast<size_t>(bytesLen), 0);
-					defaultVal = val;
+					defaultVal = awst::makeBytesConstant(
+						std::vector<uint8_t>(static_cast<size_t>(bytesLen), 0),
+						method.sourceLocation,
+						awst::BytesEncoding::Base16,
+						wtype && wtype->kind() == awst::WTypeKind::Bytes
+							? wtype : awst::WType::bytesType());
 				}
 				} // end if (!defaultVal)
 
@@ -1918,12 +1903,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			// All init code deferred to __postInit (state var defaults + constructor body).
 			// Create call only sets the pending flag.
 			// Set __ctor_pending = 1 in create block.
-			auto pendingKey = std::make_shared<awst::BytesConstant>();
-			pendingKey->sourceLocation = method.sourceLocation;
-			pendingKey->wtype = awst::WType::bytesType();
-			pendingKey->encoding = awst::BytesEncoding::Utf8;
-			std::string pendingKeyStr = "__ctor_pending";
-			pendingKey->value = std::vector<uint8_t>(pendingKeyStr.begin(), pendingKeyStr.end());
+			auto pendingKey = awst::makeUtf8BytesConstant("__ctor_pending", method.sourceLocation);
 
 			auto one = std::make_shared<awst::IntegerConstant>();
 			one->sourceLocation = method.sourceLocation;
@@ -2008,12 +1988,8 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			readPending->sourceLocation = method.sourceLocation;
 			readPending->opCode = "app_global_get";
 			readPending->wtype = awst::WType::uint64Type();
-			auto readKey = std::make_shared<awst::BytesConstant>();
-			readKey->sourceLocation = method.sourceLocation;
-			readKey->wtype = awst::WType::bytesType();
-			readKey->encoding = awst::BytesEncoding::Utf8;
-			readKey->value = std::vector<uint8_t>(pendingKeyStr.begin(), pendingKeyStr.end());
-			readPending->stackArgs.push_back(readKey);
+			readPending->stackArgs.push_back(
+				awst::makeUtf8BytesConstant("__ctor_pending", method.sourceLocation));
 
 			auto assertStmt = std::make_shared<awst::ExpressionStatement>();
 			assertStmt->sourceLocation = method.sourceLocation;
@@ -2022,11 +1998,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			postInitBody->body.push_back(std::move(assertStmt));
 
 			// Clear flag: __ctor_pending = 0
-			auto clearKey = std::make_shared<awst::BytesConstant>();
-			clearKey->sourceLocation = method.sourceLocation;
-			clearKey->wtype = awst::WType::bytesType();
-			clearKey->encoding = awst::BytesEncoding::Utf8;
-			clearKey->value = std::vector<uint8_t>(pendingKeyStr.begin(), pendingKeyStr.end());
+			auto clearKey = awst::makeUtf8BytesConstant("__ctor_pending", method.sourceLocation);
 
 			auto zeroVal = std::make_shared<awst::IntegerConstant>();
 			zeroVal->sourceLocation = method.sourceLocation;
@@ -2048,11 +2020,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			// Create boxes for dynamic array state variables
 			for (auto const& varName: m_boxArrayVarNames)
 			{
-				auto boxKey = std::make_shared<awst::BytesConstant>();
-				boxKey->sourceLocation = method.sourceLocation;
-				boxKey->wtype = awst::WType::bytesType();
-				boxKey->encoding = awst::BytesEncoding::Utf8;
-				boxKey->value = std::vector<uint8_t>(varName.begin(), varName.end());
+				auto boxKey = awst::makeUtf8BytesConstant(varName, method.sourceLocation);
 
 				// Uninitialised dynamic `bytes` state vars: skip the
 				// box_create so the reader's `box_get → select` fallback
@@ -2168,11 +2136,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				// Write initial value for bytes vars with initializers
 				if (boxInitVal)
 				{
-					auto putKey = std::make_shared<awst::BytesConstant>();
-					putKey->sourceLocation = method.sourceLocation;
-					putKey->wtype = awst::WType::bytesType();
-					putKey->encoding = awst::BytesEncoding::Utf8;
-					putKey->value = std::vector<uint8_t>(varName.begin(), varName.end());
+					auto putKey = awst::makeUtf8BytesConstant(varName, method.sourceLocation);
 					auto put = std::make_shared<awst::IntrinsicCall>();
 					put->sourceLocation = method.sourceLocation;
 					put->opCode = "box_put";
@@ -2511,11 +2475,10 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		fmpOffset->value = "64"; // 0x40
 
 		// 32-byte big-endian 0x80 = 0x00...0080
-		auto fmpBytes = std::make_shared<awst::BytesConstant>();
-		fmpBytes->sourceLocation = method.sourceLocation;
-		fmpBytes->wtype = awst::WType::bytesType();
-		fmpBytes->value = std::vector<uint8_t>(31, 0);
-		fmpBytes->value.push_back(0x80);
+		std::vector<uint8_t> fmpBytesVal(31, 0);
+		fmpBytesVal.push_back(0x80);
+		auto fmpBytes = awst::makeBytesConstant(
+			std::move(fmpBytesVal), method.sourceLocation, awst::BytesEncoding::Unknown);
 
 		auto replaceOp = std::make_shared<awst::IntrinsicCall>();
 		replaceOp->sourceLocation = method.sourceLocation;
@@ -2652,12 +2615,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				if (_isBareCall)
 				{
 					// No calldata in bare calls — pass empty bytes
-					auto emptyBytes = std::make_shared<awst::BytesConstant>();
-					emptyBytes->sourceLocation = method.sourceLocation;
-					emptyBytes->wtype = awst::WType::bytesType();
-					emptyBytes->encoding = awst::BytesEncoding::Base16;
-					emptyBytes->value = {};
-					argExpr = std::move(emptyBytes);
+					argExpr = awst::makeBytesConstant({}, method.sourceLocation);
 				}
 				else
 				{
@@ -4863,12 +4821,7 @@ void ContractBuilder::buildStorageDispatch(
 	};
 
 	auto makeBytes = [&](std::string const& s) {
-		auto c = std::make_shared<awst::BytesConstant>();
-		c->sourceLocation = loc;
-		c->wtype = awst::WType::bytesType();
-		c->encoding = awst::BytesEncoding::Utf8;
-		c->value = std::vector<uint8_t>(s.begin(), s.end());
-		return c;
+		return awst::makeUtf8BytesConstant(s, loc);
 	};
 
 	// ── __storage_read(slot: uint64) -> biguint ──

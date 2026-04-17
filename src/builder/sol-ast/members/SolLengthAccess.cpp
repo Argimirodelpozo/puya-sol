@@ -69,12 +69,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 				auto* arc4ElemType = m_ctx.typeMapper.mapToARC4Type(rawElemType);
 				unsigned elemSize = builder::StorageMapper::computeEncodedElementSize(arc4ElemType);
 
-				std::string varName = ident->name();
-				auto boxKey = std::make_shared<awst::BytesConstant>();
-				boxKey->sourceLocation = m_loc;
-				boxKey->wtype = awst::WType::bytesType();
-				boxKey->encoding = awst::BytesEncoding::Utf8;
-				boxKey->value = std::vector<uint8_t>(varName.begin(), varName.end());
+				auto boxKey = awst::makeUtf8BytesConstant(ident->name(), m_loc);
 
 				auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
 					std::vector<awst::WType const*>{

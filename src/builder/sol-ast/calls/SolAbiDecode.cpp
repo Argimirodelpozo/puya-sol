@@ -11,11 +11,7 @@ std::shared_ptr<awst::Expression> SolAbiDecode::toAwst()
 		return result->resolve();
 
 	// Fallback: return empty bytes
-	auto empty = std::make_shared<awst::BytesConstant>();
-	empty->sourceLocation = m_loc;
-	empty->wtype = awst::WType::bytesType();
-	empty->encoding = awst::BytesEncoding::Base16;
-	return empty;
+	return awst::makeBytesConstant({}, m_loc);
 }
 
 } // namespace puyasol::builder::sol_ast

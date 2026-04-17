@@ -95,26 +95,16 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						assignTmp->value = std::move(extract);
 						m_ctx.pendingStatements.push_back(std::move(assignTmp));
 
-						auto delKey = std::make_shared<awst::BytesConstant>();
-						delKey->sourceLocation = loc;
-						delKey->wtype = awst::WType::bytesType();
-						delKey->encoding = awst::BytesEncoding::Utf8;
-						delKey->value = std::vector<uint8_t>(varName.begin(), varName.end());
 						auto del = std::make_shared<awst::IntrinsicCall>();
 						del->sourceLocation = loc;
 						del->wtype = awst::WType::boolType();
 						del->opCode = "box_del";
-						del->stackArgs.push_back(std::move(delKey));
+						del->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
 						auto delStmt = std::make_shared<awst::ExpressionStatement>();
 						delStmt->sourceLocation = loc;
 						delStmt->expr = std::move(del);
 						m_ctx.pendingStatements.push_back(std::move(delStmt));
 
-						auto putKey = std::make_shared<awst::BytesConstant>();
-						putKey->sourceLocation = loc;
-						putKey->wtype = awst::WType::bytesType();
-						putKey->encoding = awst::BytesEncoding::Utf8;
-						putKey->value = std::vector<uint8_t>(varName.begin(), varName.end());
 						auto tmpRead = std::make_shared<awst::VarExpression>();
 						tmpRead->sourceLocation = loc;
 						tmpRead->name = tmpName;
@@ -123,7 +113,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						put->sourceLocation = loc;
 						put->wtype = awst::WType::voidType();
 						put->opCode = "box_put";
-						put->stackArgs.push_back(std::move(putKey));
+						put->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
 						put->stackArgs.push_back(std::move(tmpRead));
 						auto putStmt = std::make_shared<awst::ExpressionStatement>();
 						putStmt->sourceLocation = loc;
@@ -132,16 +122,11 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					}
 					else
 					{
-						auto key = std::make_shared<awst::BytesConstant>();
-						key->sourceLocation = loc;
-						key->wtype = awst::WType::bytesType();
-						key->encoding = awst::BytesEncoding::Utf8;
-						key->value = std::vector<uint8_t>(varName.begin(), varName.end());
 						auto put = std::make_shared<awst::IntrinsicCall>();
 						put->sourceLocation = loc;
 						put->wtype = awst::WType::voidType();
 						put->opCode = "app_global_put";
-						put->stackArgs.push_back(std::move(key));
+						put->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
 						put->stackArgs.push_back(std::move(extract));
 						auto stmt = std::make_shared<awst::ExpressionStatement>();
 						stmt->sourceLocation = loc;
@@ -184,12 +169,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					}
 					else
 					{
-						auto zero = std::make_shared<awst::BytesConstant>();
-						zero->sourceLocation = loc;
-						zero->wtype = awst::WType::bytesType();
-						zero->encoding = awst::BytesEncoding::Base16;
-						zero->value = {0};
-						pushVal = std::move(zero);
+						pushVal = awst::makeBytesConstant({0}, loc);
 					}
 
 					// concat(current, pushVal)
@@ -218,26 +198,16 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						assignTmp->value = std::move(cat);
 						m_ctx.pendingStatements.push_back(std::move(assignTmp));
 
-						auto delKey = std::make_shared<awst::BytesConstant>();
-						delKey->sourceLocation = loc;
-						delKey->wtype = awst::WType::bytesType();
-						delKey->encoding = awst::BytesEncoding::Utf8;
-						delKey->value = std::vector<uint8_t>(varName.begin(), varName.end());
 						auto del = std::make_shared<awst::IntrinsicCall>();
 						del->sourceLocation = loc;
 						del->wtype = awst::WType::boolType();
 						del->opCode = "box_del";
-						del->stackArgs.push_back(std::move(delKey));
+						del->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
 						auto delStmt = std::make_shared<awst::ExpressionStatement>();
 						delStmt->sourceLocation = loc;
 						delStmt->expr = std::move(del);
 						m_ctx.pendingStatements.push_back(std::move(delStmt));
 
-						auto putKey = std::make_shared<awst::BytesConstant>();
-						putKey->sourceLocation = loc;
-						putKey->wtype = awst::WType::bytesType();
-						putKey->encoding = awst::BytesEncoding::Utf8;
-						putKey->value = std::vector<uint8_t>(varName.begin(), varName.end());
 						auto tmpRead = std::make_shared<awst::VarExpression>();
 						tmpRead->sourceLocation = loc;
 						tmpRead->name = tmpName;
@@ -246,7 +216,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						put->sourceLocation = loc;
 						put->wtype = awst::WType::voidType();
 						put->opCode = "box_put";
-						put->stackArgs.push_back(std::move(putKey));
+						put->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
 						put->stackArgs.push_back(std::move(tmpRead));
 						auto putStmt = std::make_shared<awst::ExpressionStatement>();
 						putStmt->sourceLocation = loc;
@@ -255,16 +225,11 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					}
 					else
 					{
-						auto key = std::make_shared<awst::BytesConstant>();
-						key->sourceLocation = loc;
-						key->wtype = awst::WType::bytesType();
-						key->encoding = awst::BytesEncoding::Utf8;
-						key->value = std::vector<uint8_t>(varName.begin(), varName.end());
 						auto put = std::make_shared<awst::IntrinsicCall>();
 						put->sourceLocation = loc;
 						put->wtype = awst::WType::voidType();
 						put->opCode = "app_global_put";
-						put->stackArgs.push_back(std::move(key));
+						put->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
 						put->stackArgs.push_back(std::move(cat));
 						auto stmt = std::make_shared<awst::ExpressionStatement>();
 						stmt->sourceLocation = loc;
@@ -466,11 +431,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 	std::string arrayVarName = ident->name();
 
 	// Build BoxValueExpression
-	auto boxKey = std::make_shared<awst::BytesConstant>();
-	boxKey->sourceLocation = m_loc;
-	boxKey->wtype = awst::WType::boxKeyType();
-	boxKey->encoding = awst::BytesEncoding::Utf8;
-	boxKey->value = std::vector<uint8_t>(arrayVarName.begin(), arrayVarName.end());
+	auto boxKey = awst::makeUtf8BytesConstant(arrayVarName, m_loc, awst::WType::boxKeyType());
 
 	auto boxExpr = std::make_shared<awst::BoxValueExpression>();
 	boxExpr->sourceLocation = m_loc;

@@ -131,11 +131,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 	if (fields.empty())
 	{
 		// Zero-argument event: raw log with 4-byte ARC-28 selector
-		auto sigBytes = std::make_shared<awst::BytesConstant>();
-		sigBytes->sourceLocation = m_loc;
-		sigBytes->wtype = awst::WType::bytesType();
-		sigBytes->encoding = awst::BytesEncoding::Utf8;
-		sigBytes->value = std::vector<uint8_t>(eventSignature.begin(), eventSignature.end());
+		auto sigBytes = awst::makeUtf8BytesConstant(eventSignature, m_loc);
 
 		auto hash = std::make_shared<awst::IntrinsicCall>();
 		hash->sourceLocation = m_loc;

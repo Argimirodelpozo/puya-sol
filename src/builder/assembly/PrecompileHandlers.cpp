@@ -341,10 +341,7 @@ void AssemblyBuilder::handleSha256Precompile(
 	if (!inputData)
 	{
 		// Empty input: sha256 of empty bytes
-		inputData = std::make_shared<awst::BytesConstant>();
-		auto* bc = static_cast<awst::BytesConstant*>(inputData.get());
-		bc->sourceLocation = _loc;
-		bc->wtype = awst::WType::bytesType();
+		inputData = awst::makeBytesConstant({}, _loc, awst::BytesEncoding::Unknown);
 	}
 
 	// If inputSize is a multiple of 32, also truncate to exact size

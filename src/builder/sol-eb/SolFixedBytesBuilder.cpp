@@ -82,13 +82,9 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::compare(
 			if (bc->value.size() >= targetLen) return;
 			auto* newType = m_ctx.typeMapper.createType<awst::BytesWType>(
 				static_cast<int>(targetLen));
-			auto out = std::make_shared<awst::BytesConstant>();
-			out->sourceLocation = bc->sourceLocation;
-			out->wtype = newType;
-			out->encoding = bc->encoding;
-			out->value = bc->value;
-			out->value.resize(targetLen, 0);
-			expr = std::move(out);
+			auto val = bc->value;
+			val.resize(targetLen, 0);
+			expr = awst::makeBytesConstant(std::move(val), bc->sourceLocation, bc->encoding, newType);
 		};
 		auto bytesLen = [](awst::Expression const& e) -> size_t {
 			if (auto const* bw = dynamic_cast<awst::BytesWType const*>(e.wtype))
@@ -158,11 +154,9 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::bool_eval(
 	awst::SourceLocation const& _loc, bool _negate)
 {
 	// bytes != zero_bytes (or == if negated)
-	auto zero = std::make_shared<awst::BytesConstant>();
-	zero->sourceLocation = _loc;
-	zero->wtype = m_expr->wtype; // same bytes[N] type
-	zero->value = std::vector<unsigned char>(m_numBytes, 0);
-	zero->encoding = awst::BytesEncoding::Base16;
+	auto zero = awst::makeBytesConstant(
+		std::vector<uint8_t>(m_numBytes, 0), _loc, awst::BytesEncoding::Base16,
+		m_expr->wtype); // same bytes[N] type
 
 	auto e = std::make_shared<awst::BytesComparisonExpression>();
 	e->sourceLocation = _loc;

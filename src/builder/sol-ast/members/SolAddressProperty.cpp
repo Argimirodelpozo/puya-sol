@@ -30,12 +30,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 				auto const* lit = dynamic_cast<solidity::frontend::Literal const*>(fc->arguments()[0].get());
 				if (lit && lit->token() == solidity::frontend::Token::Number)
 				{
-					auto empty = std::make_shared<awst::BytesConstant>();
-					empty->sourceLocation = m_loc;
-					empty->wtype = awst::WType::bytesType();
-					empty->encoding = awst::BytesEncoding::Base16;
-					empty->value = {};
-					return empty;
+					return awst::makeBytesConstant({}, m_loc);
 				}
 			}
 		}
@@ -205,24 +200,17 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 				if (lit && lit->token() == solidity::frontend::Token::Number)
 				{
 					auto litVal = lit->annotation().type->literalValue(lit);
-					auto zeroHash = std::make_shared<awst::BytesConstant>();
-					zeroHash->sourceLocation = m_loc;
-					zeroHash->wtype = m_ctx.typeMapper.createType<awst::BytesWType>(32);
-					zeroHash->encoding = awst::BytesEncoding::Base16;
+					auto* w = m_ctx.typeMapper.createType<awst::BytesWType>(32);
 					if (litVal == 0)
-					{
-						zeroHash->value = std::vector<uint8_t>(32, 0);
-					}
-					else
-					{
+						return awst::makeBytesConstant(std::vector<uint8_t>(32, 0), m_loc, awst::BytesEncoding::Base16, w);
+					return awst::makeBytesConstant(
 						// keccak256 of empty bytes
-						zeroHash->value = std::vector<uint8_t>{
+						std::vector<uint8_t>{
 							0xc5, 0xd2, 0x46, 0x01, 0x86, 0xf7, 0x23, 0x3c,
 							0x92, 0x7e, 0x7d, 0xb2, 0xdc, 0xc7, 0x03, 0xc0,
 							0xe5, 0x00, 0xb6, 0x53, 0xca, 0x82, 0x27, 0x3b,
-							0x7b, 0xfa, 0xd8, 0x04, 0x5d, 0x85, 0xa4, 0x70};
-					}
-					return zeroHash;
+							0x7b, 0xfa, 0xd8, 0x04, 0x5d, 0x85, 0xa4, 0x70},
+						m_loc, awst::BytesEncoding::Base16, w);
 				}
 			}
 		}
@@ -281,21 +269,13 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 		Logger::instance().warning(
 			"address(other).codehash returns bytes32(0) on AVM — no way to "
 			"dereference an arbitrary address to its application code.", m_loc);
-		auto zero = std::make_shared<awst::BytesConstant>();
-		zero->sourceLocation = m_loc;
-		zero->wtype = m_ctx.typeMapper.createType<awst::BytesWType>(32);
-		zero->encoding = awst::BytesEncoding::Base16;
-		zero->value = std::vector<uint8_t>(32, 0);
-		return zero;
+		return awst::makeBytesConstant(
+			std::vector<uint8_t>(32, 0), m_loc, awst::BytesEncoding::Base16,
+			m_ctx.typeMapper.createType<awst::BytesWType>(32));
 	}
 
 	Logger::instance().warning("address property '." + member + "' has no Algorand equivalent", m_loc);
-	auto e = std::make_shared<awst::BytesConstant>();
-	e->sourceLocation = m_loc;
-	e->wtype = awst::WType::bytesType();
-	e->encoding = awst::BytesEncoding::Base16;
-	e->value = {};
-	return e;
+	return awst::makeBytesConstant({}, m_loc);
 }
 
 } // namespace puyasol::builder::sol_ast

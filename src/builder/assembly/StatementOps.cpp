@@ -251,13 +251,11 @@ void AssemblyBuilder::buildStatement(
 							// 32-byte big-endian BytesConstant matching ARC4 uint256 encoding
 							auto const& val = yulCase.value->value.value();
 							auto be = solidity::toBigEndian(val);
-							auto caseVal = std::make_shared<awst::BytesConstant>();
-							caseVal->sourceLocation = makeLoc(yulCase.value->debugData);
-							caseVal->wtype = awst::WType::bytesType();
-							caseVal->encoding = awst::BytesEncoding::Base16;
-							caseVal->value.assign(be.begin(), be.end());
 							switchNode->cases.emplace_back(
-								std::move(caseVal), std::move(caseBlock));
+								awst::makeBytesConstant(
+									std::vector<uint8_t>(be.begin(), be.end()),
+									makeLoc(yulCase.value->debugData)),
+								std::move(caseBlock));
 						}
 						else if (useBoolMatch
 							&& yulCase.value->kind == solidity::yul::LiteralKind::Number)

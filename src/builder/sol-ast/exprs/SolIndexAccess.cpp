@@ -32,11 +32,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	if (auto const* ident = dynamic_cast<Identifier const*>(&m_indexAccess.baseExpression()))
 		arrayVarName = ident->name();
 
-	auto boxKey = std::make_shared<awst::BytesConstant>();
-	boxKey->sourceLocation = m_loc;
-	boxKey->wtype = awst::WType::boxKeyType();
-	boxKey->encoding = awst::BytesEncoding::Utf8;
-	boxKey->value = std::vector<uint8_t>(arrayVarName.begin(), arrayVarName.end());
+	auto boxKey = awst::makeUtf8BytesConstant(arrayVarName, m_loc, awst::WType::boxKeyType());
 
 	auto boxExpr = std::make_shared<awst::BoxValueExpression>();
 	boxExpr->sourceLocation = m_loc;
@@ -218,12 +214,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 	}
 	else
 	{
-		auto bc = std::make_shared<awst::BytesConstant>();
-		bc->sourceLocation = m_loc;
-		bc->wtype = awst::WType::boxKeyType();
-		bc->encoding = awst::BytesEncoding::Utf8;
-		bc->value = std::vector<uint8_t>(varName.begin(), varName.end());
-		prefix = std::move(bc);
+		prefix = awst::makeUtf8BytesConstant(varName, m_loc, awst::WType::boxKeyType());
 	}
 
 	if (!indexExprs.empty())

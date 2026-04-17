@@ -119,12 +119,7 @@ std::shared_ptr<awst::Expression> SolMetaTypeAccess::toAwst()
 		else
 			typeName = typeArg->toString(true);
 
-		auto strConst = std::make_shared<awst::BytesConstant>();
-		strConst->sourceLocation = m_loc;
-		strConst->wtype = awst::WType::stringType();
-		strConst->encoding = awst::BytesEncoding::Utf8;
-		strConst->value = std::vector<uint8_t>(typeName.begin(), typeName.end());
-		return strConst;
+		return awst::makeUtf8BytesConstant(typeName, m_loc, awst::WType::stringType());
 	}
 
 	// type(C).creationCode / type(C).runtimeCode: EVM concept of contract
@@ -140,12 +135,7 @@ std::shared_ptr<awst::Expression> SolMetaTypeAccess::toAwst()
 			"type(C)." + member + " has no AVM analog — stubbed as 32 zero bytes;"
 			" code that depends on the actual bytecode will misbehave",
 			m_loc);
-		auto bc = std::make_shared<awst::BytesConstant>();
-		bc->sourceLocation = m_loc;
-		bc->wtype = awst::WType::bytesType();
-		bc->encoding = awst::BytesEncoding::Base16;
-		bc->value = std::vector<uint8_t>(32, 0);
-		return bc;
+		return awst::makeBytesConstant(std::vector<uint8_t>(32, 0), m_loc);
 	}
 
 	// type(Interface).interfaceId → bytes4 ERC165 ID
@@ -155,16 +145,13 @@ std::shared_ptr<awst::Expression> SolMetaTypeAccess::toAwst()
 		if (auto const* contractType = dynamic_cast<ContractType const*>(typeArg))
 			interfaceIdValue = contractType->contractDefinition().interfaceId();
 
-		auto e = std::make_shared<awst::BytesConstant>();
-		e->sourceLocation = m_loc;
-		e->wtype = m_ctx.typeMapper.map(m_memberAccess.annotation().type);
-		e->encoding = awst::BytesEncoding::Base16;
-		e->value = {
-			static_cast<uint8_t>((interfaceIdValue >> 24) & 0xFF),
-			static_cast<uint8_t>((interfaceIdValue >> 16) & 0xFF),
-			static_cast<uint8_t>((interfaceIdValue >> 8) & 0xFF),
-			static_cast<uint8_t>(interfaceIdValue & 0xFF)
-		};
+		auto e = awst::makeBytesConstant(
+			{static_cast<uint8_t>((interfaceIdValue >> 24) & 0xFF),
+			 static_cast<uint8_t>((interfaceIdValue >> 16) & 0xFF),
+			 static_cast<uint8_t>((interfaceIdValue >> 8) & 0xFF),
+			 static_cast<uint8_t>(interfaceIdValue & 0xFF)},
+			m_loc, awst::BytesEncoding::Base16,
+			m_ctx.typeMapper.map(m_memberAccess.annotation().type));
 		return e;
 	}
 

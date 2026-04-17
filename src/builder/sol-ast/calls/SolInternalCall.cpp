@@ -104,12 +104,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			name = ma->memberName();
 		if (name.empty())
 			name = "map"; // fallback
-		auto bc = std::make_shared<awst::BytesConstant>();
-		bc->sourceLocation = m_loc;
-		bc->wtype = awst::WType::bytesType();
-		bc->encoding = awst::BytesEncoding::Utf8;
-		bc->value = std::vector<uint8_t>(name.begin(), name.end());
-		return bc;
+		return awst::makeUtf8BytesConstant(name, m_loc);
 	};
 
 	// For using-for calls, prepend receiver as first arg

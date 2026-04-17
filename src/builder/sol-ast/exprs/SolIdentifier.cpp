@@ -98,12 +98,8 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 					for (size_t i = 0; i < bignum.size() && i < bytes.size(); ++i)
 						bytes[bytes.size() - 1 - i] = bignum[i];
 
-					auto bc = std::make_shared<awst::BytesConstant>();
-					bc->sourceLocation = val->sourceLocation;
-					bc->wtype = targetType;
-					bc->encoding = awst::BytesEncoding::Base16;
-					bc->value = std::move(bytes);
-					return bc;
+					return awst::makeBytesConstant(
+						std::move(bytes), val->sourceLocation, awst::BytesEncoding::Base16, targetType);
 				}
 			}
 			// String → bytes[N] right-pad

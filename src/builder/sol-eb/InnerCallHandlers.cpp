@@ -53,12 +53,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::makeBoolBytesTuple(
 std::shared_ptr<awst::Expression> InnerCallHandlers::makeBoolBytesTupleEmpty(
 	awst::SourceLocation const& _loc)
 {
-	auto emptyBytes = std::make_shared<awst::BytesConstant>();
-	emptyBytes->sourceLocation = _loc;
-	emptyBytes->wtype = awst::WType::bytesType();
-	emptyBytes->encoding = awst::BytesEncoding::Base16;
-	emptyBytes->value = {};
-	return makeBoolBytesTuple(true, std::move(emptyBytes), _loc);
+	return makeBoolBytesTuple(true, awst::makeBytesConstant({}, _loc), _loc);
 }
 
 std::shared_ptr<awst::IntrinsicCall> InnerCallHandlers::makeExtract(
@@ -229,17 +224,11 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 
 	if (wtype == awst::WType::boolType())
 	{
-		auto zeroByte = std::make_shared<awst::BytesConstant>();
-		zeroByte->sourceLocation = _loc;
-		zeroByte->wtype = awst::WType::bytesType();
-		zeroByte->encoding = awst::BytesEncoding::Base16;
-		zeroByte->value = {0x00};
-
 		auto setbit = std::make_shared<awst::IntrinsicCall>();
 		setbit->sourceLocation = _loc;
 		setbit->wtype = awst::WType::bytesType();
 		setbit->opCode = "setbit";
-		setbit->stackArgs.push_back(std::move(zeroByte));
+		setbit->stackArgs.push_back(awst::makeBytesConstant({0x00}, _loc));
 		setbit->stackArgs.push_back(makeUint64("0", _loc));
 		setbit->stackArgs.push_back(std::move(_arg));
 		return setbit;
@@ -490,12 +479,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 			stmt->sourceLocation = _loc;
 			stmt->expr = call;
 			_ctx.prePendingStatements.push_back(std::move(stmt));
-			auto empty = std::make_shared<awst::BytesConstant>();
-			empty->sourceLocation = _loc;
-			empty->wtype = awst::WType::bytesType();
-			empty->encoding = awst::BytesEncoding::Base16;
-			empty->value = {};
-			dataBytes = std::move(empty);
+			dataBytes = awst::makeBytesConstant({}, _loc);
 		}
 		else
 		{
@@ -534,12 +518,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 				stmt->sourceLocation = _loc;
 				stmt->expr = call;
 				_ctx.prePendingStatements.push_back(std::move(stmt));
-				auto empty = std::make_shared<awst::BytesConstant>();
-				empty->sourceLocation = _loc;
-				empty->wtype = awst::WType::bytesType();
-				empty->encoding = awst::BytesEncoding::Base16;
-				empty->value = {};
-				dataBytes = std::move(empty);
+				dataBytes = awst::makeBytesConstant({}, _loc);
 			}
 		}
 

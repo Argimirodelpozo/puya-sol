@@ -429,10 +429,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 	{
 		// keccak256("") = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
 		// Hash empty bytes
-		auto emptyBytes = std::make_shared<awst::BytesConstant>();
-		emptyBytes->sourceLocation = _loc;
-		emptyBytes->wtype = awst::WType::bytesType();
-		// empty value
+		auto emptyBytes = awst::makeBytesConstant({}, _loc, awst::BytesEncoding::Unknown);
 
 		auto keccak = std::make_shared<awst::IntrinsicCall>();
 		keccak->sourceLocation = _loc;

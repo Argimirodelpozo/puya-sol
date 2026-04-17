@@ -12,14 +12,7 @@ std::shared_ptr<awst::Expression> SolBytesConcat::toAwst()
 	auto const& args = m_call.arguments();
 
 	if (args.empty())
-	{
-		auto e = std::make_shared<awst::BytesConstant>();
-		e->sourceLocation = m_loc;
-		e->wtype = awst::WType::bytesType();
-		e->encoding = awst::BytesEncoding::Base16;
-		e->value = {};
-		return e;
-	}
+		return awst::makeBytesConstant({}, m_loc);
 
 	auto toBytes = [this](std::shared_ptr<awst::Expression> expr) -> std::shared_ptr<awst::Expression> {
 		if (expr->wtype == awst::WType::bytesType()

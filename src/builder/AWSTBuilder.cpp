@@ -506,22 +506,13 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 						}
 						else if (rpType && rpType->kind() == awst::WTypeKind::Bytes)
 						{
-							auto def = std::make_shared<awst::BytesConstant>();
-							def->sourceLocation = loc;
-							def->wtype = rpType;
-							def->encoding = awst::BytesEncoding::Base16;
 							// For fixed-size bytes types (bytes1..bytes32), produce N zero bytes
+							std::vector<uint8_t> bytes;
 							auto const* bytesType = dynamic_cast<awst::BytesWType const*>(rpType);
 							if (bytesType && bytesType->length().has_value())
-							{
-								int len = bytesType->length().value();
-								def->value = std::vector<unsigned char>(len, 0);
-							}
-							else
-							{
-								def->value = {};
-							}
-							zeroVal = std::move(def);
+								bytes.assign(bytesType->length().value(), 0);
+							zeroVal = awst::makeBytesConstant(
+								std::move(bytes), loc, awst::BytesEncoding::Base16, rpType);
 						}
 						else
 						{

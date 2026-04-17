@@ -595,12 +595,7 @@ awst::ContractMethod ConstantExternalizer::buildLoadConstantsMethod(
 	// Build box key as BytesConstant
 	auto makeBoxKey = [&]() -> std::shared_ptr<awst::BytesConstant>
 	{
-		auto key = std::make_shared<awst::BytesConstant>();
-		key->sourceLocation = _loc;
-		key->wtype = awst::WType::bytesType();
-		key->encoding = awst::BytesEncoding::Utf8;
-		key->value = std::vector<uint8_t>(_boxName.begin(), _boxName.end());
-		return key;
+		return awst::makeUtf8BytesConstant(_boxName, _loc);
 	};
 
 	// For each externalized constant:

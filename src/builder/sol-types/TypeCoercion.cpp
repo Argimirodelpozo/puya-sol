@@ -122,13 +122,10 @@ std::shared_ptr<awst::Expression> TypeCoercion::implicitNumericCast(
 			{
 				if (static_cast<int>(bc->value.size()) <= n)
 				{
-					auto out = std::make_shared<awst::BytesConstant>();
-					out->sourceLocation = _loc;
-					out->wtype = _targetType;
-					out->encoding = awst::BytesEncoding::Base16;
-					out->value = bc->value;
-					out->value.resize(static_cast<size_t>(n), 0);
-					return out;
+					auto val = bc->value;
+					val.resize(static_cast<size_t>(n), 0);
+					return awst::makeBytesConstant(
+						std::move(val), _loc, awst::BytesEncoding::Base16, _targetType);
 				}
 			}
 		}
@@ -238,13 +235,10 @@ std::shared_ptr<awst::BytesConstant> TypeCoercion::stringToBytesN(
 	if (!sc || _n <= 0)
 		return nullptr;
 
-	auto padded = std::make_shared<awst::BytesConstant>();
-	padded->sourceLocation = _loc;
-	padded->wtype = _targetType;
-	padded->encoding = awst::BytesEncoding::Base16;
-	padded->value.assign(sc->value.begin(), sc->value.end());
-	padded->value.resize(_n, 0); // right-pad with zeroes
-	return padded;
+	std::vector<uint8_t> val(sc->value.begin(), sc->value.end());
+	val.resize(_n, 0); // right-pad with zeroes
+	return awst::makeBytesConstant(
+		std::move(val), _loc, awst::BytesEncoding::Base16, _targetType);
 }
 
 std::shared_ptr<awst::ReinterpretCast> TypeCoercion::reinterpretCast(
@@ -269,12 +263,8 @@ std::shared_ptr<awst::Expression> TypeCoercion::stringToBytes(
 	if (!sc)
 		return _expr;
 
-	auto bc = std::make_shared<awst::BytesConstant>();
-	bc->sourceLocation = _loc;
-	bc->wtype = awst::WType::bytesType();
-	bc->encoding = awst::BytesEncoding::Base16;
-	bc->value.assign(sc->value.begin(), sc->value.end());
-	return bc;
+	return awst::makeBytesConstant(
+		std::vector<uint8_t>(sc->value.begin(), sc->value.end()), _loc);
 }
 
 // ── ARC4 / ABI ───────────────────────────────────────────────────
@@ -344,14 +334,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 )
 {
 	if (!_type)
-	{
-		auto val = std::make_shared<awst::BytesConstant>();
-		val->sourceLocation = _loc;
-		val->wtype = awst::WType::bytesType();
-		val->encoding = awst::BytesEncoding::Base16;
-		val->value = {};
-		return val;
-	}
+		return awst::makeBytesConstant({}, _loc);
 
 	// Bool → BoolConstant
 	if (_type == awst::WType::boolType())
@@ -381,12 +364,8 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 		auto const* arc4UInt = static_cast<awst::ARC4UIntN const*>(_type);
 		// ARC4 zero: N/8 zero bytes as BytesConstant with ARC4UIntN type
 		int numBytes = arc4UInt->n() / 8;
-		auto val = std::make_shared<awst::BytesConstant>();
-		val->sourceLocation = _loc;
-		val->wtype = _type;
-		val->encoding = awst::BytesEncoding::Base16;
-		val->value = std::vector<unsigned char>(numBytes, 0);
-		return val;
+		return awst::makeBytesConstant(
+			std::vector<uint8_t>(numBytes, 0), _loc, awst::BytesEncoding::Base16, _type);
 	}
 
 	// Tuple → TupleExpression with component defaults (recursive)
@@ -437,36 +416,22 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 		if (encodedSize > kLargeBytesRuntimeThreshold)
 			return makeZeroBytesRuntime(encodedSize, _type, _loc);
 
-		auto val = std::make_shared<awst::BytesConstant>();
-		val->sourceLocation = _loc;
-		val->wtype = _type;
-		val->encoding = awst::BytesEncoding::Base16;
+		std::vector<uint8_t> val;
 		if (encodedSize > 0)
-			val->value = std::vector<uint8_t>(static_cast<size_t>(encodedSize), 0);
-		else
-			val->value = {};
-		return val;
+			val.resize(static_cast<size_t>(encodedSize), 0);
+		return awst::makeBytesConstant(
+			std::move(val), _loc, awst::BytesEncoding::Base16, _type);
 	}
 
 	// ARC4DynamicArray → empty with 2-byte length header (0x0000)
 	if (_type->kind() == awst::WTypeKind::ARC4DynamicArray)
-	{
-		auto val = std::make_shared<awst::BytesConstant>();
-		val->sourceLocation = _loc;
-		val->wtype = _type;
-		val->encoding = awst::BytesEncoding::Base16;
-		val->value = {0x00, 0x00};
-		return val;
-	}
+		return awst::makeBytesConstant(
+			{0x00, 0x00}, _loc, awst::BytesEncoding::Base16, _type);
 
 	// Everything else (bytes, string, account, ARC4 types, etc.)
-	auto val = std::make_shared<awst::BytesConstant>();
-	val->sourceLocation = _loc;
-	val->wtype = _type;
-	val->encoding = awst::BytesEncoding::Base16;
-
+	std::vector<uint8_t> val;
 	if (_type == awst::WType::accountType())
-		val->value = std::vector<uint8_t>(32, 0);
+		val.assign(32, 0);
 	else if (auto const* bytesType = dynamic_cast<awst::BytesWType const*>(_type))
 	{
 		if (bytesType->length().has_value())
@@ -474,15 +439,11 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 			int n = static_cast<int>(*bytesType->length());
 			if (n > kLargeBytesRuntimeThreshold)
 				return makeZeroBytesRuntime(n, _type, _loc);
-			val->value = std::vector<uint8_t>(static_cast<size_t>(n), 0);
+			val.assign(static_cast<size_t>(n), 0);
 		}
-		else
-			val->value = {};
 	}
-	else
-		val->value = {};
-
-	return val;
+	return awst::makeBytesConstant(
+		std::move(val), _loc, awst::BytesEncoding::Base16, _type);
 }
 
 std::shared_ptr<awst::Expression> TypeCoercion::makeZeroBytesRuntime(
@@ -676,14 +637,10 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 				}
 
 				int N = static_cast<int>(statArr->arraySize());
-				auto header = std::make_shared<awst::BytesConstant>();
-				header->sourceLocation = _loc;
-				header->wtype = awst::WType::bytesType();
-				header->encoding = awst::BytesEncoding::Base16;
-				header->value = {
-					static_cast<uint8_t>((N >> 8) & 0xFF),
-					static_cast<uint8_t>(N & 0xFF)
-				};
+				auto header = awst::makeBytesConstant(
+					{static_cast<uint8_t>((N >> 8) & 0xFF),
+					 static_cast<uint8_t>(N & 0xFF)},
+					_loc);
 
 				auto withHeader = std::make_shared<awst::IntrinsicCall>();
 				withHeader->sourceLocation = _loc;
@@ -830,12 +787,8 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 				for (size_t i = 0; i < bignum.size() && i < bytes.size(); ++i)
 					bytes[bytes.size() - 1 - i] = bignum[i];
 
-				auto bc = std::make_shared<awst::BytesConstant>();
-				bc->sourceLocation = _loc;
-				bc->wtype = _targetType;
-				bc->encoding = awst::BytesEncoding::Base16;
-				bc->value = std::move(bytes);
-				return bc;
+				return awst::makeBytesConstant(
+					std::move(bytes), _loc, awst::BytesEncoding::Base16, _targetType);
 			}
 
 			// String → bytes[N] (right-padded)

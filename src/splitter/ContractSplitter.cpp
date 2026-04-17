@@ -803,12 +803,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 	// Auth state: orchestrator app_id, prev chunk app_id, prev method selector
 	{
 		auto makeKey = [&](std::string const& k) {
-			auto key = std::make_shared<awst::BytesConstant>();
-			key->sourceLocation = loc;
-			key->wtype = awst::WType::bytesType();
-			key->encoding = awst::BytesEncoding::Utf8;
-			key->value = std::vector<unsigned char>(k.begin(), k.end());
-			return key;
+			return awst::makeUtf8BytesConstant(k, loc);
 		};
 		// "o" = orchestrator_app_id (uint64)
 		awst::AppStorageDefinition oDef;
@@ -1291,12 +1286,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 			return ic;
 		};
 		auto makeBytesKey = [&](std::string const& k) {
-			auto key = std::make_shared<awst::BytesConstant>();
-			key->sourceLocation = loc;
-			key->wtype = awst::WType::bytesType();
-			key->encoding = awst::BytesEncoding::Utf8;
-			key->value = std::vector<unsigned char>(k.begin(), k.end());
-			return key;
+			return awst::makeUtf8BytesConstant(k, loc);
 		};
 		auto makeVar = [&](std::string name, awst::WType const* type) {
 			auto v = std::make_shared<awst::VarExpression>();
@@ -1413,12 +1403,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 	// Add global state for the active-call flag "f"
 	{
 		auto makeKey = [&](std::string const& k) {
-			auto key = std::make_shared<awst::BytesConstant>();
-			key->sourceLocation = loc;
-			key->wtype = awst::WType::bytesType();
-			key->encoding = awst::BytesEncoding::Utf8;
-			key->value = std::vector<unsigned char>(k.begin(), k.end());
-			return key;
+			return awst::makeUtf8BytesConstant(k, loc);
 		};
 		awst::AppStorageDefinition fDef;
 		fDef.sourceLocation = loc;
@@ -1445,20 +1430,10 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 		return ic;
 	};
 	auto makeBytesKey = [&](std::string const& k) {
-		auto key = std::make_shared<awst::BytesConstant>();
-		key->sourceLocation = loc;
-		key->wtype = awst::WType::bytesType();
-		key->encoding = awst::BytesEncoding::Utf8;
-		key->value = std::vector<unsigned char>(k.begin(), k.end());
-		return key;
+		return awst::makeUtf8BytesConstant(k, loc);
 	};
 	auto makeBytesHex = [&](std::vector<unsigned char> const& v) {
-		auto val = std::make_shared<awst::BytesConstant>();
-		val->sourceLocation = loc;
-		val->wtype = awst::WType::bytesType();
-		val->encoding = awst::BytesEncoding::Base16;
-		val->value = v;
-		return val;
+		return awst::makeBytesConstant(v, loc);
 	};
 	auto makeUint64 = [&](std::string const& v) {
 		auto val = std::make_shared<awst::IntegerConstant>();
@@ -1818,12 +1793,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 	if (hasDelegated)
 	{
 		auto makeKey = [&](std::string const& k) {
-			auto key = std::make_shared<awst::BytesConstant>();
-			key->sourceLocation = loc;
-			key->wtype = awst::WType::bytesType();
-			key->encoding = awst::BytesEncoding::Utf8;
-			key->value = std::vector<unsigned char>(k.begin(), k.end());
-			return key;
+			return awst::makeUtf8BytesConstant(k, loc);
 		};
 		awst::AppStorageDefinition fDef;
 		fDef.sourceLocation = loc;
@@ -1850,20 +1820,10 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 		return ic;
 	};
 	auto makeBytesKey = [&](std::string const& k) {
-		auto key = std::make_shared<awst::BytesConstant>();
-		key->sourceLocation = loc;
-		key->wtype = awst::WType::bytesType();
-		key->encoding = awst::BytesEncoding::Utf8;
-		key->value = std::vector<unsigned char>(k.begin(), k.end());
-		return key;
+		return awst::makeUtf8BytesConstant(k, loc);
 	};
 	auto makeBytesHex = [&](std::vector<unsigned char> const& v) {
-		auto val = std::make_shared<awst::BytesConstant>();
-		val->sourceLocation = loc;
-		val->wtype = awst::WType::bytesType();
-		val->encoding = awst::BytesEncoding::Base16;
-		val->value = v;
-		return val;
+		return awst::makeBytesConstant(v, loc);
 	};
 	auto makeUint64 = [&](std::string const& v) {
 		auto val = std::make_shared<awst::IntegerConstant>();
@@ -2234,17 +2194,12 @@ static std::shared_ptr<awst::Expression> buildDefaultExpression(
 	}
 	if (_type == awst::WType::bytesType() || _type->kind() == awst::WTypeKind::Bytes)
 	{
-		auto val = std::make_shared<awst::BytesConstant>();
-		val->wtype = _type;
-		val->sourceLocation = _loc;
-		val->encoding = awst::BytesEncoding::Base16;
+		std::vector<uint8_t> bytes;
 		// For fixed-size bytes types (bytes[N]), fill with N zero bytes
 		if (auto const* bytesType = dynamic_cast<awst::BytesWType const*>(_type))
-		{
 			if (bytesType->length().has_value())
-				val->value.resize(*bytesType->length(), 0);
-		}
-		return val;
+				bytes.resize(*bytesType->length(), 0);
+		return awst::makeBytesConstant(std::move(bytes), _loc, awst::BytesEncoding::Base16, _type);
 	}
 	if (_type == awst::WType::stringType())
 	{
@@ -2317,11 +2272,7 @@ static std::shared_ptr<awst::Expression> buildDefaultExpression(
 		_type->kind() == awst::WTypeKind::ARC4StaticArray)
 	{
 		// Return empty bytes for ARC4 array types
-		auto val = std::make_shared<awst::BytesConstant>();
-		val->wtype = awst::WType::bytesType();
-		val->sourceLocation = _loc;
-		val->encoding = awst::BytesEncoding::Base16;
-		return val;
+		return awst::makeBytesConstant({}, _loc);
 	}
 	// Fallback: return 0 as biguint (most general numeric type)
 	auto val = std::make_shared<awst::IntegerConstant>();
@@ -2375,12 +2326,7 @@ std::vector<std::shared_ptr<awst::Statement>> ContractSplitter::buildValidationB
 		return ic;
 	};
 	auto makeBytesKey = [&](std::string const& k) {
-		auto key = std::make_shared<awst::BytesConstant>();
-		key->sourceLocation = _loc;
-		key->wtype = awst::WType::bytesType();
-		key->encoding = awst::BytesEncoding::Utf8;
-		key->value = std::vector<unsigned char>(k.begin(), k.end());
-		return key;
+		return awst::makeUtf8BytesConstant(k, _loc);
 	};
 	auto makeUint64 = [&](std::string const& v) {
 		auto val = std::make_shared<awst::IntegerConstant>();

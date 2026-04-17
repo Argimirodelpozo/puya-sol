@@ -1146,12 +1146,7 @@ std::shared_ptr<awst::Expression> FunctionInliner::deepCopyExpr(
 	if (type == "BytesConstant")
 	{
 		auto& src = static_cast<awst::BytesConstant const&>(*_expr);
-		auto n = std::make_shared<awst::BytesConstant>();
-		n->sourceLocation = src.sourceLocation;
-		n->wtype = src.wtype;
-		n->value = src.value;
-		n->encoding = src.encoding;
-		return n;
+		return awst::makeBytesConstant(src.value, src.sourceLocation, src.encoding, src.wtype);
 	}
 	if (type == "StringConstant")
 	{

@@ -210,11 +210,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 	else if (_argExpr->wtype == awst::WType::boolType())
 	{
 		// bool → ARC4 bool = setbit(0x00, 0, boolValue)
-		auto zeroByte = std::make_shared<awst::BytesConstant>();
-		zeroByte->sourceLocation = m_loc;
-		zeroByte->wtype = awst::WType::bytesType();
-		zeroByte->encoding = awst::BytesEncoding::Base16;
-		zeroByte->value = {0x00};
+		auto zeroByte = awst::makeBytesConstant({0x00}, m_loc);
 
 		auto setbit = std::make_shared<awst::IntrinsicCall>();
 		setbit->sourceLocation = m_loc;

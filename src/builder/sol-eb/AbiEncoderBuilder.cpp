@@ -71,14 +71,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::concatByteExprs(
 	std::vector<std::shared_ptr<awst::Expression>> _parts, awst::SourceLocation const& _loc)
 {
 	if (_parts.empty())
-	{
-		auto e = std::make_shared<awst::BytesConstant>();
-		e->sourceLocation = _loc;
-		e->wtype = awst::WType::bytesType();
-		e->encoding = awst::BytesEncoding::Base16;
-		e->value = {};
-		return e;
-	}
+		return awst::makeBytesConstant({}, _loc);
 	auto result = std::move(_parts[0]);
 	for (size_t i = 1; i < _parts.size(); ++i)
 	{
@@ -241,17 +234,11 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgAsARC4Bytes(
 	if (wtype == awst::WType::boolType())
 	{
 		// Solidity ABI: bool is 32-byte right-aligned (0x00...00 or 0x00...01)
-		auto zeroByte = std::make_shared<awst::BytesConstant>();
-		zeroByte->sourceLocation = _loc;
-		zeroByte->wtype = awst::WType::bytesType();
-		zeroByte->encoding = awst::BytesEncoding::Base16;
-		zeroByte->value = {0x00};
-
 		auto setbit = std::make_shared<awst::IntrinsicCall>();
 		setbit->sourceLocation = _loc;
 		setbit->wtype = awst::WType::bytesType();
 		setbit->opCode = "setbit";
-		setbit->stackArgs.push_back(std::move(zeroByte));
+		setbit->stackArgs.push_back(awst::makeBytesConstant({0x00}, _loc));
 		setbit->stackArgs.push_back(makeUint64("0", _loc));
 		setbit->stackArgs.push_back(std::move(_argExpr));
 		return leftPadBytes(std::move(setbit), 32, _loc);
@@ -376,14 +363,8 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 	auto const& args = _callNode.arguments();
 
 	if (args.empty())
-	{
-		auto e = std::make_shared<awst::BytesConstant>();
-		e->sourceLocation = _loc;
-		e->wtype = awst::WType::bytesType();
-		e->encoding = awst::BytesEncoding::Base16;
-		e->value = {};
-		return std::make_unique<GenericAbiResult>(_ctx, std::move(e));
-	}
+		return std::make_unique<GenericAbiResult>(
+			_ctx, awst::makeBytesConstant({}, _loc));
 
 	// Pack each argument, expanding arrays element-by-element for encodePacked
 	auto packArg = [&](size_t argIdx) -> std::shared_ptr<awst::Expression> {
@@ -1328,14 +1309,8 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncode(
 	auto const& args = _callNode.arguments();
 
 	if (args.empty())
-	{
-		auto e = std::make_shared<awst::BytesConstant>();
-		e->sourceLocation = _loc;
-		e->wtype = awst::WType::bytesType();
-		e->encoding = awst::BytesEncoding::Base16;
-		e->value = {};
-		return std::make_unique<GenericAbiResult>(_ctx, std::move(e));
-	}
+		return std::make_unique<GenericAbiResult>(
+			_ctx, awst::makeBytesConstant({}, _loc));
 
 	// Check if any argument is dynamically encoded.
 	// StringLiteralType is static per Solidity's type system, but its

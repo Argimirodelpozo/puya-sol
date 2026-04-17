@@ -115,12 +115,7 @@ std::shared_ptr<awst::Expression> buildExpression(
 		{
 			return awst::makeBoolConstant(false, loc, wtype);
 		}
-		auto e = std::make_shared<awst::BytesConstant>();
-		e->sourceLocation = loc;
-		e->wtype = awst::WType::bytesType();
-		e->encoding = awst::BytesEncoding::Base16;
-		e->value = {};
-		return e;
+		return awst::makeBytesConstant({}, loc);
 	}
 
 	// Conditional

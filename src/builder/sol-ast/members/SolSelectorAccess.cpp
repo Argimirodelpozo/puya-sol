@@ -15,11 +15,7 @@ using namespace solidity::frontend;
 
 std::shared_ptr<awst::Expression> SolSelectorAccess::makeSelectorExpr(std::string const& _sig)
 {
-	auto sigConst = std::make_shared<awst::BytesConstant>();
-	sigConst->sourceLocation = m_loc;
-	sigConst->wtype = awst::WType::bytesType();
-	sigConst->encoding = awst::BytesEncoding::Utf8;
-	sigConst->value = std::vector<uint8_t>(_sig.begin(), _sig.end());
+	auto sigConst = awst::makeUtf8BytesConstant(_sig, m_loc);
 
 	auto keccak = std::make_shared<awst::IntrinsicCall>();
 	keccak->sourceLocation = m_loc;
@@ -251,12 +247,7 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 	keccak->sourceLocation = m_loc;
 	keccak->wtype = awst::WType::bytesType();
 	keccak->opCode = "keccak256";
-	auto sigBytes = std::make_shared<awst::BytesConstant>();
-	sigBytes->sourceLocation = m_loc;
-	sigBytes->wtype = awst::WType::bytesType();
-	sigBytes->encoding = awst::BytesEncoding::Utf8;
-	sigBytes->value = std::vector<uint8_t>(sig.begin(), sig.end());
-	keccak->stackArgs.push_back(std::move(sigBytes));
+	keccak->stackArgs.push_back(awst::makeUtf8BytesConstant(sig, m_loc));
 
 	auto* targetType = m_ctx.typeMapper.map(m_memberAccess.annotation().type);
 	auto const* bytesWType = dynamic_cast<awst::BytesWType const*>(targetType);

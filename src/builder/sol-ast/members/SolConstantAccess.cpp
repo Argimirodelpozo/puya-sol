@@ -47,13 +47,7 @@ std::shared_ptr<awst::Expression> SolConstantAccess::toAwst()
 	auto const* baseType = baseExpression().annotation().type;
 	if (baseType && baseType->category() == Type::Category::Contract)
 	{
-		std::string member = memberName();
-		auto e = std::make_shared<awst::BytesConstant>();
-		e->sourceLocation = m_loc;
-		e->wtype = awst::WType::bytesType();
-		e->encoding = awst::BytesEncoding::Utf8;
-		e->value = std::vector<uint8_t>(member.begin(), member.end());
-		return e;
+		return awst::makeUtf8BytesConstant(memberName(), m_loc);
 	}
 
 	return nullptr;

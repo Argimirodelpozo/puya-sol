@@ -218,6 +218,37 @@ struct BytesConstant: Expression
 	BytesEncoding encoding = BytesEncoding::Unknown;
 };
 
+// Construct a BytesConstant. wtype defaults to the canonical bytesType()
+// singleton and encoding defaults to Base16 (hex literal / raw bytes).
+// Pass the utf8 encoding + a boxKeyType()/stateKeyType() wtype when the
+// value is a human-readable name used as a box/state-global key.
+inline std::shared_ptr<BytesConstant> makeBytesConstant(
+	std::vector<uint8_t> value,
+	SourceLocation loc,
+	BytesEncoding encoding = BytesEncoding::Base16,
+	WType const* wtype = WType::bytesType())
+{
+	auto node = std::make_shared<BytesConstant>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->encoding = encoding;
+	node->value = std::move(value);
+	return node;
+}
+
+// Utf8 variant for names-as-byte-keys (state/box keys, selector sigs, etc).
+inline std::shared_ptr<BytesConstant> makeUtf8BytesConstant(
+	std::string const& str,
+	SourceLocation loc,
+	WType const* wtype = WType::bytesType())
+{
+	return makeBytesConstant(
+		std::vector<uint8_t>(str.begin(), str.end()),
+		std::move(loc),
+		BytesEncoding::Utf8,
+		wtype);
+}
+
 struct StringConstant: Expression
 {
 	std::string nodeType() const override { return "StringConstant"; }

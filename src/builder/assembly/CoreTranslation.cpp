@@ -65,13 +65,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildLiteral(
 			auto const& hint = _lit.value.hint();
 			if (hint && !hint->empty())
 			{
-				auto node = std::make_shared<awst::BytesConstant>();
-				node->sourceLocation = loc;
-				node->wtype = awst::WType::bytesType();
 				// Pad to 32 bytes (right-padded with zeros, matching EVM left-aligned semantics)
 				std::vector<unsigned char> padded(hint->begin(), hint->end());
 				padded.resize(32, 0);
-				node->value = std::move(padded);
+				auto node = awst::makeBytesConstant(
+					std::move(padded), loc, awst::BytesEncoding::Unknown);
 
 				// Cast to biguint for use in assembly context
 				auto cast = std::make_shared<awst::ReinterpretCast>();
@@ -97,10 +95,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildLiteral(
 		{
 			// Unlimited string literal (e.g., verbatim arguments) — emit as raw bytes
 			auto const& strVal = _lit.value.builtinStringLiteralValue();
-			auto node = std::make_shared<awst::BytesConstant>();
-			node->sourceLocation = loc;
-			node->wtype = awst::WType::bytesType();
-			node->value = std::vector<unsigned char>(strVal.begin(), strVal.end());
+			auto node = awst::makeBytesConstant(
+				std::vector<uint8_t>(strVal.begin(), strVal.end()),
+				loc, awst::BytesEncoding::Unknown);
 
 			auto cast = std::make_shared<awst::ReinterpretCast>();
 			cast->sourceLocation = loc;
@@ -471,15 +468,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		zero->value = "0";
 
 		// keccak256 of empty bytes (EVM constant)
-		auto emptyHash = std::make_shared<awst::BytesConstant>();
-		emptyHash->sourceLocation = loc;
-		emptyHash->wtype = awst::WType::bytesType();
-		emptyHash->encoding = awst::BytesEncoding::Base16;
-		emptyHash->value = std::vector<uint8_t>{
-			0xc5, 0xd2, 0x46, 0x01, 0x86, 0xf7, 0x23, 0x3c,
-			0x92, 0x7e, 0x7d, 0xb2, 0xdc, 0xc7, 0x03, 0xc0,
-			0xe5, 0x00, 0xb6, 0x53, 0xca, 0x82, 0x27, 0x3b,
-			0x7b, 0xfa, 0xd8, 0x04, 0x5d, 0x85, 0xa4, 0x70};
+		auto emptyHash = awst::makeBytesConstant(
+			std::vector<uint8_t>{
+				0xc5, 0xd2, 0x46, 0x01, 0x86, 0xf7, 0x23, 0x3c,
+				0x92, 0x7e, 0x7d, 0xb2, 0xdc, 0xc7, 0x03, 0xc0,
+				0xe5, 0x00, 0xb6, 0x53, 0xca, 0x82, 0x27, 0x3b,
+				0x7b, 0xfa, 0xd8, 0x04, 0x5d, 0x85, 0xa4, 0x70},
+			loc);
 		auto emptyHashBigUint = std::make_shared<awst::ReinterpretCast>();
 		emptyHashBigUint->sourceLocation = loc;
 		emptyHashBigUint->wtype = awst::WType::biguintType();
@@ -630,11 +625,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		// AVM has no PREVRANDAO; return sha256 of a constant as non-zero placeholder.
 		Logger::instance().warning(
 			"prevrandao()/difficulty() has no AVM equivalent, returning deterministic stub", loc);
-		auto hashInput = std::make_shared<awst::BytesConstant>();
-		hashInput->sourceLocation = loc;
-		hashInput->wtype = awst::WType::bytesType();
-		hashInput->encoding = awst::BytesEncoding::Utf8;
-		hashInput->value = std::vector<uint8_t>{'p','r','e','v','r','a','n','d','a','o'};
+		auto hashInput = awst::makeUtf8BytesConstant("prevrandao", loc);
 		auto hash = std::make_shared<awst::IntrinsicCall>();
 		hash->sourceLocation = loc;
 		hash->wtype = awst::WType::bytesType();

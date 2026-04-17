@@ -83,13 +83,9 @@ std::shared_ptr<awst::Expression> SolLiteral::toAwst()
 	}
 	case Token::HexStringLiteral:
 	{
-		auto e = std::make_shared<awst::BytesConstant>();
-		e->sourceLocation = m_loc;
-		e->wtype = awst::WType::bytesType();
 		auto const& raw = m_literal.value();
-		e->value.assign(raw.begin(), raw.end());
-		e->encoding = awst::BytesEncoding::Base16;
-		return e;
+		return awst::makeBytesConstant(
+			std::vector<uint8_t>(raw.begin(), raw.end()), m_loc);
 	}
 	default:
 	{

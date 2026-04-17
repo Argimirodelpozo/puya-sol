@@ -2217,23 +2217,17 @@ std::shared_ptr<awst::Expression> FunctionSplitter::buildDefault(
 	}
 	if (_type == awst::WType::bytesType() || _type->kind() == awst::WTypeKind::Bytes)
 	{
-		auto val = std::make_shared<awst::BytesConstant>();
-		val->wtype = _type;
-		val->sourceLocation = _loc;
-		val->encoding = awst::BytesEncoding::Base16;
+		std::vector<uint8_t> bytes;
 		if (auto const* bytesType = dynamic_cast<awst::BytesWType const*>(_type))
 			if (bytesType->length().has_value())
-				val->value.resize(*bytesType->length(), 0);
-		return val;
+				bytes.resize(*bytesType->length(), 0);
+		return awst::makeBytesConstant(std::move(bytes), _loc, awst::BytesEncoding::Base16, _type);
 	}
 	if (_type == awst::WType::accountType())
 	{
-		auto val = std::make_shared<awst::BytesConstant>();
-		val->wtype = awst::WType::accountType();
-		val->sourceLocation = _loc;
-		val->encoding = awst::BytesEncoding::Base16;
-		val->value.resize(32, 0);
-		return val;
+		return awst::makeBytesConstant(
+			std::vector<uint8_t>(32, 0), _loc, awst::BytesEncoding::Base16,
+			awst::WType::accountType());
 	}
 	if (_type->kind() == awst::WTypeKind::ARC4Struct)
 	{
@@ -2261,12 +2255,8 @@ std::shared_ptr<awst::Expression> FunctionSplitter::buildDefault(
 			size_t totalSize = 0;
 			for (auto const& [fname, ftype]: structType->fields())
 				totalSize += arc4Size(ftype);
-			auto val = std::make_shared<awst::BytesConstant>();
-			val->wtype = _type;
-			val->sourceLocation = _loc;
-			val->encoding = awst::BytesEncoding::Base16;
-			val->value.resize(totalSize, 0);
-			return val;
+			return awst::makeBytesConstant(
+				std::vector<uint8_t>(totalSize, 0), _loc, awst::BytesEncoding::Base16, _type);
 		}
 	}
 	if (_type->kind() == awst::WTypeKind::ARC4Tuple ||

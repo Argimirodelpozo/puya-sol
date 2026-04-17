@@ -28,14 +28,11 @@ std::shared_ptr<awst::BytesConstant> StorageMapper::makeKeyExpr(
 	awst::AppStorageKind _kind
 )
 {
-	auto key = std::make_shared<awst::BytesConstant>();
-	key->sourceLocation = _loc;
-	key->wtype = (_kind == awst::AppStorageKind::Box)
-		? awst::WType::boxKeyType()
-		: awst::WType::stateKeyType();
-	key->encoding = awst::BytesEncoding::Utf8;
-	key->value = std::vector<uint8_t>(_name.begin(), _name.end());
-	return key;
+	return awst::makeUtf8BytesConstant(
+		_name, _loc,
+		_kind == awst::AppStorageKind::Box
+			? awst::WType::boxKeyType()
+			: awst::WType::stateKeyType());
 }
 
 std::shared_ptr<awst::Expression> StorageMapper::makeDefaultValue(

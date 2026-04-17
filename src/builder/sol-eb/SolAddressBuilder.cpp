@@ -57,11 +57,9 @@ std::unique_ptr<InstanceBuilder> SolAddressBuilder::bool_eval(
 	awst::SourceLocation const& _loc, bool _negate)
 {
 	// address is truthy if != zero_address (32 zero bytes)
-	auto zero = std::make_shared<awst::BytesConstant>();
-	zero->sourceLocation = _loc;
-	zero->wtype = awst::WType::accountType();
-	zero->value = std::vector<unsigned char>(32, 0);
-	zero->encoding = awst::BytesEncoding::Base16;
+	auto zero = awst::makeBytesConstant(
+		std::vector<uint8_t>(32, 0), _loc, awst::BytesEncoding::Base16,
+		awst::WType::accountType());
 
 	auto e = std::make_shared<awst::BytesComparisonExpression>();
 	e->sourceLocation = _loc;

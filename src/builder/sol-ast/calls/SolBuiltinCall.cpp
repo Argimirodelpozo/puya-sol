@@ -80,11 +80,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		seed->immediates = {std::string("BlkSeed")};
 		seed->stackArgs.push_back(std::move(prevRound));
 
-		auto zeros = std::make_shared<awst::BytesConstant>();
-		zeros->sourceLocation = m_loc;
-		zeros->wtype = awst::WType::bytesType();
-		zeros->encoding = awst::BytesEncoding::Base16;
-		zeros->value = std::vector<uint8_t>(32, 0);
+		auto zeros = awst::makeBytesConstant(std::vector<uint8_t>(32, 0), m_loc);
 
 		auto cond = std::make_shared<awst::ConditionalExpression>();
 		cond->sourceLocation = m_loc;
@@ -109,12 +105,9 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		Logger::instance().warning(
 			"ripemd160() has no AVM equivalent — returning bytes20(0); "
 			"cryptographic uses will misbehave.", m_loc);
-		auto bc = std::make_shared<awst::BytesConstant>();
-		bc->sourceLocation = m_loc;
-		bc->wtype = m_ctx.typeMapper.createType<awst::BytesWType>(20);
-		bc->encoding = awst::BytesEncoding::Base16;
-		bc->value = std::vector<uint8_t>(20, 0);
-		return bc;
+		return awst::makeBytesConstant(
+			std::vector<uint8_t>(20, 0), m_loc, awst::BytesEncoding::Base16,
+			m_ctx.typeMapper.createType<awst::BytesWType>(20));
 	}
 
 	// erc7201 — ERC-7201 namespace slot.
@@ -228,11 +221,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		top31->stackArgs.push_back(std::move(top31Len));
 
 		// Concat with 0x00 to zero the last byte.
-		auto zeroByte = std::make_shared<awst::BytesConstant>();
-		zeroByte->sourceLocation = m_loc;
-		zeroByte->wtype = awst::WType::bytesType();
-		zeroByte->encoding = awst::BytesEncoding::Base16;
-		zeroByte->value = std::vector<uint8_t>{0};
+		auto zeroByte = awst::makeBytesConstant({0}, m_loc);
 
 		auto masked = std::make_shared<awst::IntrinsicCall>();
 		masked->sourceLocation = m_loc;
