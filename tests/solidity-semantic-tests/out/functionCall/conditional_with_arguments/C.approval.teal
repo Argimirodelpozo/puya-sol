@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/conditional_with_arguments.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x8000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x8000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 ""
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -31,54 +31,64 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/conditional_with_arguments.sol.C.g[routing]() -> void:
 g:
+    bytec_3 // ""
     txna ApplicationArgs 1
-    dupn 2
+    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    cover 2
-    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    swap
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    dig 1
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     dup
-    uncover 2
+    bury 4
+    dig 1
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     ==
-    bnz g_bool_true@3
-    dig 2
+    bnz g_bool_true@6
+    dig 1
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    dig 2
+    dig 1
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
-    dig 1
+    dig 3
     ==
-    bz g_bool_false@4
+    bz g_bool_false@7
 
-g_bool_true@3:
+g_bool_true@6:
     intc_1 // 1
 
-g_bool_merge@5:
+g_bool_merge@8:
     assert // signed arithmetic overflow
-    dig 2
+    dig 1
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    dig 2
+    dig 1
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -97,9 +107,13 @@ g_bool_merge@5:
     intc_1 // 1
     return
 
-g_bool_false@4:
+g_bool_false@7:
     intc_2 // 0
-    b g_bool_merge@5
+    b g_bool_merge@8
+
+g_ternary_false@3:
+    intc_2 // 0
+    b g_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/conditional_with_arguments.sol.C.h[routing]() -> void:
@@ -127,6 +141,16 @@ h:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/conditional_with_arguments.sol.C.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
     pushbytess 0x0000000000000000000000000000000000000000000000000000000000000002 0x0000000000000000000000000000000000000000000000000000000000000001
@@ -144,21 +168,37 @@ f:
     intc_1 // 1
     return
 
+f_ternary_false@3:
+    intc_2 // 0
+    b f_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/conditional_with_arguments.sol.C.h(__arc4_y: bytes, __arc4_x: bytes) -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/conditional_with_arguments.sol.C.h:
     proto 2 1
+    bytec_3 // ""
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/conditional_with_arguments.sol.C.h_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/conditional_with_arguments.sol.C.h_ternary_merge@3:
+    !
+    assert // not payable
     frame_dig -2
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     dup
+    frame_bury 0
     frame_dig -1
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     ==
-    bnz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/conditional_with_arguments.sol.C.h_bool_true@2
+    bnz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/conditional_with_arguments.sol.C.h_bool_true@5
     frame_dig -2
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
@@ -171,12 +211,12 @@ f:
     !
     frame_dig 0
     ==
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/conditional_with_arguments.sol.C.h_bool_false@3
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/conditional_with_arguments.sol.C.h_bool_false@6
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/conditional_with_arguments.sol.C.h_bool_true@2:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/conditional_with_arguments.sol.C.h_bool_true@5:
     intc_1 // 1
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/conditional_with_arguments.sol.C.h_bool_merge@4:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/conditional_with_arguments.sol.C.h_bool_merge@7:
     assert // signed arithmetic overflow
     frame_dig -2
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -196,6 +236,10 @@ f:
     swap
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/conditional_with_arguments.sol.C.h_bool_false@3:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/conditional_with_arguments.sol.C.h_bool_false@6:
     intc_2 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/conditional_with_arguments.sol.C.h_bool_merge@4
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/conditional_with_arguments.sol.C.h_bool_merge@7
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/conditional_with_arguments.sol.C.h_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/conditional_with_arguments.sol.C.h_ternary_merge@3

@@ -37,6 +37,16 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/keccak256_packed_complex_types.sol.C.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 0
     assert // overflow
     intc_0 // 15
@@ -98,3 +108,7 @@ f:
     log
     intc_1 // 1
     return
+
+f_ternary_false@3:
+    intc_2 // 0
+    b f_ternary_merge@4

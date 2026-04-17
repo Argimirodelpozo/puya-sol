@@ -202,6 +202,61 @@ void ContractBuilder::setPlaceholderBody(std::shared_ptr<awst::Block> _body)
 	m_stmtCtx.placeholderBody = std::move(_body);
 }
 
+void ContractBuilder::prependNonPayableCheck(awst::ContractMethod& _method)
+{
+	// Only externally-callable methods get the check; others aren't reached
+	// via ARC4 dispatch so a preceding Payment is irrelevant.
+	if (!_method.arc4MethodConfig.has_value())
+		return;
+	if (!_method.body)
+		return;
+
+	auto loc = _method.sourceLocation;
+
+	auto groupIdx = std::make_shared<awst::IntrinsicCall>();
+	groupIdx->sourceLocation = loc;
+	groupIdx->wtype = awst::WType::uint64Type();
+	groupIdx->opCode = "txn";
+	groupIdx->immediates = {std::string("GroupIndex")};
+
+	auto hasPayment = awst::makeNumericCompare(
+		groupIdx, awst::NumericComparison::Gt,
+		awst::makeIntegerConstant("0", loc), loc);
+
+	auto groupIdx2 = std::make_shared<awst::IntrinsicCall>();
+	groupIdx2->sourceLocation = loc;
+	groupIdx2->wtype = awst::WType::uint64Type();
+	groupIdx2->opCode = "txn";
+	groupIdx2->immediates = {std::string("GroupIndex")};
+	auto payIdx = awst::makeUInt64BinOp(
+		std::move(groupIdx2), awst::UInt64BinaryOperator::Sub,
+		awst::makeIntegerConstant("1", loc), loc);
+
+	auto amount = std::make_shared<awst::IntrinsicCall>();
+	amount->sourceLocation = loc;
+	amount->wtype = awst::WType::uint64Type();
+	amount->opCode = "gtxns";
+	amount->immediates = {std::string("Amount")};
+	amount->stackArgs.push_back(std::move(payIdx));
+
+	// Match msg.value's ConditionalExpression shape — avoids evaluating
+	// GroupIndex - 1 when GroupIndex == 0 (underflow-safe).
+	auto msgValue = std::make_shared<awst::ConditionalExpression>();
+	msgValue->sourceLocation = loc;
+	msgValue->wtype = awst::WType::uint64Type();
+	msgValue->condition = std::move(hasPayment);
+	msgValue->trueExpr = std::move(amount);
+	msgValue->falseExpr = awst::makeIntegerConstant("0", loc);
+
+	auto isZero = awst::makeNumericCompare(
+		std::move(msgValue), awst::NumericComparison::Eq,
+		awst::makeIntegerConstant("0", loc), loc);
+
+	auto assertStmt = awst::makeExpressionStatement(
+		awst::makeAssert(std::move(isZero), loc, "not payable"), loc);
+	_method.body->body.insert(_method.body->body.begin(), std::move(assertStmt));
+}
+
 std::shared_ptr<awst::Contract> ContractBuilder::build(
 	solidity::frontend::ContractDefinition const& _contract
 )
@@ -1119,6 +1174,10 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 						std::make_move_iterator(decodeStmts.end())
 					);
 			}
+
+			// Non-payable check for public state-variable getters
+			// (auto-generated getters are always view, never payable).
+			prependNonPayableCheck(getter);
 
 			contract->methods.push_back(std::move(getter));
 		}
@@ -3705,6 +3764,17 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			method.body->body.insert(method.body->body.begin(), std::move(stmt));
 		}
 
+		// Non-payable check: for public/external functions not marked `payable`,
+		// assert that no preceding PaymentTxn in the group carries a non-zero
+		// amount to this contract. Mirrors Solidity's `callvalue` check that
+		// reverts non-payable calls receiving ether.
+		//
+		// Skipped for internal/private (not externally callable) and for the
+		// receive() function (implicitly payable).
+		bool isPayable =
+			_func.stateMutability() == solidity::frontend::StateMutability::Payable;
+		if (!isPayable && !_func.isReceive())
+			prependNonPayableCheck(method);
 	}
 	else
 	{

@@ -80,6 +80,14 @@ private:
 
 	/// Set/clear placeholder body for modifier inlining.
 	void setPlaceholderBody(std::shared_ptr<awst::Block> _body);
+
+	/// Emit Solidity's non-payable check at method body entry:
+	///   assert((GroupIndex > 0 ? gtxns(GroupIndex-1).Amount : 0) == 0,
+	///          "not payable")
+	/// No-op unless the method has an ARC4 config (i.e. is externally
+	/// callable). Called for both public state-variable getters and
+	/// public/external contract methods whose stateMutability is not Payable.
+	void prependNonPayableCheck(awst::ContractMethod& _method);
 	OverloadedNamesSet m_overloadedNames;
 
 	/// Box-stored dynamic array variable names that need box_create in __postInit

@@ -1,13 +1,13 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_hzw7ytmn/s3.sol.D.approval_program() -> uint64:
+// /tmp/multisource_w09zrvpn/s3.sol.D.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 1 32 0
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -29,52 +29,80 @@ main_after_if_else@2:
     err
 
 
-// /tmp/multisource_hzw7ytmn/s3.sol.f_57() -> bytes:
+// /tmp/multisource_w09zrvpn/s3.sol.f_57() -> bytes:
 f:
     pushint 1337
     itob
     retsub
 
 
-// /tmp/multisource_hzw7ytmn/s3.sol.D.h[routing]() -> void:
+// /tmp/multisource_w09zrvpn/s3.sol.D.h[routing]() -> void:
 h:
-    callsub /tmp/multisource_hzw7ytmn/s3.sol.D.g
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
+    callsub /tmp/multisource_w09zrvpn/s3.sol.D.g
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
+h_ternary_false@3:
+    intc_2 // 0
+    b h_ternary_merge@4
 
-// /tmp/multisource_hzw7ytmn/s3.sol.D.g[routing]() -> void:
+
+// /tmp/multisource_w09zrvpn/s3.sol.D.g[routing]() -> void:
 g:
-    callsub /tmp/multisource_hzw7ytmn/s3.sol.D.g
+    callsub /tmp/multisource_w09zrvpn/s3.sol.D.g
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
-// /tmp/multisource_hzw7ytmn/s3.sol.D.g() -> bytes:
-/tmp/multisource_hzw7ytmn/s3.sol.D.g:
+// /tmp/multisource_w09zrvpn/s3.sol.D.g() -> bytes:
+/tmp/multisource_w09zrvpn/s3.sol.D.g:
+    txn GroupIndex
+    bz /tmp/multisource_w09zrvpn/s3.sol.D.g_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/tmp/multisource_w09zrvpn/s3.sol.D.g_ternary_merge@3:
+    !
+    assert // not payable
     callsub f
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     retsub
+
+/tmp/multisource_w09zrvpn/s3.sol.D.g_ternary_false@2:
+    intc_2 // 0
+    b /tmp/multisource_w09zrvpn/s3.sol.D.g_ternary_merge@3

@@ -40,6 +40,16 @@ setOwner:
     pushint 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz setOwner_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+setOwner_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "owner"
     app_global_get_ex
@@ -50,6 +60,8 @@ setOwner:
     !
     assert // OnlyOwner
     dig 1
+    dup
+    cover 2
     concat
     pushbytes 0x9a223efb // method "OwnershipTransferred(address,address)"
     swap
@@ -61,9 +73,23 @@ setOwner:
     intc_0 // 1
     return
 
+setOwner_ternary_false@3:
+    intc_1 // 0
+    b setOwner_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol.Ownable.renounceOwnership[routing]() -> void:
 renounceOwnership:
+    txn GroupIndex
+    bz renounceOwnership_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+renounceOwnership_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "owner"
     app_global_get_ex
@@ -78,9 +104,23 @@ renounceOwnership:
     intc_0 // 1
     return
 
+renounceOwnership_ternary_false@3:
+    intc_1 // 0
+    b renounceOwnership_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol.Ownable.owner[routing]() -> void:
 owner:
+    txn GroupIndex
+    bz owner_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+owner_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "owner"
     app_global_get_ex
@@ -91,3 +131,7 @@ owner:
     log
     intc_0 // 1
     return
+
+owner_ternary_false@3:
+    intc_1 // 0
+    b owner_ternary_merge@4

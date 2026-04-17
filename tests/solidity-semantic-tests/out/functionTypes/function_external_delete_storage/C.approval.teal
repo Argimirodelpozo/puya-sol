@@ -28,23 +28,65 @@ main_after_if_else@2:
     assert
     pushbytess 0x2d4970c7 0x0f76205a 0xcbdac6d6 0x65514ada 0xcc3adfed 0xe2a086c6 // method "f()void", method "set()void", method "isF()bool", method "isZero()bool", method "deleteFunction()void", method "x()byte[12]"
     txna ApplicationArgs 0
-    match main_f_route@5 main_set_route@6 isF isZero deleteFunction x
+    match f set isF isZero deleteFunction x
     err
 
-main_set_route@6:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_external_delete_storage.sol.C.f[routing]() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_external_delete_storage.sol.C.set[routing]() -> void:
+set:
+    txn GroupIndex
+    bz set_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+set_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "x"
     bytec_3 // 0x000000000000000000000001
     app_global_put
     intc_0 // 1
     return
 
-main_f_route@5:
-    intc_0 // 1
-    return
+set_ternary_false@3:
+    intc_1 // 0
+    b set_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_external_delete_storage.sol.C.isF[routing]() -> void:
 isF:
+    txn GroupIndex
+    bz isF_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+isF_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -62,9 +104,23 @@ isF:
     intc_0 // 1
     return
 
+isF_ternary_false@3:
+    intc_1 // 0
+    b isF_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_external_delete_storage.sol.C.isZero[routing]() -> void:
 isZero:
+    txn GroupIndex
+    bz isZero_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+isZero_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -82,9 +138,23 @@ isZero:
     intc_0 // 1
     return
 
+isZero_ternary_false@3:
+    intc_1 // 0
+    b isZero_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_external_delete_storage.sol.C.deleteFunction[routing]() -> void:
 deleteFunction:
+    txn GroupIndex
+    bz deleteFunction_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+deleteFunction_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -96,9 +166,23 @@ deleteFunction:
     intc_0 // 1
     return
 
+deleteFunction_ternary_false@3:
+    intc_1 // 0
+    b deleteFunction_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_external_delete_storage.sol.C.x[routing]() -> void:
 x:
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -109,3 +193,7 @@ x:
     log
     intc_0 // 1
     return
+
+x_ternary_false@3:
+    intc_1 // 0
+    b x_ternary_merge@4

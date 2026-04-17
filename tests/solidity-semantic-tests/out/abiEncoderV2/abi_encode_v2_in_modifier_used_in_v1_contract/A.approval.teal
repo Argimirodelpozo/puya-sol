@@ -1,7 +1,7 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_ixt5cx6v/B.sol.A.approval_program() -> uint64:
+// /tmp/multisource_6led9z5l/B.sol.A.approval_program() -> uint64:
 main:
     txn ApplicationID
     bnz main_after_if_else@2
@@ -27,7 +27,26 @@ main_get_route@4:
     txn ApplicationID
     &&
     assert
+    b get
+
+
+// /tmp/multisource_6led9z5l/B.sol.A.get[routing]() -> void:
+get:
+    txn GroupIndex
+    bz get_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+get_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000005
     log
     pushint 1
     return
+
+get_ternary_false@3:
+    pushint 0
+    b get_ternary_merge@4

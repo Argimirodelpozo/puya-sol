@@ -34,18 +34,30 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/return_in_modifier.sol.C.f[routing]() -> void:
 f:
+    intc_1 // 0
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 1
     itob
+    bury 1
 
-f_while_top@4:
+f_while_top@7:
     dup
     pushbytes 0x0a
     b<
-    bz f_after_while@8
+    bz f_after_while@11
     dup
     pushbytes 0x05
     b==
-    bnz f_after_while@8
+    bnz f_after_while@11
     intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -59,15 +71,29 @@ f_while_top@4:
     bytec_1 // 0x01
     b+
     bury 1
-    b f_while_top@4
+    b f_while_top@7
 
-f_after_while@8:
+f_after_while@11:
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/return_in_modifier.sol.C.x[routing]() -> void:
 x:
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -86,3 +112,7 @@ x:
     log
     intc_0 // 1
     return
+
+x_ternary_false@3:
+    intc_1 // 0
+    b x_ternary_merge@4

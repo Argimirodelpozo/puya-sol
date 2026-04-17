@@ -31,6 +31,7 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/if.sol.C.f[routing]() -> void:
 f:
+    intc_2 // 0
     txna ApplicationArgs 1
     dup
     len
@@ -39,20 +40,31 @@ f:
     assert // invalid number of bytes for arc4.bool
     intc_2 // 0
     getbit
-    dup
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     intc_0 // 1
     <=
     assert // ABI bool validation
     intc_3 // 23
     itob
-    swap
-    bz f_after_if_else@3
+    bury 3
+    bz f_after_if_else@6
     pushint 42
     itob
-    bury 1
+    bury 2
 
-f_after_if_else@3:
-    dupn 2
+f_after_if_else@6:
+    dig 1
+    dup
     len
     intc_1 // 32
     <=
@@ -66,6 +78,10 @@ f_after_if_else@3:
     log
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_2 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/if.sol.C.g[routing]() -> void:
@@ -78,15 +94,25 @@ g:
     assert // invalid number of bytes for arc4.bool
     intc_2 // 0
     getbit
-    dup
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     intc_0 // 1
     <=
     assert // ABI bool validation
-    bz g_else_body@3
+    bz g_else_body@6
     pushint 42
     itob
 
-g_after_if_else@4:
+g_after_if_else@7:
     dup
     len
     intc_1 // 32
@@ -102,10 +128,14 @@ g_after_if_else@4:
     intc_0 // 1
     return
 
-g_else_body@3:
+g_else_body@6:
     intc_3 // 23
     itob
-    b g_after_if_else@4
+    b g_after_if_else@7
+
+g_ternary_false@3:
+    intc_2 // 0
+    b g_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/if.sol.C.h[routing]() -> void:
@@ -118,14 +148,24 @@ h:
     assert // invalid number of bytes for arc4.bool
     intc_2 // 0
     getbit
-    dup
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     intc_0 // 1
     <=
     assert // ABI bool validation
-    bz h_after_if_else@3
+    bz h_after_if_else@6
     bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000002a
 
-h_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/if.sol.C.h@4:
+h_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/if.sol.C.h@7:
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -133,9 +173,13 @@ h_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tes
     intc_0 // 1
     return
 
-h_after_if_else@3:
+h_after_if_else@6:
     bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000017
-    b h_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/if.sol.C.h@4
+    b h_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/if.sol.C.h@7
+
+h_ternary_false@3:
+    intc_2 // 0
+    b h_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/if.sol.C.i[routing]() -> void:
@@ -148,14 +192,24 @@ i:
     assert // invalid number of bytes for arc4.bool
     intc_2 // 0
     getbit
-    dup
+    txn GroupIndex
+    bz i_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+i_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     intc_0 // 1
     <=
     assert // ABI bool validation
-    bz i_else_body@3
+    bz i_else_body@6
     bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000002a
 
-i_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/if.sol.C.i@5:
+i_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/if.sol.C.i@8:
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -163,34 +217,47 @@ i_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tes
     intc_0 // 1
     return
 
-i_else_body@3:
+i_else_body@6:
     bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000017
-    b i_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/if.sol.C.i@5
+    b i_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/if.sol.C.i@8
+
+i_ternary_false@3:
+    intc_2 // 0
+    b i_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/if.sol.C.j[routing]() -> void:
 j:
     txna ApplicationArgs 1
-    dupn 2
+    dup
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    cover 2
-    dup
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz j_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+j_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
     b+
     bytec_3 // 0x0a
     b<
-    bz j_else_body@3
+    bz j_else_body@6
     dig 1
 
-j_after_if_else@4:
+j_after_if_else@7:
     dup
     len
     intc_1 // 32
@@ -208,41 +275,54 @@ j_after_if_else@4:
     intc_0 // 1
     return
 
-j_else_body@3:
+j_else_body@6:
     dup
-    b j_after_if_else@4
+    b j_after_if_else@7
+
+j_ternary_false@3:
+    intc_2 // 0
+    b j_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/if.sol.C.k[routing]() -> void:
 k:
     intc_2 // 0
     txna ApplicationArgs 1
-    dupn 2
+    dup
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    cover 2
-    dup
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz k_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+k_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
     b+
     bytec_3 // 0x0a
     b<
-    bz k_else_body@8
+    bz k_else_body@11
     dup2
     b==
-    bz k_else_body@6
+    bz k_else_body@9
     pushint 99
     itob
     dup
     bury 4
 
-k_after_while@15:
+k_after_while@18:
     dup
     len
     intc_1 // 32
@@ -269,27 +349,31 @@ k_after_while@15:
     intc_0 // 1
     return
 
-k_else_body@6:
+k_else_body@9:
     pushint 100
     itob
     bury 3
     dig 1
-    b k_after_while@15
+    b k_after_while@18
 
-k_else_body@8:
+k_else_body@11:
     dup2
     b!=
-    bz k_else_body@10
+    bz k_else_body@13
     pushint 17
     itob
     bury 3
 
-k_after_if_else@11:
+k_after_if_else@14:
     dup
-    b k_after_while@15
+    b k_after_while@18
 
-k_else_body@10:
+k_else_body@13:
     pushint 13
     itob
     bury 3
-    b k_after_if_else@11
+    b k_after_if_else@14
+
+k_ternary_false@3:
+    intc_2 // 0
+    b k_ternary_merge@4

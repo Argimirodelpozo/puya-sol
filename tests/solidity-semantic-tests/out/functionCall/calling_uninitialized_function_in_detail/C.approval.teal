@@ -40,6 +40,16 @@ main_t_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_uninitialized_function_in_detail.sol.C.t[routing]() -> void:
 t:
+    txn GroupIndex
+    bz t_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+t_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_0 // "mutex"
     app_global_get_ex
@@ -48,7 +58,7 @@ t:
     b^
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b>
-    bz t_after_if_else@3
+    bz t_after_if_else@6
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
     replace2 0
@@ -65,7 +75,7 @@ t:
     intc_1 // 1
     return
 
-t_after_if_else@3:
+t_after_if_else@6:
     intc_1 // 1
     itob
     bytec_0 // "mutex"
@@ -77,3 +87,7 @@ t_after_if_else@3:
     bury 1
     assert // check x exists
     err // invalid function pointer
+
+t_ternary_false@3:
+    intc_0 // 0
+    b t_ternary_merge@4

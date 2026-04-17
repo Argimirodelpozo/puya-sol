@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_decode_v2_storage.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     bytecblock "__ctor_pending" "data"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,7 +38,7 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    pushint 0
+    intc_1 // 0
     app_global_put
     intc_0 // 1
     return
@@ -46,6 +46,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_decode_v2_storage.sol.C.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     bytec_1 // "data"
     box_del
     pop
@@ -56,3 +66,7 @@ f:
     log
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4

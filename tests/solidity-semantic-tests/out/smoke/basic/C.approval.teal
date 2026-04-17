@@ -25,18 +25,28 @@ main_after_if_else@2:
     assert
     pushbytess 0x29efd0f6 0xcf0aa045 0xc65797c8 0x595e23e2 0x5c69fadf 0xc64fb23a 0xc490af20 0x08ee23b1 0x85597271 // method "d()void", method "e()uint256", method "f(uint256)(uint256,uint256)", method "g()(uint256,uint256)", method "h(uint256,uint256)uint256", method "i(bool)bool", method "j(byte[32])(byte[32],byte[32])", method "k()uint256", method "l(uint256)uint256"
     txna ApplicationArgs 0
-    match main_d_route@5 e f main_g_route@8 h i j k l
+    match d e f g h i j k l
     err
 
-main_g_route@8:
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003
-    log
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/basic.sol.C.d[routing]() -> void:
+d:
+    txn GroupIndex
+    bz d_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+d_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 1
     return
 
-main_d_route@5:
-    intc_1 // 1
-    return
+d_ternary_false@3:
+    intc_0 // 0
+    b d_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/basic.sol.C.e[routing]() -> void:
@@ -74,11 +84,23 @@ f:
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     intc_2 // 32
     <=
     assert // overflow
     intc_2 // 32
     bzero
+    dig 2
     b|
     dup
     concat
@@ -88,6 +110,32 @@ f:
     log
     intc_1 // 1
     return
+
+f_ternary_false@3:
+    intc_0 // 0
+    b f_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/basic.sol.C.g[routing]() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003
+    log
+    intc_1 // 1
+    return
+
+g_ternary_false@3:
+    intc_0 // 0
+    b g_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/basic.sol.C.h[routing]() -> void:
@@ -104,10 +152,20 @@ h:
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    swap
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
+    dig 1
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    swap
+    dig 1
     b-
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -126,6 +184,10 @@ h:
     intc_1 // 1
     return
 
+h_ternary_false@3:
+    intc_0 // 0
+    b h_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/basic.sol.C.i[routing]() -> void:
 i:
@@ -137,7 +199,17 @@ i:
     assert // invalid number of bytes for arc4.bool
     intc_0 // 0
     getbit
-    dup
+    txn GroupIndex
+    bz i_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+i_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     intc_1 // 1
     <=
     assert // ABI bool validation
@@ -153,6 +225,10 @@ i:
     intc_1 // 1
     return
 
+i_ternary_false@3:
+    intc_0 // 0
+    b i_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/basic.sol.C.j[routing]() -> void:
 j:
@@ -162,7 +238,17 @@ j:
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    dup
+    txn GroupIndex
+    bz j_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+j_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -171,185 +257,199 @@ j:
     intc_1 // 1
     return
 
+j_ternary_false@3:
+    intc_0 // 0
+    b j_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/basic.sol.C.k[routing]() -> void:
 k:
     intc_0 // 0
     dupn 14
+    txn GroupIndex
+    bz k_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+k_ternary_merge@4:
+    !
+    assert // not payable
     txn NumAppArgs
-    bz k_ternary_false@51
+    bz k_ternary_false@54
     txn NumAppArgs
-    bz k_ternary_false@4
+    bz k_ternary_false@7
     txna ApplicationArgs 0
     bury 15
 
-k_ternary_merge@5:
+k_ternary_merge@8:
     txn NumAppArgs
     intc_1 // 1
     >
-    bz k_ternary_false@7
+    bz k_ternary_false@10
     txna ApplicationArgs 1
 
-k_ternary_merge@8:
-    dig 15
-    swap
-    concat
-    bury 2
-    txn NumAppArgs
-    pushint 2
-    >
-    bz k_ternary_false@10
-    txna ApplicationArgs 2
-
 k_ternary_merge@11:
-    dig 2
-    swap
-    concat
-    bury 1
-    txn NumAppArgs
-    pushint 3
-    >
-    bz k_ternary_false@13
-    txna ApplicationArgs 3
-
-k_ternary_merge@14:
-    dig 1
+    dig 15
     swap
     concat
     bury 14
     txn NumAppArgs
-    pushint 4
+    pushint 2
     >
-    bz k_ternary_false@16
-    txna ApplicationArgs 4
+    bz k_ternary_false@13
+    txna ApplicationArgs 2
 
-k_ternary_merge@17:
+k_ternary_merge@14:
     dig 14
     swap
     concat
     bury 13
     txn NumAppArgs
-    pushint 5
+    pushint 3
     >
-    bz k_ternary_false@19
-    txna ApplicationArgs 5
+    bz k_ternary_false@16
+    txna ApplicationArgs 3
 
-k_ternary_merge@20:
+k_ternary_merge@17:
     dig 13
     swap
     concat
     bury 12
     txn NumAppArgs
-    pushint 6
+    pushint 4
     >
-    bz k_ternary_false@22
-    txna ApplicationArgs 6
+    bz k_ternary_false@19
+    txna ApplicationArgs 4
 
-k_ternary_merge@23:
+k_ternary_merge@20:
     dig 12
     swap
     concat
     bury 11
     txn NumAppArgs
-    pushint 7
+    pushint 5
     >
-    bz k_ternary_false@25
-    txna ApplicationArgs 7
+    bz k_ternary_false@22
+    txna ApplicationArgs 5
 
-k_ternary_merge@26:
+k_ternary_merge@23:
     dig 11
     swap
     concat
     bury 10
     txn NumAppArgs
-    pushint 8
+    pushint 6
     >
-    bz k_ternary_false@28
-    txna ApplicationArgs 8
+    bz k_ternary_false@25
+    txna ApplicationArgs 6
 
-k_ternary_merge@29:
+k_ternary_merge@26:
     dig 10
     swap
     concat
     bury 9
     txn NumAppArgs
-    pushint 9
+    pushint 7
     >
-    bz k_ternary_false@31
-    txna ApplicationArgs 9
+    bz k_ternary_false@28
+    txna ApplicationArgs 7
 
-k_ternary_merge@32:
+k_ternary_merge@29:
     dig 9
     swap
     concat
     bury 8
     txn NumAppArgs
-    pushint 10
+    pushint 8
     >
-    bz k_ternary_false@34
-    txna ApplicationArgs 10
+    bz k_ternary_false@31
+    txna ApplicationArgs 8
 
-k_ternary_merge@35:
+k_ternary_merge@32:
     dig 8
     swap
     concat
     bury 7
     txn NumAppArgs
-    pushint 11
+    pushint 9
     >
-    bz k_ternary_false@37
-    txna ApplicationArgs 11
+    bz k_ternary_false@34
+    txna ApplicationArgs 9
 
-k_ternary_merge@38:
+k_ternary_merge@35:
     dig 7
     swap
     concat
     bury 6
     txn NumAppArgs
-    pushint 12
+    pushint 10
     >
-    bz k_ternary_false@40
-    txna ApplicationArgs 12
+    bz k_ternary_false@37
+    txna ApplicationArgs 10
 
-k_ternary_merge@41:
+k_ternary_merge@38:
     dig 6
     swap
     concat
     bury 5
     txn NumAppArgs
-    pushint 13
+    pushint 11
     >
-    bz k_ternary_false@43
-    txna ApplicationArgs 13
+    bz k_ternary_false@40
+    txna ApplicationArgs 11
 
-k_ternary_merge@44:
+k_ternary_merge@41:
     dig 5
     swap
     concat
     bury 4
     txn NumAppArgs
-    pushint 14
+    pushint 12
     >
-    bz k_ternary_false@46
-    txna ApplicationArgs 14
+    bz k_ternary_false@43
+    txna ApplicationArgs 12
 
-k_ternary_merge@47:
+k_ternary_merge@44:
     dig 4
     swap
     concat
     bury 3
     txn NumAppArgs
-    pushint 15
+    pushint 13
     >
-    bz k_ternary_false@49
-    txna ApplicationArgs 15
+    bz k_ternary_false@46
+    txna ApplicationArgs 13
 
-k_ternary_merge@50:
+k_ternary_merge@47:
     dig 3
     swap
     concat
+    bury 2
+    txn NumAppArgs
+    pushint 14
+    >
+    bz k_ternary_false@49
+    txna ApplicationArgs 14
 
-k_ternary_merge@52:
+k_ternary_merge@50:
+    dig 2
+    swap
+    concat
+    bury 1
+    txn NumAppArgs
+    pushint 15
+    >
+    bz k_ternary_false@52
+    txna ApplicationArgs 15
+
+k_ternary_merge@53:
+    dig 1
+    swap
+    concat
+
+k_ternary_merge@55:
     len
     itob
     intc_2 // 32
@@ -361,6 +461,11 @@ k_ternary_merge@52:
     log
     intc_1 // 1
     return
+
+k_ternary_false@52:
+    intc_0 // 0
+    bzero
+    b k_ternary_merge@53
 
 k_ternary_false@49:
     intc_0 // 0
@@ -435,18 +540,17 @@ k_ternary_false@10:
 k_ternary_false@7:
     intc_0 // 0
     bzero
+    bury 15
     b k_ternary_merge@8
 
-k_ternary_false@4:
+k_ternary_false@54:
     intc_0 // 0
     bzero
-    bury 15
-    b k_ternary_merge@5
+    b k_ternary_merge@55
 
-k_ternary_false@51:
+k_ternary_false@3:
     intc_0 // 0
-    bzero
-    b k_ternary_merge@52
+    b k_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/basic.sol.C.l[routing]() -> void:
@@ -457,6 +561,17 @@ l:
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz l_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+l_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     pushbytes 0x07
     b*
     dup
@@ -473,3 +588,7 @@ l:
     log
     intc_1 // 1
     return
+
+l_ternary_false@3:
+    intc_0 // 0
+    b l_ternary_merge@4

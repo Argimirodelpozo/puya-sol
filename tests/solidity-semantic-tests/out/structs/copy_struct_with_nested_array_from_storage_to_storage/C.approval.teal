@@ -106,6 +106,16 @@ main_test_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/copy_struct_with_nested_array_from_storage_to_storage.sol.C.test[routing]() -> void:
 test:
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_0 // "src"
     app_global_get_ex
@@ -146,3 +156,7 @@ test:
     assert
     intc_1 // 1
     return
+
+test_ternary_false@3:
+    intc_0 // 0
+    b test_ternary_merge@4

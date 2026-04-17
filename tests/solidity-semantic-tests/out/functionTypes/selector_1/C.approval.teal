@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_1.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -24,19 +24,67 @@ main_after_if_else@2:
     assert
     pushbytess 0x5b82652c 0x0c88cb4e 0x11105f41 // method "test()(byte[4],byte[4],byte[4],byte[4])", method "ext()void", method "pub()void"
     txna ApplicationArgs 0
-    match main_test_route@5 main_ext_route@6 main_pub_route@7
+    match test ext pub
     err
 
-main_pub_route@7:
-    intc_0 // 1
-    return
 
-main_ext_route@6:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_1.sol.C.test[routing]() -> void:
+test:
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
     intc_0 // 1
-    return
+    -
+    gtxns Amount
 
-main_test_route@5:
+test_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c75cf9f23b57defb410cf9f23b57defb410
     log
     intc_0 // 1
     return
+
+test_ternary_false@3:
+    intc_1 // 0
+    b test_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_1.sol.C.ext[routing]() -> void:
+ext:
+    txn GroupIndex
+    bz ext_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+ext_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
+
+ext_ternary_false@3:
+    intc_1 // 0
+    b ext_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_1.sol.C.pub[routing]() -> void:
+pub:
+    txn GroupIndex
+    bz pub_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+pub_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
+
+pub_ternary_false@3:
+    intc_1 // 0
+    b pub_ternary_merge@4

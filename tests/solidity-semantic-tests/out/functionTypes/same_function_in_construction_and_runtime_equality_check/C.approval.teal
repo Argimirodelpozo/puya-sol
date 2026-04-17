@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/same_function_in_construction_and_runtime_equality_check.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 0 32
     bytecblock "x" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -34,14 +34,24 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/same_function_in_construction_and_runtime_equality_check.sol.C.test[routing]() -> void:
 test:
-    intc_2 // 0
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     intc_0 // 1
     ==
     pushbytes 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec_1 // 0x151f7c75
@@ -51,23 +61,38 @@ test:
     intc_0 // 1
     return
 
+test_ternary_false@3:
+    intc_1 // 0
+    b test_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/same_function_in_construction_and_runtime_equality_check.sol.C.double[routing]() -> void:
 double:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz double_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+double_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     pushbytes 0x02
     b*
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
@@ -76,3 +101,7 @@ double:
     log
     intc_0 // 1
     return
+
+double_ternary_false@3:
+    intc_1 // 0
+    b double_ternary_merge@4

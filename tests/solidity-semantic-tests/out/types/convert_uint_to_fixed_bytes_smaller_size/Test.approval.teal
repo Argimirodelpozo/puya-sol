@@ -39,7 +39,17 @@ uintToBytes:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    dup
+    txn GroupIndex
+    bz uintToBytes_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+uintToBytes_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     pushint 4294967295
     <=
     assert // ABI validation
@@ -53,3 +63,7 @@ uintToBytes:
     log
     pushint 1
     return
+
+uintToBytes_ternary_false@3:
+    pushint 0
+    b uintToBytes_ternary_merge@4

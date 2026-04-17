@@ -43,6 +43,16 @@ main_test_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variables_transient.sol.C.test[routing]() -> void:
 test:
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "x"
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     app_global_put
@@ -58,3 +68,7 @@ test:
     log
     intc_1 // 1
     return
+
+test_ternary_false@3:
+    intc_0 // 0
+    b test_ternary_merge@4

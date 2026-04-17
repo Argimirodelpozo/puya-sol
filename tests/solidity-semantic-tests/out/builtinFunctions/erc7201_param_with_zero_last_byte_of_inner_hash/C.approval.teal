@@ -65,19 +65,29 @@ erc7201Mock:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_with_zero_last_byte_of_inner_hash.sol.C.builtinMatchesSolidityImplementation[routing]() -> void:
 builtinMatchesSolidityImplementation:
+    txn GroupIndex
+    bz builtinMatchesSolidityImplementation_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+builtinMatchesSolidityImplementation_ternary_merge@4:
+    !
+    assert // not payable
     bytec_2 // "85"
     callsub erc7201Mock
     bytec_3 // 0x06d0d983459328e82eacb1bf2d6fadfa38a6896e9d4cbfe0e1aa41c6281bab00
     b==
-    bz builtinMatchesSolidityImplementation_bool_false@4
+    bz builtinMatchesSolidityImplementation_bool_false@7
     bytec_2 // "85"
     callsub erc7201Mock
     bytec_3 // 0x06d0d983459328e82eacb1bf2d6fadfa38a6896e9d4cbfe0e1aa41c6281bab00
     b==
-    bz builtinMatchesSolidityImplementation_bool_false@4
+    bz builtinMatchesSolidityImplementation_bool_false@7
     intc_0 // 1
 
-builtinMatchesSolidityImplementation_bool_merge@5:
+builtinMatchesSolidityImplementation_bool_merge@8:
     pushbytes 0x00
     intc_2 // 0
     uncover 2
@@ -89,6 +99,10 @@ builtinMatchesSolidityImplementation_bool_merge@5:
     intc_0 // 1
     return
 
-builtinMatchesSolidityImplementation_bool_false@4:
+builtinMatchesSolidityImplementation_bool_false@7:
     intc_2 // 0
-    b builtinMatchesSolidityImplementation_bool_merge@5
+    b builtinMatchesSolidityImplementation_bool_merge@8
+
+builtinMatchesSolidityImplementation_ternary_false@3:
+    intc_2 // 0
+    b builtinMatchesSolidityImplementation_ternary_merge@4

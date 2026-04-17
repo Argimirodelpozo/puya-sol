@@ -34,6 +34,16 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/function_from_base_contract.sol.A.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -58,9 +68,23 @@ f:
     intc_0 // 1
     return
 
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/function_from_base_contract.sol.A.x[routing]() -> void:
 x:
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -79,3 +103,7 @@ x:
     log
     intc_0 // 1
     return
+
+x_ternary_false@3:
+    intc_1 // 0
+    b x_ternary_merge@4

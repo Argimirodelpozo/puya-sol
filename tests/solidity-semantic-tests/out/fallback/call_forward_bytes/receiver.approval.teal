@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.approval_program() -> uint64:
 main:
-    intcblock 1 128 0 64
+    intcblock 1 0 64
     bytecblock "received" 0x
     bytec_1 // ""
     dup
@@ -25,16 +25,12 @@ main_after_if_else@2:
     store 0
     txn NumAppArgs
     bnz main_after_if_else@4
-    intc_1 // 128
-    itob
-    bytec_0 // "received"
-    swap
-    app_global_put
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.__fallback
     intc_0 // 1
     return
 
 main_after_if_else@4:
-    intc_2 // 0
+    intc_1 // 0
     bury 2
     txn OnCompletion
     !
@@ -52,11 +48,7 @@ main_switch_case_next@12:
 main_after_if_else@14:
     dup
     bnz main_after_if_else@6
-    intc_1 // 128
-    itob
-    bytec_0 // "received"
-    swap
-    app_global_put
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.__fallback
     intc_0 // 1
     bury 1
 
@@ -89,17 +81,28 @@ main_create_NoOp@13:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.recv[routing]() -> void:
 recv:
+    proto 0 0
     txna ApplicationArgs 1
     dup
     len
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_2 // 0
+    txn GroupIndex
+    bz recv_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+recv_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_0 // "received"
     app_global_get_ex
     assert // check received exists
-    swap
+    frame_dig 0
     pushbytes 0x01
     b+
     b+
@@ -108,29 +111,39 @@ recv:
     app_global_put
     retsub
 
+recv_ternary_false@3:
+    intc_1 // 0
+    b recv_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.__fallback[routing]() -> void:
 __fallback:
-    intc_1 // 128
-    itob
-    bytec_0 // "received"
-    swap
-    app_global_put
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.__fallback
     retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.received[routing]() -> void:
 received:
-    intc_2 // 0
+    txn GroupIndex
+    bz received_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+received_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_0 // "received"
     app_global_get_ex
     assert // check received exists
     dup
     len
-    intc_3 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_3 // 64
+    intc_2 // 64
     bzero
     b|
     pushbytes 0x151f7c75
@@ -138,3 +151,31 @@ received:
     concat
     log
     retsub
+
+received_ternary_false@3:
+    intc_1 // 0
+    b received_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.__fallback() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.__fallback:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.__fallback_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.__fallback_ternary_merge@3:
+    !
+    assert // not payable
+    pushint 128
+    itob
+    bytec_0 // "received"
+    swap
+    app_global_put
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.__fallback_ternary_false@2:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.__fallback_ternary_merge@3

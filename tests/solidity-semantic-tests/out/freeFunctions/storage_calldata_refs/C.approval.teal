@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/storage_calldata_refs.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 2
+    intcblock 0 32 1 2
     bytecblock "data" "__ctor_pending" 0x0000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -49,7 +49,7 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_1 // 0
+    intc_0 // 0
     app_global_put
     bytec_0 // "data"
     intc_3 // 2
@@ -65,28 +65,38 @@ f:
     dup
     len
     dup
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
-    dup
-    intc_1 // 0
+    dupn 2
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    intc_0 // 32
+    intc_1 // 32
     *
     intc_3 // 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
-    swap
-    intc_0 // 32
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dig 1
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
-    uncover 2
+    dig 3
     dig 1
     b|
     pushbytes 0x0001
@@ -95,10 +105,10 @@ f:
     dup
     extract 2 0
     swap
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
     bytec_0 // "data"
-    intc_1 // 0
+    intc_0 // 0
     intc_3 // 2
     box_extract
     btoi
@@ -106,7 +116,7 @@ f:
     box_len
     pop
     dig 2
-    intc_0 // 32
+    intc_1 // 32
     *
     +
     bytec_0 // "data"
@@ -118,16 +128,16 @@ f:
     itob
     extract 6 2
     bytec_0 // "data"
-    intc_1 // 0
+    intc_0 // 0
     uncover 2
     box_replace
-    intc_0 // 32
+    intc_1 // 32
     *
     intc_3 // 2
     +
     bytec_0 // "data"
     swap
-    intc_1 // 0
+    intc_0 // 0
     uncover 3
     box_splice
     bytec_0 // "data"
@@ -135,7 +145,7 @@ f:
     bytec_2 // 0x0000
     cover 2
     select
-    uncover 2
+    dig 2
     swap
     callsub fun
     pop
@@ -152,7 +162,7 @@ f:
     bury 1
     dig 1
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
     swap
@@ -169,3 +179,7 @@ f:
     log
     intc_2 // 1
     return
+
+f_ternary_false@3:
+    intc_0 // 0
+    b f_ternary_merge@4

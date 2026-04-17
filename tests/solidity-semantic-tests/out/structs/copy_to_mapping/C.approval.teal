@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/copy_to_mapping.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 2 0 12
+    intcblock 1 0 2 12
     bytecblock "s" 0x000c000e000000000000000000000000 0x151f7c75 "__ctor_pending" 0x000c 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925 0x6dec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5 0x6d9267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2 0x6dd9147961436944f43cd99d28b2bbddbf452ef872b30c8279e255e7daafc7f946
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,10 +38,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_3 // "__ctor_pending"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
     pushbytes "m"
-    intc_1 // 2
+    intc_2 // 2
     box_create
     pop
     bytec_0 // "s"
@@ -50,7 +50,7 @@ __postInit:
     cover 2
     select
     dup
-    intc_1 // 2
+    intc_2 // 2
     extract_uint16
     dig 1
     len
@@ -73,10 +73,10 @@ __postInit:
     dig 1
     box_put
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16
     dig 1
-    intc_1 // 2
+    intc_2 // 2
     extract_uint16
     dig 2
     cover 2
@@ -105,7 +105,7 @@ __postInit:
     dig 1
     box_put
     dup
-    intc_1 // 2
+    intc_2 // 2
     extract_uint16
     dig 1
     len
@@ -114,7 +114,7 @@ __postInit:
     uncover 2
     substring3
     dig 2
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16
     uncover 3
     swap
@@ -149,6 +149,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/copy_to_mapping.sol.C.from_state[routing]() -> void:
 from_state:
+    txn GroupIndex
+    bz from_state_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+from_state_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "s"
     box_get
     bytec_1 // 0x000c000e000000000000000000000000
@@ -166,10 +176,24 @@ from_state:
     log
     intc_0 // 1
     return
+
+from_state_ternary_false@3:
+    intc_1 // 0
+    b from_state_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/copy_to_mapping.sol.C.from_storage[routing]() -> void:
 from_storage:
+    txn GroupIndex
+    bz from_storage_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+from_storage_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "s"
     box_get
     bytec_1 // 0x000c000e000000000000000000000000
@@ -187,10 +211,24 @@ from_storage:
     log
     intc_0 // 1
     return
+
+from_storage_ternary_false@3:
+    intc_1 // 0
+    b from_storage_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/copy_to_mapping.sol.C.from_memory[routing]() -> void:
 from_memory:
+    txn GroupIndex
+    bz from_memory_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+from_memory_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "s"
     box_get
     bytec_1 // 0x000c000e000000000000000000000000
@@ -208,15 +246,19 @@ from_memory:
     log
     intc_0 // 1
     return
+
+from_memory_ternary_false@3:
+    intc_1 // 0
+    b from_memory_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/copy_to_mapping.sol.C.from_calldata[routing]() -> void:
 from_calldata:
     txna ApplicationArgs 1
-    dup
+    dupn 2
     len
     dig 1
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid tuple encoding
     dup
     intc_3 // 12
@@ -226,35 +268,47 @@ from_calldata:
     swap
     dig 2
     substring3
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 14
     +
     dig 2
-    intc_1 // 2
+    intc_2 // 2
     extract_uint16 // on error: invalid tuple encoding
     dup
     dig 2
     ==
     assert // invalid tail pointer at index 1 of ((len+uint8[]),(len+uint16[]),uint64)
-    dig 3
+    uncover 3
     swap
     dig 3
     substring3
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_1 // 2
+    intc_2 // 2
     *
-    intc_1 // 2
+    intc_2 // 2
     +
     +
     ==
     assert // invalid number of bytes for S
+    txn GroupIndex
+    bz from_calldata_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+from_calldata_ternary_merge@4:
+    !
+    assert // not payable
     bytec 8 // 0x6dd9147961436944f43cd99d28b2bbddbf452ef872b30c8279e255e7daafc7f946
     box_del
     pop
     bytec 8 // 0x6dd9147961436944f43cd99d28b2bbddbf452ef872b30c8279e255e7daafc7f946
     dig 1
+    dup
+    cover 2
     box_put
     bytec_2 // 0x151f7c75
     swap
@@ -262,3 +316,7 @@ from_calldata:
     log
     intc_0 // 1
     return
+
+from_calldata_ternary_false@3:
+    intc_1 // 0
+    b from_calldata_ternary_merge@4

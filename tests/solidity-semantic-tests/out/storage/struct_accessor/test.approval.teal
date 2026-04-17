@@ -188,9 +188,19 @@ data:
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz data_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+data_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 32
     bzero
-    swap
+    dig 1
     concat
     dup
     len
@@ -236,3 +246,7 @@ data:
     log
     intc_1 // 1
     return
+
+data_ternary_false@3:
+    intc_0 // 0
+    b data_ternary_merge@4

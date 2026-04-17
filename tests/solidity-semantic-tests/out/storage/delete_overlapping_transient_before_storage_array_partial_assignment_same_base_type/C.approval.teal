@@ -59,6 +59,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol.C.setAndClear[routing]() -> void:
 setAndClear:
+    txn GroupIndex
+    bz setAndClear_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+setAndClear_ternary_merge@4:
+    !
+    assert // not payable
     bytec 4 // "small"
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000014
     app_global_put
@@ -78,9 +88,23 @@ setAndClear:
     intc_0 // 1
     return
 
+setAndClear_ternary_false@3:
+    intc_1 // 0
+    b setAndClear_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol.C.getLarge[routing]() -> void:
 getLarge:
+    txn GroupIndex
+    bz getLarge_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getLarge_ternary_merge@4:
+    !
+    assert // not payable
     bytec_3 // "large"
     box_get
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -92,3 +116,7 @@ getLarge:
     log
     intc_0 // 1
     return
+
+getLarge_ternary_false@3:
+    intc_1 // 0
+    b getLarge_ternary_merge@4

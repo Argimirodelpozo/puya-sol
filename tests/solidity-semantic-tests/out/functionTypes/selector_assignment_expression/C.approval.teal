@@ -28,19 +28,45 @@ main_after_if_else@2:
     assert
     pushbytess 0x2d4970c7 0x3ec2e975 // method "f()void", method "z()bool"
     txna ApplicationArgs 0
-    match main_f_route@5 z
+    match f z
     err
 
-main_f_route@5:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_assignment_expression.sol.C.f[routing]() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "z"
     intc_0 // 1
     app_global_put
     intc_0 // 1
     return
 
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_assignment_expression.sol.C.z[routing]() -> void:
 z:
+    txn GroupIndex
+    bz z_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+z_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "z"
     app_global_get_ex
@@ -55,3 +81,7 @@ z:
     log
     intc_0 // 1
     return
+
+z_ternary_false@3:
+    intc_1 // 0
+    b z_ternary_merge@4

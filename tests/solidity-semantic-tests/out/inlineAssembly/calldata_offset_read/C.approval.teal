@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/calldata_offset_read.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64 0 2
+    intcblock 1 0 64 2
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -32,7 +32,7 @@ main_after_if_else@2:
 f(2):
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_3 // 2
     +
@@ -40,6 +40,16 @@ f(2):
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txn GroupIndex
+    bz f(2)_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f(2)_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004
@@ -47,17 +57,21 @@ f(2):
     intc_0 // 1
     return
 
+f(2)_ternary_false@3:
+    intc_1 // 0
+    b f(2)_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/calldata_offset_read.sol.C.f(u256,13,u256)[routing]() -> void:
 f(u256,13,u256):
     txna ApplicationArgs 1
     len
-    intc_1 // 64
+    intc_2 // 64
     ==
     assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_3 // 2
     +
@@ -68,16 +82,26 @@ f(u256,13,u256):
     extract 2 0
     txna ApplicationArgs 3
     len
-    intc_1 // 64
+    intc_2 // 64
     ==
     assert // invalid number of bytes for arc4.uint512
+    txn GroupIndex
+    bz f(u256,13,u256)_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f(u256,13,u256)_ternary_merge@4:
+    !
+    assert // not payable
     load 0
-    swap
+    dig 1
     len
     itob
     swap
     store 0
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
     pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000024
@@ -86,3 +110,7 @@ f(u256,13,u256):
     log
     intc_0 // 1
     return
+
+f(u256,13,u256)_ternary_false@3:
+    intc_1 // 0
+    b f(u256,13,u256)_ternary_merge@4

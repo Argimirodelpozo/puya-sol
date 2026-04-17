@@ -3,9 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/comparison_operator_for_external_function_cleans_dirty_bits.sol.C.approval_program() -> uint64:
 main:
+    intcblock 1 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -23,19 +24,49 @@ main_after_if_else@2:
     assert
     pushbytess 0xf2b65f27 0xb1965aa8 // method "g()void", method "comparison_operators_for_external_function_pointers_with_dirty_bits()bool"
     txna ApplicationArgs 0
-    match main_g_route@5 comparison_operators_for_external_function_pointers_with_dirty_bits
+    match g comparison_operators_for_external_function_pointers_with_dirty_bits
     err
 
-main_g_route@5:
-    pushint 1
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/comparison_operator_for_external_function_cleans_dirty_bits.sol.C.g[routing]() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 1
     return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/comparison_operator_for_external_function_cleans_dirty_bits.sol.C.comparison_operators_for_external_function_pointers_with_dirty_bits[routing]() -> void:
 comparison_operators_for_external_function_pointers_with_dirty_bits:
+    txn GroupIndex
+    bz comparison_operators_for_external_function_pointers_with_dirty_bits_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+comparison_operators_for_external_function_pointers_with_dirty_bits_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c7580
     log
-    pushint 1
+    intc_0 // 1
     return
+
+comparison_operators_for_external_function_pointers_with_dirty_bits_ternary_false@3:
+    intc_1 // 0
+    b comparison_operators_for_external_function_pointers_with_dirty_bits_ternary_merge@4

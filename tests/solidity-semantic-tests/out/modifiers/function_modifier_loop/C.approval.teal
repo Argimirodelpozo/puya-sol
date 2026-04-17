@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_loop.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64
+    intcblock 1 0 64
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -33,35 +33,49 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_loop.sol.C.f[routing]() -> void:
 f:
+    intc_1 // 0
+    dupn 2
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x
+    bury 1
     pushint 10
     itob
-    pushint 0
-    itob
-
-f_while_top@4:
-    dup
-    dig 2
-    b<
-    bz f_after_while@6
-    dig 2
-    pushbytes 0x01
-    b+
     bury 3
+    intc_1 // 0
+    itob
+    bury 2
+
+f_while_top@7:
+    dig 1
+    dig 3
+    b<
+    bz f_after_while@9
     dup
     pushbytes 0x01
     b+
     bury 1
-    b f_while_top@4
+    dig 1
+    pushbytes 0x01
+    b+
+    bury 2
+    b f_while_top@7
 
-f_after_while@6:
-    dig 2
-    dup
+f_after_while@9:
+    dupn 2
     len
-    intc_1 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
     pushbytes 0x151f7c75
@@ -70,3 +84,7 @@ f_after_while@6:
     log
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4

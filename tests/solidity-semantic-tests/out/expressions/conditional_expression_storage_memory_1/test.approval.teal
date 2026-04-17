@@ -37,6 +37,7 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/conditional_expression_storage_memory_1.sol.test.f[routing]() -> void:
 f:
+    intc_1 // 0
     txna ApplicationArgs 1
     dup
     len
@@ -45,7 +46,17 @@ f:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
-    dup
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     intc_0 // 1
     <=
     assert // ABI bool validation
@@ -57,16 +68,16 @@ f:
     app_global_put
     intc_1 // 0
     itob
-    swap
+    bury 3
     extract 0 2 // on error: index access is out of bounds
     pushbytes "aa"
     ==
-    bz f_after_if_else@3
+    bz f_after_if_else@6
     intc_0 // 1
     itob
-    bury 1
+    bury 2
 
-f_after_if_else@3:
+f_after_if_else@6:
     intc_1 // 0
     bytec_0 // "data1"
     app_global_get_ex
@@ -74,13 +85,14 @@ f_after_if_else@3:
     extract 0 2 // on error: index access is out of bounds
     pushbytes "bb"
     ==
-    bz f_after_if_else@5
+    bz f_after_if_else@8
     pushint 2
     itob
-    bury 1
+    bury 2
 
-f_after_if_else@5:
-    dupn 2
+f_after_if_else@8:
+    dig 1
+    dup
     len
     intc_2 // 32
     <=
@@ -94,3 +106,7 @@ f_after_if_else@5:
     log
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4

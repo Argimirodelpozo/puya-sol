@@ -64,12 +64,26 @@ fromMemory:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    txn GroupIndex
+    bz fromMemory_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+fromMemory_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c75
-    swap
+    dig 1
     concat
     log
     intc_0 // 1
     return
+
+fromMemory_ternary_false@3:
+    intc_1 // 0
+    b fromMemory_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/bytes_to_fixed_bytes_too_long.sol.C.fromCalldata[routing]() -> void:
@@ -85,16 +99,40 @@ fromCalldata:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    txn GroupIndex
+    bz fromCalldata_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+fromCalldata_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c75
-    swap
+    dig 1
     concat
     log
     intc_0 // 1
     return
 
+fromCalldata_ternary_false@3:
+    intc_1 // 0
+    b fromCalldata_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/bytes_to_fixed_bytes_too_long.sol.C.fromStorage[routing]() -> void:
 fromStorage:
+    txn GroupIndex
+    bz fromStorage_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+fromStorage_ternary_merge@4:
+    !
+    assert // not payable
     bytec_2 // "s"
     box_get
     pushbytes 0x
@@ -106,6 +144,10 @@ fromStorage:
     log
     intc_0 // 1
     return
+
+fromStorage_ternary_false@3:
+    intc_1 // 0
+    b fromStorage_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/bytes_to_fixed_bytes_too_long.sol.C.fromSlice[routing]() -> void:
@@ -121,6 +163,17 @@ fromSlice:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    txn GroupIndex
+    bz fromSlice_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+fromSlice_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     substring 0 33
     bytec_0 // 0x151f7c75
     swap
@@ -128,3 +181,7 @@ fromSlice:
     log
     intc_0 // 1
     return
+
+fromSlice_ternary_false@3:
+    intc_1 // 0
+    b fromSlice_ternary_merge@4

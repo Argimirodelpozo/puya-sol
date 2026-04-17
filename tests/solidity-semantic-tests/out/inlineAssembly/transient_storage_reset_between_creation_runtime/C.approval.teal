@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_reset_between_creation_runtime.sol.C.approval_program() -> uint64:
 main:
-    pushint 0
+    intcblock 1 0
+    intc_1 // 0
     txn ApplicationID
     bnz main_after_if_else@2
     load 0
@@ -16,7 +17,7 @@ main:
     pushbytes 0x2a
     b==
     assert
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -43,6 +44,16 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_reset_between_creation_runtime.sol.C.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     pushint 160
     bzero
     load 0
@@ -62,5 +73,9 @@ f:
     swap
     concat
     log
-    pushint 1
+    intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4

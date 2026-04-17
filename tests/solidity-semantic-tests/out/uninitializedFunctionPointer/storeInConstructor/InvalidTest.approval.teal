@@ -43,17 +43,27 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/storeInConstructor.sol.InvalidTest.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_1 // "flag"
     app_global_get_ex
     assert // check flag exists
-    bz f_after_if_else@3
+    bz f_after_if_else@6
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
     log
     intc_1 // 1
     return
 
-f_after_if_else@3:
+f_after_if_else@6:
     bytec_1 // "flag"
     intc_1 // 1
     app_global_put
@@ -63,3 +73,7 @@ f_after_if_else@3:
     bury 1
     assert // check storedFn exists
     err // invalid function pointer
+
+f_ternary_false@3:
+    intc_0 // 0
+    b f_ternary_merge@4

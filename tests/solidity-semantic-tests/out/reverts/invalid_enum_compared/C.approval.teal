@@ -25,18 +25,22 @@ main_after_if_else@2:
     assert
     pushbytess 0x667acee9 0x1949f779 0x601c6aa7 // method "test_eq()bool", method "test_eq_ok()bool", method "test_neq()bool"
     txna ApplicationArgs 0
-    match test_eq main_test_eq_ok_route@6 test_neq
+    match test_eq test_eq_ok test_neq
     err
-
-main_test_eq_ok_route@6:
-    bytec_0 // 0x151f7c7580
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_compared.sol.C.test_eq[routing]() -> void:
 test_eq:
+    txn GroupIndex
+    bz test_eq_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test_eq_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     intc_1 // 0
@@ -46,9 +50,45 @@ test_eq:
     intc_0 // 1
     return
 
+test_eq_ternary_false@3:
+    intc_1 // 0
+    b test_eq_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_compared.sol.C.test_eq_ok[routing]() -> void:
+test_eq_ok:
+    txn GroupIndex
+    bz test_eq_ok_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test_eq_ok_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_0 // 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+test_eq_ok_ternary_false@3:
+    intc_1 // 0
+    b test_eq_ok_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_compared.sol.C.test_neq[routing]() -> void:
 test_neq:
+    txn GroupIndex
+    bz test_neq_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test_neq_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     intc_1 // 0
@@ -57,3 +97,7 @@ test_neq:
     log
     intc_0 // 1
     return
+
+test_neq_ternary_false@3:
+    intc_1 // 0
+    b test_neq_ternary_merge@4

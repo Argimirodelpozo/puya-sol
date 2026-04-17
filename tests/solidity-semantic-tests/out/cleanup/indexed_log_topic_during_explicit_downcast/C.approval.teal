@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/indexed_log_topic_during_explicit_downcast.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -30,6 +30,16 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/indexed_log_topic_during_explicit_downcast.sol.C.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c750000000000000031
@@ -37,9 +47,23 @@ f:
     intc_0 // 1
     return
 
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/indexed_log_topic_during_explicit_downcast.sol.C.g[routing]() -> void:
 g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c753100000000000000000000000000000000000000000000000000000000000000
@@ -47,12 +71,30 @@ g:
     intc_0 // 1
     return
 
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/indexed_log_topic_during_explicit_downcast.sol.C.h[routing]() -> void:
 h:
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c75ff00000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
+
+h_ternary_false@3:
+    intc_1 // 0
+    b h_ternary_merge@4

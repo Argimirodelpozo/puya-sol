@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 32 1 2
+    intcblock 0 1 32 2
     bytecblock "addresses" 0x0000 "__ctor_pending" 0x01 0x151f7c7580
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_2 // "__ctor_pending"
-    intc_2 // 1
+    intc_1 // 1
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -44,7 +44,7 @@ __postInit:
     intc_3 // 2
     box_create
     pop
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -54,7 +54,7 @@ f:
     dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    intc_1 // 32
+    intc_2 // 32
     *
     intc_3 // 2
     +
@@ -64,7 +64,7 @@ f:
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 32>>
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.f
     pop
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -74,7 +74,7 @@ g:
     dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    intc_1 // 32
+    intc_2 // 32
     *
     intc_3 // 2
     +
@@ -84,12 +84,22 @@ g:
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 32>>
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.g
     pop
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.test_f[routing]() -> void:
 test_f:
+    txn GroupIndex
+    bz test_f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+test_f_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "addresses"
     box_del
     pop
@@ -102,12 +112,26 @@ test_f:
     pop
     bytec 4 // 0x151f7c7580
     log
-    intc_2 // 1
+    intc_1 // 1
     return
+
+test_f_ternary_false@3:
+    intc_0 // 0
+    b test_f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.test_g[routing]() -> void:
 test_g:
+    txn GroupIndex
+    bz test_g_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+test_g_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "addresses"
     box_del
     pop
@@ -120,8 +144,12 @@ test_g:
     pop
     bytec 4 // 0x151f7c7580
     log
-    intc_2 // 1
+    intc_1 // 1
     return
+
+test_g_ternary_false@3:
+    intc_0 // 0
+    b test_g_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.addresses[routing]() -> void:
@@ -129,9 +157,19 @@ addresses:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz addresses_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+addresses_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "addresses"
     box_get
     bytec_1 // 0x0000
@@ -139,7 +177,7 @@ addresses:
     select
     pushint 8
     bzero
-    uncover 2
+    dig 2
     concat
     dup
     len
@@ -149,39 +187,55 @@ addresses:
     swap
     extract 2 0
     swap
-    intc_1 // 32
+    intc_2 // 32
     *
-    intc_1 // 32
+    intc_2 // 32
     extract3 // on error: index access is out of bounds
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
+
+addresses_ternary_false@3:
+    intc_0 // 0
+    b addresses_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.f(_addresses: bytes) -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.f:
     proto 1 1
     intc_0 // 0
-    itob
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.f_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.f_while_top@1:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.f_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 0
+    itob
+    frame_bury 0
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.f_while_top@4:
     frame_dig -1
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     itob
     frame_dig 0
     b>
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.f_after_while@3
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.f_after_while@6
     frame_dig 0
     bytec_3 // 0x01
     b+
     frame_bury 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.f_while_top@1
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.f_while_top@4
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.f_after_while@3:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.f_after_while@6:
     bytec_0 // "addresses"
     box_del
     pop
@@ -191,29 +245,45 @@ addresses:
     frame_dig -1
     swap
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.f_ternary_false@2:
+    intc_0 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.f_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.g(_addresses: bytes) -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.g:
     proto 1 1
     intc_0 // 0
-    itob
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.g_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.g_while_top@1:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.g_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 0
+    itob
+    frame_bury 0
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.g_while_top@4:
     frame_dig -1
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     itob
     frame_dig 0
     b>
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.g_after_while@3
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.g_after_while@6
     frame_dig 0
     bytec_3 // 0x01
     b+
     frame_bury 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.g_while_top@1
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.g_while_top@4
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.g_after_while@3:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.g_after_while@6:
     bytec_0 // "addresses"
     box_del
     pop
@@ -223,6 +293,10 @@ addresses:
     frame_dig -1
     swap
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.g_ternary_false@2:
+    intc_0 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.g_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.test_equality(_addresses: bytes) -> bytes:
@@ -246,7 +320,7 @@ test_equality:
 test_equality_ternary_merge@3:
     intc_3 // 2
     -
-    intc_1 // 32
+    intc_2 // 32
     /
     itob
     frame_dig 1
@@ -275,11 +349,11 @@ test_equality_while_top@4:
     frame_dig -1
     extract 2 0
     swap
-    intc_1 // 32
+    intc_2 // 32
     *
     swap
     dig 1
-    intc_1 // 32
+    intc_2 // 32
     extract3 // on error: index access is out of bounds
     bytec_0 // "addresses"
     box_get
@@ -288,7 +362,7 @@ test_equality_while_top@4:
     select
     extract 2 0
     uncover 2
-    intc_1 // 32
+    intc_2 // 32
     extract3 // on error: index access is out of bounds
     ==
     assert

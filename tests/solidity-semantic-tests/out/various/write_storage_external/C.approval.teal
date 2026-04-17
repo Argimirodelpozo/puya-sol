@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 64
+    intcblock 1 0 32 64
     bytecblock "x"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -37,7 +37,7 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     bytec_0 // "x"
@@ -52,39 +52,59 @@ g:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_0 // "x"
-    swap
-    app_global_put
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.C.g
     intc_0 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.C.h[routing]() -> void:
 h:
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
     pushint 12
     itob
-    bytec_0 // "x"
-    swap
-    app_global_put
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.C.g
     intc_0 // 1
     return
+
+h_ternary_false@3:
+    intc_1 // 0
+    b h_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.C.x[routing]() -> void:
 x:
-    pushint 0
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     dup
     len
-    intc_2 // 64
+    intc_3 // 64
     <=
     assert // overflow
-    intc_2 // 64
+    intc_3 // 64
     bzero
     b|
     pushbytes 0x151f7c75
@@ -93,3 +113,30 @@ x:
     log
     intc_0 // 1
     return
+
+x_ternary_false@3:
+    intc_1 // 0
+    b x_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.C.g(__arc4_y: bytes) -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.C.g:
+    proto 1 0
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.C.g_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.C.g_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // "x"
+    frame_dig -1
+    app_global_put
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.C.g_ternary_false@2:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.C.g_ternary_merge@3

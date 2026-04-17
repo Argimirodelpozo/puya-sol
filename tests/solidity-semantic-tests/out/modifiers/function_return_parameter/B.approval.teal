@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_return_parameter.sol.B.approval_program() -> uint64:
 main:
-    intcblock 1 255
+    intcblock 1 0 255
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -40,25 +40,39 @@ f:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    pushint 0
+    intc_1 // 0
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-f_while_top@4:
+f_ternary_merge@4:
+    !
+    assert // not payable
+
+f_while_top@7:
     dup
     pushbytes "1234567"
     ==
-    bz f_after_while@11
+    bz f_after_while@14
     dig 1
     dup
-    intc_1 // 255
+    intc_2 // 255
     <=
     assert // ABI validation
-    intc_1 // 255
+    intc_2 // 255
     &
     bury 2
-    b f_while_top@4
+    b f_while_top@7
 
-f_after_while@11:
+f_after_while@14:
     pushbytes 0x151f7c7500000000000000
     log
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4

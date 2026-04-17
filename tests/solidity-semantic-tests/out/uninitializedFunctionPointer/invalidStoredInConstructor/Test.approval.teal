@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/invalidStoredInConstructor.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 16 0
+    intcblock 1 0 16
     bytecblock TMPL_APPROVAL_C TMPL_CLEAR_C
     txn ApplicationID
     bnz main_after_if_else@2
@@ -34,16 +34,26 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/invalidStoredInConstructor.sol.Test.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     bytec_0 // TMPL_APPROVAL_C
     bytec_1 // TMPL_CLEAR_C
     pushint 6
     itxn_field TypeEnum
-    intc_1 // 16
+    intc_2 // 16
     itxn_field GlobalNumUint
-    intc_1 // 16
+    intc_2 // 16
     itxn_field GlobalNumByteSlice
-    intc_2 // 0
+    intc_1 // 0
     itxn_field Fee
     pushint 3
     itxn_field ExtraProgramPages
@@ -57,10 +67,14 @@ f:
     intc_0 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_2 // 0
+    intc_1 // 0
     itxn_field Fee
     pushint 1000000
     itxn_field Amount
     itxn_submit
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4

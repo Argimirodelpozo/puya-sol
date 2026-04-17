@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/use_scratch.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 64 0
+    intcblock 32 1 0 64
     bytecblock "__ctor_pending" "m" "x" 0x "y" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -37,14 +37,14 @@ __postInit:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 64
+    intc_3 // 64
     ==
     assert // invalid number of bytes for arc4.uint512
     bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_3 // 0
+    intc_2 // 0
     app_global_put
     bytec_1 // "m"
     pushint 2
@@ -93,7 +93,17 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/use_scratch.sol.C.f[routing]() -> void:
 f:
-    intc_3 // 0
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    intc_2 // 0
     bytec_2 // "x"
     app_global_get_ex
     assert // check x exists
@@ -109,7 +119,7 @@ f:
     swap
     dig 1
     b|
-    intc_3 // 0
+    intc_2 // 0
     bytec 4 // "y"
     app_global_get_ex
     assert // check y exists
@@ -128,6 +138,10 @@ f:
     intc_1 // 1
     return
 
+f_ternary_false@3:
+    intc_2 // 0
+    b f_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/use_scratch.sol.C.m[routing]() -> void:
 m:
@@ -137,9 +151,19 @@ m:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz m_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+m_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
-    swap
+    dig 1
     concat
     dup
     len
@@ -157,10 +181,10 @@ m:
     select
     dup
     len
-    intc_2 // 64
+    intc_3 // 64
     <=
     assert // overflow
-    intc_2 // 64
+    intc_3 // 64
     bzero
     b|
     bytec 5 // 0x151f7c75
@@ -169,3 +193,7 @@ m:
     log
     intc_1 // 1
     return
+
+m_ternary_false@3:
+    intc_2 // 0
+    b m_ternary_merge@4

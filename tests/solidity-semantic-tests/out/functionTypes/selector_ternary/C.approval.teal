@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -24,16 +24,48 @@ main_after_if_else@2:
     assert
     pushbytess 0x2d4970c7 0xf2b65f27 0xb10b5ae3 // method "f()void", method "g()void", method "h(bool)byte[4]"
     txna ApplicationArgs 0
-    match main_f_route@5 main_g_route@6 h
+    match f g h
     err
 
-main_g_route@6:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary.sol.C.f[routing]() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 1
     return
 
-main_f_route@5:
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary.sol.C.g[routing]() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 1
     return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary.sol.C.h[routing]() -> void:
@@ -44,16 +76,26 @@ h:
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    pushint 0
+    intc_1 // 0
     getbit
-    dup
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     intc_0 // 1
     <=
     assert // ABI bool validation
-    bz h_ternary_false@3
+    bz h_ternary_false@6
     pushbytes 0x26121ff0
 
-h_ternary_merge@4:
+h_ternary_merge@7:
     pushbytes 0x151f7c75
     swap
     concat
@@ -61,6 +103,10 @@ h_ternary_merge@4:
     intc_0 // 1
     return
 
-h_ternary_false@3:
+h_ternary_false@6:
     pushbytes 0xe2179b8e
+    b h_ternary_merge@7
+
+h_ternary_false@3:
+    intc_1 // 0
     b h_ternary_merge@4

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/divisiod_by_zero.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 32 1 0
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -43,6 +43,17 @@ div:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz div_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+div_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
     b/
     dup
     len
@@ -59,6 +70,10 @@ div:
     intc_1 // 1
     return
 
+div_ternary_false@3:
+    intc_2 // 0
+    b div_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/divisiod_by_zero.sol.C.mod[routing]() -> void:
 mod:
@@ -74,6 +89,17 @@ mod:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz mod_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+mod_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
     b%
     dup
     len
@@ -89,3 +115,7 @@ mod:
     log
     intc_1 // 1
     return
+
+mod_ternary_false@3:
+    intc_2 // 0
+    b mod_ternary_merge@4

@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/single_copy_with_multiple_inheritance.sol.B.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 1 32 0
     bytecblock "data" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "data"
     pushbytes 0x
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -34,21 +34,35 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/single_copy_with_multiple_inheritance.sol.B.getViaB[routing]() -> void:
 getViaB:
+    txn GroupIndex
+    bz getViaB_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getViaB_ternary_merge@4:
+    !
+    assert // not payable
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/single_copy_with_multiple_inheritance.sol.B.getViaBase
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+getViaB_ternary_false@3:
+    intc_2 // 0
+    b getViaB_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/single_copy_with_multiple_inheritance.sol.B.setData[routing]() -> void:
@@ -56,14 +70,28 @@ setData:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz setData_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+setData_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "data"
-    swap
+    dig 1
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
+
+setData_ternary_false@3:
+    intc_2 // 0
+    b setData_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/single_copy_with_multiple_inheritance.sol.B.getViaBase[routing]() -> void:
@@ -73,22 +101,36 @@ getViaBase:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/single_copy_with_multiple_inheritance.sol.B.getViaBase() -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/single_copy_with_multiple_inheritance.sol.B.getViaBase:
-    pushint 0
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/single_copy_with_multiple_inheritance.sol.B.getViaBase_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/single_copy_with_multiple_inheritance.sol.B.getViaBase_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
     bytec_0 // "data"
     app_global_get_ex
     assert // check data exists
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/single_copy_with_multiple_inheritance.sol.B.getViaBase_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/single_copy_with_multiple_inheritance.sol.B.getViaBase_ternary_merge@3

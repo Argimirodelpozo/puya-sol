@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/precompiles_ignoring_trailing_input.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 128
+    intcblock 1 0 128
     bytecblock 0x151f7c750000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -33,26 +33,54 @@ main_after_if_else@2:
 ecRecover:
     txna ApplicationArgs 1
     len
-    intc_1 // 128
+    intc_2 // 128
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 4>
+    txn GroupIndex
+    bz ecRecover_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+ecRecover_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c750000
     log
     intc_0 // 1
     return
+
+ecRecover_ternary_false@3:
+    intc_1 // 0
+    b ecRecover_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/precompiles_ignoring_trailing_input.sol.C.ecAdd[routing]() -> void:
 ecAdd:
     txna ApplicationArgs 1
     len
-    intc_1 // 128
+    intc_2 // 128
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 4>
+    txn GroupIndex
+    bz ecAdd_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+ecAdd_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c750000
     log
     intc_0 // 1
     return
+
+ecAdd_ternary_false@3:
+    intc_1 // 0
+    b ecAdd_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/precompiles_ignoring_trailing_input.sol.C.ecMul[routing]() -> void:
@@ -62,7 +90,21 @@ ecMul:
     pushint 96
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 3>
+    txn GroupIndex
+    bz ecMul_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+ecMul_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c750000
     log
     intc_0 // 1
     return
+
+ecMul_ternary_false@3:
+    intc_1 // 0
+    b ecMul_ternary_merge@4

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.approval_program() -> uint64:
 main:
     intcblock 0 1 6 16
-    bytecblock "savedData" "__ctor_pending" 0x 0x151f7c7580 "rec" TMPL_APPROVAL_receiver TMPL_CLEAR_receiver
+    bytecblock "savedData" "__ctor_pending" 0x "rec" 0x151f7c7580 TMPL_APPROVAL_receiver TMPL_CLEAR_receiver
     bytec_2 // ""
     dup
     txn ApplicationID
@@ -68,8 +68,7 @@ main_clear_route@12:
     b main_switch_case_next@14
 
 main_forward_route@11:
-    bytec_3 // 0x151f7c7580
-    log
+    callsub forward
     intc_1 // 1
     bury 2
     b main_switch_case_next@14
@@ -134,7 +133,7 @@ __postInit:
     swap
     itob
     concat
-    bytec 4 // "rec"
+    bytec_3 // "rec"
     swap
     app_global_put
     retsub
@@ -146,24 +145,69 @@ __fallback:
     retsub
 
 
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.forward[routing]() -> void:
+forward:
+    txn GroupIndex
+    bz forward_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+forward_ternary_merge@4:
+    !
+    assert // not payable
+    bytec 4 // 0x151f7c7580
+    log
+    retsub
+
+forward_ternary_false@3:
+    intc_0 // 0
+    b forward_ternary_merge@4
+
+
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.clear[routing]() -> void:
 clear:
+    txn GroupIndex
+    bz clear_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+clear_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "savedData"
     box_del
     pop
     bytec_0 // "savedData"
     bytec_2 // 0x
     box_put
-    bytec_3 // 0x151f7c7580
+    bytec 4 // 0x151f7c7580
     log
     retsub
+
+clear_ternary_false@3:
+    intc_0 // 0
+    b clear_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.val[routing]() -> void:
 val:
+    txn GroupIndex
+    bz val_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+val_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     intc_0 // 0
-    bytec 4 // "rec"
+    bytec_3 // "rec"
     app_global_get_ex
     assert // check rec exists
     pushint 24
@@ -194,186 +238,200 @@ val:
     log
     retsub
 
+val_ternary_false@3:
+    intc_0 // 0
+    b val_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback() -> void:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback:
     proto 0 0
     intc_0 // 0
     dupn 14
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@3:
+    !
+    assert // not payable
     txn NumAppArgs
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@50
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@53
     txn NumAppArgs
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@3
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@6
     txna ApplicationArgs 0
     frame_bury 0
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@4:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@7:
     txn NumAppArgs
     intc_1 // 1
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@6
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@9
     txna ApplicationArgs 1
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@7:
-    frame_dig 0
-    swap
-    concat
-    frame_bury 13
-    txn NumAppArgs
-    pushint 2
-    >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@9
-    txna ApplicationArgs 2
-
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@10:
-    frame_dig 13
-    swap
-    concat
-    frame_bury 14
-    txn NumAppArgs
-    pushint 3
-    >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@12
-    txna ApplicationArgs 3
-
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@13:
-    frame_dig 14
+    frame_dig 0
     swap
     concat
     frame_bury 1
     txn NumAppArgs
-    pushint 4
+    pushint 2
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@15
-    txna ApplicationArgs 4
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@12
+    txna ApplicationArgs 2
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@16:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@13:
     frame_dig 1
     swap
     concat
     frame_bury 2
     txn NumAppArgs
-    pushint 5
+    pushint 3
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@18
-    txna ApplicationArgs 5
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@15
+    txna ApplicationArgs 3
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@19:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@16:
     frame_dig 2
     swap
     concat
     frame_bury 3
     txn NumAppArgs
-    intc_2 // 6
+    pushint 4
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@21
-    txna ApplicationArgs 6
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@18
+    txna ApplicationArgs 4
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@22:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@19:
     frame_dig 3
     swap
     concat
     frame_bury 4
     txn NumAppArgs
-    pushint 7
+    pushint 5
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@24
-    txna ApplicationArgs 7
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@21
+    txna ApplicationArgs 5
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@25:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@22:
     frame_dig 4
     swap
     concat
     frame_bury 5
     txn NumAppArgs
-    pushint 8
+    intc_2 // 6
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@27
-    txna ApplicationArgs 8
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@24
+    txna ApplicationArgs 6
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@28:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@25:
     frame_dig 5
     swap
     concat
     frame_bury 6
     txn NumAppArgs
-    pushint 9
+    pushint 7
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@30
-    txna ApplicationArgs 9
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@27
+    txna ApplicationArgs 7
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@31:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@28:
     frame_dig 6
     swap
     concat
     frame_bury 7
     txn NumAppArgs
-    pushint 10
+    pushint 8
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@33
-    txna ApplicationArgs 10
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@30
+    txna ApplicationArgs 8
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@34:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@31:
     frame_dig 7
     swap
     concat
     frame_bury 8
     txn NumAppArgs
-    pushint 11
+    pushint 9
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@36
-    txna ApplicationArgs 11
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@33
+    txna ApplicationArgs 9
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@37:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@34:
     frame_dig 8
     swap
     concat
     frame_bury 9
     txn NumAppArgs
-    pushint 12
+    pushint 10
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@39
-    txna ApplicationArgs 12
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@36
+    txna ApplicationArgs 10
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@40:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@37:
     frame_dig 9
     swap
     concat
     frame_bury 10
     txn NumAppArgs
-    pushint 13
+    pushint 11
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@42
-    txna ApplicationArgs 13
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@39
+    txna ApplicationArgs 11
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@43:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@40:
     frame_dig 10
     swap
     concat
     frame_bury 11
     txn NumAppArgs
-    pushint 14
+    pushint 12
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@45
-    txna ApplicationArgs 14
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@42
+    txna ApplicationArgs 12
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@46:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@43:
     frame_dig 11
     swap
     concat
     frame_bury 12
     txn NumAppArgs
-    pushint 15
+    pushint 13
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@48
-    txna ApplicationArgs 15
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@45
+    txna ApplicationArgs 13
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@49:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@46:
     frame_dig 12
     swap
     concat
+    frame_bury 13
+    txn NumAppArgs
+    pushint 14
+    >
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@48
+    txna ApplicationArgs 14
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@51:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@49:
+    frame_dig 13
+    swap
+    concat
+    frame_bury 14
+    txn NumAppArgs
+    pushint 15
+    >
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@51
+    txna ApplicationArgs 15
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@52:
+    frame_dig 14
+    swap
+    concat
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@54:
     bytec_0 // "savedData"
     box_del
     pop
@@ -381,6 +439,11 @@ val:
     swap
     box_put
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@51:
+    intc_0 // 0
+    bzero
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@52
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@48:
     intc_0 // 0
@@ -455,15 +518,14 @@ val:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@6:
     intc_0 // 0
     bzero
+    frame_bury 0
     b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@7
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@3:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@53:
     intc_0 // 0
     bzero
-    frame_bury 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@4
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@54
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@50:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@2:
     intc_0 // 0
-    bzero
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@51
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@3

@@ -41,26 +41,39 @@ c:
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
-    dup
+    dupn 2
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     dup
+    cover 2
     intc_2 // 32
     *
     pushint 2
     +
-    dig 2
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
-    uncover 2
+    txn GroupIndex
+    bz c_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+c_ternary_merge@4:
+    !
+    assert // not payable
+    dig 2
     pushbytes 0x05
     b==
     assert
+    dup
     itob
     pushbytes 0x02
     b==
     assert
+    dig 1
     dup
     extract 2 32
     pushbytes 0x06
@@ -76,9 +89,23 @@ c:
     intc_1 // 1
     return
 
+c_ternary_false@3:
+    intc_0 // 0
+    b c_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_encode_call.sol.C.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -93,3 +120,7 @@ f:
     log
     intc_1 // 1
     return
+
+f_ternary_false@3:
+    intc_0 // 0
+    b f_ternary_merge@4

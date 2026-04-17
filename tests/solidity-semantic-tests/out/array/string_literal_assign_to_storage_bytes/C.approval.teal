@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_literal_assign_to_storage_bytes.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     bytecblock "s" "s1" "__ctor_pending" "abc" "abcd" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,7 +38,7 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_2 // "__ctor_pending"
-    pushint 0
+    intc_1 // 0
     app_global_put
     bytec_0 // "s"
     pushint 3
@@ -60,6 +60,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_literal_assign_to_storage_bytes.sol.C.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "s"
     box_del
     pop
@@ -74,10 +84,24 @@ f:
     box_put
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_literal_assign_to_storage_bytes.sol.C.g[routing]() -> void:
 g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     bytec_1 // "s1"
     box_del
     pop
@@ -93,9 +117,23 @@ g:
     intc_0 // 1
     return
 
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_literal_assign_to_storage_bytes.sol.C.s[routing]() -> void:
 s:
+    txn GroupIndex
+    bz s_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+s_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "s"
     box_get
     pushbytes 0x
@@ -114,9 +152,23 @@ s:
     intc_0 // 1
     return
 
+s_ternary_false@3:
+    intc_1 // 0
+    b s_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_literal_assign_to_storage_bytes.sol.C.s1[routing]() -> void:
 s1:
+    txn GroupIndex
+    bz s1_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+s1_ternary_merge@4:
+    !
+    assert // not payable
     bytec_1 // "s1"
     box_get
     pushbytes 0x
@@ -134,3 +186,7 @@ s1:
     log
     intc_0 // 1
     return
+
+s1_ternary_false@3:
+    intc_1 // 0
+    b s1_ternary_merge@4

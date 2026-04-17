@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/metaTypes/name_other_contract.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -24,27 +24,91 @@ main_after_if_else@2:
     assert
     pushbytess 0x8c6ce091 0x87a1fe97 0x792b0320 0x2d4970c7 // method "c()string", method "a()string", method "i()string", method "f()void"
     txna ApplicationArgs 0
-    match main_c_route@5 main_a_route@6 main_i_route@7 main_f_route@8
+    match c a i f
     err
 
-main_f_route@8:
-    intc_0 // 1
-    return
 
-main_i_route@7:
-    pushbytes 0x151f7c75000149
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/metaTypes/name_other_contract.sol.Test.c[routing]() -> void:
+c:
+    txn GroupIndex
+    bz c_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+c_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75000143
     log
     intc_0 // 1
     return
 
-main_a_route@6:
+c_ternary_false@3:
+    intc_1 // 0
+    b c_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/metaTypes/name_other_contract.sol.Test.a[routing]() -> void:
+a:
+    txn GroupIndex
+    bz a_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+a_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c75000141
     log
     intc_0 // 1
     return
 
-main_c_route@5:
-    pushbytes 0x151f7c75000143
+a_ternary_false@3:
+    intc_1 // 0
+    b a_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/metaTypes/name_other_contract.sol.Test.i[routing]() -> void:
+i:
+    txn GroupIndex
+    bz i_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+i_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75000149
     log
     intc_0 // 1
     return
+
+i_ternary_false@3:
+    intc_1 // 0
+    b i_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/metaTypes/name_other_contract.sol.Test.f[routing]() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4

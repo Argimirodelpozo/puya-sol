@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/saltedCreate/prediction_example.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 16 0
+    intcblock 32 1 0 16
     bytecblock 0xffffffffffffffffffffffffffffffffffffffff TMPL_APPROVAL_D TMPL_CLEAR_D
     txn ApplicationID
     bnz main_after_if_else@2
@@ -46,11 +46,21 @@ createDSalted:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz createDSalted_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+createDSalted_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
     global CurrentApplicationAddress
     dig 1
-    uncover 4
+    dig 4
     concat
     dup
     len
@@ -62,7 +72,7 @@ createDSalted:
     dig 1
     concat
     dig 2
-    uncover 4
+    dig 4
     concat
     dup
     len
@@ -113,11 +123,11 @@ createDSalted:
     bytec_2 // TMPL_CLEAR_D
     pushint 6
     itxn_field TypeEnum
-    intc_2 // 16
+    intc_3 // 16
     itxn_field GlobalNumUint
-    intc_2 // 16
+    intc_3 // 16
     itxn_field GlobalNumByteSlice
-    intc_3 // 0
+    intc_2 // 0
     itxn_field Fee
     pushint 3
     itxn_field ExtraProgramPages
@@ -132,7 +142,7 @@ createDSalted:
     intc_1 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_3 // 0
+    intc_2 // 0
     itxn_field Fee
     pushint 1000000
     itxn_field Amount
@@ -146,3 +156,7 @@ createDSalted:
     assert // Address mismatch.
     intc_1 // 1
     return
+
+createDSalted_ternary_false@3:
+    intc_2 // 0
+    b createDSalted_ternary_merge@4

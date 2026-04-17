@@ -31,6 +31,16 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x77e5189111eb6557e8a637b27ef8fbb15bc61d61c2f00cc48878f3a296e5e0ca
     intc_2 // 0
     pushbytess 0x6944c77849b18048f6abe0db8084b0d0d0689cdddb53d2671c36967b58691ad4 0xef4f06ba4f78319baafd0424365777241af4dfd3da840471b4b4b087b7750d0d 0xca35b7d915458ef540ade6068dfe2f44e8fa733c
@@ -42,6 +52,10 @@ f:
     log
     intc_1 // 1
     return
+
+f_ternary_false@3:
+    intc_2 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover[routing]() -> void:
@@ -96,7 +110,18 @@ recover:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover:
     proto 6 1
     intc_2 // 0
-    dup
+    dupn 2
+    pushbytes ""
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover_ternary_merge@3:
+    !
+    assert // not payable
     frame_dig -5
     intc_3 // 255
     <=
@@ -107,7 +132,9 @@ recover:
     frame_bury -5
     intc_0 // 32
     bzero
-    dupn 2
+    dup
+    frame_bury 2
+    dup
     frame_dig -2
     concat
     dup
@@ -134,12 +161,13 @@ recover:
     pushint 27
     >=
     dup
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover_ternary_false@2
+    frame_bury 3
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover_ternary_false@5
     frame_dig -5
     pushint 27
     -
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover_ternary_merge@3:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover_ternary_merge@6:
     intc_1 // 1
     &
     frame_dig -6
@@ -150,11 +178,11 @@ recover:
     frame_bury 1
     frame_bury 0
     frame_dig 3
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover_ternary_false@6
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover_ternary_false@9
     frame_dig -5
     pushint 28
     <=
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover_ternary_false@6
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover_ternary_false@9
     pushint 12
     bzero
     frame_dig 0
@@ -164,13 +192,17 @@ recover:
     extract 12 20
     concat
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover_ternary_merge@7:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover_ternary_merge@10:
     frame_bury 0
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover_ternary_false@6:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover_ternary_false@9:
     frame_dig 2
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover_ternary_merge@7
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover_ternary_merge@10
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover_ternary_false@5:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover_ternary_merge@6
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover_ternary_false@2:
     intc_2 // 0

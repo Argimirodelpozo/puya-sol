@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/mapping_storage_end.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
+    intcblock 0 1 32
     bytecblock "__ctor_pending" "m" 0x068101 0x03e8
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,7 +38,7 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_2 // 0
+    intc_0 // 0
     app_global_put
     bytec_1 // "m"
     pushint 2
@@ -50,13 +50,23 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/mapping_storage_end.sol.C.init[routing]() -> void:
 init:
-    intc_2 // 0
+    intc_0 // 0
+    txn GroupIndex
+    bz init_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
 
-init_while_top@6:
+init_ternary_merge@4:
+    !
+    assert // not payable
+
+init_while_top@9:
     pushint 170010
     global OpcodeBudget
     >
-    bz init_after_while@11
+    bz init_after_while@14
     itxn_begin
     pushint 6 // appl
     itxn_field TypeEnum
@@ -66,33 +76,33 @@ init_while_top@6:
     itxn_field ApprovalProgram
     bytec_2 // 0x068101
     itxn_field ClearStateProgram
-    intc_2 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_submit
-    b init_while_top@6
+    b init_while_top@9
 
-init_after_while@11:
-    intc_2 // 0
+init_after_while@14:
+    intc_0 // 0
     itob
     bury 1
 
-init_while_top@2:
+init_while_top@5:
     dup
     bytec_3 // 0x03e8
     b<
-    bz init_after_while@4
+    bz init_after_while@7
     dupn 2
     pushbytes 0x01
     b+
-    intc_0 // 32
+    intc_2 // 32
     bzero
     uncover 2
     concat
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     -
-    intc_0 // 32
+    intc_2 // 32
     extract3
     sha256
     bytec_1 // "m"
@@ -104,24 +114,40 @@ init_while_top@2:
     dig 1
     box_put
     bury 1
-    b init_while_top@2
+    b init_while_top@5
 
-init_after_while@4:
+init_after_while@7:
     intc_1 // 1
     return
+
+init_ternary_false@3:
+    intc_0 // 0
+    b init_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/mapping_storage_end.sol.C.validate[routing]() -> void:
 validate:
-    intc_2 // 0
-    itob
+    intc_0 // 0
+    txn GroupIndex
+    bz validate_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
 
-validate_while_top@2:
+validate_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 0
+    itob
+    bury 1
+
+validate_while_top@5:
     dup
     bytec_3 // 0x03e8
     b<
-    bz validate_after_while@4
-    intc_0 // 32
+    bz validate_after_while@7
+    intc_2 // 32
     bzero
     dig 1
     dup
@@ -129,9 +155,9 @@ validate_while_top@2:
     concat
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     -
-    intc_0 // 32
+    intc_2 // 32
     extract3
     sha256
     bytec_1 // "m"
@@ -148,8 +174,12 @@ validate_while_top@2:
     bury 3
     b==
     assert
-    b validate_while_top@2
+    b validate_while_top@5
 
-validate_after_while@4:
+validate_after_while@7:
     intc_1 // 1
     return
+
+validate_ternary_false@3:
+    intc_0 // 0
+    b validate_ternary_merge@4

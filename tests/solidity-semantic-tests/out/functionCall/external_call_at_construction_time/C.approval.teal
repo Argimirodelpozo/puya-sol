@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_at_construction_time.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 16 0 32 1000000
+    intcblock 1 0 16 32 1000000
     bytecblock 0x01 TMPL_APPROVAL_T TMPL_CLEAR_T TMPL_APPROVAL_U TMPL_CLEAR_U
     txn ApplicationID
     bnz main_after_if_else@2
@@ -35,24 +35,35 @@ main_f_route@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_at_construction_time.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
-    dupn 2
+    dup
     len
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     pushbytes 0x
     b==
-    bz f_else_body@5
+    bz f_else_body@8
     itxn_begin
     bytec_1 // TMPL_APPROVAL_T
     bytec_2 // TMPL_CLEAR_T
     pushint 6
     itxn_field TypeEnum
-    intc_1 // 16
+    intc_2 // 16
     itxn_field GlobalNumUint
-    intc_1 // 16
+    intc_2 // 16
     itxn_field GlobalNumByteSlice
-    intc_2 // 0
+    intc_1 // 0
     itxn_field Fee
     pushint 3
     itxn_field ExtraProgramPages
@@ -66,13 +77,13 @@ f:
     intc_0 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_2 // 0
+    intc_1 // 0
     itxn_field Fee
     intc 4 // 1000000
     itxn_field Amount
     itxn_submit
 
-f_after_if_else@10:
+f_after_if_else@13:
     bytec_0 // 0x01
     dig 1
     b+
@@ -91,21 +102,21 @@ f_after_if_else@10:
     intc_0 // 1
     return
 
-f_else_body@5:
+f_else_body@8:
     dup
     bytec_0 // 0x01
     b==
-    bz f_after_if_else@10
+    bz f_after_if_else@13
     itxn_begin
     bytec_3 // TMPL_APPROVAL_U
     bytec 4 // TMPL_CLEAR_U
     pushint 6
     itxn_field TypeEnum
-    intc_1 // 16
+    intc_2 // 16
     itxn_field GlobalNumUint
-    intc_1 // 16
+    intc_2 // 16
     itxn_field GlobalNumByteSlice
-    intc_2 // 0
+    intc_1 // 0
     itxn_field Fee
     pushint 3
     itxn_field ExtraProgramPages
@@ -119,9 +130,13 @@ f_else_body@5:
     intc_0 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_2 // 0
+    intc_1 // 0
     itxn_field Fee
     intc 4 // 1000000
     itxn_field Amount
     itxn_submit
-    b f_after_if_else@10
+    b f_after_if_else@13
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4

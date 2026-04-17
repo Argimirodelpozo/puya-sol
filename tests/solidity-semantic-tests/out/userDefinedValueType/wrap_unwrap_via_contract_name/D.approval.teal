@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/wrap_unwrap_via_contract_name.sol.D.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 32 1 0
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -71,6 +71,17 @@ h:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/wrap_unwrap_via_contract_name.sol.D.g
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/wrap_unwrap_via_contract_name.sol.D.f
     dup
@@ -87,6 +98,10 @@ h:
     log
     intc_1 // 1
     return
+
+h_ternary_false@3:
+    intc_2 // 0
+    b h_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/wrap_unwrap_via_contract_name.sol.D.i[routing]() -> void:
@@ -97,6 +112,17 @@ i:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz i_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+i_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/wrap_unwrap_via_contract_name.sol.D.f
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/wrap_unwrap_via_contract_name.sol.D.g
     dup
@@ -114,10 +140,24 @@ i:
     intc_1 // 1
     return
 
+i_ternary_false@3:
+    intc_2 // 0
+    b i_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/wrap_unwrap_via_contract_name.sol.D.f(__arc4_x: bytes) -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/wrap_unwrap_via_contract_name.sol.D.f:
     proto 1 1
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/wrap_unwrap_via_contract_name.sol.D.f_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/wrap_unwrap_via_contract_name.sol.D.f_ternary_merge@3:
+    !
+    assert // not payable
     frame_dig -1
     len
     intc_0 // 32
@@ -128,11 +168,25 @@ i:
     frame_dig -1
     b|
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/wrap_unwrap_via_contract_name.sol.D.f_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/wrap_unwrap_via_contract_name.sol.D.f_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/wrap_unwrap_via_contract_name.sol.D.g(__arc4_x: bytes) -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/wrap_unwrap_via_contract_name.sol.D.g:
     proto 1 1
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/wrap_unwrap_via_contract_name.sol.D.g_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/wrap_unwrap_via_contract_name.sol.D.g_ternary_merge@3:
+    !
+    assert // not payable
     frame_dig -1
     len
     intc_0 // 32
@@ -143,3 +197,7 @@ i:
     frame_dig -1
     b|
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/wrap_unwrap_via_contract_name.sol.D.g_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/wrap_unwrap_via_contract_name.sol.D.g_ternary_merge@3

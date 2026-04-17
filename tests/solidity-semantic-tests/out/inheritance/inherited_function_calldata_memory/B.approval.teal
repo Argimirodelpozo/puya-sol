@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol.B.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 32 0
+    bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -24,21 +25,15 @@ main_after_if_else@2:
     assert
     pushbytess 0x72a794c0 0x4b2c0376 // method "f(uint256[])uint256", method "g()uint256"
     txna ApplicationArgs 0
-    match f main_g_route@6
+    match f g
     err
-
-main_g_route@6:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000017
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol.B.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
     dup
-    pushint 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     intc_1 // 32
     *
@@ -48,13 +43,72 @@ f:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
-    extract 34 32
-    intc_1 // 32
-    bzero
-    b|
-    pushbytes 0x151f7c75
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol.B.f
+    pop
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol.B.g[routing]() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    pushbytes 0x0002000000000000000000000000000000000000000000000000000000000000002a0000000000000000000000000000000000000000000000000000000000000017
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol.B.f
+    pop
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+g_ternary_false@3:
+    intc_2 // 0
+    b g_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol.B.f(a: bytes) -> bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol.B.f:
+    proto 1 2
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol.B.f_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol.B.f_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    extract 34 32
+    intc_1 // 32
+    bzero
+    b|
+    frame_dig -1
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol.B.f_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol.B.f_ternary_merge@3

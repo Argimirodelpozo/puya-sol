@@ -32,9 +32,23 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/prevrandao.sol.C.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000d379d8ba596076c633d4f12f1a6d9bc4124d1e82cc51b786c600168f64c60376
     log
     pushint 1
     return
+
+f_ternary_false@3:
+    pushint 0
+    b f_ternary_merge@4

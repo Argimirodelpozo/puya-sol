@@ -36,6 +36,16 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_return_parameter_complex.sol.A.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -50,6 +60,10 @@ f:
     intc_1 // 1
     return
 
+f_ternary_false@3:
+    intc_0 // 0
+    b f_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_return_parameter_complex.sol.A.shouldFail[routing]() -> void:
 shouldFail:
@@ -59,6 +73,16 @@ shouldFail:
     intc_2 // 64
     ==
     assert // invalid number of bytes for arc4.uint512
+    txn GroupIndex
+    bz shouldFail_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+shouldFail_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -68,6 +92,7 @@ shouldFail:
     bytec_0 // "x"
     swap
     app_global_put
+    dup
     pushbytes 0x
     b==
     assert // a is not zero
@@ -78,9 +103,23 @@ shouldFail:
     intc_1 // 1
     return
 
+shouldFail_ternary_false@3:
+    intc_0 // 0
+    b shouldFail_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_return_parameter_complex.sol.A.g[routing]() -> void:
 g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -105,9 +144,23 @@ g:
     intc_1 // 1
     return
 
+g_ternary_false@3:
+    intc_0 // 0
+    b g_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_return_parameter_complex.sol.A.x[routing]() -> void:
 x:
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -126,3 +179,7 @@ x:
     log
     intc_1 // 1
     return
+
+x_ternary_false@3:
+    intc_0 // 0
+    b x_ternary_merge@4

@@ -65,6 +65,16 @@ erc7201Mock:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_locations.sol.C.storageVar[routing]() -> void:
 storageVar:
+    txn GroupIndex
+    bz storageVar_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+storageVar_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 32
     bzero
     intc_0 // 0
@@ -93,9 +103,23 @@ storageVar:
     intc_1 // 1
     return
 
+storageVar_ternary_false@3:
+    intc_0 // 0
+    b storageVar_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_locations.sol.C.constStorageVar[routing]() -> void:
 constStorageVar:
+    txn GroupIndex
+    bz constStorageVar_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+constStorageVar_ternary_merge@4:
+    !
+    assert // not payable
     bytec_3 // "example.contract"
     callsub erc7201Mock
     pushbytes 0x3900f6bf9776dcf7feeb475cf1a84528427ce740b518e42c213bbb76e98e6700
@@ -111,9 +135,23 @@ constStorageVar:
     intc_1 // 1
     return
 
+constStorageVar_ternary_false@3:
+    intc_0 // 0
+    b constStorageVar_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_locations.sol.C.memoryVar[routing]() -> void:
 memoryVar:
+    txn GroupIndex
+    bz memoryVar_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+memoryVar_ternary_merge@4:
+    !
+    assert // not payable
     bytec 4 // "example.main"
     callsub erc7201Mock
     bytec 7 // 0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500
@@ -129,6 +167,10 @@ memoryVar:
     intc_1 // 1
     return
 
+memoryVar_ternary_false@3:
+    intc_0 // 0
+    b memoryVar_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_locations.sol.C.calldataParam[routing]() -> void:
 calldataParam:
@@ -143,9 +185,19 @@ calldataParam:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    txn GroupIndex
+    bz calldataParam_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+calldataParam_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 32
     bzero
-    swap
+    dig 1
     keccak256
     bytec_2 // 0x01
     b-
@@ -168,6 +220,10 @@ calldataParam:
     intc_1 // 1
     return
 
+calldataParam_ternary_false@3:
+    intc_0 // 0
+    b calldataParam_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_locations.sol.C.calldataSlice[routing]() -> void:
 calldataSlice:
@@ -182,9 +238,19 @@ calldataSlice:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    txn GroupIndex
+    bz calldataSlice_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+calldataSlice_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 32
     bzero
-    swap
+    dig 1
     substring 2 5
     keccak256
     bytec_2 // 0x01
@@ -208,9 +274,23 @@ calldataSlice:
     intc_1 // 1
     return
 
+calldataSlice_ternary_false@3:
+    intc_0 // 0
+    b calldataSlice_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_locations.sol.C.literalParam[routing]() -> void:
 literalParam:
+    txn GroupIndex
+    bz literalParam_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+literalParam_ternary_merge@4:
+    !
+    assert // not payable
     bytec 4 // "example.main"
     callsub erc7201Mock
     bytec 7 // 0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500
@@ -225,3 +305,7 @@ literalParam:
     log
     intc_1 // 1
     return
+
+literalParam_ternary_false@3:
+    intc_0 // 0
+    b literalParam_ternary_merge@4

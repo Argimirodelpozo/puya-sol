@@ -34,21 +34,33 @@ main_f_route@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/conditional_expression_multiple.sol.test.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
-    dupn 2
+    dup
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     pushbytes 0x64
     b>
-    bz f_ternary_false@3
+    bz f_ternary_false@6
+    dup
     pushbytes 0x03e8
     b>
     pushints 100 1000
     uncover 2
     select
 
-f_ternary_merge@4:
+f_ternary_merge@7:
     itob
     intc_1 // 32
     bzero
@@ -60,10 +72,15 @@ f_ternary_merge@4:
     intc_0 // 1
     return
 
-f_ternary_false@3:
+f_ternary_false@6:
+    dup
     pushbytes 0x32
     b>
     pushints 10 50
     uncover 2
     select
+    b f_ternary_merge@7
+
+f_ternary_false@3:
+    pushint 0
     b f_ternary_merge@4

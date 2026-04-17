@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/return_function.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
-    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000009
+    intcblock 1 64 0
+    bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -25,21 +25,126 @@ main_after_if_else@2:
     assert
     pushbytess 0x5a6d8d38 0xa0653265 0x5c1ae154 // method "g()(uint512,byte[12],uint512)", method "f()(uint512,byte[12],uint512)", method "fun()void"
     txna ApplicationArgs 0
-    match main_g_route@5 main_f_route@6 main_fun_route@7
+    match g f fun
     err
 
-main_fun_route@7:
-    intc_0 // 1
-    return
 
-main_f_route@6:
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000009
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/return_function.sol.C.g[routing]() -> void:
+g:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/return_function.sol.C.g
+    dig 2
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    uncover 3
+    dig 1
+    b|
+    uncover 3
+    concat
+    dig 2
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_g_route@5:
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000009
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/return_function.sol.C.f[routing]() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/return_function.sol.C.g
+    dig 2
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    uncover 3
+    dig 1
+    b|
+    uncover 3
+    concat
+    dig 2
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_2 // 0
+    b f_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/return_function.sol.C.fun[routing]() -> void:
+fun:
+    txn GroupIndex
+    bz fun_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+fun_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
+
+fun_ternary_false@3:
+    intc_2 // 0
+    b fun_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/return_function.sol.C.g() -> bytes, bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/return_function.sol.C.g:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/return_function.sol.C.g_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/return_function.sol.C.g_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 1
+    itob
+    pushint 9
+    itob
+    pushbytes 0x000000000000000000000001
+    swap
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/return_function.sol.C.g_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/return_function.sol.C.g_ternary_merge@3

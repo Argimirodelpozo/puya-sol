@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/tload_tstore_not_reserved_before_cancun.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64
+    intcblock 1 0 64
     bytecblock "__dyn_storage"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -31,13 +31,24 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/tload_tstore_not_reserved_before_cancun.sol.C.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     bytec_0 // "__dyn_storage"
     pushint 8192
     box_create
     pop
     bytec_0 // "__dyn_storage"
-    pushints 0 32
+    intc_1 // 0
+    pushint 32
     box_extract
     pushbytes 0x01
     b+
@@ -47,10 +58,10 @@ f:
     store 0
     dup
     len
-    intc_1 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
     pushbytes 0x151f7c75
@@ -60,12 +71,30 @@ f:
     intc_0 // 1
     return
 
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/tload_tstore_not_reserved_before_cancun.sol.C.g[routing]() -> void:
 g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005
     log
     intc_0 // 1
     return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4

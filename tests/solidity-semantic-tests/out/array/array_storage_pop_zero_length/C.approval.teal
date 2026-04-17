@@ -50,6 +50,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_pop_zero_length.sol.C.popEmpty[routing]() -> void:
 popEmpty:
+    txn GroupIndex
+    bz popEmpty_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+popEmpty_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "storageArray"
     intc_1 // 0
     intc_2 // 2
@@ -83,3 +93,7 @@ popEmpty:
     box_resize
     intc_0 // 1
     return
+
+popEmpty_ternary_false@3:
+    intc_1 // 0
+    b popEmpty_ternary_merge@4

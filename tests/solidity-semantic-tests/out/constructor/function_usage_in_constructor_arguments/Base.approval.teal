@@ -5,7 +5,9 @@
 main:
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytess "m_a" 0x0000000000000000000000000000000000000000000000000000000000000002
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/function_usage_in_constructor_arguments.sol.Base.g
+    pushbytes "m_a"
+    swap
     app_global_put
     pushint 1
     return
@@ -29,7 +31,35 @@ main_g_route@4:
     txn ApplicationID
     &&
     assert
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
+    b g
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/function_usage_in_constructor_arguments.sol.Base.g[routing]() -> void:
+g:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/function_usage_in_constructor_arguments.sol.Base.g
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
     pushint 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/function_usage_in_constructor_arguments.sol.Base.g() -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/function_usage_in_constructor_arguments.sol.Base.g:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/function_usage_in_constructor_arguments.sol.Base.g_ternary_false@2
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/function_usage_in_constructor_arguments.sol.Base.g_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/function_usage_in_constructor_arguments.sol.Base.g_ternary_false@2:
+    pushint 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/function_usage_in_constructor_arguments.sol.Base.g_ternary_merge@3

@@ -36,26 +36,36 @@ main_after_if_else@2:
 f:
     intc_0 // 0
     dupn 14
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 1
     itob
     bytec_0 // "x"
     swap
     app_global_put
     txn NumAppArgs
-    bz f_ternary_false@51
+    bz f_ternary_false@55
     txn NumAppArgs
-    bz f_ternary_false@4
+    bz f_ternary_false@8
     txna ApplicationArgs 0
     bury 15
 
-f_ternary_merge@5:
+f_ternary_merge@9:
     txn NumAppArgs
     intc_1 // 1
     >
-    bz f_ternary_false@7
+    bz f_ternary_false@11
     txna ApplicationArgs 1
 
-f_ternary_merge@8:
+f_ternary_merge@12:
     dig 15
     swap
     concat
@@ -63,10 +73,10 @@ f_ternary_merge@8:
     txn NumAppArgs
     intc_2 // 2
     >
-    bz f_ternary_false@10
+    bz f_ternary_false@14
     txna ApplicationArgs 2
 
-f_ternary_merge@11:
+f_ternary_merge@15:
     dig 2
     swap
     concat
@@ -74,10 +84,10 @@ f_ternary_merge@11:
     txn NumAppArgs
     pushint 3
     >
-    bz f_ternary_false@13
+    bz f_ternary_false@17
     txna ApplicationArgs 3
 
-f_ternary_merge@14:
+f_ternary_merge@18:
     dig 1
     swap
     concat
@@ -85,10 +95,10 @@ f_ternary_merge@14:
     txn NumAppArgs
     pushint 4
     >
-    bz f_ternary_false@16
+    bz f_ternary_false@20
     txna ApplicationArgs 4
 
-f_ternary_merge@17:
+f_ternary_merge@21:
     dig 14
     swap
     concat
@@ -96,10 +106,10 @@ f_ternary_merge@17:
     txn NumAppArgs
     pushint 5
     >
-    bz f_ternary_false@19
+    bz f_ternary_false@23
     txna ApplicationArgs 5
 
-f_ternary_merge@20:
+f_ternary_merge@24:
     dig 13
     swap
     concat
@@ -107,10 +117,10 @@ f_ternary_merge@20:
     txn NumAppArgs
     pushint 6
     >
-    bz f_ternary_false@22
+    bz f_ternary_false@26
     txna ApplicationArgs 6
 
-f_ternary_merge@23:
+f_ternary_merge@27:
     dig 12
     swap
     concat
@@ -118,10 +128,10 @@ f_ternary_merge@23:
     txn NumAppArgs
     pushint 7
     >
-    bz f_ternary_false@25
+    bz f_ternary_false@29
     txna ApplicationArgs 7
 
-f_ternary_merge@26:
+f_ternary_merge@30:
     dig 11
     swap
     concat
@@ -129,10 +139,10 @@ f_ternary_merge@26:
     txn NumAppArgs
     pushint 8
     >
-    bz f_ternary_false@28
+    bz f_ternary_false@32
     txna ApplicationArgs 8
 
-f_ternary_merge@29:
+f_ternary_merge@33:
     dig 10
     swap
     concat
@@ -140,10 +150,10 @@ f_ternary_merge@29:
     txn NumAppArgs
     pushint 9
     >
-    bz f_ternary_false@31
+    bz f_ternary_false@35
     txna ApplicationArgs 9
 
-f_ternary_merge@32:
+f_ternary_merge@36:
     dig 9
     swap
     concat
@@ -151,10 +161,10 @@ f_ternary_merge@32:
     txn NumAppArgs
     pushint 10
     >
-    bz f_ternary_false@34
+    bz f_ternary_false@38
     txna ApplicationArgs 10
 
-f_ternary_merge@35:
+f_ternary_merge@39:
     dig 8
     swap
     concat
@@ -162,10 +172,10 @@ f_ternary_merge@35:
     txn NumAppArgs
     pushint 11
     >
-    bz f_ternary_false@37
+    bz f_ternary_false@41
     txna ApplicationArgs 11
 
-f_ternary_merge@38:
+f_ternary_merge@42:
     dig 7
     swap
     concat
@@ -173,10 +183,10 @@ f_ternary_merge@38:
     txn NumAppArgs
     pushint 12
     >
-    bz f_ternary_false@40
+    bz f_ternary_false@44
     txna ApplicationArgs 12
 
-f_ternary_merge@41:
+f_ternary_merge@45:
     dig 6
     swap
     concat
@@ -184,10 +194,10 @@ f_ternary_merge@41:
     txn NumAppArgs
     pushint 13
     >
-    bz f_ternary_false@43
+    bz f_ternary_false@47
     txna ApplicationArgs 13
 
-f_ternary_merge@44:
+f_ternary_merge@48:
     dig 5
     swap
     concat
@@ -195,10 +205,10 @@ f_ternary_merge@44:
     txn NumAppArgs
     pushint 14
     >
-    bz f_ternary_false@46
+    bz f_ternary_false@50
     txna ApplicationArgs 14
 
-f_ternary_merge@47:
+f_ternary_merge@51:
     dig 4
     swap
     concat
@@ -206,20 +216,20 @@ f_ternary_merge@47:
     txn NumAppArgs
     pushint 15
     >
-    bz f_ternary_false@49
+    bz f_ternary_false@53
     txna ApplicationArgs 15
 
-f_ternary_merge@50:
+f_ternary_merge@54:
     dig 3
     swap
     concat
 
-f_ternary_merge@52:
+f_ternary_merge@56:
     len
     itob
     pushbytes 0x04
     b>
-    bz f_after_if_else@54
+    bz f_after_if_else@58
     intc_2 // 2
     itob
     bytec_0 // "x"
@@ -228,101 +238,115 @@ f_ternary_merge@52:
     intc_1 // 1
     return
 
-f_after_if_else@54:
+f_after_if_else@58:
     load 0
     store 0
     intc_1 // 1
     return
 
-f_ternary_false@49:
+f_ternary_false@53:
     intc_0 // 0
     bzero
-    b f_ternary_merge@50
+    b f_ternary_merge@54
 
-f_ternary_false@46:
+f_ternary_false@50:
     intc_0 // 0
     bzero
-    b f_ternary_merge@47
+    b f_ternary_merge@51
 
-f_ternary_false@43:
+f_ternary_false@47:
     intc_0 // 0
     bzero
-    b f_ternary_merge@44
+    b f_ternary_merge@48
 
-f_ternary_false@40:
+f_ternary_false@44:
     intc_0 // 0
     bzero
-    b f_ternary_merge@41
+    b f_ternary_merge@45
 
-f_ternary_false@37:
+f_ternary_false@41:
     intc_0 // 0
     bzero
-    b f_ternary_merge@38
+    b f_ternary_merge@42
 
-f_ternary_false@34:
+f_ternary_false@38:
     intc_0 // 0
     bzero
-    b f_ternary_merge@35
+    b f_ternary_merge@39
 
-f_ternary_false@31:
+f_ternary_false@35:
     intc_0 // 0
     bzero
-    b f_ternary_merge@32
+    b f_ternary_merge@36
 
-f_ternary_false@28:
+f_ternary_false@32:
     intc_0 // 0
     bzero
-    b f_ternary_merge@29
+    b f_ternary_merge@33
 
-f_ternary_false@25:
+f_ternary_false@29:
     intc_0 // 0
     bzero
-    b f_ternary_merge@26
+    b f_ternary_merge@30
 
-f_ternary_false@22:
+f_ternary_false@26:
     intc_0 // 0
     bzero
-    b f_ternary_merge@23
+    b f_ternary_merge@27
 
-f_ternary_false@19:
+f_ternary_false@23:
     intc_0 // 0
     bzero
-    b f_ternary_merge@20
+    b f_ternary_merge@24
 
-f_ternary_false@16:
+f_ternary_false@20:
     intc_0 // 0
     bzero
-    b f_ternary_merge@17
+    b f_ternary_merge@21
 
-f_ternary_false@13:
+f_ternary_false@17:
     intc_0 // 0
     bzero
-    b f_ternary_merge@14
+    b f_ternary_merge@18
 
-f_ternary_false@10:
+f_ternary_false@14:
     intc_0 // 0
     bzero
-    b f_ternary_merge@11
+    b f_ternary_merge@15
 
-f_ternary_false@7:
+f_ternary_false@11:
     intc_0 // 0
     bzero
-    b f_ternary_merge@8
+    b f_ternary_merge@12
 
-f_ternary_false@4:
+f_ternary_false@8:
     intc_0 // 0
     bzero
     bury 15
-    b f_ternary_merge@5
+    b f_ternary_merge@9
 
-f_ternary_false@51:
+f_ternary_false@55:
     intc_0 // 0
     bzero
-    b f_ternary_merge@52
+    b f_ternary_merge@56
+
+f_ternary_false@3:
+    intc_0 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/optimizer/unused_store_storage_removal_bug.sol.C.x[routing]() -> void:
 x:
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -341,3 +365,7 @@ x:
     log
     intc_1 // 1
     return
+
+x_ternary_false@3:
+    intc_0 // 0
+    b x_ternary_merge@4

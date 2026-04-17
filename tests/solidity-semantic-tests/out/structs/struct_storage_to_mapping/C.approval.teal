@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_storage_to_mapping.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     bytecblock "__ctor_pending" "s" 0x000000000000000000000000000000000000000000000000000000000000000c
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,7 +38,7 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    pushint 0
+    intc_1 // 0
     app_global_put
     pushbytes "m"
     pushint 2
@@ -53,6 +53,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_storage_to_mapping.sol.C.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     bytec_1 // "s"
     bytec_2 // 0x000000000000000000000000000000000000000000000000000000000000000c
     app_global_put
@@ -63,3 +73,7 @@ f:
     log
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_arg.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64 255
+    intcblock 1 64 0 255
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -49,6 +49,16 @@ tested:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_arg.sol.C.test[routing]() -> void:
 test:
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushint 5
@@ -68,16 +78,30 @@ test:
     intc_0 // 1
     return
 
+test_ternary_false@3:
+    intc_2 // 0
+    b test_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_arg.sol.C.tested(x: uint64) -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_arg.sol.C.tested:
     proto 1 1
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_arg.sol.C.tested_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_arg.sol.C.tested_ternary_merge@3:
+    !
+    assert // not payable
     frame_dig -1
-    intc_2 // 255
+    intc_3 // 255
     <=
     assert // ABI validation
     frame_dig -1
-    intc_2 // 255
+    intc_3 // 255
     &
     dup
     frame_bury -1
@@ -86,3 +110,7 @@ test:
     assert // ABI enum validation
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_arg.sol.C.tested_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_arg.sol.C.tested_ternary_merge@3

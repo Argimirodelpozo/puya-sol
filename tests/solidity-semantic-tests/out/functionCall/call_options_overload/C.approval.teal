@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_options_overload.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 32 0
     pushbytes ""
     txn ApplicationID
     bnz main_after_if_else@2
@@ -24,7 +24,7 @@ main_after_if_else@2:
     return
 
 main_after_if_else@4:
-    pushint 0
+    intc_2 // 0
     bury 1
     txn OnCompletion
     !
@@ -104,6 +104,16 @@ f(u256,u256):
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_options_overload.sol.C.bal[routing]() -> void:
 bal:
+    txn GroupIndex
+    bz bal_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+bal_ternary_merge@4:
+    !
+    assert // not payable
     global CurrentApplicationAddress
     acct_params_get AcctBalance
     pop
@@ -116,3 +126,7 @@ bal:
     concat
     log
     retsub
+
+bal_ternary_false@3:
+    intc_2 // 0
+    b bal_ternary_merge@4

@@ -27,7 +27,26 @@ main_run_route@4:
     txn ApplicationID
     &&
     assert
+    b run
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/packing_signed_types.sol.test.run[routing]() -> void:
+run:
+    txn GroupIndex
+    bz run_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+run_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c75fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffa
     log
     pushint 1
     return
+
+run_ternary_false@3:
+    pushint 0
+    b run_ternary_merge@4

@@ -46,6 +46,16 @@ main_assign_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_assign_reference_to_struct.sol.test.assign[routing]() -> void:
 assign:
+    txn GroupIndex
+    bz assign_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+assign_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_0 // "data1"
     app_global_get_ex
@@ -96,3 +106,7 @@ assign:
     log
     intc_1 // 1
     return
+
+assign_ternary_false@3:
+    intc_0 // 0
+    b assign_ternary_merge@4

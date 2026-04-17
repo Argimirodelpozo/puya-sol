@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/detect_sub_overflow_signed.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 8 18446744073709551488
+    intcblock 1 0 32 8 18446744073709551488
     bytecblock 0x0100 0x010000000000000000000000000000000000000000000000000000000000000000 0x80 0x8000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -31,63 +31,73 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/detect_sub_overflow_signed.sol.C.f[routing]() -> void:
 f:
+    pushbytes ""
     txna ApplicationArgs 1
-    dupn 2
+    dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    cover 2
-    dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    swap
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dig 1
     bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     dup
-    uncover 2
+    bury 4
+    dig 1
     bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     ==
-    bnz f_bool_true@3
-    dig 2
+    bnz f_bool_true@6
+    dig 1
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    dig 2
+    dig 1
     b-
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
-    dig 1
+    dig 3
     ==
-    bz f_bool_false@4
+    bz f_bool_false@7
 
-f_bool_true@3:
+f_bool_true@6:
     intc_0 // 1
 
-f_bool_merge@5:
+f_bool_merge@8:
     assert // signed arithmetic overflow
-    dig 2
+    dig 1
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    dig 2
+    dig 1
     b-
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     bytec 4 // 0x151f7c75
@@ -97,14 +107,18 @@ f_bool_merge@5:
     intc_0 // 1
     return
 
-f_bool_false@4:
-    intc_2 // 0
-    b f_bool_merge@5
+f_bool_false@7:
+    intc_1 // 0
+    b f_bool_merge@8
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/detect_sub_overflow_signed.sol.C.g[routing]() -> void:
 g:
-    intc_2 // 0
+    intc_1 // 0
     dup
     pushbytes ""
     txna ApplicationArgs 1
@@ -114,7 +128,6 @@ g:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    dup
     txna ApplicationArgs 2
     dup
     len
@@ -122,40 +135,50 @@ g:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    swap
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    dig 1
     pushint 127
     <=
-    bnz g_bool_true@3
+    bnz g_bool_true@6
     dig 1
     intc 4 // 18446744073709551488
     >=
-    bz g_bool_false@4
+    bz g_bool_false@7
 
-g_bool_true@3:
+g_bool_true@6:
     intc_0 // 1
 
-g_bool_merge@5:
+g_bool_merge@8:
     assert // ABI validation
     dup
     pushint 127
     <=
-    bnz g_bool_true@7
+    bnz g_bool_true@10
     dup
     intc 4 // 18446744073709551488
     >=
-    bz g_bool_false@8
+    bz g_bool_false@11
 
-g_bool_true@7:
+g_bool_true@10:
     intc_0 // 1
 
-g_bool_merge@9:
+g_bool_merge@12:
     assert // ABI validation
     dig 1
     itob
     bytec_0 // 0x0100
     b%
     dup
-    bury 6
+    bury 5
     bytec_2 // 0x80
     b<
     !
@@ -166,16 +189,16 @@ g_bool_merge@9:
     bytec_0 // 0x0100
     b%
     dup
-    bury 6
+    bury 7
     bytec_2 // 0x80
     b<
     !
     ==
-    bnz g_bool_true@11
-    dig 4
+    bnz g_bool_true@14
+    dig 3
     bytec_0 // 0x0100
     b+
-    dig 4
+    dig 5
     b-
     bytec_0 // 0x0100
     b%
@@ -184,19 +207,19 @@ g_bool_merge@9:
     !
     dig 3
     ==
-    bz g_bool_false@12
+    bz g_bool_false@15
 
-g_bool_true@11:
+g_bool_true@14:
     intc_0 // 1
 
-g_bool_merge@13:
+g_bool_merge@16:
     assert // signed arithmetic overflow
     intc_3 // 8
     bzero
-    dig 5
+    dig 4
     bytec_0 // 0x0100
     b+
-    dig 5
+    dig 6
     b-
     bytec_0 // 0x0100
     b%
@@ -212,19 +235,19 @@ g_bool_merge@13:
     dup
     bytec_2 // 0x80
     b>=
-    bz g_ternary_false@15
+    bz g_ternary_false@18
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
-g_ternary_merge@16:
+g_ternary_merge@19:
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     bytec 4 // 0x151f7c75
@@ -234,17 +257,21 @@ g_ternary_merge@16:
     intc_0 // 1
     return
 
-g_ternary_false@15:
-    b g_ternary_merge@16
+g_ternary_false@18:
+    b g_ternary_merge@19
 
-g_bool_false@12:
-    intc_2 // 0
-    b g_bool_merge@13
+g_bool_false@15:
+    intc_1 // 0
+    b g_bool_merge@16
 
-g_bool_false@8:
-    intc_2 // 0
-    b g_bool_merge@9
+g_bool_false@11:
+    intc_1 // 0
+    b g_bool_merge@12
 
-g_bool_false@4:
-    intc_2 // 0
-    b g_bool_merge@5
+g_bool_false@7:
+    intc_1 // 0
+    b g_bool_merge@8
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4

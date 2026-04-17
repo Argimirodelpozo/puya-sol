@@ -42,8 +42,18 @@ lenBytesRead:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    txn GroupIndex
+    bz lenBytesRead_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+lenBytesRead_ternary_merge@4:
+    !
+    assert // not payable
     load 0
-    swap
+    dig 1
     len
     itob
     swap
@@ -57,6 +67,10 @@ lenBytesRead:
     log
     intc_0 // 1
     return
+
+lenBytesRead_ternary_false@3:
+    intc_1 // 0
+    b lenBytesRead_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/calldata_length_read.sol.C.lenStringRead[routing]() -> void:
@@ -72,8 +86,18 @@ lenStringRead:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    txn GroupIndex
+    bz lenStringRead_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+lenStringRead_ternary_merge@4:
+    !
+    assert // not payable
     load 0
-    swap
+    dig 1
     len
     itob
     swap
@@ -87,3 +111,7 @@ lenStringRead:
     log
     intc_0 // 1
     return
+
+lenStringRead_ternary_false@3:
+    intc_1 // 0
+    b lenStringRead_ternary_merge@4

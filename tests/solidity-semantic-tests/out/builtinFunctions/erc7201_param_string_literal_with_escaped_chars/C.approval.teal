@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_string_literal_with_escaped_chars.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 1 32 0
     bytecblock 0x01 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -41,7 +41,7 @@ erc7201Mock:
     bytec_0 // 0x01
     b>=
     assert // underflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     swap
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -53,9 +53,9 @@ erc7201Mock:
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     keccak256
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
@@ -65,17 +65,31 @@ erc7201Mock:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_string_literal_with_escaped_chars.sol.C.builtinMatchesSolidityImplementation[routing]() -> void:
 builtinMatchesSolidityImplementation:
+    txn GroupIndex
+    bz builtinMatchesSolidityImplementation_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+builtinMatchesSolidityImplementation_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes "\n\"'\\abcdef"
     callsub erc7201Mock
     pushbytes 0x3793b1a197022ac95011b2aa34b01aaa002592349088922964f1b6813d99ed00
     b==
     pushbytes 0x00
-    pushint 0
+    intc_2 // 0
     uncover 2
     setbit
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+builtinMatchesSolidityImplementation_ternary_false@3:
+    intc_2 // 0
+    b builtinMatchesSolidityImplementation_ternary_merge@4

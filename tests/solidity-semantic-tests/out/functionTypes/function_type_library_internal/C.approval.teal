@@ -3,10 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_type_library_internal.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 8
+    intcblock 1 0 32 8
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -34,12 +34,12 @@ main_f_route@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_type_library_internal.sol.Utils.reduce(array: bytes, f: uint64, init: bytes) -> bytes, bytes:
 Utils.reduce:
     proto 3 2
-    intc_2 // 0
+    intc_1 // 0
     itob
 
 Utils.reduce_while_top@1:
     frame_dig -3
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     itob
     frame_dig 0
@@ -59,12 +59,12 @@ Utils.reduce_while_top@1:
     frame_dig -3
     extract 2 0
     swap
-    intc_0 // 32
+    intc_2 // 32
     *
-    intc_0 // 32
+    intc_2 // 32
     extract3 // on error: index access is out of bounds
     frame_dig -2
-    intc_1 // 1
+    intc_0 // 1
     ==
     assert // invalid function pointer
     frame_dig -1
@@ -94,34 +94,49 @@ Utils.sum:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_type_library_internal.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
-    dup
-    intc_2 // 0
+    dupn 2
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_0 // 32
+    intc_2 // 32
     *
     pushint 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
-    intc_2 // 0
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     itob
-    intc_1 // 1
-    swap
+    dig 1
+    intc_0 // 1
+    uncover 2
     callsub Utils.reduce
     pop
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_2 // 32
     bzero
     b|
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4

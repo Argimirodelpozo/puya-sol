@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_literal.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 32 0
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -49,6 +49,16 @@ L.double:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_literal.sol.C.double42[routing]() -> void:
 double42:
+    txn GroupIndex
+    bz double42_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+double42_ternary_merge@4:
+    !
+    assert // not payable
     pushint 42
     itob
     callsub L.double
@@ -67,9 +77,23 @@ double42:
     intc_0 // 1
     return
 
+double42_ternary_false@3:
+    intc_2 // 0
+    b double42_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_literal.sol.C.doubleABC[routing]() -> void:
 doubleABC:
+    txn GroupIndex
+    bz doubleABC_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+doubleABC_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes "abc"
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_literal.sol.L.double(1)_1
     dup
@@ -84,3 +108,7 @@ doubleABC:
     log
     intc_0 // 1
     return
+
+doubleABC_ternary_false@3:
+    intc_2 // 0
+    b doubleABC_ternary_merge@4

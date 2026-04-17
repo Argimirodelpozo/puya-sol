@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/negative_stack_height.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2 16000 48000 32000
+    intcblock 1 0 32 2 16000 48000 32000
     bytecblock 0x151f7c75 0x00 "__ctor_pending" "invoices"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_2 // "__ctor_pending"
-    intc_1 // 1
+    intc_0 // 1
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -38,13 +38,13 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_2 // "__ctor_pending"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
     bytec_3 // "invoices"
     intc_3 // 2
     box_create
     pop
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -52,9 +52,19 @@ __postInit:
 nredit:
     txna ApplicationArgs 1
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz nredit_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+nredit_ternary_merge@4:
+    !
+    assert // not payable
     intc 4 // 16000
     bzero
     dup
@@ -68,27 +78,41 @@ nredit:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+nredit_ternary_false@3:
+    intc_1 // 0
+    b nredit_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/negative_stack_height.sol.C.return500InvoicesByDates[routing]() -> void:
 return500InvoicesByDates:
     txna ApplicationArgs 1
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz return500InvoicesByDates_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+return500InvoicesByDates_ternary_merge@4:
+    !
+    assert // not payable
     intc 4 // 16000
     bzero
     intc 5 // 48000
@@ -110,27 +134,41 @@ return500InvoicesByDates:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+return500InvoicesByDates_ternary_false@3:
+    intc_1 // 0
+    b return500InvoicesByDates_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/negative_stack_height.sol.C.return500PaymentsByDates[routing]() -> void:
 return500PaymentsByDates:
     txna ApplicationArgs 1
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz return500PaymentsByDates_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+return500PaymentsByDates_ternary_merge@4:
+    !
+    assert // not payable
     intc 4 // 16000
     bzero
     intc 5 // 48000
@@ -152,8 +190,12 @@ return500PaymentsByDates:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+return500PaymentsByDates_ternary_false@3:
+    intc_1 // 0
+    b return500PaymentsByDates_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/negative_stack_height.sol.C.invoices[routing]() -> void:
@@ -161,28 +203,38 @@ invoices:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_0 // 32
+    txn GroupIndex
+    bz invoices_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+invoices_ternary_merge@4:
+    !
+    assert // not payable
+    intc_2 // 32
     bzero
-    swap
+    dig 1
     concat
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     -
-    intc_0 // 32
+    intc_2 // 32
     extract3
     sha256
     bytec_3 // "invoices"
     swap
     concat
     pushbytes 0x
-    intc_2 // 0
+    intc_1 // 0
     getbit
     pushbytes 0x
-    intc_1 // 1
+    intc_0 // 1
     dig 2
     setbit
     intc_3 // 2
@@ -200,38 +252,38 @@ invoices:
     pushint 256
     getbit
     bytec_1 // 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
-    intc_2 // 0
+    intc_1 // 0
     getbit
     dig 2
     pushint 257
     getbit
     bytec_1 // 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
-    intc_2 // 0
+    intc_1 // 0
     getbit
     uncover 3
     pushint 258
     getbit
     bytec_1 // 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
-    intc_2 // 0
+    intc_1 // 0
     getbit
     pushint 64
     bzero
     uncover 4
     b|
     bytec_1 // 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 5
     setbit
-    intc_1 // 1
+    intc_0 // 1
     uncover 4
     setbit
     intc_3 // 2
@@ -242,5 +294,9 @@ invoices:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+invoices_ternary_false@3:
+    intc_1 // 0
+    b invoices_ternary_merge@4

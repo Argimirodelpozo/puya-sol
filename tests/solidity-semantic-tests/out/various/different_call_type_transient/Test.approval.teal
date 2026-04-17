@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 0 6 1 24 1000000
+    intcblock 0 1 6 24 1000000
     bytecblock "a" "b" 0x75d12918 "__ctor_pending" 0x151f7c75 TMPL_APPROVAL_A TMPL_CLEAR_A TMPL_APPROVAL_B TMPL_CLEAR_B
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_3 // "__ctor_pending"
-    intc_2 // 1
+    intc_1 // 1
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -43,7 +43,7 @@ __postInit:
     itxn_begin
     bytec 5 // TMPL_APPROVAL_A
     bytec 6 // TMPL_CLEAR_A
-    intc_1 // 6
+    intc_2 // 6
     itxn_field TypeEnum
     pushint 16
     itxn_field GlobalNumUint
@@ -61,7 +61,7 @@ __postInit:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_2 // 1
+    intc_1 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_0 // 0
@@ -82,7 +82,7 @@ __postInit:
     itxn_begin
     bytec 7 // TMPL_APPROVAL_B
     bytec 8 // TMPL_CLEAR_B
-    intc_1 // 6
+    intc_2 // 6
     itxn_field TypeEnum
     pushint 16
     itxn_field GlobalNumUint
@@ -100,7 +100,7 @@ __postInit:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_2 // 1
+    intc_1 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_0 // 0
@@ -113,12 +113,22 @@ __postInit:
     bytec_1 // "b"
     swap
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.Test.testDelegate[routing]() -> void:
 testDelegate:
+    txn GroupIndex
+    bz testDelegate_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+testDelegate_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     intc_0 // 0
     bytec_1 // "b"
@@ -130,7 +140,7 @@ testDelegate:
     assert // check a exists
     intc_3 // 24
     extract_uint64
-    intc_1 // 6
+    intc_2 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -146,7 +156,7 @@ testDelegate:
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
-    intc_1 // 6
+    intc_2 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -159,7 +169,7 @@ testDelegate:
     itxn_begin
     intc_3 // 24
     extract_uint64
-    intc_1 // 6
+    intc_2 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -195,12 +205,26 @@ testDelegate:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
+
+testDelegate_ternary_false@3:
+    intc_0 // 0
+    b testDelegate_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.Test.testCall[routing]() -> void:
 testCall:
+    txn GroupIndex
+    bz testCall_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+testCall_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     intc_0 // 0
     bytec_1 // "b"
@@ -212,7 +236,7 @@ testCall:
     assert // check a exists
     intc_3 // 24
     extract_uint64
-    intc_1 // 6
+    intc_2 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -228,7 +252,7 @@ testCall:
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
-    intc_1 // 6
+    intc_2 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -241,7 +265,7 @@ testCall:
     itxn_begin
     intc_3 // 24
     extract_uint64
-    intc_1 // 6
+    intc_2 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -277,12 +301,26 @@ testCall:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
+
+testCall_ternary_false@3:
+    intc_0 // 0
+    b testCall_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.Test.testStatic[routing]() -> void:
 testStatic:
+    txn GroupIndex
+    bz testStatic_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+testStatic_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     intc_0 // 0
     bytec_1 // "b"
@@ -294,7 +332,7 @@ testStatic:
     assert // check a exists
     intc_3 // 24
     extract_uint64
-    intc_1 // 6
+    intc_2 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -321,5 +359,9 @@ testStatic:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
+
+testStatic_ternary_false@3:
+    intc_0 // 0
+    b testStatic_ternary_merge@4

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/scientific_notation.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -24,41 +24,137 @@ main_after_if_else@2:
     assert
     pushbytess 0xcd78b354 0x4b2c0376 0xafedb2e5 0x3f72e9ed 0x6f8b6b7a 0x08ee23b1 // method "f()uint256", method "g()uint256", method "h()uint256", method "i()uint256", method "j()uint256", method "k()uint256"
     txna ApplicationArgs 0
-    match main_f_route@5 main_g_route@6 main_h_route@7 main_i_route@8 main_j_route@9 main_k_route@10
+    match f g h i j k
     err
 
-main_k_route@10:
-    pushbytes 0x151f7c75ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe7
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/scientific_notation.sol.C.f[routing]() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000004a817c800
     log
     intc_0 // 1
     return
 
-main_j_route@9:
-    pushbytes 0x151f7c75fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe
-    log
-    intc_0 // 1
-    return
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
 
-main_i_route@8:
-    pushbytes 0x151f7c75fffffffffffffffffffffffffffffffffffffffffffffffffffffffb57e83800
-    log
-    intc_0 // 1
-    return
 
-main_h_route@7:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000019
-    log
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/scientific_notation.sol.C.g[routing]() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
     intc_0 // 1
-    return
+    -
+    gtxns Amount
 
-main_g_route@6:
+g_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
     log
     intc_0 // 1
     return
 
-main_f_route@5:
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000004a817c800
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/scientific_notation.sol.C.h[routing]() -> void:
+h:
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000019
     log
     intc_0 // 1
     return
+
+h_ternary_false@3:
+    intc_1 // 0
+    b h_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/scientific_notation.sol.C.i[routing]() -> void:
+i:
+    txn GroupIndex
+    bz i_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+i_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75fffffffffffffffffffffffffffffffffffffffffffffffffffffffb57e83800
+    log
+    intc_0 // 1
+    return
+
+i_ternary_false@3:
+    intc_1 // 0
+    b i_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/scientific_notation.sol.C.j[routing]() -> void:
+j:
+    txn GroupIndex
+    bz j_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+j_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe
+    log
+    intc_0 // 1
+    return
+
+j_ternary_false@3:
+    intc_1 // 0
+    b j_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/scientific_notation.sol.C.k[routing]() -> void:
+k:
+    txn GroupIndex
+    bz k_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+k_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe7
+    log
+    intc_0 // 1
+    return
+
+k_ternary_false@3:
+    intc_1 // 0
+    b k_ternary_merge@4

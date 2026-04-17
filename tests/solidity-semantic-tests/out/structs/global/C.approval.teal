@@ -38,7 +38,17 @@ f:
     pushint 64
     ==
     assert // invalid number of bytes for S
-    dup
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     extract 0 32
     pushint 32
     bzero
@@ -56,3 +66,7 @@ f:
     log
     pushint 1
     return
+
+f_ternary_false@3:
+    pushint 0
+    b f_ternary_merge@4

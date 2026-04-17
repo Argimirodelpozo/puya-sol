@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/break_in_modifier.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 64
+    intcblock 0 1 64
     bytecblock "x" 0x01
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
     pushbytes 0x
     app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -34,15 +34,27 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/break_in_modifier.sol.C.f[routing]() -> void:
 f:
-    intc_1 // 0
-    itob
+    intc_0 // 0
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
 
-f_while_top@4:
+f_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 0
+    itob
+    bury 1
+
+f_while_top@7:
     dup
     pushbytes 0x0a
     b<
-    bz f_after_while@8
-    intc_1 // 0
+    bz f_after_while@11
+    intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
@@ -54,21 +66,35 @@ f_while_top@4:
     dup
     bytec_1 // 0x01
     b==
-    bnz f_after_while@8
+    bnz f_after_while@11
     dup
     bytec_1 // 0x01
     b+
     bury 1
-    b f_while_top@4
+    b f_while_top@7
 
-f_after_while@8:
-    intc_0 // 1
+f_after_while@11:
+    intc_1 // 1
     return
+
+f_ternary_false@3:
+    intc_0 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/break_in_modifier.sol.C.x[routing]() -> void:
 x:
-    intc_1 // 0
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
@@ -84,5 +110,9 @@ x:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
+
+x_ternary_false@3:
+    intc_0 // 0
+    b x_ternary_merge@4

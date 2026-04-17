@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/delete_transient_storage.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 99
-    bytecblock "x" "a" 0x 0x0000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000001234
+    intcblock 1 0
+    bytecblock "x" "a" 0x 0x0000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
@@ -43,14 +43,17 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/delete_transient_storage.sol.C.f[routing]() -> void:
 f:
-    intc_2 // 99
-    itob
-    bytec_0 // "x"
-    swap
-    app_global_put
-    bytec_1 // "a"
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000001234
-    app_global_put
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/delete_transient_storage.sol.C.g
     intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -77,16 +80,40 @@ f:
     intc_0 // 1
     return
 
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/delete_transient_storage.sol.C.g[routing]() -> void:
 g:
-    intc_2 // 99
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/delete_transient_storage.sol.C.g
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/delete_transient_storage.sol.C.g() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/delete_transient_storage.sol.C.g:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/delete_transient_storage.sol.C.g_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/delete_transient_storage.sol.C.g_ternary_merge@3:
+    !
+    assert // not payable
+    pushint 99
     itob
     bytec_0 // "x"
     swap
     app_global_put
     bytec_1 // "a"
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000001234
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000001234
     app_global_put
-    intc_0 // 1
-    return
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/delete_transient_storage.sol.C.g_ternary_false@2:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/delete_transient_storage.sol.C.g_ternary_merge@3

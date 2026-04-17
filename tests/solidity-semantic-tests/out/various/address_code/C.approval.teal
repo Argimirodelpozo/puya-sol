@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "__ctor_pending" "initCode" 0x151f7c750000000000000000000000000000000000000000000000000000000000000000 0x 0x151f7c75
+    bytecblock "__ctor_pending" "initCode" 0x 0x151f7c75 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "__ctor_pending"
@@ -28,20 +28,8 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x4b4fb052 0x4b2c0376 0xafedb2e5 0x0cc35549 // method "__postInit()void", method "f()bool", method "g()uint256", method "h()uint256", method "initCode()byte[]"
     txna ApplicationArgs 0
-    match __postInit f main_g_route@7 main_h_route@8 initCode
+    match __postInit f g h initCode
     err
-
-main_h_route@8:
-    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
-
-main_g_route@7:
-    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol.C.__postInit[routing]() -> void:
@@ -57,7 +45,7 @@ __postInit:
     pop
     len
     itob
-    bytec_3 // 0x
+    bytec_2 // 0x
     b==
     assert
     global CurrentApplicationID
@@ -75,6 +63,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol.C.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     global CurrentApplicationID
     app_params_get AppApprovalProgram
     pop
@@ -86,19 +84,77 @@ f:
     intc_1 // 0
     uncover 2
     setbit
-    bytec 4 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol.C.g[routing]() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    bytec 4 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol.C.h[routing]() -> void:
+h:
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
+    bytec 4 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+h_ternary_false@3:
+    intc_1 // 0
+    b h_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol.C.initCode[routing]() -> void:
 initCode:
+    txn GroupIndex
+    bz initCode_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+initCode_ternary_merge@4:
+    !
+    assert // not payable
     bytec_1 // "initCode"
     box_get
-    bytec_3 // 0x
+    bytec_2 // 0x
     cover 2
     select
     dup
@@ -107,9 +163,13 @@ initCode:
     extract 6 2
     swap
     concat
-    bytec 4 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
+
+initCode_ternary_false@3:
+    intc_1 // 0
+    b initCode_ternary_merge@4

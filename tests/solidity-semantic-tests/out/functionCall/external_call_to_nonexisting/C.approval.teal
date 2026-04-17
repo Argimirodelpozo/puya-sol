@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_to_nonexisting.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 24 6 32
+    intcblock 0 24 6 1
     bytecblock "i" 0x01 0x8c6966f0
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "i"
     pushbytes 0x00000000000000000000000000000000000000000000000000000000cafecafe
     app_global_put
-    pushint 1
+    intc_3 // 1
     return
 
 main_after_if_else@2:
@@ -38,14 +38,25 @@ main_f_route@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_to_nonexisting.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
-    dupn 2
+    dup
     len
-    intc_3 // 32
+    pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     pushbytes 0x
     b==
-    bz f_else_body@4
+    bz f_else_body@7
     itxn_begin
     intc_0 // 0
     bytec_0 // "i"
@@ -64,30 +75,30 @@ f:
     itxn_field ApplicationArgs
     itxn_submit
 
-f_after_if_else@24:
+f_after_if_else@27:
     bytec_1 // 0x01
     dig 1
     b+
     dup
     len
-    intc_3 // 32
+    pushint 32
     <=
     assert // overflow
-    intc_3 // 32
+    pushint 32
     bzero
     b|
     pushbytes 0x151f7c75
     swap
     concat
     log
-    pushint 1
+    intc_3 // 1
     return
 
-f_else_body@4:
+f_else_body@7:
     dup
     bytec_1 // 0x01
     b==
-    bz f_else_body@7
+    bz f_else_body@10
     itxn_begin
     intc_0 // 0
     bytec_0 // "i"
@@ -105,35 +116,11 @@ f_else_body@4:
     pushbytes 0x3ac90b08 // method "b()void"
     itxn_field ApplicationArgs
     itxn_submit
-    b f_after_if_else@24
-
-f_else_body@7:
-    dup
-    pushbytes 0x02
-    b==
-    bz f_else_body@10
-    itxn_begin
-    intc_0 // 0
-    bytec_0 // "i"
-    app_global_get_ex
-    assert // check i exists
-    intc_1 // 24
-    extract_uint64
-    intc_2 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_2 // method "c()void"
-    itxn_field ApplicationArgs
-    itxn_submit
-    b f_after_if_else@24
+    b f_after_if_else@27
 
 f_else_body@10:
     dup
-    pushbytes 0x03
+    pushbytes 0x02
     b==
     bz f_else_body@13
     itxn_begin
@@ -153,13 +140,37 @@ f_else_body@10:
     bytec_2 // method "c()void"
     itxn_field ApplicationArgs
     itxn_submit
-    b f_after_if_else@24
+    b f_after_if_else@27
 
 f_else_body@13:
     dup
-    pushbytes 0x04
+    pushbytes 0x03
     b==
     bz f_else_body@16
+    itxn_begin
+    intc_0 // 0
+    bytec_0 // "i"
+    app_global_get_ex
+    assert // check i exists
+    intc_1 // 24
+    extract_uint64
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "c()void"
+    itxn_field ApplicationArgs
+    itxn_submit
+    b f_after_if_else@27
+
+f_else_body@16:
+    dup
+    pushbytes 0x04
+    b==
+    bz f_else_body@19
     itxn_begin
     intc_0 // 0
     bytec_0 // "i"
@@ -177,13 +188,13 @@ f_else_body@13:
     pushbytes 0x7c1072af // method "x()uint256"
     itxn_field ApplicationArgs
     itxn_submit
-    b f_after_if_else@24
+    b f_after_if_else@27
 
-f_else_body@16:
+f_else_body@19:
     dup
     pushbytes 0x05
     b==
-    bz f_after_if_else@24
+    bz f_after_if_else@27
     itxn_begin
     intc_0 // 0
     bytec_0 // "i"
@@ -201,4 +212,8 @@ f_else_body@16:
     pushbytes 0x7f0d7410 // method "y()string"
     itxn_field ApplicationArgs
     itxn_submit
-    b f_after_if_else@24
+    b f_after_if_else@27
+
+f_ternary_false@3:
+    intc_0 // 0
+    b f_ternary_merge@4

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/internal_function_pointer.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
-    bytecblock "z" 0x151f7c750000000000000000000000000000000000000000000000000000000000000007
+    intcblock 1 0 32
+    bytecblock "z" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "z"
@@ -28,11 +28,16 @@ main_after_if_else@2:
     assert
     pushbytess 0xcd78b354 0xd5968e6d // method "f()uint256", method "callZ()uint256"
     txna ApplicationArgs 0
-    match main_f_route@5 callZ
+    match f callZ
     err
 
-main_f_route@5:
-    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000007
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/internal_function_pointer.sol.C.f[routing]() -> void:
+f:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/internal_function_pointer.sol.C.f
+    bytec_1 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
@@ -40,14 +45,59 @@ main_f_route@5:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/internal_function_pointer.sol.C.callZ[routing]() -> void:
 callZ:
-    pushint 0
+    txn GroupIndex
+    bz callZ_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+callZ_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_0 // "z"
     app_global_get_ex
     assert // check z exists
     intc_0 // 1
     ==
     assert // invalid function pointer
-    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000007
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/internal_function_pointer.sol.C.f
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
+
+callZ_ternary_false@3:
+    intc_1 // 0
+    b callZ_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/internal_function_pointer.sol.C.f() -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/internal_function_pointer.sol.C.f:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/internal_function_pointer.sol.C.f_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/internal_function_pointer.sol.C.f_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/internal_function_pointer.sol.C.f_ternary_false@2:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/internal_function_pointer.sol.C.f_ternary_merge@3

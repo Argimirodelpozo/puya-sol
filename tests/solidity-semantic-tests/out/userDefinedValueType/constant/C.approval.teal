@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/constant.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     bytecblock 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000001925c317317e232abd2ce57aa86fc6cd3698c7c097ed0a903275f48
     txn ApplicationID
     bnz main_after_if_else@2
@@ -25,23 +25,71 @@ main_after_if_else@2:
     assert
     pushbytess 0x590a1470 0xa4346735 0x6184bbd7 // method "s()uint512", method "t()uint512", method "u()uint512"
     txna ApplicationArgs 0
-    match main_s_route@5 main_t_route@6 main_u_route@7
+    match s t u
     err
 
-main_u_route@7:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/constant.sol.C.s[routing]() -> void:
+s:
+    txn GroupIndex
+    bz s_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+s_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000001925c317317e232abd2ce57aa86fc6cd3698c7c097ed0a903275f48
     log
     intc_0 // 1
     return
 
-main_t_route@6:
+s_ternary_false@3:
+    intc_1 // 0
+    b s_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/constant.sol.C.t[routing]() -> void:
+t:
+    txn GroupIndex
+    bz t_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+t_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000001925c317317e232abd2ce57aa86fc6cd3698c7c097ed0a903275f48
     log
     intc_0 // 1
     return
 
-main_s_route@5:
+t_ternary_false@3:
+    intc_1 // 0
+    b t_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/constant.sol.C.u[routing]() -> void:
+u:
+    txn GroupIndex
+    bz u_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+u_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000001925c317317e232abd2ce57aa86fc6cd3698c7c097ed0a903275f48
     log
     intc_0 // 1
     return
+
+u_ternary_false@3:
+    intc_1 // 0
+    b u_ternary_merge@4

@@ -43,6 +43,17 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/variable_cleanup_sstore.sol.C.f[routing]() -> void:
 f:
+    pushbytes ""
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     bytec_1 // "b"
     pushbytes 0x0000000000000000000000000000000000000000000000000000000061627f10
@@ -56,6 +67,7 @@ f:
     assert // check x exists
     pushint 65535
     &
+    bury 1
     intc_0 // 0
     bytec_0 // "y"
     app_global_get_ex
@@ -65,7 +77,7 @@ f:
     b&
     pushbytes 0x80000000
     b>=
-    bz f_ternary_false@3
+    bz f_ternary_false@6
     intc_0 // 0
     bytec_0 // "y"
     app_global_get_ex
@@ -78,7 +90,7 @@ f:
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
-f_ternary_merge@4:
+f_ternary_merge@7:
     intc_0 // 0
     bytec_1 // "b"
     app_global_get_ex
@@ -104,7 +116,7 @@ f_ternary_merge@4:
     intc_1 // 1
     return
 
-f_ternary_false@3:
+f_ternary_false@6:
     intc_0 // 0
     bytec_0 // "y"
     app_global_get_ex
@@ -112,4 +124,8 @@ f_ternary_false@3:
     itob
     bytec_2 // 0xffffffff
     b&
+    b f_ternary_merge@7
+
+f_ternary_false@3:
+    intc_0 // 0
     b f_ternary_merge@4

@@ -39,8 +39,20 @@ bytesToBytes:
     intc_1 // 2
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 2>
+    txn GroupIndex
+    bz bytesToBytes_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+bytesToBytes_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 2
     bzero
+    dig 1
+    swap
     concat
     pushbytes 0x151f7c75
     swap
@@ -48,3 +60,7 @@ bytesToBytes:
     log
     intc_0 // 1
     return
+
+bytesToBytes_ternary_false@3:
+    pushint 0
+    b bytesToBytes_ternary_merge@4

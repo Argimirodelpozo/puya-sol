@@ -46,6 +46,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/keccak256_with_bytes.sol.c.foo[routing]() -> void:
 foo:
+    txn GroupIndex
+    bz foo_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+foo_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "data"
     box_get
     pushbytes 0x
@@ -88,3 +98,7 @@ foo:
     log
     intc_0 // 1
     return
+
+foo_ternary_false@3:
+    intc_1 // 0
+    b foo_ternary_merge@4

@@ -3,10 +3,12 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_inheritance_init_order_3_viaIR.sol.B.approval_program() -> uint64:
 main:
-    intcblock 1 64
-    bytecblock "x"
+    intcblock 1 0 64
+    bytecblock "x" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_inheritance_init_order_3_viaIR.sol.B.f
+    pop
     pushint 2
     itob
     bytec_0 // "x"
@@ -36,19 +38,44 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_inheritance_init_order_3_viaIR.sol.B.x[routing]() -> void:
 x:
-    pushint 0
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     dup
     len
-    intc_1 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
-    pushbytes 0x151f7c75
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+x_ternary_false@3:
+    intc_1 // 0
+    b x_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_inheritance_init_order_3_viaIR.sol.B.f[routing]() -> void:
+f:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_inheritance_init_order_3_viaIR.sol.B.f
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -56,14 +83,26 @@ x:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_inheritance_init_order_3_viaIR.sol.B.f[routing]() -> void:
-f:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_inheritance_init_order_3_viaIR.sol.B.f() -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_inheritance_init_order_3_viaIR.sol.B.f:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_inheritance_init_order_3_viaIR.sol.B.f_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_inheritance_init_order_3_viaIR.sol.B.f_ternary_merge@3:
+    !
+    assert // not payable
     pushint 4
     itob
     bytec_0 // "x"
     swap
     app_global_put
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_inheritance_init_order_3_viaIR.sol.B.f_ternary_false@2:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_inheritance_init_order_3_viaIR.sol.B.f_ternary_merge@3

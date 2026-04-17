@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2
-    bytecblock "arr" "t" 0x "__ctor_pending" "__dyn_storage"
+    bytecblock "arr" 0x "t" "__ctor_pending" "__dyn_storage"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_3 // "__ctor_pending"
@@ -21,8 +21,8 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    bytec_1 // "t"
-    bytec_2 // 0x
+    bytec_2 // "t"
+    bytec_1 // 0x
     app_global_put
     txn OnCompletion
     !
@@ -47,8 +47,8 @@ __postInit:
     intc_3 // 2
     box_create
     pop
-    bytec_1 // "t"
-    bytec_2 // 0x
+    bytec_2 // "t"
+    bytec_1 // 0x
     app_global_put
     intc_1 // 1
     return
@@ -56,6 +56,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.pushArr[routing]() -> void:
 pushArr:
+    txn GroupIndex
+    bz pushArr_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+pushArr_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "arr"
     intc_2 // 0
     intc_3 // 2
@@ -90,11 +100,25 @@ pushArr:
     intc_1 // 1
     return
 
+pushArr_ternary_false@3:
+    intc_2 // 0
+    b pushArr_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.setAndClear[routing]() -> void:
 setAndClear:
-    bytec_1 // "t"
-    bytec_2 // 0x
+    txn GroupIndex
+    bz setAndClear_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+setAndClear_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_2 // "t"
+    bytec_1 // 0x
     app_global_put
     bytec_0 // "arr"
     intc_2 // 0
@@ -117,7 +141,7 @@ setAndClear:
     bytec_0 // "arr"
     swap
     intc_0 // 32
-    bytec_2 // 0x
+    bytec_1 // 0x
     box_splice
     bytec_0 // "arr"
     box_len
@@ -130,9 +154,25 @@ setAndClear:
     intc_1 // 1
     return
 
+setAndClear_ternary_false@3:
+    intc_2 // 0
+    b setAndClear_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.getArr[routing]() -> void:
 getArr:
+    intc_2 // 0
+    bytec_1 // ""
+    txn GroupIndex
+    bz getArr_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getArr_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     pushint 8
     bzero
@@ -140,7 +180,7 @@ getArr:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 0
     dup
-    cover 2
+    bury 4
     extract 0 32
     keccak256
     concat
@@ -150,12 +190,13 @@ getArr:
     -
     extract_uint64
     dup
+    bury 2
     intc_1 // 1
     ==
-    bz getArr_else_body@3
+    bz getArr_else_body@7
     intc_0 // 32
     bzero
-    bytec_1 // "t"
+    bytec_2 // "t"
     app_global_get
     concat
     dup
@@ -165,7 +206,7 @@ getArr:
     intc_0 // 32
     extract3
 
-getArr_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.__storage_read@6:
+getArr_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.__storage_read@10:
     dig 2
     store 0
     dup
@@ -183,9 +224,9 @@ getArr_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-so
     intc_1 // 1
     return
 
-getArr_else_body@3:
+getArr_else_body@7:
     dup
-    bnz getArr_else_body@5
+    bnz getArr_else_body@9
     intc_0 // 32
     bzero
     bytec_0 // "arr"
@@ -197,9 +238,9 @@ getArr_else_body@3:
     -
     intc_0 // 32
     extract3
-    b getArr_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.__storage_read@6
+    b getArr_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.__storage_read@10
 
-getArr_else_body@5:
+getArr_else_body@9:
     bytec 4 // "__dyn_storage"
     pushint 8192
     box_create
@@ -213,4 +254,8 @@ getArr_else_body@5:
     swap
     intc_0 // 32
     box_extract
-    b getArr_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.__storage_read@6
+    b getArr_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.__storage_read@10
+
+getArr_ternary_false@3:
+    intc_2 // 0
+    b getArr_ternary_merge@4

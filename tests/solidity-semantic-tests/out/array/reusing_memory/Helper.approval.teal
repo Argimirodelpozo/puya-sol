@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/reusing_memory.sol.Helper.approval_program() -> uint64:
 main:
-    intcblock 1 64
+    intcblock 1 0 64
     bytecblock "flag"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -37,16 +37,26 @@ main_flag_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/reusing_memory.sol.Helper.flag[routing]() -> void:
 flag:
-    pushint 0
+    txn GroupIndex
+    bz flag_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+flag_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_0 // "flag"
     app_global_get_ex
     assert // check flag exists
     dup
     len
-    intc_1 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
     pushbytes 0x151f7c75
@@ -55,3 +65,7 @@ flag:
     log
     intc_0 // 1
     return
+
+flag_ternary_false@3:
+    intc_1 // 0
+    b flag_ternary_merge@4

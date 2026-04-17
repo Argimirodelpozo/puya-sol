@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/state_smoke_test.sol.test.approval_program() -> uint64:
 main:
-    intcblock 32 255 1 8
+    intcblock 1 32 255 0
     bytecblock "value1" "value2" 0x
     txn ApplicationID
     bnz main_after_if_else@2
@@ -13,7 +13,7 @@ main:
     bytec_1 // "value2"
     bytec_2 // 0x
     app_global_put
-    intc_2 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -40,52 +40,66 @@ get:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 8
+    pushint 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    dup
-    intc_1 // 255
+    txn GroupIndex
+    bz get_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+get_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
+    intc_2 // 255
     <=
     assert // ABI validation
-    intc_1 // 255
+    intc_2 // 255
     &
-    bnz get_else_body@3
-    pushint 0
+    bnz get_else_body@6
+    intc_3 // 0
     bytec_0 // "value1"
     app_global_get_ex
     assert // check value1 exists
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
 
-get_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/state_smoke_test.sol.test.get@4:
+get_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/state_smoke_test.sol.test.get@7:
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_0 // 1
     return
 
-get_else_body@3:
-    pushint 0
+get_else_body@6:
+    intc_3 // 0
     bytec_1 // "value2"
     app_global_get_ex
     assert // check value2 exists
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
-    b get_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/state_smoke_test.sol.test.get@4
+    b get_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/state_smoke_test.sol.test.get@7
+
+get_ternary_false@3:
+    intc_3 // 0
+    b get_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/state_smoke_test.sol.test.set[routing]() -> void:
@@ -93,34 +107,48 @@ set:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 8
+    pushint 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
     txna ApplicationArgs 2
     dup
-    cover 2
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz set_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+set_ternary_merge@4:
+    !
+    assert // not payable
+    dig 1
     dup
-    intc_1 // 255
+    intc_2 // 255
     <=
     assert // ABI validation
-    intc_1 // 255
+    intc_2 // 255
     &
-    bnz set_else_body@3
+    bnz set_else_body@6
     bytec_0 // "value1"
-    swap
+    dig 1
     app_global_put
 
-set_after_if_else@4:
-    intc_2 // 1
+set_after_if_else@7:
+    intc_0 // 1
     return
 
-set_else_body@3:
+set_else_body@6:
     bytec_1 // "value2"
-    swap
+    dig 1
     app_global_put
-    b set_after_if_else@4
+    b set_after_if_else@7
+
+set_ternary_false@3:
+    intc_3 // 0
+    b set_ternary_merge@4

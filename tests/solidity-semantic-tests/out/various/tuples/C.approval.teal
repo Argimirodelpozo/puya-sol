@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 2 32
-    bytecblock "data" "__ctor_pending" "m_c"
+    bytecblock "data" "__ctor_pending" "m_c" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
@@ -28,14 +28,8 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x185e9ff4 0xcd78b354 // method "__postInit()void", method "h()(uint256,uint256)", method "f()uint256"
     txna ApplicationArgs 0
-    match __postInit main_h_route@6 f
+    match __postInit h f
     err
-
-main_h_route@6:
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000050000000000000000000000000000000000000000000000000000000000000006
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol.C.__postInit[routing]() -> void:
@@ -58,8 +52,31 @@ __postInit:
     return
 
 
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol.C.h[routing]() -> void:
+h:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol.C.h
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol.C.f[routing]() -> void:
 f:
+    intc_1 // 0
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "data"
     intc_1 // 0
     intc_2 // 2
@@ -91,6 +108,33 @@ f:
     intc_1 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
     box_splice
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol.C.h
+    popn 2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol.C.h
+    bury 2
+    pop
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol.C.h
+    pop
+    pushbytes 0x05
+    b!=
+    bnz f_if_body@6
+    dup
+    pushbytes 0x06
+    b!=
+    bz f_after_if_else@7
+
+f_if_body@6:
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
+
+f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol.C.f@18:
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+f_after_if_else@7:
     bytec_0 // "data"
     box_get
     pushbytes 0x0000
@@ -105,17 +149,34 @@ f:
     extract 2 32
     pushbytes 0x03
     b!=
-    bz f_after_if_else@8
+    bz f_after_if_else@11
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol.C.f@18
 
-f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol.C.f@15:
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-f_after_if_else@8:
+f_after_if_else@11:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol.C.f@15
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol.C.f@18
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol.C.h() -> bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol.C.h:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol.C.h_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol.C.h_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytess 0x0000000000000000000000000000000000000000000000000000000000000005 0x0000000000000000000000000000000000000000000000000000000000000006
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol.C.h_ternary_false@2:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol.C.h_ternary_merge@3

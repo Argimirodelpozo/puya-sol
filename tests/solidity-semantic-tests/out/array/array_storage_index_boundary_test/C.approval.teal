@@ -62,12 +62,22 @@ test_boundary_check:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz test_boundary_check_ternary_false@3
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
 
-test_boundary_check_while_top@19:
+test_boundary_check_ternary_merge@4:
+    !
+    assert // not payable
+
+test_boundary_check_while_top@22:
     pushint 170010
     global OpcodeBudget
     >
-    bz test_boundary_check_while_top@2
+    bz test_boundary_check_while_top@5
     itxn_begin
     pushint 6 // appl
     itxn_field TypeEnum
@@ -80,20 +90,20 @@ test_boundary_check_while_top@19:
     intc_2 // 0
     itxn_field Fee
     itxn_submit
-    b test_boundary_check_while_top@19
+    b test_boundary_check_while_top@22
 
-test_boundary_check_while_top@2:
+test_boundary_check_while_top@5:
     bytec_0 // "storageArray"
     box_len
     pop
     intc_1 // 2
     >=
-    bz test_boundary_check_ternary_false@4
+    bz test_boundary_check_ternary_false@7
     bytec_0 // "storageArray"
     box_len
     pop
 
-test_boundary_check_ternary_merge@5:
+test_boundary_check_ternary_merge@8:
     intc_1 // 2
     -
     intc_0 // 32
@@ -101,7 +111,7 @@ test_boundary_check_ternary_merge@5:
     itob
     dig 2
     b<
-    bz test_boundary_check_while_top@8
+    bz test_boundary_check_while_top@11
     bytec_0 // "storageArray"
     intc_2 // 0
     intc_1 // 2
@@ -133,20 +143,20 @@ test_boundary_check_ternary_merge@5:
     intc_2 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     box_splice
-    b test_boundary_check_while_top@2
+    b test_boundary_check_while_top@5
 
-test_boundary_check_while_top@8:
+test_boundary_check_while_top@11:
     bytec_0 // "storageArray"
     box_len
     pop
     intc_1 // 2
     >=
-    bz test_boundary_check_ternary_false@10
+    bz test_boundary_check_ternary_false@13
     bytec_0 // "storageArray"
     box_len
     pop
 
-test_boundary_check_ternary_merge@11:
+test_boundary_check_ternary_merge@14:
     intc_1 // 2
     -
     intc_0 // 32
@@ -154,7 +164,7 @@ test_boundary_check_ternary_merge@11:
     itob
     dig 2
     b>
-    bz test_boundary_check_after_while@13
+    bz test_boundary_check_after_while@16
     bytec_0 // "storageArray"
     intc_2 // 0
     intc_1 // 2
@@ -186,9 +196,9 @@ test_boundary_check_ternary_merge@11:
     bytec_0 // "storageArray"
     swap
     box_resize
-    b test_boundary_check_while_top@8
+    b test_boundary_check_while_top@11
 
-test_boundary_check_after_while@13:
+test_boundary_check_after_while@16:
     bytec_0 // "storageArray"
     box_get
     pushbytes 0x0000
@@ -225,10 +235,14 @@ test_boundary_check_after_while@13:
     intc_3 // 1
     return
 
-test_boundary_check_ternary_false@10:
+test_boundary_check_ternary_false@13:
     intc_1 // 2
-    b test_boundary_check_ternary_merge@11
+    b test_boundary_check_ternary_merge@14
 
-test_boundary_check_ternary_false@4:
+test_boundary_check_ternary_false@7:
     intc_1 // 2
-    b test_boundary_check_ternary_merge@5
+    b test_boundary_check_ternary_merge@8
+
+test_boundary_check_ternary_false@3:
+    intc_2 // 0
+    b test_boundary_check_ternary_merge@4

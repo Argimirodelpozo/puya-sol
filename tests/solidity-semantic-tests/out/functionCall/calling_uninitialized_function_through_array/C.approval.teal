@@ -3,13 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_uninitialized_function_through_array.sol.C.approval_program() -> uint64:
 main:
+    intcblock 1 0
     bytecblock "mutex" 0x8000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "mutex"
     pushbytes 0x
     app_global_put
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -36,7 +37,17 @@ main_t_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_uninitialized_function_through_array.sol.C.t[routing]() -> void:
 t:
-    pushint 0
+    txn GroupIndex
+    bz t_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+t_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_0 // "mutex"
     app_global_get_ex
     assert // check mutex exists
@@ -44,7 +55,7 @@ t:
     b^
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b>
-    bz t_after_if_else@3
+    bz t_after_if_else@6
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
     replace2 0
@@ -58,13 +69,17 @@ t:
     swap
     concat
     log
-    pushint 1
+    intc_0 // 1
     return
 
-t_after_if_else@3:
-    pushint 1
+t_after_if_else@6:
+    intc_0 // 1
     itob
     bytec_0 // "mutex"
     swap
     app_global_put
     err // invalid function pointer
+
+t_ternary_false@3:
+    intc_1 // 0
+    b t_ternary_merge@4

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_packed_array.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 8 6
+    intcblock 1 32 0 8
     bytecblock 0x "__dyn_storage" 0x068101
     txn ApplicationID
     bnz main_after_if_else@2
@@ -31,22 +31,34 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_packed_array.sol.C.fillArray[routing]() -> void:
 fillArray:
+    bytec_0 // ""
+    txn GroupIndex
+    bz fillArray_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+fillArray_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     intc_0 // 1
+    bury 1
 
-fillArray_while_top@2:
+fillArray_while_top@5:
     dup
     pushint 40
     <
-    bz fillArray_after_while@4
+    bz fillArray_after_while@7
     dupn 2
     itob
     pushbytes 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
     b+
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     -
     extract_uint64
     dig 1
@@ -54,23 +66,37 @@ fillArray_while_top@2:
     intc_0 // 1
     +
     bury 1
-    b fillArray_while_top@2
+    b fillArray_while_top@5
 
-fillArray_after_while@4:
+fillArray_after_while@7:
     intc_0 // 1
     return
+
+fillArray_ternary_false@3:
+    intc_2 // 0
+    b fillArray_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_packed_array.sol.C.clearArray[routing]() -> void:
 clearArray:
+    txn GroupIndex
+    bz clearArray_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-clearArray_while_top@2:
+clearArray_ternary_merge@4:
+    !
+    assert // not payable
+
+clearArray_while_top@6:
     pushint 170010
     global OpcodeBudget
     >
-    bz clearArray_after_while@7
+    bz clearArray_after_while@11
     itxn_begin
-    intc_3 // appl
+    pushint 6 // appl
     itxn_field TypeEnum
     pushint 5 // DeleteApplication
     itxn_field OnCompletion
@@ -78,12 +104,12 @@ clearArray_while_top@2:
     itxn_field ApprovalProgram
     bytec_2 // 0x068101
     itxn_field ClearStateProgram
-    pushint 0
+    intc_2 // 0
     itxn_field Fee
     itxn_submit
-    b clearArray_while_top@2
+    b clearArray_while_top@6
 
-clearArray_after_while@7:
+clearArray_after_while@11:
     load 0
     store 0
     pushint 18446744073709551611
@@ -101,7 +127,7 @@ clearArray_after_while@7:
     pushint 18446744073709551615
     bytec_0 // 0x
     callsub __storage_write
-    pushint 0
+    intc_2 // 0
     bytec_0 // 0x
     callsub __storage_write
     intc_0 // 1
@@ -119,13 +145,13 @@ clearArray_after_while@7:
     pushint 5
     bytec_0 // 0x
     callsub __storage_write
-    intc_3 // 6
+    pushint 6
     bytec_0 // 0x
     callsub __storage_write
     pushint 7
     bytec_0 // 0x
     callsub __storage_write
-    intc_2 // 8
+    intc_3 // 8
     bytec_0 // 0x
     callsub __storage_write
     pushint 9
@@ -209,9 +235,23 @@ clearArray_after_while@7:
     intc_0 // 1
     return
 
+clearArray_ternary_false@3:
+    intc_2 // 0
+    b clearArray_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_packed_array.sol.C.x[routing]() -> void:
 x:
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     bytec_1 // "__dyn_storage"
@@ -228,6 +268,10 @@ x:
     log
     intc_0 // 1
     return
+
+x_ternary_false@3:
+    intc_2 // 0
+    b x_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_packed_array.sol.C.__storage_write(__slot: uint64, __value: bytes) -> void:

@@ -69,11 +69,21 @@ f1_for_header@1:
 
 f1_after_for@4:
     dig 2
-    dup
     len
-    dig 3
+    dig 2
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.dynamic_array<arc4.uint8>, 1>
+    txn GroupIndex
+    bz f1_ternary_false@7
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+f1_ternary_merge@8:
+    !
+    assert // not payable
+    dig 2
     dup
     intc_1 // 0
     extract_uint16
@@ -128,6 +138,10 @@ f1_after_for@4:
     log
     intc_2 // 1
     return
+
+f1_ternary_false@7:
+    intc_1 // 0
+    b f1_ternary_merge@8
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_array_dynamic_bytes.sol.C.f2[routing]() -> void:
@@ -219,12 +233,21 @@ f2_for_header@5:
 
 f2_after_for@8:
     dig 5
-    dup
     len
-    dig 5
+    dig 4
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.dynamic_array<arc4.uint8>, 1>
-    dig 3
+    txn GroupIndex
+    bz f2_ternary_false@11
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+f2_ternary_merge@12:
+    !
+    assert // not payable
+    dig 2
     dup
     intc_1 // 0
     extract_uint16
@@ -266,16 +289,14 @@ f2_after_for@8:
     itob
     dig 4
     b|
-    dig 5
+    dig 10
+    dup
     intc_1 // 0
     extract_uint16
-    dig 6
-    dig 1
+    dup2
     extract_uint16
     intc_0 // 2
     +
-    uncover 7
-    cover 2
     extract3
     extract 2 0
     dup
@@ -319,6 +340,10 @@ f2_after_for@8:
     intc_2 // 1
     return
 
+f2_ternary_false@11:
+    intc_1 // 0
+    b f2_ternary_merge@12
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_array_dynamic_bytes.sol.C.g1[routing]() -> void:
 g1:
@@ -360,11 +385,21 @@ g1_for_header@1:
 
 g1_after_for@4:
     dig 2
-    dup
     len
-    dig 3
+    dig 2
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.dynamic_array<arc4.uint8>, 2>
+    txn GroupIndex
+    bz g1_ternary_false@7
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+g1_ternary_merge@8:
+    !
+    assert // not payable
+    dig 2
     dup
     intc_1 // 0
     extract_uint16
@@ -470,6 +505,10 @@ g1_after_for@4:
     log
     intc_2 // 1
     return
+
+g1_ternary_false@7:
+    intc_1 // 0
+    b g1_ternary_merge@8
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_array_dynamic_bytes.sol.C.g2[routing]() -> void:
@@ -528,6 +567,16 @@ g2_after_for@4:
     dig 3
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint8>>
+    txn GroupIndex
+    bz g2_ternary_false@7
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+g2_ternary_merge@8:
+    !
+    assert // not payable
     dig 4
     dup
     itob
@@ -637,3 +686,7 @@ g2_after_for@4:
     log
     intc_2 // 1
     return
+
+g2_ternary_false@7:
+    intc_1 // 0
+    b g2_ternary_merge@8

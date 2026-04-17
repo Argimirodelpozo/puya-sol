@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_short_decode.sol.C.approval_program() -> uint64:
 main:
-    intcblock 2 0 1
+    intcblock 0 2 1
     txn ApplicationID
     bnz main_after_if_else@2
     intc_2 // 1
@@ -33,23 +33,23 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_short_decode.sol.C.f[routing]() -> void:
 f:
-    intc_1 // 0
+    intc_0 // 0
     pushbytes ""
     dup
     txna ApplicationArgs 1
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
     dup
     cover 2
-    intc_0 // 2
+    intc_1 // 2
     *
     swap
     dup
     len
     swap
     extract 2 0
-    intc_1 // 0
+    intc_0 // 0
 
 f_for_header@1:
     dup
@@ -57,7 +57,7 @@ f_for_header@1:
     <
     bz f_after_for@8
     dup
-    intc_0 // 2
+    intc_1 // 2
     *
     dig 2
     dup
@@ -73,17 +73,17 @@ f_for_header@1:
     bury 8
     pushint 4
     bury 6
-    intc_1 // 0
+    intc_0 // 0
     bury 7
 
 f_for_header@3:
     dig 6
-    intc_0 // 2
+    intc_1 // 2
     <
     bz f_after_for@6
     dig 6
     dup
-    intc_0 // 2
+    intc_1 // 2
     *
     dig 9
     dup
@@ -98,11 +98,11 @@ f_for_header@3:
     dig 1
     len
     substring3
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
     pushint 32
     *
-    intc_0 // 2
+    intc_1 // 2
     +
     +
     bury 7
@@ -124,12 +124,26 @@ f_after_for@6:
 
 f_after_for@8:
     dig 3
-    intc_0 // 2
+    intc_1 // 2
     +
     dig 3
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.dynamic_array<arc4.uint256>, 2>>
+    txn GroupIndex
+    bz f_ternary_false@11
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@12:
+    !
+    assert // not payable
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000017
     log
     intc_2 // 1
     return
+
+f_ternary_false@11:
+    intc_0 // 0
+    b f_ternary_merge@12

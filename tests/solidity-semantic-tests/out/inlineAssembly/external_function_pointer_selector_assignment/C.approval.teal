@@ -3,9 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_selector_assignment.sol.C.approval_program() -> uint64:
 main:
+    intcblock 1 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -23,12 +24,28 @@ main_after_if_else@2:
     assert
     pushbytess 0x89aac53b 0x8c829a67 // method "testFunction()void", method "testYul(uint64)uint64"
     txna ApplicationArgs 0
-    match main_testFunction_route@5 testYul
+    match testFunction testYul
     err
 
-main_testFunction_route@5:
-    pushint 1
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_selector_assignment.sol.C.testFunction[routing]() -> void:
+testFunction:
+    txn GroupIndex
+    bz testFunction_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+testFunction_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 1
     return
+
+testFunction_ternary_false@3:
+    intc_1 // 0
+    b testFunction_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_selector_assignment.sol.C.testYul[routing]() -> void:
@@ -40,6 +57,17 @@ testYul:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    txn GroupIndex
+    bz testYul_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+testYul_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     pushint 4294967295
     <=
     assert // ABI validation
@@ -47,5 +75,9 @@ testYul:
     store 0
     pushbytes 0x151f7c750000000000000000
     log
-    pushint 1
+    intc_0 // 1
     return
+
+testYul_ternary_false@3:
+    intc_1 // 0
+    b testYul_ternary_merge@4

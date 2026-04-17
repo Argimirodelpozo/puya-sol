@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/nested_tuples.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -24,35 +24,115 @@ main_after_if_else@2:
     assert
     pushbytess 0x98411453 0x08d05333 0xed371b95 0x0c192409 0xf777099f // method "f0()(uint512,bool)", method "f1()uint256", method "f2()uint256", method "f3()uint256", method "f4()uint256"
     txna ApplicationArgs 0
-    match main_f0_route@5 main_f1_route@6 main_f2_route@7 main_f3_route@8 main_f4_route@9
+    match f0 f1 f2 f3 f4
     err
 
-main_f4_route@9:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000004
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/nested_tuples.sol.test.f0[routing]() -> void:
+f0:
+    txn GroupIndex
+    bz f0_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f0_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000280
     log
     intc_0 // 1
     return
 
-main_f3_route@8:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000003
-    log
-    intc_0 // 1
-    return
+f0_ternary_false@3:
+    intc_1 // 0
+    b f0_ternary_merge@4
 
-main_f2_route@7:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
-    log
-    intc_0 // 1
-    return
 
-main_f1_route@6:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/nested_tuples.sol.test.f1[routing]() -> void:
+f1:
+    txn GroupIndex
+    bz f1_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f1_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     log
     intc_0 // 1
     return
 
-main_f0_route@5:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000280
+f1_ternary_false@3:
+    intc_1 // 0
+    b f1_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/nested_tuples.sol.test.f2[routing]() -> void:
+f2:
+    txn GroupIndex
+    bz f2_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f2_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
     log
     intc_0 // 1
     return
+
+f2_ternary_false@3:
+    intc_1 // 0
+    b f2_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/nested_tuples.sol.test.f3[routing]() -> void:
+f3:
+    txn GroupIndex
+    bz f3_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f3_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000003
+    log
+    intc_0 // 1
+    return
+
+f3_ternary_false@3:
+    intc_1 // 0
+    b f3_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/nested_tuples.sol.test.f4[routing]() -> void:
+f4:
+    txn GroupIndex
+    bz f4_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f4_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000004
+    log
+    intc_0 // 1
+    return
+
+f4_ternary_false@3:
+    intc_1 // 0
+    b f4_ternary_merge@4

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 2 0 32
+    intcblock 1 0 2 32
     bytecblock "s" "__ctor_pending" 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -28,20 +28,8 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x48202399 0xaad134cd 0xfd6894cd // method "__postInit()void", method "f()(bool,bool,uint256)", method "g()(bool,bool,uint512)", method "h()(bool,bool,uint256)"
     txna ApplicationArgs 0
-    match __postInit main_f_route@6 g main_h_route@8
+    match __postInit f g h
     err
-
-main_h_route@8:
-    bytec_2 // 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
-
-main_f_route@6:
-    bytec_2 // 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.__postInit[routing]() -> void:
@@ -50,10 +38,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
     bytec_0 // "s"
-    intc_1 // 2
+    intc_2 // 2
     box_create
     pop
 
@@ -61,7 +49,7 @@ __postInit_while_top@2:
     bytec_0 // "s"
     box_len
     pop
-    intc_1 // 2
+    intc_2 // 2
     >=
     bz __postInit_ternary_false@4
     bytec_0 // "s"
@@ -69,7 +57,7 @@ __postInit_while_top@2:
     pop
 
 __postInit_ternary_merge@5:
-    intc_1 // 2
+    intc_2 // 2
     -
     intc_3 // 32
     /
@@ -78,8 +66,8 @@ __postInit_ternary_merge@5:
     b<
     bz __postInit_after_while@7
     bytec_0 // "s"
-    intc_2 // 0
-    intc_1 // 2
+    intc_1 // 0
+    intc_2 // 2
     box_extract
     btoi
     bytec_0 // "s"
@@ -96,16 +84,16 @@ __postInit_ternary_merge@5:
     itob
     extract 6 2
     bytec_0 // "s"
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     box_replace
     intc_3 // 32
     *
-    intc_1 // 2
+    intc_2 // 2
     +
     bytec_0 // "s"
     swap
-    intc_2 // 0
+    intc_1 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     box_splice
     b __postInit_while_top@2
@@ -115,15 +103,73 @@ __postInit_after_while@7:
     return
 
 __postInit_ternary_false@4:
-    intc_1 // 2
+    intc_2 // 2
     b __postInit_ternary_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.f[routing]() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_2 // 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.g[routing]() -> void:
 g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c754000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.h[routing]() -> void:
+h:
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_2 // 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+h_ternary_false@3:
+    intc_1 // 0
+    b h_ternary_merge@4

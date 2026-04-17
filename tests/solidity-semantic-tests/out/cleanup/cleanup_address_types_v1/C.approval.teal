@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_address_types_v1.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 32 0
     bytecblock 0x 0x0000000000000000000000000000000000000000000000000000000000000001 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -37,12 +37,23 @@ f:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     bytec_0 // 0x
     !=
-    bz f_after_if_else@3
+    bz f_after_if_else@6
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000001
 
-f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_address_types_v1.sol.C.f@4:
+f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_address_types_v1.sol.C.f@7:
     bytec_2 // 0x151f7c75
     swap
     concat
@@ -50,9 +61,13 @@ f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tes
     intc_0 // 1
     return
 
-f_after_if_else@3:
+f_after_if_else@6:
     bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_address_types_v1.sol.C.f@4
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_address_types_v1.sol.C.f@7
+
+f_ternary_false@3:
+    intc_2 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_address_types_v1.sol.C.g[routing]() -> void:
@@ -63,12 +78,23 @@ g:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     bytec_0 // 0x
     !=
-    bz g_after_if_else@3
+    bz g_after_if_else@6
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000001
 
-g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_address_types_v1.sol.C.g@4:
+g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_address_types_v1.sol.C.g@7:
     bytec_2 // 0x151f7c75
     swap
     concat
@@ -76,6 +102,10 @@ g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tes
     intc_0 // 1
     return
 
-g_after_if_else@3:
+g_after_if_else@6:
     bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    b g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_address_types_v1.sol.C.g@4
+    b g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_address_types_v1.sol.C.g@7
+
+g_ternary_false@3:
+    intc_2 // 0
+    b g_ternary_merge@4

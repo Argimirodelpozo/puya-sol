@@ -38,6 +38,17 @@ bytesToUint:
     pushint 4
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    txn GroupIndex
+    bz bytesToUint_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+bytesToUint_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     btoi
     pushint 4294967295
     &
@@ -48,3 +59,7 @@ bytesToUint:
     log
     pushint 1
     return
+
+bytesToUint_ternary_false@3:
+    pushint 0
+    b bytesToUint_ternary_merge@4

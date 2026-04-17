@@ -1,7 +1,7 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_q19739bj/s2.sol.C.approval_program() -> uint64:
+// /tmp/multisource_kqmhyg6s/s2.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32
     txn ApplicationID
@@ -31,15 +31,25 @@ main_g_route@4:
     b g
 
 
-// /tmp/multisource_q19739bj/s2.sol.f() -> bytes:
+// /tmp/multisource_kqmhyg6s/s2.sol.f() -> bytes:
 f:
     pushint 1337
     itob
     retsub
 
 
-// /tmp/multisource_q19739bj/s2.sol.C.g[routing]() -> void:
+// /tmp/multisource_kqmhyg6s/s2.sol.C.g[routing]() -> void:
 g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     callsub f
     dup
     len
@@ -55,3 +65,7 @@ g:
     log
     intc_0 // 1
     return
+
+g_ternary_false@3:
+    pushint 0
+    b g_ternary_merge@4

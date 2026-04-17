@@ -51,6 +51,16 @@ main_get_route@10:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/multiple_initializations.sol.B.get[routing]() -> void:
 get:
+    txn GroupIndex
+    bz get_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+get_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -69,3 +79,7 @@ get:
     log
     intc_1 // 1
     return
+
+get_ternary_false@3:
+    intc_0 // 0
+    b get_ternary_merge@4

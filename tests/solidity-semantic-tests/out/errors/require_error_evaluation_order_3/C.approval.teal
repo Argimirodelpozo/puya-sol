@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/require_error_evaluation_order_3.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     bytecblock "failureMessage"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -43,9 +43,19 @@ f:
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    pushint 0
+    intc_1 // 0
     getbit
-    dup
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     intc_0 // 1
     <=
     assert // ABI bool validation
@@ -55,3 +65,7 @@ f:
     assert // h
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4

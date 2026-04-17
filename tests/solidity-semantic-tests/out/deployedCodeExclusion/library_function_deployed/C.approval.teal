@@ -62,6 +62,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/deployedCodeExclusion/library_function_deployed.sol.C.test[routing]() -> void:
 test:
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
     bytec_1 // "data"
     box_get
     pushbytes 0x
@@ -88,3 +98,7 @@ test:
     log
     intc_0 // 1
     return
+
+test_ternary_false@3:
+    intc_1 // 0
+    b test_ternary_merge@4

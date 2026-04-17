@@ -3,12 +3,12 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/enum_explicit_overflow_homestead.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 32 8 0
+    intcblock 1 0 32 8
     bytecblock "choice" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "choice"
-    intc_3 // 0
+    intc_1 // 0
     app_global_put
     intc_0 // 1
     return
@@ -37,16 +37,26 @@ getChoiceExp:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_2 // 8
+    txn GroupIndex
+    bz getChoiceExp_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getChoiceExp_ternary_merge@4:
+    !
+    assert // not payable
+    intc_3 // 8
     bzero
-    swap
+    dig 1
     concat
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     -
     extract_uint64
     dup
@@ -57,7 +67,7 @@ getChoiceExp:
     dig 1
     app_global_put
     itob
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
@@ -66,6 +76,10 @@ getChoiceExp:
     log
     intc_0 // 1
     return
+
+getChoiceExp_ternary_false@3:
+    intc_1 // 0
+    b getChoiceExp_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/enum_explicit_overflow_homestead.sol.test.getChoiceFromSigned[routing]() -> void:
@@ -73,16 +87,26 @@ getChoiceFromSigned:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_2 // 8
+    txn GroupIndex
+    bz getChoiceFromSigned_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getChoiceFromSigned_ternary_merge@4:
+    !
+    assert // not payable
+    intc_3 // 8
     bzero
-    swap
+    dig 1
     concat
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     -
     extract_uint64
     dup
@@ -93,7 +117,7 @@ getChoiceFromSigned:
     dig 1
     app_global_put
     itob
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
@@ -103,10 +127,24 @@ getChoiceFromSigned:
     intc_0 // 1
     return
 
+getChoiceFromSigned_ternary_false@3:
+    intc_1 // 0
+    b getChoiceFromSigned_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/enum_explicit_overflow_homestead.sol.test.getChoiceFromMax[routing]() -> void:
 getChoiceFromMax:
-    intc_3 // 0
+    txn GroupIndex
+    bz getChoiceFromMax_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getChoiceFromMax_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     assert // enum out of range
     bytec_0 // "choice"
     pushint 18446744073709551615
@@ -115,3 +153,7 @@ getChoiceFromMax:
     log
     intc_0 // 1
     return
+
+getChoiceFromMax_ternary_false@3:
+    intc_1 // 0
+    b getChoiceFromMax_ternary_merge@4

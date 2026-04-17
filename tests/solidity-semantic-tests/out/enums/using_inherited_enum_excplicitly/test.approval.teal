@@ -27,7 +27,26 @@ main_answer_route@4:
     txn ApplicationID
     &&
     assert
+    b answer
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/using_inherited_enum_excplicitly.sol.test.answer[routing]() -> void:
+answer:
+    txn GroupIndex
+    bz answer_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+answer_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c750000000000000001
     log
     pushint 1
     return
+
+answer_ternary_false@3:
+    pushint 0
+    b answer_ternary_merge@4

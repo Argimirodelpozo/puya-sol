@@ -68,6 +68,16 @@ __receive:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/receive/empty_calldata_calls_receive.sol.A.x[routing]() -> void:
 x:
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -85,6 +95,10 @@ x:
     concat
     log
     retsub
+
+x_ternary_false@3:
+    intc_1 // 0
+    b x_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/receive/empty_calldata_calls_receive.sol.A.__receive() -> void:

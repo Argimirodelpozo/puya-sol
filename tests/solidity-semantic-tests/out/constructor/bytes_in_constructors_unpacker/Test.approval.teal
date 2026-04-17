@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_unpacker.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 64 0
+    intcblock 1 0 64
     bytecblock "__ctor_pending" "m_s" "m_x" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -37,12 +37,12 @@ __postInit:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 64
+    intc_2 // 64
     ==
     assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -55,7 +55,7 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
     bytec_2 // "m_x"
     uncover 2
@@ -72,16 +72,26 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_unpacker.sol.Test.m_x[routing]() -> void:
 m_x:
-    intc_2 // 0
+    txn GroupIndex
+    bz m_x_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+m_x_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_2 // "m_x"
     app_global_get_ex
     assert // check m_x exists
     dup
     len
-    intc_1 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
     bytec_3 // 0x151f7c75
@@ -91,9 +101,23 @@ m_x:
     intc_0 // 1
     return
 
+m_x_ternary_false@3:
+    intc_1 // 0
+    b m_x_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_unpacker.sol.Test.m_s[routing]() -> void:
 m_s:
+    txn GroupIndex
+    bz m_s_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+m_s_ternary_merge@4:
+    !
+    assert // not payable
     bytec_1 // "m_s"
     box_get
     pushbytes 0x
@@ -111,3 +135,7 @@ m_s:
     log
     intc_0 // 1
     return
+
+m_s_ternary_false@3:
+    intc_1 // 0
+    b m_s_ternary_merge@4

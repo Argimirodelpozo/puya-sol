@@ -26,4 +26,25 @@ main_something_route@4:
     !
     txn ApplicationID
     &&
+    assert
+    b something
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_memory.sol.D.something[routing]() -> void:
+something:
+    txn GroupIndex
+    bz something_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+something_ternary_merge@4:
+    !
+    assert // not payable
+    pushint 1
     return
+
+something_ternary_false@3:
+    pushint 0
+    b something_ternary_merge@4

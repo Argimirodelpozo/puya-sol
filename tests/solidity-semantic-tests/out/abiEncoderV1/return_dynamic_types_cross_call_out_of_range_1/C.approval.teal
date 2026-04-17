@@ -3,9 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_out_of_range_1.sol.C.approval_program() -> uint64:
 main:
+    intcblock 1 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -46,7 +47,7 @@ dyn:
     swap
     concat
     log
-    pushint 1
+    intc_0 // 1
     return
 
 
@@ -58,17 +59,42 @@ f:
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_out_of_range_1.sol.C.dyn
     pop
     pushbytes 0x151f7c7580
     log
-    pushint 1
+    intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_out_of_range_1.sol.C.dyn(x: bytes) -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_out_of_range_1.sol.C.dyn:
     proto 1 1
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_out_of_range_1.sol.C.dyn_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_out_of_range_1.sol.C.dyn_ternary_merge@3:
+    !
+    assert // not payable
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000020
     replace2 0
@@ -78,3 +104,7 @@ f:
     store 0
     extract 0 32
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_out_of_range_1.sol.C.dyn_ternary_false@2:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_out_of_range_1.sol.C.dyn_ternary_merge@3

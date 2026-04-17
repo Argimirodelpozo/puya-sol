@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/delegatecall_return_value_pre_byzantium.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 0 32
     bytecblock "value" 0x 0x151f7c7580
     txn ApplicationID
     bnz main_after_if_else@2
@@ -28,20 +28,8 @@ main_after_if_else@2:
     assert
     pushbytess 0x7cb116cd 0xf08d7860 0x43a63759 0xa0d1025d 0x272a9569 // method "set(uint256)void", method "get()uint256", method "get_delegated()bool", method "assert0()void", method "assert0_delegated()bool"
     txna ApplicationArgs 0
-    match set get main_get_delegated_route@7 assert0 main_assert0_delegated_route@9
+    match set get get_delegated assert0 assert0_delegated
     err
-
-main_assert0_delegated_route@9:
-    bytec_2 // 0x151f7c7580
-    log
-    intc_0 // 1
-    return
-
-main_get_delegated_route@7:
-    bytec_2 // 0x151f7c7580
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/delegatecall_return_value_pre_byzantium.sol.C.set[routing]() -> void:
@@ -49,28 +37,52 @@ set:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz set_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+set_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "value"
-    swap
+    dig 1
     app_global_put
     intc_0 // 1
     return
 
+set_ternary_false@3:
+    intc_1 // 0
+    b set_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/delegatecall_return_value_pre_byzantium.sol.C.get[routing]() -> void:
 get:
-    intc_2 // 0
+    txn GroupIndex
+    bz get_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+get_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_0 // "value"
     app_global_get_ex
     assert // check value exists
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -80,10 +92,46 @@ get:
     intc_0 // 1
     return
 
+get_ternary_false@3:
+    intc_1 // 0
+    b get_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/delegatecall_return_value_pre_byzantium.sol.C.get_delegated[routing]() -> void:
+get_delegated:
+    txn GroupIndex
+    bz get_delegated_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+get_delegated_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_2 // 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+get_delegated_ternary_false@3:
+    intc_1 // 0
+    b get_delegated_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/delegatecall_return_value_pre_byzantium.sol.C.assert0[routing]() -> void:
 assert0:
-    intc_2 // 0
+    txn GroupIndex
+    bz assert0_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+assert0_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_0 // "value"
     app_global_get_ex
     assert // check value exists
@@ -92,3 +140,29 @@ assert0:
     assert
     intc_0 // 1
     return
+
+assert0_ternary_false@3:
+    intc_1 // 0
+    b assert0_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/delegatecall_return_value_pre_byzantium.sol.C.assert0_delegated[routing]() -> void:
+assert0_delegated:
+    txn GroupIndex
+    bz assert0_delegated_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+assert0_delegated_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_2 // 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+assert0_delegated_ternary_false@3:
+    intc_1 // 0
+    b assert0_delegated_ternary_merge@4

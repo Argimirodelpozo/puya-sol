@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_bytes_internal.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 32 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -39,12 +39,12 @@ f(u256,18,u256):
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
-    dup
-    pushint 0
+    dupn 2
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
@@ -53,6 +53,17 @@ f(u256,18,u256):
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz f(u256,18,u256)_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f(u256,18,u256)_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     extract 4 1
     pushbytes 0x151f7c75
     swap
@@ -60,3 +71,7 @@ f(u256,18,u256):
     log
     intc_0 // 1
     return
+
+f(u256,18,u256)_ternary_false@3:
+    intc_2 // 0
+    b f(u256,18,u256)_ternary_merge@4

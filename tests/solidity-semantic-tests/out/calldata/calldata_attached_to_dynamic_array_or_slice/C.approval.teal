@@ -48,14 +48,14 @@ testArray:
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
-    dup
+    dupn 2
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
     intc_3 // 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
@@ -64,6 +64,17 @@ testArray:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz testArray_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+testArray_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     callsub L.reverse
     pop
     swap
@@ -92,6 +103,10 @@ testArray:
     intc_1 // 1
     return
 
+testArray_ternary_false@3:
+    intc_2 // 0
+    b testArray_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_attached_to_dynamic_array_or_slice.sol.C.testSlice[routing]() -> void:
 testSlice:
@@ -101,14 +116,14 @@ testSlice:
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
-    dup
+    dupn 2
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
     intc_3 // 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
@@ -117,6 +132,17 @@ testSlice:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz testSlice_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+testSlice_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     extract 0 0
     callsub L.reverse
     pop
@@ -145,3 +171,7 @@ testSlice:
     log
     intc_1 // 1
     return
+
+testSlice_ternary_false@3:
+    intc_2 // 0
+    b testSlice_ternary_merge@4

@@ -82,7 +82,16 @@ f:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    dup
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray
     pop
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray
@@ -97,7 +106,7 @@ f:
     box_del
     pop
     bytec_3 // "data"
-    swap
+    dig 1
     box_put
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray
     bytec_1 // "y"
@@ -121,10 +130,10 @@ f:
     assert // check x exists
     pushbytes 0x04
     b!=
-    bz f_after_if_else@5
+    bz f_after_if_else@8
     bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000002
 
-f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35:
+f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@38:
     bytec 6 // 0x151f7c75
     swap
     concat
@@ -132,18 +141,18 @@ f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tes
     intc_1 // 1
     return
 
-f_after_if_else@5:
+f_after_if_else@8:
     bytec_1 // "y"
     box_len
     pop
     intc_0 // 2
     >=
-    bz f_ternary_false@7
+    bz f_ternary_false@10
     bytec_1 // "y"
     box_len
     pop
 
-f_ternary_merge@8:
+f_ternary_merge@11:
     intc_0 // 2
     -
     intc_3 // 32
@@ -151,11 +160,11 @@ f_ternary_merge@8:
     itob
     pushbytes 0x09
     b!=
-    bz f_after_if_else@10
+    bz f_after_if_else@13
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@38
 
-f_after_if_else@10:
+f_after_if_else@13:
     bytec_1 // "y"
     box_get
     bytec_2 // 0x0000
@@ -164,11 +173,11 @@ f_after_if_else@10:
     extract 66 32
     pushbytes 0x05
     b!=
-    bz f_after_if_else@12
+    bz f_after_if_else@15
     bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000004
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@38
 
-f_after_if_else@12:
+f_after_if_else@15:
     bytec_1 // "y"
     box_get
     bytec_2 // 0x0000
@@ -177,22 +186,22 @@ f_after_if_else@12:
     extract 226 32
     pushbytes 0x04
     b!=
-    bz f_after_if_else@14
+    bz f_after_if_else@17
     bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000005
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@38
 
-f_after_if_else@14:
+f_after_if_else@17:
     bytec_3 // "data"
     box_len
     pop
     intc_0 // 2
     >=
-    bz f_ternary_false@16
+    bz f_ternary_false@19
     bytec_3 // "data"
     box_len
     pop
 
-f_ternary_merge@17:
+f_ternary_merge@20:
     intc_0 // 2
     -
     itob
@@ -200,11 +209,11 @@ f_ternary_merge@17:
     len
     itob
     b!=
-    bz f_after_if_else@19
+    bz f_after_if_else@22
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000006
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@38
 
-f_after_if_else@19:
+f_after_if_else@22:
     bytec_3 // "data"
     box_get
     pushbytes 0x
@@ -214,11 +223,11 @@ f_after_if_else@19:
     dig 2
     extract 5 1
     !=
-    bz f_after_if_else@21
+    bz f_after_if_else@24
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@38
 
-f_after_if_else@21:
+f_after_if_else@24:
     bytec_0 // "arrayData"
     box_get
     bytec_2 // 0x0000
@@ -227,11 +236,11 @@ f_after_if_else@21:
     extract 98 32
     pushbytes 0x02
     b!=
-    bz f_after_if_else@23
+    bz f_after_if_else@26
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@38
 
-f_after_if_else@23:
+f_after_if_else@26:
     bytec_0 // "arrayData"
     box_get
     bytec_2 // 0x0000
@@ -246,12 +255,12 @@ f_after_if_else@23:
     pop
     intc_0 // 2
     >=
-    bz f_ternary_false@27
+    bz f_ternary_false@30
     bytec_0 // "arrayData"
     box_len
     pop
 
-f_ternary_merge@28:
+f_ternary_merge@31:
     intc_0 // 2
     -
     intc_3 // 32
@@ -259,11 +268,11 @@ f_ternary_merge@28:
     itob
     dig 3
     b!=
-    bz f_after_if_else@30
+    bz f_after_if_else@33
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@38
 
-f_after_if_else@30:
+f_after_if_else@33:
     bytec_1 // "y"
     pushint 66
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000315
@@ -281,29 +290,43 @@ f_after_if_else@30:
     extract 66 32
     pushbytes 0x0315
     b!=
-    bz f_after_if_else@34
+    bz f_after_if_else@37
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000b
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@38
 
-f_after_if_else@34:
+f_after_if_else@37:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@38
 
-f_ternary_false@27:
+f_ternary_false@30:
     intc_0 // 2
-    b f_ternary_merge@28
+    b f_ternary_merge@31
 
-f_ternary_false@16:
+f_ternary_false@19:
     intc_0 // 2
-    b f_ternary_merge@17
+    b f_ternary_merge@20
 
-f_ternary_false@7:
+f_ternary_false@10:
     intc_0 // 2
-    b f_ternary_merge@8
+    b f_ternary_merge@11
+
+f_ternary_false@3:
+    intc_2 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray() -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray_ternary_merge@3:
+    !
+    assert // not payable
     bytec_0 // "arrayData"
     box_del
     pop
@@ -324,3 +347,7 @@ f_ternary_false@7:
     cover 2
     select
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray_ternary_merge@3

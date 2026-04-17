@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/single_copy_with_multiple_inheritance.sol.A.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 32 0
     bytecblock "data"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -40,11 +40,24 @@ setViaA:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_0 // "data"
-    swap
-    app_global_put
+    txn GroupIndex
+    bz setViaA_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+setViaA_ternary_merge@4:
+    !
+    assert // not payable
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/single_copy_with_multiple_inheritance.sol.A.setData
     intc_0 // 1
     return
+
+setViaA_ternary_false@3:
+    intc_2 // 0
+    b setViaA_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/single_copy_with_multiple_inheritance.sol.A.setData[routing]() -> void:
@@ -55,16 +68,24 @@ setData:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_0 // "data"
-    swap
-    app_global_put
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/single_copy_with_multiple_inheritance.sol.A.setData
     intc_0 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/single_copy_with_multiple_inheritance.sol.A.getViaBase[routing]() -> void:
 getViaBase:
-    pushint 0
+    txn GroupIndex
+    bz getViaBase_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getViaBase_ternary_merge@4:
+    !
+    assert // not payable
+    intc_2 // 0
     bytec_0 // "data"
     app_global_get_ex
     assert // check data exists
@@ -82,3 +103,30 @@ getViaBase:
     log
     intc_0 // 1
     return
+
+getViaBase_ternary_false@3:
+    intc_2 // 0
+    b getViaBase_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/single_copy_with_multiple_inheritance.sol.A.setData(__arc4_i: bytes) -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/single_copy_with_multiple_inheritance.sol.A.setData:
+    proto 1 0
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/single_copy_with_multiple_inheritance.sol.A.setData_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/single_copy_with_multiple_inheritance.sol.A.setData_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // "data"
+    frame_dig -1
+    app_global_put
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/single_copy_with_multiple_inheritance.sol.A.setData_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/single_copy_with_multiple_inheritance.sol.A.setData_ternary_merge@3

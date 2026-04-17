@@ -32,6 +32,16 @@ main_getBalance_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/balance.sol.test.getBalance[routing]() -> void:
 getBalance:
+    txn GroupIndex
+    bz getBalance_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+getBalance_ternary_merge@4:
+    !
+    assert // not payable
     global CurrentApplicationAddress
     acct_params_get AcctBalance
     pop
@@ -45,3 +55,7 @@ getBalance:
     log
     pushint 1
     return
+
+getBalance_ternary_false@3:
+    pushint 0
+    b getBalance_ternary_merge@4

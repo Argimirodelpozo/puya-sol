@@ -83,17 +83,28 @@ sum_after_while@3:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
-    dup
+    dupn 2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
     pushint 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     callsub sum
     pop
     dup
@@ -110,3 +121,7 @@ f:
     log
     intc_2 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4

@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 8 2
-    bytecblock "testArray" 0x151f7c75 "__ctor_pending" 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 "__dyn_storage"
+    intcblock 1 0 32 8
+    bytecblock "testArray" 0x151f7c75 "__ctor_pending" 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000000 "__dyn_storage"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_2 // "__ctor_pending"
-    intc_1 // 1
+    intc_0 // 1
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -28,14 +28,8 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x2bbf0199 0x5990fed5 0xc67bf355 0x6773290f 0x2b98ccbd 0xbef40b9c 0xbb389e16 0x40f5d5e4 // method "__postInit()void", method "fillArray()void", method "shrinkArray()uint256", method "canaryValue()uint256", method "arrayLength()uint256", method "getDataSlotContent(uint512)byte[32]", method "checkSlots()(byte[32],byte[32],byte[32],uint512,uint512)", method "getSlot1LastBytes()byte[14]", method "getArrayBytes(uint256,uint256)byte[]"
     txna ApplicationArgs 0
-    match __postInit fillArray shrinkArray main_canaryValue_route@8 arrayLength getDataSlotContent checkSlots getSlot1LastBytes getArrayBytes
+    match __postInit fillArray shrinkArray canaryValue arrayLength getDataSlotContent checkSlots getSlot1LastBytes getArrayBytes
     err
-
-main_canaryValue_route@8:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_1 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.__postInit[routing]() -> void:
@@ -44,28 +38,40 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_2 // "__ctor_pending"
-    pushint 0
+    intc_1 // 0
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.fillArray[routing]() -> void:
 fillArray:
-    pushint 0
-    itob
+    intc_1 // 0
+    txn GroupIndex
+    bz fillArray_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-fillArray_while_top@2:
+fillArray_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
+    itob
+    bury 1
+
+fillArray_while_top@5:
     dup
     pushbytes 0x60
     b<
-    bz fillArray_after_while@4
+    bz fillArray_after_while@7
     bytec_0 // "testArray"
     box_get
     pushbytes 0x
     cover 2
     select
-    intc_2 // 8
+    intc_3 // 8
     bzero
     dig 2
     bytec_3 // 0x01
@@ -75,7 +81,7 @@ fillArray_while_top@2:
     concat
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     -
     extract_uint64
     pushint 255
@@ -89,35 +95,53 @@ fillArray_while_top@2:
     bytec_0 // "testArray"
     swap
     box_put
-    b fillArray_while_top@2
+    b fillArray_while_top@5
 
-fillArray_after_while@4:
-    intc_1 // 1
+fillArray_after_while@7:
+    intc_0 // 1
     return
+
+fillArray_ternary_false@3:
+    intc_1 // 0
+    b fillArray_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.shrinkArray[routing]() -> void:
 shrinkArray:
+    intc_1 // 0
+    dup
+    txn GroupIndex
+    bz shrinkArray_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+shrinkArray_ternary_merge@4:
+    !
+    assert // not payable
     pushint 50
     bzero
-    pushint 0
+    bury 1
+    intc_1 // 0
     itob
+    bury 2
 
-shrinkArray_while_top@2:
-    dup
+shrinkArray_while_top@5:
+    dig 1
     pushbytes 0x32
     b<
-    bz shrinkArray_after_while@4
-    intc_2 // 8
+    bz shrinkArray_after_while@7
+    intc_3 // 8
     bzero
     dup
-    dig 2
+    dig 3
     dup
     cover 2
     concat
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     -
     extract_uint64
     dig 1
@@ -128,56 +152,71 @@ shrinkArray_while_top@2:
     concat
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     -
     extract_uint64
     pushint 255
     &
     itob
     extract 7 1
-    dig 4
+    dig 3
     cover 2
     replace3
-    bury 3
+    bury 2
     bytec_3 // 0x01
     b+
-    bury 1
-    b shrinkArray_while_top@2
+    bury 2
+    b shrinkArray_while_top@5
 
-shrinkArray_after_while@4:
+shrinkArray_after_while@7:
     bytec_0 // "testArray"
     box_del
     pop
     bytec_0 // "testArray"
-    dig 2
+    dig 1
     box_put
     bytec_0 // "testArray"
     box_len
     pop
-    intc_3 // 2
+    pushint 2
     >=
-    bz shrinkArray_ternary_false@6
+    bz shrinkArray_ternary_false@9
     bytec_0 // "testArray"
     box_len
     pop
 
-shrinkArray_ternary_merge@7:
-    intc_3 // 2
+shrinkArray_ternary_merge@10:
+    pushint 2
     -
     itob
-    intc_0 // 32
+    intc_2 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
-shrinkArray_ternary_false@6:
-    intc_3 // 2
-    b shrinkArray_ternary_merge@7
+shrinkArray_ternary_false@9:
+    pushint 2
+    b shrinkArray_ternary_merge@10
+
+shrinkArray_ternary_false@3:
+    intc_1 // 0
+    b shrinkArray_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.canaryValue[routing]() -> void:
+canaryValue:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.canaryValue
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength[routing]() -> void:
@@ -187,7 +226,7 @@ arrayLength:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -204,31 +243,50 @@ getDataSlotContent:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.checkSlots[routing]() -> void:
 checkSlots:
-    pushint 0
+    txn GroupIndex
+    bz checkSlots_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+checkSlots_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     itob
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.getDataSlotContent
-    intc_1 // 1
+    intc_0 // 1
     itob
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.getDataSlotContent
-    intc_3 // 2
+    pushint 2
     itob
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.getDataSlotContent
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.canaryValue
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength
-    uncover 3
+    uncover 4
+    uncover 4
+    concat
     uncover 3
     concat
-    uncover 2
-    concat
+    dig 2
+    len
+    pushint 64
+    <=
+    assert // overflow
     pushint 64
     bzero
+    uncover 3
+    dig 1
+    b|
+    uncover 2
     swap
-    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     concat
     dig 2
     len
@@ -242,17 +300,31 @@ checkSlots:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+checkSlots_ternary_false@3:
+    intc_1 // 0
+    b checkSlots_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.getSlot1LastBytes[routing]() -> void:
 getSlot1LastBytes:
-    intc_1 // 1
+    txn GroupIndex
+    bz getSlot1LastBytes_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getSlot1LastBytes_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 1
     itob
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.getDataSlotContent
     load 0
-    intc_0 // 32
+    intc_2 // 32
     bzero
     uncover 2
     pushbytes 0x0000000000000000000000000001000000000000000000000000000000000000
@@ -262,9 +334,9 @@ getSlot1LastBytes:
     concat
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     -
-    intc_0 // 32
+    intc_2 // 32
     extract3
     extract 0 14
     swap
@@ -273,74 +345,92 @@ getSlot1LastBytes:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+getSlot1LastBytes_ternary_false@3:
+    intc_1 // 0
+    b getSlot1LastBytes_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.getArrayBytes[routing]() -> void:
 getArrayBytes:
-    pushint 0
+    intc_1 // 0
+    dupn 3
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
-    dupn 2
+    dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_2 // 8
+    txn GroupIndex
+    bz getArrayBytes_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getArrayBytes_ternary_merge@4:
+    !
+    assert // not payable
+    intc_3 // 8
     bzero
     dup
-    uncover 2
+    bury 4
+    dig 1
     concat
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     -
     extract_uint64
     bzero
-    pushint 0
+    bury 5
+    intc_1 // 0
     itob
-
-getArrayBytes_while_top@2:
-    dup
-    dig 4
-    b<
-    bz getArrayBytes_after_while@8
-    dig 4
-    dig 1
-    b+
     bury 6
+
+getArrayBytes_while_top@5:
+    dig 5
+    dig 1
+    b<
+    bz getArrayBytes_after_while@11
+    dig 1
+    dig 6
+    b+
+    bury 4
     bytec_0 // "testArray"
     box_len
     pop
-    intc_3 // 2
+    pushint 2
     >=
-    bz getArrayBytes_ternary_false@5
+    bz getArrayBytes_ternary_false@8
     bytec_0 // "testArray"
     box_len
     pop
 
-getArrayBytes_ternary_merge@6:
-    intc_3 // 2
+getArrayBytes_ternary_merge@9:
+    pushint 2
     -
     itob
-    dig 6
+    dig 4
     b>
-    bz getArrayBytes_after_while@8
+    bz getArrayBytes_after_while@11
     dig 2
     dup
-    dig 2
+    dig 7
     dup
     cover 3
     concat
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     -
     extract_uint64
     bytec_0 // "testArray"
@@ -349,26 +439,26 @@ getArrayBytes_ternary_merge@6:
     cover 2
     select
     uncover 2
-    dig 9
+    dig 7
     concat
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     -
     extract_uint64
-    intc_1 // 1
+    intc_0 // 1
     extract3
-    dig 4
+    dig 7
     cover 2
     replace3
-    bury 3
+    bury 6
     bytec_3 // 0x01
     b+
-    bury 1
-    b getArrayBytes_while_top@2
+    bury 6
+    b getArrayBytes_while_top@5
 
-getArrayBytes_after_while@8:
-    dig 1
+getArrayBytes_after_while@11:
+    dig 4
     dup
     len
     itob
@@ -379,50 +469,98 @@ getArrayBytes_after_while@8:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
-getArrayBytes_ternary_false@5:
-    intc_3 // 2
-    b getArrayBytes_ternary_merge@6
+getArrayBytes_ternary_false@8:
+    pushint 2
+    b getArrayBytes_ternary_merge@9
+
+getArrayBytes_ternary_false@3:
+    intc_1 // 0
+    b getArrayBytes_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.canaryValue() -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.canaryValue:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.canaryValue_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.canaryValue_ternary_merge@3:
+    !
+    assert // not payable
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.canaryValue_ternary_false@2:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.canaryValue_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength() -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength_ternary_merge@3:
+    !
+    assert // not payable
     bytec_0 // "testArray"
     box_len
     pop
-    intc_3 // 2
+    pushint 2
     >=
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength_ternary_false@2
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength_ternary_false@5
     bytec_0 // "testArray"
     box_len
     pop
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength_ternary_merge@3:
-    intc_3 // 2
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength_ternary_merge@6:
+    pushint 2
     -
     itob
-    intc_0 // 32
+    intc_2 // 32
     bzero
     b|
     retsub
 
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength_ternary_false@5:
+    pushint 2
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength_ternary_merge@6
+
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength_ternary_false@2:
-    intc_3 // 2
+    intc_1 // 0
     b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.getDataSlotContent(index: bytes) -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.getDataSlotContent:
     proto 1 1
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.getDataSlotContent_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.getDataSlotContent_ternary_merge@3:
+    !
+    assert // not payable
     load 0
-    intc_2 // 8
+    intc_3 // 8
     bzero
-    intc_0 // 32
+    intc_2 // 32
     bzero
     uncover 2
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 0
     dup
     extract 0 32
@@ -436,7 +574,7 @@ getArrayBytes_ternary_false@5:
     concat
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     -
     extract_uint64
     dup
@@ -450,14 +588,18 @@ getArrayBytes_ternary_false@5:
     swap
     concat
     len
-    intc_0 // 32
+    intc_2 // 32
     -
-    intc_0 // 32
+    intc_2 // 32
     extract3
     extract 0 32
     swap
     store 0
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.getDataSlotContent_ternary_false@2:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.getDataSlotContent_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.__storage_read(__slot: uint64) -> bytes:
@@ -465,31 +607,31 @@ __storage_read:
     proto 1 1
     frame_dig -1
     bnz __storage_read_else_body@2
-    intc_0 // 32
+    intc_2 // 32
     bzero
     bytec_0 // "testArray"
     app_global_get
     concat
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     -
-    intc_0 // 32
+    intc_2 // 32
     extract3
     retsub
 
 __storage_read_else_body@2:
-    bytec 5 // "__dyn_storage"
+    bytec 6 // "__dyn_storage"
     pushint 8192
     box_create
     pop
     frame_dig -1
     pushint 256
     %
-    intc_0 // 32
+    intc_2 // 32
     *
-    bytec 5 // "__dyn_storage"
+    bytec 6 // "__dyn_storage"
     swap
-    intc_0 // 32
+    intc_2 // 32
     box_extract
     retsub

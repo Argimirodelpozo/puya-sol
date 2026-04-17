@@ -32,9 +32,23 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_bytes_types_shortening_newCodeGen.sol.C.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c75ffff000000000000000000000000000000000000000000000000000000000000
     log
     pushint 1
     return
+
+f_ternary_false@3:
+    pushint 0
+    b f_ternary_merge@4

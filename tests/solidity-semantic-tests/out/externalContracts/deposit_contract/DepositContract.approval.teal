@@ -124,25 +124,41 @@ __postInit_after_while@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/deposit_contract.sol.DepositContract.get_deposit_root[routing]() -> void:
 get_deposit_root:
+    intc_1 // 0
+    dupn 2
+    txn GroupIndex
+    bz get_deposit_root_ternary_false@3
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+get_deposit_root_ternary_merge@4:
+    !
+    assert // not payable
     bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bury 2
     intc_1 // 0
     bytec_1 // "deposit_count"
     app_global_get_ex
+    swap
+    bury 2
     assert // check deposit_count exists
     intc_1 // 0
     itob
+    bury 3
 
-get_deposit_root_while_top@2:
-    dup
+get_deposit_root_while_top@5:
+    dig 2
     bytec 5 // 0x20
     b<
-    bz get_deposit_root_after_while@7
-    dig 1
+    bz get_deposit_root_after_while@10
+    dup
     bytec_0 // 0x01
     b&
     bytec_0 // 0x01
     b==
-    bz get_deposit_root_else_body@5
+    bz get_deposit_root_else_body@8
     intc_0 // 32
     bzero
     bytec_2 // "branch"
@@ -152,7 +168,7 @@ get_deposit_root_while_top@2:
     select
     intc_2 // 8
     bzero
-    dig 3
+    dig 5
     concat
     dup
     len
@@ -173,7 +189,7 @@ get_deposit_root_while_top@2:
     intc_0 // 32
     extract3
     swap
-    dig 4
+    dig 3
     concat
     dup
     len
@@ -183,24 +199,24 @@ get_deposit_root_while_top@2:
     extract3
     concat
     sha256
-    bury 3
+    bury 2
 
-get_deposit_root_after_if_else@6:
-    dig 1
+get_deposit_root_after_if_else@9:
+    dup
     bytec 6 // 0x02
     b/
-    bury 2
-    dup
+    bury 1
+    dig 2
     bytec_0 // 0x01
     b+
-    bury 1
-    b get_deposit_root_while_top@2
+    bury 3
+    b get_deposit_root_while_top@5
 
-get_deposit_root_else_body@5:
+get_deposit_root_else_body@8:
     intc_0 // 32
     bzero
     dup
-    dig 4
+    dig 3
     concat
     dup
     len
@@ -215,7 +231,7 @@ get_deposit_root_else_body@5:
     select
     intc_2 // 8
     bzero
-    dig 4
+    dig 6
     concat
     dup
     len
@@ -237,13 +253,13 @@ get_deposit_root_else_body@5:
     extract3
     concat
     sha256
-    bury 3
-    b get_deposit_root_after_if_else@6
+    bury 2
+    b get_deposit_root_after_if_else@9
 
-get_deposit_root_after_while@7:
+get_deposit_root_after_while@10:
     intc_0 // 32
     bzero
-    dig 3
+    dig 2
     concat
     dup
     len
@@ -275,9 +291,23 @@ get_deposit_root_after_while@7:
     intc_3 // 1
     return
 
+get_deposit_root_ternary_false@3:
+    intc_1 // 0
+    b get_deposit_root_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/deposit_contract.sol.DepositContract.get_deposit_count[routing]() -> void:
 get_deposit_count:
+    txn GroupIndex
+    bz get_deposit_count_ternary_false@3
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+get_deposit_count_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 8
     bzero
     intc_1 // 0
@@ -303,6 +333,10 @@ get_deposit_count:
     log
     intc_3 // 1
     return
+
+get_deposit_count_ternary_false@3:
+    intc_1 // 0
+    b get_deposit_count_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/deposit_contract.sol.DepositContract.deposit[routing]() -> void:
@@ -757,23 +791,34 @@ deposit_ternary_false@3:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/deposit_contract.sol.DepositContract.supportsInterface[routing]() -> void:
 supportsInterface:
     txna ApplicationArgs 1
-    dupn 2
+    dup
     len
     pushint 4
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    txn GroupIndex
+    bz supportsInterface_ternary_false@3
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+supportsInterface_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     pushbytes 0x01ffc9a7
     ==
-    bnz supportsInterface_bool_true@3
+    bnz supportsInterface_bool_true@6
     dup
     pushbytes 0x85640907
     ==
-    bz supportsInterface_bool_false@4
+    bz supportsInterface_bool_false@7
 
-supportsInterface_bool_true@3:
+supportsInterface_bool_true@6:
     intc_3 // 1
 
-supportsInterface_bool_merge@5:
+supportsInterface_bool_merge@8:
     pushbytes 0x00
     intc_1 // 0
     uncover 2
@@ -785,9 +830,13 @@ supportsInterface_bool_merge@5:
     intc_3 // 1
     return
 
-supportsInterface_bool_false@4:
+supportsInterface_bool_false@7:
     intc_1 // 0
-    b supportsInterface_bool_merge@5
+    b supportsInterface_bool_merge@8
+
+supportsInterface_ternary_false@3:
+    intc_1 // 0
+    b supportsInterface_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/deposit_contract.sol.DepositContract.to_little_endian_64(value: uint64) -> bytes:

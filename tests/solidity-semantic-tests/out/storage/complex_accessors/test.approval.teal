@@ -91,9 +91,19 @@ to_string_map:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz to_string_map_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+to_string_map_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
-    swap
+    dig 1
     concat
     dup
     len
@@ -116,6 +126,10 @@ to_string_map:
     intc_1 // 1
     return
 
+to_string_map_ternary_false@3:
+    intc_2 // 0
+    b to_string_map_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/complex_accessors.sol.test.to_bool_map[routing]() -> void:
 to_bool_map:
@@ -125,9 +139,19 @@ to_bool_map:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz to_bool_map_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+to_bool_map_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
-    swap
+    dig 1
     concat
     dup
     len
@@ -157,6 +181,10 @@ to_bool_map:
     intc_1 // 1
     return
 
+to_bool_map_ternary_false@3:
+    intc_2 // 0
+    b to_bool_map_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/complex_accessors.sol.test.to_uint_map[routing]() -> void:
 to_uint_map:
@@ -166,9 +194,19 @@ to_uint_map:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz to_uint_map_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+to_uint_map_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
-    swap
+    dig 1
     concat
     dup
     len
@@ -199,6 +237,10 @@ to_uint_map:
     intc_1 // 1
     return
 
+to_uint_map_ternary_false@3:
+    intc_2 // 0
+    b to_uint_map_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/complex_accessors.sol.test.to_multiple_map[routing]() -> void:
 to_multiple_map:
@@ -214,10 +256,20 @@ to_multiple_map:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz to_multiple_map_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+to_multiple_map_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
     dup
-    uncover 3
+    dig 3
     concat
     dup
     len
@@ -226,7 +278,7 @@ to_multiple_map:
     intc_0 // 32
     extract3
     swap
-    uncover 2
+    dig 2
     concat
     dup
     len
@@ -257,3 +309,7 @@ to_multiple_map:
     log
     intc_1 // 1
     return
+
+to_multiple_map_ternary_false@3:
+    intc_2 // 0
+    b to_multiple_map_ternary_merge@4

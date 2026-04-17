@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/for_loop_continue.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64
+    intcblock 1 0 64
     bytecblock 0x 0x01 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -34,54 +34,68 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/for_loop_continue.sol.C.f[routing]() -> void:
 f:
-    bytec_0 // 0x
-    load 0
-    bytec_0 // 0x
+    intc_1 // 0
+    dupn 2
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-f_while_top@2:
-    dup
+f_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_0 // 0x
+    bury 1
+    load 0
+    bury 3
+    bytec_0 // 0x
+    bury 2
+
+f_while_top@5:
+    dig 1
     pushbytes 0x0a
     b<
-    bz f_after_while@9
-    dup
+    bz f_after_while@12
+    dig 1
     pushbytes 0x02
     b%
     bytec_0 // 0x
     b==
-    bz f_after_if_else@8
-    dup
-    bytec_1 // 0x01
-    b+
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bury 1
-    b f_while_top@2
-
-f_after_if_else@8:
-    dig 2
-    bytec_1 // 0x01
-    b+
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bury 3
-    dup
-    bytec_1 // 0x01
-    b+
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bury 1
-    b f_while_top@2
-
-f_after_while@9:
+    bz f_after_if_else@11
     dig 1
-    store 0
-    dig 2
+    bytec_1 // 0x01
+    b+
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 2
+    b f_while_top@5
+
+f_after_if_else@11:
     dup
+    bytec_1 // 0x01
+    b+
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 1
+    dig 1
+    bytec_1 // 0x01
+    b+
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 2
+    b f_while_top@5
+
+f_after_while@12:
+    dig 2
+    store 0
+    dupn 2
     len
-    intc_1 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
     pushbytes 0x151f7c75
@@ -90,3 +104,7 @@ f_after_while@9:
     log
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4

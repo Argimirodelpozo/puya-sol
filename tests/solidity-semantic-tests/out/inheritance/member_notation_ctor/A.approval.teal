@@ -1,7 +1,7 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_9t24r4fk/B.sol.A.approval_program() -> uint64:
+// /tmp/multisource_wvivk9y6/B.sol.A.approval_program() -> uint64:
 main:
     intcblock 0 1 32 6
     bytecblock TMPL_APPROVAL_D TMPL_CLEAR_D
@@ -32,13 +32,23 @@ main_g_route@4:
     b g
 
 
-// /tmp/multisource_9t24r4fk/B.sol.A.g[routing]() -> void:
+// /tmp/multisource_wvivk9y6/B.sol.A.g[routing]() -> void:
 g:
     txna ApplicationArgs 1
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     bytec_0 // TMPL_APPROVAL_D
     bytec_1 // TMPL_CLEAR_D
@@ -102,3 +112,7 @@ g:
     log
     intc_1 // 1
     return
+
+g_ternary_false@3:
+    intc_0 // 0
+    b g_ternary_merge@4

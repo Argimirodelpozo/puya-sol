@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/array_mapping_abstract_constructor_param.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 2 64
+    intcblock 32 1 0 2
     bytecblock "__ctor_pending" "m" 0x6d08e00266fff0aacc64974f22a53622a7dc458ac1b5fd446ae7c99a4a99a564e6
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,13 +38,13 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    pushint 0
+    intc_2 // 0
     app_global_put
     bytec_1 // "m"
-    intc_2 // 2
+    intc_3 // 2
     box_create
     pop
-    intc_2 // 2
+    intc_3 // 2
     itob
     bytec_2 // 0x6d08e00266fff0aacc64974f22a53622a7dc458ac1b5fd446ae7c99a4a99a564e6
     box_del
@@ -76,10 +76,20 @@ m:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz m_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+m_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
     dup
-    uncover 4
+    dig 4
     concat
     dup
     len
@@ -88,7 +98,7 @@ m:
     intc_0 // 32
     extract3
     dig 1
-    uncover 4
+    dig 4
     concat
     dup
     len
@@ -98,7 +108,7 @@ m:
     extract3
     concat
     swap
-    uncover 2
+    dig 2
     concat
     dup
     len
@@ -117,10 +127,10 @@ m:
     select
     dup
     len
-    intc_3 // 64
+    pushint 64
     <=
     assert // overflow
-    intc_3 // 64
+    pushint 64
     bzero
     b|
     pushbytes 0x151f7c75
@@ -129,3 +139,7 @@ m:
     log
     intc_1 // 1
     return
+
+m_ternary_false@3:
+    intc_2 // 0
+    b m_ternary_merge@4

@@ -142,12 +142,22 @@ f:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
 
-f_while_top@20:
+f_ternary_merge@4:
+    !
+    assert // not payable
+
+f_while_top@23:
     pushint 170010
     global OpcodeBudget
     >
-    bz f_after_while@25
+    bz f_after_while@28
     itxn_begin
     pushint 6 // appl
     itxn_field TypeEnum
@@ -160,15 +170,15 @@ f_while_top@20:
     intc_2 // 0
     itxn_field Fee
     itxn_submit
-    b f_while_top@20
+    b f_while_top@23
 
-f_after_while@25:
+f_after_while@28:
     bytec 4 // 0x0000
     bury 19
     intc_2 // 0
     bury 9
 
-f_while_top@2:
+f_while_top@5:
     intc_3 // 8
     bzero
     dup
@@ -184,7 +194,7 @@ f_while_top@2:
     extract_uint64
     dig 9
     >
-    bz f_after_while@4
+    bz f_after_while@7
     dig 18
     dup
     intc_2 // 0
@@ -202,11 +212,11 @@ f_while_top@2:
     intc_2 // 0
     bury 5
 
-f_for_header@12:
+f_for_header@15:
     dig 4
     dig 3
     <
-    bz f_after_for@14
+    bz f_after_for@17
     dig 16
     dig 5
     dup
@@ -223,20 +233,20 @@ f_for_header@12:
     intc_0 // 2
     +
     bury 5
-    b f_for_header@12
+    b f_for_header@15
 
-f_after_for@14:
+f_after_for@17:
     dig 16
     len
     bury 6
     intc_2 // 0
     bury 5
 
-f_for_header@15:
+f_for_header@18:
     dig 4
     intc_0 // 2
     <
-    bz f_after_for@17
+    bz f_after_for@20
     pushbytes 0x00020000
     dig 5
     dup
@@ -253,9 +263,9 @@ f_for_header@15:
     intc_0 // 2
     +
     bury 5
-    b f_for_header@15
+    b f_for_header@18
 
-f_after_for@17:
+f_after_for@20:
     dig 6
     pushint 1
     +
@@ -275,9 +285,9 @@ f_after_for@17:
     pushint 1
     +
     bury 9
-    b f_while_top@2
+    b f_while_top@5
 
-f_after_while@4:
+f_after_while@7:
     pushint 1
     itob
     dup
@@ -286,11 +296,11 @@ f_after_while@4:
     bury 13
     bury 15
 
-f_while_top@5:
+f_while_top@8:
     dig 14
     dig 2
     b<=
-    bz f_after_while@10
+    bz f_after_while@13
     dig 10
     dup
     dig 16
@@ -400,7 +410,7 @@ f_while_top@5:
     dig 15
     bury 14
 
-f_while_top@7:
+f_while_top@10:
     dig 14
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
@@ -412,7 +422,7 @@ f_while_top@7:
     bury 11
     dig 14
     b>
-    bz f_after_while@9
+    bz f_after_while@12
     dig 14
     bytec_0 // 0x01
     b>=
@@ -534,16 +544,16 @@ f_while_top@7:
     bytec_0 // 0x01
     b+
     bury 14
-    b f_while_top@7
+    b f_while_top@10
 
-f_after_while@9:
+f_after_while@12:
     dig 14
     bytec_0 // 0x01
     b+
     bury 15
-    b f_while_top@5
+    b f_while_top@8
 
-f_after_while@10:
+f_after_while@13:
     dupn 2
     bytec_0 // 0x01
     b>=
@@ -615,3 +625,7 @@ f_after_while@10:
     log
     pushint 1
     return
+
+f_ternary_false@3:
+    intc_2 // 0
+    b f_ternary_merge@4

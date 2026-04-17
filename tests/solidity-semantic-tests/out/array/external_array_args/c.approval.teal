@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/external_array_args.sol.c.approval_program() -> uint64:
 main:
-    intcblock 32 8 1
+    intcblock 32 8 1 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_2 // 1
@@ -40,14 +40,14 @@ test:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 8>
     txna ApplicationArgs 2
-    dup
-    pushint 0
+    dupn 2
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
     pushint 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
@@ -75,10 +75,20 @@ test:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 8
     bzero
     dup
-    uncover 4
+    dig 4
     concat
     dup
     len
@@ -87,19 +97,19 @@ test:
     extract_uint64
     intc_0 // 32
     *
-    uncover 6
+    dig 7
     swap
     intc_0 // 32
     extract3 // on error: index access is out of bounds
     dig 1
-    uncover 4
+    dig 4
     concat
     dup
     len
     intc_1 // 8
     -
     extract_uint64
-    uncover 5
+    dig 7
     extract 2 0
     swap
     intc_0 // 32
@@ -107,7 +117,7 @@ test:
     intc_0 // 32
     extract3 // on error: index access is out of bounds
     uncover 2
-    uncover 3
+    dig 3
     concat
     dup
     len
@@ -116,7 +126,7 @@ test:
     extract_uint64
     intc_0 // 32
     *
-    uncover 3
+    dig 6
     swap
     intc_0 // 32
     extract3 // on error: index access is out of bounds
@@ -156,3 +166,7 @@ test:
     log
     intc_2 // 1
     return
+
+test_ternary_false@3:
+    intc_3 // 0
+    b test_ternary_merge@4

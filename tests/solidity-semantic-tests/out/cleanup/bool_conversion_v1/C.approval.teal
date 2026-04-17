@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/bool_conversion_v1.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -37,12 +37,23 @@ f:
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    pushint 0
+    intc_1 // 0
     getbit
-    bz f_else_body@3
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dup
+    bz f_else_body@6
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
 
-f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/bool_conversion_v1.sol.C.f@4:
+f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/bool_conversion_v1.sol.C.f@7:
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -50,9 +61,13 @@ f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tes
     intc_0 // 1
     return
 
-f_else_body@3:
+f_else_body@6:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/bool_conversion_v1.sol.C.f@4
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/bool_conversion_v1.sol.C.f@7
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/bool_conversion_v1.sol.C.g[routing]() -> void:
@@ -63,9 +78,23 @@ g:
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c75
-    swap
+    dig 1
     concat
     log
     intc_0 // 1
     return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4

@@ -3,13 +3,13 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance_state_var_slots.sol.D.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     txn ApplicationID
     bnz main_after_if_else@2
     pushbytess "x" 0x
     app_global_put
     pushbytes "y"
-    pushint 0
+    intc_1 // 0
     app_global_put
     pushbytess "w" 0x
     app_global_put
@@ -39,6 +39,16 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance_state_var_slots.sol.D.xSlotOffset[routing]() -> void:
 xSlotOffset:
+    txn GroupIndex
+    bz xSlotOffset_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+xSlotOffset_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -46,9 +56,23 @@ xSlotOffset:
     intc_0 // 1
     return
 
+xSlotOffset_ternary_false@3:
+    intc_1 // 0
+    b xSlotOffset_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance_state_var_slots.sol.D.ySlotOffset[routing]() -> void:
 ySlotOffset:
+    txn GroupIndex
+    bz ySlotOffset_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+ySlotOffset_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -56,9 +80,23 @@ ySlotOffset:
     intc_0 // 1
     return
 
+ySlotOffset_ternary_false@3:
+    intc_1 // 0
+    b ySlotOffset_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance_state_var_slots.sol.D.wSlotOffset[routing]() -> void:
 wSlotOffset:
+    txn GroupIndex
+    bz wSlotOffset_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+wSlotOffset_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004
@@ -66,12 +104,30 @@ wSlotOffset:
     intc_0 // 1
     return
 
+wSlotOffset_ternary_false@3:
+    intc_1 // 0
+    b wSlotOffset_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance_state_var_slots.sol.D.zSlotOffset[routing]() -> void:
 zSlotOffset:
+    txn GroupIndex
+    bz zSlotOffset_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+zSlotOffset_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
+
+zSlotOffset_ternary_false@3:
+    intc_1 // 0
+    b zSlotOffset_ternary_merge@4

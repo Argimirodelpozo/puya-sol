@@ -24,16 +24,42 @@ main_after_if_else@2:
     assert
     pushbytess 0x40e33532 0x32064c45 // method "something()void", method "test()byte[4]"
     txna ApplicationArgs 0
-    match main_something_route@5 test
+    match something test
     err
 
-main_something_route@5:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_memory.sol.C.something[routing]() -> void:
+something:
+    txn GroupIndex
+    bz something_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+something_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 1
     return
+
+something_ternary_false@3:
+    intc_1 // 0
+    b something_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_memory.sol.C.test[routing]() -> void:
 test:
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     assert
     intc_1 // 0
@@ -42,3 +68,7 @@ test:
     log
     intc_0 // 1
     return
+
+test_ternary_false@3:
+    intc_1 // 0
+    b test_ternary_merge@4

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_abi_encode.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 32 0
     bytecblock 0x01 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -25,14 +25,8 @@ main_after_if_else@2:
     assert
     pushbytess 0x2eaab6fe 0xd8be32c5 // method "builtinMatchesSolidityImplementation()bool", method "builtinOutput()uint256"
     txna ApplicationArgs 0
-    match builtinMatchesSolidityImplementation main_builtinOutput_route@6
+    match builtinMatchesSolidityImplementation builtinOutput
     err
-
-main_builtinOutput_route@6:
-    pushbytes 0x151f7c75df9b83a2f4548e5b457332f408e669b705f8a64018f7694a6fec23645508e100
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_abi_encode.sol.erc7201Mock(id: bytes) -> bytes:
@@ -68,12 +62,22 @@ erc7201Mock:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_abi_encode.sol.C.builtinMatchesSolidityImplementation[routing]() -> void:
 builtinMatchesSolidityImplementation:
+    txn GroupIndex
+    bz builtinMatchesSolidityImplementation_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+builtinMatchesSolidityImplementation_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000c6578616d706c652e6d61696e0000000000000000000000000000000000000000
     callsub erc7201Mock
     pushbytes 0xdf9b83a2f4548e5b457332f408e669b705f8a64018f7694a6fec23645508e100
     b==
     pushbytes 0x00
-    pushint 0
+    intc_2 // 0
     uncover 2
     setbit
     pushbytes 0x151f7c75
@@ -82,3 +86,29 @@ builtinMatchesSolidityImplementation:
     log
     intc_0 // 1
     return
+
+builtinMatchesSolidityImplementation_ternary_false@3:
+    intc_2 // 0
+    b builtinMatchesSolidityImplementation_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_abi_encode.sol.C.builtinOutput[routing]() -> void:
+builtinOutput:
+    txn GroupIndex
+    bz builtinOutput_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+builtinOutput_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75df9b83a2f4548e5b457332f408e669b705f8a64018f7694a6fec23645508e100
+    log
+    intc_0 // 1
+    return
+
+builtinOutput_ternary_false@3:
+    intc_2 // 0
+    b builtinOutput_ternary_merge@4

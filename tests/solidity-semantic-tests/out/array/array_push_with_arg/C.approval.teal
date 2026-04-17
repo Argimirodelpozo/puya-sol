@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_push_with_arg.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 2 0
+    intcblock 32 1 0 2
     bytecblock "storageArray" "__ctor_pending" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,10 +38,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_3 // 0
+    intc_2 // 0
     app_global_put
     bytec_0 // "storageArray"
-    intc_2 // 2
+    intc_3 // 2
     box_create
     pop
     intc_1 // 1
@@ -57,11 +57,23 @@ test:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     intc_0 // 32
     <=
     assert // overflow
     intc_0 // 32
     bzero
+    dig 2
     b|
     pushbytes 0x0001
     swap
@@ -69,11 +81,11 @@ test:
     dup
     extract 2 0
     swap
-    intc_3 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     bytec_0 // "storageArray"
-    intc_3 // 0
-    intc_2 // 2
+    intc_2 // 0
+    intc_3 // 2
     box_extract
     btoi
     bytec_0 // "storageArray"
@@ -92,36 +104,50 @@ test:
     itob
     extract 6 2
     bytec_0 // "storageArray"
-    intc_3 // 0
+    intc_2 // 0
     uncover 2
     box_replace
     intc_0 // 32
     *
-    intc_2 // 2
+    intc_3 // 2
     +
     bytec_0 // "storageArray"
     swap
-    intc_3 // 0
+    intc_2 // 0
     uncover 3
     box_splice
     intc_1 // 1
     return
 
+test_ternary_false@3:
+    intc_2 // 0
+    b test_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_push_with_arg.sol.C.getLength[routing]() -> void:
 getLength:
+    txn GroupIndex
+    bz getLength_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getLength_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_2 // 2
+    intc_3 // 2
     >=
-    bz getLength_ternary_false@3
+    bz getLength_ternary_false@6
     bytec_0 // "storageArray"
     box_len
     pop
 
-getLength_ternary_merge@4:
-    intc_2 // 2
+getLength_ternary_merge@7:
+    intc_3 // 2
     -
     intc_0 // 32
     /
@@ -136,8 +162,12 @@ getLength_ternary_merge@4:
     intc_1 // 1
     return
 
+getLength_ternary_false@6:
+    intc_3 // 2
+    b getLength_ternary_merge@7
+
 getLength_ternary_false@3:
-    intc_2 // 2
+    intc_2 // 0
     b getLength_ternary_merge@4
 
 
@@ -149,6 +179,16 @@ fetch:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz fetch_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+fetch_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "storageArray"
     box_get
     pushbytes 0x0000
@@ -156,7 +196,7 @@ fetch:
     select
     pushint 8
     bzero
-    uncover 2
+    dig 2
     concat
     dup
     len
@@ -184,3 +224,7 @@ fetch:
     log
     intc_1 // 1
     return
+
+fetch_ternary_false@3:
+    intc_2 // 0
+    b fetch_ternary_merge@4

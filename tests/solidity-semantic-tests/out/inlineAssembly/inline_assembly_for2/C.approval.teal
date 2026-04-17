@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_for2.sol.C.approval_program() -> uint64:
 main:
-    intcblock 64 32 0 1
+    intcblock 0 64 32 1
     bytecblock "st" 0x 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -37,32 +37,45 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_for2.sol.C.f[routing]() -> void:
 f:
+    intc_0 // 0
+    dupn 3
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_1 // 64
     ==
     assert // invalid number of bytes for arc4.uint512
-    intc_2 // 0
-    swap
+    intc_0 // 0
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     bytec_1 // 0x
-    cover 2
+    bury 5
     bytec_1 // 0x
-    cover 2
-    intc_2 // 0
+    bury 4
+    intc_0 // 0
     itob
     bytec_0 // "st"
     swap
     app_global_put
     load 0
-    cover 2
-    swap
+    bury 6
+    dig 1
+    bury 3
 
-f_while_top@2:
+f_while_top@5:
+    dig 2
     dig 1
     b==
-    bz f_after_while@4
-    intc_1 // 32
+    bz f_after_while@7
+    intc_2 // 32
     bzero
     bytec_0 // "st"
     app_global_get
@@ -71,9 +84,9 @@ f_while_top@2:
     concat
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     -
-    intc_1 // 32
+    intc_2 // 32
     extract3
     pushbytes 0x02
     b+
@@ -82,14 +95,15 @@ f_while_top@2:
     concat
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     -
-    intc_1 // 32
+    intc_2 // 32
     extract3
     bytec_0 // "st"
     swap
     app_global_put
     pushbytes 0x01
+    bury 1
     bytec_1 // 0x
     dig 4
     pushbytes 0x03
@@ -97,42 +111,42 @@ f_while_top@2:
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bury 5
-    dig 2
+    dig 3
     bury 6
-    bury 2
-    b f_while_top@2
+    bury 3
+    b f_while_top@5
 
-f_after_while@4:
-    dig 1
+f_after_while@7:
+    dig 5
     store 0
-    intc_2 // 0
+    intc_0 // 0
     bytec_0 // "st"
     app_global_get_ex
     assert // check st exists
-    dig 4
+    dig 5
     dup
     len
-    intc_0 // 64
+    intc_1 // 64
     <=
     assert // overflow
-    intc_0 // 64
+    intc_1 // 64
     bzero
     swap
     dig 1
     b|
     dig 2
     len
-    intc_0 // 64
+    intc_1 // 64
     <=
     assert // overflow
     uncover 2
     dig 2
     b|
     concat
-    dig 4
+    dig 5
     dup
     len
-    intc_0 // 64
+    intc_1 // 64
     <=
     assert // overflow
     uncover 2
@@ -144,3 +158,7 @@ f_after_while@4:
     log
     intc_3 // 1
     return
+
+f_ternary_false@3:
+    intc_0 // 0
+    b f_ternary_merge@4

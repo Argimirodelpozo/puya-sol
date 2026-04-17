@@ -54,6 +54,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_mapping.sol.C.setup[routing]() -> void:
 setup:
+    txn GroupIndex
+    bz setup_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+setup_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 1
     itob
     pushbytes 0x6c6f636b656466687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
@@ -97,18 +107,34 @@ setup:
     intc_0 // 1
     return
 
+setup_ternary_false@3:
+    intc_1 // 0
+    b setup_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_mapping.sol.C.open[routing]() -> void:
 open:
+    intc_1 // 0
+    dup
     txna ApplicationArgs 1
     dup
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz open_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+open_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 32
     bzero
-    swap
+    dig 1
     concat
     dup
     len
@@ -118,10 +144,12 @@ open:
     extract3
     sha256
     dup
+    bury 3
     bytec_1 // "locked"
     swap
     concat
     dup
+    bury 4
     box_get
     swap
     btoi
@@ -129,10 +157,10 @@ open:
     swap
     uncover 2
     select
-    bz open_after_if_else@3
+    bz open_after_if_else@6
     pushbytes "Locked"
 
-open_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_mapping.sol.C.open@4:
+open_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_mapping.sol.C.open@7:
     dup
     len
     itob
@@ -146,8 +174,8 @@ open_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     intc_0 // 1
     return
 
-open_after_if_else@3:
-    dup
+open_after_if_else@6:
+    dig 2
     box_get
     swap
     btoi
@@ -164,4 +192,8 @@ open_after_if_else@3:
     pushbytes 0x
     cover 2
     select
-    b open_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_mapping.sol.C.open@4
+    b open_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_mapping.sol.C.open@7
+
+open_ternary_false@3:
+    intc_1 // 0
+    b open_ternary_merge@4

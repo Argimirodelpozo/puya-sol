@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_struct.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 512 1 64
+    intcblock 0 1 512 64
     bytecblock 0x00 0x 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 "s1" "s2" "t1" "t2"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -19,7 +19,7 @@ main:
     bytec 7 // "t2"
     bytec_1 // 0x
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -49,6 +49,16 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_struct.sol.C.initS1[routing]() -> void:
 initS1:
+    txn GroupIndex
+    bz initS1_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+initS1_ternary_merge@4:
+    !
+    assert // not payable
     bytec 4 // "s1"
     box_get
     bytec_2 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -57,7 +67,7 @@ initS1:
     dup
     extract 32 32
     swap
-    intc_1 // 512
+    intc_2 // 512
     getbit
     bytec_0 // 0x00
     intc_0 // 0
@@ -69,7 +79,7 @@ initS1:
     swap
     concat
     dup
-    intc_1 // 512
+    intc_2 // 512
     getbit
     bytec_0 // 0x00
     intc_0 // 0
@@ -97,7 +107,7 @@ initS1:
     dig 1
     extract 32 32
     uncover 2
-    intc_1 // 512
+    intc_2 // 512
     getbit
     bytec_0 // 0x00
     intc_0 // 0
@@ -120,12 +130,26 @@ initS1:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
+
+initS1_ternary_false@3:
+    intc_0 // 0
+    b initS1_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_struct.sol.C.initS2[routing]() -> void:
 initS2:
+    txn GroupIndex
+    bz initS2_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+initS2_ternary_merge@4:
+    !
+    assert // not payable
     bytec 5 // "s2"
     box_get
     bytec_2 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -134,7 +158,7 @@ initS2:
     dup
     extract 32 32
     swap
-    intc_1 // 512
+    intc_2 // 512
     getbit
     bytec_0 // 0x00
     intc_0 // 0
@@ -146,7 +170,7 @@ initS2:
     swap
     concat
     dup
-    intc_1 // 512
+    intc_2 // 512
     getbit
     bytec_0 // 0x00
     intc_0 // 0
@@ -174,7 +198,7 @@ initS2:
     dig 1
     extract 32 32
     uncover 2
-    intc_1 // 512
+    intc_2 // 512
     getbit
     bytec_0 // 0x00
     intc_0 // 0
@@ -197,12 +221,26 @@ initS2:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
+
+initS2_ternary_false@3:
+    intc_0 // 0
+    b initS2_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_struct.sol.C.s2[routing]() -> void:
 s2:
+    txn GroupIndex
+    bz s2_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+s2_ternary_merge@4:
+    !
+    assert // not payable
     bytec 5 // "s2"
     box_get
     bytec_2 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -213,7 +251,7 @@ s2:
     dig 1
     extract 32 32
     uncover 2
-    intc_1 // 512
+    intc_2 // 512
     getbit
     bytec_0 // 0x00
     intc_0 // 0
@@ -236,12 +274,26 @@ s2:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
+
+s2_ternary_false@3:
+    intc_0 // 0
+    b s2_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_struct.sol.C.s1[routing]() -> void:
 s1:
+    txn GroupIndex
+    bz s1_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+s1_ternary_merge@4:
+    !
+    assert // not payable
     bytec 4 // "s1"
     box_get
     bytec_2 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -252,7 +304,7 @@ s1:
     dig 1
     extract 32 32
     uncover 2
-    intc_1 // 512
+    intc_2 // 512
     getbit
     bytec_0 // 0x00
     intc_0 // 0
@@ -275,5 +327,9 @@ s1:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
+
+s1_ternary_false@3:
+    intc_0 // 0
+    b s1_ternary_merge@4

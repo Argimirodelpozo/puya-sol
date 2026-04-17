@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_ternary_operator.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 0 32
     bytecblock 0x01 "x" 0x00 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,7 +38,7 @@ erc7201Mock:
     bytec_0 // 0x01
     b>=
     assert // underflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     swap
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -50,9 +50,9 @@ erc7201Mock:
     concat
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     -
-    intc_1 // 32
+    intc_2 // 32
     extract3
     keccak256
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
@@ -62,12 +62,22 @@ erc7201Mock:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_ternary_operator.sol.C.simple[routing]() -> void:
 simple:
+    txn GroupIndex
+    bz simple_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+simple_ternary_merge@4:
+    !
+    assert // not payable
     bytec_1 // "x"
     callsub erc7201Mock
     pushbytes 0x87b4891dabfa6386a559a842738ea7cea3c9f195f3e5e60ccbd5b6d66c3b5000
     b==
     bytec_2 // 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec 4 // 0x151f7c75
@@ -77,16 +87,21 @@ simple:
     intc_0 // 1
     return
 
+simple_ternary_false@3:
+    intc_1 // 0
+    b simple_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_ternary_operator.sol.C.compounded[routing]() -> void:
 compounded:
+    intc_1 // 0
     txna ApplicationArgs 1
     dup
     len
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    intc_2 // 0
+    intc_1 // 0
     getbit
     txna ApplicationArgs 2
     dup
@@ -94,28 +109,38 @@ compounded:
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    intc_2 // 0
+    intc_1 // 0
     getbit
+    txn GroupIndex
+    bz compounded_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+compounded_ternary_merge@4:
+    !
+    assert // not payable
+    dig 1
     dup
-    cover 2
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
     dig 1
     intc_0 // 1
     <=
     assert // ABI bool validation
-    intc_0 // 1
-    <=
-    assert // ABI bool validation
-    intc_1 // 32
+    intc_2 // 32
     bzero
-    swap
-    bz compounded_ternary_false@3
+    bury 4
+    bz compounded_ternary_false@6
     pushbytes "a"
 
-compounded_ternary_merge@7:
+compounded_ternary_merge@10:
     keccak256
     bytec_0 // 0x01
     b-
-    dig 1
+    dig 3
     b|
     keccak256
     extract 0 31
@@ -125,7 +150,7 @@ compounded_ternary_merge@7:
     callsub erc7201Mock
     b==
     bytec_2 // 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec 4 // 0x151f7c75
@@ -135,12 +160,16 @@ compounded_ternary_merge@7:
     intc_0 // 1
     return
 
-compounded_ternary_false@3:
-    dig 1
-    bz compounded_ternary_false@5
+compounded_ternary_false@6:
+    dup
+    bz compounded_ternary_false@8
     bytec_1 // "x"
-    b compounded_ternary_merge@7
+    b compounded_ternary_merge@10
 
-compounded_ternary_false@5:
+compounded_ternary_false@8:
     pushbytes "c"
-    b compounded_ternary_merge@7
+    b compounded_ternary_merge@10
+
+compounded_ternary_false@3:
+    intc_1 // 0
+    b compounded_ternary_merge@4

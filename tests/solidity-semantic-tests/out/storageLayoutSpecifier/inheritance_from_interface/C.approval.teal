@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_interface.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 64
+    intcblock 1 32 0 64
     bytecblock "y" 0x04 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -40,7 +40,17 @@ f:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    dup
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     bytec_1 // 0x04
     b>=
     assert // underflow
@@ -70,19 +80,33 @@ f:
     intc_0 // 1
     return
 
+f_ternary_false@3:
+    intc_2 // 0
+    b f_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_interface.sol.C.y[routing]() -> void:
 y:
-    pushint 0
+    txn GroupIndex
+    bz y_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+y_ternary_merge@4:
+    !
+    assert // not payable
+    intc_2 // 0
     bytec_0 // "y"
     app_global_get_ex
     assert // check y exists
     dup
     len
-    intc_2 // 64
+    intc_3 // 64
     <=
     assert // overflow
-    intc_2 // 64
+    intc_3 // 64
     bzero
     b|
     bytec_3 // 0x151f7c75
@@ -91,3 +115,7 @@ y:
     log
     intc_0 // 1
     return
+
+y_ternary_false@3:
+    intc_2 // 0
+    b y_ternary_merge@4

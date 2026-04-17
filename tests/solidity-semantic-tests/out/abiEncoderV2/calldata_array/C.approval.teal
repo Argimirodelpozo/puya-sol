@@ -102,11 +102,21 @@ f_for_header@1:
 
 f_after_for@4:
     dig 2
-    dup
     len
-    dig 3
+    dig 2
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.dynamic_array<arc4.uint256>, 1>
+    txn GroupIndex
+    bz f_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@8:
+    !
+    assert // not payable
+    dig 2
     dup
     intc_0 // 0
     extract_uint16
@@ -141,11 +151,11 @@ f_after_for@4:
     itob
     bury 5
 
-f_while_top@6:
+f_while_top@9:
     dig 4
     dig 4
     b<
-    bz f_after_while@8
+    bz f_after_while@11
     pushint 8
     bzero
     dig 5
@@ -170,13 +180,17 @@ f_while_top@6:
     pushbytes 0x01
     b+
     bury 5
-    b f_while_top@6
+    b f_while_top@9
 
-f_after_while@8:
+f_after_while@11:
     pushbytes 0x151f7c7580
     log
     intc_1 // 1
     return
+
+f_ternary_false@7:
+    intc_0 // 0
+    b f_ternary_merge@8
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g(_param0: bytes) -> bytes, bytes:
@@ -184,184 +198,199 @@ f_after_while@8:
     proto 1 2
     intc_0 // 0
     dupn 14
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@3:
+    !
+    assert // not payable
     txn NumAppArgs
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@50
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@53
     txn NumAppArgs
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@3
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@6
     txna ApplicationArgs 0
     frame_bury 0
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@4:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@7:
     txn NumAppArgs
     intc_1 // 1
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@6
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@9
     txna ApplicationArgs 1
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@7:
-    frame_dig 0
-    swap
-    concat
-    frame_bury 13
-    txn NumAppArgs
-    intc_2 // 2
-    >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@9
-    txna ApplicationArgs 2
-
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@10:
-    frame_dig 13
-    swap
-    concat
-    frame_bury 14
-    txn NumAppArgs
-    pushint 3
-    >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@12
-    txna ApplicationArgs 3
-
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@13:
-    frame_dig 14
+    frame_dig 0
     swap
     concat
     frame_bury 1
     txn NumAppArgs
-    pushint 4
+    intc_2 // 2
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@15
-    txna ApplicationArgs 4
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@12
+    txna ApplicationArgs 2
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@16:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@13:
     frame_dig 1
     swap
     concat
     frame_bury 2
     txn NumAppArgs
-    pushint 5
+    pushint 3
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@18
-    txna ApplicationArgs 5
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@15
+    txna ApplicationArgs 3
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@19:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@16:
     frame_dig 2
     swap
     concat
     frame_bury 3
     txn NumAppArgs
-    pushint 6
+    pushint 4
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@21
-    txna ApplicationArgs 6
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@18
+    txna ApplicationArgs 4
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@22:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@19:
     frame_dig 3
     swap
     concat
     frame_bury 4
     txn NumAppArgs
-    pushint 7
+    pushint 5
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@24
-    txna ApplicationArgs 7
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@21
+    txna ApplicationArgs 5
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@25:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@22:
     frame_dig 4
     swap
     concat
     frame_bury 5
     txn NumAppArgs
-    pushint 8
+    pushint 6
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@27
-    txna ApplicationArgs 8
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@24
+    txna ApplicationArgs 6
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@28:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@25:
     frame_dig 5
     swap
     concat
     frame_bury 6
     txn NumAppArgs
-    pushint 9
+    pushint 7
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@30
-    txna ApplicationArgs 9
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@27
+    txna ApplicationArgs 7
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@31:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@28:
     frame_dig 6
     swap
     concat
     frame_bury 7
     txn NumAppArgs
-    pushint 10
+    pushint 8
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@33
-    txna ApplicationArgs 10
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@30
+    txna ApplicationArgs 8
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@34:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@31:
     frame_dig 7
     swap
     concat
     frame_bury 8
     txn NumAppArgs
-    pushint 11
+    pushint 9
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@36
-    txna ApplicationArgs 11
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@33
+    txna ApplicationArgs 9
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@37:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@34:
     frame_dig 8
     swap
     concat
     frame_bury 9
     txn NumAppArgs
-    pushint 12
+    pushint 10
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@39
-    txna ApplicationArgs 12
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@36
+    txna ApplicationArgs 10
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@40:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@37:
     frame_dig 9
     swap
     concat
     frame_bury 10
     txn NumAppArgs
-    pushint 13
+    pushint 11
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@42
-    txna ApplicationArgs 13
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@39
+    txna ApplicationArgs 11
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@43:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@40:
     frame_dig 10
     swap
     concat
     frame_bury 11
     txn NumAppArgs
-    pushint 14
+    pushint 12
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@45
-    txna ApplicationArgs 14
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@42
+    txna ApplicationArgs 12
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@46:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@43:
     frame_dig 11
     swap
     concat
     frame_bury 12
     txn NumAppArgs
-    pushint 15
+    pushint 13
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@48
-    txna ApplicationArgs 15
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@45
+    txna ApplicationArgs 13
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@49:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@46:
     frame_dig 12
     swap
     concat
+    frame_bury 13
+    txn NumAppArgs
+    pushint 14
+    >
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@48
+    txna ApplicationArgs 14
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@51:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@49:
+    frame_dig 13
+    swap
+    concat
+    frame_bury 14
+    txn NumAppArgs
+    pushint 15
+    >
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@51
+    txna ApplicationArgs 15
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@52:
+    frame_dig 14
+    swap
+    concat
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@54:
     frame_dig -1
     frame_bury 1
     frame_bury 0
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@51:
+    intc_0 // 0
+    bzero
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@52
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@48:
     intc_0 // 0
@@ -436,15 +465,14 @@ f_after_while@8:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@6:
     intc_0 // 0
     bzero
+    frame_bury 0
     b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@7
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@3:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@53:
     intc_0 // 0
     bzero
-    frame_bury 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@4
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@54
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@50:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_false@2:
     intc_0 // 0
-    bzero
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@51
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array.sol.C.g_ternary_merge@3

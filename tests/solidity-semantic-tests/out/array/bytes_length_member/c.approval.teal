@@ -48,180 +48,190 @@ __postInit:
 set:
     intc_0 // 0
     dupn 14
+    txn GroupIndex
+    bz set_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+set_ternary_merge@4:
+    !
+    assert // not payable
     txn NumAppArgs
-    bz set_ternary_false@51
+    bz set_ternary_false@54
     txn NumAppArgs
-    bz set_ternary_false@4
+    bz set_ternary_false@7
     txna ApplicationArgs 0
     bury 15
 
-set_ternary_merge@5:
+set_ternary_merge@8:
     txn NumAppArgs
     intc_1 // 1
     >
-    bz set_ternary_false@7
+    bz set_ternary_false@10
     txna ApplicationArgs 1
 
-set_ternary_merge@8:
-    dig 15
-    swap
-    concat
-    bury 2
-    txn NumAppArgs
-    intc_2 // 2
-    >
-    bz set_ternary_false@10
-    txna ApplicationArgs 2
-
 set_ternary_merge@11:
-    dig 2
-    swap
-    concat
-    bury 1
-    txn NumAppArgs
-    pushint 3
-    >
-    bz set_ternary_false@13
-    txna ApplicationArgs 3
-
-set_ternary_merge@14:
-    dig 1
+    dig 15
     swap
     concat
     bury 14
     txn NumAppArgs
-    pushint 4
+    intc_2 // 2
     >
-    bz set_ternary_false@16
-    txna ApplicationArgs 4
+    bz set_ternary_false@13
+    txna ApplicationArgs 2
 
-set_ternary_merge@17:
+set_ternary_merge@14:
     dig 14
     swap
     concat
     bury 13
     txn NumAppArgs
-    pushint 5
+    pushint 3
     >
-    bz set_ternary_false@19
-    txna ApplicationArgs 5
+    bz set_ternary_false@16
+    txna ApplicationArgs 3
 
-set_ternary_merge@20:
+set_ternary_merge@17:
     dig 13
     swap
     concat
     bury 12
     txn NumAppArgs
-    pushint 6
+    pushint 4
     >
-    bz set_ternary_false@22
-    txna ApplicationArgs 6
+    bz set_ternary_false@19
+    txna ApplicationArgs 4
 
-set_ternary_merge@23:
+set_ternary_merge@20:
     dig 12
     swap
     concat
     bury 11
     txn NumAppArgs
-    pushint 7
+    pushint 5
     >
-    bz set_ternary_false@25
-    txna ApplicationArgs 7
+    bz set_ternary_false@22
+    txna ApplicationArgs 5
 
-set_ternary_merge@26:
+set_ternary_merge@23:
     dig 11
     swap
     concat
     bury 10
     txn NumAppArgs
-    pushint 8
+    pushint 6
     >
-    bz set_ternary_false@28
-    txna ApplicationArgs 8
+    bz set_ternary_false@25
+    txna ApplicationArgs 6
 
-set_ternary_merge@29:
+set_ternary_merge@26:
     dig 10
     swap
     concat
     bury 9
     txn NumAppArgs
-    pushint 9
+    pushint 7
     >
-    bz set_ternary_false@31
-    txna ApplicationArgs 9
+    bz set_ternary_false@28
+    txna ApplicationArgs 7
 
-set_ternary_merge@32:
+set_ternary_merge@29:
     dig 9
     swap
     concat
     bury 8
     txn NumAppArgs
-    pushint 10
+    pushint 8
     >
-    bz set_ternary_false@34
-    txna ApplicationArgs 10
+    bz set_ternary_false@31
+    txna ApplicationArgs 8
 
-set_ternary_merge@35:
+set_ternary_merge@32:
     dig 8
     swap
     concat
     bury 7
     txn NumAppArgs
-    pushint 11
+    pushint 9
     >
-    bz set_ternary_false@37
-    txna ApplicationArgs 11
+    bz set_ternary_false@34
+    txna ApplicationArgs 9
 
-set_ternary_merge@38:
+set_ternary_merge@35:
     dig 7
     swap
     concat
     bury 6
     txn NumAppArgs
-    pushint 12
+    pushint 10
     >
-    bz set_ternary_false@40
-    txna ApplicationArgs 12
+    bz set_ternary_false@37
+    txna ApplicationArgs 10
 
-set_ternary_merge@41:
+set_ternary_merge@38:
     dig 6
     swap
     concat
     bury 5
     txn NumAppArgs
-    pushint 13
+    pushint 11
     >
-    bz set_ternary_false@43
-    txna ApplicationArgs 13
+    bz set_ternary_false@40
+    txna ApplicationArgs 11
 
-set_ternary_merge@44:
+set_ternary_merge@41:
     dig 5
     swap
     concat
     bury 4
     txn NumAppArgs
-    pushint 14
+    pushint 12
     >
-    bz set_ternary_false@46
-    txna ApplicationArgs 14
+    bz set_ternary_false@43
+    txna ApplicationArgs 12
 
-set_ternary_merge@47:
+set_ternary_merge@44:
     dig 4
     swap
     concat
     bury 3
     txn NumAppArgs
-    pushint 15
+    pushint 13
     >
-    bz set_ternary_false@49
-    txna ApplicationArgs 15
+    bz set_ternary_false@46
+    txna ApplicationArgs 13
 
-set_ternary_merge@50:
+set_ternary_merge@47:
     dig 3
     swap
     concat
+    bury 2
+    txn NumAppArgs
+    pushint 14
+    >
+    bz set_ternary_false@49
+    txna ApplicationArgs 14
 
-set_ternary_merge@52:
+set_ternary_merge@50:
+    dig 2
+    swap
+    concat
+    bury 1
+    txn NumAppArgs
+    pushint 15
+    >
+    bz set_ternary_false@52
+    txna ApplicationArgs 15
+
+set_ternary_merge@53:
+    dig 1
+    swap
+    concat
+
+set_ternary_merge@55:
     bytec_0 // "data"
     box_del
     pop
@@ -232,6 +242,11 @@ set_ternary_merge@52:
     log
     intc_1 // 1
     return
+
+set_ternary_false@52:
+    intc_0 // 0
+    bzero
+    b set_ternary_merge@53
 
 set_ternary_false@49:
     intc_0 // 0
@@ -306,33 +321,42 @@ set_ternary_false@10:
 set_ternary_false@7:
     intc_0 // 0
     bzero
+    bury 15
     b set_ternary_merge@8
 
-set_ternary_false@4:
+set_ternary_false@54:
     intc_0 // 0
     bzero
-    bury 15
-    b set_ternary_merge@5
+    b set_ternary_merge@55
 
-set_ternary_false@51:
+set_ternary_false@3:
     intc_0 // 0
-    bzero
-    b set_ternary_merge@52
+    b set_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/bytes_length_member.sol.c.getLength[routing]() -> void:
 getLength:
+    txn GroupIndex
+    bz getLength_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getLength_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "data"
     box_len
     pop
     intc_2 // 2
     >=
-    bz getLength_ternary_false@3
+    bz getLength_ternary_false@6
     bytec_0 // "data"
     box_len
     pop
 
-getLength_ternary_merge@4:
+getLength_ternary_merge@7:
     intc_2 // 2
     -
     itob
@@ -346,6 +370,10 @@ getLength_ternary_merge@4:
     intc_1 // 1
     return
 
-getLength_ternary_false@3:
+getLength_ternary_false@6:
     intc_2 // 2
+    b getLength_ternary_merge@7
+
+getLength_ternary_false@3:
+    intc_0 // 0
     b getLength_ternary_merge@4

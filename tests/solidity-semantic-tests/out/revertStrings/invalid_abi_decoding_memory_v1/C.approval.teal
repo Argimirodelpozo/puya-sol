@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/invalid_abi_decoding_memory_v1.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 64 8
+    intcblock 32 1 64 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -83,6 +83,19 @@ f:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dig 2
+    dig 2
+    dig 2
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/invalid_abi_decoding_memory_v1.sol.C.dyn
     pop
     pushbytes 0x151f7c7580
@@ -90,12 +103,26 @@ f:
     intc_1 // 1
     return
 
+f_ternary_false@3:
+    intc_3 // 0
+    b f_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/invalid_abi_decoding_memory_v1.sol.C.dyn(ptr: bytes, start: bytes, x: bytes) -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/invalid_abi_decoding_memory_v1.sol.C.dyn:
     proto 3 1
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/invalid_abi_decoding_memory_v1.sol.C.dyn_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/invalid_abi_decoding_memory_v1.sol.C.dyn_ternary_merge@3:
+    !
+    assert // not payable
     load 0
-    intc_3 // 8
+    pushint 8
     bzero
     intc_0 // 32
     bzero
@@ -116,7 +143,7 @@ f:
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     frame_dig -2
@@ -138,3 +165,7 @@ f:
     store 0
     extract 4 32
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/invalid_abi_decoding_memory_v1.sol.C.dyn_ternary_false@2:
+    intc_3 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/invalid_abi_decoding_memory_v1.sol.C.dyn_ternary_merge@3

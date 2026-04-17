@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/many_subassemblies.sol.D.approval_program() -> uint64:
 main:
-    intcblock 16 0 1 6 1000000
+    intcblock 0 16 1 6 1000000
     bytecblock TMPL_APPROVAL_C0 TMPL_CLEAR_C0 TMPL_APPROVAL_C1 TMPL_CLEAR_C1 TMPL_APPROVAL_C2 TMPL_CLEAR_C2 TMPL_APPROVAL_C3 TMPL_CLEAR_C3 TMPL_APPROVAL_C4 TMPL_CLEAR_C4 TMPL_APPROVAL_C5 TMPL_CLEAR_C5 TMPL_APPROVAL_C6 TMPL_CLEAR_C6 TMPL_APPROVAL_C7 TMPL_CLEAR_C7 TMPL_APPROVAL_C8 TMPL_CLEAR_C8 TMPL_APPROVAL_C9 TMPL_CLEAR_C9 TMPL_APPROVAL_C10 TMPL_CLEAR_C10
     txn ApplicationID
     bnz main_after_if_else@2
@@ -34,16 +34,26 @@ main_run_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/many_subassemblies.sol.D.run[routing]() -> void:
 run:
+    txn GroupIndex
+    bz run_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+run_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     bytec_0 // TMPL_APPROVAL_C0
     bytec_1 // TMPL_CLEAR_C0
     intc_3 // 6
     itxn_field TypeEnum
-    intc_0 // 16
+    intc_1 // 16
     itxn_field GlobalNumUint
-    intc_0 // 16
+    intc_1 // 16
     itxn_field GlobalNumByteSlice
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     pushint 3
     itxn_field ExtraProgramPages
@@ -57,7 +67,7 @@ run:
     intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     intc 4 // 1000000
     itxn_field Amount
@@ -67,11 +77,11 @@ run:
     bytec_3 // TMPL_CLEAR_C1
     intc_3 // 6
     itxn_field TypeEnum
-    intc_0 // 16
+    intc_1 // 16
     itxn_field GlobalNumUint
-    intc_0 // 16
+    intc_1 // 16
     itxn_field GlobalNumByteSlice
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     pushint 3
     itxn_field ExtraProgramPages
@@ -85,7 +95,7 @@ run:
     intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     intc 4 // 1000000
     itxn_field Amount
@@ -95,11 +105,11 @@ run:
     bytec 5 // TMPL_CLEAR_C2
     intc_3 // 6
     itxn_field TypeEnum
-    intc_0 // 16
+    intc_1 // 16
     itxn_field GlobalNumUint
-    intc_0 // 16
+    intc_1 // 16
     itxn_field GlobalNumByteSlice
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     pushint 3
     itxn_field ExtraProgramPages
@@ -113,7 +123,7 @@ run:
     intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     intc 4 // 1000000
     itxn_field Amount
@@ -123,11 +133,11 @@ run:
     bytec 7 // TMPL_CLEAR_C3
     intc_3 // 6
     itxn_field TypeEnum
-    intc_0 // 16
+    intc_1 // 16
     itxn_field GlobalNumUint
-    intc_0 // 16
+    intc_1 // 16
     itxn_field GlobalNumByteSlice
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     pushint 3
     itxn_field ExtraProgramPages
@@ -141,7 +151,7 @@ run:
     intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     intc 4 // 1000000
     itxn_field Amount
@@ -151,11 +161,11 @@ run:
     bytec 9 // TMPL_CLEAR_C4
     intc_3 // 6
     itxn_field TypeEnum
-    intc_0 // 16
+    intc_1 // 16
     itxn_field GlobalNumUint
-    intc_0 // 16
+    intc_1 // 16
     itxn_field GlobalNumByteSlice
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     pushint 3
     itxn_field ExtraProgramPages
@@ -169,7 +179,7 @@ run:
     intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     intc 4 // 1000000
     itxn_field Amount
@@ -179,11 +189,11 @@ run:
     bytec 11 // TMPL_CLEAR_C5
     intc_3 // 6
     itxn_field TypeEnum
-    intc_0 // 16
+    intc_1 // 16
     itxn_field GlobalNumUint
-    intc_0 // 16
+    intc_1 // 16
     itxn_field GlobalNumByteSlice
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     pushint 3
     itxn_field ExtraProgramPages
@@ -197,7 +207,7 @@ run:
     intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     intc 4 // 1000000
     itxn_field Amount
@@ -207,11 +217,11 @@ run:
     bytec 13 // TMPL_CLEAR_C6
     intc_3 // 6
     itxn_field TypeEnum
-    intc_0 // 16
+    intc_1 // 16
     itxn_field GlobalNumUint
-    intc_0 // 16
+    intc_1 // 16
     itxn_field GlobalNumByteSlice
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     pushint 3
     itxn_field ExtraProgramPages
@@ -225,7 +235,7 @@ run:
     intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     intc 4 // 1000000
     itxn_field Amount
@@ -235,11 +245,11 @@ run:
     bytec 15 // TMPL_CLEAR_C7
     intc_3 // 6
     itxn_field TypeEnum
-    intc_0 // 16
+    intc_1 // 16
     itxn_field GlobalNumUint
-    intc_0 // 16
+    intc_1 // 16
     itxn_field GlobalNumByteSlice
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     pushint 3
     itxn_field ExtraProgramPages
@@ -253,7 +263,7 @@ run:
     intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     intc 4 // 1000000
     itxn_field Amount
@@ -263,11 +273,11 @@ run:
     bytec 17 // TMPL_CLEAR_C8
     intc_3 // 6
     itxn_field TypeEnum
-    intc_0 // 16
+    intc_1 // 16
     itxn_field GlobalNumUint
-    intc_0 // 16
+    intc_1 // 16
     itxn_field GlobalNumByteSlice
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     pushint 3
     itxn_field ExtraProgramPages
@@ -281,7 +291,7 @@ run:
     intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     intc 4 // 1000000
     itxn_field Amount
@@ -291,11 +301,11 @@ run:
     bytec 19 // TMPL_CLEAR_C9
     intc_3 // 6
     itxn_field TypeEnum
-    intc_0 // 16
+    intc_1 // 16
     itxn_field GlobalNumUint
-    intc_0 // 16
+    intc_1 // 16
     itxn_field GlobalNumByteSlice
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     pushint 3
     itxn_field ExtraProgramPages
@@ -309,7 +319,7 @@ run:
     intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     intc 4 // 1000000
     itxn_field Amount
@@ -319,11 +329,11 @@ run:
     bytec 21 // TMPL_CLEAR_C10
     intc_3 // 6
     itxn_field TypeEnum
-    intc_0 // 16
+    intc_1 // 16
     itxn_field GlobalNumUint
-    intc_0 // 16
+    intc_1 // 16
     itxn_field GlobalNumByteSlice
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     pushint 3
     itxn_field ExtraProgramPages
@@ -337,10 +347,14 @@ run:
     intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     intc 4 // 1000000
     itxn_field Amount
     itxn_submit
     intc_2 // 1
     return
+
+run_ternary_false@3:
+    intc_0 // 0
+    b run_ternary_merge@4

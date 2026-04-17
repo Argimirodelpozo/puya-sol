@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_delete.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 8192
+    intcblock 1 0 32 8192
     bytecblock 0x "__dyn_storage"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -31,16 +31,28 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_delete.sol.C.fillArray[routing]() -> void:
 fillArray:
+    intc_1 // 0
+    txn GroupIndex
+    bz fillArray_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+fillArray_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     intc_0 // 1
     itob
+    bury 1
 
-fillArray_while_top@2:
+fillArray_while_top@5:
     dup
     pushbytes 0x0a
     b<
-    bz fillArray_after_while@4
+    bz fillArray_after_while@7
     pushbytes 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
     dig 1
     dup
@@ -56,15 +68,29 @@ fillArray_while_top@2:
     pushbytes 0x01
     b+
     bury 1
-    b fillArray_while_top@2
+    b fillArray_while_top@5
 
-fillArray_after_while@4:
+fillArray_after_while@7:
     intc_0 // 1
     return
+
+fillArray_ternary_false@3:
+    intc_1 // 0
+    b fillArray_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_delete.sol.C.clearArray[routing]() -> void:
 clearArray:
+    txn GroupIndex
+    bz clearArray_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+clearArray_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushint 18446744073709551611
@@ -82,7 +108,7 @@ clearArray:
     pushint 18446744073709551615
     bytec_0 // 0x
     callsub __storage_write
-    pushint 0
+    intc_1 // 0
     bytec_0 // 0x
     callsub __storage_write
     intc_0 // 1
@@ -100,18 +126,32 @@ clearArray:
     intc_0 // 1
     return
 
+clearArray_ternary_false@3:
+    intc_1 // 0
+    b clearArray_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_delete.sol.C.x[routing]() -> void:
 x:
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     bytec_1 // "__dyn_storage"
-    intc_2 // 8192
+    intc_3 // 8192
     box_create
     pop
     bytec_1 // "__dyn_storage"
     pushint 8032
-    intc_1 // 32
+    intc_2 // 32
     box_extract
     pushbytes 0x151f7c75
     swap
@@ -120,28 +160,32 @@ x:
     intc_0 // 1
     return
 
+x_ternary_false@3:
+    intc_1 // 0
+    b x_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_delete.sol.C.__storage_write(__slot: uint64, __value: bytes) -> void:
 __storage_write:
     proto 2 0
     bytec_1 // "__dyn_storage"
-    intc_2 // 8192
+    intc_3 // 8192
     box_create
     pop
     frame_dig -2
     pushint 256
     %
-    intc_1 // 32
+    intc_2 // 32
     *
-    intc_1 // 32
+    intc_2 // 32
     bzero
     frame_dig -1
     concat
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     -
-    intc_1 // 32
+    intc_2 // 32
     extract3
     bytec_1 // "__dyn_storage"
     cover 2

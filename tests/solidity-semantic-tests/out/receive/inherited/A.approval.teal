@@ -68,6 +68,16 @@ __receive:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/receive/inherited.sol.A.getData[routing]() -> void:
 getData:
+    txn GroupIndex
+    bz getData_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getData_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "data"
     app_global_get_ex
@@ -85,6 +95,10 @@ getData:
     concat
     log
     retsub
+
+getData_ternary_false@3:
+    intc_1 // 0
+    b getData_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/receive/inherited.sol.A.__receive() -> void:

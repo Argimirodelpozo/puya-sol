@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_other_functions.sol.collatz.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 32 1 0
     bytecblock 0x151f7c75 0x01 0x02
     txn ApplicationID
     bnz main_after_if_else@2
@@ -31,37 +31,51 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_other_functions.sol.collatz.run[routing]() -> void:
 run:
+    intc_2 // 0
     txna ApplicationArgs 1
     dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz run_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
 
-run_while_top@2:
+run_ternary_merge@4:
+    !
+    assert // not payable
     dup
+    bury 2
+
+run_while_top@5:
+    dig 1
     bytec_1 // 0x01
     b>
-    bz run_after_while@7
-    dup
+    bz run_after_while@10
+    dig 1
     bytec_2 // 0x02
     b%
     pushbytes 0x
     b==
-    bz run_else_body@5
-    dup
+    bz run_else_body@8
+    dig 1
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_other_functions.sol.collatz.evenStep
-    bury 1
-    b run_while_top@2
+    bury 2
+    b run_while_top@5
 
-run_else_body@5:
-    dup
+run_else_body@8:
+    dig 1
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_other_functions.sol.collatz.oddStep
-    bury 1
-    b run_while_top@2
+    bury 2
+    b run_while_top@5
 
-run_after_while@7:
-    dupn 2
+run_after_while@10:
+    dig 1
+    dup
     len
     intc_0 // 32
     <=
@@ -75,6 +89,10 @@ run_after_while@7:
     log
     intc_1 // 1
     return
+
+run_ternary_false@3:
+    intc_2 // 0
+    b run_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_other_functions.sol.collatz.evenStep[routing]() -> void:
@@ -114,6 +132,16 @@ oddStep:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_other_functions.sol.collatz.evenStep(__arc4_x: bytes) -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_other_functions.sol.collatz.evenStep:
     proto 1 1
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_other_functions.sol.collatz.evenStep_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_other_functions.sol.collatz.evenStep_ternary_merge@3:
+    !
+    assert // not payable
     frame_dig -1
     bytec_2 // 0x02
     b/
@@ -127,10 +155,24 @@ oddStep:
     b|
     retsub
 
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_other_functions.sol.collatz.evenStep_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_other_functions.sol.collatz.evenStep_ternary_merge@3
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_other_functions.sol.collatz.oddStep(__arc4_x: bytes) -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_other_functions.sol.collatz.oddStep:
     proto 1 1
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_other_functions.sol.collatz.oddStep_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_other_functions.sol.collatz.oddStep_ternary_merge@3:
+    !
+    assert // not payable
     pushbytes 0x03
     frame_dig -1
     b*
@@ -145,3 +187,7 @@ oddStep:
     bzero
     b|
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_other_functions.sol.collatz.oddStep_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_other_functions.sol.collatz.oddStep_ternary_merge@3

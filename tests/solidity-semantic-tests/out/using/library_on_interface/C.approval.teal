@@ -26,14 +26,8 @@ main_after_if_else@2:
     pushbytes 0x7c1072af // method "x()uint256"
     bytec_0 // method "f()uint256"
     txna ApplicationArgs 0
-    match x main_f_route@6
+    match x f
     err
-
-main_f_route@6:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000007
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/library_on_interface.sol.L.execute(i: bytes) -> bytes:
@@ -60,6 +54,16 @@ L.execute:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/library_on_interface.sol.C.x[routing]() -> void:
 x:
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
     global CurrentApplicationAddress
     callsub L.execute
     dup
@@ -76,3 +80,29 @@ x:
     log
     intc_0 // 1
     return
+
+x_ternary_false@3:
+    intc_1 // 0
+    b x_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/library_on_interface.sol.C.f[routing]() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000007
+    log
+    intc_0 // 1
+    return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4

@@ -27,7 +27,26 @@ main_g_route@4:
     txn ApplicationID
     &&
     assert
+    b g
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_through_dispatch.sol.B.g[routing]() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     log
     pushint 1
     return
+
+g_ternary_false@3:
+    pushint 0
+    b g_ternary_merge@4

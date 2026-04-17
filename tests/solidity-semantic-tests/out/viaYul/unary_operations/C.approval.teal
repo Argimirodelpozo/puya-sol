@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 8 32 255 18446744073709551488
+    intcblock 1 0 8 32 255 18446744073709551488
     bytecblock 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x80 0xff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x0100 0x01 0x010000000000000000 0x8000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -34,25 +34,35 @@ preincr_u8:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    dup
-    intc_3 // 255
+    txn GroupIndex
+    bz preincr_u8_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+preincr_u8_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
+    intc 4 // 255
     <=
     assert // ABI validation
-    intc_3 // 255
+    intc 4 // 255
     &
     intc_0 // 1
     +
     dup
     +
     dup
-    intc_3 // 255
+    intc 4 // 255
     <=
     assert // overflow
-    intc_3 // 255
+    intc 4 // 255
     &
     itob
     bytec_0 // 0x151f7c75
@@ -61,6 +71,10 @@ preincr_u8:
     log
     intc_0 // 1
     return
+
+preincr_u8_ternary_false@3:
+    intc_1 // 0
+    b preincr_u8_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.postincr_u8[routing]() -> void:
@@ -68,25 +82,35 @@ postincr_u8:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    dup
-    intc_3 // 255
+    txn GroupIndex
+    bz postincr_u8_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+postincr_u8_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
+    intc 4 // 255
     <=
     assert // ABI validation
-    intc_3 // 255
+    intc 4 // 255
     &
     dup
     intc_0 // 1
     +
     +
     dup
-    intc_3 // 255
+    intc 4 // 255
     <=
     assert // overflow
-    intc_3 // 255
+    intc 4 // 255
     &
     itob
     bytec_0 // 0x151f7c75
@@ -95,6 +119,10 @@ postincr_u8:
     log
     intc_0 // 1
     return
+
+postincr_u8_ternary_false@3:
+    intc_1 // 0
+    b postincr_u8_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.predecr_u8[routing]() -> void:
@@ -102,25 +130,35 @@ predecr_u8:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    dup
-    intc_3 // 255
+    txn GroupIndex
+    bz predecr_u8_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+predecr_u8_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
+    intc 4 // 255
     <=
     assert // ABI validation
-    intc_3 // 255
+    intc 4 // 255
     &
     intc_0 // 1
     -
     dup
     +
     dup
-    intc_3 // 255
+    intc 4 // 255
     <=
     assert // overflow
-    intc_3 // 255
+    intc 4 // 255
     &
     itob
     bytec_0 // 0x151f7c75
@@ -129,6 +167,10 @@ predecr_u8:
     log
     intc_0 // 1
     return
+
+predecr_u8_ternary_false@3:
+    intc_1 // 0
+    b predecr_u8_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.postdecr_u8[routing]() -> void:
@@ -136,25 +178,35 @@ postdecr_u8:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    dup
-    intc_3 // 255
+    txn GroupIndex
+    bz postdecr_u8_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+postdecr_u8_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
+    intc 4 // 255
     <=
     assert // ABI validation
-    intc_3 // 255
+    intc 4 // 255
     &
     dup
     intc_0 // 1
     -
     +
     dup
-    intc_3 // 255
+    intc 4 // 255
     <=
     assert // overflow
-    intc_3 // 255
+    intc 4 // 255
     &
     itob
     bytec_0 // 0x151f7c75
@@ -164,32 +216,46 @@ postdecr_u8:
     intc_0 // 1
     return
 
+postdecr_u8_ternary_false@3:
+    intc_1 // 0
+    b postdecr_u8_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.preincr_s8[routing]() -> void:
 preincr_s8:
-    pushint 0
+    intc_1 // 0
     dup
     pushbytes ""
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    txn GroupIndex
+    bz preincr_s8_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+preincr_s8_ternary_merge@4:
+    !
+    assert // not payable
     dup
     pushint 127
     <=
-    bnz preincr_s8_bool_true@3
+    bnz preincr_s8_bool_true@6
     dup
-    intc 4 // 18446744073709551488
+    intc 5 // 18446744073709551488
     >=
-    bz preincr_s8_bool_false@4
+    bz preincr_s8_bool_false@7
 
-preincr_s8_bool_true@3:
+preincr_s8_bool_true@6:
     intc_0 // 1
 
-preincr_s8_bool_merge@5:
+preincr_s8_bool_merge@8:
     assert // ABI validation
     dup
     itob
@@ -199,7 +265,7 @@ preincr_s8_bool_merge@5:
     pushbytes 0x7f
     b!=
     assert // signed inc/dec overflow
-    intc_1 // 8
+    intc_2 // 8
     bzero
     swap
     bytec 6 // 0x01
@@ -209,9 +275,9 @@ preincr_s8_bool_merge@5:
     concat
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     -
-    intc_1 // 8
+    intc_2 // 8
     extract3
     bytec_3 // 0xff
     b&
@@ -221,7 +287,7 @@ preincr_s8_bool_merge@5:
     b>=
     dup
     bury 3
-    bz preincr_s8_ternary_false@7
+    bz preincr_s8_ternary_false@10
     dig 2
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
@@ -229,16 +295,16 @@ preincr_s8_bool_merge@5:
     b%
     bury 4
 
-preincr_s8_ternary_merge@8:
+preincr_s8_ternary_merge@11:
     dig 1
-    bz preincr_s8_ternary_false@10
+    bz preincr_s8_ternary_false@13
     dig 2
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
-preincr_s8_ternary_merge@11:
+preincr_s8_ternary_merge@14:
     dig 4
     dup
     len
@@ -266,45 +332,59 @@ preincr_s8_ternary_merge@11:
     intc_0 // 1
     return
 
+preincr_s8_ternary_false@13:
+    dig 2
+    b preincr_s8_ternary_merge@14
+
 preincr_s8_ternary_false@10:
     dig 2
+    bury 4
     b preincr_s8_ternary_merge@11
 
-preincr_s8_ternary_false@7:
-    dig 2
-    bury 4
-    b preincr_s8_ternary_merge@8
+preincr_s8_bool_false@7:
+    intc_1 // 0
+    b preincr_s8_bool_merge@8
 
-preincr_s8_bool_false@4:
-    pushint 0
-    b preincr_s8_bool_merge@5
+preincr_s8_ternary_false@3:
+    intc_1 // 0
+    b preincr_s8_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.postincr_s8[routing]() -> void:
 postincr_s8:
-    pushint 0
+    intc_1 // 0
     dup
     pushbytes ""
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    txn GroupIndex
+    bz postincr_s8_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+postincr_s8_ternary_merge@4:
+    !
+    assert // not payable
     dup
     pushint 127
     <=
-    bnz postincr_s8_bool_true@3
+    bnz postincr_s8_bool_true@6
     dup
-    intc 4 // 18446744073709551488
+    intc 5 // 18446744073709551488
     >=
-    bz postincr_s8_bool_false@4
+    bz postincr_s8_bool_false@7
 
-postincr_s8_bool_true@3:
+postincr_s8_bool_true@6:
     intc_0 // 1
 
-postincr_s8_bool_merge@5:
+postincr_s8_bool_merge@8:
     assert // ABI validation
     dup
     itob
@@ -315,7 +395,7 @@ postincr_s8_bool_merge@5:
     pushbytes 0x7f
     b!=
     assert // signed inc/dec overflow
-    intc_1 // 8
+    intc_2 // 8
     bzero
     swap
     bytec 6 // 0x01
@@ -326,26 +406,9 @@ postincr_s8_bool_merge@5:
     dup
     bury 5
     len
-    intc_1 // 8
+    intc_2 // 8
     -
     bury 3
-    bytec_3 // 0xff
-    b&
-    dup
-    bytec_2 // 0x80
-    b>=
-    bz postincr_s8_ternary_false@7
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
-    b+
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bury 4
-
-postincr_s8_ternary_merge@8:
-    dig 2
-    dig 2
-    intc_1 // 8
-    extract3
     bytec_3 // 0xff
     b&
     dup
@@ -356,8 +419,25 @@ postincr_s8_ternary_merge@8:
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    bury 4
 
 postincr_s8_ternary_merge@11:
+    dig 2
+    dig 2
+    intc_2 // 8
+    extract3
+    bytec_3 // 0xff
+    b&
+    dup
+    bytec_2 // 0x80
+    b>=
+    bz postincr_s8_ternary_false@13
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+postincr_s8_ternary_merge@14:
     dig 4
     dup
     len
@@ -385,43 +465,57 @@ postincr_s8_ternary_merge@11:
     intc_0 // 1
     return
 
+postincr_s8_ternary_false@13:
+    b postincr_s8_ternary_merge@14
+
 postincr_s8_ternary_false@10:
+    bury 4
     b postincr_s8_ternary_merge@11
 
-postincr_s8_ternary_false@7:
-    bury 4
-    b postincr_s8_ternary_merge@8
+postincr_s8_bool_false@7:
+    intc_1 // 0
+    b postincr_s8_bool_merge@8
 
-postincr_s8_bool_false@4:
-    pushint 0
-    b postincr_s8_bool_merge@5
+postincr_s8_ternary_false@3:
+    intc_1 // 0
+    b postincr_s8_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.predecr_s8[routing]() -> void:
 predecr_s8:
-    pushint 0
+    intc_1 // 0
     dup
     pushbytes ""
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    txn GroupIndex
+    bz predecr_s8_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+predecr_s8_ternary_merge@4:
+    !
+    assert // not payable
     dup
     pushint 127
     <=
-    bnz predecr_s8_bool_true@3
+    bnz predecr_s8_bool_true@6
     dup
-    intc 4 // 18446744073709551488
+    intc 5 // 18446744073709551488
     >=
-    bz predecr_s8_bool_false@4
+    bz predecr_s8_bool_false@7
 
-predecr_s8_bool_true@3:
+predecr_s8_bool_true@6:
     intc_0 // 1
 
-predecr_s8_bool_merge@5:
+predecr_s8_bool_merge@8:
     assert // ABI validation
     dup
     itob
@@ -431,7 +525,7 @@ predecr_s8_bool_merge@5:
     bytec_2 // 0x80
     b!=
     assert // signed inc/dec overflow
-    intc_1 // 8
+    intc_2 // 8
     bzero
     swap
     bytec_3 // 0xff
@@ -441,9 +535,9 @@ predecr_s8_bool_merge@5:
     concat
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     -
-    intc_1 // 8
+    intc_2 // 8
     extract3
     bytec_3 // 0xff
     b&
@@ -453,7 +547,7 @@ predecr_s8_bool_merge@5:
     b>=
     dup
     bury 3
-    bz predecr_s8_ternary_false@7
+    bz predecr_s8_ternary_false@10
     dig 2
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
@@ -461,16 +555,16 @@ predecr_s8_bool_merge@5:
     b%
     bury 4
 
-predecr_s8_ternary_merge@8:
+predecr_s8_ternary_merge@11:
     dig 1
-    bz predecr_s8_ternary_false@10
+    bz predecr_s8_ternary_false@13
     dig 2
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
-predecr_s8_ternary_merge@11:
+predecr_s8_ternary_merge@14:
     dig 4
     dup
     len
@@ -498,45 +592,59 @@ predecr_s8_ternary_merge@11:
     intc_0 // 1
     return
 
+predecr_s8_ternary_false@13:
+    dig 2
+    b predecr_s8_ternary_merge@14
+
 predecr_s8_ternary_false@10:
     dig 2
+    bury 4
     b predecr_s8_ternary_merge@11
 
-predecr_s8_ternary_false@7:
-    dig 2
-    bury 4
-    b predecr_s8_ternary_merge@8
+predecr_s8_bool_false@7:
+    intc_1 // 0
+    b predecr_s8_bool_merge@8
 
-predecr_s8_bool_false@4:
-    pushint 0
-    b predecr_s8_bool_merge@5
+predecr_s8_ternary_false@3:
+    intc_1 // 0
+    b predecr_s8_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.postdecr_s8[routing]() -> void:
 postdecr_s8:
-    pushint 0
+    intc_1 // 0
     dup
     pushbytes ""
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    txn GroupIndex
+    bz postdecr_s8_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+postdecr_s8_ternary_merge@4:
+    !
+    assert // not payable
     dup
     pushint 127
     <=
-    bnz postdecr_s8_bool_true@3
+    bnz postdecr_s8_bool_true@6
     dup
-    intc 4 // 18446744073709551488
+    intc 5 // 18446744073709551488
     >=
-    bz postdecr_s8_bool_false@4
+    bz postdecr_s8_bool_false@7
 
-postdecr_s8_bool_true@3:
+postdecr_s8_bool_true@6:
     intc_0 // 1
 
-postdecr_s8_bool_merge@5:
+postdecr_s8_bool_merge@8:
     assert // ABI validation
     dup
     itob
@@ -547,7 +655,7 @@ postdecr_s8_bool_merge@5:
     bytec_2 // 0x80
     b!=
     assert // signed inc/dec overflow
-    intc_1 // 8
+    intc_2 // 8
     bzero
     swap
     bytec_3 // 0xff
@@ -558,26 +666,9 @@ postdecr_s8_bool_merge@5:
     dup
     bury 5
     len
-    intc_1 // 8
+    intc_2 // 8
     -
     bury 3
-    bytec_3 // 0xff
-    b&
-    dup
-    bytec_2 // 0x80
-    b>=
-    bz postdecr_s8_ternary_false@7
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
-    b+
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bury 4
-
-postdecr_s8_ternary_merge@8:
-    dig 2
-    dig 2
-    intc_1 // 8
-    extract3
     bytec_3 // 0xff
     b&
     dup
@@ -588,8 +679,25 @@ postdecr_s8_ternary_merge@8:
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    bury 4
 
 postdecr_s8_ternary_merge@11:
+    dig 2
+    dig 2
+    intc_2 // 8
+    extract3
+    bytec_3 // 0xff
+    b&
+    dup
+    bytec_2 // 0x80
+    b>=
+    bz postdecr_s8_ternary_false@13
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+postdecr_s8_ternary_merge@14:
     dig 4
     dup
     len
@@ -617,16 +725,20 @@ postdecr_s8_ternary_merge@11:
     intc_0 // 1
     return
 
+postdecr_s8_ternary_false@13:
+    b postdecr_s8_ternary_merge@14
+
 postdecr_s8_ternary_false@10:
+    bury 4
     b postdecr_s8_ternary_merge@11
 
-postdecr_s8_ternary_false@7:
-    bury 4
-    b postdecr_s8_ternary_merge@8
+postdecr_s8_bool_false@7:
+    intc_1 // 0
+    b postdecr_s8_bool_merge@8
 
-postdecr_s8_bool_false@4:
-    pushint 0
-    b postdecr_s8_bool_merge@5
+postdecr_s8_ternary_false@3:
+    intc_1 // 0
+    b postdecr_s8_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.preincr[routing]() -> void:
@@ -634,19 +746,30 @@ preincr:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz preincr_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+preincr_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     bytec 6 // 0x01
     b+
     dup
     b+
     dup
     len
-    intc_2 // 32
+    intc_3 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_3 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -655,6 +778,10 @@ preincr:
     log
     intc_0 // 1
     return
+
+preincr_ternary_false@3:
+    intc_1 // 0
+    b preincr_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.postincr[routing]() -> void:
@@ -662,19 +789,29 @@ postincr:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    dup
+    txn GroupIndex
+    bz postincr_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+postincr_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     bytec 6 // 0x01
     b+
     b+
     dup
     len
-    intc_2 // 32
+    intc_3 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_3 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -683,6 +820,10 @@ postincr:
     log
     intc_0 // 1
     return
+
+postincr_ternary_false@3:
+    intc_1 // 0
+    b postincr_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.predecr[routing]() -> void:
@@ -690,19 +831,30 @@ predecr:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz predecr_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+predecr_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     bytec 6 // 0x01
     b-
     dup
     b+
     dup
     len
-    intc_2 // 32
+    intc_3 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_3 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -711,6 +863,10 @@ predecr:
     log
     intc_0 // 1
     return
+
+predecr_ternary_false@3:
+    intc_1 // 0
+    b predecr_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.postdecr[routing]() -> void:
@@ -718,19 +874,29 @@ postdecr:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    dup
+    txn GroupIndex
+    bz postdecr_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+postdecr_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     bytec 6 // 0x01
     b-
     b+
     dup
     len
-    intc_2 // 32
+    intc_3 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_3 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -739,6 +905,10 @@ postdecr:
     log
     intc_0 // 1
     return
+
+postdecr_ternary_false@3:
+    intc_1 // 0
+    b postdecr_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.not[routing]() -> void:
@@ -749,15 +919,25 @@ not:
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    pushint 0
+    intc_1 // 0
     getbit
-    dup
+    txn GroupIndex
+    bz not_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+not_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     intc_0 // 1
     <=
     assert // ABI bool validation
     !
     pushbytes 0x00
-    pushint 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec_0 // 0x151f7c75
@@ -767,22 +947,37 @@ not:
     intc_0 // 1
     return
 
+not_ternary_false@3:
+    intc_1 // 0
+    b not_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.bitnot[routing]() -> void:
 bitnot:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz bitnot_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+bitnot_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     b~
     dup
     len
-    intc_2 // 32
+    intc_3 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_3 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -792,23 +987,37 @@ bitnot:
     intc_0 // 1
     return
 
+bitnot_ternary_false@3:
+    intc_1 // 0
+    b bitnot_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.bitnot_u8[routing]() -> void:
 bitnot_u8:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    dup
-    intc_3 // 255
+    txn GroupIndex
+    bz bitnot_u8_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+bitnot_u8_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
+    intc 4 // 255
     <=
     assert // ABI validation
-    intc_3 // 255
+    intc 4 // 255
     &
-    intc_3 // 255
+    intc 4 // 255
     ^
     load 0
     swap
@@ -825,9 +1034,23 @@ bitnot_u8:
     intc_0 // 1
     return
 
+bitnot_u8_ternary_false@3:
+    intc_1 // 0
+    b bitnot_u8_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.bitnot_s8[routing]() -> void:
 bitnot_s8:
+    txn GroupIndex
+    bz bitnot_s8_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+bitnot_s8_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     load 0
@@ -837,16 +1060,30 @@ bitnot_s8:
     intc_0 // 1
     return
 
+bitnot_s8_ternary_false@3:
+    intc_1 // 0
+    b bitnot_s8_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.negate[routing]() -> void:
 negate:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    dup
+    txn GroupIndex
+    bz negate_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+negate_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     pushbytes 0x8000000000000000000000000000000000000000000000000000000000000000
     b!=
     assert // signed negation overflow
@@ -857,10 +1094,10 @@ negate:
     b%
     dup
     len
-    intc_2 // 32
+    intc_3 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_3 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -870,38 +1107,52 @@ negate:
     intc_0 // 1
     return
 
+negate_ternary_false@3:
+    intc_1 // 0
+    b negate_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.negate_s8[routing]() -> void:
 negate_s8:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    txn GroupIndex
+    bz negate_s8_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+negate_s8_ternary_merge@4:
+    !
+    assert // not payable
     dup
     pushint 127
     <=
-    bnz negate_s8_bool_true@3
+    bnz negate_s8_bool_true@6
     dup
-    intc 4 // 18446744073709551488
+    intc 5 // 18446744073709551488
     >=
-    bz negate_s8_bool_false@4
+    bz negate_s8_bool_false@7
 
-negate_s8_bool_true@3:
+negate_s8_bool_true@6:
     intc_0 // 1
 
-negate_s8_bool_merge@5:
+negate_s8_bool_merge@8:
     assert // ABI validation
     dupn 2
-    intc_3 // 255
+    intc 4 // 255
     &
     itob
     bytec_2 // 0x80
     b!=
     assert // signed negation overflow
-    intc_1 // 8
+    intc_2 // 8
     bzero
     swap
     itob
@@ -913,28 +1164,28 @@ negate_s8_bool_merge@5:
     concat
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     -
-    intc_1 // 8
+    intc_2 // 8
     extract3
     bytec_3 // 0xff
     b&
     dup
     bytec_2 // 0x80
     b>=
-    bz negate_s8_ternary_false@7
+    bz negate_s8_ternary_false@10
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
-negate_s8_ternary_merge@8:
+negate_s8_ternary_merge@11:
     dup
     len
-    intc_2 // 32
+    intc_3 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_3 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -944,12 +1195,16 @@ negate_s8_ternary_merge@8:
     intc_0 // 1
     return
 
-negate_s8_ternary_false@7:
-    b negate_s8_ternary_merge@8
+negate_s8_ternary_false@10:
+    b negate_s8_ternary_merge@11
 
-negate_s8_bool_false@4:
-    pushint 0
-    b negate_s8_bool_merge@5
+negate_s8_bool_false@7:
+    intc_1 // 0
+    b negate_s8_bool_merge@8
+
+negate_s8_ternary_false@3:
+    intc_1 // 0
+    b negate_s8_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.negate_s16[routing]() -> void:
@@ -957,23 +1212,33 @@ negate_s16:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    txn GroupIndex
+    bz negate_s16_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+negate_s16_ternary_merge@4:
+    !
+    assert // not payable
     dup
     pushint 32767
     <=
-    bnz negate_s16_bool_true@3
+    bnz negate_s16_bool_true@6
     dup
     pushint 18446744073709518848
     >=
-    bz negate_s16_bool_false@4
+    bz negate_s16_bool_false@7
 
-negate_s16_bool_true@3:
+negate_s16_bool_true@6:
     intc_0 // 1
 
-negate_s16_bool_merge@5:
+negate_s16_bool_merge@8:
     assert // ABI validation
     dupn 2
     pushint 65535
@@ -982,7 +1247,7 @@ negate_s16_bool_merge@5:
     bytec 8 // 0x8000
     b!=
     assert // signed negation overflow
-    intc_1 // 8
+    intc_2 // 8
     bzero
     swap
     itob
@@ -994,28 +1259,28 @@ negate_s16_bool_merge@5:
     concat
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     -
-    intc_1 // 8
+    intc_2 // 8
     extract3
     pushbytes 0xffff
     b&
     dup
     bytec 8 // 0x8000
     b>=
-    bz negate_s16_ternary_false@7
+    bz negate_s16_ternary_false@10
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
-negate_s16_ternary_merge@8:
+negate_s16_ternary_merge@11:
     dup
     len
-    intc_2 // 32
+    intc_3 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_3 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -1025,9 +1290,13 @@ negate_s16_ternary_merge@8:
     intc_0 // 1
     return
 
-negate_s16_ternary_false@7:
-    b negate_s16_ternary_merge@8
+negate_s16_ternary_false@10:
+    b negate_s16_ternary_merge@11
 
-negate_s16_bool_false@4:
-    pushint 0
-    b negate_s16_bool_merge@5
+negate_s16_bool_false@7:
+    intc_1 // 0
+    b negate_s16_bool_merge@8
+
+negate_s16_ternary_false@3:
+    intc_1 // 0
+    b negate_s16_ternary_merge@4

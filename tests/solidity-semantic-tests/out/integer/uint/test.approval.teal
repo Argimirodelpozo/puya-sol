@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/uint.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     bytecblock 0x151f7c7580
     txn ApplicationID
     bnz main_after_if_else@2
@@ -25,53 +25,181 @@ main_after_if_else@2:
     assert
     pushbytess 0x42af34d0 0x2ebffae9 0x4eb92150 0x0d687ab0 0x64909fd3 0xaffbb142 0xc4479ff1 0x94d9eb83 // method "uintMinA()bool", method "uintMinB()bool", method "uintMinC()bool", method "uintMinD()bool", method "uintMaxA()bool", method "uintMaxB()bool", method "uintMaxC()bool", method "uintMaxD()bool"
     txna ApplicationArgs 0
-    match main_uintMinA_route@5 main_uintMinB_route@6 main_uintMinC_route@7 main_uintMinD_route@8 main_uintMaxA_route@9 main_uintMaxB_route@10 main_uintMaxC_route@11 main_uintMaxD_route@12
+    match uintMinA uintMinB uintMinC uintMinD uintMaxA uintMaxB uintMaxC uintMaxD
     err
 
-main_uintMaxD_route@12:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/uint.sol.test.uintMinA[routing]() -> void:
+uintMinA:
+    txn GroupIndex
+    bz uintMinA_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+uintMinA_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c7580
     log
     intc_0 // 1
     return
 
-main_uintMaxC_route@11:
+uintMinA_ternary_false@3:
+    intc_1 // 0
+    b uintMinA_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/uint.sol.test.uintMinB[routing]() -> void:
+uintMinB:
+    txn GroupIndex
+    bz uintMinB_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+uintMinB_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c7580
     log
     intc_0 // 1
     return
 
-main_uintMaxB_route@10:
+uintMinB_ternary_false@3:
+    intc_1 // 0
+    b uintMinB_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/uint.sol.test.uintMinC[routing]() -> void:
+uintMinC:
+    txn GroupIndex
+    bz uintMinC_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+uintMinC_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c7580
     log
     intc_0 // 1
     return
 
-main_uintMaxA_route@9:
+uintMinC_ternary_false@3:
+    intc_1 // 0
+    b uintMinC_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/uint.sol.test.uintMinD[routing]() -> void:
+uintMinD:
+    txn GroupIndex
+    bz uintMinD_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+uintMinD_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c7580
     log
     intc_0 // 1
     return
 
-main_uintMinD_route@8:
+uintMinD_ternary_false@3:
+    intc_1 // 0
+    b uintMinD_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/uint.sol.test.uintMaxA[routing]() -> void:
+uintMaxA:
+    txn GroupIndex
+    bz uintMaxA_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+uintMaxA_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c7580
     log
     intc_0 // 1
     return
 
-main_uintMinC_route@7:
+uintMaxA_ternary_false@3:
+    intc_1 // 0
+    b uintMaxA_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/uint.sol.test.uintMaxB[routing]() -> void:
+uintMaxB:
+    txn GroupIndex
+    bz uintMaxB_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+uintMaxB_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c7580
     log
     intc_0 // 1
     return
 
-main_uintMinB_route@6:
+uintMaxB_ternary_false@3:
+    intc_1 // 0
+    b uintMaxB_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/uint.sol.test.uintMaxC[routing]() -> void:
+uintMaxC:
+    txn GroupIndex
+    bz uintMaxC_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+uintMaxC_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c7580
     log
     intc_0 // 1
     return
 
-main_uintMinA_route@5:
+uintMaxC_ternary_false@3:
+    intc_1 // 0
+    b uintMaxC_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/uint.sol.test.uintMaxD[routing]() -> void:
+uintMaxD:
+    txn GroupIndex
+    bz uintMaxD_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+uintMaxD_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c7580
     log
     intc_0 // 1
     return
+
+uintMaxD_ternary_false@3:
+    intc_1 // 0
+    b uintMaxD_ternary_merge@4

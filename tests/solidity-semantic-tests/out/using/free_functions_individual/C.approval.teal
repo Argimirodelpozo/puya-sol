@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/free_functions_individual.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 32 1 0
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -39,7 +39,7 @@ id:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/free_functions_individual.sol.zero(_param0: bytes) -> bytes:
 zero:
     proto 1 1
-    pushint 0
+    intc_2 // 0
     itob
     retsub
 
@@ -52,6 +52,17 @@ f:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     callsub id
     dup
     len
@@ -68,6 +79,10 @@ f:
     intc_1 // 1
     return
 
+f_ternary_false@3:
+    intc_2 // 0
+    b f_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/free_functions_individual.sol.C.g[routing]() -> void:
 g:
@@ -77,6 +92,17 @@ g:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     callsub zero
     dup
     len
@@ -92,3 +118,7 @@ g:
     log
     intc_1 // 1
     return
+
+g_ternary_false@3:
+    intc_2 // 0
+    b g_ternary_merge@4

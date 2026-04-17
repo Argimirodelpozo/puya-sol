@@ -56,19 +56,29 @@ enlarge:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz enlarge_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
 
-enlarge_while_top@2:
+enlarge_ternary_merge@4:
+    !
+    assert // not payable
+
+enlarge_while_top@5:
     bytec_0 // "data"
     box_len
     pop
     intc_1 // 2
     >=
-    bz enlarge_ternary_false@4
+    bz enlarge_ternary_false@7
     bytec_0 // "data"
     box_len
     pop
 
-enlarge_ternary_merge@5:
+enlarge_ternary_merge@8:
     intc_1 // 2
     -
     intc_0 // 32
@@ -76,7 +86,7 @@ enlarge_ternary_merge@5:
     itob
     dig 1
     b<
-    bz enlarge_after_while@7
+    bz enlarge_after_while@10
     bytec_0 // "data"
     intc_3 // 0
     intc_1 // 2
@@ -108,20 +118,20 @@ enlarge_ternary_merge@5:
     intc_3 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     box_splice
-    b enlarge_while_top@2
+    b enlarge_while_top@5
 
-enlarge_after_while@7:
+enlarge_after_while@10:
     bytec_0 // "data"
     box_len
     pop
     intc_1 // 2
     >=
-    bz enlarge_ternary_false@9
+    bz enlarge_ternary_false@12
     bytec_0 // "data"
     box_len
     pop
 
-enlarge_ternary_merge@10:
+enlarge_ternary_merge@13:
     intc_1 // 2
     -
     intc_0 // 32
@@ -137,13 +147,17 @@ enlarge_ternary_merge@10:
     intc_2 // 1
     return
 
-enlarge_ternary_false@9:
+enlarge_ternary_false@12:
     intc_1 // 2
-    b enlarge_ternary_merge@10
+    b enlarge_ternary_merge@13
 
-enlarge_ternary_false@4:
+enlarge_ternary_false@7:
     intc_1 // 2
-    b enlarge_ternary_merge@5
+    b enlarge_ternary_merge@8
+
+enlarge_ternary_false@3:
+    intc_3 // 0
+    b enlarge_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/dynamic_out_of_bounds_array_access.sol.c.set[routing]() -> void:
@@ -161,15 +175,27 @@ set:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz set_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+set_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     intc_0 // 32
     <=
     assert // overflow
     intc_0 // 32
     bzero
+    dig 2
     b|
     pushint 8
     bzero
-    uncover 2
+    dig 4
     concat
     dup
     len
@@ -189,6 +215,10 @@ set:
     intc_2 // 1
     return
 
+set_ternary_false@3:
+    intc_3 // 0
+    b set_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/dynamic_out_of_bounds_array_access.sol.c.get[routing]() -> void:
 get:
@@ -198,6 +228,16 @@ get:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz get_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+get_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "data"
     box_get
     pushbytes 0x0000
@@ -205,7 +245,7 @@ get:
     select
     pushint 8
     bzero
-    uncover 2
+    dig 2
     concat
     dup
     len
@@ -234,20 +274,34 @@ get:
     intc_2 // 1
     return
 
+get_ternary_false@3:
+    intc_3 // 0
+    b get_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/dynamic_out_of_bounds_array_access.sol.c.length[routing]() -> void:
 length:
+    txn GroupIndex
+    bz length_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+length_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "data"
     box_len
     pop
     intc_1 // 2
     >=
-    bz length_ternary_false@3
+    bz length_ternary_false@6
     bytec_0 // "data"
     box_len
     pop
 
-length_ternary_merge@4:
+length_ternary_merge@7:
     intc_1 // 2
     -
     intc_0 // 32
@@ -263,6 +317,10 @@ length_ternary_merge@4:
     intc_2 // 1
     return
 
-length_ternary_false@3:
+length_ternary_false@6:
     intc_1 // 2
+    b length_ternary_merge@7
+
+length_ternary_false@3:
+    intc_3 // 0
     b length_ternary_merge@4

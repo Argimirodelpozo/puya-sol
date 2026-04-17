@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_overlapped_dynamic_arrays.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 2 0
+    intcblock 32 1 0 2
     bytecblock 0x151f7c75 "__ctor_pending" "s" "n"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,10 +38,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_3 // 0
+    intc_2 // 0
     app_global_put
     bytec_2 // "s"
-    intc_2 // 2
+    intc_3 // 2
     box_create
     pop
     bytec_3 // "n"
@@ -54,14 +54,14 @@ __postInit:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_overlapped_dynamic_arrays.sol.C.f_memory[routing]() -> void:
 f_memory:
     txna ApplicationArgs 1
-    dup
-    intc_3 // 0
+    dupn 2
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    intc_2 // 2
+    intc_3 // 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
@@ -71,10 +71,20 @@ f_memory:
     pushint 64
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
+    txn GroupIndex
+    bz f_memory_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_memory_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x0042
-    swap
+    dig 1
     concat
-    swap
+    dig 2
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -83,18 +93,22 @@ f_memory:
     intc_1 // 1
     return
 
+f_memory_ternary_false@3:
+    intc_2 // 0
+    b f_memory_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_overlapped_dynamic_arrays.sol.C.f_encode[routing]() -> void:
 f_encode:
     txna ApplicationArgs 1
-    dup
-    intc_3 // 0
+    dupn 2
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    intc_2 // 2
+    intc_3 // 2
     +
-    dig 1
+    swap
     len
     dup
     uncover 2
@@ -106,13 +120,23 @@ f_encode:
     pushint 64
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
+    txn GroupIndex
+    bz f_encode_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_encode_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000040
-    uncover 2
+    dig 2
     concat
-    uncover 2
-    intc_2 // 2
+    dig 3
+    intc_3 // 2
     -
     intc_0 // 32
     /
@@ -126,7 +150,7 @@ f_encode:
     -
     intc_0 // 32
     extract3
-    uncover 2
+    dig 4
     extract 2 0
     concat
     concat
@@ -143,18 +167,22 @@ f_encode:
     intc_1 // 1
     return
 
+f_encode_ternary_false@3:
+    intc_2 // 0
+    b f_encode_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_overlapped_dynamic_arrays.sol.C.f_which[routing]() -> void:
 f_which:
     txna ApplicationArgs 1
-    dup
-    intc_3 // 0
+    dupn 2
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    intc_2 // 2
+    intc_3 // 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
@@ -170,18 +198,28 @@ f_which:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz f_which_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_which_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
     pushint 8
     bzero
-    uncover 2
+    dig 2
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    uncover 3
+    dig 4
     extract 2 0
     swap
     intc_0 // 32
@@ -197,7 +235,7 @@ f_which:
     -
     intc_0 // 32
     extract3
-    uncover 2
+    dig 3
     extract 32 32 // on error: index access is out of bounds
     uncover 2
     swap
@@ -222,18 +260,22 @@ f_which:
     intc_1 // 1
     return
 
+f_which_ternary_false@3:
+    intc_2 // 0
+    b f_which_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_overlapped_dynamic_arrays.sol.C.f_storage[routing]() -> void:
 f_storage:
     txna ApplicationArgs 1
-    dup
-    intc_3 // 0
+    dupn 2
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    intc_2 // 2
+    intc_3 // 2
     +
-    dig 1
+    swap
     len
     dup
     uncover 2
@@ -245,19 +287,31 @@ f_storage:
     pushint 64
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
+    txn GroupIndex
+    bz f_storage_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_storage_ternary_merge@4:
+    !
+    assert // not payable
     bytec_2 // "s"
     box_del
     pop
     bytec_2 // "s"
     dig 3
+    dup
+    cover 2
     box_put
     bytec_3 // "n"
-    swap
+    dig 2
     app_global_put
     intc_0 // 32
     bzero
-    swap
-    intc_2 // 2
+    dig 3
+    intc_3 // 2
     -
     intc_0 // 32
     /
@@ -287,3 +341,7 @@ f_storage:
     log
     intc_1 // 1
     return
+
+f_storage_ternary_false@3:
+    intc_2 // 0
+    b f_storage_ternary_merge@4

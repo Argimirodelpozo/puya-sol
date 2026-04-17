@@ -3,10 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/short_circuit.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 8 0
+    intcblock 1 32 0 8
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -31,66 +31,92 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/short_circuit.sol.C.or[routing]() -> void:
 or:
     txna ApplicationArgs 1
-    dupn 2
+    dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz or_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+or_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     pushbytes 0x
     b==
-    bz or_or_contd@2
+    bz or_or_contd@5
     dup
 
-or_bool_true@3:
+or_bool_true@6:
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     pushbytes 0x151f7c7580
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
-or_or_contd@2:
-    intc_2 // 8
+or_or_contd@5:
+    intc_3 // 8
     itob
-    b or_bool_true@3
+    b or_bool_true@6
+
+or_ternary_false@3:
+    intc_2 // 0
+    b or_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/short_circuit.sol.C.and[routing]() -> void:
 and:
     pushbytes ""
     txna ApplicationArgs 1
-    dupn 2
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    pushbytes 0x
-    b==
-    bz and_bool_false@4
-    intc_2 // 8
-    itob
-    intc_1 // 1
-    bury 3
-
-and_bool_merge@5:
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz and_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+and_ternary_merge@4:
+    !
+    assert // not payable
+    dup
+    pushbytes 0x
+    b==
+    bz and_bool_false@7
+    intc_3 // 8
+    itob
+    intc_0 // 1
+    bury 3
+
+and_bool_merge@8:
+    dup
+    len
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     pushbytes 0x00
-    intc_3 // 0
+    intc_2 // 0
     dig 4
     setbit
     swap
@@ -99,11 +125,15 @@ and_bool_merge@5:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
-and_bool_false@4:
+and_bool_false@7:
     dup
-    intc_3 // 0
+    intc_2 // 0
     bury 3
-    b and_bool_merge@5
+    b and_bool_merge@8
+
+and_ternary_false@3:
+    intc_2 // 0
+    b and_ternary_merge@4

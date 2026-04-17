@@ -1,7 +1,7 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_vqwobfns/C.sol.CContract.approval_program() -> uint64:
+// /tmp/multisource_a2mdvtjx/C.sol.CContract.approval_program() -> uint64:
 main:
     txn ApplicationID
     bnz main_after_if_else@2
@@ -30,8 +30,18 @@ main_returnAddress_route@4:
     b returnAddress
 
 
-// /tmp/multisource_vqwobfns/C.sol.CContract.returnAddress[routing]() -> void:
+// /tmp/multisource_a2mdvtjx/C.sol.CContract.returnAddress[routing]() -> void:
 returnAddress:
+    txn GroupIndex
+    bz returnAddress_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+returnAddress_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x51542f67000000000000000000000000000000000000000000000000000000000000000b000000000000000000000000000000000000000000000000000000000000000c000000000000000d
     log
     pushbytes 0x51542f67000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000000f0000000000000010
@@ -40,3 +50,7 @@ returnAddress:
     log
     pushint 1
     return
+
+returnAddress_ternary_false@3:
+    pushint 0
+    b returnAddress_ternary_merge@4

@@ -187,6 +187,16 @@ f_after_for@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_array.sol.C.g()[routing]() -> void:
 g():
+    txn GroupIndex
+    bz g()_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+g()_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x
     bytec_1 // 0x000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     intc_3 // 0
@@ -267,6 +277,10 @@ g():
     intc_2 // 1
     return
 
+g()_ternary_false@3:
+    intc_3 // 0
+    b g()_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_array.sol.C.g(6)(s: bytes) -> bytes, bytes, bytes:
 g(6):
@@ -305,6 +319,16 @@ g(6):
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_array.sol.C.f(__arc4__param0: bytes, s: bytes, __arc4__param2: bytes) -> bytes, bytes, bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_array.sol.C.f:
     proto 3 3
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_array.sol.C.f_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_array.sol.C.f_ternary_merge@3:
+    !
+    assert // not payable
     frame_dig -2
     callsub g(6)
     frame_bury -2
@@ -330,3 +354,7 @@ g(6):
     b|
     frame_dig -2
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_array.sol.C.f_ternary_false@2:
+    intc_3 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_array.sol.C.f_ternary_merge@3

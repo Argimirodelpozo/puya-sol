@@ -3,20 +3,20 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup.sol.C.approval_program() -> uint64:
 main:
-    intcblock 255 1 0 8 511
+    intcblock 1 0 255 8 511
     bytecblock 0x151f7c75 "a" "c" "b"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "a"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
     bytec_3 // "b"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
     bytec_2 // "c"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -69,18 +69,32 @@ unwrap:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup.sol.C.ret[routing]() -> void:
 ret:
+    txn GroupIndex
+    bz ret_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+ret_ternary_merge@4:
+    !
+    assert // not payable
     intc 4 // 511
     itob
     callsub wrap
-    intc_0 // 255
+    intc_2 // 255
     &
     itob
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+ret_ternary_false@3:
+    intc_1 // 0
+    b ret_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup.sol.C.f[routing]() -> void:
@@ -92,23 +106,47 @@ f:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    dup
-    intc_0 // 255
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
+    intc_2 // 255
     <=
     assert // ABI validation
-    intc_0 // 255
+    intc_2 // 255
     &
     itob
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup.sol.C.mem[routing]() -> void:
 mem:
+    txn GroupIndex
+    bz mem_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+mem_ternary_merge@4:
+    !
+    assert // not payable
     intc 4 // 511
     itob
     callsub wrap
@@ -122,7 +160,7 @@ mem:
     pushbytes 0x00020000
     swap
     replace2 2 // on error: index access is out of bounds
-    intc_0 // 255
+    intc_2 // 255
     itob
     callsub wrap
     itob
@@ -160,14 +198,28 @@ mem:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+mem_ternary_false@3:
+    intc_1 // 0
+    b mem_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup.sol.C.stor[routing]() -> void:
 stor:
+    txn GroupIndex
+    bz stor_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+stor_ternary_merge@4:
+    !
+    assert // not payable
     bytec_1 // "a"
-    intc_1 // 1
+    intc_0 // 1
     app_global_put
     bytec_2 // "c"
     pushint 2
@@ -178,20 +230,20 @@ stor:
     bytec_3 // "b"
     dig 1
     app_global_put
-    intc_2 // 0
+    intc_1 // 0
     bytec_1 // "a"
     app_global_get_ex
     assert // check a exists
-    intc_0 // 255
+    intc_2 // 255
     &
     swap
-    intc_0 // 255
+    intc_2 // 255
     &
-    intc_2 // 0
+    intc_1 // 0
     bytec_2 // "c"
     app_global_get_ex
     assert // check c exists
-    intc_0 // 255
+    intc_2 // 255
     &
     uncover 2
     itob
@@ -205,5 +257,9 @@ stor:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+stor_ternary_false@3:
+    intc_1 // 0
+    b stor_ternary_merge@4

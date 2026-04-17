@@ -3,13 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/virtual_function_usage_in_constructor_arguments.sol.BaseBase.approval_program() -> uint64:
 main:
-    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    intcblock 1 32 0
+    bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     pushbytes "m_a"
     txna ApplicationArgs 0
     app_global_put
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -27,17 +28,69 @@ main_after_if_else@2:
     assert
     pushbytess 0xd3661b80 0x4b2c0376 // method "overridden()uint256", method "g()uint256"
     txna ApplicationArgs 0
-    match main_overridden_route@5 main_g_route@6
+    match overridden g
     err
 
-main_g_route@6:
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/virtual_function_usage_in_constructor_arguments.sol.BaseBase.overridden[routing]() -> void:
+overridden:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/virtual_function_usage_in_constructor_arguments.sol.BaseBase.overridden
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
-    pushint 1
+    intc_0 // 1
     return
 
-main_overridden_route@5:
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/virtual_function_usage_in_constructor_arguments.sol.BaseBase.g[routing]() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/virtual_function_usage_in_constructor_arguments.sol.BaseBase.overridden
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
-    pushint 1
+    intc_0 // 1
     return
+
+g_ternary_false@3:
+    intc_2 // 0
+    b g_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/virtual_function_usage_in_constructor_arguments.sol.BaseBase.overridden() -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/virtual_function_usage_in_constructor_arguments.sol.BaseBase.overridden:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/virtual_function_usage_in_constructor_arguments.sol.BaseBase.overridden_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/virtual_function_usage_in_constructor_arguments.sol.BaseBase.overridden_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/virtual_function_usage_in_constructor_arguments.sol.BaseBase.overridden_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/virtual_function_usage_in_constructor_arguments.sol.BaseBase.overridden_ternary_merge@3

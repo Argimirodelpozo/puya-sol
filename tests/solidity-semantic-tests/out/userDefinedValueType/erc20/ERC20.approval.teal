@@ -118,6 +118,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/erc20.sol.ERC20.totalSupply[routing]() -> void:
 totalSupply:
+    txn GroupIndex
+    bz totalSupply_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+totalSupply_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 0
     bytec 8 // "_totalSupply"
     app_global_get_ex
@@ -137,6 +147,10 @@ totalSupply:
     intc_1 // 1
     return
 
+totalSupply_ternary_false@3:
+    intc_2 // 0
+    b totalSupply_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/erc20.sol.ERC20.balanceOf[routing]() -> void:
 balanceOf:
@@ -146,6 +160,17 @@ balanceOf:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz balanceOf_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+balanceOf_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     sha256
     bytec_2 // "_balances"
     swap
@@ -169,6 +194,10 @@ balanceOf:
     intc_1 // 1
     return
 
+balanceOf_ternary_false@3:
+    intc_2 // 0
+    b balanceOf_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/erc20.sol.ERC20.allowance[routing]() -> void:
 allowance:
@@ -184,6 +213,17 @@ allowance:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz allowance_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+allowance_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
     concat
     sha256
     bytec_1 // "_allowances"
@@ -208,6 +248,10 @@ allowance:
     intc_1 // 1
     return
 
+allowance_ternary_false@3:
+    intc_2 // 0
+    b allowance_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/erc20.sol.ERC20.transfer[routing]() -> void:
 transfer:
@@ -223,13 +267,28 @@ transfer:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz transfer_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+transfer_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    cover 2
+    dig 2
+    dig 2
     callsub _transfer
     bytec 4 // 0x151f7c7580
     log
     intc_1 // 1
     return
+
+transfer_ternary_false@3:
+    intc_2 // 0
+    b transfer_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/erc20.sol.ERC20.approve[routing]() -> void:
@@ -246,13 +305,28 @@ approve:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz approve_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+approve_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    cover 2
+    dig 2
+    dig 2
     callsub _approve
     bytec 4 // 0x151f7c7580
     log
     intc_1 // 1
     return
+
+approve_ternary_false@3:
+    intc_2 // 0
+    b approve_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/erc20.sol.ERC20.transferFrom[routing]() -> void:
@@ -275,12 +349,25 @@ transferFrom:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz transferFrom_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+transferFrom_ternary_merge@4:
+    !
+    assert // not payable
     dig 2
-    uncover 2
-    dig 2
+    dup
+    dig 3
+    dig 3
+    dup
+    cover 4
     callsub _transfer
     txn Sender
-    dig 2
+    dig 1
     txn Sender
     concat
     sha256
@@ -291,13 +378,17 @@ transferFrom:
     bytec_0 // 0x
     cover 2
     select
-    uncover 2
+    uncover 3
     callsub FixedMath.sub
     callsub _approve
     bytec 4 // 0x151f7c7580
     log
     intc_1 // 1
     return
+
+transferFrom_ternary_false@3:
+    intc_2 // 0
+    b transferFrom_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/erc20.sol.ERC20.increaseAllowance[routing]() -> void:
@@ -314,9 +405,21 @@ increaseAllowance:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz increaseAllowance_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+increaseAllowance_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
     dup
     dig 3
+    dup
+    cover 2
     concat
     sha256
     bytec_1 // "_allowances"
@@ -326,15 +429,17 @@ increaseAllowance:
     bytec_0 // 0x
     cover 2
     select
-    uncover 2
+    dig 3
     callsub FixedMath.add
-    swap
-    cover 2
     callsub _approve
     bytec 4 // 0x151f7c7580
     log
     intc_1 // 1
     return
+
+increaseAllowance_ternary_false@3:
+    intc_2 // 0
+    b increaseAllowance_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/erc20.sol.ERC20.decreaseAllowance[routing]() -> void:
@@ -351,9 +456,21 @@ decreaseAllowance:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz decreaseAllowance_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+decreaseAllowance_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
     dup
     dig 3
+    dup
+    cover 2
     concat
     sha256
     bytec_1 // "_allowances"
@@ -363,15 +480,17 @@ decreaseAllowance:
     bytec_0 // 0x
     cover 2
     select
-    uncover 2
+    dig 3
     callsub FixedMath.sub
-    swap
-    cover 2
     callsub _approve
     bytec 4 // 0x151f7c7580
     log
     intc_1 // 1
     return
+
+decreaseAllowance_ternary_false@3:
+    intc_2 // 0
+    b decreaseAllowance_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/erc20.sol.ERC20._transfer(from: bytes, to: bytes, value: bytes) -> void:

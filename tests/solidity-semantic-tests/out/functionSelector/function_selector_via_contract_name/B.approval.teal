@@ -3,10 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionSelector/function_selector_via_contract_name.sol.B.approval_program() -> uint64:
 main:
+    intcblock 1 0
     bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -24,14 +25,30 @@ main_after_if_else@2:
     assert
     pushbytess 0xcd78b354 0xc14ad39f // method "f()uint256", method "g(uint256)uint256"
     txna ApplicationArgs 0
-    match main_f_route@5 g
+    match f g
     err
 
-main_f_route@5:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionSelector/function_selector_via_contract_name.sol.B.f[routing]() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
-    pushint 1
+    intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionSelector/function_selector_via_contract_name.sol.B.g[routing]() -> void:
@@ -41,7 +58,21 @@ g:
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
-    pushint 1
+    intc_0 // 1
     return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4

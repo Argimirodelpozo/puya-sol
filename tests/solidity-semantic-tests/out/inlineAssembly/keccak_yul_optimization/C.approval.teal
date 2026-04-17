@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak_yul_optimization.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64
+    intcblock 1 64 0
     bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75 0x
     txn ApplicationID
     bnz main_after_if_else@2
@@ -31,6 +31,16 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak_yul_optimization.sol.C.g[routing]() -> void:
 g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     replace2 32
@@ -49,37 +59,55 @@ g:
     intc_0 // 1
     return
 
+g_ternary_false@3:
+    intc_2 // 0
+    b g_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak_yul_optimization.sol.C.f[routing]() -> void:
 f:
+    intc_2 // 0
+    dupn 2
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     bytec_2 // 0x
+    bury 1
     load 0
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     replace2 32
+    bury 3
     bytec_2 // 0x
+    bury 2
 
-f_while_top@2:
-    dup
+f_while_top@5:
+    dig 1
     pushbytes 0x14
     b<
-    bz f_after_while@4
-    dig 1
+    bz f_after_while@7
+    dig 2
     extract 32 16
     keccak256
-    bury 3
-    dup
+    bury 1
+    dig 1
     pushbytes 0x01
     b+
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bury 1
-    b f_while_top@2
+    bury 2
+    b f_while_top@5
 
-f_after_while@4:
-    dig 1
-    store 0
+f_after_while@7:
     dig 2
-    dup
+    store 0
+    dupn 2
     len
     intc_1 // 64
     <=
@@ -93,3 +121,7 @@ f_after_while@4:
     log
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_2 // 0
+    b f_ternary_merge@4

@@ -40,6 +40,16 @@ main_test_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_bytes.sol.C.test[routing]() -> void:
 test:
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
     pushbytess "x" 0x01
     app_global_put
     bytec_0 // "data"
@@ -256,7 +266,7 @@ test:
     getbyte
     pushint 2
     ==
-    bz test_bool_false@12
+    bz test_bool_false@15
     bytec_0 // "data"
     box_get
     bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
@@ -267,7 +277,7 @@ test:
     getbyte
     pushint 3
     ==
-    bz test_bool_false@12
+    bz test_bool_false@15
     bytec_0 // "data"
     box_get
     bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
@@ -278,7 +288,7 @@ test:
     getbyte
     pushint 4
     ==
-    bz test_bool_false@12
+    bz test_bool_false@15
     bytec_0 // "data"
     box_get
     bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
@@ -288,7 +298,7 @@ test:
     extract 2 10
     bytec 4 // "1234567890"
     ==
-    bz test_bool_false@12
+    bz test_bool_false@15
     bytec_0 // "data"
     box_get
     bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
@@ -298,7 +308,7 @@ test:
     extract 12 9
     bytec 5 // "123456789"
     ==
-    bz test_bool_false@12
+    bz test_bool_false@15
     bytec_0 // "data"
     box_get
     bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
@@ -308,7 +318,7 @@ test:
     extract 21 10
     bytec 6 // "abcdefghij"
     ==
-    bz test_bool_false@12
+    bz test_bool_false@15
     bytec_0 // "data"
     box_get
     bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
@@ -318,7 +328,7 @@ test:
     getbyte
     pushint 5
     ==
-    bz test_bool_false@12
+    bz test_bool_false@15
     bytec_0 // "data"
     box_get
     bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
@@ -327,7 +337,7 @@ test:
     extract 33 1
     pushbytes 0x06
     ==
-    bz test_bool_false@12
+    bz test_bool_false@15
     intc_0 // 0
     bytec_3 // "y"
     app_global_get_ex
@@ -335,10 +345,10 @@ test:
     btoi
     pushint 7
     ==
-    bz test_bool_false@12
+    bz test_bool_false@15
     intc_1 // 1
 
-test_bool_merge@13:
+test_bool_merge@16:
     bytec_2 // 0x00
     intc_0 // 0
     uncover 2
@@ -350,6 +360,10 @@ test_bool_merge@13:
     intc_1 // 1
     return
 
-test_bool_false@12:
+test_bool_false@15:
     intc_0 // 0
-    b test_bool_merge@13
+    b test_bool_merge@16
+
+test_ternary_false@3:
+    intc_0 // 0
+    b test_ternary_merge@4

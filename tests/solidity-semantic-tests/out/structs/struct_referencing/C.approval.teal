@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_referencing.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 0 32
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -25,26 +25,8 @@ main_after_if_else@2:
     assert
     pushbytess 0x1cb8a76f 0x2d35ca47 0x185e9ff4 0x4f6eaa77 0x40d478bf 0x97a5936b 0xdcc49ba4 // method "f()(uint256)", method "g()(uint256)", method "h()(uint256,uint256)", method "x()(uint256,uint256)", method "y()(uint256)", method "a1()uint256", method "a2()uint256"
     txna ApplicationArgs 0
-    match main_f_route@5 main_g_route@6 main_h_route@7 x y a1 a2
+    match f g h x y a1 a2
     err
-
-main_h_route@7:
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005
-    log
-    intc_0 // 1
-    return
-
-main_g_route@6:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
-    log
-    intc_0 // 1
-    return
-
-main_f_route@5:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_referencing.sol.L.f() -> bytes:
@@ -75,8 +57,84 @@ L.a:
     retsub
 
 
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_referencing.sol.C.f[routing]() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    intc_0 // 1
+    return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_referencing.sol.C.g[routing]() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
+    log
+    intc_0 // 1
+    return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_referencing.sol.C.h[routing]() -> void:
+h:
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005
+    log
+    intc_0 // 1
+    return
+
+h_ternary_false@3:
+    intc_1 // 0
+    b h_ternary_merge@4
+
+
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_referencing.sol.C.x[routing]() -> void:
 x:
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
     callsub L.f
     bytec_0 // 0x151f7c75
     swap
@@ -85,9 +143,23 @@ x:
     intc_0 // 1
     return
 
+x_ternary_false@3:
+    intc_1 // 0
+    b x_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_referencing.sol.C.y[routing]() -> void:
 y:
+    txn GroupIndex
+    bz y_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+y_ternary_merge@4:
+    !
+    assert // not payable
     callsub L.g
     bytec_0 // 0x151f7c75
     swap
@@ -96,17 +168,31 @@ y:
     intc_0 // 1
     return
 
+y_ternary_false@3:
+    intc_1 // 0
+    b y_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_referencing.sol.C.a1[routing]() -> void:
 a1:
+    txn GroupIndex
+    bz a1_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+a1_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     callsub L.a
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -115,18 +201,32 @@ a1:
     log
     intc_0 // 1
     return
+
+a1_ternary_false@3:
+    intc_1 // 0
+    b a1_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_referencing.sol.C.a2[routing]() -> void:
 a2:
+    txn GroupIndex
+    bz a2_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+a2_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_referencing.sol.L.a(1)_1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -135,3 +235,7 @@ a2:
     log
     intc_0 // 1
     return
+
+a2_ternary_false@3:
+    intc_1 // 0
+    b a2_ternary_merge@4

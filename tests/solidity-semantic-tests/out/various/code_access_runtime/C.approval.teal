@@ -35,6 +35,18 @@ main_test_route@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/code_access_runtime.sol.C.test[routing]() -> void:
 test:
     intc_1 // 0
+    dupn 3
+    bytec_0 // ""
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     bytec_3 // TMPL_APPROVAL_D
     bytec 4 // TMPL_CLEAR_D
@@ -70,39 +82,41 @@ test:
     itob
     concat
     dup
+    bury 5
     load 0
-    swap
+    bury 6
     intc_2 // 32
     bzero
-    swap
+    bury 4
     bytec_0 // 0x
     b==
     dup
-    bz test_ternary_false@5
+    bury 2
+    bz test_ternary_false@8
     bytec_0 // 0x
 
-test_ternary_merge@9:
-    dig 2
+test_ternary_merge@12:
+    dig 3
     swap
     concat
-    bury 5
+    bury 2
     dup
-    bz test_ternary_false@11
+    bz test_ternary_false@14
     bytec_0 // 0x
 
-test_ternary_merge@15:
-    dig 2
+test_ternary_merge@18:
+    dig 3
     swap
     concat
     len
     intc_2 // 32
     -
-    dig 5
+    dig 2
     swap
     intc_2 // 32
     extract3
     extract 0 32
-    dig 3
+    dig 5
     store 0
     pushbytes 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
     ==
@@ -112,32 +126,36 @@ test_ternary_merge@15:
     intc_0 // 1
     return
 
-test_ternary_false@11:
+test_ternary_false@14:
     dig 3
     bytec_1 // 0x64
     b>
-    bz test_ternary_false@13
+    bz test_ternary_false@16
     global CurrentApplicationID
     app_params_get AppApprovalProgram
     pop
     keccak256
-    b test_ternary_merge@15
+    b test_ternary_merge@18
 
-test_ternary_false@13:
+test_ternary_false@16:
     bytec_2 // 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
-    b test_ternary_merge@15
+    b test_ternary_merge@18
 
-test_ternary_false@5:
+test_ternary_false@8:
     dig 3
     bytec_1 // 0x64
     b>
-    bz test_ternary_false@7
+    bz test_ternary_false@10
     global CurrentApplicationID
     app_params_get AppApprovalProgram
     pop
     keccak256
-    b test_ternary_merge@9
+    b test_ternary_merge@12
 
-test_ternary_false@7:
+test_ternary_false@10:
     bytec_2 // 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
-    b test_ternary_merge@9
+    b test_ternary_merge@12
+
+test_ternary_false@3:
+    intc_1 // 0
+    b test_ternary_merge@4

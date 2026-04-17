@@ -38,6 +38,16 @@ main_m_i_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/pass_dynamic_arguments_to_the_base_base.sol.Derived.m_i[routing]() -> void:
 m_i:
+    txn GroupIndex
+    bz m_i_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+m_i_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_0 // "m_i"
     app_global_get_ex
@@ -56,3 +66,7 @@ m_i:
     log
     intc_1 // 1
     return
+
+m_i_ternary_false@3:
+    intc_0 // 0
+    b m_i_ternary_merge@4

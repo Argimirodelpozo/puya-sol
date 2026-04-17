@@ -3,10 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/calldata_array_dynamic_invalid.sol.C.approval_program() -> uint64:
 main:
-    intcblock 2 1 0
+    intcblock 1 0 2
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -35,18 +35,18 @@ main_f_route@4:
 f:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
     cover 2
-    intc_0 // 2
+    intc_2 // 2
     *
     swap
     dup
     len
     swap
     extract 2 0
-    intc_2 // 0
+    intc_1 // 0
 
 f_for_header@1:
     dup
@@ -54,7 +54,7 @@ f_for_header@1:
     <
     bz f_after_for@4
     dupn 2
-    intc_0 // 2
+    intc_2 // 2
     *
     dig 3
     dup
@@ -69,27 +69,41 @@ f_for_header@1:
     dig 1
     len
     substring3
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 32
     *
-    intc_0 // 2
+    intc_2 // 2
     +
     +
     bury 5
-    intc_1 // 1
+    intc_0 // 1
     +
     bury 1
     b f_for_header@1
 
 f_after_for@4:
     dig 3
-    intc_0 // 2
+    intc_2 // 2
     +
     dig 3
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>
+    txn GroupIndex
+    bz f_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@8:
+    !
+    assert // not payable
     pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+f_ternary_false@7:
+    intc_1 // 0
+    b f_ternary_merge@8

@@ -39,6 +39,20 @@ L.o:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/event.sol.C.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     callsub L.o
     pushint 1
     return
+
+f_ternary_false@3:
+    pushint 0
+    b f_ternary_merge@4

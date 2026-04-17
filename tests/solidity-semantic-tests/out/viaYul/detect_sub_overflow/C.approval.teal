@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/detect_sub_overflow.sol.C.approval_program() -> uint64:
 main:
-    intcblock 255 32 1 8
+    intcblock 255 1 32 0
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -34,19 +34,32 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    dup2
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dig 1
+    dup
+    dig 2
+    dup
+    cover 3
     b>=
     assert // underflow
-    swap
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     swap
@@ -55,18 +68,22 @@ f:
     b%
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
+
+f_ternary_false@3:
+    intc_3 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/detect_sub_overflow.sol.C.g[routing]() -> void:
@@ -74,29 +91,39 @@ g:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 8
+    pushint 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 8
+    pushint 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     dig 1
+    dup
     intc_0 // 255
     <=
     assert // ABI validation
-    swap
     intc_0 // 255
     &
     dig 1
+    dup
     intc_0 // 255
     <=
     assert // ABI validation
-    swap
     intc_0 // 255
     &
     -
@@ -111,5 +138,9 @@ g:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
+
+g_ternary_false@3:
+    intc_3 // 0
+    b g_ternary_merge@4

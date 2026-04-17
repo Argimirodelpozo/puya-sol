@@ -42,8 +42,22 @@ f(6):
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint256, 3>>
+    txn GroupIndex
+    bz f(6)_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f(6)_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 1
     return
+
+f(6)_ternary_false@3:
+    intc_1 // 0
+    b f(6)_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_nested_array_static_reencode.sol.C.f(21)[routing]() -> void:
@@ -92,8 +106,22 @@ f(21)_after_for@4:
     dig 2
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.dynamic_array<arc4.uint256>, 3>
+    txn GroupIndex
+    bz f(21)_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f(21)_ternary_merge@8:
+    !
+    assert // not payable
     intc_0 // 1
     return
+
+f(21)_ternary_false@7:
+    intc_1 // 0
+    b f(21)_ternary_merge@8
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_nested_array_static_reencode.sol.C.f(37)[routing]() -> void:
@@ -103,5 +131,19 @@ f(37):
     pushint 128
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.static_array<arc4.uint256, 2>, 2>
+    txn GroupIndex
+    bz f(37)_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f(37)_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 1
     return
+
+f(37)_ternary_false@3:
+    intc_1 // 0
+    b f(37)_ternary_merge@4

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_with_signaturev2.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     bytecblock "xstor" 0x151f7c750064b3de648b000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000036162630000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -28,36 +28,66 @@ main_after_if_else@2:
     assert
     pushbytess 0x329c8739 0x3f35ad11 0x035ca5a9 0x63f240f0 0x6be4a9d9 // method "f0()byte[]", method "f1()byte[]", method "f1s()byte[]", method "f2()(byte[],uint256[])", method "f4()byte[]"
     txna ApplicationArgs 0
-    match main_f0_route@5 main_f1_route@6 f1s main_f2_route@8 main_f4_route@9
+    match f0 f1 f1s f2 f4
     err
 
-main_f4_route@9:
-    pushbytes 0x151f7c7500b67c793002ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000001234567002a000000000000123400264c6f72656d20697073756d20646f6c6f722073697420657468657265756d2e2e2e2e2e2e2e2e
-    log
-    intc_0 // 1
-    return
 
-main_f2_route@8:
-    pushbytes 0x151f7c75000400ca00c4e9c921cd00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000004fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    log
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_with_signaturev2.sol.C.f0[routing]() -> void:
+f0:
+    txn GroupIndex
+    bz f0_ternary_false@3
+    txn GroupIndex
     intc_0 // 1
-    return
+    -
+    gtxns Amount
 
-main_f1_route@6:
-    bytec_1 // 0x151f7c750064b3de648b000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000036162630000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
-
-main_f0_route@5:
+f0_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c750004b3de648b
     log
     intc_0 // 1
     return
 
+f0_ternary_false@3:
+    intc_1 // 0
+    b f0_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_with_signaturev2.sol.C.f1[routing]() -> void:
+f1:
+    txn GroupIndex
+    bz f1_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f1_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_1 // 0x151f7c750064b3de648b000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000036162630000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+f1_ternary_false@3:
+    intc_1 // 0
+    b f1_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_with_signaturev2.sol.C.f1s[routing]() -> void:
 f1s:
+    txn GroupIndex
+    bz f1s_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f1s_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "xstor"
     pushbytes "f(uint256)"
     app_global_put
@@ -65,3 +95,51 @@ f1s:
     log
     intc_0 // 1
     return
+
+f1s_ternary_false@3:
+    intc_1 // 0
+    b f1s_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_with_signaturev2.sol.C.f2[routing]() -> void:
+f2:
+    txn GroupIndex
+    bz f2_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f2_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75000400ca00c4e9c921cd00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000004fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+f2_ternary_false@3:
+    intc_1 // 0
+    b f2_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_with_signaturev2.sol.C.f4[routing]() -> void:
+f4:
+    txn GroupIndex
+    bz f4_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f4_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7500b67c793002ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000001234567002a000000000000123400264c6f72656d20697073756d20646f6c6f722073697420657468657265756d2e2e2e2e2e2e2e2e
+    log
+    intc_0 // 1
+    return
+
+f4_ternary_false@3:
+    intc_1 // 0
+    b f4_ternary_merge@4

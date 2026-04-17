@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_mapping_delete_same_value_type.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 0 32
     bytecblock 0x 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925 "__ctor_pending" "t"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -41,7 +41,7 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_2 // "__ctor_pending"
-    pushint 0
+    intc_1 // 0
     app_global_put
     pushbytes "m"
     pushint 2
@@ -56,6 +56,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_mapping_delete_same_value_type.sol.C.setAndClear[routing]() -> void:
 setAndClear:
+    txn GroupIndex
+    bz setAndClear_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+setAndClear_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 1
     itob
     bytec_1 // 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
@@ -73,9 +83,23 @@ setAndClear:
     intc_0 // 1
     return
 
+setAndClear_ternary_false@3:
+    intc_1 // 0
+    b setAndClear_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_mapping_delete_same_value_type.sol.C.getM[routing]() -> void:
 getM:
+    txn GroupIndex
+    bz getM_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getM_ternary_merge@4:
+    !
+    assert // not payable
     bytec_1 // 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
     box_get
     bytec_0 // 0x
@@ -83,10 +107,10 @@ getM:
     select
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -95,3 +119,7 @@ getM:
     log
     intc_0 // 1
     return
+
+getM_ternary_false@3:
+    intc_1 // 0
+    b getM_ternary_merge@4

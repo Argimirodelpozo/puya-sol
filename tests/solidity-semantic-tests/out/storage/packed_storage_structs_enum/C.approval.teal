@@ -35,10 +35,21 @@ main_test_route@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test[routing]() -> void:
 test:
     intc_2 // 0
-    dup
+    dupn 2
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 1
     itob
     dup
+    bury 4
     bytec_0 // "data"
     box_get
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -68,10 +79,10 @@ test:
     assert // enum out of range
     intc_0 // 1
     !=
-    bz test_after_if_else@3
+    bz test_after_if_else@6
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
 
-test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@20:
+test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@23:
     pushbytes 0x151f7c75
     swap
     concat
@@ -79,7 +90,7 @@ test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     intc_0 // 1
     return
 
-test_after_if_else@3:
+test_after_if_else@6:
     bytec_0 // "data"
     box_get
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -91,7 +102,7 @@ test_after_if_else@3:
     itob
     dup
     cover 2
-    bury 6
+    bury 5
     dig 2
     extract 16 8
     uncover 3
@@ -114,11 +125,11 @@ test_after_if_else@3:
     assert // enum out of range
     intc_3 // 2
     !=
-    bz test_after_if_else@5
+    bz test_after_if_else@8
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
-    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@20
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@23
 
-test_after_if_else@5:
+test_after_if_else@8:
     bytec_0 // "data"
     box_get
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -132,7 +143,7 @@ test_after_if_else@5:
     itob
     dup
     cover 3
-    bury 6
+    bury 5
     uncover 3
     extract 24 8
     cover 2
@@ -152,11 +163,11 @@ test_after_if_else@5:
     assert // enum out of range
     pushint 3
     !=
-    bz test_after_if_else@7
+    bz test_after_if_else@10
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
-    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@20
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@23
 
-test_after_if_else@7:
+test_after_if_else@10:
     bytec_0 // "data"
     box_get
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -170,11 +181,11 @@ test_after_if_else@7:
     assert // enum out of range
     intc_0 // 1
     !=
-    bz test_after_if_else@9
+    bz test_after_if_else@12
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000005
-    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@20
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@23
 
-test_after_if_else@9:
+test_after_if_else@12:
     bytec_0 // "data"
     box_get
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -186,7 +197,7 @@ test_after_if_else@9:
     extract 16 8
     uncover 2
     extract 24 8
-    dig 5
+    dig 4
     uncover 3
     concat
     uncover 2
@@ -204,11 +215,11 @@ test_after_if_else@9:
     assert // enum out of range
     intc_3 // 2
     !=
-    bz test_after_if_else@11
+    bz test_after_if_else@14
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000006
-    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@20
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@23
 
-test_after_if_else@11:
+test_after_if_else@14:
     bytec_0 // "data"
     box_get
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -222,11 +233,11 @@ test_after_if_else@11:
     assert // enum out of range
     intc_3 // 2
     !=
-    bz test_after_if_else@13
+    bz test_after_if_else@16
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
-    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@20
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@23
 
-test_after_if_else@13:
+test_after_if_else@16:
     bytec_0 // "data"
     box_get
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -239,61 +250,61 @@ test_after_if_else@13:
     uncover 2
     extract 24 8
     uncover 2
+    dig 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_0 // "data"
+    dig 1
+    box_put
+    pushint 8
+    extract_uint64
+    dup
+    intc_1 // 4
+    <
+    assert // enum out of range
+    pushint 3
+    !=
+    bz test_after_if_else@18
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@23
+
+test_after_if_else@18:
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    pushint 16
+    extract_uint64
+    dup
+    pushint 5
+    <
+    assert // enum out of range
+    pushint 3
+    !=
+    bz test_after_if_else@20
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000009
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@23
+
+test_after_if_else@20:
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 8
+    dig 1
+    extract 8 8
+    uncover 2
+    extract 24 8
+    cover 2
+    concat
     dig 4
     concat
-    uncover 2
-    concat
-    swap
-    concat
-    bytec_0 // "data"
-    dig 1
-    box_put
-    pushint 8
-    extract_uint64
-    dup
-    intc_1 // 4
-    <
-    assert // enum out of range
-    pushint 3
-    !=
-    bz test_after_if_else@15
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
-    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@20
-
-test_after_if_else@15:
-    bytec_0 // "data"
-    box_get
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    pushint 16
-    extract_uint64
-    dup
-    pushint 5
-    <
-    assert // enum out of range
-    pushint 3
-    !=
-    bz test_after_if_else@17
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000009
-    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@20
-
-test_after_if_else@17:
-    bytec_0 // "data"
-    box_get
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 0 8
-    dig 1
-    extract 8 8
-    uncover 2
-    extract 24 8
-    cover 2
-    concat
-    dig 2
-    concat
     swap
     concat
     bytec_0 // "data"
@@ -307,10 +318,14 @@ test_after_if_else@17:
     assert // enum out of range
     intc_0 // 1
     !=
-    bz test_after_if_else@19
+    bz test_after_if_else@22
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a
-    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@20
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@23
 
-test_after_if_else@19:
+test_after_if_else@22:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
-    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@20
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@23
+
+test_ternary_false@3:
+    intc_2 // 0
+    b test_ternary_merge@4

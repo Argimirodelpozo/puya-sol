@@ -64,7 +64,17 @@ f:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    dup
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     intc_0 // 65535
     <=
     assert // ABI validation
@@ -88,10 +98,24 @@ f:
     intc_1 // 1
     return
 
+f_ternary_false@3:
+    pushint 0
+    b f_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/unchecked_called_by_checked.sol.C.add(a: uint64, b: uint64) -> uint64:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/unchecked_called_by_checked.sol.C.add:
     proto 2 1
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/unchecked_called_by_checked.sol.C.add_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/unchecked_called_by_checked.sol.C.add_ternary_merge@3:
+    !
+    assert // not payable
     frame_dig -2
     intc_0 // 65535
     <=
@@ -116,3 +140,7 @@ f:
     intc_0 // 65535
     &
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/unchecked_called_by_checked.sol.C.add_ternary_false@2:
+    pushint 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/unchecked_called_by_checked.sol.C.add_ternary_merge@3

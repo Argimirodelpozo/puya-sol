@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_dynamic_array.sol.A.approval_program() -> uint64:
 main:
-    intcblock 1 32 8 64
+    intcblock 1 32 0 8
     bytecblock "__ctor_pending" "arrayA"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,7 +38,7 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    pushint 0
+    intc_2 // 0
     app_global_put
     bytec_1 // "arrayA"
     pushint 2
@@ -56,18 +56,28 @@ arrayA:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz arrayA_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+arrayA_ternary_merge@4:
+    !
+    assert // not payable
     bytec_1 // "arrayA"
     box_get
     pushbytes 0x0000
     cover 2
     select
-    intc_2 // 8
+    intc_3 // 8
     bzero
-    uncover 2
+    dig 2
     concat
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     -
     extract_uint64
     swap
@@ -79,10 +89,10 @@ arrayA:
     extract3 // on error: index access is out of bounds
     dup
     len
-    intc_3 // 64
+    pushint 64
     <=
     assert // overflow
-    intc_3 // 64
+    pushint 64
     bzero
     b|
     pushbytes 0x151f7c75
@@ -91,3 +101,7 @@ arrayA:
     log
     intc_0 // 1
     return
+
+arrayA_ternary_false@3:
+    intc_2 // 0
+    b arrayA_ternary_merge@4

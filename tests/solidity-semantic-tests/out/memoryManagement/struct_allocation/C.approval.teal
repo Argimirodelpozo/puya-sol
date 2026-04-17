@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 1 32 0
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -31,6 +31,16 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol.C.withValue[routing]() -> void:
 withValue:
+    txn GroupIndex
+    bz withValue_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+withValue_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     dup
     extract 64 32
@@ -53,22 +63,36 @@ withValue:
     b%
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+withValue_ternary_false@3:
+    intc_2 // 0
+    b withValue_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol.C.withoutValue[routing]() -> void:
 withoutValue:
+    txn GroupIndex
+    bz withoutValue_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+withoutValue_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     dup
     extract 64 32
@@ -91,15 +115,19 @@ withoutValue:
     b%
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+withoutValue_ternary_false@3:
+    intc_2 // 0
+    b withoutValue_ternary_merge@4

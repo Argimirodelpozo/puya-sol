@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol.test.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 34
+    intcblock 1 32 0 34
     bytecblock "str" 0x0024000000000000000000000000000000000000000000000000000000000000000000480000000000000000000000000000000000000000000000000000000000000000002200000000 0x151f7c75 "__ctor_pending" 0x746f704d617070696e6766687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925 0x746f704d617070696e67ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5 "toDelete"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_3 // "__ctor_pending"
-    intc_1 // 1
+    intc_0 // 1
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -62,7 +62,7 @@ __postInit:
     uncover 2
     substring3
     extract 2 0
-    intc_1 // 1
+    intc_0 // 1
     itob
     dig 2
     len
@@ -120,7 +120,7 @@ __postInit:
     dig 2
     substring3
     dup
-    intc_0 // 32
+    intc_1 // 32
     extract_uint16
     dig 1
     len
@@ -173,7 +173,7 @@ __postInit:
     bytec_0 // "str"
     swap
     box_put
-    intc_1 // 1
+    intc_0 // 1
     itob
     pushbytes 0x6e65737465644d617070696e6766687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
     swap
@@ -192,53 +192,91 @@ __postInit:
     bytec 6 // "toDelete"
     pushbytes 0x
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol.test.getToDelete[routing]() -> void:
 getToDelete:
+    txn GroupIndex
+    bz getToDelete_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getToDelete_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 0
     bytec 6 // "toDelete"
     app_global_get_ex
     assert // check toDelete exists
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+getToDelete_ternary_false@3:
+    intc_2 // 0
+    b getToDelete_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol.test.getTopValue[routing]() -> void:
 getTopValue:
+    txn GroupIndex
+    bz getTopValue_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getTopValue_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "str"
     box_get
     bytec_1 // 0x0024000000000000000000000000000000000000000000000000000000000000000000480000000000000000000000000000000000000000000000000000000000000000002200000000
     cover 2
     select
     extract 2 32
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+getTopValue_ternary_false@3:
+    intc_2 // 0
+    b getTopValue_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol.test.getNestedValue[routing]() -> void:
 getNestedValue:
+    txn GroupIndex
+    bz getNestedValue_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getNestedValue_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "str"
     box_get
     bytec_1 // 0x0024000000000000000000000000000000000000000000000000000000000000000000480000000000000000000000000000000000000000000000000000000000000000002200000000
@@ -252,15 +290,19 @@ getNestedValue:
     extract_uint16
     substring3
     extract 0 32
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+getNestedValue_ternary_false@3:
+    intc_2 // 0
+    b getNestedValue_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol.test.getTopMapping[routing]() -> void:
@@ -268,19 +310,29 @@ getTopMapping:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_0 // 32
+    txn GroupIndex
+    bz getTopMapping_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getTopMapping_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 32
     bzero
     dup
-    uncover 2
+    dig 2
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     sha256
     pushbytes "topMapping"
@@ -292,7 +344,7 @@ getTopMapping:
     select
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
     b|
@@ -300,8 +352,12 @@ getTopMapping:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+getTopMapping_ternary_false@3:
+    intc_2 // 0
+    b getTopMapping_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol.test.getNestedMapping[routing]() -> void:
@@ -309,18 +365,28 @@ getNestedMapping:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_0 // 32
+    txn GroupIndex
+    bz getNestedMapping_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getNestedMapping_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 32
     bzero
-    swap
+    dig 1
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     sha256
     pushbytes "nestedMapping"
@@ -341,5 +407,9 @@ getNestedMapping:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+getNestedMapping_ternary_false@3:
+    intc_2 // 0
+    b getNestedMapping_ternary_merge@4

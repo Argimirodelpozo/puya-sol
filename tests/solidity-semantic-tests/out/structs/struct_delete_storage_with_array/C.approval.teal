@@ -38,6 +38,16 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_storage_with_array.sol.C.f[routing]() -> void:
 f:
     intc_1 // 0
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "s"
     box_del
     pop
@@ -69,7 +79,7 @@ f:
     bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000000000
     box_put
     load 0
-    swap
+    dig 1
     pushbytes 0x03
     callsub __storage_write
     store 0
@@ -115,10 +125,24 @@ f:
     intc_2 // 1
     return
 
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_storage_with_array.sol.C.g[routing]() -> void:
 g:
     intc_1 // 0
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "s"
     box_del
     pop
@@ -162,7 +186,7 @@ g:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001004200000000000000000000000000000000000000000000000000000000000000020000
     box_put
     load 0
-    swap
+    dig 1
     pushbytes 0x03
     callsub __storage_write
     store 0
@@ -218,6 +242,10 @@ g:
     assert
     intc_2 // 1
     return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_storage_with_array.sol.C.__storage_write(__slot: uint64, __value: bytes) -> void:

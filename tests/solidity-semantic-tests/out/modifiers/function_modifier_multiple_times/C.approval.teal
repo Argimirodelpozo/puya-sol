@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_multiple_times.sol.C.approval_program() -> uint64:
 main:
-    intcblock 64 1 0
+    intcblock 1 64 0
     bytecblock "a" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "a"
     pushbytes 0x
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -37,13 +37,24 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_1 // 64
     ==
     assert // invalid number of bytes for arc4.uint512
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 0
     bytec_0 // "a"
     app_global_get_ex
     assert // check a exists
+    dig 1
     b+
     pushbytes 0x07
     b+
@@ -52,37 +63,55 @@ f:
     app_global_put
     dup
     len
-    intc_0 // 64
+    intc_1 // 64
     <=
     assert // overflow
-    intc_0 // 64
+    intc_1 // 64
     bzero
     b|
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_2 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_multiple_times.sol.C.a[routing]() -> void:
 a:
+    txn GroupIndex
+    bz a_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+a_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 0
     bytec_0 // "a"
     app_global_get_ex
     assert // check a exists
     dup
     len
-    intc_0 // 64
+    intc_1 // 64
     <=
     assert // overflow
-    intc_0 // 64
+    intc_1 // 64
     bzero
     b|
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+a_ternary_false@3:
+    intc_2 // 0
+    b a_ternary_merge@4

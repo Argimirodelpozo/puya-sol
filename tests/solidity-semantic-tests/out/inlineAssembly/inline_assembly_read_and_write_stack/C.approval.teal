@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_read_and_write_stack.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 0 32
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -33,15 +33,29 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_read_and_write_stack.sol.C.f[routing]() -> void:
 f:
-    pushbytes 0x
-    pushint 0
-    itob
+    intc_1 // 0
+    dup
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-f_while_top@2:
+f_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x
+    bury 2
+    intc_1 // 0
+    itob
+    bury 1
+
+f_while_top@5:
     dup
     pushbytes 0x0a
     b<
-    bz f_after_while@4
+    bz f_after_while@7
     load 0
     dig 2
     dig 2
@@ -55,16 +69,16 @@ f_while_top@2:
     pushbytes 0x01
     b+
     bury 1
-    b f_while_top@2
+    b f_while_top@5
 
-f_after_while@4:
+f_after_while@7:
     dig 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -73,3 +87,7 @@ f_after_while@4:
     log
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4

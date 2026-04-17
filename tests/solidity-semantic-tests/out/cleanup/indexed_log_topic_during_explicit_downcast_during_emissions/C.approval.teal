@@ -35,9 +35,23 @@ main_j_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/indexed_log_topic_during_explicit_downcast_during_emissions.sol.C.j[routing]() -> void:
 j:
+    txn GroupIndex
+    bz j_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+j_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     bytec_0 // 0xd1b80b4031
     log
     pushint 1
     return
+
+j_ternary_false@3:
+    pushint 0
+    b j_ternary_merge@4

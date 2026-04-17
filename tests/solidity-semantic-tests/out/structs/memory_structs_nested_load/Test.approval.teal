@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_nested_load.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 0 32
     bytecblock "m_x" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x0506
     txn ApplicationID
     bnz main_after_if_else@2
@@ -31,6 +31,16 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_nested_load.sol.Test.load[routing]() -> void:
 load:
+    txn GroupIndex
+    bz load_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+load_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "m_x"
     box_get
     bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -94,7 +104,7 @@ load:
     extract 0 8
     swap
     extract 8 8
-    intc_1 // 32
+    intc_2 // 32
     bzero
     cover 2
     concat
@@ -135,7 +145,7 @@ load:
     uncover 4
     extract 56 2
     dup
-    intc_2 // 0
+    intc_1 // 0
     getbyte
     itob
     swap
@@ -178,16 +188,30 @@ load:
     intc_0 // 1
     return
 
+load_ternary_false@3:
+    intc_1 // 0
+    b load_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_nested_load.sol.Test.store[routing]() -> void:
 store:
-    intc_1 // 32
+    txn GroupIndex
+    bz store_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+store_ternary_merge@4:
+    !
+    assert // not payable
+    intc_2 // 32
     bzero
     bytec_0 // "m_x"
     pushbytes 0x00000000000000010000000000000002000000000000000300000000000000000000000000000000000000000000000000000000000000040506
     box_put
     bytec_3 // 0x0506
-    intc_2 // 0
+    intc_1 // 0
     getbyte
     itob
     bytec_3 // 0x0506
@@ -211,3 +235,7 @@ store:
     log
     intc_0 // 1
     return
+
+store_ternary_false@3:
+    intc_1 // 0
+    b store_ternary_merge@4

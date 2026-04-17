@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/assert.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -24,38 +24,83 @@ main_after_if_else@2:
     assert
     pushbytess 0x8e9b83f0 0xb79ee1b5 0xc103576c // method "f(bool)bool", method "fail()bool", method "succeed()bool"
     txna ApplicationArgs 0
-    match f main_fail_route@6 main_succeed_route@7
-    err
-
-main_succeed_route@7:
-    pushbytes 0x151f7c7580
-    log
-    intc_0 // 1
-    return
-
-main_fail_route@6:
+    match f fail succeed
     err
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/assert.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
-    dup
+    dupn 2
     len
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    dup
-    pushint 0
+    intc_1 // 0
     getbit
-    dup
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     intc_0 // 1
     <=
     assert // ABI bool validation
     assert
     pushbytes 0x151f7c75
-    swap
+    dig 2
     concat
     log
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/assert.sol.C.fail[routing]() -> void:
+fail:
+    txn GroupIndex
+    bz fail_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+fail_ternary_merge@4:
+    !
+    assert // not payable
+    err
+
+fail_ternary_false@3:
+    intc_1 // 0
+    b fail_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/assert.sol.C.succeed[routing]() -> void:
+succeed:
+    txn GroupIndex
+    bz succeed_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+succeed_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+succeed_ternary_false@3:
+    intc_1 // 0
+    b succeed_ternary_merge@4

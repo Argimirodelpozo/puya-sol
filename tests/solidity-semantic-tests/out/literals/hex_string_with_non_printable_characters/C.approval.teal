@@ -32,9 +32,23 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/hex_string_with_non_printable_characters.sol.C.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c75000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
     log
     pushint 1
     return
+
+f_ternary_false@3:
+    pushint 0
+    b f_ternary_merge@4

@@ -43,6 +43,16 @@ main_viaasm_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/immutable_signed.sol.C.viaasm[routing]() -> void:
 viaasm:
+    txn GroupIndex
+    bz viaasm_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+viaasm_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 0
     bytec_0 // "a"
     app_global_get_ex
@@ -90,3 +100,7 @@ viaasm:
     log
     intc_1 // 1
     return
+
+viaasm_ternary_false@3:
+    intc_2 // 0
+    b viaasm_ternary_merge@4

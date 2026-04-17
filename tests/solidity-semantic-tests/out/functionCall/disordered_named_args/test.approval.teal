@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/disordered_named_args.sol.test.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 32 1 0
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -60,6 +60,16 @@ a:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/disordered_named_args.sol.test.b[routing]() -> void:
 b:
+    txn GroupIndex
+    bz b_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+b_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 1
     itob
     pushint 2
@@ -82,10 +92,24 @@ b:
     intc_1 // 1
     return
 
+b_ternary_false@3:
+    intc_2 // 0
+    b b_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/disordered_named_args.sol.test.a(__arc4_a: bytes, __arc4_b: bytes, __arc4_c: bytes) -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/disordered_named_args.sol.test.a:
     proto 3 1
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/disordered_named_args.sol.test.a_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/disordered_named_args.sol.test.a_ternary_merge@3:
+    !
+    assert // not payable
     frame_dig -3
     pushbytes 0x64
     b*
@@ -104,3 +128,7 @@ b:
     bzero
     b|
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/disordered_named_args.sol.test.a_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/disordered_named_args.sol.test.a_ternary_merge@3

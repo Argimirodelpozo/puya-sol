@@ -24,20 +24,52 @@ main_after_if_else@2:
     assert
     pushbytess 0xb9304266 0xf71817e5 0x7de11924 // method "fixedBytesHex()byte[32]", method "fixedBytes()byte[32]", method "pipeThrough(byte[2],bool)(byte[16],bool)"
     txna ApplicationArgs 0
-    match main_fixedBytesHex_route@5 main_fixedBytes_route@6 pipeThrough
+    match fixedBytesHex fixedBytes pipeThrough
     err
 
-main_fixedBytes_route@6:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/strings.sol.test.fixedBytesHex[routing]() -> void:
+fixedBytesHex:
+    txn GroupIndex
+    bz fixedBytesHex_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+fixedBytesHex_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75aabb00ff00000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+fixedBytesHex_ternary_false@3:
+    intc_1 // 0
+    b fixedBytesHex_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/strings.sol.test.fixedBytes[routing]() -> void:
+fixedBytes:
+    txn GroupIndex
+    bz fixedBytes_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+fixedBytes_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c7561626300ff5f5f00000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
 
-main_fixedBytesHex_route@5:
-    pushbytes 0x151f7c75aabb00ff00000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
+fixedBytes_ternary_false@3:
+    intc_1 // 0
+    b fixedBytes_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/strings.sol.test.pipeThrough[routing]() -> void:
@@ -56,13 +88,23 @@ pipeThrough:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
-    dup
+    txn GroupIndex
+    bz pipeThrough_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+pipeThrough_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     intc_0 // 1
     <=
     assert // ABI bool validation
     pushint 14
     bzero
-    uncover 2
+    dig 3
     swap
     concat
     pushbytes 0x00
@@ -76,3 +118,7 @@ pipeThrough:
     log
     intc_0 // 1
     return
+
+pipeThrough_ternary_false@3:
+    intc_1 // 0
+    b pipeThrough_ternary_merge@4

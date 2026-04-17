@@ -62,6 +62,16 @@ terminate:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.test_deploy_and_terminate_twice[routing]() -> void:
 test_deploy_and_terminate_twice:
+    txn GroupIndex
+    bz test_deploy_and_terminate_twice_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+test_deploy_and_terminate_twice_ternary_merge@4:
+    !
+    assert // not payable
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.deploy
     intc_0 // 0
     bytec_2 // "account1"
@@ -76,9 +86,23 @@ test_deploy_and_terminate_twice:
     intc_1 // 1
     return
 
+test_deploy_and_terminate_twice_ternary_false@3:
+    intc_0 // 0
+    b test_deploy_and_terminate_twice_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.exists[routing]() -> void:
 exists:
+    txn GroupIndex
+    bz exists_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+exists_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_0 // "c"
     app_global_get_ex
@@ -102,9 +126,23 @@ exists:
     intc_1 // 1
     return
 
+exists_ternary_false@3:
+    intc_0 // 0
+    b exists_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.c[routing]() -> void:
 c:
+    txn GroupIndex
+    bz c_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+c_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_0 // "c"
     app_global_get_ex
@@ -115,6 +153,10 @@ c:
     log
     intc_1 // 1
     return
+
+c_ternary_false@3:
+    intc_0 // 0
+    b c_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.deploy() -> void:
@@ -162,6 +204,16 @@ c:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.terminate(_beneficiary: bytes) -> void:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.terminate:
     proto 1 0
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.terminate_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.terminate_ternary_merge@3:
+    !
+    assert // not payable
     itxn_begin
     intc_0 // 0
     bytec_0 // "c"
@@ -182,3 +234,7 @@ c:
     itxn_field ApplicationArgs
     itxn_submit
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.terminate_ternary_false@2:
+    intc_0 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.terminate_ternary_merge@3

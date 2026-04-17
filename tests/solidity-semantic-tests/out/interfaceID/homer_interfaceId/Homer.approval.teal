@@ -24,42 +24,41 @@ main_after_if_else@2:
     assert
     pushbytess 0x4e22a3ba 0x027c6bc8 0xf76e680b // method "supportsInterface(byte[4])bool", method "is2D()bool", method "skinColor()string"
     txna ApplicationArgs 0
-    match supportsInterface main_is2D_route@6 main_skinColor_route@7
+    match supportsInterface is2D skinColor
     err
-
-main_skinColor_route@7:
-    pushbytes 0x151f7c75000679656c6c6f77
-    log
-    intc_0 // 1
-    return
-
-main_is2D_route@6:
-    pushbytes 0x151f7c7580
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/homer_interfaceId.sol.Homer.supportsInterface[routing]() -> void:
 supportsInterface:
     txna ApplicationArgs 1
-    dupn 2
+    dup
     len
     pushint 4
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    txn GroupIndex
+    bz supportsInterface_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+supportsInterface_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     pushbytes 0x01ffc9a7
     ==
-    bnz supportsInterface_bool_true@3
+    bnz supportsInterface_bool_true@6
     dup
     pushbytes 0x73b6b492
     ==
-    bz supportsInterface_bool_false@4
+    bz supportsInterface_bool_false@7
 
-supportsInterface_bool_true@3:
+supportsInterface_bool_true@6:
     intc_0 // 1
 
-supportsInterface_bool_merge@5:
+supportsInterface_bool_merge@8:
     pushbytes 0x00
     intc_1 // 0
     uncover 2
@@ -71,6 +70,54 @@ supportsInterface_bool_merge@5:
     intc_0 // 1
     return
 
-supportsInterface_bool_false@4:
+supportsInterface_bool_false@7:
     intc_1 // 0
-    b supportsInterface_bool_merge@5
+    b supportsInterface_bool_merge@8
+
+supportsInterface_ternary_false@3:
+    intc_1 // 0
+    b supportsInterface_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/homer_interfaceId.sol.Homer.is2D[routing]() -> void:
+is2D:
+    txn GroupIndex
+    bz is2D_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+is2D_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+is2D_ternary_false@3:
+    intc_1 // 0
+    b is2D_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/homer_interfaceId.sol.Homer.skinColor[routing]() -> void:
+skinColor:
+    txn GroupIndex
+    bz skinColor_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+skinColor_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75000679656c6c6f77
+    log
+    intc_0 // 1
+    return
+
+skinColor_ternary_false@3:
+    intc_1 // 0
+    b skinColor_ternary_merge@4

@@ -37,5 +37,19 @@ t:
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz t_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+t_ternary_merge@4:
+    !
+    assert // not payable
     pushint 1
     return
+
+t_ternary_false@3:
+    pushint 0
+    b t_ternary_merge@4

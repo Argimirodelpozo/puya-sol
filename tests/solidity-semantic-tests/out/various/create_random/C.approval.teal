@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/create_random.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 1 32 0
     bytecblock 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffff
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -31,34 +31,72 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/create_random.sol.C.addr[routing]() -> void:
 addr:
+    txn GroupIndex
+    bz addr_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+addr_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c75
     global CurrentApplicationAddress
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+addr_ternary_false@3:
+    intc_2 // 0
+    b addr_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/create_random.sol.C.testRunner[routing]() -> void:
 testRunner:
+    txn GroupIndex
+    bz testRunner_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+testRunner_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     pushbytes 0x60016000f3000000000000000000000000000000000000000000000000000000
     replace2 0
     store 0
     pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+testRunner_ternary_false@3:
+    intc_2 // 0
+    b testRunner_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/create_random.sol.C.testCalc[routing]() -> void:
 testCalc:
+    txn GroupIndex
+    bz testCalc_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+testCalc_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0xd694
     global CurrentApplicationAddress
     concat
     pushbytes 0x01
     concat
-    intc_0 // 32
+    intc_1 // 32
     bzero
     swap
     keccak256
@@ -69,9 +107,9 @@ testCalc:
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     global CurrentApplicationAddress
     dig 2
@@ -79,9 +117,9 @@ testCalc:
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     concat
     pushbytes 0x5e59e02549ba8e07ea50ebd4ed8e46ed3ef88ddfb158dda6108a036181bc9bad
@@ -94,14 +132,18 @@ testCalc:
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     concat
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+testCalc_ternary_false@3:
+    intc_2 // 0
+    b testCalc_ternary_merge@4

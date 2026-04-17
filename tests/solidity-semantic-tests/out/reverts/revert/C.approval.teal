@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/revert.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64
+    intcblock 1 0 64
     bytecblock "a"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -36,16 +36,40 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/revert.sol.C.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 1
     itob
     bytec_0 // "a"
     swap
     app_global_put
     err // revert
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/revert.sol.C.g[routing]() -> void:
 g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 1
     itob
     bytec_0 // "a"
@@ -53,19 +77,33 @@ g:
     app_global_put
     err // revert
 
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/revert.sol.C.a[routing]() -> void:
 a:
-    pushint 0
+    txn GroupIndex
+    bz a_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+a_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_0 // "a"
     app_global_get_ex
     assert // check a exists
     dup
     len
-    intc_1 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
     pushbytes 0x151f7c75
@@ -74,3 +112,7 @@ a:
     log
     intc_0 // 1
     return
+
+a_ternary_false@3:
+    intc_1 // 0
+    b a_ternary_merge@4

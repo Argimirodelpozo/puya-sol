@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/exp_overflow.sol.C.approval_program() -> uint64:
 main:
-    intcblock 255 32 1 8
+    intcblock 1 255 32 0
     bytecblock 0x151f7c75 0x01 0x
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -34,114 +34,149 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 8
+    pushint 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 8
+    pushint 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    dig 1
-    intc_0 // 255
-    <=
-    assert // ABI validation
-    swap
-    intc_0 // 255
-    &
-    swap
-    dup
-    intc_0 // 255
-    <=
-    assert // ABI validation
-    intc_0 // 255
-    &
-    dup
-    bnz f_ternary_false@3
-    intc_2 // 1
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
 f_ternary_merge@4:
+    !
+    assert // not payable
+    dig 1
     dup
-    intc_0 // 255
+    intc_1 // 255
+    <=
+    assert // ABI validation
+    intc_1 // 255
+    &
+    bury 2
+    dupn 2
+    intc_1 // 255
+    <=
+    assert // ABI validation
+    intc_1 // 255
+    &
+    dup
+    bury 2
+    bnz f_ternary_false@6
+    intc_0 // 1
+
+f_ternary_merge@7:
+    dup
+    intc_1 // 255
     <=
     assert // overflow
     itob
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_0 // 1
     return
 
-f_ternary_false@3:
+f_ternary_false@6:
     dup2
     exp
+    b f_ternary_merge@7
+
+f_ternary_false@3:
+    intc_3 // 0
     b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/exp_overflow.sol.C.g[routing]() -> void:
 g:
+    intc_3 // 0
+    dupn 2
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_1 // 0x01
-    cover 2
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-g_while_top@2:
+g_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_1 // 0x01
+    bury 3
+    dig 1
+    bury 5
     dup
+    bury 4
+
+g_while_top@5:
+    dig 3
     bytec_2 // 0x
     b>
-    bz g_after_while@6
-    dup
+    bz g_after_while@9
+    dig 3
     bytec_1 // 0x01
     b&
     bytec_2 // 0x
     b!=
-    bz g_after_if_else@5
+    bz g_after_if_else@8
     dig 2
-    dig 2
+    dig 5
     b*
     bury 3
 
-g_after_if_else@5:
-    dup
+g_after_if_else@8:
+    dig 3
     pushbytes 0x02
     b/
-    bury 1
-    dig 1
+    bury 4
+    dig 4
     dup
     b*
-    bury 2
-    b g_while_top@2
+    bury 5
+    b g_while_top@5
 
-g_after_while@6:
+g_after_while@9:
     dig 2
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_0 // 1
     return
+
+g_ternary_false@3:
+    intc_3 // 0
+    b g_ternary_merge@4

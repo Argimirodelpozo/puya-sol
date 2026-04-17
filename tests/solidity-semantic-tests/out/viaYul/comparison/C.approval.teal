@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/comparison.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
+    intcblock 1 0 32
     bytecblock 0x00 0x151f7c75 0x8000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -25,14 +25,8 @@ main_after_if_else@2:
     assert
     pushbytess 0x73f8fb5a 0xf6af7d6c 0xb14d4578 0xf2203d44 0x11f5363e 0x11fad38b 0xb4bf3782 0x5ec0cc7e 0xf57284ae 0x97e13711 0x45891856 0x6d1ed6d1 // method "f(address)bool", method "g()bool", method "lt(uint256,uint256)bool", method "slt(uint256,uint256)bool", method "lte(uint256,uint256)bool", method "slte(uint256,uint256)bool", method "gt(uint256,uint256)bool", method "sgt(uint256,uint256)bool", method "gte(uint256,uint256)bool", method "sgte(uint256,uint256)bool", method "eq(uint256,uint256)bool", method "neq(uint256,uint256)bool"
     txna ApplicationArgs 0
-    match f main_g_route@6 lt slt lte slte gt sgt gte sgte eq neq
+    match f g lt slt lte slte gt sgt gte sgte eq neq
     err
-
-main_g_route@6:
-    pushbytes 0x151f7c7580
-    log
-    intc_1 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/comparison.sol.C.f[routing]() -> void:
@@ -40,21 +34,58 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     ==
     bytec_0 // 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/comparison.sol.C.g[routing]() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/comparison.sol.C.lt[routing]() -> void:
@@ -62,26 +93,41 @@ lt:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz lt_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+lt_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
     b<
     bytec_0 // 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+lt_ternary_false@3:
+    intc_1 // 0
+    b lt_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/comparison.sol.C.slt[routing]() -> void:
@@ -89,32 +135,46 @@ slt:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    swap
+    txn GroupIndex
+    bz slt_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+slt_ternary_merge@4:
+    !
+    assert // not payable
+    dig 1
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
-    swap
+    dig 1
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
     b<
     bytec_0 // 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+slt_ternary_false@3:
+    intc_1 // 0
+    b slt_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/comparison.sol.C.lte[routing]() -> void:
@@ -122,26 +182,41 @@ lte:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz lte_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+lte_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
     b<=
     bytec_0 // 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+lte_ternary_false@3:
+    intc_1 // 0
+    b lte_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/comparison.sol.C.slte[routing]() -> void:
@@ -149,32 +224,46 @@ slte:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    swap
+    txn GroupIndex
+    bz slte_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+slte_ternary_merge@4:
+    !
+    assert // not payable
+    dig 1
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
-    swap
+    dig 1
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
     b<=
     bytec_0 // 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+slte_ternary_false@3:
+    intc_1 // 0
+    b slte_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/comparison.sol.C.gt[routing]() -> void:
@@ -182,26 +271,41 @@ gt:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz gt_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+gt_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
     b>
     bytec_0 // 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+gt_ternary_false@3:
+    intc_1 // 0
+    b gt_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/comparison.sol.C.sgt[routing]() -> void:
@@ -209,32 +313,46 @@ sgt:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    swap
+    txn GroupIndex
+    bz sgt_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+sgt_ternary_merge@4:
+    !
+    assert // not payable
+    dig 1
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
-    swap
+    dig 1
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
     b>
     bytec_0 // 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+sgt_ternary_false@3:
+    intc_1 // 0
+    b sgt_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/comparison.sol.C.gte[routing]() -> void:
@@ -242,26 +360,41 @@ gte:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz gte_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+gte_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
     b>=
     bytec_0 // 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+gte_ternary_false@3:
+    intc_1 // 0
+    b gte_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/comparison.sol.C.sgte[routing]() -> void:
@@ -269,32 +402,46 @@ sgte:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    swap
+    txn GroupIndex
+    bz sgte_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+sgte_ternary_merge@4:
+    !
+    assert // not payable
+    dig 1
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
-    swap
+    dig 1
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
     b>=
     bytec_0 // 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+sgte_ternary_false@3:
+    intc_1 // 0
+    b sgte_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/comparison.sol.C.eq[routing]() -> void:
@@ -302,26 +449,41 @@ eq:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz eq_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+eq_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
     b==
     bytec_0 // 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+eq_ternary_false@3:
+    intc_1 // 0
+    b eq_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/comparison.sol.C.neq[routing]() -> void:
@@ -329,23 +491,38 @@ neq:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz neq_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+neq_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
     b!=
     bytec_0 // 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+neq_ternary_false@3:
+    intc_1 // 0
+    b neq_ternary_merge@4

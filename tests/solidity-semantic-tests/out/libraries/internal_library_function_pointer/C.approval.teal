@@ -40,6 +40,16 @@ L.f:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_pointer.sol.C.g[routing]() -> void:
 g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     callsub L.f
     dup
     len
@@ -55,3 +65,7 @@ g:
     log
     intc_0 // 1
     return
+
+g_ternary_false@3:
+    pushint 0
+    b g_ternary_merge@4

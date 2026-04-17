@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/arrays.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     bytecblock "__ctor_pending" "flags"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -28,50 +28,8 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x3f91f9c7 0xd8204579 0xd28042fd 0x3b5a1911 0x29bb6014 0x4dcad27e 0x9f19ada4 0xdad9e060 // method "__postInit()void", method "r()bool[3]", method "s()(uint256[2],uint512)", method "u()(uint256,uint256,string)[2]", method "v()bool[2][]", method "w1()string[1]", method "w2()string[2]", method "w3()string[3]", method "x()(string[2],string[3])"
     txna ApplicationArgs 0
-    match __postInit main_r_route@6 main_s_route@7 main_u_route@8 v main_w1_route@10 main_w2_route@11 main_w3_route@12 main_x_route@13
+    match __postInit r s u v w1 w2 w3 x
     err
-
-main_x_route@13:
-    pushbytes 0x151f7c7500040012000400090003616e790003616e790006000b00100003616e790003616e790003616e79
-    log
-    intc_0 // 1
-    return
-
-main_w3_route@12:
-    pushbytes 0x151f7c750006000b00100003616e790003616e790003616e79
-    log
-    intc_0 // 1
-    return
-
-main_w2_route@11:
-    pushbytes 0x151f7c75000400090003616e790003616e79
-    log
-    intc_0 // 1
-    return
-
-main_w1_route@10:
-    pushbytes 0x151f7c7500020003616e79
-    log
-    intc_0 // 1
-    return
-
-main_u_route@8:
-    pushbytes 0x151f7c750004004b0000000000000000000000000000000000000000000000000000000000000017000000000000000000000000000000000000000000000000000000000000002a00420003616e79000000000000000000000000000000000000000000000000000000000000022b000000000000000000000000000000000000000000000000000000000000029a00420003616e79
-    log
-    intc_0 // 1
-    return
-
-main_s_route@7:
-    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000007b00000000000000000000000000000000000000000000000000000000000001c800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000315
-    log
-    intc_0 // 1
-    return
-
-main_r_route@6:
-    pushbytes 0x151f7c75a0
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/arrays.sol.C.__postInit[routing]() -> void:
@@ -80,7 +38,7 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    pushint 0
+    intc_1 // 0
     app_global_put
     bytec_1 // "flags"
     pushint 2
@@ -90,8 +48,84 @@ __postInit:
     return
 
 
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/arrays.sol.C.r[routing]() -> void:
+r:
+    txn GroupIndex
+    bz r_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+r_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75a0
+    log
+    intc_0 // 1
+    return
+
+r_ternary_false@3:
+    intc_1 // 0
+    b r_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/arrays.sol.C.s[routing]() -> void:
+s:
+    txn GroupIndex
+    bz s_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+s_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000007b00000000000000000000000000000000000000000000000000000000000001c800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000315
+    log
+    intc_0 // 1
+    return
+
+s_ternary_false@3:
+    intc_1 // 0
+    b s_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/arrays.sol.C.u[routing]() -> void:
+u:
+    txn GroupIndex
+    bz u_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+u_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750004004b0000000000000000000000000000000000000000000000000000000000000017000000000000000000000000000000000000000000000000000000000000002a00420003616e79000000000000000000000000000000000000000000000000000000000000022b000000000000000000000000000000000000000000000000000000000000029a00420003616e79
+    log
+    intc_0 // 1
+    return
+
+u_ternary_false@3:
+    intc_1 // 0
+    b u_ternary_merge@4
+
+
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/arrays.sol.C.v[routing]() -> void:
 v:
+    txn GroupIndex
+    bz v_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+v_ternary_merge@4:
+    !
+    assert // not payable
     bytec_1 // "flags"
     box_get
     pushbytes 0x0000
@@ -103,3 +137,95 @@ v:
     log
     intc_0 // 1
     return
+
+v_ternary_false@3:
+    intc_1 // 0
+    b v_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/arrays.sol.C.w1[routing]() -> void:
+w1:
+    txn GroupIndex
+    bz w1_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+w1_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7500020003616e79
+    log
+    intc_0 // 1
+    return
+
+w1_ternary_false@3:
+    intc_1 // 0
+    b w1_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/arrays.sol.C.w2[routing]() -> void:
+w2:
+    txn GroupIndex
+    bz w2_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+w2_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75000400090003616e790003616e79
+    log
+    intc_0 // 1
+    return
+
+w2_ternary_false@3:
+    intc_1 // 0
+    b w2_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/arrays.sol.C.w3[routing]() -> void:
+w3:
+    txn GroupIndex
+    bz w3_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+w3_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750006000b00100003616e790003616e790003616e79
+    log
+    intc_0 // 1
+    return
+
+w3_ternary_false@3:
+    intc_1 // 0
+    b w3_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/arrays.sol.C.x[routing]() -> void:
+x:
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7500040012000400090003616e790003616e790006000b00100003616e790003616e790003616e79
+    log
+    intc_0 // 1
+    return
+
+x_ternary_false@3:
+    intc_1 // 0
+    b x_ternary_merge@4

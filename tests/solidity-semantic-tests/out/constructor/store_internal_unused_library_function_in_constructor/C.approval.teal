@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_internal_unused_library_function_in_constructor.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 0 32
     txn ApplicationID
     bnz main_after_if_else@2
     pushbytes "x"
@@ -43,7 +43,17 @@ L.x:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_internal_unused_library_function_in_constructor.sol.C.t[routing]() -> void:
 t:
-    pushint 0
+    txn GroupIndex
+    bz t_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+t_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     pushbytes "x"
     app_global_get_ex
     assert // check x exists
@@ -53,10 +63,10 @@ t:
     callsub L.x
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -65,3 +75,7 @@ t:
     log
     intc_0 // 1
     return
+
+t_ternary_false@3:
+    intc_1 // 0
+    b t_ternary_merge@4

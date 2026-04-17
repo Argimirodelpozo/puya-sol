@@ -28,18 +28,22 @@ main_after_if_else@2:
     assert
     pushbytess 0xcd78b354 0x4b2c0376 0xafedb2e5 // method "f()uint256", method "g()uint256", method "h()uint256"
     txna ApplicationArgs 0
-    match f g main_h_route@7
+    match f g h
     err
-
-main_h_route@7:
-    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000007
-    log
-    intc_1 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_nonexisting_contract_throws.sol.C.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     intc_0 // 0
     bytec_0 // "d"
@@ -61,10 +65,24 @@ f:
     log
     intc_1 // 1
     return
+
+f_ternary_false@3:
+    intc_0 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_nonexisting_contract_throws.sol.C.g[routing]() -> void:
 g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     intc_0 // 0
     bytec_0 // "d"
@@ -86,3 +104,29 @@ g:
     log
     intc_1 // 1
     return
+
+g_ternary_false@3:
+    intc_0 // 0
+    b g_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_nonexisting_contract_throws.sol.C.h[routing]() -> void:
+h:
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000007
+    log
+    intc_1 // 1
+    return
+
+h_ternary_false@3:
+    intc_0 // 0
+    b h_ternary_merge@4

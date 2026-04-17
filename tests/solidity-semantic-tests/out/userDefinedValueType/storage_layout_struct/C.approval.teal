@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 8
+    intcblock 1 0 32 8
     bytecblock 0x151f7c75 "b" 0x00000000000000000000000000000000 "a" "ra" "rb" "c" "rc" "d" "rd" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "__dyn_storage"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -31,7 +31,7 @@ main:
     bytec 9 // "rd"
     bytec 10 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -55,82 +55,194 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.storage_a[routing]() -> void:
 storage_a:
+    txn GroupIndex
+    bz storage_a_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+storage_a_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+storage_a_ternary_false@3:
+    intc_1 // 0
+    b storage_a_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.storage_ra[routing]() -> void:
 storage_ra:
+    txn GroupIndex
+    bz storage_ra_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+storage_ra_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+storage_ra_ternary_false@3:
+    intc_1 // 0
+    b storage_ra_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.storage_b[routing]() -> void:
 storage_b:
+    txn GroupIndex
+    bz storage_b_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+storage_b_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+storage_b_ternary_false@3:
+    intc_1 // 0
+    b storage_b_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.storage_rb[routing]() -> void:
 storage_rb:
+    txn GroupIndex
+    bz storage_rb_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+storage_rb_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+storage_rb_ternary_false@3:
+    intc_1 // 0
+    b storage_rb_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.storage_c[routing]() -> void:
 storage_c:
+    txn GroupIndex
+    bz storage_c_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+storage_c_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+storage_c_ternary_false@3:
+    intc_1 // 0
+    b storage_c_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.storage_rc[routing]() -> void:
 storage_rc:
+    txn GroupIndex
+    bz storage_rc_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+storage_rc_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+storage_rc_ternary_false@3:
+    intc_1 // 0
+    b storage_rc_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.storage_d[routing]() -> void:
 storage_d:
+    txn GroupIndex
+    bz storage_d_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+storage_d_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+storage_d_ternary_false@3:
+    intc_1 // 0
+    b storage_d_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.storage_rd[routing]() -> void:
 storage_rd:
+    txn GroupIndex
+    bz storage_rd_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+storage_rd_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+storage_rd_ternary_false@3:
+    intc_1 // 0
+    b storage_rd_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.set_a[routing]() -> void:
@@ -147,22 +259,36 @@ set_a:
     intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    intc_2 // 0
+    txn GroupIndex
+    bz set_a_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+set_a_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_3 // "a"
     app_global_get_ex
     assert // check a exists
     extract 8 8
-    uncover 2
+    dig 2
     swap
     concat
     extract 0 8
-    swap
+    dig 1
     concat
     bytec_3 // "a"
     swap
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
+
+set_a_ternary_false@3:
+    intc_1 // 0
+    b set_a_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.set_ra[routing]() -> void:
@@ -179,22 +305,36 @@ set_ra:
     intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    intc_2 // 0
+    txn GroupIndex
+    bz set_ra_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+set_ra_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec 4 // "ra"
     app_global_get_ex
     assert // check ra exists
     extract 8 8
-    uncover 2
+    dig 2
     swap
     concat
     extract 0 8
-    swap
+    dig 1
     concat
     bytec 4 // "ra"
     swap
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
+
+set_ra_ternary_false@3:
+    intc_1 // 0
+    b set_ra_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.set_b[routing]() -> void:
@@ -211,22 +351,36 @@ set_b:
     intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    intc_2 // 0
+    txn GroupIndex
+    bz set_b_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+set_b_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_1 // "b"
     app_global_get_ex
     assert // check b exists
     extract 8 8
-    uncover 2
+    dig 2
     swap
     concat
     extract 0 8
-    swap
+    dig 1
     concat
     bytec_1 // "b"
     swap
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
+
+set_b_ternary_false@3:
+    intc_1 // 0
+    b set_b_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.set_rb[routing]() -> void:
@@ -243,22 +397,36 @@ set_rb:
     intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    intc_2 // 0
+    txn GroupIndex
+    bz set_rb_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+set_rb_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec 5 // "rb"
     app_global_get_ex
     assert // check rb exists
     extract 8 8
-    uncover 2
+    dig 2
     swap
     concat
     extract 0 8
-    swap
+    dig 1
     concat
     bytec 5 // "rb"
     swap
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
+
+set_rb_ternary_false@3:
+    intc_1 // 0
+    b set_rb_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.set_c[routing]() -> void:
@@ -275,22 +443,36 @@ set_c:
     intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    intc_2 // 0
+    txn GroupIndex
+    bz set_c_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+set_c_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec 6 // "c"
     app_global_get_ex
     assert // check c exists
     extract 8 8
-    uncover 2
+    dig 2
     swap
     concat
     extract 0 8
-    swap
+    dig 1
     concat
     bytec 6 // "c"
     swap
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
+
+set_c_ternary_false@3:
+    intc_1 // 0
+    b set_c_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.set_rc[routing]() -> void:
@@ -307,22 +489,36 @@ set_rc:
     intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    intc_2 // 0
+    txn GroupIndex
+    bz set_rc_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+set_rc_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec 7 // "rc"
     app_global_get_ex
     assert // check rc exists
     extract 8 8
-    uncover 2
+    dig 2
     swap
     concat
     extract 0 8
-    swap
+    dig 1
     concat
     bytec 7 // "rc"
     swap
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
+
+set_rc_ternary_false@3:
+    intc_1 // 0
+    b set_rc_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.set_d[routing]() -> void:
@@ -337,31 +533,45 @@ set_d:
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    swap
-    intc_0 // 32
+    txn GroupIndex
+    bz set_d_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+set_d_ternary_merge@4:
+    !
+    assert // not payable
+    dig 1
+    intc_2 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_2 // 32
     bzero
-    uncover 2
+    dig 3
     b|
-    intc_2 // 0
+    intc_1 // 0
     bytec 8 // "d"
     app_global_get_ex
     assert // check d exists
     extract 32 32
     concat
     extract 0 32
-    swap
+    dig 1
     concat
     bytec 8 // "d"
     swap
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
+
+set_d_ternary_false@3:
+    intc_1 // 0
+    b set_d_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.set_rd[routing]() -> void:
@@ -376,46 +586,72 @@ set_rd:
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    swap
-    intc_0 // 32
+    txn GroupIndex
+    bz set_rd_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+set_rd_ternary_merge@4:
+    !
+    assert // not payable
+    dig 1
+    intc_2 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_2 // 32
     bzero
-    uncover 2
+    dig 3
     b|
-    intc_2 // 0
+    intc_1 // 0
     bytec 9 // "rd"
     app_global_get_ex
     assert // check rd exists
     extract 32 32
     concat
     extract 0 32
-    swap
+    dig 1
     concat
     bytec 9 // "rd"
     swap
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
+
+set_rd_ternary_false@3:
+    intc_1 // 0
+    b set_rd_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.read_slot[routing]() -> void:
 read_slot:
+    intc_1 // 0
+    pushbytes ""
     txna ApplicationArgs 1
     dup
     len
     pushint 64
     ==
     assert // invalid number of bytes for arc4.uint512
+    txn GroupIndex
+    bz read_slot_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+read_slot_ternary_merge@4:
+    !
+    assert // not payable
     load 0
-    swap
+    bury 3
     intc_3 // 8
     bzero
-    swap
+    dig 1
     concat
     dup
     len
@@ -423,23 +659,24 @@ read_slot:
     -
     extract_uint64
     dup
+    bury 3
     pushint 7
     ==
-    bz read_slot_else_body@3
-    intc_0 // 32
+    bz read_slot_else_body@7
+    intc_2 // 32
     bzero
     bytec 9 // "rd"
     app_global_get
     concat
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     -
-    intc_0 // 32
+    intc_2 // 32
     extract3
 
-read_slot_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.__storage_read@18:
-    dig 2
+read_slot_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.__storage_read@22:
+    dig 3
     store 0
     dup
     len
@@ -453,155 +690,169 @@ read_slot_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
-read_slot_else_body@3:
-    dup
+read_slot_else_body@7:
+    dig 1
     pushint 6
     ==
-    bz read_slot_else_body@5
-    intc_0 // 32
+    bz read_slot_else_body@9
+    intc_2 // 32
     bzero
     bytec 8 // "d"
     app_global_get
     concat
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     -
-    intc_0 // 32
+    intc_2 // 32
     extract3
-    b read_slot_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.__storage_read@18
+    b read_slot_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.__storage_read@22
 
-read_slot_else_body@5:
-    dup
+read_slot_else_body@9:
+    dig 1
     pushint 5
     ==
-    bz read_slot_else_body@7
-    intc_0 // 32
+    bz read_slot_else_body@11
+    intc_2 // 32
     bzero
     bytec 7 // "rc"
     app_global_get
     concat
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     -
-    intc_0 // 32
+    intc_2 // 32
     extract3
-    b read_slot_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.__storage_read@18
+    b read_slot_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.__storage_read@22
 
-read_slot_else_body@7:
-    dup
+read_slot_else_body@11:
+    dig 1
     pushint 4
     ==
-    bz read_slot_else_body@9
-    intc_0 // 32
+    bz read_slot_else_body@13
+    intc_2 // 32
     bzero
     bytec 6 // "c"
     app_global_get
     concat
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     -
-    intc_0 // 32
+    intc_2 // 32
     extract3
-    b read_slot_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.__storage_read@18
+    b read_slot_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.__storage_read@22
 
-read_slot_else_body@9:
-    dup
+read_slot_else_body@13:
+    dig 1
     pushint 3
     ==
-    bz read_slot_else_body@11
-    intc_0 // 32
+    bz read_slot_else_body@15
+    intc_2 // 32
     bzero
     bytec 5 // "rb"
     app_global_get
     concat
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     -
-    intc_0 // 32
+    intc_2 // 32
     extract3
-    b read_slot_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.__storage_read@18
+    b read_slot_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.__storage_read@22
 
-read_slot_else_body@11:
-    dup
+read_slot_else_body@15:
+    dig 1
     pushint 2
     ==
-    bz read_slot_else_body@13
-    intc_0 // 32
+    bz read_slot_else_body@17
+    intc_2 // 32
     bzero
     bytec_1 // "b"
     app_global_get
     concat
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     -
-    intc_0 // 32
+    intc_2 // 32
     extract3
-    b read_slot_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.__storage_read@18
+    b read_slot_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.__storage_read@22
 
-read_slot_else_body@13:
-    dup
-    intc_1 // 1
+read_slot_else_body@17:
+    dig 1
+    intc_0 // 1
     ==
-    bz read_slot_else_body@15
-    intc_0 // 32
+    bz read_slot_else_body@19
+    intc_2 // 32
     bzero
     bytec 4 // "ra"
     app_global_get
     concat
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     -
-    intc_0 // 32
+    intc_2 // 32
     extract3
-    b read_slot_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.__storage_read@18
+    b read_slot_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.__storage_read@22
 
-read_slot_else_body@15:
-    dup
-    bnz read_slot_else_body@17
-    intc_0 // 32
+read_slot_else_body@19:
+    dig 1
+    bnz read_slot_else_body@21
+    intc_2 // 32
     bzero
     bytec_3 // "a"
     app_global_get
     concat
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     -
-    intc_0 // 32
+    intc_2 // 32
     extract3
-    b read_slot_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.__storage_read@18
+    b read_slot_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.__storage_read@22
 
-read_slot_else_body@17:
+read_slot_else_body@21:
     bytec 11 // "__dyn_storage"
     pushint 8192
     box_create
     pop
-    dup
+    dig 1
     pushint 256
     %
-    intc_0 // 32
+    intc_2 // 32
     *
     bytec 11 // "__dyn_storage"
     swap
-    intc_0 // 32
+    intc_2 // 32
     box_extract
-    b read_slot_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.__storage_read@18
+    b read_slot_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.__storage_read@22
+
+read_slot_ternary_false@3:
+    intc_1 // 0
+    b read_slot_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.read_contents_asm[routing]() -> void:
 read_contents_asm:
+    txn GroupIndex
+    bz read_contents_asm_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+read_contents_asm_ternary_merge@4:
+    !
+    assert // not payable
     pushint 18446744073709551614
     itob
-    intc_2 // 0
+    intc_1 // 0
     bytec_1 // "b"
     app_global_get_ex
     assert // check b exists
@@ -619,16 +870,16 @@ read_contents_asm:
     swap
     extract 8 8
     load 0
-    intc_0 // 32
+    intc_2 // 32
     bzero
     dup
     uncover 4
     concat
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     -
-    intc_0 // 32
+    intc_2 // 32
     extract3
     extract 0 32
     dig 2
@@ -638,9 +889,9 @@ read_contents_asm:
     concat
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     -
-    intc_0 // 32
+    intc_2 // 32
     extract3
     extract 0 32
     uncover 2
@@ -648,9 +899,9 @@ read_contents_asm:
     concat
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     -
-    intc_0 // 32
+    intc_2 // 32
     extract3
     extract 0 32
     uncover 3
@@ -666,13 +917,27 @@ read_contents_asm:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+read_contents_asm_ternary_false@3:
+    intc_1 // 0
+    b read_contents_asm_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.a[routing]() -> void:
 a:
-    intc_2 // 0
+    txn GroupIndex
+    bz a_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+a_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_3 // "a"
     app_global_get_ex
     assert // check a exists
@@ -685,13 +950,27 @@ a:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+a_ternary_false@3:
+    intc_1 // 0
+    b a_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.ra[routing]() -> void:
 ra:
-    intc_2 // 0
+    txn GroupIndex
+    bz ra_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+ra_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec 4 // "ra"
     app_global_get_ex
     assert // check ra exists
@@ -704,13 +983,27 @@ ra:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+ra_ternary_false@3:
+    intc_1 // 0
+    b ra_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.b[routing]() -> void:
 b:
-    intc_2 // 0
+    txn GroupIndex
+    bz b_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+b_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_1 // "b"
     app_global_get_ex
     assert // check b exists
@@ -723,13 +1016,27 @@ b:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+b_ternary_false@3:
+    intc_1 // 0
+    b b_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.rb[routing]() -> void:
 rb:
-    intc_2 // 0
+    txn GroupIndex
+    bz rb_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+rb_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec 5 // "rb"
     app_global_get_ex
     assert // check rb exists
@@ -742,13 +1049,27 @@ rb:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+rb_ternary_false@3:
+    intc_1 // 0
+    b rb_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.c[routing]() -> void:
 c:
-    intc_2 // 0
+    txn GroupIndex
+    bz c_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+c_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec 6 // "c"
     app_global_get_ex
     assert // check c exists
@@ -761,13 +1082,27 @@ c:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+c_ternary_false@3:
+    intc_1 // 0
+    b c_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.rc[routing]() -> void:
 rc:
-    intc_2 // 0
+    txn GroupIndex
+    bz rc_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+rc_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec 7 // "rc"
     app_global_get_ex
     assert // check rc exists
@@ -780,13 +1115,27 @@ rc:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+rc_ternary_false@3:
+    intc_1 // 0
+    b rc_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.d[routing]() -> void:
 d:
-    intc_2 // 0
+    txn GroupIndex
+    bz d_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+d_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec 8 // "d"
     app_global_get_ex
     assert // check d exists
@@ -804,13 +1153,27 @@ d:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+d_ternary_false@3:
+    intc_1 // 0
+    b d_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.rd[routing]() -> void:
 rd:
-    intc_2 // 0
+    txn GroupIndex
+    bz rd_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+rd_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec 9 // "rd"
     app_global_get_ex
     assert // check rd exists
@@ -828,5 +1191,9 @@ rd:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+rd_ternary_false@3:
+    intc_1 // 0
+    b rd_ternary_merge@4

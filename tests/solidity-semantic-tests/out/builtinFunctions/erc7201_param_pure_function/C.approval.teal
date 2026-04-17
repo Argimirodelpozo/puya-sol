@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_pure_function.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
-    bytecblock 0x01 0x010000000000000000000000000000000000000000000000000000000000000000
+    intcblock 1 32 0
+    bytecblock 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x00 "example.main"
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -25,14 +25,8 @@ main_after_if_else@2:
     assert
     pushbytess 0x36b8a41c 0x2eaab6fe // method "f()string", method "builtinMatchesSolidityImplementation()bool"
     txna ApplicationArgs 0
-    match main_f_route@5 builtinMatchesSolidityImplementation
+    match f builtinMatchesSolidityImplementation
     err
-
-main_f_route@5:
-    pushbytes 0x151f7c75000c6578616d706c652e6d61696e
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_pure_function.sol.erc7201Mock(id: bytes) -> bytes:
@@ -66,19 +60,80 @@ erc7201Mock:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_pure_function.sol.C.builtinMatchesSolidityImplementation[routing]() -> void:
-builtinMatchesSolidityImplementation:
-    pushbytes "example.main"
-    callsub erc7201Mock
-    pushbytes 0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500
-    b==
-    pushbytes 0x00
-    pushint 0
-    uncover 2
-    setbit
-    pushbytes 0x151f7c75
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_pure_function.sol.C.f[routing]() -> void:
+f:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_pure_function.sol.C.f
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_pure_function.sol.C.builtinMatchesSolidityImplementation[routing]() -> void:
+builtinMatchesSolidityImplementation:
+    txn GroupIndex
+    bz builtinMatchesSolidityImplementation_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+builtinMatchesSolidityImplementation_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_pure_function.sol.C.f
+    keccak256
+    bytec_0 // 0x01
+    b-
+    b|
+    keccak256
+    extract 0 31
+    bytec_3 // 0x00
+    concat
+    bytec 4 // "example.main"
+    callsub erc7201Mock
+    b==
+    bytec_3 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+builtinMatchesSolidityImplementation_ternary_false@3:
+    intc_2 // 0
+    b builtinMatchesSolidityImplementation_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_pure_function.sol.C.f() -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_pure_function.sol.C.f:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_pure_function.sol.C.f_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_pure_function.sol.C.f_ternary_merge@3:
+    !
+    assert // not payable
+    bytec 4 // "example.main"
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_pure_function.sol.C.f_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_pure_function.sol.C.f_ternary_merge@3

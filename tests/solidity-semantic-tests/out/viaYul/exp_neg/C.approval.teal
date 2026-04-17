@@ -49,12 +49,22 @@ f:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
 
-f_while_top@20:
+f_ternary_merge@4:
+    !
+    assert // not payable
+
+f_while_top@23:
     pushint 170010
     global OpcodeBudget
     >
-    bz f_after_while@25
+    bz f_after_while@28
     itxn_begin
     pushint 6 // appl
     itxn_field TypeEnum
@@ -67,9 +77,9 @@ f_while_top@20:
     intc_2 // 0
     itxn_field Fee
     itxn_submit
-    b f_while_top@20
+    b f_while_top@23
 
-f_after_while@25:
+f_after_while@28:
     pushbytes 0x01
     bury 4
     dig 1
@@ -77,33 +87,33 @@ f_after_while@25:
     b<
     dup
     bury 4
-    bnz f_ternary_false@3
+    bnz f_ternary_false@6
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     dig 2
     b-
     bury 6
 
-f_ternary_merge@4:
+f_ternary_merge@7:
     dup
     bury 5
 
-f_while_top@5:
+f_while_top@8:
     dig 4
     bytec_0 // 0x
     b>
-    bz f_after_while@9
+    bz f_after_while@12
     dig 4
     pushbytes 0x01
     b&
     bytec_0 // 0x
     b!=
-    bz f_after_if_else@8
+    bz f_after_if_else@11
     dig 3
     dig 6
     b*
     bury 4
 
-f_after_if_else@8:
+f_after_if_else@11:
     dig 4
     bytec_3 // 0x02
     b/
@@ -112,43 +122,43 @@ f_after_if_else@8:
     dup
     b*
     bury 6
-    b f_while_top@5
+    b f_while_top@8
 
-f_after_while@9:
+f_after_while@12:
     dig 2
-    bnz f_ternary_false@12
+    bnz f_ternary_false@15
     dup
     bytec_3 // 0x02
     b%
     bytec_0 // 0x
     b!=
-    bz f_ternary_false@12
+    bz f_ternary_false@15
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     dig 4
     b<
     !
 
-f_ternary_merge@13:
+f_ternary_merge@16:
     assert // signed exp overflow
     dig 2
-    bnz f_ternary_false@17
+    bnz f_ternary_false@20
     dup
     bytec_3 // 0x02
     b%
     bytec_0 // 0x
     b!=
-    bz f_ternary_false@17
+    bz f_ternary_false@20
     dig 3
     bytec_0 // 0x
     b==
-    bnz f_ternary_false@17
+    bnz f_ternary_false@20
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     dig 4
     b-
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
-f_ternary_merge@18:
+f_ternary_merge@21:
     dup
     len
     intc_0 // 32
@@ -164,17 +174,21 @@ f_ternary_merge@18:
     intc_1 // 1
     return
 
-f_ternary_false@17:
+f_ternary_false@20:
     dig 3
-    b f_ternary_merge@18
+    b f_ternary_merge@21
 
-f_ternary_false@12:
+f_ternary_false@15:
     dig 3
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
-    b f_ternary_merge@13
+    b f_ternary_merge@16
 
-f_ternary_false@3:
+f_ternary_false@6:
     dig 1
     bury 6
+    b f_ternary_merge@7
+
+f_ternary_false@3:
+    intc_2 // 0
     b f_ternary_merge@4

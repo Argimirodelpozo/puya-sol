@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_address.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 0 32
     bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -40,11 +40,22 @@ L.f:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_address.sol.C.addr[routing]() -> void:
 addr:
-    intc_2 // 0
+    intc_1 // 0
+    txn GroupIndex
+    bz addr_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+addr_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     ==
     pushbytes 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec_1 // 0x151f7c75
@@ -54,22 +65,37 @@ addr:
     intc_0 // 1
     return
 
+addr_ternary_false@3:
+    intc_1 // 0
+    b addr_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_address.sol.C.g[routing]() -> void:
 g:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     callsub L.f
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
@@ -79,54 +105,114 @@ g:
     intc_0 // 1
     return
 
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_address.sol.C.h[routing]() -> void:
 h:
     txna ApplicationArgs 1
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
+
+h_ternary_false@3:
+    intc_1 // 0
+    b h_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_address.sol.C.i[routing]() -> void:
 i:
     txna ApplicationArgs 1
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz i_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+i_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
+
+i_ternary_false@3:
+    intc_1 // 0
+    b i_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_address.sol.C.j[routing]() -> void:
 j:
     txna ApplicationArgs 1
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz j_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+j_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
+
+j_ternary_false@3:
+    intc_1 // 0
+    b j_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_address.sol.C.k[routing]() -> void:
 k:
     txna ApplicationArgs 1
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz k_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+k_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
+
+k_ternary_false@3:
+    intc_1 // 0
+    b k_ternary_merge@4

@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "flag"
+    intcblock 0 1
+    bytecblock "flag" 0x00 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "flag"
-    intc_1 // 0
+    intc_0 // 0
     app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -28,41 +28,99 @@ main_after_if_else@2:
     assert
     pushbytess 0x10b04df6 0x4b4fb052 0xfc32fe40 // method "f0()void", method "f()bool", method "flag()bool"
     txna ApplicationArgs 0
-    match main_f0_route@5 f flag
+    match f0 f flag
     err
 
-main_f0_route@5:
-    bytec_0 // "flag"
-    intc_0 // 1
-    app_global_put
-    intc_0 // 1
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.f0[routing]() -> void:
+f0:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.f0
+    intc_1 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.f0
+    intc_0 // 0
     bytec_0 // "flag"
-    intc_0 // 1
-    app_global_put
-    pushbytes 0x151f7c7580
+    app_global_get_ex
+    assert // check flag exists
+    bytec_1 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
+
+f_ternary_false@3:
+    intc_0 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.flag[routing]() -> void:
 flag:
-    intc_1 // 0
+    txn GroupIndex
+    bz flag_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+flag_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 0
     bytec_0 // "flag"
     app_global_get_ex
     assert // check flag exists
-    pushbytes 0x00
-    intc_1 // 0
+    bytec_1 // 0x00
+    intc_0 // 0
     uncover 2
     setbit
-    pushbytes 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
+
+flag_ternary_false@3:
+    intc_0 // 0
+    b flag_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.f0() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.f0:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.f0_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.f0_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // "flag"
+    intc_1 // 1
+    app_global_put
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.f0_ternary_false@2:
+    intc_0 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.f0_ternary_merge@3

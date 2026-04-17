@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/addmod_mulmod_zero.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 0 32
     bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000002 0x
     txn ApplicationID
     bnz main_after_if_else@2
@@ -25,14 +25,8 @@ main_after_if_else@2:
     assert
     pushbytess 0x1928cd24 0xc14ad39f 0xafedb2e5 // method "f(uint256)uint256", method "g(uint256)uint256", method "h()uint256"
     txna ApplicationArgs 0
-    match f g main_h_route@7
+    match f g h
     err
-
-main_h_route@7:
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/addmod_mulmod_zero.sol.C.f[routing]() -> void:
@@ -40,9 +34,20 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     bytec_1 // 0x
     b!=
     assert // modulo by zero
@@ -50,6 +55,10 @@ f:
     log
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/addmod_mulmod_zero.sol.C.g[routing]() -> void:
@@ -57,9 +66,20 @@ g:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     bytec_1 // 0x
     b!=
     assert // modulo by zero
@@ -67,3 +87,29 @@ g:
     log
     intc_0 // 1
     return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/addmod_mulmod_zero.sol.C.h[routing]() -> void:
+h:
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
+    log
+    intc_0 // 1
+    return
+
+h_ternary_false@3:
+    intc_1 // 0
+    b h_ternary_merge@4

@@ -34,6 +34,7 @@ main_f_route@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_array_three_dimensional.sol.C.f[routing]() -> void:
 f:
     intc_2 // 0
+    dupn 3
     pushbytes ""
     dup
     txna ApplicationArgs 1
@@ -131,30 +132,42 @@ f_after_for@8:
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.dynamic_array<arc4.uint256>, 2>>
     txna ApplicationArgs 2
     dup
+    bury 12
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
+    bury 11
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
     dup
+    bury 10
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    dig 7
+    txn GroupIndex
+    bz f_ternary_false@11
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@12:
+    !
+    assert // not payable
+    dig 4
     dup
-    cover 3
     itob
     pushint 8
     bzero
     dup
-    uncover 6
+    dig 14
     concat
     dup
     len
@@ -162,7 +175,7 @@ f_after_for@8:
     -
     extract_uint64
     dig 1
-    uncover 5
+    dig 14
     concat
     dup
     len
@@ -172,7 +185,7 @@ f_after_for@8:
     dig 1
     intc_0 // 2
     *
-    dig 8
+    dig 7
     dup
     cover 3
     swap
@@ -180,7 +193,7 @@ f_after_for@8:
     uncover 3
     intc_3 // 1
     +
-    uncover 7
+    uncover 6
     dig 1
     - // on error: index access is out of bounds
     dig 4
@@ -218,7 +231,7 @@ f_after_for@8:
     extract_uint16 // on error: invalid array length header
     itob
     uncover 2
-    uncover 4
+    dig 12
     concat
     dup
     len
@@ -261,3 +274,7 @@ f_after_for@8:
     log
     intc_3 // 1
     return
+
+f_ternary_false@11:
+    intc_2 // 0
+    b f_ternary_merge@12

@@ -89,10 +89,20 @@ data:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz data_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+data_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
     dup
-    uncover 3
+    dig 3
     concat
     dup
     len
@@ -101,7 +111,7 @@ data:
     intc_0 // 32
     extract3
     swap
-    uncover 2
+    dig 2
     concat
     dup
     len
@@ -133,6 +143,10 @@ data:
     intc_1 // 1
     return
 
+data_ternary_false@3:
+    intc_3 // 0
+    b data_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/accessors_mapping_for_array.sol.test.dynamicData[routing]() -> void:
 dynamicData:
@@ -148,10 +162,20 @@ dynamicData:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz dynamicData_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+dynamicData_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
     dup
-    uncover 3
+    dig 3
     concat
     dup
     len
@@ -160,7 +184,7 @@ dynamicData:
     intc_0 // 32
     extract3
     swap
-    uncover 2
+    dig 2
     concat
     dup
     len
@@ -191,3 +215,7 @@ dynamicData:
     log
     intc_1 // 1
     return
+
+dynamicData_ternary_false@3:
+    intc_3 // 0
+    b dynamicData_ternary_merge@4

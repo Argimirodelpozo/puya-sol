@@ -85,6 +85,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/value_for_constructor.sol.Main.getFlag[routing]() -> void:
 getFlag:
+    txn GroupIndex
+    bz getFlag_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getFlag_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     intc_0 // 0
     bytec_0 // "h"
@@ -119,9 +129,23 @@ getFlag:
     intc_1 // 1
     return
 
+getFlag_ternary_false@3:
+    intc_0 // 0
+    b getFlag_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/value_for_constructor.sol.Main.getName[routing]() -> void:
 getName:
+    txn GroupIndex
+    bz getName_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getName_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     intc_0 // 0
     bytec_0 // "h"
@@ -148,9 +172,23 @@ getName:
     intc_1 // 1
     return
 
+getName_ternary_false@3:
+    intc_0 // 0
+    b getName_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/value_for_constructor.sol.Main.getBalances[routing]() -> void:
 getBalances:
+    txn GroupIndex
+    bz getBalances_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getBalances_ternary_merge@4:
+    !
+    assert // not payable
     global CurrentApplicationAddress
     acct_params_get AcctBalance
     pop
@@ -176,3 +214,7 @@ getBalances:
     log
     intc_1 // 1
     return
+
+getBalances_ternary_false@3:
+    intc_0 // 0
+    b getBalances_ternary_merge@4

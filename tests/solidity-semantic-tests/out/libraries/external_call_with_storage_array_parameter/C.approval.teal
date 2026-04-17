@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/external_call_with_storage_array_parameter.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 32 1 0
     bytecblock "x"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -57,15 +57,26 @@ g:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     intc_0 // 32
     <=
     assert // overflow
     intc_0 // 32
     bzero
-    swap
+    dig 2
     dig 1
     b|
-    pushint 0
+    intc_2 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
@@ -93,3 +104,7 @@ g:
     log
     intc_1 // 1
     return
+
+g_ternary_false@3:
+    intc_2 // 0
+    b g_ternary_merge@4

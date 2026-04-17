@@ -37,6 +37,17 @@ o:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz o_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+o_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     pushbytes 0x01
     b+
     dup
@@ -54,9 +65,23 @@ o:
     intc_0 // 1
     return
 
+o_ternary_false@3:
+    intc_2 // 0
+    b o_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/multislot_struct_allocation.sol.C.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 1
     itob
     intc_1 // 32
@@ -89,3 +114,7 @@ f:
     log
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_2 // 0
+    b f_ternary_merge@4

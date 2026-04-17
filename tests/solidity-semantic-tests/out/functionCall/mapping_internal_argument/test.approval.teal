@@ -75,25 +75,35 @@ set:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    txn GroupIndex
+    bz set_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+set_ternary_merge@4:
+    !
+    assert // not payable
     dig 2
+    dup
     intc_0 // 255
     <=
     assert // ABI validation
-    uncover 2
     intc_0 // 255
     &
     dig 2
+    dup
     intc_0 // 255
     <=
     assert // ABI validation
-    uncover 2
     intc_0 // 255
     &
     dig 2
+    dup
     intc_0 // 255
     <=
     assert // ABI validation
-    uncover 2
     intc_0 // 255
     &
     bytec_1 // "a"
@@ -122,6 +132,10 @@ set:
     intc_1 // 1
     return
 
+set_ternary_false@3:
+    intc_2 // 0
+    b set_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol.test.get[routing]() -> void:
 get:
@@ -132,7 +146,17 @@ get:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    dup
+    txn GroupIndex
+    bz get_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+get_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     intc_0 // 255
     <=
     assert // ABI validation
@@ -175,6 +199,10 @@ get:
     log
     intc_1 // 1
     return
+
+get_ternary_false@3:
+    intc_2 // 0
+    b get_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol.test.set_internal(m: bytes, key: uint64, value: uint64) -> uint64:

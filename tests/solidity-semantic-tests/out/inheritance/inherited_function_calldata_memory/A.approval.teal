@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol.A.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 0 32
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -34,19 +34,30 @@ main_f_route@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol.A.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
-    dup
-    pushint 0
+    dupn 2
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_1 // 32
+    intc_2 // 32
     *
     pushint 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     extract 2 32
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -55,3 +66,7 @@ f:
     log
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4

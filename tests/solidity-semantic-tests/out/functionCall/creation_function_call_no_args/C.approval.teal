@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/creation_function_call_no_args.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64
+    intcblock 1 0 64
     txn ApplicationID
     bnz main_after_if_else@2
     pushint 2
@@ -38,16 +38,26 @@ main_i_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/creation_function_call_no_args.sol.C.i[routing]() -> void:
 i:
-    pushint 0
+    txn GroupIndex
+    bz i_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+i_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     pushbytes "i"
     app_global_get_ex
     assert // check i exists
     dup
     len
-    intc_1 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
     pushbytes 0x151f7c75
@@ -56,3 +66,7 @@ i:
     log
     intc_0 // 1
     return
+
+i_ternary_false@3:
+    intc_1 // 0
+    b i_ternary_merge@4

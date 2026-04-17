@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mappings_array2d_pop_delete.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 32 1 2 36893488147419103230 18446744073709551616 36893488147419103232
-    bytecblock "a" 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x00020000 0x0000
+    intcblock 0 1 32 2 36893488147419103230 18446744073709551616 36893488147419103232
+    bytecblock "a" 0x 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x00020000 0x0000
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_3 // "__ctor_pending"
-    intc_2 // 1
+    bytec 4 // "__ctor_pending"
+    intc_1 // 1
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -35,7 +35,7 @@ main_after_if_else@2:
 // _puya_lib.arc4.dynamic_array_concat_dynamic_element(array_items_count: uint64, array_head_and_tail: bytes, new_items_count: uint64, new_head_and_tail: bytes) -> bytes:
 dynamic_array_concat_dynamic_element:
     proto 4 1
-    pushbytes ""
+    bytec_1 // ""
     dup
     frame_dig -2
     intc_3 // 2
@@ -124,17 +124,17 @@ dynamic_array_concat_dynamic_element_after_for@8:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mappings_array2d_pop_delete.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     intc_0 // 0
     app_global_put
     bytec_0 // "a"
     intc_3 // 2
     box_create
     pop
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -143,15 +143,25 @@ n1:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz n1_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+n1_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "a"
     box_get
     assert // box exists
@@ -160,8 +170,8 @@ n1:
     extract_uint16
     swap
     extract 2 0
-    intc_2 // 1
-    bytec 4 // 0x00020000
+    intc_1 // 1
+    bytec 5 // 0x00020000
     callsub dynamic_array_concat_dynamic_element
     bytec_0 // "a"
     box_del
@@ -194,35 +204,35 @@ n1:
     extract_uint16 // on error: invalid array length header
     itob
     dup
-    bytec_1 // 0x01
+    bytec_2 // 0x01
     b>=
     assert // underflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     swap
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec_1 // 0x01
+    bytec_2 // 0x01
     b-
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dig 1
     swap
     concat
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     -
-    intc_1 // 32
+    intc_2 // 32
     extract3
     swap
-    uncover 3
+    dig 3
     concat
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     -
-    intc_1 // 32
+    intc_2 // 32
     extract3
     concat
     sha256
@@ -232,14 +242,28 @@ n1:
     dup
     box_del
     pop
-    swap
+    dig 1
     box_put
-    intc_2 // 1
+    intc_1 // 1
     return
+
+n1_ternary_false@3:
+    intc_0 // 0
+    b n1_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mappings_array2d_pop_delete.sol.C.n2[routing]() -> void:
 n2:
+    txn GroupIndex
+    bz n2_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+n2_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "a"
     box_get
     assert // box exists
@@ -248,8 +272,8 @@ n2:
     extract_uint16
     swap
     extract 2 0
-    intc_2 // 1
-    bytec 4 // 0x00020000
+    intc_1 // 1
+    bytec 5 // 0x00020000
     callsub dynamic_array_concat_dynamic_element
     bytec_0 // "a"
     box_del
@@ -259,8 +283,12 @@ n2:
     box_put
     intc_0 // 0
     assert // underflow
-    intc_2 // 1
+    intc_1 // 1
     return
+
+n2_ternary_false@3:
+    intc_0 // 0
+    b n2_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mappings_array2d_pop_delete.sol.C.map[routing]() -> void:
@@ -268,14 +296,24 @@ map:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz map_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+map_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     assert // underflow
     bytec_0 // "a"
     box_get
-    bytec 5 // 0x0000
+    bytec 6 // 0x0000
     cover 2
     select
     dup
@@ -301,35 +339,35 @@ map:
     extract_uint16 // on error: invalid array length header
     itob
     dup
-    bytec_1 // 0x01
+    bytec_2 // 0x01
     b>=
     assert // underflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     swap
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec_1 // 0x01
+    bytec_2 // 0x01
     b-
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dig 1
     swap
     concat
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     -
-    intc_1 // 32
+    intc_2 // 32
     extract3
     dig 1
-    uncover 3
+    dig 3
     concat
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     -
-    intc_1 // 32
+    intc_2 // 32
     extract3
     concat
     sha256
@@ -337,12 +375,12 @@ map:
     swap
     concat
     box_get
-    pushbytes 0x
+    bytec_1 // 0x
     cover 2
     select
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
     b|
@@ -350,40 +388,63 @@ map:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
+
+map_ternary_false@3:
+    intc_0 // 0
+    b map_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mappings_array2d_pop_delete.sol.C.p[routing]() -> void:
 p:
+    intc_0 // 0
+    dup
+    bytec_1 // ""
+    dupn 3
+    txn GroupIndex
+    bz p_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+p_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "a"
     box_get
     assert // box exists
     dup
     intc_0 // 0
     extract_uint16
-    intc_2 // 1
+    intc_1 // 1
     -
     dup
-    cover 2
+    bury 5
     intc_3 // 2
     *
     dup
-    uncover 2
+    bury 4
+    swap
     extract 2 0
     dup
-    uncover 2
+    bury 8
+    swap
     extract_uint16
-    pushbytes 0x
+    bury 1
+    bytec_1 // 0x
+    bury 5
     intc_0 // 0
+    bury 4
 
-p_for_header@2:
-    dup
-    dig 5
-    <
-    bz p_after_for@4
+p_for_header@6:
     dig 3
-    dig 1
+    dig 2
+    <
+    bz p_after_for@8
+    dig 5
+    dig 4
     dup
     cover 2
     extract_uint16
@@ -391,27 +452,27 @@ p_for_header@2:
     -
     itob
     extract 6 2
-    dig 3
+    dig 6
     swap
     concat
-    bury 3
+    bury 6
     intc_3 // 2
     +
-    bury 1
-    b p_for_header@2
+    bury 4
+    b p_for_header@6
 
-p_after_for@4:
-    dig 5
+p_after_for@8:
+    dig 2
     itob
     extract 6 2
-    dig 2
-    concat
     dig 5
+    concat
+    dig 2
     intc_3 // 2
     +
-    dig 5
+    dig 7
     swap
-    dig 5
+    dig 3
     substring3
     concat
     bytec_0 // "a"
@@ -420,19 +481,37 @@ p_after_for@4:
     bytec_0 // "a"
     swap
     box_put
-    intc_2 // 1
+    intc_1 // 1
     return
+
+p_ternary_false@3:
+    intc_0 // 0
+    b p_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mappings_array2d_pop_delete.sol.C.d[routing]() -> void:
 d:
+    txn GroupIndex
+    bz d_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+d_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "a"
     box_del
     pop
     bytec_0 // "a"
-    bytec 5 // 0x0000
+    bytec 6 // 0x0000
     box_put
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_2 // 1
+    intc_1 // 1
     return
+
+d_ternary_false@3:
+    intc_0 // 0
+    b d_ternary_merge@4

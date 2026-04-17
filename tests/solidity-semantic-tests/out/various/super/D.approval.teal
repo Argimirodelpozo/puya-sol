@@ -3,9 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/super.sol.D.approval_program() -> uint64:
 main:
+    intcblock 1 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -27,7 +28,68 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/super.sol.D.f[routing]() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    txn GroupIndex
+    bz f_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@8:
+    !
+    assert // not payable
+    txn GroupIndex
+    bz f_ternary_false@10
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@11:
+    !
+    assert // not payable
+    txn GroupIndex
+    bz f_ternary_false@13
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@14:
+    !
+    assert // not payable
     pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000f
     log
-    pushint 1
+    intc_0 // 1
     return
+
+f_ternary_false@13:
+    intc_1 // 0
+    b f_ternary_merge@14
+
+f_ternary_false@10:
+    intc_1 // 0
+    b f_ternary_merge@11
+
+f_ternary_false@7:
+    intc_1 // 0
+    b f_ternary_merge@8
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4

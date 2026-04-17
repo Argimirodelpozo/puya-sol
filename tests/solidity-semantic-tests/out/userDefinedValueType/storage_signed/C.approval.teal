@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_signed.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 32 1 8
+    intcblock 0 1 32 8
     bytecblock 0x010000 "a" 0x8000 0x02 0xffff 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -14,7 +14,7 @@ main:
     app_global_put
     pushbytess "third" 0x6566
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -38,6 +38,16 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_signed.sol.C.direct[routing]() -> void:
 direct:
+    txn GroupIndex
+    bz direct_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+direct_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -47,7 +57,7 @@ direct:
     b&
     bytec_2 // 0x8000
     b>=
-    bz direct_ternary_false@3
+    bz direct_ternary_false@6
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -60,23 +70,23 @@ direct:
     bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
-direct_ternary_merge@4:
+direct_ternary_merge@7:
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     bytec 5 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
-direct_ternary_false@3:
+direct_ternary_false@6:
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -84,11 +94,25 @@ direct_ternary_false@3:
     itob
     bytec 4 // 0xffff
     b&
+    b direct_ternary_merge@7
+
+direct_ternary_false@3:
+    intc_0 // 0
     b direct_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_signed.sol.C.indirect[routing]() -> void:
 indirect:
+    txn GroupIndex
+    bz indirect_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+indirect_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -98,7 +122,7 @@ indirect:
     b&
     bytec_2 // 0x8000
     b>=
-    bz indirect_ternary_false@3
+    bz indirect_ternary_false@6
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -111,23 +135,23 @@ indirect:
     bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
-indirect_ternary_merge@4:
+indirect_ternary_merge@7:
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     bytec 5 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
-indirect_ternary_false@3:
+indirect_ternary_false@6:
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -135,11 +159,25 @@ indirect_ternary_false@3:
     itob
     bytec 4 // 0xffff
     b&
+    b indirect_ternary_merge@7
+
+indirect_ternary_false@3:
+    intc_0 // 0
     b indirect_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_signed.sol.C.toMemDirect[routing]() -> void:
 toMemDirect:
+    txn GroupIndex
+    bz toMemDirect_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+toMemDirect_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -150,12 +188,26 @@ toMemDirect:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
+
+toMemDirect_ternary_false@3:
+    intc_0 // 0
+    b toMemDirect_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_signed.sol.C.toMemIndirect[routing]() -> void:
 toMemIndirect:
+    txn GroupIndex
+    bz toMemIndirect_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+toMemIndirect_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -166,26 +218,41 @@ toMemIndirect:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
+
+toMemIndirect_ternary_false@3:
+    intc_0 // 0
+    b toMemIndirect_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_signed.sol.C.div[routing]() -> void:
 div:
     intc_0 // 0
     dupn 3
+    txn GroupIndex
+    bz div_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+div_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
     assert // check a exists
     intc_3 // 8
     bzero
-    swap
+    bury 4
     itob
     bytec_0 // 0x010000
     b%
     bytec_2 // 0x8000
     b<
-    bnz div_ternary_false@20
+    bnz div_ternary_false@23
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -195,7 +262,7 @@ div:
     b%
     bytec_2 // 0x8000
     b<
-    bnz div_ternary_false@8
+    bnz div_ternary_false@11
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -207,12 +274,12 @@ div:
     swap
     b-
 
-div_ternary_merge@9:
+div_ternary_merge@12:
     bytec_3 // 0x02
     b/
     pushbytes 0x
     b==
-    bnz div_ternary_false@20
+    bnz div_ternary_false@23
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -222,7 +289,7 @@ div_ternary_merge@9:
     b%
     bytec_2 // 0x8000
     b<
-    bnz div_ternary_false@15
+    bnz div_ternary_false@18
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -234,7 +301,7 @@ div_ternary_merge@9:
     swap
     b-
 
-div_ternary_merge@16:
+div_ternary_merge@19:
     bytec_3 // 0x02
     b/
     bytec_0 // 0x010000
@@ -243,11 +310,11 @@ div_ternary_merge@16:
     bytec_0 // 0x010000
     b%
 
-div_ternary_merge@27:
-    dig 1
+div_ternary_merge@30:
+    dig 3
     swap
     concat
-    bury 2
+    bury 1
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -257,7 +324,7 @@ div_ternary_merge@27:
     b%
     bytec_2 // 0x8000
     b<
-    bnz div_ternary_false@42
+    bnz div_ternary_false@45
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -267,7 +334,7 @@ div_ternary_merge@27:
     b%
     bytec_2 // 0x8000
     b<
-    bnz div_ternary_false@30
+    bnz div_ternary_false@33
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -279,12 +346,12 @@ div_ternary_merge@27:
     swap
     b-
 
-div_ternary_merge@31:
+div_ternary_merge@34:
     bytec_3 // 0x02
     b/
     pushbytes 0x
     b==
-    bnz div_ternary_false@42
+    bnz div_ternary_false@45
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -294,7 +361,7 @@ div_ternary_merge@31:
     b%
     bytec_2 // 0x8000
     b<
-    bnz div_ternary_false@37
+    bnz div_ternary_false@40
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -306,7 +373,7 @@ div_ternary_merge@31:
     swap
     b-
 
-div_ternary_merge@38:
+div_ternary_merge@41:
     bytec_3 // 0x02
     b/
     bytec_0 // 0x010000
@@ -315,14 +382,14 @@ div_ternary_merge@38:
     bytec_0 // 0x010000
     b%
 
-div_ternary_merge@49:
-    dig 1
+div_ternary_merge@52:
+    dig 3
     swap
     concat
     len
     intc_3 // 8
     -
-    dig 2
+    dig 1
     swap
     intc_3 // 8
     extract3
@@ -330,7 +397,7 @@ div_ternary_merge@49:
     b&
     bytec_2 // 0x8000
     b>=
-    bz div_ternary_false@95
+    bz div_ternary_false@98
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -340,7 +407,7 @@ div_ternary_merge@49:
     b%
     bytec_2 // 0x8000
     b<
-    bnz div_ternary_false@65
+    bnz div_ternary_false@68
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -350,7 +417,7 @@ div_ternary_merge@49:
     b%
     bytec_2 // 0x8000
     b<
-    bnz div_ternary_false@53
+    bnz div_ternary_false@56
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -362,12 +429,12 @@ div_ternary_merge@49:
     swap
     b-
 
-div_ternary_merge@54:
+div_ternary_merge@57:
     bytec_3 // 0x02
     b/
     pushbytes 0x
     b==
-    bnz div_ternary_false@65
+    bnz div_ternary_false@68
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -377,7 +444,7 @@ div_ternary_merge@54:
     b%
     bytec_2 // 0x8000
     b<
-    bnz div_ternary_false@60
+    bnz div_ternary_false@63
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -389,7 +456,7 @@ div_ternary_merge@54:
     swap
     b-
 
-div_ternary_merge@61:
+div_ternary_merge@64:
     bytec_3 // 0x02
     b/
     bytec_0 // 0x010000
@@ -398,8 +465,8 @@ div_ternary_merge@61:
     bytec_0 // 0x010000
     b%
 
-div_ternary_merge@72:
-    dig 1
+div_ternary_merge@75:
+    dig 3
     swap
     concat
     bury 4
@@ -412,7 +479,7 @@ div_ternary_merge@72:
     b%
     bytec_2 // 0x8000
     b<
-    bnz div_ternary_false@87
+    bnz div_ternary_false@90
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -422,7 +489,7 @@ div_ternary_merge@72:
     b%
     bytec_2 // 0x8000
     b<
-    bnz div_ternary_false@75
+    bnz div_ternary_false@78
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -434,12 +501,12 @@ div_ternary_merge@72:
     swap
     b-
 
-div_ternary_merge@76:
+div_ternary_merge@79:
     bytec_3 // 0x02
     b/
     pushbytes 0x
     b==
-    bnz div_ternary_false@87
+    bnz div_ternary_false@90
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -449,7 +516,7 @@ div_ternary_merge@76:
     b%
     bytec_2 // 0x8000
     b<
-    bnz div_ternary_false@82
+    bnz div_ternary_false@85
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -461,7 +528,7 @@ div_ternary_merge@76:
     swap
     b-
 
-div_ternary_merge@83:
+div_ternary_merge@86:
     bytec_3 // 0x02
     b/
     bytec_0 // 0x010000
@@ -470,8 +537,8 @@ div_ternary_merge@83:
     bytec_0 // 0x010000
     b%
 
-div_ternary_merge@94:
-    dig 1
+div_ternary_merge@97:
+    dig 3
     swap
     concat
     len
@@ -488,23 +555,23 @@ div_ternary_merge@94:
     bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
-div_ternary_merge@140:
+div_ternary_merge@143:
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     bytec 5 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
-div_ternary_false@82:
+div_ternary_false@85:
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -512,9 +579,9 @@ div_ternary_false@82:
     itob
     bytec_0 // 0x010000
     b%
-    b div_ternary_merge@83
+    b div_ternary_merge@86
 
-div_ternary_false@87:
+div_ternary_false@90:
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -524,7 +591,7 @@ div_ternary_false@87:
     b%
     bytec_2 // 0x8000
     b<
-    bnz div_ternary_false@89
+    bnz div_ternary_false@92
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -536,12 +603,12 @@ div_ternary_false@87:
     swap
     b-
 
-div_ternary_merge@90:
+div_ternary_merge@93:
     bytec_3 // 0x02
     b/
-    b div_ternary_merge@94
+    b div_ternary_merge@97
 
-div_ternary_false@89:
+div_ternary_false@92:
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -549,9 +616,9 @@ div_ternary_false@89:
     itob
     bytec_0 // 0x010000
     b%
-    b div_ternary_merge@90
+    b div_ternary_merge@93
 
-div_ternary_false@75:
+div_ternary_false@78:
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -559,9 +626,9 @@ div_ternary_false@75:
     itob
     bytec_0 // 0x010000
     b%
-    b div_ternary_merge@76
+    b div_ternary_merge@79
 
-div_ternary_false@60:
+div_ternary_false@63:
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -569,9 +636,9 @@ div_ternary_false@60:
     itob
     bytec_0 // 0x010000
     b%
-    b div_ternary_merge@61
+    b div_ternary_merge@64
 
-div_ternary_false@65:
+div_ternary_false@68:
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -581,7 +648,7 @@ div_ternary_false@65:
     b%
     bytec_2 // 0x8000
     b<
-    bnz div_ternary_false@67
+    bnz div_ternary_false@70
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -593,12 +660,12 @@ div_ternary_false@65:
     swap
     b-
 
-div_ternary_merge@68:
+div_ternary_merge@71:
     bytec_3 // 0x02
     b/
-    b div_ternary_merge@72
+    b div_ternary_merge@75
 
-div_ternary_false@67:
+div_ternary_false@70:
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -606,9 +673,9 @@ div_ternary_false@67:
     itob
     bytec_0 // 0x010000
     b%
-    b div_ternary_merge@68
+    b div_ternary_merge@71
 
-div_ternary_false@53:
+div_ternary_false@56:
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -616,266 +683,7 @@ div_ternary_false@53:
     itob
     bytec_0 // 0x010000
     b%
-    b div_ternary_merge@54
-
-div_ternary_false@95:
-    intc_0 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_0 // 0x010000
-    b%
-    bytec_2 // 0x8000
-    b<
-    bnz div_ternary_false@110
-    intc_0 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_0 // 0x010000
-    b%
-    bytec_2 // 0x8000
-    b<
-    bnz div_ternary_false@98
-    intc_0 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_0 // 0x010000
-    b%
-    bytec_0 // 0x010000
-    swap
-    b-
-
-div_ternary_merge@99:
-    bytec_3 // 0x02
-    b/
-    pushbytes 0x
-    b==
-    bnz div_ternary_false@110
-    intc_0 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_0 // 0x010000
-    b%
-    bytec_2 // 0x8000
-    b<
-    bnz div_ternary_false@105
-    intc_0 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_0 // 0x010000
-    b%
-    bytec_0 // 0x010000
-    swap
-    b-
-
-div_ternary_merge@106:
-    bytec_3 // 0x02
-    b/
-    bytec_0 // 0x010000
-    swap
-    b-
-    bytec_0 // 0x010000
-    b%
-
-div_ternary_merge@117:
-    dig 1
-    swap
-    concat
-    bury 3
-    intc_0 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_0 // 0x010000
-    b%
-    bytec_2 // 0x8000
-    b<
-    bnz div_ternary_false@132
-    intc_0 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_0 // 0x010000
-    b%
-    bytec_2 // 0x8000
-    b<
-    bnz div_ternary_false@120
-    intc_0 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_0 // 0x010000
-    b%
-    bytec_0 // 0x010000
-    swap
-    b-
-
-div_ternary_merge@121:
-    bytec_3 // 0x02
-    b/
-    pushbytes 0x
-    b==
-    bnz div_ternary_false@132
-    intc_0 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_0 // 0x010000
-    b%
-    bytec_2 // 0x8000
-    b<
-    bnz div_ternary_false@127
-    intc_0 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_0 // 0x010000
-    b%
-    bytec_0 // 0x010000
-    swap
-    b-
-
-div_ternary_merge@128:
-    bytec_3 // 0x02
-    b/
-    bytec_0 // 0x010000
-    swap
-    b-
-    bytec_0 // 0x010000
-    b%
-
-div_ternary_merge@139:
-    dig 1
-    swap
-    concat
-    len
-    intc_3 // 8
-    -
-    dig 3
-    swap
-    intc_3 // 8
-    extract3
-    bytec 4 // 0xffff
-    b&
-    b div_ternary_merge@140
-
-div_ternary_false@127:
-    intc_0 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_0 // 0x010000
-    b%
-    b div_ternary_merge@128
-
-div_ternary_false@132:
-    intc_0 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_0 // 0x010000
-    b%
-    bytec_2 // 0x8000
-    b<
-    bnz div_ternary_false@134
-    intc_0 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_0 // 0x010000
-    b%
-    bytec_0 // 0x010000
-    swap
-    b-
-
-div_ternary_merge@135:
-    bytec_3 // 0x02
-    b/
-    b div_ternary_merge@139
-
-div_ternary_false@134:
-    intc_0 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_0 // 0x010000
-    b%
-    b div_ternary_merge@135
-
-div_ternary_false@120:
-    intc_0 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_0 // 0x010000
-    b%
-    b div_ternary_merge@121
-
-div_ternary_false@105:
-    intc_0 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_0 // 0x010000
-    b%
-    b div_ternary_merge@106
-
-div_ternary_false@110:
-    intc_0 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_0 // 0x010000
-    b%
-    bytec_2 // 0x8000
-    b<
-    bnz div_ternary_false@112
-    intc_0 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_0 // 0x010000
-    b%
-    bytec_0 // 0x010000
-    swap
-    b-
-
-div_ternary_merge@113:
-    bytec_3 // 0x02
-    b/
-    b div_ternary_merge@117
-
-div_ternary_false@112:
-    intc_0 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_0 // 0x010000
-    b%
-    b div_ternary_merge@113
+    b div_ternary_merge@57
 
 div_ternary_false@98:
     intc_0 // 0
@@ -885,19 +693,9 @@ div_ternary_false@98:
     itob
     bytec_0 // 0x010000
     b%
-    b div_ternary_merge@99
-
-div_ternary_false@37:
-    intc_0 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_0 // 0x010000
-    b%
-    b div_ternary_merge@38
-
-div_ternary_false@42:
+    bytec_2 // 0x8000
+    b<
+    bnz div_ternary_false@113
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -907,7 +705,7 @@ div_ternary_false@42:
     b%
     bytec_2 // 0x8000
     b<
-    bnz div_ternary_false@44
+    bnz div_ternary_false@101
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -919,42 +717,12 @@ div_ternary_false@42:
     swap
     b-
 
-div_ternary_merge@45:
+div_ternary_merge@102:
     bytec_3 // 0x02
     b/
-    b div_ternary_merge@49
-
-div_ternary_false@44:
-    intc_0 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_0 // 0x010000
-    b%
-    b div_ternary_merge@45
-
-div_ternary_false@30:
-    intc_0 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_0 // 0x010000
-    b%
-    b div_ternary_merge@31
-
-div_ternary_false@15:
-    intc_0 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_0 // 0x010000
-    b%
-    b div_ternary_merge@16
-
-div_ternary_false@20:
+    pushbytes 0x
+    b==
+    bnz div_ternary_false@113
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -964,7 +732,7 @@ div_ternary_false@20:
     b%
     bytec_2 // 0x8000
     b<
-    bnz div_ternary_false@22
+    bnz div_ternary_false@108
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -976,12 +744,20 @@ div_ternary_false@20:
     swap
     b-
 
-div_ternary_merge@23:
+div_ternary_merge@109:
     bytec_3 // 0x02
     b/
-    b div_ternary_merge@27
+    bytec_0 // 0x010000
+    swap
+    b-
+    bytec_0 // 0x010000
+    b%
 
-div_ternary_false@22:
+div_ternary_merge@120:
+    dig 3
+    swap
+    concat
+    bury 2
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -989,9 +765,9 @@ div_ternary_false@22:
     itob
     bytec_0 // 0x010000
     b%
-    b div_ternary_merge@23
-
-div_ternary_false@8:
+    bytec_2 // 0x8000
+    b<
+    bnz div_ternary_false@135
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -999,26 +775,331 @@ div_ternary_false@8:
     itob
     bytec_0 // 0x010000
     b%
-    b div_ternary_merge@9
+    bytec_2 // 0x8000
+    b<
+    bnz div_ternary_false@123
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x010000
+    b%
+    bytec_0 // 0x010000
+    swap
+    b-
+
+div_ternary_merge@124:
+    bytec_3 // 0x02
+    b/
+    pushbytes 0x
+    b==
+    bnz div_ternary_false@135
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x010000
+    b%
+    bytec_2 // 0x8000
+    b<
+    bnz div_ternary_false@130
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x010000
+    b%
+    bytec_0 // 0x010000
+    swap
+    b-
+
+div_ternary_merge@131:
+    bytec_3 // 0x02
+    b/
+    bytec_0 // 0x010000
+    swap
+    b-
+    bytec_0 // 0x010000
+    b%
+
+div_ternary_merge@142:
+    dig 3
+    swap
+    concat
+    len
+    intc_3 // 8
+    -
+    dig 2
+    swap
+    intc_3 // 8
+    extract3
+    bytec 4 // 0xffff
+    b&
+    b div_ternary_merge@143
+
+div_ternary_false@130:
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x010000
+    b%
+    b div_ternary_merge@131
+
+div_ternary_false@135:
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x010000
+    b%
+    bytec_2 // 0x8000
+    b<
+    bnz div_ternary_false@137
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x010000
+    b%
+    bytec_0 // 0x010000
+    swap
+    b-
+
+div_ternary_merge@138:
+    bytec_3 // 0x02
+    b/
+    b div_ternary_merge@142
+
+div_ternary_false@137:
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x010000
+    b%
+    b div_ternary_merge@138
+
+div_ternary_false@123:
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x010000
+    b%
+    b div_ternary_merge@124
+
+div_ternary_false@108:
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x010000
+    b%
+    b div_ternary_merge@109
+
+div_ternary_false@113:
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x010000
+    b%
+    bytec_2 // 0x8000
+    b<
+    bnz div_ternary_false@115
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x010000
+    b%
+    bytec_0 // 0x010000
+    swap
+    b-
+
+div_ternary_merge@116:
+    bytec_3 // 0x02
+    b/
+    b div_ternary_merge@120
+
+div_ternary_false@115:
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x010000
+    b%
+    b div_ternary_merge@116
+
+div_ternary_false@101:
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x010000
+    b%
+    b div_ternary_merge@102
+
+div_ternary_false@40:
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x010000
+    b%
+    b div_ternary_merge@41
+
+div_ternary_false@45:
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x010000
+    b%
+    bytec_2 // 0x8000
+    b<
+    bnz div_ternary_false@47
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x010000
+    b%
+    bytec_0 // 0x010000
+    swap
+    b-
+
+div_ternary_merge@48:
+    bytec_3 // 0x02
+    b/
+    b div_ternary_merge@52
+
+div_ternary_false@47:
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x010000
+    b%
+    b div_ternary_merge@48
+
+div_ternary_false@33:
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x010000
+    b%
+    b div_ternary_merge@34
+
+div_ternary_false@18:
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x010000
+    b%
+    b div_ternary_merge@19
+
+div_ternary_false@23:
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x010000
+    b%
+    bytec_2 // 0x8000
+    b<
+    bnz div_ternary_false@25
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x010000
+    b%
+    bytec_0 // 0x010000
+    swap
+    b-
+
+div_ternary_merge@26:
+    bytec_3 // 0x02
+    b/
+    b div_ternary_merge@30
+
+div_ternary_false@25:
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x010000
+    b%
+    b div_ternary_merge@26
+
+div_ternary_false@11:
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x010000
+    b%
+    b div_ternary_merge@12
+
+div_ternary_false@3:
+    intc_0 // 0
+    b div_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_signed.sol.C.viaasm[routing]() -> void:
 viaasm:
+    txn GroupIndex
+    bz viaasm_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+viaasm_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
     assert // check a exists
     load 0
-    intc_1 // 32
+    intc_2 // 32
     bzero
     uncover 2
     itob
     concat
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     -
-    intc_1 // 32
+    intc_2 // 32
     extract3
     extract 0 32
     swap
@@ -1027,12 +1108,26 @@ viaasm:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
+
+viaasm_ternary_false@3:
+    intc_0 // 0
+    b viaasm_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_signed.sol.C.a[routing]() -> void:
 a:
+    txn GroupIndex
+    bz a_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+a_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -1042,7 +1137,7 @@ a:
     b&
     bytec_2 // 0x8000
     b>=
-    bz a_ternary_false@3
+    bz a_ternary_false@6
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -1055,7 +1150,7 @@ a:
     bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
-a_ternary_merge@4:
+a_ternary_merge@7:
     dup
     len
     pushint 64
@@ -1068,10 +1163,10 @@ a_ternary_merge@4:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
-a_ternary_false@3:
+a_ternary_false@6:
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -1079,4 +1174,8 @@ a_ternary_false@3:
     itob
     bytec 4 // 0xffff
     b&
+    b a_ternary_merge@7
+
+a_ternary_false@3:
+    intc_0 // 0
     b a_ternary_merge@4

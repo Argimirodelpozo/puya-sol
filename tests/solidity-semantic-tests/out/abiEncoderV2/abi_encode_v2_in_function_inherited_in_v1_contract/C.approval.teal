@@ -1,7 +1,7 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_vqwk7qg1/B.sol.C.approval_program() -> uint64:
+// /tmp/multisource_sd6xsg6h/B.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32 6
     bytecblock 0x151f7c75 TMPL_APPROVAL_A TMPL_CLEAR_A
@@ -29,8 +29,18 @@ main_after_if_else@2:
     err
 
 
-// /tmp/multisource_vqwk7qg1/B.sol.C.test[routing]() -> void:
+// /tmp/multisource_sd6xsg6h/B.sol.C.test[routing]() -> void:
 test:
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     bytec_1 // TMPL_APPROVAL_A
     bytec_2 // TMPL_CLEAR_A
@@ -60,7 +70,7 @@ test:
     pushint 1000000
     itxn_field Amount
     itxn_submit
-    callsub /tmp/multisource_vqwk7qg1/B.sol.C.foo
+    callsub /tmp/multisource_sd6xsg6h/B.sol.C.foo
     dup
     len
     intc_2 // 32
@@ -76,8 +86,12 @@ test:
     intc_0 // 1
     return
 
+test_ternary_false@3:
+    intc_1 // 0
+    b test_ternary_merge@4
 
-// /tmp/multisource_vqwk7qg1/B.sol.C.foo[routing]() -> void:
+
+// /tmp/multisource_sd6xsg6h/B.sol.C.foo[routing]() -> void:
 foo:
     txna ApplicationArgs 1
     dup
@@ -85,7 +99,7 @@ foo:
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub /tmp/multisource_vqwk7qg1/B.sol.C.foo
+    callsub /tmp/multisource_sd6xsg6h/B.sol.C.foo
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -94,9 +108,19 @@ foo:
     return
 
 
-// /tmp/multisource_vqwk7qg1/B.sol.C.foo(_a: bytes) -> bytes:
-/tmp/multisource_vqwk7qg1/B.sol.C.foo:
+// /tmp/multisource_sd6xsg6h/B.sol.C.foo(_a: bytes) -> bytes:
+/tmp/multisource_sd6xsg6h/B.sol.C.foo:
     proto 1 1
+    txn GroupIndex
+    bz /tmp/multisource_sd6xsg6h/B.sol.C.foo_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/tmp/multisource_sd6xsg6h/B.sol.C.foo_ternary_merge@3:
+    !
+    assert // not payable
     itxn_begin
     frame_dig -1
     pushint 24
@@ -118,3 +142,7 @@ foo:
     bzero
     b|
     retsub
+
+/tmp/multisource_sd6xsg6h/B.sol.C.foo_ternary_false@2:
+    intc_1 // 0
+    b /tmp/multisource_sd6xsg6h/B.sol.C.foo_ternary_merge@3

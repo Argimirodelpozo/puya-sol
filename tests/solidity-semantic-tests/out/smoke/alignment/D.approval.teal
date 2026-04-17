@@ -36,14 +36,30 @@ main_after_if_else@2:
     assert
     pushbytess 0x8f266e15 0x89c1f8b8 0x54ab7f9a 0x19936773 0x6a2b8873 // method "internalStateDecimal()uint256", method "update(bool,uint256,byte[32])(bool,uint512,byte[32])", method "stateBool()bool", method "stateDecimal()uint512", method "stateBytes()byte[32]"
     txna ApplicationArgs 0
-    match main_internalStateDecimal_route@5 update stateBool stateDecimal stateBytes
+    match internalStateDecimal update stateBool stateDecimal stateBytes
     err
 
-main_internalStateDecimal_route@5:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/alignment.sol.D.internalStateDecimal[routing]() -> void:
+internalStateDecimal:
+    txn GroupIndex
+    bz internalStateDecimal_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+internalStateDecimal_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
     log
     intc_0 // 1
     return
+
+internalStateDecimal_ternary_false@3:
+    intc_1 // 0
+    b internalStateDecimal_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/alignment.sol.D.update[routing]() -> void:
@@ -68,18 +84,31 @@ update:
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz update_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+update_ternary_merge@4:
+    !
+    assert // not payable
     dig 2
+    dup
     intc_0 // 1
     <=
     assert // ABI bool validation
     bytec_0 // "stateBool"
-    uncover 3
+    swap
     app_global_put
     bytec_1 // "stateDecimal"
-    uncover 2
+    dig 2
     app_global_put
     bytec_3 // "stateBytes"
     dig 1
+    dup
+    cover 2
     app_global_put
     intc_1 // 0
     bytec_0 // "stateBool"
@@ -112,9 +141,23 @@ update:
     intc_0 // 1
     return
 
+update_ternary_false@3:
+    intc_1 // 0
+    b update_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/alignment.sol.D.stateBool[routing]() -> void:
 stateBool:
+    txn GroupIndex
+    bz stateBool_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+stateBool_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "stateBool"
     app_global_get_ex
@@ -130,9 +173,23 @@ stateBool:
     intc_0 // 1
     return
 
+stateBool_ternary_false@3:
+    intc_1 // 0
+    b stateBool_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/alignment.sol.D.stateDecimal[routing]() -> void:
 stateDecimal:
+    txn GroupIndex
+    bz stateDecimal_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+stateDecimal_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_1 // "stateDecimal"
     app_global_get_ex
@@ -152,9 +209,23 @@ stateDecimal:
     intc_0 // 1
     return
 
+stateDecimal_ternary_false@3:
+    intc_1 // 0
+    b stateDecimal_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/alignment.sol.D.stateBytes[routing]() -> void:
 stateBytes:
+    txn GroupIndex
+    bz stateBytes_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+stateBytes_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_3 // "stateBytes"
     app_global_get_ex
@@ -165,3 +236,7 @@ stateBytes:
     log
     intc_0 // 1
     return
+
+stateBytes_ternary_false@3:
+    intc_1 // 0
+    b stateBytes_ternary_merge@4

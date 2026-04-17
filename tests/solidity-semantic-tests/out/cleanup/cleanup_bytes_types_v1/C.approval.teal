@@ -46,15 +46,27 @@ f:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     pushint 65535
     &
-    swap
+    bury 1
+    dig 1
     pushbytes "ab"
     !=
-    bz f_after_if_else@3
+    bz f_after_if_else@6
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
 
-f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_bytes_types_v1.sol.C.f@8:
+f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_bytes_types_v1.sol.C.f@11:
     pushbytes 0x151f7c75
     swap
     concat
@@ -62,25 +74,29 @@ f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tes
     intc_0 // 1
     return
 
-f_after_if_else@3:
+f_after_if_else@6:
     dup
     intc_1 // 258
     !=
-    bz f_after_if_else@5
+    bz f_after_if_else@8
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_bytes_types_v1.sol.C.f@8
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_bytes_types_v1.sol.C.f@11
 
-f_after_if_else@5:
+f_after_if_else@8:
     dup
     itob
     extract 5 3
     btoi
     intc_1 // 258
     !=
-    bz f_after_if_else@7
+    bz f_after_if_else@10
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_bytes_types_v1.sol.C.f@8
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_bytes_types_v1.sol.C.f@11
 
-f_after_if_else@7:
+f_after_if_else@10:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_bytes_types_v1.sol.C.f@8
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_bytes_types_v1.sol.C.f@11
+
+f_ternary_false@3:
+    pushint 0
+    b f_ternary_merge@4

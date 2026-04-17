@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/deployedCodeExclusion/virtual_function.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 2 0
+    intcblock 1 0 2
     bytecblock "data" "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,7 +38,7 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
     bytec_0 // "data"
     box_del
@@ -52,26 +52,36 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/deployedCodeExclusion/virtual_function.sol.C.test[routing]() -> void:
 test:
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     bytec_0 // "data"
     box_len
     pop
-    intc_1 // 2
+    intc_2 // 2
     >=
-    bz test_ternary_false@3
+    bz test_ternary_false@6
     bytec_0 // "data"
     box_len
     pop
 
-test_ternary_merge@4:
-    intc_1 // 2
+test_ternary_merge@7:
+    intc_2 // 2
     -
     itob
     pushbytes 0x32
     b>
     pushbytes 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     pushbytes 0x151f7c75
@@ -81,6 +91,10 @@ test_ternary_merge@4:
     intc_0 // 1
     return
 
+test_ternary_false@6:
+    intc_2 // 2
+    b test_ternary_merge@7
+
 test_ternary_false@3:
-    intc_1 // 2
+    intc_1 // 0
     b test_ternary_merge@4

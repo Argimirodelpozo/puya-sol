@@ -24,18 +24,22 @@ main_after_if_else@2:
     assert
     pushbytess 0x7b7e2103 0x60c57321 0x1ea87231 // method "testHighLevel()bool", method "testHighLevel2()(uint256,uint256,uint256)", method "testLowLevel()uint256"
     txna ApplicationArgs 0
-    match testHighLevel testHighLevel2 main_testLowLevel_route@7
+    match testHighLevel testHighLevel2 testLowLevel
     err
-
-main_testLowLevel_route@7:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/precompile_extcodesize_check.sol.C.testHighLevel[routing]() -> void:
 testHighLevel:
+    txn GroupIndex
+    bz testHighLevel_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+testHighLevel_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     intc_2 // 6
     itxn_field TypeEnum
@@ -55,9 +59,23 @@ testHighLevel:
     intc_0 // 1
     return
 
+testHighLevel_ternary_false@3:
+    intc_1 // 0
+    b testHighLevel_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/precompile_extcodesize_check.sol.C.testHighLevel2[routing]() -> void:
 testHighLevel2:
+    txn GroupIndex
+    bz testHighLevel2_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+testHighLevel2_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     intc_2 // 6
     itxn_field TypeEnum
@@ -97,3 +115,29 @@ testHighLevel2:
     log
     intc_0 // 1
     return
+
+testHighLevel2_ternary_false@3:
+    intc_1 // 0
+    b testHighLevel2_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/precompile_extcodesize_check.sol.C.testLowLevel[routing]() -> void:
+testLowLevel:
+    txn GroupIndex
+    bz testLowLevel_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+testLowLevel_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+testLowLevel_ternary_false@3:
+    intc_1 // 0
+    b testLowLevel_ternary_merge@4

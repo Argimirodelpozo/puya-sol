@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/enum_referencing.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 255
+    intcblock 1 0 255
     bytecblock 0x151f7c750000000000000003 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -25,26 +25,8 @@ main_after_if_else@2:
     assert
     pushbytess 0x6ca2f943 0x7466167f 0x35009996 0xdf01cac5 0x62d38f3e // method "f()uint64", method "g()uint64", method "h()uint64", method "x()uint64", method "y()uint64"
     txna ApplicationArgs 0
-    match main_f_route@5 main_g_route@6 main_h_route@7 x y
+    match f g h x y
     err
-
-main_h_route@7:
-    pushbytes 0x151f7c750000000000000001
-    log
-    intc_0 // 1
-    return
-
-main_g_route@6:
-    bytec_0 // 0x151f7c750000000000000003
-    log
-    intc_0 // 1
-    return
-
-main_f_route@5:
-    bytec_0 // 0x151f7c750000000000000003
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/enum_referencing.sol.L.f() -> uint64:
@@ -59,14 +41,90 @@ L.g:
     retsub
 
 
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/enum_referencing.sol.C.f[routing]() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_0 // 0x151f7c750000000000000003
+    log
+    intc_0 // 1
+    return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/enum_referencing.sol.C.g[routing]() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_0 // 0x151f7c750000000000000003
+    log
+    intc_0 // 1
+    return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/enum_referencing.sol.C.h[routing]() -> void:
+h:
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000001
+    log
+    intc_0 // 1
+    return
+
+h_ternary_false@3:
+    intc_1 // 0
+    b h_ternary_merge@4
+
+
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/enum_referencing.sol.C.x[routing]() -> void:
 x:
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
     callsub L.f
     pushint 2
     <
     assert // enum out of range
     callsub L.f
-    intc_1 // 255
+    intc_2 // 255
     &
     itob
     bytec_1 // 0x151f7c75
@@ -76,15 +134,29 @@ x:
     intc_0 // 1
     return
 
+x_ternary_false@3:
+    intc_1 // 0
+    b x_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/enum_referencing.sol.C.y[routing]() -> void:
 y:
+    txn GroupIndex
+    bz y_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+y_ternary_merge@4:
+    !
+    assert // not payable
     callsub L.g
     pushint 4
     <
     assert // enum out of range
     callsub L.g
-    intc_1 // 255
+    intc_2 // 255
     &
     itob
     bytec_1 // 0x151f7c75
@@ -93,3 +165,7 @@ y:
     log
     intc_0 // 1
     return
+
+y_ternary_false@3:
+    intc_1 // 0
+    b y_ternary_merge@4

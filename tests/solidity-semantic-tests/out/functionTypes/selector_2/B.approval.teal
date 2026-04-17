@@ -3,9 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_2.sol.B.approval_program() -> uint64:
 main:
+    intcblock 1 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -23,13 +24,45 @@ main_after_if_else@2:
     assert
     pushbytess 0x0c88cb4e 0x11105f41 // method "ext()void", method "pub()void"
     txna ApplicationArgs 0
-    match main_ext_route@5 main_pub_route@6
+    match ext pub
     err
 
-main_pub_route@6:
-    pushint 1
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_2.sol.B.ext[routing]() -> void:
+ext:
+    txn GroupIndex
+    bz ext_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+ext_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 1
     return
 
-main_ext_route@5:
-    pushint 1
+ext_ternary_false@3:
+    intc_1 // 0
+    b ext_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_2.sol.B.pub[routing]() -> void:
+pub:
+    txn GroupIndex
+    bz pub_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+pub_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 1
     return
+
+pub_ternary_false@3:
+    intc_1 // 0
+    b pub_ternary_merge@4

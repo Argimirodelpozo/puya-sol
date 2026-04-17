@@ -82,10 +82,23 @@ onlyPanic:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz onlyPanic_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+onlyPanic_ternary_merge@4:
+    !
+    assert // not payable
     dig 2
+    dup
     intc_0 // 1
     <=
     assert // ABI bool validation
+    dig 2
+    dig 2
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/panic.sol.C.uf
     dup
     len
@@ -103,6 +116,10 @@ onlyPanic:
     log
     intc_0 // 1
     return
+
+onlyPanic_ternary_false@3:
+    intc_2 // 0
+    b onlyPanic_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/panic.sol.C.panicAndError[routing]() -> void:
@@ -127,10 +144,23 @@ panicAndError:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz panicAndError_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+panicAndError_ternary_merge@4:
+    !
+    assert // not payable
     dig 2
+    dup
     intc_0 // 1
     <=
     assert // ABI bool validation
+    dig 2
+    dig 2
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/panic.sol.C.uf
     dup
     len
@@ -149,10 +179,24 @@ panicAndError:
     intc_0 // 1
     return
 
+panicAndError_ternary_false@3:
+    intc_2 // 0
+    b panicAndError_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/panic.sol.C.uf(b: uint64, __arc4_x: bytes, __arc4_y: bytes) -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/panic.sol.C.uf:
     proto 3 1
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/panic.sol.C.uf_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/panic.sol.C.uf_ternary_merge@3:
+    !
+    assert // not payable
     frame_dig -3
     intc_0 // 1
     <=
@@ -179,3 +223,7 @@ panicAndError:
     bzero
     b|
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/panic.sol.C.uf_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/panic.sol.C.uf_ternary_merge@3

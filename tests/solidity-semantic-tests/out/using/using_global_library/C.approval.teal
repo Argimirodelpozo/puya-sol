@@ -1,13 +1,13 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_jhrldtoe/B.sol.C.approval_program() -> uint64:
+// /tmp/multisource_uq7ojz4p/B.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 1 32
     bytecblock 0x01 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -32,7 +32,7 @@ main_f_route@4:
     b f
 
 
-// /tmp/multisource_jhrldtoe/B.sol.L.inc(x: bytes) -> bytes:
+// /tmp/multisource_uq7ojz4p/B.sol.L.inc(x: bytes) -> bytes:
 L.inc:
     proto 1 1
     frame_dig -1
@@ -41,7 +41,7 @@ L.inc:
     retsub
 
 
-// /tmp/multisource_jhrldtoe/B.sol.L.dec(x: bytes) -> bytes:
+// /tmp/multisource_uq7ojz4p/B.sol.L.dec(x: bytes) -> bytes:
 L.dec:
     proto 1 1
     frame_dig -1
@@ -58,8 +58,18 @@ L.dec:
     retsub
 
 
-// /tmp/multisource_jhrldtoe/B.sol.C.f[routing]() -> void:
+// /tmp/multisource_uq7ojz4p/B.sol.C.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x
     callsub L.inc
     callsub L.inc
@@ -67,17 +77,17 @@ f:
     callsub L.dec
     dig 1
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     uncover 2
     dig 1
     b|
     dig 2
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
     cover 2
@@ -87,5 +97,9 @@ f:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+f_ternary_false@3:
+    pushint 0
+    b f_ternary_merge@4

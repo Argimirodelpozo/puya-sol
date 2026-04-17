@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/literal_empty_string.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 64
+    intcblock 1 0 32 64
     bytecblock "x" "a" 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -40,42 +40,58 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_0 // "x"
-    uncover 2
-    app_global_put
-    bytec_1 // "a"
-    swap
-    app_global_put
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/literal_empty_string.sol.C.f
     intc_0 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/literal_empty_string.sol.C.g[routing]() -> void:
 g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     pushint 2
     itob
-    bytec_0 // "x"
     bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    app_global_put
-    bytec_1 // "a"
     swap
-    app_global_put
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/literal_empty_string.sol.C.f
     intc_0 // 1
     return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/literal_empty_string.sol.C.x[routing]() -> void:
 x:
-    intc_2 // 0
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
@@ -86,10 +102,24 @@ x:
     intc_0 // 1
     return
 
+x_ternary_false@3:
+    intc_1 // 0
+    b x_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/literal_empty_string.sol.C.a[routing]() -> void:
 a:
-    intc_2 // 0
+    txn GroupIndex
+    bz a_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+a_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_1 // "a"
     app_global_get_ex
     assert // check a exists
@@ -107,3 +137,33 @@ a:
     log
     intc_0 // 1
     return
+
+a_ternary_false@3:
+    intc_1 // 0
+    b a_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/literal_empty_string.sol.C.f(_x: bytes, __arc4__a: bytes) -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/literal_empty_string.sol.C.f:
+    proto 2 0
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/literal_empty_string.sol.C.f_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/literal_empty_string.sol.C.f_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // "x"
+    frame_dig -2
+    app_global_put
+    bytec_1 // "a"
+    frame_dig -1
+    app_global_put
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/literal_empty_string.sol.C.f_ternary_false@2:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/literal_empty_string.sol.C.f_ternary_merge@3

@@ -25,11 +25,27 @@ main_after_if_else@2:
     assert
     pushbytess 0x2d4970c7 0xda75597a 0xd432046b // method "f()void", method "g(bool)bool", method "h(bool)bool"
     txna ApplicationArgs 0
-    match main_f_route@5 g h
+    match f g h
     err
 
-main_f_route@5:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/assert_require.sol.C.f[routing]() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     err
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/assert_require.sol.C.g[routing]() -> void:
@@ -42,7 +58,17 @@ g:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
-    dup
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     intc_0 // 1
     <=
     assert // ABI bool validation
@@ -53,6 +79,10 @@ g:
     log
     intc_0 // 1
     return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/assert_require.sol.C.h[routing]() -> void:
@@ -65,7 +95,17 @@ h:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
-    dup
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     intc_0 // 1
     <=
     assert // ABI bool validation
@@ -74,3 +114,7 @@ h:
     log
     intc_0 // 1
     return
+
+h_ternary_false@3:
+    intc_1 // 0
+    b h_ternary_merge@4

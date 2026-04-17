@@ -34,6 +34,16 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/storing_invalid_boolean.sol.C.set[routing]() -> void:
 set:
+    txn GroupIndex
+    bz set_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+set_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     bytec_0 // "perm"
@@ -44,9 +54,23 @@ set:
     intc_0 // 1
     return
 
+set_ternary_false@3:
+    intc_1 // 0
+    b set_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/storing_invalid_boolean.sol.C.ret[routing]() -> void:
 ret:
+    txn GroupIndex
+    bz ret_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+ret_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c7580
@@ -54,9 +78,23 @@ ret:
     intc_0 // 1
     return
 
+ret_ternary_false@3:
+    intc_1 // 0
+    b ret_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/storing_invalid_boolean.sol.C.ev[routing]() -> void:
 ev:
+    txn GroupIndex
+    bz ev_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+ev_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x803bd84c80
@@ -66,9 +104,23 @@ ev:
     intc_0 // 1
     return
 
+ev_ternary_false@3:
+    intc_1 // 0
+    b ev_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/storing_invalid_boolean.sol.C.perm[routing]() -> void:
 perm:
+    txn GroupIndex
+    bz perm_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+perm_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "perm"
     app_global_get_ex
@@ -83,3 +135,7 @@ perm:
     log
     intc_0 // 1
     return
+
+perm_ternary_false@3:
+    intc_1 // 0
+    b perm_ternary_merge@4

@@ -46,6 +46,16 @@ main_test_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_signed.sol.C.test[routing]() -> void:
 test:
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 8
     bzero
     bytec_0 // "a"
@@ -133,3 +143,7 @@ test:
     log
     intc_2 // 1
     return
+
+test_ternary_false@3:
+    intc_0 // 0
+    b test_ternary_merge@4

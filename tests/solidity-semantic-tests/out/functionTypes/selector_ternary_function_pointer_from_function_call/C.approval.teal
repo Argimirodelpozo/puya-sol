@@ -83,6 +83,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary_function_pointer_from_function_call.sol.C.getContract[routing]() -> void:
 getContract:
+    txn GroupIndex
+    bz getContract_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getContract_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -93,6 +103,10 @@ getContract:
     log
     intc_0 // 1
     return
+
+getContract_ternary_false@3:
+    intc_1 // 0
+    b getContract_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary_function_pointer_from_function_call.sol.C.test[routing]() -> void:
@@ -105,14 +119,24 @@ test:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
-    dup
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     intc_0 // 1
     <=
     assert // ABI bool validation
-    bz test_ternary_false@3
+    bz test_ternary_false@6
     pushbytes 0x26121ff0
 
-test_ternary_merge@4:
+test_ternary_merge@7:
     bytec_2 // 0x151f7c75
     swap
     concat
@@ -120,6 +144,10 @@ test_ternary_merge@4:
     intc_0 // 1
     return
 
-test_ternary_false@3:
+test_ternary_false@6:
     pushbytes 0xe2179b8e
+    b test_ternary_merge@7
+
+test_ternary_false@3:
+    intc_1 // 0
     b test_ternary_merge@4

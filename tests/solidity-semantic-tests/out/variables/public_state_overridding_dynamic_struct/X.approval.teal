@@ -34,6 +34,16 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding_dynamic_struct.sol.X.set[routing]() -> void:
 set:
+    txn GroupIndex
+    bz set_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+set_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "test"
     app_global_get_ex
@@ -56,9 +66,23 @@ set:
     intc_0 // 1
     return
 
+set_ternary_false@3:
+    intc_1 // 0
+    b set_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding_dynamic_struct.sol.X.test[routing]() -> void:
 test:
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "test"
     app_global_get_ex
@@ -95,3 +119,7 @@ test:
     log
     intc_0 // 1
     return
+
+test_ternary_false@3:
+    intc_1 // 0
+    b test_ternary_merge@4

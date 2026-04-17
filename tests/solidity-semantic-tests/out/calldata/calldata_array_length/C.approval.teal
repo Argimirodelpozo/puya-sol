@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_array_length.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 32 2 1
+    intcblock 0 1 32 2
     bytecblock 0x 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_3 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -36,24 +36,40 @@ f(4):
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    intc_1 // 32
+    cover 2
+    intc_2 // 32
     *
-    intc_2 // 2
+    intc_3 // 2
     +
-    uncover 2
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txn GroupIndex
+    bz f(4)_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f(4)_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     itob
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_1 // 1
     return
+
+f(4)_ternary_false@3:
+    intc_0 // 0
+    b f(4)_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_array_length.sol.C.f(17)[routing]() -> void:
@@ -66,7 +82,7 @@ f(17):
     extract_uint16 // on error: invalid array length header
     dup
     cover 2
-    intc_2 // 2
+    intc_3 // 2
     *
     swap
     dup
@@ -81,7 +97,7 @@ f(17)_for_header@1:
     <
     bz f(17)_after_for@4
     dupn 2
-    intc_2 // 2
+    intc_3 // 2
     *
     dig 3
     dup
@@ -98,24 +114,34 @@ f(17)_for_header@1:
     substring3
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    intc_1 // 32
+    intc_2 // 32
     *
-    intc_2 // 2
+    intc_3 // 2
     +
     +
     bury 5
-    intc_3 // 1
+    intc_1 // 1
     +
     bury 1
     b f(17)_for_header@1
 
 f(17)_after_for@4:
     dig 3
-    intc_2 // 2
+    intc_3 // 2
     +
     dig 3
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>
+    txn GroupIndex
+    bz f(17)_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f(17)_ternary_merge@8:
+    !
+    assert // not payable
     bytec_0 // 0x
     bury 7
     bytec_0 // 0x
@@ -126,7 +152,7 @@ f(17)_after_for@4:
     bury 9
     bytec_0 // 0x
     b>
-    bz f(17)_after_if_else@7
+    bz f(17)_after_if_else@10
     dig 4
     assert // index access is out of bounds
     dig 1
@@ -135,9 +161,9 @@ f(17)_after_for@4:
     extract_uint16
     dup2
     extract_uint16
-    intc_1 // 32
+    intc_2 // 32
     *
-    intc_2 // 2
+    intc_3 // 2
     +
     extract3
     intc_0 // 0
@@ -145,24 +171,24 @@ f(17)_after_for@4:
     itob
     bury 7
 
-f(17)_after_if_else@7:
+f(17)_after_if_else@10:
     dig 7
     pushbytes 0x01
     b>
-    bz f(17)_after_if_else@9
-    intc_3 // 1
+    bz f(17)_after_if_else@12
+    intc_1 // 1
     dig 5
     <
     assert // index access is out of bounds
     dig 1
     dup
-    intc_2 // 2
+    intc_3 // 2
     extract_uint16
     dup2
     extract_uint16
-    intc_1 // 32
+    intc_2 // 32
     *
-    intc_2 // 2
+    intc_3 // 2
     +
     extract3
     intc_0 // 0
@@ -170,8 +196,8 @@ f(17)_after_if_else@7:
     itob
     bury 6
 
-f(17)_after_if_else@9:
-    intc_1 // 32
+f(17)_after_if_else@12:
+    intc_2 // 32
     bzero
     dig 8
     dig 1
@@ -179,7 +205,7 @@ f(17)_after_if_else@9:
     dig 8
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
     dig 2
@@ -187,7 +213,7 @@ f(17)_after_if_else@9:
     dig 8
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
     uncover 3
@@ -200,8 +226,12 @@ f(17)_after_if_else@9:
     swap
     concat
     log
-    intc_3 // 1
+    intc_1 // 1
     return
+
+f(17)_ternary_false@7:
+    intc_0 // 0
+    b f(17)_ternary_merge@8
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_array_length.sol.C.f(58)[routing]() -> void:
@@ -211,7 +241,21 @@ f(58):
     pushint 64
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
+    txn GroupIndex
+    bz f(58)_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f(58)_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
     log
-    intc_3 // 1
+    intc_1 // 1
     return
+
+f(58)_ternary_false@3:
+    intc_0 // 0
+    b f(58)_ternary_merge@4

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/constant_string_at_file_level.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     bytecblock 0x151f7c750003030102
     txn ApplicationID
     bnz main_after_if_else@2
@@ -25,29 +25,93 @@ main_after_if_else@2:
     assert
     pushbytess 0x38b8b62f 0x4b25d408 0x1f6cd751 0x01e68a20 // method "f()byte[]", method "g()byte[]", method "h()byte[]", method "i()(uint512,uint64,byte[32])"
     txna ApplicationArgs 0
-    match main_f_route@5 main_g_route@6 main_h_route@7 main_i_route@8
+    match f g h i
     err
 
-main_i_route@8:
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000038000000000000000161626300ff5f5f00000000000000000000000000000000000000000000000000
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/constant_string_at_file_level.sol.C.f[routing]() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_0 // 0x151f7c750003030102
     log
     intc_0 // 1
     return
 
-main_h_route@7:
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/constant_string_at_file_level.sol.C.g[routing]() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_0 // 0x151f7c750003030102
+    log
+    intc_0 // 1
+    return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/constant_string_at_file_level.sol.C.h[routing]() -> void:
+h:
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c75000568656c6c6f
     log
     intc_0 // 1
     return
 
-main_g_route@6:
-    bytec_0 // 0x151f7c750003030102
+h_ternary_false@3:
+    intc_1 // 0
+    b h_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/constant_string_at_file_level.sol.C.i[routing]() -> void:
+i:
+    txn GroupIndex
+    bz i_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+i_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000038000000000000000161626300ff5f5f00000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
 
-main_f_route@5:
-    bytec_0 // 0x151f7c750003030102
-    log
-    intc_0 // 1
-    return
+i_ternary_false@3:
+    intc_1 // 0
+    b i_ternary_merge@4

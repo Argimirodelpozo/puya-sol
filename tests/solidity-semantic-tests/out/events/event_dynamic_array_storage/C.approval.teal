@@ -57,19 +57,29 @@ createEvent:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz createEvent_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
 
-createEvent_while_top@2:
+createEvent_ternary_merge@4:
+    !
+    assert // not payable
+
+createEvent_while_top@5:
     bytec_0 // "arr"
     box_len
     pop
     intc_1 // 2
     >=
-    bz createEvent_ternary_false@4
+    bz createEvent_ternary_false@7
     bytec_0 // "arr"
     box_len
     pop
 
-createEvent_ternary_merge@5:
+createEvent_ternary_merge@8:
     intc_1 // 2
     -
     intc_0 // 32
@@ -77,7 +87,7 @@ createEvent_ternary_merge@5:
     itob
     pushbytes 0x03
     b<
-    bz createEvent_after_while@7
+    bz createEvent_after_while@10
     bytec_0 // "arr"
     intc_3 // 0
     intc_1 // 2
@@ -109,9 +119,9 @@ createEvent_ternary_merge@5:
     intc_3 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     box_splice
-    b createEvent_while_top@2
+    b createEvent_while_top@5
 
-createEvent_after_while@7:
+createEvent_after_while@10:
     dup
     intc_0 // 32
     <=
@@ -166,6 +176,10 @@ createEvent_after_while@7:
     intc_2 // 1
     return
 
-createEvent_ternary_false@4:
+createEvent_ternary_false@7:
     intc_1 // 2
-    b createEvent_ternary_merge@5
+    b createEvent_ternary_merge@8
+
+createEvent_ternary_false@3:
+    intc_3 // 0
+    b createEvent_ternary_merge@4

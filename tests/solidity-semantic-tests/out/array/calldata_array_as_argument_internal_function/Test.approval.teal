@@ -32,20 +32,32 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/calldata_array_as_argument_internal_function.sol.Test.g[routing]() -> void:
 g:
     txna ApplicationArgs 1
-    dup
+    dupn 2
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
+    cover 2
     intc_0 // 32
     *
     pushint 2
     +
-    dig 2
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     itob
-    swap
+    dig 2
     extract 2 32
     intc_0 // 32
     bzero
@@ -62,18 +74,22 @@ g:
     intc_1 // 1
     return
 
+g_ternary_false@3:
+    intc_2 // 0
+    b g_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/calldata_array_as_argument_internal_function.sol.Test.h[routing]() -> void:
 h:
     txna ApplicationArgs 1
-    dup
+    dupn 2
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
     pushint 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
@@ -89,10 +105,20 @@ h:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
     intc_3 // 8
     bzero
     dup
-    uncover 3
+    dig 3
     concat
     dup
     len
@@ -100,13 +126,15 @@ h:
     -
     extract_uint64
     swap
-    uncover 2
+    dig 2
     concat
     dup
     len
     intc_3 // 8
     -
     extract_uint64
+    dig 4
+    cover 2
     substring3
     dup
     intc_2 // 0
@@ -128,3 +156,7 @@ h:
     log
     intc_1 // 1
     return
+
+h_ternary_false@3:
+    intc_2 // 0
+    b h_ternary_merge@4

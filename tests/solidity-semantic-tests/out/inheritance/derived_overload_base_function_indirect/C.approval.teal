@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/derived_overload_base_function_indirect.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
-    bytecblock 0x151f7c75000000000000000000000000000000000000000000000000000000000000000a 0x151f7c75
+    intcblock 1 32 0
+    bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -25,24 +25,55 @@ main_after_if_else@2:
     assert
     pushbytess 0x4b2c0376 0xafedb2e5 0xcd78b354 0x1928cd24 // method "g()uint256", method "h()uint256", method "f()uint256", method "f(uint256)uint256"
     txna ApplicationArgs 0
-    match main_g_route@5 h main_f_route@7 f(u256)
+    match g h f() f(u256)
     err
 
-main_f_route@7:
-    bytec_0 // 0x151f7c75000000000000000000000000000000000000000000000000000000000000000a
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/derived_overload_base_function_indirect.sol.C.g[routing]() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/derived_overload_base_function_indirect.sol.C.f()
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_g_route@5:
-    bytec_0 // 0x151f7c75000000000000000000000000000000000000000000000000000000000000000a
-    log
-    intc_0 // 1
-    return
+g_ternary_false@3:
+    intc_2 // 0
+    b g_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/derived_overload_base_function_indirect.sol.C.h[routing]() -> void:
 h:
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 1
     itob
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/derived_overload_base_function_indirect.sol.C.f(u256)
@@ -54,7 +85,22 @@ h:
     intc_1 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+h_ternary_false@3:
+    intc_2 // 0
+    b h_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/derived_overload_base_function_indirect.sol.C.f()[routing]() -> void:
+f():
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/derived_overload_base_function_indirect.sol.C.f()
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -71,7 +117,7 @@ f(u256):
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/derived_overload_base_function_indirect.sol.C.f(u256)
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -79,9 +125,39 @@ f(u256):
     return
 
 
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/derived_overload_base_function_indirect.sol.C.f()() -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/derived_overload_base_function_indirect.sol.C.f():
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/derived_overload_base_function_indirect.sol.C.f()_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/derived_overload_base_function_indirect.sol.C.f()_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/derived_overload_base_function_indirect.sol.C.f()_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/derived_overload_base_function_indirect.sol.C.f()_ternary_merge@3
+
+
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/derived_overload_base_function_indirect.sol.C.f(u256)(__arc4_a: bytes) -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/derived_overload_base_function_indirect.sol.C.f(u256):
     proto 1 1
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/derived_overload_base_function_indirect.sol.C.f(u256)_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/derived_overload_base_function_indirect.sol.C.f(u256)_ternary_merge@3:
+    !
+    assert // not payable
     pushbytes 0x02
     frame_dig -1
     b*
@@ -94,3 +170,7 @@ f(u256):
     bzero
     b|
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/derived_overload_base_function_indirect.sol.C.f(u256)_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/derived_overload_base_function_indirect.sol.C.f(u256)_ternary_merge@3

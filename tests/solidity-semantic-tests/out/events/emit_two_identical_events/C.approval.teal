@@ -33,9 +33,23 @@ main_terminate_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/emit_two_identical_events.sol.C.terminate[routing]() -> void:
 terminate:
+    txn GroupIndex
+    bz terminate_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+terminate_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x56a9f39a
     log
     bytec_0 // 0x56a9f39a
     log
     pushint 1
     return
+
+terminate_ternary_false@3:
+    pushint 0
+    b terminate_ternary_merge@4

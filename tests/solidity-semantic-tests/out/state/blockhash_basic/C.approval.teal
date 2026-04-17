@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/blockhash_basic.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 2 0
+    intcblock 1 0 2
     bytecblock "genesisHash" "currentHash" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -19,14 +19,14 @@ main:
     b==
     assert
     global Round
-    intc_1 // 2
+    intc_2 // 2
     -
     block BlkSeed
     bytec_0 // "genesisHash"
     swap
     app_global_put
     global Round
-    intc_1 // 2
+    intc_2 // 2
     -
     block BlkSeed
     bytec_1 // "currentHash"
@@ -61,8 +61,18 @@ f:
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     global Round
-    intc_1 // 2
+    intc_2 // 2
     -
     block BlkSeed
     bytec_2 // 0x151f7c75
@@ -72,10 +82,24 @@ f:
     intc_0 // 1
     return
 
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/blockhash_basic.sol.C.genesisHash[routing]() -> void:
 genesisHash:
-    intc_2 // 0
+    txn GroupIndex
+    bz genesisHash_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+genesisHash_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_0 // "genesisHash"
     app_global_get_ex
     assert // check genesisHash exists
@@ -86,10 +110,24 @@ genesisHash:
     intc_0 // 1
     return
 
+genesisHash_ternary_false@3:
+    intc_1 // 0
+    b genesisHash_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/blockhash_basic.sol.C.currentHash[routing]() -> void:
 currentHash:
-    intc_2 // 0
+    txn GroupIndex
+    bz currentHash_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+currentHash_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_1 // "currentHash"
     app_global_get_ex
     assert // check currentHash exists
@@ -99,3 +137,7 @@ currentHash:
     log
     intc_0 // 1
     return
+
+currentHash_ternary_false@3:
+    intc_1 // 0
+    b currentHash_ternary_merge@4

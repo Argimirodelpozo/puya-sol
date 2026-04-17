@@ -27,7 +27,26 @@ main_h_route@4:
     txn ApplicationID
     &&
     assert
+    b h
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/internal_virtual_function_calls_through_dispatch.sol.Derived.h[routing]() -> void:
+h:
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
     log
     pushint 1
     return
+
+h_ternary_false@3:
+    pushint 0
+    b h_ternary_merge@4

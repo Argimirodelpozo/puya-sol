@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/struct_mapping_abstract_constructor_param.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 32 1 0
     bytecblock "__ctor_pending" "m" 0x6d96de8fc8c256fa1e1556d41af431cace7dca68707c78dd88c3acab8b17164c47
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,7 +38,7 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    pushint 0
+    intc_2 // 0
     app_global_put
     bytec_1 // "m"
     pushint 2
@@ -69,10 +69,20 @@ getM:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz getM_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getM_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
     dup
-    uncover 2
+    dig 2
     concat
     dup
     len
@@ -100,3 +110,7 @@ getM:
     log
     intc_1 // 1
     return
+
+getM_ternary_false@3:
+    intc_2 // 0
+    b getM_ternary_merge@4

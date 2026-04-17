@@ -58,12 +58,22 @@ test_indices:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz test_indices_ternary_false@3
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
 
-test_indices_while_top@25:
+test_indices_ternary_merge@4:
+    !
+    assert // not payable
+
+test_indices_while_top@28:
     pushint 170010
     global OpcodeBudget
     >
-    bz test_indices_while_top@2
+    bz test_indices_while_top@5
     itxn_begin
     pushint 6 // appl
     itxn_field TypeEnum
@@ -76,20 +86,20 @@ test_indices_while_top@25:
     intc_2 // 0
     itxn_field Fee
     itxn_submit
-    b test_indices_while_top@25
+    b test_indices_while_top@28
 
-test_indices_while_top@2:
+test_indices_while_top@5:
     bytec_0 // "storageArray"
     box_len
     pop
     intc_1 // 2
     >=
-    bz test_indices_ternary_false@4
+    bz test_indices_ternary_false@7
     bytec_0 // "storageArray"
     box_len
     pop
 
-test_indices_ternary_merge@5:
+test_indices_ternary_merge@8:
     intc_1 // 2
     -
     intc_0 // 32
@@ -97,7 +107,7 @@ test_indices_ternary_merge@5:
     itob
     dig 1
     b<
-    bz test_indices_while_top@8
+    bz test_indices_while_top@11
     bytec_0 // "storageArray"
     intc_2 // 0
     intc_1 // 2
@@ -129,20 +139,20 @@ test_indices_ternary_merge@5:
     intc_2 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     box_splice
-    b test_indices_while_top@2
+    b test_indices_while_top@5
 
-test_indices_while_top@8:
+test_indices_while_top@11:
     bytec_0 // "storageArray"
     box_len
     pop
     intc_1 // 2
     >=
-    bz test_indices_ternary_false@10
+    bz test_indices_ternary_false@13
     bytec_0 // "storageArray"
     box_len
     pop
 
-test_indices_ternary_merge@11:
+test_indices_ternary_merge@14:
     intc_1 // 2
     -
     intc_0 // 32
@@ -150,7 +160,7 @@ test_indices_ternary_merge@11:
     itob
     dig 1
     b>
-    bz test_indices_after_while@13
+    bz test_indices_after_while@16
     bytec_0 // "storageArray"
     intc_2 // 0
     intc_1 // 2
@@ -182,20 +192,20 @@ test_indices_ternary_merge@11:
     bytec_0 // "storageArray"
     swap
     box_resize
-    b test_indices_while_top@8
+    b test_indices_while_top@11
 
-test_indices_after_while@13:
+test_indices_after_while@16:
     intc_2 // 0
     itob
     dup
     bury 5
     bury 3
 
-test_indices_while_top@14:
+test_indices_while_top@17:
     dig 2
     dig 1
     b<
-    bz test_indices_after_while@16
+    bz test_indices_after_while@19
     dig 2
     dup
     bytec_3 // 0x01
@@ -227,16 +237,16 @@ test_indices_while_top@14:
     uncover 2
     box_replace // on error: index out of bounds
     bury 3
-    b test_indices_while_top@14
+    b test_indices_while_top@17
 
-test_indices_after_while@16:
+test_indices_after_while@19:
     dig 3
     bury 2
 
-test_indices_while_top@17:
+test_indices_while_top@20:
     dup2
     b<
-    bz test_indices_after_while@19
+    bz test_indices_after_while@22
     bytec_0 // "storageArray"
     box_get
     pushbytes 0x0000
@@ -267,16 +277,20 @@ test_indices_while_top@17:
     bury 4
     b==
     assert
-    b test_indices_while_top@17
+    b test_indices_while_top@20
 
-test_indices_after_while@19:
+test_indices_after_while@22:
     intc_3 // 1
     return
 
-test_indices_ternary_false@10:
+test_indices_ternary_false@13:
     intc_1 // 2
-    b test_indices_ternary_merge@11
+    b test_indices_ternary_merge@14
 
-test_indices_ternary_false@4:
+test_indices_ternary_false@7:
     intc_1 // 2
-    b test_indices_ternary_merge@5
+    b test_indices_ternary_merge@8
+
+test_indices_ternary_false@3:
+    intc_2 // 0
+    b test_indices_ternary_merge@4

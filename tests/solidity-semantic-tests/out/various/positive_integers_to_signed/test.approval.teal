@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/positive_integers_to_signed.sol.test.approval_program() -> uint64:
 main:
-    intcblock 0 64 1
+    intcblock 0 1 64
     bytecblock 0xff "x" "y" "q" 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0xffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     txn ApplicationID
     bnz main_after_if_else@2
@@ -16,7 +16,7 @@ main:
     bytec_3 // "q"
     pushint 250
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -40,6 +40,16 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/positive_integers_to_signed.sol.test.x[routing]() -> void:
 x:
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_1 // "x"
     app_global_get_ex
@@ -49,7 +59,7 @@ x:
     b&
     pushbytes 0x80
     b>=
-    bz x_ternary_false@3
+    bz x_ternary_false@6
     intc_0 // 0
     bytec_1 // "x"
     app_global_get_ex
@@ -62,23 +72,23 @@ x:
     bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
-x_ternary_merge@4:
+x_ternary_merge@7:
     dup
     len
-    intc_1 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
     bytec 5 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
-x_ternary_false@3:
+x_ternary_false@6:
     intc_0 // 0
     bytec_1 // "x"
     app_global_get_ex
@@ -86,11 +96,25 @@ x_ternary_false@3:
     itob
     bytec_0 // 0xff
     b&
+    b x_ternary_merge@7
+
+x_ternary_false@3:
+    intc_0 // 0
     b x_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/positive_integers_to_signed.sol.test.y[routing]() -> void:
 y:
+    txn GroupIndex
+    bz y_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+y_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_2 // "y"
     app_global_get_ex
@@ -100,7 +124,7 @@ y:
     b&
     pushbytes 0x80
     b>=
-    bz y_ternary_false@3
+    bz y_ternary_false@6
     intc_0 // 0
     bytec_2 // "y"
     app_global_get_ex
@@ -113,23 +137,23 @@ y:
     bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
-y_ternary_merge@4:
+y_ternary_merge@7:
     dup
     len
-    intc_1 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
     bytec 5 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
-y_ternary_false@3:
+y_ternary_false@6:
     intc_0 // 0
     bytec_2 // "y"
     app_global_get_ex
@@ -137,11 +161,25 @@ y_ternary_false@3:
     itob
     bytec_0 // 0xff
     b&
+    b y_ternary_merge@7
+
+y_ternary_false@3:
+    intc_0 // 0
     b y_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/positive_integers_to_signed.sol.test.q[routing]() -> void:
 q:
+    txn GroupIndex
+    bz q_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+q_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_3 // "q"
     app_global_get_ex
@@ -151,7 +189,7 @@ q:
     b&
     pushbytes 0x8000
     b>=
-    bz q_ternary_false@3
+    bz q_ternary_false@6
     intc_0 // 0
     bytec_3 // "q"
     app_global_get_ex
@@ -164,23 +202,23 @@ q:
     bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
-q_ternary_merge@4:
+q_ternary_merge@7:
     dup
     len
-    intc_1 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
     bytec 5 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
-q_ternary_false@3:
+q_ternary_false@6:
     intc_0 // 0
     bytec_3 // "q"
     app_global_get_ex
@@ -188,4 +226,8 @@ q_ternary_false@3:
     itob
     bytec 6 // 0xffff
     b&
+    b q_ternary_merge@7
+
+q_ternary_false@3:
+    intc_0 // 0
     b q_ternary_merge@4

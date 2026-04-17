@@ -3,10 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/memory_params_in_external_function.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2
+    intcblock 64 0 1 2
+    bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -24,14 +25,8 @@ main_after_if_else@2:
     assert
     pushbytess 0x49712b6a 0x980a6fb9 // method "f(byte[],byte[],uint256[])(uint512,byte[1],uint512,byte[1],uint512,uint512)", method "g()(uint512,byte[1],uint512,byte[1],uint512,uint512)"
     txna ApplicationArgs 0
-    match f main_g_route@6
+    match f g
     err
-
-main_g_route@6:
-    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000036200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003660000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/memory_params_in_external_function.sol.C.f[routing]() -> void:
@@ -40,76 +35,195 @@ f:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_2 // 2
+    intc_3 // 2
     +
     dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    dup
     extract 2 0
     txna ApplicationArgs 2
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_2 // 2
+    intc_3 // 2
     +
     dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    dup
     extract 2 0
     txna ApplicationArgs 3
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    dup
     pushint 32
     *
-    intc_2 // 2
+    intc_3 // 2
     +
-    dig 2
+    dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
-    uncover 4
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/memory_params_in_external_function.sol.C.f
+    pop
+    cover 5
+    cover 4
+    cover 3
+    cover 2
+    swap
+    dup
     len
-    itob
-    uncover 5
-    extract 3 1
-    uncover 4
-    len
-    itob
-    uncover 5
-    extract 4 1
-    uncover 4
-    itob
-    uncover 5
-    extract 98 32
-    pushint 64
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
     bzero
-    uncover 6
+    swap
     dig 1
     b|
-    uncover 6
+    uncover 2
     concat
-    uncover 5
+    dig 2
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 2
     dig 2
     b|
     concat
-    uncover 4
+    uncover 2
     concat
-    uncover 3
+    dig 2
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 2
     dig 2
     b|
     concat
+    dig 2
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
     cover 2
     b|
     concat
-    pushbytes 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_2 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/memory_params_in_external_function.sol.C.g[routing]() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytess "abc" "def" 0x00040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/memory_params_in_external_function.sol.C.f
+    pop
+    cover 5
+    cover 4
+    cover 3
+    cover 2
+    swap
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    swap
+    dig 1
+    b|
+    uncover 2
+    concat
+    dig 2
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 2
+    dig 2
+    b|
+    concat
+    uncover 2
+    concat
+    dig 2
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 2
+    dig 2
+    b|
+    concat
+    dig 2
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/memory_params_in_external_function.sol.C.f(a: bytes, b: bytes, c: bytes) -> bytes, bytes, bytes, bytes, bytes, bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/memory_params_in_external_function.sol.C.f:
+    proto 3 7
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/memory_params_in_external_function.sol.C.f_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/memory_params_in_external_function.sol.C.f_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -3
+    len
+    itob
+    frame_dig -3
+    extract 1 1
+    frame_dig -2
+    len
+    itob
+    frame_dig -2
+    extract 2 1
+    frame_dig -1
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    itob
+    frame_dig -1
+    extract 98 32
+    frame_dig -1
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/memory_params_in_external_function.sol.C.f_ternary_false@2:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/memory_params_in_external_function.sol.C.f_ternary_merge@3

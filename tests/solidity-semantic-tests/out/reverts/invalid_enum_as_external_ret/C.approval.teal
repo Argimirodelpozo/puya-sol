@@ -31,6 +31,16 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_ret.sol.C.test_return[routing]() -> void:
 test_return:
+    txn GroupIndex
+    bz test_return_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test_return_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     intc_1 // 0
@@ -39,10 +49,24 @@ test_return:
     log
     intc_0 // 1
     return
+
+test_return_ternary_false@3:
+    intc_1 // 0
+    b test_return_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_ret.sol.C.test_inline_assignment[routing]() -> void:
 test_inline_assignment:
+    txn GroupIndex
+    bz test_inline_assignment_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test_inline_assignment_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     intc_1 // 0
@@ -51,10 +75,24 @@ test_inline_assignment:
     log
     intc_0 // 1
     return
+
+test_inline_assignment_ternary_false@3:
+    intc_1 // 0
+    b test_inline_assignment_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_ret.sol.C.test_assignment[routing]() -> void:
 test_assignment:
+    txn GroupIndex
+    bz test_assignment_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test_assignment_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     intc_1 // 0
@@ -63,3 +101,7 @@ test_assignment:
     log
     intc_0 // 1
     return
+
+test_assignment_ternary_false@3:
+    intc_1 // 0
+    b test_assignment_ternary_merge@4

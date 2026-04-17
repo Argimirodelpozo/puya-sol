@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/unicode_escapes.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -24,29 +24,93 @@ main_after_if_else@2:
     assert
     pushbytess 0xdb3fae8e 0x8163d802 0x769866b7 0x9c377eb8 // method "oneByteUTF8()string", method "twoBytesUTF8()string", method "threeBytesUTF8()string", method "combined()string"
     txna ApplicationArgs 0
-    match main_oneByteUTF8_route@5 main_twoBytesUTF8_route@6 main_threeBytesUTF8_route@7 main_combined_route@8
+    match oneByteUTF8 twoBytesUTF8 threeBytesUTF8 combined
     err
 
-main_combined_route@8:
-    pushbytes 0x151f7c75000624c2a2e282ac
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/unicode_escapes.sol.C.oneByteUTF8[routing]() -> void:
+oneByteUTF8:
+    txn GroupIndex
+    bz oneByteUTF8_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+oneByteUTF8_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75000761616124616161
     log
     intc_0 // 1
     return
 
-main_threeBytesUTF8_route@7:
-    pushbytes 0x151f7c750009616161e282ac616161
-    log
-    intc_0 // 1
-    return
+oneByteUTF8_ternary_false@3:
+    intc_1 // 0
+    b oneByteUTF8_ternary_merge@4
 
-main_twoBytesUTF8_route@6:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/unicode_escapes.sol.C.twoBytesUTF8[routing]() -> void:
+twoBytesUTF8:
+    txn GroupIndex
+    bz twoBytesUTF8_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+twoBytesUTF8_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c750008616161c2a2616161
     log
     intc_0 // 1
     return
 
-main_oneByteUTF8_route@5:
-    pushbytes 0x151f7c75000761616124616161
+twoBytesUTF8_ternary_false@3:
+    intc_1 // 0
+    b twoBytesUTF8_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/unicode_escapes.sol.C.threeBytesUTF8[routing]() -> void:
+threeBytesUTF8:
+    txn GroupIndex
+    bz threeBytesUTF8_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+threeBytesUTF8_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750009616161e282ac616161
     log
     intc_0 // 1
     return
+
+threeBytesUTF8_ternary_false@3:
+    intc_1 // 0
+    b threeBytesUTF8_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/unicode_escapes.sol.C.combined[routing]() -> void:
+combined:
+    txn GroupIndex
+    bz combined_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+combined_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75000624c2a2e282ac
+    log
+    intc_0 // 1
+    return
+
+combined_ternary_false@3:
+    intc_1 // 0
+    b combined_ternary_merge@4

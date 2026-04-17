@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/memory_to_storage.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 2 8 0
+    intcblock 1 0 2 8
     bytecblock 0x151f7c75 "small" "l" "__ctor_pending" 0x0000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,14 +38,14 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_3 // "__ctor_pending"
-    intc_3 // 0
+    intc_1 // 0
     app_global_put
     bytec_1 // "small"
-    intc_1 // 2
+    intc_2 // 2
     box_create
     pop
     bytec_2 // "l"
-    intc_1 // 2
+    intc_2 // 2
     box_create
     pop
     intc_0 // 1
@@ -60,32 +60,58 @@ f:
     pushint 26
     ==
     assert // invalid number of bytes for S
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes "s"
-    swap
+    dig 1
     box_put
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/memory_to_storage.sol.C.g[routing]() -> void:
 g:
     txna ApplicationArgs 1
-    dup
-    intc_3 // 0
+    dupn 2
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_1 // 2
+    intc_2 // 2
     *
-    intc_1 // 2
+    intc_2 // 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint16>
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     bytec_1 // "small"
     box_del
     pop
     bytec_1 // "small"
     dig 1
+    dup
+    cover 2
     box_put
     bytec_0 // 0x151f7c75
     swap
@@ -93,27 +119,43 @@ g:
     log
     intc_0 // 1
     return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/memory_to_storage.sol.C.h[routing]() -> void:
 h:
     txna ApplicationArgs 1
-    dup
-    intc_3 // 0
+    dupn 2
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_1 // 2
+    intc_2 // 2
     *
-    intc_1 // 2
+    intc_2 // 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 2>>
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
     bytec_2 // "l"
     box_del
     pop
     bytec_2 // "l"
     dig 1
+    dup
+    cover 2
     box_put
     bytec_0 // 0x151f7c75
     swap
@@ -122,9 +164,23 @@ h:
     intc_0 // 1
     return
 
+h_ternary_false@3:
+    intc_1 // 0
+    b h_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/memory_to_storage.sol.C.s[routing]() -> void:
 s:
+    txn GroupIndex
+    bz s_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+s_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes "s"
     box_get
     pushbytes 0x0000000000000000000000000000000000000000000000000000
@@ -152,6 +208,10 @@ s:
     intc_0 // 1
     return
 
+s_ternary_false@3:
+    intc_1 // 0
+    b s_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/memory_to_storage.sol.C.small[routing]() -> void:
 small:
@@ -161,24 +221,34 @@ small:
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz small_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+small_ternary_merge@4:
+    !
+    assert // not payable
     bytec_1 // "small"
     box_get
     bytec 4 // 0x0000
     cover 2
     select
-    intc_2 // 8
+    intc_3 // 8
     bzero
-    uncover 2
+    dig 2
     concat
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     -
     extract_uint64
     swap
     extract 2 0
     swap
-    intc_1 // 2
+    intc_2 // 2
     *
     extract_uint16
     itob
@@ -189,6 +259,10 @@ small:
     intc_0 // 1
     return
 
+small_ternary_false@3:
+    intc_1 // 0
+    b small_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/memory_to_storage.sol.C.l[routing]() -> void:
 l:
@@ -198,26 +272,36 @@ l:
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz l_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+l_ternary_merge@4:
+    !
+    assert // not payable
     bytec_2 // "l"
     box_get
     bytec 4 // 0x0000
     cover 2
     select
-    intc_2 // 8
+    intc_3 // 8
     bzero
-    uncover 2
+    dig 2
     concat
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     -
     extract_uint64
     swap
     extract 2 0
     swap
-    intc_1 // 2
+    intc_2 // 2
     *
-    intc_1 // 2
+    intc_2 // 2
     extract3 // on error: index access is out of bounds
     bytec_0 // 0x151f7c75
     swap
@@ -225,3 +309,7 @@ l:
     log
     intc_0 // 1
     return
+
+l_ternary_false@3:
+    intc_1 // 0
+    b l_ternary_merge@4

@@ -40,6 +40,16 @@ main_s1_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_reference_types_slot_offset.sol.A.s1[routing]() -> void:
 s1:
+    txn GroupIndex
+    bz s1_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+s1_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes "s1"
     box_get
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -75,3 +85,7 @@ s1:
     log
     intc_1 // 1
     return
+
+s1_ternary_false@3:
+    intc_0 // 0
+    b s1_ternary_merge@4

@@ -31,6 +31,17 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_address_homestead.sol.C.addr[routing]() -> void:
 addr:
     intc_1 // 0
+    txn GroupIndex
+    bz addr_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+addr_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     ==
     pushbytes 0x00
@@ -43,6 +54,10 @@ addr:
     log
     intc_0 // 1
     return
+
+addr_ternary_false@3:
+    intc_1 // 0
+    b addr_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_address_homestead.sol.C.g[routing]() -> void:
@@ -57,7 +72,21 @@ g:
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c7580
     log
     intc_0 // 1
     return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4

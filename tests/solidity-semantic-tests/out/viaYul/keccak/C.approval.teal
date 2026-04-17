@@ -3,10 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/keccak.sol.C.approval_program() -> uint64:
 main:
+    intcblock 1 0
     bytecblock 0x151f7c7564e604787cbf194841e7b68d7cd28786f6c9a0a3ab9f8b0a0e87cb4387ab0107
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -24,17 +25,49 @@ main_after_if_else@2:
     assert
     pushbytess 0xa5f32117 0x9a43a435 // method "keccak1()byte[32]", method "keccak2()byte[32]"
     txna ApplicationArgs 0
-    match main_keccak1_route@5 main_keccak2_route@6
+    match keccak1 keccak2
     err
 
-main_keccak2_route@6:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/keccak.sol.C.keccak1[routing]() -> void:
+keccak1:
+    txn GroupIndex
+    bz keccak1_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+keccak1_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c7564e604787cbf194841e7b68d7cd28786f6c9a0a3ab9f8b0a0e87cb4387ab0107
     log
-    pushint 1
+    intc_0 // 1
     return
 
-main_keccak1_route@5:
+keccak1_ternary_false@3:
+    intc_1 // 0
+    b keccak1_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/keccak.sol.C.keccak2[routing]() -> void:
+keccak2:
+    txn GroupIndex
+    bz keccak2_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+keccak2_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c7564e604787cbf194841e7b68d7cd28786f6c9a0a3ab9f8b0a0e87cb4387ab0107
     log
-    pushint 1
+    intc_0 // 1
     return
+
+keccak2_ternary_false@3:
+    intc_1 // 0
+    b keccak2_ternary_merge@4

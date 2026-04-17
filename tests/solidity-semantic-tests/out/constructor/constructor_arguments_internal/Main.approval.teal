@@ -85,6 +85,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_arguments_internal.sol.Main.getFlag[routing]() -> void:
 getFlag:
+    txn GroupIndex
+    bz getFlag_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getFlag_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     intc_0 // 0
     bytec_1 // "h"
@@ -119,9 +129,23 @@ getFlag:
     intc_1 // 1
     return
 
+getFlag_ternary_false@3:
+    intc_0 // 0
+    b getFlag_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_arguments_internal.sol.Main.getName[routing]() -> void:
 getName:
+    txn GroupIndex
+    bz getName_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getName_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     intc_0 // 0
     bytec_1 // "h"
@@ -147,3 +171,7 @@ getName:
     log
     intc_1 // 1
     return
+
+getName_ternary_false@3:
+    intc_0 // 0
+    b getName_ternary_merge@4

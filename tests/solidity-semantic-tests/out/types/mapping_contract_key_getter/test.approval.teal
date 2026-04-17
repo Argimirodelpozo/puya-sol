@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key_getter.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 32 255 0
+    intcblock 1 0 32 255
     bytecblock "__ctor_pending" "table" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,7 +38,7 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_3 // 0
+    intc_1 // 0
     app_global_put
     bytec_1 // "table"
     pushint 2
@@ -53,7 +53,7 @@ set:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
@@ -63,13 +63,23 @@ set:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    dup
-    intc_2 // 255
+    txn GroupIndex
+    bz set_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+set_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
+    intc_3 // 255
     <=
     assert // ABI validation
-    intc_2 // 255
+    intc_3 // 255
     &
-    swap
+    dig 2
     sha256
     bytec_1 // "table"
     swap
@@ -80,17 +90,32 @@ set:
     intc_0 // 1
     return
 
+set_ternary_false@3:
+    intc_1 // 0
+    b set_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key_getter.sol.test.get[routing]() -> void:
 get:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz get_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+get_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key_getter.sol.test.table
-    intc_2 // 255
+    intc_3 // 255
     &
     itob
     bytec_2 // 0x151f7c75
@@ -100,13 +125,17 @@ get:
     intc_0 // 1
     return
 
+get_ternary_false@3:
+    intc_1 // 0
+    b get_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key_getter.sol.test.table[routing]() -> void:
 table:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key_getter.sol.test.table
@@ -122,6 +151,16 @@ table:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key_getter.sol.test.table(key0: bytes) -> uint64:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key_getter.sol.test.table:
     proto 1 1
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key_getter.sol.test.table_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key_getter.sol.test.table_ternary_merge@3:
+    !
+    assert // not payable
     frame_dig -1
     sha256
     bytec_1 // "table"
@@ -130,8 +169,12 @@ table:
     box_get
     swap
     btoi
-    intc_3 // 0
+    intc_1 // 0
     swap
     uncover 2
     select
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key_getter.sol.test.table_ternary_false@2:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key_getter.sol.test.table_ternary_merge@3

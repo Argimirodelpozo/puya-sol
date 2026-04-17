@@ -28,20 +28,8 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0xf59e3cc4 0x21f5b0f3 0x79c18c5e 0x769c4dc6 // method "__postInit()void", method "test()bool", method "random1()void", method "random2()void", method "random3()void"
     txna ApplicationArgs 0
-    match __postInit test main_random1_route@7 main_random2_route@8 main_random3_route@9
+    match __postInit test random1 random2 random3
     err
-
-main_random3_route@9:
-    intc_0 // 1
-    return
-
-main_random2_route@8:
-    intc_0 // 1
-    return
-
-main_random1_route@7:
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/function_type_copy.sol.Test.__postInit[routing]() -> void:
@@ -95,6 +83,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/function_type_copy.sol.Test.test[routing]() -> void:
 test:
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     intc_1 // 0
     bytec_1 // "c"
@@ -147,3 +145,67 @@ test:
     log
     intc_0 // 1
     return
+
+test_ternary_false@3:
+    intc_1 // 0
+    b test_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/function_type_copy.sol.Test.random1[routing]() -> void:
+random1:
+    txn GroupIndex
+    bz random1_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+random1_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
+
+random1_ternary_false@3:
+    intc_1 // 0
+    b random1_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/function_type_copy.sol.Test.random2[routing]() -> void:
+random2:
+    txn GroupIndex
+    bz random2_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+random2_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
+
+random2_ternary_false@3:
+    intc_1 // 0
+    b random2_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/function_type_copy.sol.Test.random3[routing]() -> void:
+random3:
+    txn GroupIndex
+    bz random3_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+random3_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
+
+random3_ternary_false@3:
+    intc_1 // 0
+    b random3_ternary_merge@4

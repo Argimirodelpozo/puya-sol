@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 2
+    intcblock 32 1 0 2
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -25,11 +25,16 @@ main_after_if_else@2:
     assert
     pushbytess 0xcd78b354 0x1928cd24 0x2b9082ff 0xec213826 0xbe4d258c // method "f()uint256", method "f(uint256)uint256", method "f(uint256,uint256)uint256", method "f(uint256,uint256,uint256)uint256", method "call(uint256)uint256"
     txna ApplicationArgs 0
-    match main_f_route@5 f(u256) f(u256,u256) f(u256,u256,u256) call
+    match f() f(u256) f(u256,u256) f(u256,u256,u256) call
     err
 
-main_f_route@5:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f()[routing]() -> void:
+f():
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f()
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_1 // 1
     return
@@ -107,17 +112,36 @@ f(u256,u256,u256):
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.call[routing]() -> void:
 call:
     txna ApplicationArgs 1
-    dupn 2
+    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz call_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+call_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     pushbytes 0x
     b==
-    bz call_after_if_else@3
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    bz call_after_if_else@6
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f()
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
 
-call_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.call@12:
+call_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.call@15:
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -125,11 +149,11 @@ call_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     intc_1 // 1
     return
 
-call_after_if_else@3:
+call_after_if_else@6:
     dup
     pushbytes 0x01
     b==
-    bz call_after_if_else@5
+    bz call_after_if_else@8
     intc_1 // 1
     itob
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f(u256)
@@ -141,14 +165,14 @@ call_after_if_else@3:
     intc_0 // 32
     bzero
     b|
-    b call_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.call@12
+    b call_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.call@15
 
-call_after_if_else@5:
+call_after_if_else@8:
     dup
     pushbytes 0x02
     b==
-    bz call_after_if_else@7
-    intc_2 // 2
+    bz call_after_if_else@10
+    intc_3 // 2
     itob
     intc_1 // 1
     itob
@@ -161,14 +185,14 @@ call_after_if_else@5:
     intc_0 // 32
     bzero
     b|
-    b call_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.call@12
+    b call_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.call@15
 
-call_after_if_else@7:
+call_after_if_else@10:
     dup
     pushbytes 0x03
     b==
-    bz call_after_if_else@9
-    intc_2 // 2
+    bz call_after_if_else@12
+    intc_3 // 2
     itob
     pushint 3
     itob
@@ -183,14 +207,14 @@ call_after_if_else@7:
     intc_0 // 32
     bzero
     b|
-    b call_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.call@12
+    b call_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.call@15
 
-call_after_if_else@9:
+call_after_if_else@12:
     dup
     pushbytes 0x04
     b==
-    bz call_after_if_else@11
-    intc_2 // 2
+    bz call_after_if_else@14
+    intc_3 // 2
     itob
     pushint 5
     itob
@@ -205,16 +229,50 @@ call_after_if_else@9:
     intc_0 // 32
     bzero
     b|
-    b call_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.call@12
+    b call_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.call@15
 
-call_after_if_else@11:
+call_after_if_else@14:
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000001f4
-    b call_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.call@12
+    b call_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.call@15
+
+call_ternary_false@3:
+    intc_2 // 0
+    b call_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f()() -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f():
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f()_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f()_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f()_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f()_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f(u256)(__arc4_a: bytes) -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f(u256):
     proto 1 1
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f(u256)_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f(u256)_ternary_merge@3:
+    !
+    assert // not payable
     frame_dig -1
     len
     intc_0 // 32
@@ -226,10 +284,24 @@ call_after_if_else@11:
     b|
     retsub
 
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f(u256)_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f(u256)_ternary_merge@3
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f(u256,u256)(__arc4_a: bytes, __arc4_b: bytes) -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f(u256,u256):
     proto 2 1
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f(u256,u256)_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f(u256,u256)_ternary_merge@3:
+    !
+    assert // not payable
     frame_dig -2
     frame_dig -1
     b+
@@ -243,10 +315,24 @@ call_after_if_else@11:
     b|
     retsub
 
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f(u256,u256)_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f(u256,u256)_ternary_merge@3
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f(u256,u256,u256)(__arc4_a: bytes, __arc4_b: bytes, __arc4_c: bytes) -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f(u256,u256,u256):
     proto 3 1
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f(u256,u256,u256)_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f(u256,u256,u256)_ternary_merge@3:
+    !
+    assert // not payable
     frame_dig -3
     frame_dig -2
     b+
@@ -261,3 +347,7 @@ call_after_if_else@11:
     bzero
     b|
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f(u256,u256,u256)_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.f(u256,u256,u256)_ternary_merge@3

@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/staticcall_for_view_and_pure_pre_byzantium.sol.D.approval_program() -> uint64:
 main:
-    intcblock 0 16 1 6 1000000
+    intcblock 0 1 16 6 1000000
     bytecblock TMPL_APPROVAL_C TMPL_CLEAR_C 0xcd78b354 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -32,14 +32,24 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/staticcall_for_view_and_pure_pre_byzantium.sol.D.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     bytec_0 // TMPL_APPROVAL_C
     bytec_1 // TMPL_CLEAR_C
     intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 16
+    intc_2 // 16
     itxn_field GlobalNumUint
-    intc_1 // 16
+    intc_2 // 16
     itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
@@ -53,7 +63,7 @@ f:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_2 // 1
+    intc_1 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_0 // 0
@@ -86,20 +96,34 @@ f:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
+
+f_ternary_false@3:
+    intc_0 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/staticcall_for_view_and_pure_pre_byzantium.sol.D.fview[routing]() -> void:
 fview:
+    txn GroupIndex
+    bz fview_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+fview_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     bytec_0 // TMPL_APPROVAL_C
     bytec_1 // TMPL_CLEAR_C
     intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 16
+    intc_2 // 16
     itxn_field GlobalNumUint
-    intc_1 // 16
+    intc_2 // 16
     itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
@@ -112,7 +136,7 @@ fview:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_2 // 1
+    intc_1 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_0 // 0
@@ -125,9 +149,9 @@ fview:
     bytec_1 // TMPL_CLEAR_C
     intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 16
+    intc_2 // 16
     itxn_field GlobalNumUint
-    intc_1 // 16
+    intc_2 // 16
     itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
@@ -141,7 +165,7 @@ fview:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_2 // 1
+    intc_1 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_0 // 0
@@ -181,20 +205,34 @@ fview:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
+
+fview_ternary_false@3:
+    intc_0 // 0
+    b fview_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/staticcall_for_view_and_pure_pre_byzantium.sol.D.fpure[routing]() -> void:
 fpure:
+    txn GroupIndex
+    bz fpure_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+fpure_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     bytec_0 // TMPL_APPROVAL_C
     bytec_1 // TMPL_CLEAR_C
     intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 16
+    intc_2 // 16
     itxn_field GlobalNumUint
-    intc_1 // 16
+    intc_2 // 16
     itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
@@ -207,7 +245,7 @@ fpure:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_2 // 1
+    intc_1 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_0 // 0
@@ -220,9 +258,9 @@ fpure:
     bytec_1 // TMPL_CLEAR_C
     intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 16
+    intc_2 // 16
     itxn_field GlobalNumUint
-    intc_1 // 16
+    intc_2 // 16
     itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
@@ -236,7 +274,7 @@ fpure:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_2 // 1
+    intc_1 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_0 // 0
@@ -276,5 +314,9 @@ fpure:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
+
+fpure_ternary_false@3:
+    intc_0 // 0
+    b fpure_ternary_merge@4

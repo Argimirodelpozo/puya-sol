@@ -37,6 +37,16 @@ main_s_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.A.s[routing]() -> void:
 s:
+    txn GroupIndex
+    bz s_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+s_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_0 // "s"
     app_global_get_ex
@@ -67,3 +77,7 @@ s:
     log
     intc_1 // 1
     return
+
+s_ternary_false@3:
+    intc_0 // 0
+    b s_ternary_merge@4

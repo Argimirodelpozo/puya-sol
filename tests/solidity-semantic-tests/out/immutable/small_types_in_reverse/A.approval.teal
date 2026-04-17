@@ -72,6 +72,16 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol.A.a[routing]() -> void:
 a:
+    txn GroupIndex
+    bz a_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+a_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_3 // "a"
     app_global_get_ex
@@ -84,9 +94,23 @@ a:
     intc_1 // 1
     return
 
+a_ternary_false@3:
+    intc_0 // 0
+    b a_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol.A.b[routing]() -> void:
 b:
+    txn GroupIndex
+    bz b_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+b_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_0 // "b"
     app_global_get_ex
@@ -99,9 +123,23 @@ b:
     intc_1 // 1
     return
 
+b_ternary_false@3:
+    intc_0 // 0
+    b b_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol.A.c[routing]() -> void:
 c:
+    txn GroupIndex
+    bz c_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+c_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_1 // "c"
     app_global_get_ex
@@ -114,6 +152,10 @@ c:
     intc_1 // 1
     return
 
+c_ternary_false@3:
+    intc_0 // 0
+    b c_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol.A.x[routing]() -> void:
 x:
@@ -123,13 +165,23 @@ x:
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec 4 // "x"
     app_global_get_ex
     assert // check x exists
     intc_2 // 8
     bzero
-    uncover 2
+    dig 2
     concat
     dup
     len
@@ -146,3 +198,7 @@ x:
     log
     intc_1 // 1
     return
+
+x_ternary_false@3:
+    intc_0 // 0
+    b x_ternary_merge@4

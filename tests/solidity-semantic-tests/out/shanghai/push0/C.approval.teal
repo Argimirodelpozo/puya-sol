@@ -27,7 +27,26 @@ main_zero_route@4:
     txn ApplicationID
     &&
     assert
+    b zero
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/shanghai/push0.sol.C.zero[routing]() -> void:
+zero:
+    txn GroupIndex
+    bz zero_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+zero_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     pushint 1
     return
+
+zero_ternary_false@3:
+    pushint 0
+    b zero_ternary_merge@4

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_local_variables.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64
+    intcblock 1 0 64
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -33,33 +33,45 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_local_variables.sol.C.f[routing]() -> void:
 f:
+    intc_1 // 0
     txna ApplicationArgs 1
     dup
     len
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    pushint 0
+    intc_1 // 0
     getbit
-    dup
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x
-    swap
-    bnz f_after_while@10
-    dig 1
+    bury 2
+    dup
+    bnz f_after_while@13
+    dup
     intc_0 // 1
     <=
     assert // ABI bool validation
     pushint 3
     itob
-    bury 1
+    bury 2
 
-f_after_while@10:
-    dupn 2
+f_after_while@13:
+    dig 1
+    dup
     len
-    intc_1 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
     pushbytes 0x151f7c75
@@ -68,3 +80,7 @@ f_after_while@10:
     log
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4

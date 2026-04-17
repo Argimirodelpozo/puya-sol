@@ -55,16 +55,28 @@ f:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 0
     bytec_1 // "value1"
     app_global_get_ex
     assert // check value1 exists
     dig 2
+    dup
+    cover 2
     b+
     bytec_1 // "value1"
     dig 1
     app_global_put
-    swap
+    dig 2
     uncover 2
     b*
     intc_2 // 0
@@ -94,3 +106,7 @@ f:
     log
     intc_1 // 1
     return
+
+f_ternary_false@3:
+    intc_2 // 0
+    b f_ternary_merge@4

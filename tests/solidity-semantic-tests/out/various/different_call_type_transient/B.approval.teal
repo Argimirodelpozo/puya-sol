@@ -43,10 +43,21 @@ setValue:
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz setValue_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+setValue_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "value"
     app_global_get_ex
     assert // check value exists
+    dig 1
     b+
     bytec_0 // "value"
     swap
@@ -54,9 +65,23 @@ setValue:
     intc_0 // 1
     return
 
+setValue_ternary_false@3:
+    intc_1 // 0
+    b setValue_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.B.value[routing]() -> void:
 value:
+    txn GroupIndex
+    bz value_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+value_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "value"
     app_global_get_ex
@@ -75,3 +100,7 @@ value:
     log
     intc_0 // 1
     return
+
+value_ternary_false@3:
+    intc_1 // 0
+    b value_ternary_merge@4

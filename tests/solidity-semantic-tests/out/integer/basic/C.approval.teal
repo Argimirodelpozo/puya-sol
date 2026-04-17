@@ -27,7 +27,26 @@ main_basic_route@4:
     txn ApplicationID
     &&
     assert
+    b basic
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/basic.sol.C.basic[routing]() -> void:
+basic:
+    txn GroupIndex
+    bz basic_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+basic_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c7580
     log
     pushint 1
     return
+
+basic_ternary_false@3:
+    pushint 0
+    b basic_ternary_merge@4

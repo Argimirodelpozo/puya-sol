@@ -4,22 +4,19 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/getter_call_in_constructor.sol.A.approval_program() -> uint64:
 main:
     intcblock 1 64 0
-    bytecblock "x" "y" 0x151f7c75
+    bytecblock "y" "x" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
     itob
-    bytec_0 // "x"
+    bytec_1 // "x"
     swap
     app_global_put
-    bytec_1 // "y"
+    bytec_0 // "y"
     pushbytes 0x
     app_global_put
-    intc_2 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
-    bytec_1 // "y"
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/getter_call_in_constructor.sol.A.x
+    bytec_0 // "y"
     swap
     app_global_put
     intc_0 // 1
@@ -46,10 +43,7 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/getter_call_in_constructor.sol.A.x[routing]() -> void:
 x:
-    intc_2 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/getter_call_in_constructor.sol.A.x
     dup
     len
     intc_1 // 64
@@ -68,8 +62,18 @@ x:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/getter_call_in_constructor.sol.A.y[routing]() -> void:
 y:
+    txn GroupIndex
+    bz y_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+y_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 0
-    bytec_1 // "y"
+    bytec_0 // "y"
     app_global_get_ex
     assert // check y exists
     dup
@@ -86,3 +90,30 @@ y:
     log
     intc_0 // 1
     return
+
+y_ternary_false@3:
+    intc_2 // 0
+    b y_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/getter_call_in_constructor.sol.A.x() -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/getter_call_in_constructor.sol.A.x:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/getter_call_in_constructor.sol.A.x_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/getter_call_in_constructor.sol.A.x_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_1 // "x"
+    app_global_get_ex
+    assert // check x exists
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/getter_call_in_constructor.sol.A.x_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/getter_call_in_constructor.sol.A.x_ternary_merge@3

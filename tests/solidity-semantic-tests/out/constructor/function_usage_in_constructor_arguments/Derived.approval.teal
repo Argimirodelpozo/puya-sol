@@ -3,12 +3,13 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/function_usage_in_constructor_arguments.sol.Derived.approval_program() -> uint64:
 main:
-    intcblock 1 32
-    bytecblock "m_a"
+    intcblock 1 0 32
+    bytecblock "m_a" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/function_usage_in_constructor_arguments.sol.Derived.g
     bytec_0 // "m_a"
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+    swap
     app_global_put
     intc_0 // 1
     return
@@ -28,33 +29,72 @@ main_after_if_else@2:
     assert
     pushbytess 0x39e69bec 0x4b2c0376 // method "getA()uint256", method "g()uint256"
     txna ApplicationArgs 0
-    match getA main_g_route@6
+    match getA g
     err
-
-main_g_route@6:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/function_usage_in_constructor_arguments.sol.Derived.getA[routing]() -> void:
 getA:
-    pushint 0
+    txn GroupIndex
+    bz getA_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getA_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_0 // "m_a"
     app_global_get_ex
     assert // check m_a exists
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
-    pushbytes 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
+
+getA_ternary_false@3:
+    intc_1 // 0
+    b getA_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/function_usage_in_constructor_arguments.sol.Derived.g[routing]() -> void:
+g:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/function_usage_in_constructor_arguments.sol.Derived.g
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/function_usage_in_constructor_arguments.sol.Derived.g() -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/function_usage_in_constructor_arguments.sol.Derived.g:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/function_usage_in_constructor_arguments.sol.Derived.g_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/function_usage_in_constructor_arguments.sol.Derived.g_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/function_usage_in_constructor_arguments.sol.Derived.g_ternary_false@2:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/function_usage_in_constructor_arguments.sol.Derived.g_ternary_merge@3

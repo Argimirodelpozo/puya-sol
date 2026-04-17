@@ -21,6 +21,9 @@ main_after_if_else@2:
     store 0
     txn NumAppArgs
     bnz main_after_if_else@4
+    pushbytes 0x
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_override_multi.sol.B.__fallback
+    pop
     intc_0 // 1
     return
 
@@ -29,20 +32,23 @@ main_after_if_else@4:
     bury 2
     pushbytes 0x9509a93a // method "__fallback(byte[])byte[]"
     txna ApplicationArgs 0
-    match main___fallback_route@10
+    match main___fallback_route@8
     dig 1
     bury 1
 
-main_switch_case_next@11:
+main_switch_case_next@9:
     dup
     bnz main_after_if_else@6
+    txna ApplicationArgs 0
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_override_multi.sol.B.__fallback
+    pop
     intc_0 // 1
     bury 1
 
 main_after_if_else@6:
     return
 
-main___fallback_route@10:
+main___fallback_route@8:
     txn OnCompletion
     !
     txn ApplicationID
@@ -51,7 +57,7 @@ main___fallback_route@10:
     callsub __fallback
     intc_0 // 1
     bury 1
-    b main_switch_case_next@11
+    b main_switch_case_next@9
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_override_multi.sol.B.__fallback[routing]() -> void:
@@ -62,10 +68,41 @@ __fallback:
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
-    swap
+    dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    pushbytes 0x151f7c75000378797a
+    extract 2 0
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_override_multi.sol.B.__fallback
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
     retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_override_multi.sol.B.__fallback(_input: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_override_multi.sol.B.__fallback:
+    proto 1 1
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_override_multi.sol.B.__fallback_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_override_multi.sol.B.__fallback_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes "xyz"
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_override_multi.sol.B.__fallback_ternary_false@2:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_override_multi.sol.B.__fallback_ternary_merge@3

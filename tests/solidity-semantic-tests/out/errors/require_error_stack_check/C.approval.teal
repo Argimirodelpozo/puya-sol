@@ -41,11 +41,23 @@ e:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz e_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+e_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     intc_1 // 32
     <=
     assert // overflow
     intc_1 // 32
     bzero
+    dig 2
     b|
     bytec_1 // 0x151f7c75
     swap
@@ -53,6 +65,10 @@ e:
     log
     intc_0 // 1
     return
+
+e_ternary_false@3:
+    intc_2 // 0
+    b e_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/require_error_stack_check.sol.C.f[routing]() -> void:
@@ -81,21 +97,45 @@ f:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     dig 1
+    dup
     intc_0 // 1
     <=
     assert // ABI bool validation
-    swap
     assert // E
     bytec_0 // "x"
-    swap
+    dig 1
     app_global_put
     intc_0 // 1
     return
 
+f_ternary_false@3:
+    intc_2 // 0
+    b f_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/require_error_stack_check.sol.C.x[routing]() -> void:
 x:
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -114,3 +154,7 @@ x:
     log
     intc_0 // 1
     return
+
+x_ternary_false@3:
+    intc_2 // 0
+    b x_ternary_merge@4

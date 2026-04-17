@@ -48,180 +48,190 @@ __postInit:
 save:
     intc_0 // 0
     dupn 14
+    txn GroupIndex
+    bz save_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+save_ternary_merge@4:
+    !
+    assert // not payable
     txn NumAppArgs
-    bz save_ternary_false@51
+    bz save_ternary_false@54
     txn NumAppArgs
-    bz save_ternary_false@4
+    bz save_ternary_false@7
     txna ApplicationArgs 0
     bury 15
 
-save_ternary_merge@5:
+save_ternary_merge@8:
     txn NumAppArgs
     intc_1 // 1
     >
-    bz save_ternary_false@7
+    bz save_ternary_false@10
     txna ApplicationArgs 1
 
-save_ternary_merge@8:
-    dig 15
-    swap
-    concat
-    bury 2
-    txn NumAppArgs
-    pushint 2
-    >
-    bz save_ternary_false@10
-    txna ApplicationArgs 2
-
 save_ternary_merge@11:
-    dig 2
-    swap
-    concat
-    bury 1
-    txn NumAppArgs
-    pushint 3
-    >
-    bz save_ternary_false@13
-    txna ApplicationArgs 3
-
-save_ternary_merge@14:
-    dig 1
+    dig 15
     swap
     concat
     bury 14
     txn NumAppArgs
-    pushint 4
+    pushint 2
     >
-    bz save_ternary_false@16
-    txna ApplicationArgs 4
+    bz save_ternary_false@13
+    txna ApplicationArgs 2
 
-save_ternary_merge@17:
+save_ternary_merge@14:
     dig 14
     swap
     concat
     bury 13
     txn NumAppArgs
-    pushint 5
+    pushint 3
     >
-    bz save_ternary_false@19
-    txna ApplicationArgs 5
+    bz save_ternary_false@16
+    txna ApplicationArgs 3
 
-save_ternary_merge@20:
+save_ternary_merge@17:
     dig 13
     swap
     concat
     bury 12
     txn NumAppArgs
-    pushint 6
+    pushint 4
     >
-    bz save_ternary_false@22
-    txna ApplicationArgs 6
+    bz save_ternary_false@19
+    txna ApplicationArgs 4
 
-save_ternary_merge@23:
+save_ternary_merge@20:
     dig 12
     swap
     concat
     bury 11
     txn NumAppArgs
-    pushint 7
+    pushint 5
     >
-    bz save_ternary_false@25
-    txna ApplicationArgs 7
+    bz save_ternary_false@22
+    txna ApplicationArgs 5
 
-save_ternary_merge@26:
+save_ternary_merge@23:
     dig 11
     swap
     concat
     bury 10
     txn NumAppArgs
-    pushint 8
+    pushint 6
     >
-    bz save_ternary_false@28
-    txna ApplicationArgs 8
+    bz save_ternary_false@25
+    txna ApplicationArgs 6
 
-save_ternary_merge@29:
+save_ternary_merge@26:
     dig 10
     swap
     concat
     bury 9
     txn NumAppArgs
-    pushint 9
+    pushint 7
     >
-    bz save_ternary_false@31
-    txna ApplicationArgs 9
+    bz save_ternary_false@28
+    txna ApplicationArgs 7
 
-save_ternary_merge@32:
+save_ternary_merge@29:
     dig 9
     swap
     concat
     bury 8
     txn NumAppArgs
-    pushint 10
+    pushint 8
     >
-    bz save_ternary_false@34
-    txna ApplicationArgs 10
+    bz save_ternary_false@31
+    txna ApplicationArgs 8
 
-save_ternary_merge@35:
+save_ternary_merge@32:
     dig 8
     swap
     concat
     bury 7
     txn NumAppArgs
-    pushint 11
+    pushint 9
     >
-    bz save_ternary_false@37
-    txna ApplicationArgs 11
+    bz save_ternary_false@34
+    txna ApplicationArgs 9
 
-save_ternary_merge@38:
+save_ternary_merge@35:
     dig 7
     swap
     concat
     bury 6
     txn NumAppArgs
-    pushint 12
+    pushint 10
     >
-    bz save_ternary_false@40
-    txna ApplicationArgs 12
+    bz save_ternary_false@37
+    txna ApplicationArgs 10
 
-save_ternary_merge@41:
+save_ternary_merge@38:
     dig 6
     swap
     concat
     bury 5
     txn NumAppArgs
-    pushint 13
+    pushint 11
     >
-    bz save_ternary_false@43
-    txna ApplicationArgs 13
+    bz save_ternary_false@40
+    txna ApplicationArgs 11
 
-save_ternary_merge@44:
+save_ternary_merge@41:
     dig 5
     swap
     concat
     bury 4
     txn NumAppArgs
-    pushint 14
+    pushint 12
     >
-    bz save_ternary_false@46
-    txna ApplicationArgs 14
+    bz save_ternary_false@43
+    txna ApplicationArgs 12
 
-save_ternary_merge@47:
+save_ternary_merge@44:
     dig 4
     swap
     concat
     bury 3
     txn NumAppArgs
-    pushint 15
+    pushint 13
     >
-    bz save_ternary_false@49
-    txna ApplicationArgs 15
+    bz save_ternary_false@46
+    txna ApplicationArgs 13
 
-save_ternary_merge@50:
+save_ternary_merge@47:
     dig 3
     swap
     concat
+    bury 2
+    txn NumAppArgs
+    pushint 14
+    >
+    bz save_ternary_false@49
+    txna ApplicationArgs 14
 
-save_ternary_merge@52:
+save_ternary_merge@50:
+    dig 2
+    swap
+    concat
+    bury 1
+    txn NumAppArgs
+    pushint 15
+    >
+    bz save_ternary_false@52
+    txna ApplicationArgs 15
+
+save_ternary_merge@53:
+    dig 1
+    swap
+    concat
+
+save_ternary_merge@55:
     bytec_1 // "savedData"
     box_del
     pop
@@ -232,6 +242,11 @@ save_ternary_merge@52:
     log
     intc_1 // 1
     return
+
+save_ternary_false@52:
+    intc_0 // 0
+    bzero
+    b save_ternary_merge@53
 
 save_ternary_false@49:
     intc_0 // 0
@@ -306,15 +321,14 @@ save_ternary_false@10:
 save_ternary_false@7:
     intc_0 // 0
     bzero
+    bury 15
     b save_ternary_merge@8
 
-save_ternary_false@4:
+save_ternary_false@54:
     intc_0 // 0
     bzero
-    bury 15
-    b save_ternary_merge@5
+    b save_ternary_merge@55
 
-save_ternary_false@51:
+save_ternary_false@3:
     intc_0 // 0
-    bzero
-    b save_ternary_merge@52
+    b save_ternary_merge@4

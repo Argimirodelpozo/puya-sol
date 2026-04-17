@@ -24,14 +24,27 @@ main_after_if_else@2:
     assert
     pushbytess 0x277630fc 0x74c48465 0x666a2f25 0xafedb2e5 // method "e()void", method "f(bool)void", method "g(bool)void", method "h()uint256"
     txna ApplicationArgs 0
-    match main_e_route@5 f g main_h_route@8
+    match e f g h
     err
 
-main_h_route@8:
-    err
 
-main_e_route@5:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/failure.sol.C.e[routing]() -> void:
+e:
+    txn GroupIndex
+    bz e_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+e_ternary_merge@4:
+    !
+    assert // not payable
     err // revert
+
+e_ternary_false@3:
+    intc_1 // 0
+    b e_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/failure.sol.C.f[routing]() -> void:
@@ -44,13 +57,27 @@ f:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
-    dup
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     intc_0 // 1
     <=
     assert // ABI bool validation
     assert // assertion failed
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/failure.sol.C.g[routing]() -> void:
@@ -63,10 +90,43 @@ g:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
-    dup
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     intc_0 // 1
     <=
     assert // ABI bool validation
     assert // Value is false.
     intc_0 // 1
     return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/failure.sol.C.h[routing]() -> void:
+h:
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
+    err
+
+h_ternary_false@3:
+    intc_1 // 0
+    b h_ternary_merge@4

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/parameter.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 32 0
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -37,12 +37,26 @@ id:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz id_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+id_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c75
-    swap
+    dig 1
     concat
     log
     intc_0 // 1
     return
+
+id_ternary_false@3:
+    intc_2 // 0
+    b id_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/parameter.sol.C.unwrap_assembly[routing]() -> void:
@@ -53,14 +67,28 @@ unwrap_assembly:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz unwrap_assembly_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+unwrap_assembly_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     bytec_0 // 0x151f7c75
-    swap
+    dig 1
     concat
     log
     intc_0 // 1
     return
+
+unwrap_assembly_ternary_false@3:
+    intc_2 // 0
+    b unwrap_assembly_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/parameter.sol.C.wrap_assembly[routing]() -> void:
@@ -71,14 +99,28 @@ wrap_assembly:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz wrap_assembly_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+wrap_assembly_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     bytec_0 // 0x151f7c75
-    swap
+    dig 1
     concat
     log
     intc_0 // 1
     return
+
+wrap_assembly_ternary_false@3:
+    intc_2 // 0
+    b wrap_assembly_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/parameter.sol.C.unwrap[routing]() -> void:
@@ -89,12 +131,26 @@ unwrap:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz unwrap_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+unwrap_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c75
-    swap
+    dig 1
     concat
     log
     intc_0 // 1
     return
+
+unwrap_ternary_false@3:
+    intc_2 // 0
+    b unwrap_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/parameter.sol.C.wrap[routing]() -> void:
@@ -105,9 +161,23 @@ wrap:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz wrap_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+wrap_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c75
-    swap
+    dig 1
     concat
     log
     intc_0 // 1
     return
+
+wrap_ternary_false@3:
+    intc_2 // 0
+    b wrap_ternary_merge@4

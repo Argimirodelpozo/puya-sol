@@ -34,7 +34,7 @@ main_f_route@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_2d_new.sol.C.f[routing]() -> void:
 f:
     intc_1 // 0
-    dup
+    dupn 3
     pushbytes ""
     dupn 2
     txna ApplicationArgs 1
@@ -44,25 +44,37 @@ f:
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x00020004000600000000
+    bury 9
     intc_1 // 0
     itob
+    bury 8
 
-f_while_top@2:
-    dup
+f_while_top@5:
+    dig 7
     pushbytes 0x02
     b<
-    bz f_after_while@4
+    bz f_after_while@7
     pushint 8
     bzero
-    dig 1
+    dig 8
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    dig 2
+    dig 9
     dup
     cover 2
     intc_1 // 0
@@ -73,7 +85,7 @@ f_while_top@2:
     dig 1
     substring 0 2
     dup
-    bury 11
+    bury 9
     btoi
     uncover 2
     extract 2 0
@@ -105,7 +117,7 @@ f_while_top@2:
     dup
     dig 4
     -
-    bury 12
+    bury 10
     dig 4
     intc_1 // 0
     uncover 5
@@ -117,58 +129,58 @@ f_while_top@2:
     uncover 3
     substring3
     concat
-    bury 11
+    bury 9
     swap
     intc_2 // 2
     *
-    bury 6
-    bury 7
+    bury 4
+    bury 5
 
-f_for_header@6:
-    dig 6
-    dig 5
+f_for_header@9:
+    dig 4
+    dig 3
     <
-    bz f_after_for@8
-    dig 8
+    bz f_after_for@11
+    dig 6
     dup
-    dig 8
+    dig 6
     dup
     cover 3
     extract_uint16
     pushint 98
     +
-    dig 8
+    dig 6
     -
     itob
     extract 6 2
     dig 2
     swap
     replace3
-    bury 10
+    bury 8
     intc_2 // 2
     +
-    bury 7
-    b f_for_header@6
+    bury 5
+    b f_for_header@9
 
-f_after_for@8:
+f_after_for@11:
+    dig 5
     dig 7
-    dig 9
     concat
-    bury 2
-    dup
+    bury 9
+    dig 7
     pushbytes 0x01
     b+
-    bury 1
-    b f_while_top@2
+    bury 8
+    b f_while_top@5
 
-f_after_while@4:
-    dig 2
+f_after_while@7:
+    dup
     intc_3 // 32
     <=
     assert // overflow
     intc_3 // 32
     bzero
-    dig 4
+    dig 2
     b|
     pushbytes 0x151f7c75
     swap
@@ -176,3 +188,7 @@ f_after_while@4:
     log
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4

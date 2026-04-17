@@ -32,9 +32,23 @@ main_diff_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/code_access_padding.sol.C.diff[routing]() -> void:
 diff:
+    txn GroupIndex
+    bz diff_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+diff_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     pushint 1
     return
+
+diff_ternary_false@3:
+    pushint 0
+    b diff_ternary_merge@4

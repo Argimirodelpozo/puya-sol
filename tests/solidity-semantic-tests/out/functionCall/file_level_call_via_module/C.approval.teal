@@ -1,12 +1,12 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_yx1a6xq1/b.sol.C.approval_program() -> uint64:
+// /tmp/multisource_lrluq9rl/b.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 1 32
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -28,10 +28,10 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b /tmp/multisource_yx1a6xq1/b.sol.C.f[routing]
+    b /tmp/multisource_lrluq9rl/b.sol.C.f[routing]
 
 
-// /tmp/multisource_yx1a6xq1/b.sol.f(_param0: bytes) -> bytes:
+// /tmp/multisource_lrluq9rl/b.sol.f(_param0: bytes) -> bytes:
 f:
     proto 1 1
     pushint 7
@@ -39,8 +39,8 @@ f:
     retsub
 
 
-// /tmp/multisource_yx1a6xq1/b.sol.f_64(x: bytes) -> bytes:
-/tmp/multisource_yx1a6xq1/b.sol.f_64:
+// /tmp/multisource_lrluq9rl/b.sol.f_64(x: bytes) -> bytes:
+/tmp/multisource_lrluq9rl/b.sol.f_64:
     proto 1 1
     frame_dig -1
     len
@@ -48,26 +48,36 @@ f:
     retsub
 
 
-// /tmp/multisource_yx1a6xq1/b.sol.C.f[routing]() -> void:
-/tmp/multisource_yx1a6xq1/b.sol.C.f[routing]:
+// /tmp/multisource_lrluq9rl/b.sol.C.f[routing]() -> void:
+/tmp/multisource_lrluq9rl/b.sol.C.f[routing]:
+    txn GroupIndex
+    bz /tmp/multisource_lrluq9rl/b.sol.C.f[routing]_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/tmp/multisource_lrluq9rl/b.sol.C.f[routing]_ternary_merge@4:
+    !
+    assert // not payable
     pushint 2
     itob
     callsub f
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     swap
     dig 1
     b|
     pushbytes "abc"
-    callsub /tmp/multisource_yx1a6xq1/b.sol.f_64
+    callsub /tmp/multisource_lrluq9rl/b.sol.f_64
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
     uncover 2
@@ -77,5 +87,9 @@ f:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+/tmp/multisource_lrluq9rl/b.sol.C.f[routing]_ternary_false@3:
+    pushint 0
+    b /tmp/multisource_lrluq9rl/b.sol.C.f[routing]_ternary_merge@4

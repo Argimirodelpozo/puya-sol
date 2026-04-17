@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_equivalent_solidity_spec.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 1
+    intcblock 0 1 32
     bytecblock 0x01 "namespace" "example.main" 0x00 "expectedSlot" 0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -13,7 +13,7 @@ main:
     bytec_1 // "namespace"
     bytec_2 // "example.main"
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -44,7 +44,7 @@ erc7201Mock:
     bytec_0 // 0x01
     b>=
     assert // underflow
-    intc_0 // 32
+    intc_2 // 32
     bzero
     swap
     bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -56,9 +56,9 @@ erc7201Mock:
     concat
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     -
-    intc_0 // 32
+    intc_2 // 32
     extract3
     keccak256
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
@@ -68,11 +68,21 @@ erc7201Mock:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_equivalent_solidity_spec.sol.C.builtinMatchesSolidityImplementation[routing]() -> void:
 builtinMatchesSolidityImplementation:
-    intc_1 // 0
+    txn GroupIndex
+    bz builtinMatchesSolidityImplementation_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+builtinMatchesSolidityImplementation_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 0
     bytec 4 // "expectedSlot"
     app_global_get_ex
     assert // check expectedSlot exists
-    intc_1 // 0
+    intc_0 // 0
     bytec_1 // "namespace"
     app_global_get_ex
     assert // check namespace exists
@@ -81,7 +91,7 @@ builtinMatchesSolidityImplementation:
     uncover 2
     b==
     assert
-    intc_0 // 32
+    intc_2 // 32
     bzero
     swap
     keccak256
@@ -95,36 +105,50 @@ builtinMatchesSolidityImplementation:
     bytec_2 // "example.main"
     callsub erc7201Mock
     b==
-    bz builtinMatchesSolidityImplementation_bool_false@4
+    bz builtinMatchesSolidityImplementation_bool_false@7
     bytec_2 // "example.main"
     callsub erc7201Mock
     bytec 5 // 0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500
     b==
-    bz builtinMatchesSolidityImplementation_bool_false@4
-    intc_2 // 1
+    bz builtinMatchesSolidityImplementation_bool_false@7
+    intc_1 // 1
 
-builtinMatchesSolidityImplementation_bool_merge@5:
+builtinMatchesSolidityImplementation_bool_merge@8:
     bytec_3 // 0x00
-    intc_1 // 0
+    intc_0 // 0
     uncover 2
     setbit
     bytec 7 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
-builtinMatchesSolidityImplementation_bool_false@4:
-    intc_1 // 0
-    b builtinMatchesSolidityImplementation_bool_merge@5
+builtinMatchesSolidityImplementation_bool_false@7:
+    intc_0 // 0
+    b builtinMatchesSolidityImplementation_bool_merge@8
+
+builtinMatchesSolidityImplementation_ternary_false@3:
+    intc_0 // 0
+    b builtinMatchesSolidityImplementation_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_equivalent_solidity_spec.sol.C.builtinOutput[routing]() -> void:
 builtinOutput:
-    intc_0 // 32
+    txn GroupIndex
+    bz builtinOutput_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+builtinOutput_ternary_merge@4:
+    !
+    assert // not payable
+    intc_2 // 32
     bzero
-    intc_1 // 0
+    intc_0 // 0
     bytec_1 // "namespace"
     app_global_get_ex
     assert // check namespace exists
@@ -139,7 +163,7 @@ builtinOutput:
     concat
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     <=
     assert // overflow
     b|
@@ -147,5 +171,9 @@ builtinOutput:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
+
+builtinOutput_ternary_false@3:
+    intc_0 // 0
+    b builtinOutput_ternary_merge@4

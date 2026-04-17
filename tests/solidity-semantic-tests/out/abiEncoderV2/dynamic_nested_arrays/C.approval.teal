@@ -359,6 +359,16 @@ f_after_for@8:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/dynamic_nested_arrays.sol.C.test[routing]() -> void:
 test:
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
     pushbytess 0x000300060008000a000000000000 0x000200000000
     intc_1 // 0
     callsub dynamic_array_replace_dynamic_element
@@ -644,10 +654,24 @@ test:
     intc_2 // 1
     return
 
+test_ternary_false@3:
+    intc_1 // 0
+    b test_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/dynamic_nested_arrays.sol.C.f(__arc4_a: bytes, b: bytes, c: bytes, __arc4_d: bytes) -> bytes, bytes, bytes, bytes, bytes, bytes, bytes, bytes, bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/dynamic_nested_arrays.sol.C.f:
     proto 4 9
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/dynamic_nested_arrays.sol.C.f_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/dynamic_nested_arrays.sol.C.f_ternary_merge@3:
+    !
+    assert // not payable
     frame_dig -4
     len
     intc_3 // 32
@@ -728,3 +752,7 @@ test:
     frame_dig -3
     frame_dig -2
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/dynamic_nested_arrays.sol.C.f_ternary_false@2:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/dynamic_nested_arrays.sol.C.f_ternary_merge@3

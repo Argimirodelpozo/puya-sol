@@ -155,6 +155,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.Test.contractASlots[routing]() -> void:
 contractASlots:
+    txn GroupIndex
+    bz contractASlots_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+contractASlots_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     intc_0 // 0
     bytec_2 // "a"
@@ -189,9 +199,23 @@ contractASlots:
     intc_1 // 1
     return
 
+contractASlots_ternary_false@3:
+    intc_0 // 0
+    b contractASlots_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.Test.contractBSlots[routing]() -> void:
 contractBSlots:
+    txn GroupIndex
+    bz contractBSlots_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+contractBSlots_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     intc_0 // 0
     bytec_3 // "b"
@@ -228,9 +252,23 @@ contractBSlots:
     intc_1 // 1
     return
 
+contractBSlots_ternary_false@3:
+    intc_0 // 0
+    b contractBSlots_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.Test.contractCSlots[routing]() -> void:
 contractCSlots:
+    txn GroupIndex
+    bz contractCSlots_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+contractCSlots_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     intc_0 // 0
     pushbytes "c"
@@ -266,3 +304,7 @@ contractCSlots:
     log
     intc_1 // 1
     return
+
+contractCSlots_ternary_false@3:
+    intc_0 // 0
+    b contractCSlots_ternary_merge@4

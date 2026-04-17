@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/calldata_struct_assign_and_return.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000042
     txn ApplicationID
     bnz main_after_if_else@2
@@ -25,18 +25,22 @@ main_after_if_else@2:
     assert
     pushbytess 0xdd4ba0fa 0xafedb2e5 0x3f72e9ed // method "g()(uint512,uint512)", method "h()uint256", method "i()uint256"
     txna ApplicationArgs 0
-    match g h main_i_route@7
+    match g h i
     err
-
-main_i_route@7:
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000042
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/calldata_struct_assign_and_return.sol.C.g[routing]() -> void:
 g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -44,12 +48,52 @@ g:
     intc_0 // 1
     return
 
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/calldata_struct_assign_and_return.sol.C.h[routing]() -> void:
 h:
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000042
     log
     intc_0 // 1
     return
+
+h_ternary_false@3:
+    intc_1 // 0
+    b h_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/calldata_struct_assign_and_return.sol.C.i[routing]() -> void:
+i:
+    txn GroupIndex
+    bz i_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+i_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000042
+    log
+    intc_0 // 1
+    return
+
+i_ternary_false@3:
+    intc_1 // 0
+    b i_ternary_merge@4

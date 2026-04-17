@@ -27,7 +27,26 @@ main_getX_route@4:
     txn ApplicationID
     &&
     assert
+    b getX
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/simple_constant_variables_test.sol.Foo.getX[routing]() -> void:
+getX:
+    txn GroupIndex
+    bz getX_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+getX_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000038
     log
     pushint 1
     return
+
+getX_ternary_false@3:
+    pushint 0
+    b getX_ternary_merge@4

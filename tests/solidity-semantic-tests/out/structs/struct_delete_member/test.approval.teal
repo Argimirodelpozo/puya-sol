@@ -36,6 +36,16 @@ main_deleteMember_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_member.sol.test.deleteMember[routing]() -> void:
 deleteMember:
+    txn GroupIndex
+    bz deleteMember_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+deleteMember_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "data1"
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
@@ -43,3 +53,7 @@ deleteMember:
     log
     pushint 1
     return
+
+deleteMember_ternary_false@3:
+    pushint 0
+    b deleteMember_ternary_merge@4

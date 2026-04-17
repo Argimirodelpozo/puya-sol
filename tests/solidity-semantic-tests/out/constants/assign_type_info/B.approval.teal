@@ -27,7 +27,26 @@ main_nonEmptyCode_route@4:
     txn ApplicationID
     &&
     assert
+    b nonEmptyCode
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/assign_type_info.sol.B.nonEmptyCode[routing]() -> void:
+nonEmptyCode:
+    txn GroupIndex
+    bz nonEmptyCode_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+nonEmptyCode_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c7580
     log
     pushint 1
     return
+
+nonEmptyCode_ternary_false@3:
+    pushint 0
+    b nonEmptyCode_ternary_merge@4

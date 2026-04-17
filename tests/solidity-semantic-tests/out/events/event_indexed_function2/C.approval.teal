@@ -3,9 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_indexed_function2.sol.C.approval_program() -> uint64:
 main:
+    intcblock 1 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -23,14 +24,30 @@ main_after_if_else@2:
     assert
     pushbytess 0xe1ff2398 0x4e6a772f // method "f1()void", method "f2(uint256)void"
     txna ApplicationArgs 0
-    match main_f1_route@5 f2
+    match f1 f2
     err
 
-main_f1_route@5:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_indexed_function2.sol.C.f1[routing]() -> void:
+f1:
+    txn GroupIndex
+    bz f1_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f1_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x83cc7385000000000000000000000001
     log
-    pushint 1
+    intc_0 // 1
     return
+
+f1_ternary_false@3:
+    intc_1 // 0
+    b f1_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_indexed_function2.sol.C.f2[routing]() -> void:
@@ -40,7 +57,21 @@ f2:
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz f2_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f2_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0xd5e37fe3000000000000000000000002
     log
-    pushint 1
+    intc_0 // 1
     return
+
+f2_ternary_false@3:
+    intc_1 // 0
+    b f2_ternary_merge@4

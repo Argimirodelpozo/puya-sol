@@ -3,17 +3,17 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_storage.sol.C.approval_program() -> uint64:
 main:
-    intcblock 23 17 1 0
+    intcblock 1 0 23 17
     bytecblock "b" "a"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "b"
-    intc_0 // 23
+    intc_2 // 23
     app_global_put
     bytec_1 // "a"
-    intc_1 // 17
+    intc_3 // 17
     app_global_put
-    intc_2 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -40,21 +40,35 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_storage.sol.C.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     pushbytess "s" 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     box_put
-    intc_3 // 0
+    intc_1 // 0
     bytec_0 // "b"
     app_global_get_ex
     assert // check b exists
-    intc_0 // 23
+    intc_2 // 23
     ==
     assert
-    intc_3 // 0
+    intc_1 // 0
     bytec_1 // "a"
     app_global_get_ex
     assert // check a exists
-    intc_1 // 17
+    intc_3 // 17
     ==
     assert
-    intc_2 // 1
+    intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4

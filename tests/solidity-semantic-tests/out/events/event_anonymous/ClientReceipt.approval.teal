@@ -27,7 +27,26 @@ main_deposit_route@4:
     txn ApplicationID
     &&
     assert
+    b deposit
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_anonymous.sol.ClientReceipt.deposit[routing]() -> void:
+deposit:
+    txn GroupIndex
+    bz deposit_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+deposit_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0xed21248c
     log
     pushint 1
     return
+
+deposit_ternary_false@3:
+    pushint 0
+    b deposit_ternary_merge@4

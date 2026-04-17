@@ -40,24 +40,44 @@ main_after_if_else@2:
     assert
     pushbytess 0x943dd5e3 0xcbf61323 0x4d813080 // method "test1()(byte[32],byte[32],byte[32],byte[32])", method "test2()(byte[32],byte[32],byte[32],byte[32],byte[32])", method "test3()byte[32]"
     txna ApplicationArgs 0
-    match main_test1_route@5 test2 main_test3_route@7
+    match test1 test2 test3
     err
 
-main_test3_route@7:
-    pushbytes 0x151f7c7528811f5935c16a099486acb976b3a6b4942950a1425a74e9eb3e9b7f7135e12a
-    log
-    intc_1 // 1
-    return
 
-main_test1_route@5:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_selector.sol.C.test1[routing]() -> void:
+test1:
+    txn GroupIndex
+    bz test1_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+test1_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c7592bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028002ff0672f372fbe844b353429d4510ea5e43683af134c54f75f789ff57bc0c092bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a02892bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028
     log
     intc_1 // 1
     return
 
+test1_ternary_false@3:
+    intc_0 // 0
+    b test1_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_selector.sol.C.test2[routing]() -> void:
 test2:
+    txn GroupIndex
+    bz test2_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+test2_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_1 // "s1"
     app_global_get_ex
@@ -93,3 +113,29 @@ test2:
     log
     intc_1 // 1
     return
+
+test2_ternary_false@3:
+    intc_0 // 0
+    b test2_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_selector.sol.C.test3[routing]() -> void:
+test3:
+    txn GroupIndex
+    bz test3_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+test3_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7528811f5935c16a099486acb976b3a6b4942950a1425a74e9eb3e9b7f7135e12a
+    log
+    intc_1 // 1
+    return
+
+test3_ternary_false@3:
+    intc_0 // 0
+    b test3_ternary_merge@4

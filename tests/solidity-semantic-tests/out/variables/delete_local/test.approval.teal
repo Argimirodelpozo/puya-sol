@@ -27,7 +27,26 @@ main_delLocal_route@4:
     txn ApplicationID
     &&
     assert
+    b delLocal
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/delete_local.sol.test.delLocal[routing]() -> void:
+delLocal:
+    txn GroupIndex
+    bz delLocal_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+delLocal_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     pushint 1
     return
+
+delLocal_ternary_false@3:
+    pushint 0
+    b delLocal_ternary_merge@4

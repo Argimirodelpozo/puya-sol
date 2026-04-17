@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_address.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 32 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -54,9 +54,20 @@ foo:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz foo_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+foo_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
     callsub L.equals
     pushbytes 0x00
-    pushint 0
+    intc_2 // 0
     uncover 2
     setbit
     pushbytes 0x151f7c75
@@ -65,3 +76,7 @@ foo:
     log
     intc_0 // 1
     return
+
+foo_ternary_false@3:
+    intc_2 // 0
+    b foo_ternary_merge@4

@@ -40,6 +40,16 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/store2.sol.InvalidTest.run[routing]() -> void:
 run:
+    txn GroupIndex
+    bz run_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+run_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_1 // "storedFn"
     app_global_get_ex
@@ -47,9 +57,23 @@ run:
     assert // check storedFn exists
     err // invalid function pointer
 
+run_ternary_false@3:
+    intc_0 // 0
+    b run_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/store2.sol.InvalidTest.z[routing]() -> void:
 z:
+    txn GroupIndex
+    bz z_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+z_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -62,9 +86,23 @@ z:
     intc_1 // 1
     return
 
+z_ternary_false@3:
+    intc_0 // 0
+    b z_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/store2.sol.InvalidTest.x[routing]() -> void:
 x:
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -83,3 +121,7 @@ x:
     log
     intc_1 // 1
     return
+
+x_ternary_false@3:
+    intc_0 // 0
+    b x_ternary_merge@4

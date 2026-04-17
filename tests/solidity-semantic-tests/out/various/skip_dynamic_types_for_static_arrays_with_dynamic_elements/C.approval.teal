@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64 32 4
+    intcblock 1 64 32 0
     bytecblock 0x151f7c75 0x 0x0002
     txn ApplicationID
     bnz main_after_if_else@2
@@ -73,6 +73,16 @@ f:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol.C.g[routing]() -> void:
 g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol.C.f
     popn 3
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol.C.f
@@ -103,13 +113,27 @@ g:
     intc_0 // 1
     return
 
+g_ternary_false@3:
+    intc_3 // 0
+    b g_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol.C.f() -> bytes, bytes, bytes, bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol.C.f:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol.C.f_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol.C.f_ternary_merge@3:
+    !
+    assert // not payable
     pushint 5
     itob
     bytec_1 // 0x
-    pushint 0
+    intc_3 // 0
     getbit
     bytec_1 // 0x
     intc_0 // 1
@@ -133,7 +157,7 @@ g:
     pushint 3
     dig 5
     setbit
-    intc_3 // 4
+    pushint 4
     uncover 5
     setbit
     pushbytes 0x00020005
@@ -141,7 +165,7 @@ g:
     concat
     dig 1
     len
-    intc_3 // 4
+    pushint 4
     +
     itob
     extract 6 2
@@ -156,3 +180,7 @@ g:
     cover 2
     uncover 3
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol.C.f_ternary_false@2:
+    intc_3 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol.C.f_ternary_merge@3

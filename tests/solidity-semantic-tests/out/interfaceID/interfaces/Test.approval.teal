@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/interfaces.sol.Test.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "ghello_world_interfaceId" "ERC165_interfaceId" 0x151f7c7585295877 0x151f7c75c6be8b58 0x151f7c75
+    bytecblock "ghello_world_interfaceId" "ERC165_interfaceId" 0x151f7c75c6be8b58 0x151f7c7585295877 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "ghello_world_interfaceId"
@@ -31,48 +31,154 @@ main_after_if_else@2:
     assert
     pushbytess 0xc079a281 0xff0eed01 0xde7e7430 0xb701ebe6 0xe2a72f14 0xf7b333b0 0x438c683d 0x8bf5e24b // method "hello()byte[4]", method "world()byte[4]", method "hello_world()byte[4]", method "hello_world_interfaceId()byte[4]", method "other()byte[4]", method "hello_world_derived_interfaceId()byte[4]", method "ghello_world_interfaceId()byte[4]", method "ERC165_interfaceId()byte[4]"
     txna ApplicationArgs 0
-    match main_hello_route@5 main_world_route@6 main_hello_world_route@7 main_hello_world_interfaceId_route@8 main_other_route@9 main_hello_world_derived_interfaceId_route@10 ghello_world_interfaceId ERC165_interfaceId
+    match hello world hello_world hello_world_interfaceId other hello_world_derived_interfaceId ghello_world_interfaceId ERC165_interfaceId
     err
 
-main_hello_world_derived_interfaceId_route@10:
-    bytec_2 // 0x151f7c7585295877
-    log
-    intc_0 // 1
-    return
 
-main_other_route@9:
-    bytec_2 // 0x151f7c7585295877
-    log
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/interfaces.sol.Test.hello[routing]() -> void:
+hello:
+    txn GroupIndex
+    bz hello_ternary_false@3
+    txn GroupIndex
     intc_0 // 1
-    return
+    -
+    gtxns Amount
 
-main_hello_world_interfaceId_route@8:
-    bytec_3 // 0x151f7c75c6be8b58
-    log
-    intc_0 // 1
-    return
-
-main_hello_world_route@7:
-    bytec_3 // 0x151f7c75c6be8b58
-    log
-    intc_0 // 1
-    return
-
-main_world_route@6:
-    pushbytes 0x151f7c75df419679
-    log
-    intc_0 // 1
-    return
-
-main_hello_route@5:
+hello_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c7519ff1d21
     log
     intc_0 // 1
     return
 
+hello_ternary_false@3:
+    intc_1 // 0
+    b hello_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/interfaces.sol.Test.world[routing]() -> void:
+world:
+    txn GroupIndex
+    bz world_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+world_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75df419679
+    log
+    intc_0 // 1
+    return
+
+world_ternary_false@3:
+    intc_1 // 0
+    b world_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/interfaces.sol.Test.hello_world[routing]() -> void:
+hello_world:
+    txn GroupIndex
+    bz hello_world_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+hello_world_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_2 // 0x151f7c75c6be8b58
+    log
+    intc_0 // 1
+    return
+
+hello_world_ternary_false@3:
+    intc_1 // 0
+    b hello_world_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/interfaces.sol.Test.hello_world_interfaceId[routing]() -> void:
+hello_world_interfaceId:
+    txn GroupIndex
+    bz hello_world_interfaceId_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+hello_world_interfaceId_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_2 // 0x151f7c75c6be8b58
+    log
+    intc_0 // 1
+    return
+
+hello_world_interfaceId_ternary_false@3:
+    intc_1 // 0
+    b hello_world_interfaceId_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/interfaces.sol.Test.other[routing]() -> void:
+other:
+    txn GroupIndex
+    bz other_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+other_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_3 // 0x151f7c7585295877
+    log
+    intc_0 // 1
+    return
+
+other_ternary_false@3:
+    intc_1 // 0
+    b other_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/interfaces.sol.Test.hello_world_derived_interfaceId[routing]() -> void:
+hello_world_derived_interfaceId:
+    txn GroupIndex
+    bz hello_world_derived_interfaceId_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+hello_world_derived_interfaceId_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_3 // 0x151f7c7585295877
+    log
+    intc_0 // 1
+    return
+
+hello_world_derived_interfaceId_ternary_false@3:
+    intc_1 // 0
+    b hello_world_derived_interfaceId_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/interfaces.sol.Test.ghello_world_interfaceId[routing]() -> void:
 ghello_world_interfaceId:
+    txn GroupIndex
+    bz ghello_world_interfaceId_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+ghello_world_interfaceId_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "ghello_world_interfaceId"
     app_global_get_ex
@@ -84,9 +190,23 @@ ghello_world_interfaceId:
     intc_0 // 1
     return
 
+ghello_world_interfaceId_ternary_false@3:
+    intc_1 // 0
+    b ghello_world_interfaceId_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/interfaces.sol.Test.ERC165_interfaceId[routing]() -> void:
 ERC165_interfaceId:
+    txn GroupIndex
+    bz ERC165_interfaceId_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+ERC165_interfaceId_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_1 // "ERC165_interfaceId"
     app_global_get_ex
@@ -97,3 +217,7 @@ ERC165_interfaceId:
     log
     intc_0 // 1
     return
+
+ERC165_interfaceId_ternary_false@3:
+    intc_1 // 0
+    b ERC165_interfaceId_ternary_merge@4

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_address_named_send_transfer.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 32 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -48,9 +48,24 @@ useTransfer:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz useTransfer_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+useTransfer_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     callsub L.transfer
     intc_0 // 1
     return
+
+useTransfer_ternary_false@3:
+    intc_2 // 0
+    b useTransfer_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_address_named_send_transfer.sol.C.useSend[routing]() -> void:
@@ -61,6 +76,21 @@ useSend:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz useSend_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+useSend_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     callsub L.send
     intc_0 // 1
     return
+
+useSend_ternary_false@3:
+    intc_2 // 0
+    b useSend_ternary_merge@4

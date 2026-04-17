@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/comparison_operators_for_external_functions.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     bytecblock 0x151f7c7580
     txn ApplicationID
     bnz main_after_if_else@2
@@ -25,33 +25,129 @@ main_after_if_else@2:
     assert
     pushbytess 0x2d4970c7 0xf2b65f27 0x0a449f0b 0xd70fdf03 0xecb2b2fc 0xd7a757fd // method "f()void", method "g()void", method "h()void", method "i()void", method "comparison_operators_for_external_functions()bool", method "comparison_operators_for_local_external_function_pointers()bool"
     txna ApplicationArgs 0
-    match main_f_route@5 main_g_route@6 main_h_route@7 main_i_route@8 main_comparison_operators_for_external_functions_route@9 main_comparison_operators_for_local_external_function_pointers_route@10
+    match f g h i comparison_operators_for_external_functions comparison_operators_for_local_external_function_pointers
     err
 
-main_comparison_operators_for_local_external_function_pointers_route@10:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/comparison_operators_for_external_functions.sol.C.f[routing]() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/comparison_operators_for_external_functions.sol.C.g[routing]() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/comparison_operators_for_external_functions.sol.C.h[routing]() -> void:
+h:
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
+
+h_ternary_false@3:
+    intc_1 // 0
+    b h_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/comparison_operators_for_external_functions.sol.C.i[routing]() -> void:
+i:
+    txn GroupIndex
+    bz i_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+i_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
+
+i_ternary_false@3:
+    intc_1 // 0
+    b i_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/comparison_operators_for_external_functions.sol.C.comparison_operators_for_external_functions[routing]() -> void:
+comparison_operators_for_external_functions:
+    txn GroupIndex
+    bz comparison_operators_for_external_functions_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+comparison_operators_for_external_functions_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c7580
     log
     intc_0 // 1
     return
 
-main_comparison_operators_for_external_functions_route@9:
+comparison_operators_for_external_functions_ternary_false@3:
+    intc_1 // 0
+    b comparison_operators_for_external_functions_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/comparison_operators_for_external_functions.sol.C.comparison_operators_for_local_external_function_pointers[routing]() -> void:
+comparison_operators_for_local_external_function_pointers:
+    txn GroupIndex
+    bz comparison_operators_for_local_external_function_pointers_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+comparison_operators_for_local_external_function_pointers_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c7580
     log
     intc_0 // 1
     return
 
-main_i_route@8:
-    intc_0 // 1
-    return
-
-main_h_route@7:
-    intc_0 // 1
-    return
-
-main_g_route@6:
-    intc_0 // 1
-    return
-
-main_f_route@5:
-    intc_0 // 1
-    return
+comparison_operators_for_local_external_function_pointers_ternary_false@3:
+    intc_1 // 0
+    b comparison_operators_for_local_external_function_pointers_ternary_merge@4

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_short_reencode.sol.C.approval_program() -> uint64:
 main:
-    intcblock 2 0 1 4
-    bytecblock "" 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
+    intcblock 0 2 1 32
+    bytecblock "" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_2 // 1
@@ -31,23 +31,23 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_short_reencode.sol.C.f[routing]() -> void:
 f:
-    intc_1 // 0
+    intc_0 // 0
     bytec_0 // ""
     dup
     txna ApplicationArgs 1
-    dup
-    intc_1 // 0
+    dupn 2
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
     dup
     cover 2
-    intc_0 // 2
+    intc_1 // 2
     *
     swap
     dup
     len
     swap
     extract 2 0
-    intc_1 // 0
+    intc_0 // 0
 
 f_for_header@1:
     dup
@@ -55,7 +55,7 @@ f_for_header@1:
     <
     bz f_after_for@8
     dup
-    intc_0 // 2
+    intc_1 // 2
     *
     dig 2
     dup
@@ -68,27 +68,27 @@ f_for_header@1:
     dig 1
     len
     substring3
-    bury 8
-    intc_3 // 4
-    bury 6
-    intc_1 // 0
+    bury 9
+    pushint 4
     bury 7
+    intc_0 // 0
+    bury 8
 
 f_for_header@3:
-    dig 6
-    intc_0 // 2
+    dig 7
+    intc_1 // 2
     <
     bz f_after_for@6
-    dig 6
+    dig 7
     dup
-    intc_0 // 2
+    intc_1 // 2
     *
-    dig 9
+    dig 10
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 9
+    dig 10
     dup
     cover 4
     ==
@@ -96,22 +96,22 @@ f_for_header@3:
     dig 1
     len
     substring3
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 32
+    intc_3 // 32
     *
-    intc_0 // 2
+    intc_1 // 2
     +
     +
-    bury 7
+    bury 8
     intc_2 // 1
     +
-    bury 7
+    bury 8
     b f_for_header@3
 
 f_after_for@6:
     dig 3
-    dig 6
+    dig 7
     +
     bury 4
     dup
@@ -122,12 +122,17 @@ f_after_for@6:
 
 f_after_for@8:
     dig 3
-    intc_0 // 2
+    intc_1 // 2
     +
     dig 3
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.dynamic_array<arc4.uint256>, 2>>
-    bytec_1 // 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
+    dig 5
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_short_reencode.sol.C.f
+    pop
+    bytec_1 // 0x151f7c75
+    swap
+    concat
     log
     intc_2 // 1
     return
@@ -135,23 +140,23 @@ f_after_for@8:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_short_reencode.sol.C.g[routing]() -> void:
 g:
-    intc_1 // 0
+    intc_0 // 0
     bytec_0 // ""
     dup
     txna ApplicationArgs 1
-    dup
-    intc_1 // 0
+    dupn 2
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
     dup
     cover 2
-    intc_0 // 2
+    intc_1 // 2
     *
     swap
     dup
     len
     swap
     extract 2 0
-    intc_1 // 0
+    intc_0 // 0
 
 g_for_header@1:
     dup
@@ -159,7 +164,7 @@ g_for_header@1:
     <
     bz g_after_for@8
     dup
-    intc_0 // 2
+    intc_1 // 2
     *
     dig 2
     dup
@@ -172,27 +177,27 @@ g_for_header@1:
     dig 1
     len
     substring3
-    bury 8
-    intc_3 // 4
-    bury 6
-    intc_1 // 0
+    bury 9
+    pushint 4
     bury 7
+    intc_0 // 0
+    bury 8
 
 g_for_header@3:
-    dig 6
-    intc_0 // 2
+    dig 7
+    intc_1 // 2
     <
     bz g_after_for@6
-    dig 6
+    dig 7
     dup
-    intc_0 // 2
+    intc_1 // 2
     *
-    dig 9
+    dig 10
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 9
+    dig 10
     dup
     cover 4
     ==
@@ -200,22 +205,22 @@ g_for_header@3:
     dig 1
     len
     substring3
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 32
+    intc_3 // 32
     *
-    intc_0 // 2
+    intc_1 // 2
     +
     +
-    bury 7
+    bury 8
     intc_2 // 1
     +
-    bury 7
+    bury 8
     b g_for_header@3
 
 g_after_for@6:
     dig 3
-    dig 6
+    dig 7
     +
     bury 4
     dup
@@ -226,12 +231,61 @@ g_after_for@6:
 
 g_after_for@8:
     dig 3
-    intc_0 // 2
+    intc_1 // 2
     +
     dig 3
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.dynamic_array<arc4.uint256>, 2>>
-    bytec_1 // 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
+    txn GroupIndex
+    bz g_ternary_false@11
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@12:
+    !
+    assert // not payable
+    dig 5
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_short_reencode.sol.C.f
+    pop
+    dup
+    len
+    intc_3 // 32
+    <=
+    assert // overflow
+    intc_3 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
     log
     intc_2 // 1
     return
+
+g_ternary_false@11:
+    intc_0 // 0
+    b g_ternary_merge@12
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_short_reencode.sol.C.f(x: bytes) -> bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_short_reencode.sol.C.f:
+    proto 1 2
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_short_reencode.sol.C.f_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_short_reencode.sol.C.f_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000002a
+    frame_dig -1
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_short_reencode.sol.C.f_ternary_false@2:
+    intc_0 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_short_reencode.sol.C.f_ternary_merge@3

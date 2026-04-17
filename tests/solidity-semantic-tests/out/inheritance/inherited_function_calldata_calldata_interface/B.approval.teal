@@ -33,17 +33,28 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_calldata_interface.sol.B.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
-    dup
+    dupn 2
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     intc_2 // 32
     *
     pushint 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     extract 34 32
     intc_2 // 32
     bzero
@@ -55,9 +66,23 @@ f:
     intc_1 // 1
     return
 
+f_ternary_false@3:
+    intc_0 // 0
+    b f_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_calldata_interface.sol.B.g[routing]() -> void:
 g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     bytec_2 // TMPL_APPROVAL_A
     bytec_3 // TMPL_CLEAR_A
@@ -151,3 +176,7 @@ g:
     log
     intc_1 // 1
     return
+
+g_ternary_false@3:
+    intc_0 // 0
+    b g_ternary_merge@4

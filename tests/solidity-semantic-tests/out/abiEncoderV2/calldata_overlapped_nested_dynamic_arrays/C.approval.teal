@@ -108,12 +108,26 @@ f_memory_after_for@4:
     dig 3
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>
+    txn GroupIndex
+    bz f_memory_ternary_false@7
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+f_memory_ternary_merge@8:
+    !
+    assert // not payable
     bytec_1 // 0x151f7c75
     dig 6
     concat
     log
     intc_2 // 1
     return
+
+f_memory_ternary_false@7:
+    intc_1 // 0
+    b f_memory_ternary_merge@8
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_overlapped_nested_dynamic_arrays.sol.C.f_encode[routing]() -> void:
@@ -172,13 +186,21 @@ f_encode_after_for@4:
     intc_0 // 2
     +
     dig 3
-    dup
-    uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>
+    txn GroupIndex
+    bz f_encode_ternary_false@7
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+f_encode_ternary_merge@8:
+    !
+    assert // not payable
     intc_3 // 32
     bzero
-    swap
+    dig 3
     intc_0 // 2
     -
     intc_3 // 32
@@ -209,9 +231,14 @@ f_encode_after_for@4:
     intc_2 // 1
     return
 
+f_encode_ternary_false@7:
+    intc_1 // 0
+    b f_encode_ternary_merge@8
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_overlapped_nested_dynamic_arrays.sol.C.f_which[routing]() -> void:
 f_which:
+    intc_1 // 0
     txna ApplicationArgs 1
     dup
     intc_1 // 0
@@ -270,13 +297,24 @@ f_which_after_for@4:
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>
     txna ApplicationArgs 2
     dup
+    bury 7
     len
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz f_which_ternary_false@7
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+f_which_ternary_merge@8:
+    !
+    assert // not payable
     pushint 8
     bzero
-    swap
+    dig 6
     concat
     dup
     len
@@ -306,3 +344,7 @@ f_which_after_for@4:
     log
     intc_2 // 1
     return
+
+f_which_ternary_false@7:
+    intc_1 // 0
+    b f_which_ternary_merge@8

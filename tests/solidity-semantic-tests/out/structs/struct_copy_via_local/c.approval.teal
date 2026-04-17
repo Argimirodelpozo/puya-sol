@@ -56,6 +56,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_copy_via_local.sol.c.test[routing]() -> void:
 test:
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_0 // "data1"
     app_global_get_ex
@@ -80,7 +90,7 @@ test:
     assert // check data1 exists
     extract 0 32
     b==
-    bz test_bool_false@4
+    bz test_bool_false@7
     intc_0 // 0
     bytec_2 // "data2"
     app_global_get_ex
@@ -92,10 +102,10 @@ test:
     assert // check data1 exists
     extract 32 32
     b==
-    bz test_bool_false@4
+    bz test_bool_false@7
     intc_1 // 1
 
-test_bool_merge@5:
+test_bool_merge@8:
     pushbytes 0x00
     intc_0 // 0
     uncover 2
@@ -107,6 +117,10 @@ test_bool_merge@5:
     intc_1 // 1
     return
 
-test_bool_false@4:
+test_bool_false@7:
     intc_0 // 0
-    b test_bool_merge@5
+    b test_bool_merge@8
+
+test_ternary_false@3:
+    intc_0 // 0
+    b test_ternary_merge@4

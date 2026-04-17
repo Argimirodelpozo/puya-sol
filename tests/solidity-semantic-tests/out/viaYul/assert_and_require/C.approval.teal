@@ -32,46 +32,72 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/assert_and_require.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
-    dup
+    dupn 2
     len
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    dup
     intc_1 // 0
     getbit
-    dup
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     intc_0 // 1
     <=
     assert // ABI bool validation
     assert
     bytec_0 // 0x151f7c75
-    swap
+    dig 2
     concat
     log
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/assert_and_require.sol.C.f2[routing]() -> void:
 f2:
     txna ApplicationArgs 1
-    dup
+    dupn 2
     len
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    dup
     intc_1 // 0
     getbit
-    dup
+    txn GroupIndex
+    bz f2_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f2_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     intc_0 // 1
     <=
     assert // ABI bool validation
     assert
     bytec_0 // 0x151f7c75
-    swap
+    dig 2
     concat
     log
     intc_0 // 1
     return
+
+f2_ternary_false@3:
+    intc_1 // 0
+    b f2_ternary_merge@4

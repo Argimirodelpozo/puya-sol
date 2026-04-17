@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_sanity_checks.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 160 8192 0
+    intcblock 1 0 160 8192
     bytecblock "__dyn_storage" 0x000000000000000000000000000000000000000000000000000000000000002a
     txn ApplicationID
     bnz main_after_if_else@2
@@ -31,7 +31,17 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_sanity_checks.sol.C.f[routing]() -> void:
 f:
-    intc_1 // 160
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    intc_2 // 160
     bzero
     load 0
     swap
@@ -41,11 +51,11 @@ f:
     bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000002a
     replace2 0
     bytec_0 // "__dyn_storage"
-    intc_2 // 8192
+    intc_3 // 8192
     box_create
     pop
     bytec_0 // "__dyn_storage"
-    intc_3 // 0
+    intc_1 // 0
     bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000002a
     box_replace
     swap
@@ -59,18 +69,32 @@ f:
     intc_0 // 1
     return
 
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_sanity_checks.sol.C.g[routing]() -> void:
 g:
-    intc_1 // 160
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    intc_2 // 160
     bzero
     load 0
     bytec_0 // "__dyn_storage"
-    intc_2 // 8192
+    intc_3 // 8192
     box_create
     pop
     bytec_0 // "__dyn_storage"
-    intc_3 // 0
+    intc_1 // 0
     pushint 32
     box_extract
     dig 1
@@ -102,3 +126,7 @@ g:
     log
     intc_0 // 1
     return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4

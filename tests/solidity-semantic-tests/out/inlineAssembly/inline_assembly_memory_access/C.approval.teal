@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_memory_access.sol.C.approval_program() -> uint64:
 main:
-    intcblock 8 1 0
+    intcblock 0 1 8
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -33,44 +33,58 @@ main_test_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_memory_access.sol.C.test[routing]() -> void:
 test:
+    intc_0 // 0
+    dup
     pushbytes ""
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
     pushint 5
     bzero
-    intc_2 // 0
+    bury 2
+    intc_0 // 0
     itob
+    bury 3
 
-test_while_top@2:
+test_while_top@5:
     dig 1
     len
     dup
-    bury 4
+    bury 2
     itob
-    dig 1
+    dig 3
     b>
-    bz test_after_while@4
-    intc_0 // 8
+    bz test_after_while@7
+    intc_2 // 8
     bzero
     dup
-    dig 2
+    dig 4
     dup
     cover 2
     concat
     dup
     len
-    intc_0 // 8
+    intc_2 // 8
     -
     extract_uint64
     swap
     pushbytes 0x01
     b+
     dup
-    bury 4
+    bury 6
     uncover 2
     swap
     concat
     dup
     len
-    intc_0 // 8
+    intc_2 // 8
     -
     extract_uint64
     pushint 255
@@ -81,13 +95,13 @@ test_while_top@2:
     cover 2
     replace3
     bury 2
-    b test_while_top@2
+    b test_while_top@5
 
-test_after_while@4:
+test_after_while@7:
     load 0
     pushbytes 0x3132333435363738393031323334353637383930313233343536373839303132
-    intc_2 // 0
-    dig 5
+    intc_0 // 0
+    dig 3
     extract3
     swap
     store 0
@@ -103,3 +117,7 @@ test_after_while@4:
     log
     intc_1 // 1
     return
+
+test_ternary_false@3:
+    intc_0 // 0
+    b test_ternary_merge@4

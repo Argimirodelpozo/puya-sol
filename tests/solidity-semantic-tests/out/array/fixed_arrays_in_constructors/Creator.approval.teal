@@ -46,6 +46,16 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_constructors.sol.Creator.r[routing]() -> void:
 r:
+    txn GroupIndex
+    bz r_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+r_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "r"
     app_global_get_ex
@@ -65,9 +75,23 @@ r:
     intc_0 // 1
     return
 
+r_ternary_false@3:
+    intc_1 // 0
+    b r_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_constructors.sol.Creator.ch[routing]() -> void:
 ch:
+    txn GroupIndex
+    bz ch_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+ch_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_1 // "ch"
     app_global_get_ex
@@ -78,3 +102,7 @@ ch:
     log
     intc_0 // 1
     return
+
+ch_ternary_false@3:
+    intc_1 // 0
+    b ch_ternary_merge@4

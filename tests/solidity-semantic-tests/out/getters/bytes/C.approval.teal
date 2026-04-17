@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/bytes.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     bytecblock "__ctor_pending" "b"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,7 +38,7 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    pushint 0
+    intc_1 // 0
     app_global_put
     bytec_1 // "b"
     box_del
@@ -52,6 +52,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/bytes.sol.C.b[routing]() -> void:
 b:
+    txn GroupIndex
+    bz b_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+b_ternary_merge@4:
+    !
+    assert // not payable
     bytec_1 // "b"
     box_get
     pushbytes 0x
@@ -69,3 +79,7 @@ b:
     log
     intc_0 // 1
     return
+
+b_ternary_false@3:
+    intc_1 // 0
+    b b_ternary_merge@4

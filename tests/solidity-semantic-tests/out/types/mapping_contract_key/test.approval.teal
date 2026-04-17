@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 255 0 32
+    intcblock 1 0 255 32
     bytecblock "__ctor_pending" "table"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,7 +38,7 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
     bytec_1 // "table"
     pushint 2
@@ -56,6 +56,17 @@ get:
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz get_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+get_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     sha256
     bytec_1 // "table"
     swap
@@ -63,11 +74,11 @@ get:
     box_get
     swap
     btoi
-    intc_2 // 0
+    intc_1 // 0
     swap
     uncover 2
     select
-    intc_1 // 255
+    intc_2 // 255
     &
     itob
     pushbytes 0x151f7c75
@@ -76,6 +87,10 @@ get:
     log
     intc_0 // 1
     return
+
+get_ternary_false@3:
+    intc_1 // 0
+    b get_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key.sol.test.set[routing]() -> void:
@@ -93,13 +108,23 @@ set:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    dup
-    intc_1 // 255
+    txn GroupIndex
+    bz set_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+set_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
+    intc_2 // 255
     <=
     assert // ABI validation
-    intc_1 // 255
+    intc_2 // 255
     &
-    swap
+    dig 2
     sha256
     bytec_1 // "table"
     swap
@@ -109,3 +134,7 @@ set:
     box_put
     intc_0 // 1
     return
+
+set_ternary_false@3:
+    intc_1 // 0
+    b set_ternary_merge@4

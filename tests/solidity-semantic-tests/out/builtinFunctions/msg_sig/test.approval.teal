@@ -37,9 +37,23 @@ foo:
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz foo_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+foo_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c75
     txna ApplicationArgs 0
     concat
     log
     pushint 1
     return
+
+foo_ternary_false@3:
+    pushint 0
+    b foo_ternary_merge@4

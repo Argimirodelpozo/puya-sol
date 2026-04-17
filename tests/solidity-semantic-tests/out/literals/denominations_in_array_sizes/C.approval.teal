@@ -56,6 +56,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/denominations_in_array_sizes.sol.C.lengths[routing]() -> void:
 lengths:
+    txn GroupIndex
+    bz lengths_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+lengths_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -70,3 +80,7 @@ lengths:
     log
     intc_0 // 1
     return
+
+lengths_ternary_false@3:
+    intc_1 // 0
+    b lengths_ternary_merge@4

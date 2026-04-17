@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.approval_program() -> uint64:
 main:
-    intcblock 1 2 0 64
+    intcblock 1 0 64
     bytecblock "x" 0x
     bytec_1 // ""
     dup
@@ -25,16 +25,12 @@ main_after_if_else@2:
     store 0
     txn NumAppArgs
     bnz main_after_if_else@4
-    intc_1 // 2
-    itob
-    bytec_0 // "x"
-    swap
-    app_global_put
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.__fallback
     intc_0 // 1
     return
 
 main_after_if_else@4:
-    intc_2 // 0
+    intc_1 // 0
     bury 2
     txn OnCompletion
     !
@@ -52,11 +48,7 @@ main_switch_case_next@12:
 main_after_if_else@14:
     dup
     bnz main_after_if_else@6
-    intc_1 // 2
-    itob
-    bytec_0 // "x"
-    swap
-    app_global_put
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.__fallback
     intc_0 // 1
     bury 1
 
@@ -89,6 +81,16 @@ main_create_NoOp@13:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.fow[routing]() -> void:
 fow:
+    txn GroupIndex
+    bz fow_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+fow_ternary_merge@4:
+    !
+    assert // not payable
     pushint 3
     itob
     bytec_0 // "x"
@@ -96,29 +98,39 @@ fow:
     app_global_put
     retsub
 
+fow_ternary_false@3:
+    intc_1 // 0
+    b fow_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.__fallback[routing]() -> void:
 __fallback:
-    intc_1 // 2
-    itob
-    bytec_0 // "x"
-    swap
-    app_global_put
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.__fallback
     retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.x[routing]() -> void:
 x:
-    intc_2 // 0
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     dup
     len
-    intc_3 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_3 // 64
+    intc_2 // 64
     bzero
     b|
     pushbytes 0x151f7c75
@@ -126,3 +138,31 @@ x:
     concat
     log
     retsub
+
+x_ternary_false@3:
+    intc_1 // 0
+    b x_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.__fallback() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.__fallback:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.__fallback_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.__fallback_ternary_merge@3:
+    !
+    assert // not payable
+    pushint 2
+    itob
+    bytec_0 // "x"
+    swap
+    app_global_put
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.__fallback_ternary_false@2:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.__fallback_ternary_merge@3

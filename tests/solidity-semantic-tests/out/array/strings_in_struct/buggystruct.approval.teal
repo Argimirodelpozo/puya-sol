@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.approval_program() -> uint64:
 main:
-    intcblock 1 32 96
+    intcblock 1 0 32 96
     bytecblock "bug" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000620000 0x151f7c75 "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,7 +38,7 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_3 // "__ctor_pending"
-    pushint 0
+    intc_1 // 0
     app_global_put
     bytec_0 // "bug"
     box_del
@@ -52,13 +52,23 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.getFirst[routing]() -> void:
 getFirst:
+    txn GroupIndex
+    bz getFirst_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getFirst_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "bug"
     box_get
     bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000620000
     cover 2
     select
     extract 0 32
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -68,16 +78,30 @@ getFirst:
     intc_0 // 1
     return
 
+getFirst_ternary_false@3:
+    intc_1 // 0
+    b getFirst_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.getSecond[routing]() -> void:
 getSecond:
+    txn GroupIndex
+    bz getSecond_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getSecond_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "bug"
     box_get
     bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000620000
     cover 2
     select
     extract 32 32
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -87,16 +111,30 @@ getSecond:
     intc_0 // 1
     return
 
+getSecond_ternary_false@3:
+    intc_1 // 0
+    b getSecond_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.getThird[routing]() -> void:
 getThird:
+    txn GroupIndex
+    bz getThird_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getThird_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "bug"
     box_get
     bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000620000
     cover 2
     select
     extract 64 32
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -106,16 +144,30 @@ getThird:
     intc_0 // 1
     return
 
+getThird_ternary_false@3:
+    intc_1 // 0
+    b getThird_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.getLast[routing]() -> void:
 getLast:
+    txn GroupIndex
+    bz getLast_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getLast_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "bug"
     box_get
     bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000620000
     cover 2
     select
     dup
-    intc_2 // 96
+    intc_3 // 96
     extract_uint16
     dig 1
     len
@@ -127,9 +179,23 @@ getLast:
     intc_0 // 1
     return
 
+getLast_ternary_false@3:
+    intc_1 // 0
+    b getLast_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.bug[routing]() -> void:
 bug:
+    txn GroupIndex
+    bz bug_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+bug_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "bug"
     box_get
     bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000620000
@@ -142,7 +208,7 @@ bug:
     dig 2
     extract 64 32
     dig 3
-    intc_2 // 96
+    intc_3 // 96
     extract_uint16
     dig 4
     len
@@ -180,3 +246,7 @@ bug:
     log
     intc_0 // 1
     return
+
+bug_ternary_false@3:
+    intc_1 // 0
+    b bug_ternary_merge@4

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contract_array_v2.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 24 32
+    intcblock 1 0 24 32
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -24,21 +24,15 @@ main_after_if_else@2:
     assert
     pushbytess 0xa666da45 0x4b25d408 // method "f(byte[])uint8[32][]", method "g()byte[]"
     txna ApplicationArgs 0
-    match f main_g_route@6
+    match f g
     err
-
-main_g_route@6:
-    pushbytes 0x151f7c7500a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000210000000000000000000000000000000000000000000000000000000000000023
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contract_array_v2.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
-    dup
-    pushint 0
+    dupn 2
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -46,20 +40,31 @@ f:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    dup
     extract 2 0
-    swap
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dig 1
     extract 2 32
-    intc_1 // 24
+    intc_2 // 24
     extract_uint64
     dup
-    intc_2 // 32
+    intc_3 // 32
     +
     dig 2
-    uncover 2
-    intc_2 // 32
+    dup
+    cover 2
+    uncover 3
+    intc_3 // 32
     extract3
-    intc_1 // 24
+    intc_2 // 24
     extract_uint64
     extract3
     pushbytes 0x151f7c75
@@ -68,3 +73,29 @@ f:
     log
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contract_array_v2.sol.C.g[routing]() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7500a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000210000000000000000000000000000000000000000000000000000000000000023
+    log
+    intc_0 // 1
+    return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4

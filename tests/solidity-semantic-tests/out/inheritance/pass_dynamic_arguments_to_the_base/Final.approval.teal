@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/pass_dynamic_arguments_to_the_base.sol.Final.approval_program() -> uint64:
 main:
-    intcblock 1 64
+    intcblock 1 0 64
     bytecblock "m_i"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -39,16 +39,26 @@ main_m_i_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/pass_dynamic_arguments_to_the_base.sol.Final.m_i[routing]() -> void:
 m_i:
-    pushint 0
+    txn GroupIndex
+    bz m_i_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+m_i_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_0 // "m_i"
     app_global_get_ex
     assert // check m_i exists
     dup
     len
-    intc_1 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
     pushbytes 0x151f7c75
@@ -57,3 +67,7 @@ m_i:
     log
     intc_0 // 1
     return
+
+m_i_ternary_false@3:
+    intc_1 // 0
+    b m_i_ternary_merge@4

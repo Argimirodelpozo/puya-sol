@@ -97,6 +97,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.ext[routing]() -> void:
 ext:
+    txn GroupIndex
+    bz ext_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+ext_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_1 // "externalCalled"
     app_global_get_ex
@@ -115,9 +125,23 @@ ext:
     intc_1 // 1
     return
 
+ext_ternary_false@3:
+    intc_0 // 0
+    b ext_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "array"
     intc_0 // 0
     pushbytes 0x000000000000000000000001
@@ -187,3 +211,7 @@ f:
     assert
     intc_1 // 1
     return
+
+f_ternary_false@3:
+    intc_0 // 0
+    b f_ternary_merge@4

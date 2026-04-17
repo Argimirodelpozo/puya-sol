@@ -41,6 +41,14 @@ test:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_bytes_external.sol.CalldataTest.test
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -61,10 +69,48 @@ tester:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    extract 4 1
+    extract 2 0
+    txn GroupIndex
+    bz tester_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+tester_ternary_merge@4:
+    !
+    assert // not payable
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_bytes_external.sol.CalldataTest.test
+    extract 2 1
     bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
+
+tester_ternary_false@3:
+    intc_1 // 0
+    b tester_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_bytes_external.sol.CalldataTest.test(x: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_bytes_external.sol.CalldataTest.test:
+    proto 1 1
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_bytes_external.sol.CalldataTest.test_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_bytes_external.sol.CalldataTest.test_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_bytes_external.sol.CalldataTest.test_ternary_false@2:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_bytes_external.sol.CalldataTest.test_ternary_merge@3

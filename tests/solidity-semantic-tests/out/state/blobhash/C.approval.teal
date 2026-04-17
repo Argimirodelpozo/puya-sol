@@ -39,9 +39,19 @@ f:
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 8
     bzero
-    swap
+    dig 1
     concat
     dup
     len
@@ -50,13 +60,13 @@ f:
     extract_uint64
     intc_2 // 2
     <
-    bz f_ternary_false@3
+    bz f_ternary_false@6
     global Round
     intc_2 // 2
     -
     block BlkSeed
 
-f_ternary_merge@4:
+f_ternary_merge@7:
     pushbytes 0x151f7c75
     swap
     concat
@@ -64,6 +74,10 @@ f_ternary_merge@4:
     intc_0 // 1
     return
 
-f_ternary_false@3:
+f_ternary_false@6:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    b f_ternary_merge@7
+
+f_ternary_false@3:
+    pushint 0
     b f_ternary_merge@4

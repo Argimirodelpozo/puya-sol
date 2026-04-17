@@ -28,20 +28,8 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x027c6bc8 0xf76e680b 0x4e22a3ba // method "__postInit()void", method "is2D()bool", method "skinColor()string", method "supportsInterface(byte[4])bool"
     txna ApplicationArgs 0
-    match __postInit main_is2D_route@6 main_skinColor_route@7 supportsInterface
+    match __postInit is2D skinColor supportsInterface
     err
-
-main_skinColor_route@7:
-    pushbytes 0x151f7c75000679656c6c6f77
-    log
-    intc_0 // 1
-    return
-
-main_is2D_route@6:
-    pushbytes 0x151f7c7580
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/lisa.sol.Lisa.__postInit[routing]() -> void:
@@ -68,6 +56,50 @@ __postInit:
     return
 
 
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/lisa.sol.Lisa.is2D[routing]() -> void:
+is2D:
+    txn GroupIndex
+    bz is2D_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+is2D_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+is2D_ternary_false@3:
+    intc_1 // 0
+    b is2D_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/lisa.sol.Lisa.skinColor[routing]() -> void:
+skinColor:
+    txn GroupIndex
+    bz skinColor_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+skinColor_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75000679656c6c6f77
+    log
+    intc_0 // 1
+    return
+
+skinColor_ternary_false@3:
+    intc_1 // 0
+    b skinColor_ternary_merge@4
+
+
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/lisa.sol.Lisa.supportsInterface[routing]() -> void:
 supportsInterface:
     txna ApplicationArgs 1
@@ -76,6 +108,17 @@ supportsInterface:
     pushint 4
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    txn GroupIndex
+    bz supportsInterface_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+supportsInterface_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     sha256
     bytec_1 // "supportedInterfaces"
     swap
@@ -97,3 +140,7 @@ supportsInterface:
     log
     intc_0 // 1
     return
+
+supportsInterface_ternary_false@3:
+    intc_1 // 0
+    b supportsInterface_ternary_merge@4

@@ -32,7 +32,7 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/exp_associativity.sol.C.test_hardcode1[routing]() -> void:
 test_hardcode1:
     intc_1 // 0
-    dupn 2
+    dupn 5
     txna ApplicationArgs 1
     dup
     len
@@ -51,73 +51,87 @@ test_hardcode1:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_0 // 0x01
-    cover 2
+    txn GroupIndex
+    bz test_hardcode1_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
 
-test_hardcode1_while_top@2:
-    dup
-    bytec_1 // 0x
-    b>
-    bz test_hardcode1_after_while@6
-    dup
+test_hardcode1_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x01
-    b&
-    bytec_1 // 0x
-    b!=
-    bz test_hardcode1_after_if_else@5
-    dig 2
-    dig 2
-    b*
-    bury 3
-
-test_hardcode1_after_if_else@5:
-    dup
-    bytec_2 // 0x02
-    b/
-    bury 1
+    bury 5
     dig 1
+    bury 9
+    dup
+    bury 7
+
+test_hardcode1_while_top@5:
+    dig 6
+    bytec_1 // 0x
+    b>
+    bz test_hardcode1_after_while@9
+    dig 6
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_hardcode1_after_if_else@8
+    dig 4
+    dig 9
+    b*
+    bury 5
+
+test_hardcode1_after_if_else@8:
+    dig 6
+    bytec_2 // 0x02
+    b/
+    bury 7
+    dig 8
     dup
     b*
-    bury 2
-    b test_hardcode1_while_top@2
+    bury 9
+    b test_hardcode1_while_top@5
 
-test_hardcode1_after_while@6:
+test_hardcode1_after_while@9:
     bytec_0 // 0x01
-    bury 5
-    dig 3
-    bury 7
+    bury 4
     dig 2
+    bury 8
+    dig 4
     bury 6
 
-test_hardcode1_while_top@7:
+test_hardcode1_while_top@10:
     dig 5
     bytec_1 // 0x
     b>
-    bz test_hardcode1_after_while@11
+    bz test_hardcode1_after_while@14
     dig 5
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_hardcode1_after_if_else@10
-    dig 4
-    dig 7
+    bz test_hardcode1_after_if_else@13
+    dig 3
+    dig 8
     b*
-    bury 5
+    bury 4
 
-test_hardcode1_after_if_else@10:
+test_hardcode1_after_if_else@13:
     dig 5
     bytec_2 // 0x02
     b/
     bury 6
-    dig 6
+    dig 7
     dup
     b*
-    bury 7
-    b test_hardcode1_while_top@7
+    bury 8
+    b test_hardcode1_while_top@10
 
-test_hardcode1_after_while@11:
-    dig 4
+test_hardcode1_after_while@14:
+    dig 3
     dup
     len
     intc_0 // 32
@@ -133,11 +147,15 @@ test_hardcode1_after_while@11:
     intc_2 // 1
     return
 
+test_hardcode1_ternary_false@3:
+    intc_1 // 0
+    b test_hardcode1_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/exp_associativity.sol.C.test_hardcode2[routing]() -> void:
 test_hardcode2:
     intc_1 // 0
-    dupn 5
+    dupn 8
     txna ApplicationArgs 1
     dup
     len
@@ -162,108 +180,122 @@ test_hardcode2:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_0 // 0x01
-    cover 2
+    txn GroupIndex
+    bz test_hardcode2_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
 
-test_hardcode2_while_top@2:
+test_hardcode2_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_0 // 0x01
+    bury 7
+    dig 1
+    bury 13
     dup
+    bury 10
+
+test_hardcode2_while_top@5:
+    dig 9
     bytec_1 // 0x
     b>
-    bz test_hardcode2_after_while@6
-    dup
+    bz test_hardcode2_after_while@9
+    dig 9
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_hardcode2_after_if_else@5
-    dig 2
-    dig 2
+    bz test_hardcode2_after_if_else@8
+    dig 6
+    dig 13
     b*
-    bury 3
+    bury 7
 
-test_hardcode2_after_if_else@5:
-    dup
+test_hardcode2_after_if_else@8:
+    dig 9
     bytec_2 // 0x02
     b/
-    bury 1
-    dig 1
+    bury 10
+    dig 12
     dup
     b*
-    bury 2
-    b test_hardcode2_while_top@2
+    bury 13
+    b test_hardcode2_while_top@5
 
-test_hardcode2_after_while@6:
+test_hardcode2_after_while@9:
     bytec_0 // 0x01
-    bury 7
+    bury 6
+    dig 2
+    bury 12
+    dig 6
+    bury 9
+
+test_hardcode2_while_top@10:
+    dig 8
+    bytec_1 // 0x
+    b>
+    bz test_hardcode2_after_while@14
+    dig 8
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_hardcode2_after_if_else@13
+    dig 5
+    dig 12
+    b*
+    bury 6
+
+test_hardcode2_after_if_else@13:
+    dig 8
+    bytec_2 // 0x02
+    b/
+    bury 9
+    dig 11
+    dup
+    b*
+    bury 12
+    b test_hardcode2_while_top@10
+
+test_hardcode2_after_while@14:
+    bytec_0 // 0x01
+    bury 5
     dig 3
     bury 11
-    dig 2
-    bury 9
+    dig 5
+    bury 8
 
-test_hardcode2_while_top@7:
-    dig 8
+test_hardcode2_while_top@15:
+    dig 7
     bytec_1 // 0x
     b>
-    bz test_hardcode2_after_while@11
-    dig 8
+    bz test_hardcode2_after_while@19
+    dig 7
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_hardcode2_after_if_else@10
-    dig 6
+    bz test_hardcode2_after_if_else@18
+    dig 4
     dig 11
     b*
-    bury 7
+    bury 5
 
-test_hardcode2_after_if_else@10:
-    dig 8
+test_hardcode2_after_if_else@18:
+    dig 7
     bytec_2 // 0x02
     b/
-    bury 9
+    bury 8
     dig 10
     dup
     b*
     bury 11
-    b test_hardcode2_while_top@7
+    b test_hardcode2_while_top@15
 
-test_hardcode2_after_while@11:
-    bytec_0 // 0x01
-    bury 6
+test_hardcode2_after_while@19:
     dig 4
-    bury 10
-    dig 6
-    bury 8
-
-test_hardcode2_while_top@12:
-    dig 7
-    bytec_1 // 0x
-    b>
-    bz test_hardcode2_after_while@16
-    dig 7
-    bytec_0 // 0x01
-    b&
-    bytec_1 // 0x
-    b!=
-    bz test_hardcode2_after_if_else@15
-    dig 5
-    dig 10
-    b*
-    bury 6
-
-test_hardcode2_after_if_else@15:
-    dig 7
-    bytec_2 // 0x02
-    b/
-    bury 8
-    dig 9
-    dup
-    b*
-    bury 10
-    b test_hardcode2_while_top@12
-
-test_hardcode2_after_while@16:
-    dig 5
     dup
     len
     intc_0 // 32
@@ -279,11 +311,15 @@ test_hardcode2_after_while@16:
     intc_2 // 1
     return
 
+test_hardcode2_ternary_false@3:
+    intc_1 // 0
+    b test_hardcode2_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/exp_associativity.sol.C.test_invariant[routing]() -> void:
 test_invariant:
     intc_1 // 0
-    dupn 8
+    dupn 11
     txna ApplicationArgs 1
     dup
     len
@@ -291,157 +327,169 @@ test_invariant:
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
-    dupn 2
+    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    cover 2
-    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_0 // 0x01
-    cover 2
+    txn GroupIndex
+    bz test_invariant_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
 
-test_invariant_while_top@2:
-    dup
-    bytec_1 // 0x
-    b>
-    bz test_invariant_after_while@6
-    dup
+test_invariant_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x01
-    b&
-    bytec_1 // 0x
-    b!=
-    bz test_invariant_after_if_else@5
-    dig 2
-    dig 2
-    b*
-    bury 3
-
-test_invariant_after_if_else@5:
-    dup
-    bytec_2 // 0x02
-    b/
-    bury 1
+    bury 7
     dig 1
-    dup
-    b*
-    bury 2
-    b test_invariant_while_top@2
-
-test_invariant_after_while@6:
-    bytec_0 // 0x01
-    bury 9
-    dig 5
     bury 15
-    dig 2
-    bury 12
+    dup
+    bury 11
 
-test_invariant_while_top@7:
-    dig 11
+test_invariant_while_top@5:
+    dig 10
     bytec_1 // 0x
     b>
-    bz test_invariant_after_while@11
-    dig 11
+    bz test_invariant_after_while@9
+    dig 10
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_invariant_after_if_else@10
-    dig 8
+    bz test_invariant_after_if_else@8
+    dig 6
     dig 15
     b*
-    bury 9
+    bury 7
 
-test_invariant_after_if_else@10:
-    dig 11
+test_invariant_after_if_else@8:
+    dig 10
     bytec_2 // 0x02
     b/
-    bury 12
+    bury 11
     dig 14
     dup
     b*
     bury 15
-    b test_invariant_while_top@7
+    b test_invariant_while_top@5
 
-test_invariant_after_while@11:
+test_invariant_after_while@9:
     bytec_0 // 0x01
-    bury 8
-    dig 4
+    bury 6
+    dig 2
     bury 14
-    dig 3
-    bury 11
+    dig 6
+    bury 10
 
-test_invariant_while_top@12:
-    dig 10
+test_invariant_while_top@10:
+    dig 9
     bytec_1 // 0x
     b>
-    bz test_invariant_after_while@16
-    dig 10
+    bz test_invariant_after_while@14
+    dig 9
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_invariant_after_if_else@15
-    dig 7
+    bz test_invariant_after_if_else@13
+    dig 5
     dig 14
     b*
-    bury 8
+    bury 6
 
-test_invariant_after_if_else@15:
-    dig 10
+test_invariant_after_if_else@13:
+    dig 9
     bytec_2 // 0x02
     b/
-    bury 11
+    bury 10
     dig 13
     dup
     b*
     bury 14
-    b test_invariant_while_top@12
+    b test_invariant_while_top@10
 
-test_invariant_after_while@16:
+test_invariant_after_while@14:
     bytec_0 // 0x01
-    bury 7
-    dig 5
+    bury 5
+    dig 1
     bury 13
-    dig 7
-    bury 10
+    dup
+    bury 9
 
-test_invariant_while_top@17:
-    dig 9
+test_invariant_while_top@15:
+    dig 8
     bytec_1 // 0x
     b>
-    bz test_invariant_after_while@21
-    dig 9
+    bz test_invariant_after_while@19
+    dig 8
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_invariant_after_if_else@20
-    dig 6
+    bz test_invariant_after_if_else@18
+    dig 4
     dig 13
     b*
-    bury 7
+    bury 5
 
-test_invariant_after_if_else@20:
-    dig 9
+test_invariant_after_if_else@18:
+    dig 8
     bytec_2 // 0x02
     b/
-    bury 10
+    bury 9
     dig 12
     dup
     b*
     bury 13
-    b test_invariant_while_top@17
+    b test_invariant_while_top@15
 
-test_invariant_after_while@21:
-    dig 8
+test_invariant_after_while@19:
+    bytec_0 // 0x01
+    bury 4
+    dig 2
+    bury 12
+    dig 4
+    bury 8
+
+test_invariant_while_top@20:
     dig 7
+    bytec_1 // 0x
+    b>
+    bz test_invariant_after_while@24
+    dig 7
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_invariant_after_if_else@23
+    dig 3
+    dig 12
+    b*
+    bury 4
+
+test_invariant_after_if_else@23:
+    dig 7
+    bytec_2 // 0x02
+    b/
+    bury 8
+    dig 11
+    dup
+    b*
+    bury 12
+    b test_invariant_while_top@20
+
+test_invariant_after_while@24:
+    dig 5
+    dig 4
     b==
     bytec 4 // 0x00
     intc_1 // 0
@@ -453,12 +501,16 @@ test_invariant_after_while@21:
     log
     intc_2 // 1
     return
+
+test_invariant_ternary_false@3:
+    intc_1 // 0
+    b test_invariant_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/exp_associativity.sol.C.test_literal_mix[routing]() -> void:
 test_literal_mix:
     intc_1 // 0
-    dupn 32
+    dupn 35
     txna ApplicationArgs 1
     dup
     len
@@ -466,444 +518,456 @@ test_literal_mix:
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
-    dupn 2
+    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_0 // 0x01
-    swap
-    bytec_2 // 0x02
-    swap
+    txn GroupIndex
+    bz test_literal_mix_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
 
-test_literal_mix_while_top@2:
+test_literal_mix_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_0 // 0x01
+    bury 3
+    bytec_2 // 0x02
+    bury 27
     dup
+    bury 15
+
+test_literal_mix_while_top@5:
+    dig 14
     bytec_1 // 0x
     b>
-    bz test_literal_mix_after_while@6
-    dup
+    bz test_literal_mix_after_while@9
+    dig 14
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_literal_mix_after_if_else@5
+    bz test_literal_mix_after_if_else@8
     dig 2
-    dig 2
+    dig 27
     b*
     bury 3
 
-test_literal_mix_after_if_else@5:
-    dup
+test_literal_mix_after_if_else@8:
+    dig 14
     bytec_2 // 0x02
     b/
-    bury 1
-    dig 1
+    bury 15
+    dig 26
     dup
     b*
-    bury 2
-    b test_literal_mix_while_top@2
+    bury 27
+    b test_literal_mix_while_top@5
 
-test_literal_mix_after_while@6:
+test_literal_mix_after_while@9:
     bytec_0 // 0x01
-    bury 16
-    dig 4
+    bury 14
+    dig 1
     bury 38
     dig 2
-    bury 27
+    bury 26
 
-test_literal_mix_while_top@7:
-    dig 26
+test_literal_mix_while_top@10:
+    dig 25
     bytec_1 // 0x
     b>
-    bz test_literal_mix_after_while@11
-    dig 26
+    bz test_literal_mix_after_while@14
+    dig 25
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_literal_mix_after_if_else@10
-    dig 15
+    bz test_literal_mix_after_if_else@13
+    dig 13
     dig 38
     b*
-    bury 16
+    bury 14
 
-test_literal_mix_after_if_else@10:
-    dig 26
+test_literal_mix_after_if_else@13:
+    dig 25
     bytec_2 // 0x02
     b/
-    bury 27
+    bury 26
     dig 37
     dup
     b*
     bury 38
-    b test_literal_mix_while_top@7
+    b test_literal_mix_while_top@10
 
-test_literal_mix_after_while@11:
+test_literal_mix_after_while@14:
     bytec_0 // 0x01
-    bury 15
+    bury 13
     bytec_2 // 0x02
     bury 37
-    dig 3
-    bury 26
+    dup
+    bury 25
 
-test_literal_mix_while_top@12:
-    dig 25
+test_literal_mix_while_top@15:
+    dig 24
     bytec_1 // 0x
     b>
-    bz test_literal_mix_after_while@16
-    dig 25
+    bz test_literal_mix_after_while@19
+    dig 24
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_literal_mix_after_if_else@15
-    dig 14
+    bz test_literal_mix_after_if_else@18
+    dig 12
     dig 37
     b*
-    bury 15
+    bury 13
 
-test_literal_mix_after_if_else@15:
-    dig 25
+test_literal_mix_after_if_else@18:
+    dig 24
     bytec_2 // 0x02
     b/
-    bury 26
+    bury 25
     dig 36
     dup
     b*
     bury 37
-    b test_literal_mix_while_top@12
+    b test_literal_mix_while_top@15
 
-test_literal_mix_after_while@16:
+test_literal_mix_after_while@19:
     bytec_0 // 0x01
-    bury 14
-    dig 4
+    bury 12
+    dig 1
     bury 36
-    dig 14
-    bury 25
+    dig 12
+    bury 24
 
-test_literal_mix_while_top@17:
-    dig 24
+test_literal_mix_while_top@20:
+    dig 23
     bytec_1 // 0x
     b>
-    bz test_literal_mix_after_while@21
-    dig 24
+    bz test_literal_mix_after_while@24
+    dig 23
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_literal_mix_after_if_else@20
-    dig 13
+    bz test_literal_mix_after_if_else@23
+    dig 11
     dig 36
     b*
-    bury 14
+    bury 12
 
-test_literal_mix_after_if_else@20:
-    dig 24
+test_literal_mix_after_if_else@23:
+    dig 23
     bytec_2 // 0x02
     b/
-    bury 25
+    bury 24
     dig 35
     dup
     b*
     bury 36
-    b test_literal_mix_while_top@17
+    b test_literal_mix_while_top@20
 
-test_literal_mix_after_while@21:
+test_literal_mix_after_while@24:
     bytec_0 // 0x01
-    bury 13
-    dig 4
+    bury 11
+    dig 1
     bury 35
-    dig 3
-    bury 24
+    dup
+    bury 23
 
-test_literal_mix_while_top@22:
-    dig 23
+test_literal_mix_while_top@25:
+    dig 22
     bytec_1 // 0x
     b>
-    bz test_literal_mix_after_while@26
-    dig 23
+    bz test_literal_mix_after_while@29
+    dig 22
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_literal_mix_after_if_else@25
-    dig 12
+    bz test_literal_mix_after_if_else@28
+    dig 10
     dig 35
     b*
-    bury 13
+    bury 11
 
-test_literal_mix_after_if_else@25:
-    dig 23
+test_literal_mix_after_if_else@28:
+    dig 22
     bytec_2 // 0x02
     b/
-    bury 24
+    bury 23
     dig 34
     dup
     b*
     bury 35
-    b test_literal_mix_while_top@22
+    b test_literal_mix_while_top@25
 
-test_literal_mix_after_while@26:
+test_literal_mix_after_while@29:
     bytec_0 // 0x01
-    bury 12
+    bury 10
     bytec_2 // 0x02
     bury 34
-    dig 12
-    bury 23
+    dig 10
+    bury 22
 
-test_literal_mix_while_top@27:
-    dig 22
+test_literal_mix_while_top@30:
+    dig 21
     bytec_1 // 0x
     b>
-    bz test_literal_mix_after_while@31
-    dig 22
+    bz test_literal_mix_after_while@34
+    dig 21
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_literal_mix_after_if_else@30
-    dig 11
+    bz test_literal_mix_after_if_else@33
+    dig 9
     dig 34
     b*
-    bury 12
+    bury 10
 
-test_literal_mix_after_if_else@30:
-    dig 22
+test_literal_mix_after_if_else@33:
+    dig 21
     bytec_2 // 0x02
     b/
-    bury 23
+    bury 22
     dig 33
     dup
     b*
     bury 34
-    b test_literal_mix_while_top@27
+    b test_literal_mix_while_top@30
 
-test_literal_mix_after_while@31:
+test_literal_mix_after_while@34:
     bytec_0 // 0x01
-    bury 11
-    dig 4
+    bury 9
+    dig 1
     bury 33
-    dig 3
-    bury 22
+    dup
+    bury 21
 
-test_literal_mix_while_top@32:
-    dig 21
+test_literal_mix_while_top@35:
+    dig 20
     bytec_1 // 0x
     b>
-    bz test_literal_mix_after_while@36
-    dig 21
+    bz test_literal_mix_after_while@39
+    dig 20
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_literal_mix_after_if_else@35
-    dig 10
+    bz test_literal_mix_after_if_else@38
+    dig 8
     dig 33
     b*
-    bury 11
+    bury 9
 
-test_literal_mix_after_if_else@35:
-    dig 21
+test_literal_mix_after_if_else@38:
+    dig 20
     bytec_2 // 0x02
     b/
-    bury 22
+    bury 21
     dig 32
     dup
     b*
     bury 33
-    b test_literal_mix_while_top@32
+    b test_literal_mix_while_top@35
 
-test_literal_mix_after_while@36:
+test_literal_mix_after_while@39:
     bytec_0 // 0x01
-    bury 10
+    bury 8
     bytec_2 // 0x02
     bury 32
-    dig 10
-    bury 21
+    dig 8
+    bury 20
 
-test_literal_mix_while_top@37:
-    dig 20
+test_literal_mix_while_top@40:
+    dig 19
     bytec_1 // 0x
     b>
-    bz test_literal_mix_after_while@41
-    dig 20
+    bz test_literal_mix_after_while@44
+    dig 19
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_literal_mix_after_if_else@40
-    dig 9
+    bz test_literal_mix_after_if_else@43
+    dig 7
     dig 32
     b*
-    bury 10
+    bury 8
 
-test_literal_mix_after_if_else@40:
-    dig 20
+test_literal_mix_after_if_else@43:
+    dig 19
     bytec_2 // 0x02
     b/
-    bury 21
+    bury 20
     dig 31
     dup
     b*
     bury 32
-    b test_literal_mix_while_top@37
+    b test_literal_mix_while_top@40
 
-test_literal_mix_after_while@41:
+test_literal_mix_after_while@44:
     bytec_0 // 0x01
-    bury 9
+    bury 7
     bytec_2 // 0x02
-    bury 20
-    dig 3
+    bury 19
+    dup
     bury 31
 
-test_literal_mix_while_top@42:
-    dig 19
+test_literal_mix_while_top@45:
+    dig 18
     bytec_1 // 0x
     b>
-    bz test_literal_mix_after_while@46
-    dig 19
+    bz test_literal_mix_after_while@49
+    dig 18
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_literal_mix_after_if_else@45
-    dig 8
+    bz test_literal_mix_after_if_else@48
+    dig 6
     dig 31
     b*
-    bury 9
+    bury 7
 
-test_literal_mix_after_if_else@45:
-    dig 19
+test_literal_mix_after_if_else@48:
+    dig 18
     bytec_2 // 0x02
     b/
-    bury 20
+    bury 19
     dig 30
     dup
     b*
     bury 31
-    b test_literal_mix_while_top@42
+    b test_literal_mix_while_top@45
 
-test_literal_mix_after_while@46:
+test_literal_mix_after_while@49:
     bytec_0 // 0x01
-    bury 8
-    dig 4
+    bury 6
+    dig 1
     bury 30
-    dig 8
-    bury 19
+    dig 6
+    bury 18
 
-test_literal_mix_while_top@47:
-    dig 18
+test_literal_mix_while_top@50:
+    dig 17
     bytec_1 // 0x
     b>
-    bz test_literal_mix_after_while@51
-    dig 18
+    bz test_literal_mix_after_while@54
+    dig 17
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_literal_mix_after_if_else@50
-    dig 7
+    bz test_literal_mix_after_if_else@53
+    dig 5
     dig 30
     b*
-    bury 8
+    bury 6
 
-test_literal_mix_after_if_else@50:
-    dig 18
+test_literal_mix_after_if_else@53:
+    dig 17
     bytec_2 // 0x02
     b/
-    bury 19
+    bury 18
     dig 29
     dup
     b*
     bury 30
-    b test_literal_mix_while_top@47
+    b test_literal_mix_while_top@50
 
-test_literal_mix_after_while@51:
+test_literal_mix_after_while@54:
     bytec_0 // 0x01
-    bury 7
+    bury 5
     bytec_2 // 0x02
-    bury 18
-    dig 3
+    bury 17
+    dup
     bury 29
 
-test_literal_mix_while_top@52:
-    dig 17
+test_literal_mix_while_top@55:
+    dig 16
     bytec_1 // 0x
     b>
-    bz test_literal_mix_after_while@56
-    dig 17
+    bz test_literal_mix_after_while@59
+    dig 16
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_literal_mix_after_if_else@55
-    dig 6
+    bz test_literal_mix_after_if_else@58
+    dig 4
     dig 29
     b*
-    bury 7
+    bury 5
 
-test_literal_mix_after_if_else@55:
-    dig 17
+test_literal_mix_after_if_else@58:
+    dig 16
     bytec_2 // 0x02
     b/
-    bury 18
+    bury 17
     dig 28
     dup
     b*
     bury 29
-    b test_literal_mix_while_top@52
+    b test_literal_mix_while_top@55
 
-test_literal_mix_after_while@56:
+test_literal_mix_after_while@59:
     bytec_0 // 0x01
-    bury 6
-    dig 4
+    bury 4
+    dig 1
     bury 28
-    dig 6
-    bury 17
+    dig 4
+    bury 16
 
-test_literal_mix_while_top@57:
-    dig 16
+test_literal_mix_while_top@60:
+    dig 15
     bytec_1 // 0x
     b>
-    bz test_literal_mix_after_while@61
-    dig 16
+    bz test_literal_mix_after_while@64
+    dig 15
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_literal_mix_after_if_else@60
-    dig 5
+    bz test_literal_mix_after_if_else@63
+    dig 3
     dig 28
     b*
-    bury 6
+    bury 4
 
-test_literal_mix_after_if_else@60:
-    dig 16
+test_literal_mix_after_if_else@63:
+    dig 15
     bytec_2 // 0x02
     b/
-    bury 17
+    bury 16
     dig 27
     dup
     b*
     bury 28
-    b test_literal_mix_while_top@57
+    b test_literal_mix_while_top@60
 
-test_literal_mix_after_while@61:
-    dig 15
-    dig 14
+test_literal_mix_after_while@64:
+    dig 13
+    dig 12
     b==
-    bz test_literal_mix_bool_false@65
-    dig 11
-    dig 10
+    bz test_literal_mix_bool_false@68
+    dig 9
+    dig 8
     b==
-    bz test_literal_mix_bool_false@65
-    dig 7
-    dig 6
+    bz test_literal_mix_bool_false@68
+    dig 5
+    dig 4
     b==
-    bz test_literal_mix_bool_false@65
+    bz test_literal_mix_bool_false@68
     intc_2 // 1
 
-test_literal_mix_bool_merge@66:
+test_literal_mix_bool_merge@69:
     bytec 4 // 0x00
     intc_1 // 0
     uncover 2
@@ -915,542 +979,558 @@ test_literal_mix_bool_merge@66:
     intc_2 // 1
     return
 
-test_literal_mix_bool_false@65:
+test_literal_mix_bool_false@68:
     intc_1 // 0
-    b test_literal_mix_bool_merge@66
+    b test_literal_mix_bool_merge@69
+
+test_literal_mix_ternary_false@3:
+    intc_1 // 0
+    b test_literal_mix_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/exp_associativity.sol.C.test_other_operators[routing]() -> void:
 test_other_operators:
     intc_1 // 0
-    dupn 38
+    dupn 41
     txna ApplicationArgs 1
-    dupn 2
+    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    cover 2
-    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_0 // 0x01
-    cover 2
+    txn GroupIndex
+    bz test_other_operators_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
 
-test_other_operators_while_top@2:
-    dup
-    bytec_1 // 0x
-    b>
-    bz test_other_operators_after_while@6
-    dup
+test_other_operators_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x01
-    b&
-    bytec_1 // 0x
-    b!=
-    bz test_other_operators_after_if_else@5
-    dig 2
-    dig 2
-    b*
-    bury 3
-
-test_other_operators_after_if_else@5:
-    dup
-    bytec_2 // 0x02
-    b/
-    bury 1
+    bury 16
     dig 1
-    dup
-    b*
-    bury 2
-    b test_other_operators_while_top@2
-
-test_other_operators_after_while@6:
-    bytec_0 // 0x01
-    bury 18
-    dig 4
     bury 44
-    dig 3
-    bury 31
+    dup
+    bury 30
 
-test_other_operators_while_top@7:
-    dig 30
+test_other_operators_while_top@5:
+    dig 29
     bytec_1 // 0x
     b>
-    bz test_other_operators_after_while@11
-    dig 30
+    bz test_other_operators_after_while@9
+    dig 29
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_other_operators_after_if_else@10
-    dig 17
+    bz test_other_operators_after_if_else@8
+    dig 15
     dig 44
     b*
-    bury 18
+    bury 16
 
-test_other_operators_after_if_else@10:
-    dig 30
+test_other_operators_after_if_else@8:
+    dig 29
     bytec_2 // 0x02
     b/
-    bury 31
+    bury 30
     dig 43
     dup
     b*
     bury 44
-    b test_other_operators_while_top@7
+    b test_other_operators_while_top@5
 
-test_other_operators_after_while@11:
+test_other_operators_after_while@9:
     bytec_0 // 0x01
-    bury 17
-    dig 4
+    bury 15
+    dig 1
     bury 43
-    dig 3
-    bury 30
+    dup
+    bury 29
 
-test_other_operators_while_top@12:
-    dig 29
+test_other_operators_while_top@10:
+    dig 28
     bytec_1 // 0x
     b>
-    bz test_other_operators_after_while@16
-    dig 29
+    bz test_other_operators_after_while@14
+    dig 28
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_other_operators_after_if_else@15
-    dig 16
+    bz test_other_operators_after_if_else@13
+    dig 14
     dig 43
     b*
-    bury 17
+    bury 15
 
-test_other_operators_after_if_else@15:
-    dig 29
+test_other_operators_after_if_else@13:
+    dig 28
     bytec_2 // 0x02
     b/
-    bury 30
+    bury 29
     dig 42
     dup
     b*
     bury 43
-    b test_other_operators_while_top@12
+    b test_other_operators_while_top@10
 
-test_other_operators_after_while@16:
+test_other_operators_after_while@14:
     bytec_0 // 0x01
-    bury 16
-    pushbytes 0x03
+    bury 14
+    dig 1
     bury 42
-    dig 3
-    bury 29
+    dup
+    bury 28
 
-test_other_operators_while_top@17:
-    dig 28
+test_other_operators_while_top@15:
+    dig 27
     bytec_1 // 0x
     b>
-    bz test_other_operators_after_while@21
-    dig 28
+    bz test_other_operators_after_while@19
+    dig 27
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_other_operators_after_if_else@20
-    dig 15
+    bz test_other_operators_after_if_else@18
+    dig 13
     dig 42
     b*
-    bury 16
+    bury 14
 
-test_other_operators_after_if_else@20:
-    dig 28
+test_other_operators_after_if_else@18:
+    dig 27
     bytec_2 // 0x02
     b/
-    bury 29
+    bury 28
     dig 41
     dup
     b*
     bury 42
-    b test_other_operators_while_top@17
+    b test_other_operators_while_top@15
 
-test_other_operators_after_while@21:
+test_other_operators_after_while@19:
     bytec_0 // 0x01
-    bury 15
-    dig 4
+    bury 13
+    pushbytes 0x03
     bury 41
-    dig 3
-    bury 28
+    dup
+    bury 27
 
-test_other_operators_while_top@22:
-    dig 27
+test_other_operators_while_top@20:
+    dig 26
     bytec_1 // 0x
     b>
-    bz test_other_operators_after_while@26
-    dig 27
+    bz test_other_operators_after_while@24
+    dig 26
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_other_operators_after_if_else@25
-    dig 14
+    bz test_other_operators_after_if_else@23
+    dig 12
     dig 41
     b*
-    bury 15
+    bury 13
 
-test_other_operators_after_if_else@25:
-    dig 27
+test_other_operators_after_if_else@23:
+    dig 26
     bytec_2 // 0x02
     b/
-    bury 28
+    bury 27
     dig 40
     dup
     b*
     bury 41
-    b test_other_operators_while_top@22
+    b test_other_operators_while_top@20
 
-test_other_operators_after_while@26:
+test_other_operators_after_while@24:
     bytec_0 // 0x01
-    bury 14
-    pushbytes 0x03
+    bury 12
+    dig 1
     bury 40
-    dig 3
-    bury 27
+    dup
+    bury 26
 
-test_other_operators_while_top@27:
-    dig 26
+test_other_operators_while_top@25:
+    dig 25
     bytec_1 // 0x
     b>
-    bz test_other_operators_after_while@31
-    dig 26
+    bz test_other_operators_after_while@29
+    dig 25
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_other_operators_after_if_else@30
-    dig 13
+    bz test_other_operators_after_if_else@28
+    dig 11
     dig 40
     b*
-    bury 14
+    bury 12
 
-test_other_operators_after_if_else@30:
-    dig 26
+test_other_operators_after_if_else@28:
+    dig 25
     bytec_2 // 0x02
     b/
-    bury 27
+    bury 26
     dig 39
     dup
     b*
     bury 40
-    b test_other_operators_while_top@27
+    b test_other_operators_while_top@25
 
-test_other_operators_after_while@31:
+test_other_operators_after_while@29:
     bytec_0 // 0x01
-    bury 13
-    dig 4
+    bury 11
+    pushbytes 0x03
+    bury 39
     dup
-    bury 40
-    bury 26
+    bury 25
 
-test_other_operators_while_top@32:
-    dig 25
+test_other_operators_while_top@30:
+    dig 24
     bytec_1 // 0x
     b>
-    bz test_other_operators_after_while@36
-    dig 25
+    bz test_other_operators_after_while@34
+    dig 24
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_other_operators_after_if_else@35
-    dig 12
+    bz test_other_operators_after_if_else@33
+    dig 10
     dig 39
     b*
-    bury 13
+    bury 11
 
-test_other_operators_after_if_else@35:
-    dig 25
+test_other_operators_after_if_else@33:
+    dig 24
     bytec_2 // 0x02
     b/
-    bury 26
+    bury 25
     dig 38
     dup
     b*
     bury 39
-    b test_other_operators_while_top@32
+    b test_other_operators_while_top@30
 
-test_other_operators_after_while@36:
+test_other_operators_after_while@34:
     bytec_0 // 0x01
-    bury 12
-    dig 3
-    bury 38
-    dig 12
-    bury 25
+    bury 10
+    dig 1
+    dup
+    bury 39
+    bury 24
 
-test_other_operators_while_top@37:
-    dig 24
+test_other_operators_while_top@35:
+    dig 23
     bytec_1 // 0x
     b>
-    bz test_other_operators_after_while@41
-    dig 24
+    bz test_other_operators_after_while@39
+    dig 23
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_other_operators_after_if_else@40
-    dig 11
+    bz test_other_operators_after_if_else@38
+    dig 9
     dig 38
     b*
-    bury 12
+    bury 10
 
-test_other_operators_after_if_else@40:
-    dig 24
+test_other_operators_after_if_else@38:
+    dig 23
     bytec_2 // 0x02
     b/
-    bury 25
+    bury 24
     dig 37
     dup
     b*
     bury 38
-    b test_other_operators_while_top@37
+    b test_other_operators_while_top@35
 
-test_other_operators_after_while@41:
+test_other_operators_after_while@39:
     bytec_0 // 0x01
-    bury 11
-    dig 4
+    bury 9
+    dup
     bury 37
-    dig 3
-    bury 24
+    dig 9
+    bury 23
 
-test_other_operators_while_top@42:
-    dig 23
+test_other_operators_while_top@40:
+    dig 22
     bytec_1 // 0x
     b>
-    bz test_other_operators_after_while@46
-    dig 23
+    bz test_other_operators_after_while@44
+    dig 22
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_other_operators_after_if_else@45
-    dig 10
+    bz test_other_operators_after_if_else@43
+    dig 8
     dig 37
     b*
-    bury 11
+    bury 9
 
-test_other_operators_after_if_else@45:
-    dig 23
+test_other_operators_after_if_else@43:
+    dig 22
     bytec_2 // 0x02
     b/
-    bury 24
+    bury 23
     dig 36
     dup
     b*
     bury 37
-    b test_other_operators_while_top@42
+    b test_other_operators_while_top@40
 
-test_other_operators_after_while@46:
+test_other_operators_after_while@44:
     bytec_0 // 0x01
-    bury 10
-    dig 3
+    bury 8
+    dig 1
     bury 36
-    dig 10
-    bury 23
+    dup
+    bury 22
 
-test_other_operators_while_top@47:
-    dig 22
+test_other_operators_while_top@45:
+    dig 21
     bytec_1 // 0x
     b>
-    bz test_other_operators_after_while@51
-    dig 22
+    bz test_other_operators_after_while@49
+    dig 21
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_other_operators_after_if_else@50
-    dig 9
+    bz test_other_operators_after_if_else@48
+    dig 7
     dig 36
     b*
-    bury 10
+    bury 8
 
-test_other_operators_after_if_else@50:
-    dig 22
+test_other_operators_after_if_else@48:
+    dig 21
     bytec_2 // 0x02
     b/
-    bury 23
+    bury 22
     dig 35
     dup
     b*
     bury 36
-    b test_other_operators_while_top@47
+    b test_other_operators_while_top@45
 
-test_other_operators_after_while@51:
+test_other_operators_after_while@49:
     bytec_0 // 0x01
-    bury 9
-    dig 4
+    bury 7
     dup
-    bury 36
-    bury 22
+    bury 35
+    dig 7
+    bury 21
 
-test_other_operators_while_top@52:
-    dig 21
+test_other_operators_while_top@50:
+    dig 20
     bytec_1 // 0x
     b>
-    bz test_other_operators_after_while@56
-    dig 21
+    bz test_other_operators_after_while@54
+    dig 20
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_other_operators_after_if_else@55
-    dig 8
+    bz test_other_operators_after_if_else@53
+    dig 6
     dig 35
     b*
-    bury 9
+    bury 7
 
-test_other_operators_after_if_else@55:
-    dig 21
+test_other_operators_after_if_else@53:
+    dig 20
     bytec_2 // 0x02
     b/
-    bury 22
+    bury 21
     dig 34
     dup
     b*
     bury 35
-    b test_other_operators_while_top@52
+    b test_other_operators_while_top@50
 
-test_other_operators_after_while@56:
+test_other_operators_after_while@54:
     bytec_0 // 0x01
-    bury 8
-    dig 3
-    bury 34
-    dig 8
-    bury 21
+    bury 6
+    dig 1
+    dup
+    bury 35
+    bury 20
 
-test_other_operators_while_top@57:
-    dig 20
+test_other_operators_while_top@55:
+    dig 19
     bytec_1 // 0x
     b>
-    bz test_other_operators_after_while@61
-    dig 20
+    bz test_other_operators_after_while@59
+    dig 19
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_other_operators_after_if_else@60
-    dig 7
+    bz test_other_operators_after_if_else@58
+    dig 5
     dig 34
     b*
-    bury 8
+    bury 6
 
-test_other_operators_after_if_else@60:
-    dig 20
+test_other_operators_after_if_else@58:
+    dig 19
     bytec_2 // 0x02
     b/
-    bury 21
+    bury 20
     dig 33
     dup
     b*
     bury 34
-    b test_other_operators_while_top@57
+    b test_other_operators_while_top@55
 
-test_other_operators_after_while@61:
+test_other_operators_after_while@59:
     bytec_0 // 0x01
-    bury 7
-    dig 4
+    bury 5
+    dup
     bury 33
-    dig 3
-    bury 20
+    dig 5
+    bury 19
 
-test_other_operators_while_top@62:
-    dig 19
+test_other_operators_while_top@60:
+    dig 18
     bytec_1 // 0x
     b>
-    bz test_other_operators_after_while@66
-    dig 19
+    bz test_other_operators_after_while@64
+    dig 18
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_other_operators_after_if_else@65
-    dig 6
+    bz test_other_operators_after_if_else@63
+    dig 4
     dig 33
     b*
-    bury 7
+    bury 5
 
-test_other_operators_after_if_else@65:
-    dig 19
+test_other_operators_after_if_else@63:
+    dig 18
     bytec_2 // 0x02
     b/
-    bury 20
+    bury 19
     dig 32
     dup
     b*
     bury 33
-    b test_other_operators_while_top@62
+    b test_other_operators_while_top@60
 
-test_other_operators_after_while@66:
+test_other_operators_after_while@64:
     bytec_0 // 0x01
-    bury 6
-    dig 3
+    bury 4
+    dig 1
     bury 32
-    dig 6
-    bury 19
+    dup
+    bury 18
 
-test_other_operators_while_top@67:
-    dig 18
+test_other_operators_while_top@65:
+    dig 17
     bytec_1 // 0x
     b>
-    bz test_other_operators_after_while@71
-    dig 18
+    bz test_other_operators_after_while@69
+    dig 17
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz test_other_operators_after_if_else@70
-    dig 5
+    bz test_other_operators_after_if_else@68
+    dig 3
     dig 32
     b*
-    bury 6
+    bury 4
 
-test_other_operators_after_if_else@70:
-    dig 18
+test_other_operators_after_if_else@68:
+    dig 17
     bytec_2 // 0x02
     b/
-    bury 19
+    bury 18
     dig 31
     dup
     b*
     bury 32
-    b test_other_operators_while_top@67
+    b test_other_operators_while_top@65
 
-test_other_operators_after_while@71:
+test_other_operators_after_while@69:
+    bytec_0 // 0x01
+    bury 3
+    dup
+    bury 31
+    dig 3
+    bury 17
+
+test_other_operators_while_top@70:
+    dig 16
+    bytec_1 // 0x
+    b>
+    bz test_other_operators_after_while@74
+    dig 16
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_other_operators_after_if_else@73
     dig 2
+    dig 31
+    b*
+    bury 3
+
+test_other_operators_after_if_else@73:
+    dig 16
+    bytec_2 // 0x02
+    b/
+    bury 17
+    dig 30
+    dup
+    b*
+    bury 31
+    b test_other_operators_while_top@70
+
+test_other_operators_after_while@74:
+    dig 15
     pushbytes 0x19
     b/
-    dig 18
+    dig 15
     pushbytes 0x19
     b/
     b==
-    bz test_other_operators_bool_false@75
-    dig 16
-    dig 16
+    bz test_other_operators_bool_false@78
+    dig 13
+    dig 13
     b*
-    dig 15
-    dig 15
+    dig 12
+    dig 12
     b*
     b==
-    bz test_other_operators_bool_false@75
-    dig 11
-    dig 10
-    b/
+    bz test_other_operators_bool_false@78
     dig 8
     dig 7
     b/
+    dig 5
+    dig 4
+    b/
     b==
-    bz test_other_operators_bool_false@75
+    bz test_other_operators_bool_false@78
     intc_2 // 1
 
-test_other_operators_bool_merge@76:
+test_other_operators_bool_merge@79:
     bytec 4 // 0x00
     intc_1 // 0
     uncover 2
@@ -1462,6 +1542,10 @@ test_other_operators_bool_merge@76:
     intc_2 // 1
     return
 
-test_other_operators_bool_false@75:
+test_other_operators_bool_false@78:
     intc_1 // 0
-    b test_other_operators_bool_merge@76
+    b test_other_operators_bool_merge@79
+
+test_other_operators_ternary_false@3:
+    intc_1 // 0
+    b test_other_operators_ternary_merge@4

@@ -66,6 +66,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/evaluation_order.sol.D.query[routing]() -> void:
 query:
+    txn GroupIndex
+    bz query_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+query_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "x"
     box_get
     pushbytes 0x0000
@@ -77,6 +87,10 @@ query:
     log
     intc_1 // 1
     return
+
+query_ternary_false@3:
+    intc_0 // 0
+    b query_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/evaluation_order.sol.D.f(y: bytes) -> bytes:

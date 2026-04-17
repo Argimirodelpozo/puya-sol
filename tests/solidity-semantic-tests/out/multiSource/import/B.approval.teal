@@ -1,9 +1,9 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_0fto4w2x/B.sol.B.approval_program() -> uint64:
+// /tmp/multisource_x6pyqkic/B.sol.B.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 32 1 0
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -29,7 +29,7 @@ main_after_if_else@2:
     err
 
 
-// /tmp/multisource_0fto4w2x/B.sol.B.f[routing]() -> void:
+// /tmp/multisource_x6pyqkic/B.sol.B.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
     dup
@@ -38,11 +38,23 @@ f:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     intc_0 // 32
     <=
     assert // overflow
     intc_0 // 32
     bzero
+    dig 2
     b|
     bytec_0 // 0x151f7c75
     swap
@@ -51,8 +63,12 @@ f:
     intc_1 // 1
     return
 
+f_ternary_false@3:
+    intc_2 // 0
+    b f_ternary_merge@4
 
-// /tmp/multisource_0fto4w2x/B.sol.B.g[routing]() -> void:
+
+// /tmp/multisource_x6pyqkic/B.sol.B.g[routing]() -> void:
 g:
     txna ApplicationArgs 1
     dup
@@ -60,6 +76,17 @@ g:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     pushbytes 0x01
     b+
     dup
@@ -76,3 +103,7 @@ g:
     log
     intc_1 // 1
     return
+
+g_ternary_false@3:
+    intc_2 // 0
+    b g_ternary_merge@4

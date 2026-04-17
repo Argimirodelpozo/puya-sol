@@ -83,9 +83,19 @@ x:
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 32
     bzero
-    swap
+    dig 1
     concat
     dup
     len
@@ -93,6 +103,8 @@ x:
     -
     intc_2 // 32
     extract3
+    dig 2
+    swap
     concat
     sha256
     bytec_2 // "x"
@@ -112,3 +124,7 @@ x:
     log
     intc_0 // 1
     return
+
+x_ternary_false@3:
+    intc_1 // 0
+    b x_ternary_merge@4

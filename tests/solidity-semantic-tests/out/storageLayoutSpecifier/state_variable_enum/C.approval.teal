@@ -28,19 +28,22 @@ main_after_if_else@2:
     assert
     pushbytess 0xacd46a0c 0x0a1c1d05 0xa6fd40b7 // method "cSlotOffset()(uint512,uint512)", method "setBlue()void", method "checkBlue()bool"
     txna ApplicationArgs 0
-    match cSlotOffset main_setBlue_route@6 checkBlue
+    match cSlotOffset setBlue checkBlue
     err
-
-main_setBlue_route@6:
-    bytec_0 // "c"
-    intc_0 // 1
-    app_global_put
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_enum.sol.C.cSlotOffset[routing]() -> void:
 cSlotOffset:
+    txn GroupIndex
+    bz cSlotOffset_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+cSlotOffset_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -48,9 +51,46 @@ cSlotOffset:
     intc_0 // 1
     return
 
+cSlotOffset_ternary_false@3:
+    intc_1 // 0
+    b cSlotOffset_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_enum.sol.C.setBlue[routing]() -> void:
+setBlue:
+    txn GroupIndex
+    bz setBlue_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+setBlue_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_0 // "c"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+setBlue_ternary_false@3:
+    intc_1 // 0
+    b setBlue_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_enum.sol.C.checkBlue[routing]() -> void:
 checkBlue:
+    txn GroupIndex
+    bz checkBlue_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+checkBlue_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "c"
     app_global_get_ex
@@ -71,3 +111,7 @@ checkBlue:
     log
     intc_0 // 1
     return
+
+checkBlue_ternary_false@3:
+    intc_1 // 0
+    b checkBlue_ternary_merge@4

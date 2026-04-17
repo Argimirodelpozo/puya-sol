@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_assignment.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 256 8192
+    intcblock 32 1 0 256
     bytecblock "__dyn_storage"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -37,9 +37,19 @@ assignArray:
     pushint 320
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 10>
+    txn GroupIndex
+    bz assignArray_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+assignArray_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
-    dup
+    dupn 2
     extract 0 32 // on error: index access is out of bounds
     pushint 18446744073709551611
     swap
@@ -66,7 +76,7 @@ assignArray:
     callsub __storage_write
     dup
     extract 160 32 // on error: index access is out of bounds
-    pushint 0
+    intc_2 // 0
     swap
     callsub __storage_write
     dup
@@ -80,7 +90,7 @@ assignArray:
     swap
     callsub __storage_write
     dup
-    intc_2 // 256
+    intc_3 // 256
     intc_0 // 32
     extract3 // on error: index access is out of bounds
     pushint 3
@@ -95,13 +105,27 @@ assignArray:
     intc_1 // 1
     return
 
+assignArray_ternary_false@3:
+    intc_2 // 0
+    b assignArray_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_assignment.sol.C.x[routing]() -> void:
 x:
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     store 0
     bytec_0 // "__dyn_storage"
-    intc_3 // 8192
+    pushint 8192
     box_create
     pop
     bytec_0 // "__dyn_storage"
@@ -115,16 +139,20 @@ x:
     intc_1 // 1
     return
 
+x_ternary_false@3:
+    intc_2 // 0
+    b x_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_assignment.sol.C.__storage_write(__slot: uint64, __value: bytes) -> void:
 __storage_write:
     proto 2 0
     bytec_0 // "__dyn_storage"
-    intc_3 // 8192
+    pushint 8192
     box_create
     pop
     frame_dig -2
-    intc_2 // 256
+    intc_3 // 256
     %
     intc_0 // 32
     *

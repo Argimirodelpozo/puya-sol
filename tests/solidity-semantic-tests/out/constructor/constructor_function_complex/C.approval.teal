@@ -25,18 +25,22 @@ main_after_if_else@2:
     assert
     pushbytess 0xcd78b354 0x6962a01f // method "f()uint256", method "sixteen()uint256"
     txna ApplicationArgs 0
-    match f main_sixteen_route@6
+    match f sixteen
     err
-
-main_sixteen_route@6:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000010
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_function_complex.sol.C.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     bytec_0 // TMPL_APPROVAL_D
     bytec_1 // TMPL_CLEAR_D
@@ -100,3 +104,29 @@ f:
     log
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_function_complex.sol.C.sixteen[routing]() -> void:
+sixteen:
+    txn GroupIndex
+    bz sixteen_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+sixteen_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000010
+    log
+    intc_0 // 1
+    return
+
+sixteen_ternary_false@3:
+    intc_1 // 0
+    b sixteen_ternary_merge@4

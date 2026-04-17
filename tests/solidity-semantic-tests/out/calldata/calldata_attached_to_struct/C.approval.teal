@@ -59,6 +59,17 @@ test:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     callsub L.reverse
     dig 1
     len
@@ -84,3 +95,7 @@ test:
     log
     intc_1 // 1
     return
+
+test_ternary_false@3:
+    pushint 0
+    b test_ternary_merge@4

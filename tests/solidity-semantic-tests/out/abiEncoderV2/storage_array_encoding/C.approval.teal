@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/storage_array_encoding.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 2 0
+    intcblock 32 1 0 2
     bytecblock "__ctor_pending" "tmp_h" "tmp_i" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,10 +38,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_3 // 0
+    intc_2 // 0
     app_global_put
     bytec_1 // "tmp_h"
-    intc_2 // 2
+    intc_3 // 2
     box_create
     pop
     bytec_2 // "tmp_i"
@@ -55,29 +55,41 @@ __postInit:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/storage_array_encoding.sol.C.h[routing]() -> void:
 h:
     txna ApplicationArgs 1
-    dup
-    intc_3 // 0
+    dupn 2
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     pushint 64
     *
-    intc_2 // 2
+    intc_3 // 2
     +
-    dig 1
+    swap
     len
     dup
     uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint256, 2>>
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
     bytec_1 // "tmp_h"
     box_del
     pop
     bytec_1 // "tmp_h"
     dig 2
+    dup
+    cover 2
     box_put
     intc_0 // 32
     bzero
-    swap
-    intc_2 // 2
+    dig 2
+    intc_3 // 2
     -
     intc_0 // 32
     /
@@ -108,6 +120,10 @@ h:
     intc_1 // 1
     return
 
+h_ternary_false@3:
+    intc_2 // 0
+    b h_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/storage_array_encoding.sol.C.i[routing]() -> void:
 i:
@@ -117,8 +133,20 @@ i:
     pushint 128
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.static_array<arc4.uint256, 2>, 2>
+    txn GroupIndex
+    bz i_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+i_ternary_merge@4:
+    !
+    assert // not payable
     bytec_2 // "tmp_i"
     dig 1
+    dup
+    cover 2
     box_put
     intc_0 // 32
     bzero
@@ -157,3 +185,7 @@ i:
     log
     intc_1 // 1
     return
+
+i_ternary_false@3:
+    intc_2 // 0
+    b i_ternary_merge@4

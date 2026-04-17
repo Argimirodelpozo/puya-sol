@@ -27,7 +27,26 @@ main_s_route@4:
     txn ApplicationID
     &&
     assert
+    b s
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_struct_named_constructor.sol.C.s[routing]() -> void:
+s:
+    txn GroupIndex
+    bz s_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+s_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000880
     log
     pushint 1
     return
+
+s_ternary_false@3:
+    pushint 0
+    b s_ternary_merge@4

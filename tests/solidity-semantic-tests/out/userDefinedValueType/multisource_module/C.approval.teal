@@ -1,9 +1,9 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_pc4f1g1a/s2.sol.C.approval_program() -> uint64:
+// /tmp/multisource_udlyo52c/s2.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 32 1 0
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -29,7 +29,7 @@ main_after_if_else@2:
     err
 
 
-// /tmp/multisource_pc4f1g1a/s2.sol.C.f[routing]() -> void:
+// /tmp/multisource_udlyo52c/s2.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
     dup
@@ -38,11 +38,23 @@ f:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     intc_0 // 32
     <=
     assert // overflow
     intc_0 // 32
     bzero
+    dig 2
     b|
     bytec_0 // 0x151f7c75
     swap
@@ -51,8 +63,12 @@ f:
     intc_1 // 1
     return
 
+f_ternary_false@3:
+    intc_2 // 0
+    b f_ternary_merge@4
 
-// /tmp/multisource_pc4f1g1a/s2.sol.C.g[routing]() -> void:
+
+// /tmp/multisource_udlyo52c/s2.sol.C.g[routing]() -> void:
 g:
     txna ApplicationArgs 1
     dup
@@ -61,11 +77,23 @@ g:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     intc_0 // 32
     <=
     assert // overflow
     intc_0 // 32
     bzero
+    dig 2
     b|
     bytec_0 // 0x151f7c75
     swap
@@ -73,3 +101,7 @@ g:
     log
     intc_1 // 1
     return
+
+g_ternary_false@3:
+    intc_2 // 0
+    b g_ternary_merge@4

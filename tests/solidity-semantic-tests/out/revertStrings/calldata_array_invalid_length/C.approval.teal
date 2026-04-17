@@ -89,6 +89,16 @@ f_after_for@4:
     dig 3
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>
+    txn GroupIndex
+    bz f_ternary_false@7
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@8:
+    !
+    assert // not payable
     dig 4
     assert // index access is out of bounds
     dig 1
@@ -114,3 +124,7 @@ f_after_for@4:
     log
     intc_2 // 1
     return
+
+f_ternary_false@7:
+    intc_0 // 0
+    b f_ternary_merge@8

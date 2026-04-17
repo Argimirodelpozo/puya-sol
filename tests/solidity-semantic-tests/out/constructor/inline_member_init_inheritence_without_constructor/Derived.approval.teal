@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/inline_member_init_inheritence_without_constructor.sol.Derived.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
+    intcblock 1 0 32
     bytecblock "m_base" "m_derived" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -17,7 +17,7 @@ main:
     bytec_1 // "m_derived"
     swap
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -41,43 +41,71 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/inline_member_init_inheritence_without_constructor.sol.Derived.getDMember[routing]() -> void:
 getDMember:
-    intc_2 // 0
+    txn GroupIndex
+    bz getDMember_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getDMember_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_1 // "m_derived"
     app_global_get_ex
     assert // check m_derived exists
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_2 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+getDMember_ternary_false@3:
+    intc_1 // 0
+    b getDMember_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/inline_member_init_inheritence_without_constructor.sol.Derived.getBMember[routing]() -> void:
 getBMember:
-    intc_2 // 0
+    txn GroupIndex
+    bz getBMember_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getBMember_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_0 // "m_base"
     app_global_get_ex
     assert // check m_base exists
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_2 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+getBMember_ternary_false@3:
+    intc_1 // 0
+    b getBMember_ternary_merge@4

@@ -34,6 +34,16 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_reference.sol.test.check[routing]() -> void:
 check:
+    txn GroupIndex
+    bz check_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+check_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_2 // "data"
     app_global_get_ex
@@ -42,7 +52,7 @@ check:
     extract_uint64
     pushint 2
     ==
-    bz check_bool_false@6
+    bz check_bool_false@9
     bytec_1 // 0x726563757273697665af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
     box_get
     bytec_0 // 0x0000000000000000000a0000
@@ -52,7 +62,7 @@ check:
     extract_uint64
     pushint 3
     ==
-    bz check_bool_false@6
+    bz check_bool_false@9
     bytec 4 // 0x726563757273697665cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
     box_get
     bytec_0 // 0x0000000000000000000a0000
@@ -60,7 +70,7 @@ check:
     select
     intc_0 // 0
     extract_uint64
-    bnz check_bool_false@6
+    bnz check_bool_false@9
     bytec_1 // 0x726563757273697665af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
     box_get
     bytec_0 // 0x0000000000000000000a0000
@@ -70,10 +80,10 @@ check:
     extract_uint64
     intc_1 // 1
     ==
-    bz check_bool_false@6
+    bz check_bool_false@9
     intc_1 // 1
 
-check_bool_merge@7:
+check_bool_merge@10:
     pushbytes 0x00
     intc_0 // 0
     uncover 2
@@ -85,13 +95,27 @@ check_bool_merge@7:
     intc_1 // 1
     return
 
-check_bool_false@6:
+check_bool_false@9:
     intc_0 // 0
-    b check_bool_merge@7
+    b check_bool_merge@10
+
+check_ternary_false@3:
+    intc_0 // 0
+    b check_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_reference.sol.test.set[routing]() -> void:
 set:
+    txn GroupIndex
+    bz set_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+set_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_2 // "data"
     app_global_get_ex
@@ -188,3 +212,7 @@ set:
     box_put
     intc_1 // 1
     return
+
+set_ternary_false@3:
+    intc_0 // 0
+    b set_ternary_merge@4

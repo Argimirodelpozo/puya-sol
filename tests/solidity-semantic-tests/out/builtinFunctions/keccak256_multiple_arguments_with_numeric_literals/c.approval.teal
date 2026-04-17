@@ -46,7 +46,17 @@ foo:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    dup
+    txn GroupIndex
+    bz foo_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+foo_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     intc_2 // 65535
     <=
     assert // ABI validation
@@ -54,7 +64,7 @@ foo:
     &
     intc_0 // 32
     bzero
-    uncover 2
+    dig 3
     concat
     dup
     len
@@ -75,3 +85,7 @@ foo:
     log
     intc_1 // 1
     return
+
+foo_ternary_false@3:
+    pushint 0
+    b foo_ternary_merge@4

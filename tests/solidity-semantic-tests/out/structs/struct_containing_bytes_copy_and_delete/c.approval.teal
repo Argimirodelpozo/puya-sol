@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_containing_bytes_copy_and_delete.sol.c.approval_program() -> uint64:
 main:
-    intcblock 32 1 8
+    intcblock 1 32 0 8
     bytecblock "data1" 0x0000000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000000000 0x0042 0x151f7c7580
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -35,16 +35,16 @@ set:
     dup
     len
     dup
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
-    dup
-    pushint 0
+    dupn 2
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
@@ -52,16 +52,26 @@ set:
     dup
     len
     dup
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    uncover 3
-    intc_0 // 32
+    txn GroupIndex
+    bz set_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+set_ternary_merge@4:
+    !
+    assert // not payable
+    dig 3
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
-    uncover 4
+    dig 5
     dig 1
     b|
     bytec_0 // "data1"
@@ -72,7 +82,7 @@ set:
     dup
     extract 34 32
     dig 1
-    intc_0 // 32
+    intc_1 // 32
     extract_uint16
     dig 2
     len
@@ -94,15 +104,15 @@ set:
     box_put
     dup
     extract 0 32
-    uncover 3
-    intc_0 // 32
+    dig 3
+    intc_1 // 32
     <=
     assert // overflow
-    uncover 3
+    dig 4
     uncover 3
     b|
     dig 2
-    intc_0 // 32
+    intc_1 // 32
     extract_uint16
     dig 3
     len
@@ -131,7 +141,7 @@ set:
     concat
     swap
     concat
-    swap
+    dig 3
     concat
     bytec_0 // "data1"
     box_del
@@ -141,12 +151,26 @@ set:
     box_put
     bytec_3 // 0x151f7c7580
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+set_ternary_false@3:
+    intc_2 // 0
+    b set_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_containing_bytes_copy_and_delete.sol.c.copy[routing]() -> void:
 copy:
+    txn GroupIndex
+    bz copy_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+copy_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes "data2"
     box_get
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000000000
@@ -160,12 +184,26 @@ copy:
     box_put
     bytec_3 // 0x151f7c7580
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+copy_ternary_false@3:
+    intc_2 // 0
+    b copy_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_containing_bytes_copy_and_delete.sol.c.del[routing]() -> void:
 del:
+    txn GroupIndex
+    bz del_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+del_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "data1"
     box_del
     pop
@@ -174,8 +212,12 @@ del:
     box_put
     bytec_3 // 0x151f7c7580
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+del_ternary_false@3:
+    intc_2 // 0
+    b del_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_containing_bytes_copy_and_delete.sol.c.test[routing]() -> void:
@@ -183,35 +225,49 @@ test:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "data1"
     box_get
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
-    intc_0 // 32
+    intc_1 // 32
     extract_uint16
     dig 1
     len
     substring3
     extract 2 0
-    intc_2 // 8
+    intc_3 // 8
     bzero
-    uncover 2
+    dig 2
     concat
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     -
     extract_uint64
-    intc_1 // 1
+    intc_0 // 1
     extract3
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+test_ternary_false@3:
+    intc_2 // 0
+    b test_ternary_merge@4

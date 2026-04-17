@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/create_memory_array_too_large.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock 0x0000 0x151f7c75
+    bytecblock 0x0000 "" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -31,14 +31,28 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/create_memory_array_too_large.sol.C.f[routing]() -> void:
 f:
-    bytec_0 // 0x0000
     intc_1 // 0
+    bytec_1 // ""
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-f_while_top@2:
+f_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_0 // 0x0000
+    bury 2
+    intc_1 // 0
+    bury 1
+
+f_while_top@5:
     dup
     intc_1 // 0
     <
-    bz f_after_while@4
+    bz f_after_while@7
     dig 1
     dup
     intc_1 // 0
@@ -55,9 +69,9 @@ f_while_top@2:
     intc_0 // 1
     +
     bury 1
-    b f_while_top@2
+    b f_while_top@5
 
-f_after_while@4:
+f_after_while@7:
     intc_2 // 32
     bzero
     dig 2
@@ -65,24 +79,42 @@ f_after_while@4:
     replace2 34 // on error: index access is out of bounds
     extract 34 32
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/create_memory_array_too_large.sol.C.g[routing]() -> void:
 g:
-    bytec_0 // 0x0000
     intc_1 // 0
+    bytec_1 // ""
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-g_while_top@2:
+g_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_0 // 0x0000
+    bury 2
+    intc_1 // 0
+    bury 1
+
+g_while_top@5:
     dup
     intc_0 // 1
     <
-    bz g_after_while@4
+    bz g_after_while@7
     dig 1
     dup
     intc_1 // 0
@@ -99,9 +131,9 @@ g_while_top@2:
     intc_0 // 1
     +
     bury 1
-    b g_while_top@2
+    b g_while_top@5
 
-g_after_while@4:
+g_after_while@7:
     dig 1
     pushbytes 0x002a
     replace2 6 // on error: index access is out of bounds
@@ -111,9 +143,13 @@ g_after_while@4:
     intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4

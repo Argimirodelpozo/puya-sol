@@ -83,6 +83,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_selfdestruct.sol.D.destroy[routing]() -> void:
 destroy:
+    txn GroupIndex
+    bz destroy_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+destroy_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     intc_0 // 0
     bytec_0 // "c"
@@ -136,9 +146,23 @@ destroy:
     intc_1 // 1
     return
 
+destroy_ternary_false@3:
+    intc_0 // 0
+    b destroy_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_selfdestruct.sol.D.createAndDestroy[routing]() -> void:
 createAndDestroy:
+    txn GroupIndex
+    bz createAndDestroy_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+createAndDestroy_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     bytec_2 // TMPL_APPROVAL_C
     bytec_3 // TMPL_CLEAR_C
@@ -225,9 +249,23 @@ createAndDestroy:
     intc_1 // 1
     return
 
+createAndDestroy_ternary_false@3:
+    intc_0 // 0
+    b createAndDestroy_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_selfdestruct.sol.D.c[routing]() -> void:
 c:
+    txn GroupIndex
+    bz c_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+c_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_0 // "c"
     app_global_get_ex
@@ -238,3 +276,7 @@ c:
     log
     intc_1 // 1
     return
+
+c_ternary_false@3:
+    intc_0 // 0
+    b c_ternary_merge@4

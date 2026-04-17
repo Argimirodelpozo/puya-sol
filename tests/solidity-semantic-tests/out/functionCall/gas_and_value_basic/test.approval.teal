@@ -125,6 +125,16 @@ sendAmount:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/gas_and_value_basic.sol.test.outOfGas[routing]() -> void:
 outOfGas:
+    txn GroupIndex
+    bz outOfGas_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+outOfGas_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     intc_0 // 0
     bytec_0 // "h"
@@ -147,9 +157,23 @@ outOfGas:
     intc_1 // 1
     return
 
+outOfGas_ternary_false@3:
+    intc_0 // 0
+    b outOfGas_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/gas_and_value_basic.sol.test.checkState[routing]() -> void:
 checkState:
+    txn GroupIndex
+    bz checkState_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+checkState_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     intc_0 // 0
     bytec_0 // "h"
@@ -192,3 +216,7 @@ checkState:
     log
     intc_1 // 1
     return
+
+checkState_ternary_false@3:
+    intc_0 // 0
+    b checkState_ternary_merge@4

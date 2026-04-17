@@ -32,9 +32,23 @@ main_who_am_i_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/account.sol.AccountBuiltinTest.who_am_i[routing]() -> void:
 who_am_i:
+    txn GroupIndex
+    bz who_am_i_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+who_am_i_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x151f7c75
     txn Sender
     concat
     log
     pushint 1
     return
+
+who_am_i_ternary_false@3:
+    pushint 0
+    b who_am_i_ternary_merge@4

@@ -28,17 +28,8 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x36b8a41c 0xf3d2904e 0x348621cf 0x5d16f89f 0xbe732f06 0x96ebd7d3 0x99969863 0x05d4c0a3 0x39e2f415 0x7a37d769 0x97d26e57 0xe861f374 0xf4efc58b 0x74ee17b8 0x1c663589 0x6139ec78 // method "__postInit()void", method "f()string", method "g()(string,string)", method "h()(string,string)", method "i()(string,string)", method "j(string)string", method "k()string", method "l(string)byte[]", method "m()string", method "n()void", method "o()void", method "p()void", method "q()byte[]", method "r()byte[]", method "s()byte[]", method "set(string)void", method "get()string"
     txna ApplicationArgs 0
-    match __postInit f g h i j k l m main_n_route@14 o main_p_route@16 q r s set get
+    match __postInit f g h i j k l m n o p q r s set get
     err
-
-main_p_route@16:
-    pushbytes 0x9ddaae2900020000
-    log
-    intc_1 // 1
-    return
-
-main_n_route@14:
-    err // EmptyError
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.__postInit[routing]() -> void:
@@ -71,6 +62,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.f[routing]() -> void:
 f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_2 // "uninitializedString"
     app_global_get_ex
@@ -87,10 +88,24 @@ f:
     log
     intc_1 // 1
     return
+
+f_ternary_false@3:
+    intc_0 // 0
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.g[routing]() -> void:
 g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_2 // "uninitializedString"
     app_global_get_ex
@@ -131,10 +146,24 @@ g:
     log
     intc_1 // 1
     return
+
+g_ternary_false@3:
+    intc_0 // 0
+    b g_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.h[routing]() -> void:
 h:
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_2 // "uninitializedString"
     app_global_get_ex
@@ -176,9 +205,23 @@ h:
     intc_1 // 1
     return
 
+h_ternary_false@3:
+    intc_0 // 0
+    b h_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.i[routing]() -> void:
 i:
+    txn GroupIndex
+    bz i_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+i_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec 4 // "nonEmptyString"
     app_global_get_ex
@@ -219,30 +262,58 @@ i:
     log
     intc_1 // 1
     return
+
+i_ternary_false@3:
+    intc_0 // 0
+    b i_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.j[routing]() -> void:
 j:
     txna ApplicationArgs 1
-    dup
+    dupn 2
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txn GroupIndex
+    bz j_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+j_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c75
-    swap
+    dig 1
     concat
     log
     intc_1 // 1
     return
 
+j_ternary_false@3:
+    intc_0 // 0
+    b j_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.k[routing]() -> void:
 k:
+    txn GroupIndex
+    bz k_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+k_ternary_merge@4:
+    !
+    assert // not payable
     bytec 8 // "nonEmptyString2"
     pushbytes ""
     app_global_put
@@ -250,6 +321,10 @@ k:
     log
     intc_1 // 1
     return
+
+k_ternary_false@3:
+    intc_0 // 0
+    b k_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.l[routing]() -> void:
@@ -265,9 +340,21 @@ l:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    txn GroupIndex
+    bz l_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+l_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 32
     bzero
     dig 1
+    dup
+    cover 2
     len
     dup
     itob
@@ -312,9 +399,23 @@ l:
     intc_1 // 1
     return
 
+l_ternary_false@3:
+    intc_0 // 0
+    b l_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.m[routing]() -> void:
 m:
+    txn GroupIndex
+    bz m_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+m_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 32
     bzero
     intc_0 // 0
@@ -366,9 +467,42 @@ m:
     intc_1 // 1
     return
 
+m_ternary_false@3:
+    intc_0 // 0
+    b m_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.n[routing]() -> void:
+n:
+    txn GroupIndex
+    bz n_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+n_ternary_merge@4:
+    !
+    assert // not payable
+    err // EmptyError
+
+n_ternary_false@3:
+    intc_0 // 0
+    b n_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.o[routing]() -> void:
 o:
+    txn GroupIndex
+    bz o_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+o_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_3 // "emptyString"
     app_global_get_ex
@@ -386,9 +520,45 @@ o:
     intc_1 // 1
     return
 
+o_ternary_false@3:
+    intc_0 // 0
+    b o_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.p[routing]() -> void:
+p:
+    txn GroupIndex
+    bz p_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+p_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x9ddaae2900020000
+    log
+    intc_1 // 1
+    return
+
+p_ternary_false@3:
+    intc_0 // 0
+    b p_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.q[routing]() -> void:
 q:
+    txn GroupIndex
+    bz q_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+q_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes "uninitializedBytes"
     box_get
     pushbytes 0x
@@ -407,9 +577,23 @@ q:
     intc_1 // 1
     return
 
+q_ternary_false@3:
+    intc_0 // 0
+    b q_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.r[routing]() -> void:
 r:
+    txn GroupIndex
+    bz r_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+r_ternary_merge@4:
+    !
+    assert // not payable
     bytec_1 // "emptyBytes"
     box_del
     pop
@@ -421,9 +605,23 @@ r:
     intc_1 // 1
     return
 
+r_ternary_false@3:
+    intc_0 // 0
+    b r_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.s[routing]() -> void:
 s:
+    txn GroupIndex
+    bz s_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+s_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 32
     bzero
     intc_0 // 0
@@ -481,6 +679,10 @@ s:
     intc_1 // 1
     return
 
+s_ternary_false@3:
+    intc_0 // 0
+    b s_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.set[routing]() -> void:
 set:
@@ -495,15 +697,39 @@ set:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    txn GroupIndex
+    bz set_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+set_ternary_merge@4:
+    !
+    assert // not payable
     bytec 4 // "nonEmptyString"
-    swap
+    dig 1
     app_global_put
     intc_1 // 1
     return
 
+set_ternary_false@3:
+    intc_0 // 0
+    b set_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.get[routing]() -> void:
 get:
+    txn GroupIndex
+    bz get_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+get_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec 4 // "nonEmptyString"
     app_global_get_ex
@@ -520,3 +746,7 @@ get:
     log
     intc_1 // 1
     return
+
+get_ternary_false@3:
+    intc_0 // 0
+    b get_ternary_merge@4

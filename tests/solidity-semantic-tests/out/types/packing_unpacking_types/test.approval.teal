@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/packing_unpacking_types.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 4294967295 8 32
+    intcblock 1 0 4294967295 8
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -33,69 +33,81 @@ main_run_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/packing_unpacking_types.sol.test.run[routing]() -> void:
 run:
+    intc_1 // 0
     txna ApplicationArgs 1
     dup
     len
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    pushint 0
+    intc_1 // 0
     getbit
     txna ApplicationArgs 2
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
     txna ApplicationArgs 3
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    cover 2
+    txn GroupIndex
+    bz run_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+run_ternary_merge@4:
+    !
+    assert // not payable
+    dig 1
     dup
-    intc_1 // 4294967295
+    intc_2 // 4294967295
     <=
     assert // ABI validation
-    intc_1 // 4294967295
+    intc_2 // 4294967295
     &
-    swap
+    bury 2
+    dig 2
     dup
     intc_0 // 1
     <=
     assert // ABI bool validation
     pushbytes 0x
-    swap
-    bz run_after_if_else@3
+    bury 5
+    bz run_after_if_else@6
     intc_0 // 1
     itob
-    bury 1
+    bury 4
 
-run_after_if_else@3:
-    dup
+run_after_if_else@6:
+    dig 3
     pushbytes 0x0100000000
     b*
     dig 2
-    intc_1 // 4294967295
+    intc_2 // 4294967295
     ^
     itob
     b|
     pushbytes 0x010000000000000000
     b*
-    dig 3
+    dig 1
     pushint 18446744073709551615
     ^
     itob
     b|
     dup
     len
-    intc_3 // 32
+    pushint 32
     <=
     assert // overflow
-    intc_3 // 32
+    pushint 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -104,3 +116,7 @@ run_after_if_else@3:
     log
     intc_0 // 1
     return
+
+run_ternary_false@3:
+    intc_1 // 0
+    b run_ternary_merge@4

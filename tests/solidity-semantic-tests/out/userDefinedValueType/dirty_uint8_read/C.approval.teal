@@ -34,6 +34,16 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_uint8_read.sol.C.create_dirty_slot[routing]() -> void:
 create_dirty_slot:
+    txn GroupIndex
+    bz create_dirty_slot_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+create_dirty_slot_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     intc_0 // 32
     bzero
@@ -64,9 +74,23 @@ create_dirty_slot:
     intc_1 // 1
     return
 
+create_dirty_slot_ternary_false@3:
+    intc_2 // 0
+    b create_dirty_slot_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_uint8_read.sol.C.read_unclean_value[routing]() -> void:
 read_unclean_value:
+    txn GroupIndex
+    bz read_unclean_value_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+read_unclean_value_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -93,9 +117,23 @@ read_unclean_value:
     intc_1 // 1
     return
 
+read_unclean_value_ternary_false@3:
+    intc_2 // 0
+    b read_unclean_value_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_uint8_read.sol.C.x[routing]() -> void:
 x:
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -105,7 +143,7 @@ x:
     b&
     pushbytes 0x80
     b>=
-    bz x_ternary_false@3
+    bz x_ternary_false@6
     intc_2 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -118,7 +156,7 @@ x:
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
-x_ternary_merge@4:
+x_ternary_merge@7:
     dup
     len
     intc_3 // 64
@@ -134,7 +172,7 @@ x_ternary_merge@4:
     intc_1 // 1
     return
 
-x_ternary_false@3:
+x_ternary_false@6:
     intc_2 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -142,4 +180,8 @@ x_ternary_false@3:
     itob
     bytec_1 // 0xff
     b&
+    b x_ternary_merge@7
+
+x_ternary_false@3:
+    intc_2 // 0
     b x_ternary_merge@4

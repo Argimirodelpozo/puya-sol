@@ -66,18 +66,30 @@ f:
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
     bytec_2 // "b"
     box_del
     pop
     bytec_2 // "b"
     dig 2
+    dup
+    cover 2
     box_put
     bytec_1 // "s"
-    dig 2
+    dig 1
     app_global_put
     intc_3 // 8
     bzero
-    swap
+    dig 2
     concat
     dup
     len
@@ -93,9 +105,23 @@ f:
     intc_0 // 1
     return
 
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_bytes_conversion.sol.Test.l[routing]() -> void:
 l:
+    txn GroupIndex
+    bz l_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+l_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_1 // "s"
     app_global_get_ex
@@ -111,3 +137,7 @@ l:
     log
     intc_0 // 1
     return
+
+l_ternary_false@3:
+    intc_1 // 0
+    b l_ternary_merge@4

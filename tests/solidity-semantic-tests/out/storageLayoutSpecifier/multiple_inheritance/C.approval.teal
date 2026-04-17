@@ -46,6 +46,17 @@ h:
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.C.g
     intc_1 // 0
     bytec_0 // "x"
@@ -62,9 +73,23 @@ h:
     intc_0 // 1
     return
 
+h_ternary_false@3:
+    intc_1 // 0
+    b h_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.C.w[routing]() -> void:
 w:
+    txn GroupIndex
+    bz w_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+w_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_3 // "w"
     app_global_get_ex
@@ -84,9 +109,23 @@ w:
     intc_0 // 1
     return
 
+w_ternary_false@3:
+    intc_1 // 0
+    b w_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.C.y[routing]() -> void:
 y:
+    txn GroupIndex
+    bz y_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+y_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_1 // "y"
     app_global_get_ex
@@ -106,9 +145,23 @@ y:
     intc_0 // 1
     return
 
+y_ternary_false@3:
+    intc_1 // 0
+    b y_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.C.x[routing]() -> void:
 x:
+    txn GroupIndex
+    bz x_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -127,6 +180,10 @@ x:
     log
     intc_0 // 1
     return
+
+x_ternary_false@3:
+    intc_1 // 0
+    b x_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.C.g[routing]() -> void:
@@ -150,9 +207,7 @@ f:
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_0 // "x"
-    swap
-    app_global_put
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.C.f
     intc_0 // 1
     return
 
@@ -160,20 +215,57 @@ f:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.C.g(__arc4_a: bytes) -> void:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.C.g:
     proto 1 0
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.C.g_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.C.g_ternary_merge@3:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     frame_dig -1
     b+
-    frame_bury -1
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.C.f
+    intc_1 // 0
     bytec_0 // "x"
-    frame_dig -1
-    app_global_put
-    frame_dig -1
+    app_global_get_ex
+    assert // check x exists
     pushbytes 0x01
     b+
     bytec_1 // "y"
     swap
     app_global_put
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.C.g_ternary_false@2:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.C.g_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.C.f(__arc4_a: bytes) -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.C.f:
+    proto 1 0
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.C.f_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.C.f_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // "x"
+    frame_dig -1
+    app_global_put
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.C.f_ternary_false@2:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.C.f_ternary_merge@3

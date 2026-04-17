@@ -55,12 +55,22 @@ __postInit:
 deposit:
     intc_0 // 0
     bytec_3 // ""
+    txn GroupIndex
+    bz deposit_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
 
-deposit_while_top@9:
+deposit_ternary_merge@4:
+    !
+    assert // not payable
+
+deposit_while_top@12:
     pushint 170010
     global OpcodeBudget
     >
-    bz deposit_after_while@14
+    bz deposit_after_while@17
     itxn_begin
     pushint 6 // appl
     itxn_field TypeEnum
@@ -73,18 +83,18 @@ deposit_while_top@9:
     intc_0 // 0
     itxn_field Fee
     itxn_submit
-    b deposit_while_top@9
+    b deposit_while_top@12
 
-deposit_after_while@14:
+deposit_after_while@17:
     intc_0 // 0
     itob
     bury 2
 
-deposit_while_top@2:
+deposit_while_top@5:
     dig 1
     pushbytes 0x5a
     b<
-    bz deposit_after_while@4
+    bz deposit_after_while@7
     intc_0 // 0
     bytec_1 // "x"
     app_global_get_ex
@@ -94,17 +104,17 @@ deposit_while_top@2:
     pushbytes 0x01
     b+
     bury 2
-    b deposit_while_top@2
+    b deposit_while_top@5
 
-deposit_after_while@4:
+deposit_after_while@7:
     intc_0 // 0
     bury 1
 
-deposit_while_top@5:
+deposit_while_top@8:
     dup
     pushint 90
     <
-    bz deposit_after_while@7
+    bz deposit_after_while@10
     intc_0 // 0
     bytec_1 // "x"
     app_global_get_ex
@@ -123,9 +133,9 @@ deposit_while_top@5:
     intc_1 // 1
     +
     bury 1
-    b deposit_while_top@5
+    b deposit_while_top@8
 
-deposit_after_while@7:
+deposit_after_while@10:
     bytec_0 // "y"
     intc_0 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
@@ -168,3 +178,7 @@ deposit_after_while@7:
     log
     intc_1 // 1
     return
+
+deposit_ternary_false@3:
+    intc_0 // 0
+    b deposit_ternary_merge@4

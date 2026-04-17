@@ -37,6 +37,16 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/interfaceId_events.sol.Test.hello_world[routing]() -> void:
 hello_world:
+    txn GroupIndex
+    bz hello_world_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+hello_world_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "hello_world"
     app_global_get_ex
@@ -48,9 +58,23 @@ hello_world:
     intc_0 // 1
     return
 
+hello_world_ternary_false@3:
+    intc_1 // 0
+    b hello_world_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/interfaceId_events.sol.Test.hello_world_with_event[routing]() -> void:
 hello_world_with_event:
+    txn GroupIndex
+    bz hello_world_with_event_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+hello_world_with_event_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_2 // "hello_world_with_event"
     app_global_get_ex
@@ -61,3 +85,7 @@ hello_world_with_event:
     log
     intc_0 // 1
     return
+
+hello_world_with_event_ternary_false@3:
+    intc_1 // 0
+    b hello_world_with_event_ternary_merge@4

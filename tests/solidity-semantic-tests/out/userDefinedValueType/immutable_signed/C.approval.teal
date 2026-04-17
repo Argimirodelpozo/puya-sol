@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/immutable_signed.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 32 1 64
+    intcblock 0 1 32 64
     bytecblock "a" "b" 0xffff 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -14,9 +14,9 @@ main:
     pushbytes 0x6162
     app_global_put
     pushbytes "f"
-    intc_2 // 1
+    intc_1 // 1
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -40,6 +40,16 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/immutable_signed.sol.C.direct[routing]() -> void:
 direct:
+    txn GroupIndex
+    bz direct_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+direct_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_0 // "a"
     app_global_get_ex
@@ -49,7 +59,7 @@ direct:
     b&
     pushbytes 0x8000
     b>=
-    bz direct_ternary_false@3
+    bz direct_ternary_false@6
     intc_0 // 0
     bytec_0 // "a"
     app_global_get_ex
@@ -62,7 +72,7 @@ direct:
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
-direct_ternary_merge@4:
+direct_ternary_merge@7:
     intc_0 // 0
     bytec_1 // "b"
     app_global_get_ex
@@ -82,10 +92,10 @@ direct_ternary_merge@4:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
-direct_ternary_false@3:
+direct_ternary_false@6:
     intc_0 // 0
     bytec_0 // "a"
     app_global_get_ex
@@ -93,11 +103,25 @@ direct_ternary_false@3:
     itob
     bytec_2 // 0xffff
     b&
+    b direct_ternary_merge@7
+
+direct_ternary_false@3:
+    intc_0 // 0
     b direct_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/immutable_signed.sol.C.viaasm[routing]() -> void:
 viaasm:
+    txn GroupIndex
+    bz viaasm_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+viaasm_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 0
     bytec_0 // "a"
     app_global_get_ex
@@ -107,7 +131,7 @@ viaasm:
     app_global_get_ex
     assert // check b exists
     load 0
-    intc_1 // 32
+    intc_2 // 32
     bzero
     uncover 3
     itob
@@ -116,9 +140,9 @@ viaasm:
     concat
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     -
-    intc_1 // 32
+    intc_2 // 32
     extract3
     extract 0 32
     pushint 30
@@ -131,9 +155,9 @@ viaasm:
     concat
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     -
-    intc_1 // 32
+    intc_2 // 32
     extract3
     extract 0 32
     uncover 2
@@ -143,5 +167,9 @@ viaasm:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
+
+viaasm_ternary_false@3:
+    intc_0 // 0
+    b viaasm_ternary_merge@4
