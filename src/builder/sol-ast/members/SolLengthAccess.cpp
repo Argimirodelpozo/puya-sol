@@ -116,19 +116,9 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 
 				// Subtract 2-byte ARC4 length header before dividing
 				auto headerSize = awst::makeIntegerConstant("2", m_loc);
-				auto dataLen = std::make_shared<awst::UInt64BinaryOperation>();
-				dataLen->sourceLocation = m_loc;
-				dataLen->wtype = awst::WType::uint64Type();
-				dataLen->left = std::move(safeLen);
-				dataLen->op = awst::UInt64BinaryOperator::Sub;
-				dataLen->right = std::move(headerSize);
+				auto dataLen = awst::makeUInt64BinOp(std::move(safeLen), awst::UInt64BinaryOperator::Sub, std::move(headerSize), m_loc);
 
-				auto divExpr = std::make_shared<awst::UInt64BinaryOperation>();
-				divExpr->sourceLocation = m_loc;
-				divExpr->wtype = awst::WType::uint64Type();
-				divExpr->left = std::move(dataLen);
-				divExpr->op = awst::UInt64BinaryOperator::FloorDiv;
-				divExpr->right = std::move(elemSizeConst);
+				auto divExpr = awst::makeUInt64BinOp(std::move(dataLen), awst::UInt64BinaryOperator::FloorDiv, std::move(elemSizeConst), m_loc);
 				return divExpr;
 			}
 		}

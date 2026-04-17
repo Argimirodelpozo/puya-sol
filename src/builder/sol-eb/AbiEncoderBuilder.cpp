@@ -971,12 +971,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 		auto dataLen = uint64FromAbiWord(std::move(lenWord), _loc);
 
 		// Data starts at tailOffset + 32
-		auto dataStart = std::make_shared<awst::UInt64BinaryOperation>();
-		dataStart->sourceLocation = _loc;
-		dataStart->wtype = awst::WType::uint64Type();
-		dataStart->left = std::move(tailOffset);
-		dataStart->op = awst::UInt64BinaryOperator::Add;
-		dataStart->right = makeUint64("32", _loc);
+		auto dataStart = awst::makeUInt64BinOp(std::move(tailOffset), awst::UInt64BinaryOperator::Add, makeUint64("32", _loc), _loc);
 
 		// Extract data bytes
 		auto dataBytes = std::make_shared<awst::IntrinsicCall>();
@@ -1162,21 +1157,11 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 
 				auto two = awst::makeIntegerConstant("2", _loc);
 
-				auto contentBytes = std::make_shared<awst::UInt64BinaryOperation>();
-				contentBytes->sourceLocation = _loc;
-				contentBytes->wtype = awst::WType::uint64Type();
-				contentBytes->left = std::move(rawLen);
-				contentBytes->op = awst::UInt64BinaryOperator::Sub;
-				contentBytes->right = std::move(two);
+				auto contentBytes = awst::makeUInt64BinOp(std::move(rawLen), awst::UInt64BinaryOperator::Sub, std::move(two), _loc);
 
 				auto elemSize = awst::makeIntegerConstant(std::to_string(elemByteSize), _loc);
 
-				auto lenExpr = std::make_shared<awst::UInt64BinaryOperation>();
-				lenExpr->sourceLocation = _loc;
-				lenExpr->wtype = awst::WType::uint64Type();
-				lenExpr->left = std::move(contentBytes);
-				lenExpr->op = awst::UInt64BinaryOperator::FloorDiv;
-				lenExpr->right = std::move(elemSize);
+				auto lenExpr = awst::makeUInt64BinOp(std::move(contentBytes), awst::UInt64BinaryOperator::FloorDiv, std::move(elemSize), _loc);
 
 				auto lenItob = std::make_shared<awst::IntrinsicCall>();
 				lenItob->sourceLocation = _loc;

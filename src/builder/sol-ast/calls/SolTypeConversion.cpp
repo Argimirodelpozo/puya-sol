@@ -187,12 +187,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
 			{
 				auto mask = awst::makeIntegerConstant(std::to_string((uint64_t(1) << targetBits) - 1), m_loc);
 
-				auto bitAnd = std::make_shared<awst::UInt64BinaryOperation>();
-				bitAnd->sourceLocation = m_loc;
-				bitAnd->wtype = awst::WType::uint64Type();
-				bitAnd->left = std::move(result);
-				bitAnd->op = awst::UInt64BinaryOperator::BitAnd;
-				bitAnd->right = std::move(mask);
+				auto bitAnd = awst::makeUInt64BinOp(std::move(result), awst::UInt64BinaryOperator::BitAnd, std::move(mask), m_loc);
 				result = std::move(bitAnd);
 			}
 		}
@@ -433,12 +428,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::applyNarrowingMask(
 		if (targetBits < 64 && (targetBits < sourceBits || (sourceIsSigned && !targetIntType->isSigned())))
 		{
 			auto mask = awst::makeIntegerConstant(std::to_string((uint64_t(1) << targetBits) - 1), m_loc);
-			auto bitAnd = std::make_shared<awst::UInt64BinaryOperation>();
-			bitAnd->sourceLocation = m_loc;
-			bitAnd->wtype = awst::WType::uint64Type();
-			bitAnd->left = std::move(_expr);
-			bitAnd->op = awst::UInt64BinaryOperator::BitAnd;
-			bitAnd->right = std::move(mask);
+			auto bitAnd = awst::makeUInt64BinOp(std::move(_expr), awst::UInt64BinaryOperator::BitAnd, std::move(mask), m_loc);
 			return bitAnd;
 		}
 	}
@@ -549,12 +539,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::leftPadToN(
 
 	auto nConst2 = awst::makeIntegerConstant(std::to_string(_n), m_loc);
 
-	auto offset = std::make_shared<awst::UInt64BinaryOperation>();
-	offset->sourceLocation = m_loc;
-	offset->wtype = awst::WType::uint64Type();
-	offset->left = std::move(lenExpr);
-	offset->right = std::move(nConst2);
-	offset->op = awst::UInt64BinaryOperator::Sub;
+	auto offset = awst::makeUInt64BinOp(std::move(lenExpr), awst::UInt64BinaryOperator::Sub, std::move(nConst2), m_loc);
 
 	auto nConst3 = awst::makeIntegerConstant(std::to_string(_n), m_loc);
 

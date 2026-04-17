@@ -55,12 +55,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					lenCall->stackArgs.push_back(readVal);
 
 					auto one = awst::makeIntegerConstant("1", loc);
-					auto newLen = std::make_shared<awst::UInt64BinaryOperation>();
-					newLen->sourceLocation = loc;
-					newLen->wtype = awst::WType::uint64Type();
-					newLen->left = std::move(lenCall);
-					newLen->op = awst::UInt64BinaryOperator::Sub;
-					newLen->right = std::move(one);
+					auto newLen = awst::makeUInt64BinOp(std::move(lenCall), awst::UInt64BinaryOperator::Sub, std::move(one), loc);
 
 					// extract3(readVal, 0, len-1)
 					auto zero = awst::makeIntegerConstant("0", loc);

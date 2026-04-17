@@ -76,12 +76,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 
 		auto two = awst::makeIntegerConstant("2", m_loc);
 
-		auto prevRound = std::make_shared<awst::UInt64BinaryOperation>();
-		prevRound->sourceLocation = m_loc;
-		prevRound->wtype = awst::WType::uint64Type();
-		prevRound->left = std::move(round);
-		prevRound->op = awst::UInt64BinaryOperator::Sub;
-		prevRound->right = std::move(two);
+		auto prevRound = awst::makeUInt64BinOp(std::move(round), awst::UInt64BinaryOperator::Sub, std::move(two), m_loc);
 
 		auto blockSeed = std::make_shared<awst::IntrinsicCall>();
 		blockSeed->sourceLocation = m_loc;
@@ -113,12 +108,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		groupIdx2->opCode = "txn";
 		groupIdx2->immediates = {std::string("GroupIndex")};
 		auto one = awst::makeIntegerConstant("1", m_loc);
-		auto payIdx = std::make_shared<awst::UInt64BinaryOperation>();
-		payIdx->sourceLocation = m_loc;
-		payIdx->wtype = awst::WType::uint64Type();
-		payIdx->left = std::move(groupIdx2);
-		payIdx->op = awst::UInt64BinaryOperator::Sub;
-		payIdx->right = std::move(one);
+		auto payIdx = awst::makeUInt64BinOp(std::move(groupIdx2), awst::UInt64BinaryOperator::Sub, std::move(one), m_loc);
 
 		auto amount = std::make_shared<awst::IntrinsicCall>();
 		amount->sourceLocation = m_loc;

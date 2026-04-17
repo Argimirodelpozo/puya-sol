@@ -322,12 +322,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	// important because unguarded `v-27` underflows for v < 27 and crashes.
 	auto vGte27 = awst::makeNumericCompare(readV(), awst::NumericComparison::Gte, mkU64("27"), _loc);
 
-	auto vMinus27 = std::make_shared<awst::UInt64BinaryOperation>();
-	vMinus27->sourceLocation = _loc;
-	vMinus27->wtype = awst::WType::uint64Type();
-	vMinus27->left = readV();
-	vMinus27->op = awst::UInt64BinaryOperator::Sub;
-	vMinus27->right = mkU64("27");
+	auto vMinus27 = awst::makeUInt64BinOp(readV(), awst::UInt64BinaryOperator::Sub, mkU64("27"), _loc);
 
 	auto recIdCond = std::make_shared<awst::ConditionalExpression>();
 	recIdCond->sourceLocation = _loc;
@@ -338,12 +333,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	// Clamp further: `recovery_id & 1` so the ecdsa opcode doesn't see an
 	// out-of-range value when v is e.g. 29. Combined with the outer result
 	// masking this keeps the TEAL valid for any v.
-	auto recIdClamp = std::make_shared<awst::UInt64BinaryOperation>();
-	recIdClamp->sourceLocation = _loc;
-	recIdClamp->wtype = awst::WType::uint64Type();
-	recIdClamp->left = std::move(recIdCond);
-	recIdClamp->op = awst::UInt64BinaryOperator::BitAnd;
-	recIdClamp->right = mkU64("1");
+	auto recIdClamp = awst::makeUInt64BinOp(std::move(recIdCond), awst::UInt64BinaryOperator::BitAnd, mkU64("1"), _loc);
 	std::shared_ptr<awst::Expression> recoveryId = std::move(recIdClamp);
 
 	// ecdsa_pk_recover Secp256k1 → (pubkey_x: bytes, pubkey_y: bytes)

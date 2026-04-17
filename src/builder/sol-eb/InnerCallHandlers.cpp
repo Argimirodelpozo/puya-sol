@@ -97,12 +97,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::leftPadToN(
 	paddedLen->opCode = "len";
 	paddedLen->stackArgs.push_back(padded);
 
-	auto offset = std::make_shared<awst::UInt64BinaryOperation>();
-	offset->sourceLocation = _loc;
-	offset->wtype = awst::WType::uint64Type();
-	offset->left = std::move(paddedLen);
-	offset->op = awst::UInt64BinaryOperator::Sub;
-	offset->right = makeUint64(std::to_string(_n), _loc);
+	auto offset = awst::makeUInt64BinOp(std::move(paddedLen), awst::UInt64BinaryOperator::Sub, makeUint64(std::to_string(_n), _loc), _loc);
 
 	return makeExtract(std::move(padded), 0, _n, _loc);
 	// FIXME: should use dynamic extract3(padded, offset, N) — but for now

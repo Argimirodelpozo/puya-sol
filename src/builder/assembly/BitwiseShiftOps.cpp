@@ -164,22 +164,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildPowerOf2(
 	// but puya optimizer may strip wrapMod256 from intermediates
 	auto twoFiftySix = awst::makeIntegerConstant("256", _loc);
 
-	auto clampedShift = std::make_shared<awst::UInt64BinaryOperation>();
-	clampedShift->sourceLocation = _loc;
-	clampedShift->wtype = awst::WType::uint64Type();
-	clampedShift->left = std::move(shiftAmt);
-	clampedShift->right = std::move(twoFiftySix);
-	clampedShift->op = awst::UInt64BinaryOperator::Mod;
+	auto clampedShift = awst::makeUInt64BinOp(std::move(shiftAmt), awst::UInt64BinaryOperator::Mod, std::move(twoFiftySix), _loc);
 
 	// 255 - shift: setbit uses MSB-first ordering, so bit (255-n) = 2^n
 	auto twoFiftyFive = awst::makeIntegerConstant("255", _loc);
 
-	auto bitIdx = std::make_shared<awst::UInt64BinaryOperation>();
-	bitIdx->sourceLocation = _loc;
-	bitIdx->wtype = awst::WType::uint64Type();
-	bitIdx->left = std::move(twoFiftyFive);
-	bitIdx->right = std::move(clampedShift);
-	bitIdx->op = awst::UInt64BinaryOperator::Sub;
+	auto bitIdx = awst::makeUInt64BinOp(std::move(twoFiftyFive), awst::UInt64BinaryOperator::Sub, std::move(clampedShift), _loc);
 
 	// setbit(bzero(32), 255-shift, 1) → bytes with only bit `shift` set
 	auto one = awst::makeIntegerConstant("1", _loc);

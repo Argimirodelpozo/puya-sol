@@ -478,12 +478,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 
 		auto two = awst::makeIntegerConstant("2", loc);
 
-		auto prevRound = std::make_shared<awst::UInt64BinaryOperation>();
-		prevRound->sourceLocation = loc;
-		prevRound->wtype = awst::WType::uint64Type();
-		prevRound->left = std::move(round);
-		prevRound->op = awst::UInt64BinaryOperator::Sub;
-		prevRound->right = std::move(two);
+		auto prevRound = awst::makeUInt64BinOp(std::move(round), awst::UInt64BinaryOperator::Sub, std::move(two), loc);
 
 		auto seed = std::make_shared<awst::IntrinsicCall>();
 		seed->sourceLocation = loc;
@@ -622,12 +617,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 
 		auto c256 = awst::makeIntegerConstant("256", loc);
 
-		auto sub = std::make_shared<awst::UInt64BinaryOperation>();
-		sub->sourceLocation = loc;
-		sub->wtype = awst::WType::uint64Type();
-		sub->left = std::move(c256);
-		sub->op = awst::UInt64BinaryOperator::Sub;
-		sub->right = std::move(bitlen);
+		auto sub = awst::makeUInt64BinOp(std::move(c256), awst::UInt64BinaryOperator::Sub, std::move(bitlen), loc);
 
 		// Yul returns a 256-bit value; promote to biguint.
 		auto itob2 = std::make_shared<awst::IntrinsicCall>();

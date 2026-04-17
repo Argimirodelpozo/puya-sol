@@ -36,12 +36,7 @@ std::shared_ptr<awst::IntrinsicCall> IntrinsicMapper::tryMapMemberAccess(
 			groupIdx->opCode = "txn";
 			groupIdx->immediates = {std::string("GroupIndex")};
 			auto one = awst::makeIntegerConstant("1", _loc);
-			auto payIdx = std::make_shared<awst::UInt64BinaryOperation>();
-			payIdx->sourceLocation = _loc;
-			payIdx->wtype = awst::WType::uint64Type();
-			payIdx->left = std::move(groupIdx);
-			payIdx->op = awst::UInt64BinaryOperator::Sub;
-			payIdx->right = std::move(one);
+			auto payIdx = awst::makeUInt64BinOp(std::move(groupIdx), awst::UInt64BinaryOperator::Sub, std::move(one), _loc);
 
 			call->stackArgs.push_back(std::move(payIdx));
 			call->wtype = awst::WType::uint64Type();

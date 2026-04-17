@@ -68,12 +68,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::implicitNumericCast(
 		// paddedLen - 8 → offset
 		auto eight2 = awst::makeIntegerConstant("8", _loc);
 
-		auto offset = std::make_shared<awst::UInt64BinaryOperation>();
-		offset->sourceLocation = _loc;
-		offset->wtype = awst::WType::uint64Type();
-		offset->left = std::move(paddedLen);
-		offset->op = awst::UInt64BinaryOperator::Sub;
-		offset->right = std::move(eight2);
+		auto offset = awst::makeUInt64BinOp(std::move(paddedLen), awst::UInt64BinaryOperator::Sub, std::move(eight2), _loc);
 
 		// extract3(padded, offset, 8) → last 8 bytes
 		auto eight3 = awst::makeIntegerConstant("8", _loc);

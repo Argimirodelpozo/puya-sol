@@ -1654,12 +1654,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 					auto eight = awst::makeIntegerConstant("8", method.sourceLocation);
 
-					auto offset = std::make_shared<awst::UInt64BinaryOperation>();
-					offset->sourceLocation = method.sourceLocation;
-					offset->wtype = awst::WType::uint64Type();
-					offset->left = std::move(len);
-					offset->op = awst::UInt64BinaryOperator::Sub;
-					offset->right = eight;
+					auto offset = awst::makeUInt64BinOp(std::move(len), awst::UInt64BinaryOperator::Sub, eight, method.sourceLocation);
 
 					auto extract = std::make_shared<awst::IntrinsicCall>();
 					extract->sourceLocation = method.sourceLocation;
@@ -3354,12 +3349,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			{
 				uint64_t mask = (uint64_t(1) << bits) - 1;
 				auto maskConst = awst::makeIntegerConstant(std::to_string(mask), loc);
-				auto bitAnd = std::make_shared<awst::UInt64BinaryOperation>();
-				bitAnd->sourceLocation = loc;
-				bitAnd->wtype = awst::WType::uint64Type();
-				bitAnd->left = std::move(val);
-				bitAnd->op = awst::UInt64BinaryOperator::BitAnd;
-				bitAnd->right = std::move(maskConst);
+				auto bitAnd = awst::makeUInt64BinOp(std::move(val), awst::UInt64BinaryOperator::BitAnd, std::move(maskConst), loc);
 				return bitAnd;
 			};
 
@@ -3564,12 +3554,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 				auto maskConst = awst::makeIntegerConstant(std::to_string(mask), loc);
 
-				auto bitAnd = std::make_shared<awst::UInt64BinaryOperation>();
-				bitAnd->sourceLocation = loc;
-				bitAnd->wtype = awst::WType::uint64Type();
-				bitAnd->left = paramVar;
-				bitAnd->op = awst::UInt64BinaryOperator::BitAnd;
-				bitAnd->right = std::move(maskConst);
+				auto bitAnd = awst::makeUInt64BinOp(paramVar, awst::UInt64BinaryOperator::BitAnd, std::move(maskConst), loc);
 
 				auto target = awst::makeVarExpression(param->name(), awst::WType::uint64Type(), loc);
 
@@ -4538,19 +4523,9 @@ void ContractBuilder::buildStorageDispatch(
 			// Compute offset: (__slot % 256) * 32
 			auto slotVar = awst::makeVarExpression("__slot", awst::WType::uint64Type(), loc);
 
-			auto mod256 = std::make_shared<awst::UInt64BinaryOperation>();
-			mod256->sourceLocation = loc;
-			mod256->wtype = awst::WType::uint64Type();
-			mod256->left = std::move(slotVar);
-			mod256->op = awst::UInt64BinaryOperator::Mod;
-			mod256->right = makeUint64("256");
+			auto mod256 = awst::makeUInt64BinOp(std::move(slotVar), awst::UInt64BinaryOperator::Mod, makeUint64("256"), loc);
 
-			auto offset = std::make_shared<awst::UInt64BinaryOperation>();
-			offset->sourceLocation = loc;
-			offset->wtype = awst::WType::uint64Type();
-			offset->left = std::move(mod256);
-			offset->op = awst::UInt64BinaryOperator::Mult;
-			offset->right = makeUint64("32");
+			auto offset = awst::makeUInt64BinOp(std::move(mod256), awst::UInt64BinaryOperator::Mult, makeUint64("32"), loc);
 
 			// box_create("__dyn_storage", 8192) — 256 slots * 32 bytes
 			auto boxCreate = std::make_shared<awst::IntrinsicCall>();
@@ -4624,12 +4599,7 @@ void ContractBuilder::buildStorageDispatch(
 				lenCall->opCode = "len";
 				lenCall->stackArgs.push_back(cat);
 
-				auto sub = std::make_shared<awst::UInt64BinaryOperation>();
-				sub->sourceLocation = loc;
-				sub->wtype = awst::WType::uint64Type();
-				sub->left = std::move(lenCall);
-				sub->op = awst::UInt64BinaryOperator::Sub;
-				sub->right = makeUint64("32");
+				auto sub = awst::makeUInt64BinOp(std::move(lenCall), awst::UInt64BinaryOperator::Sub, makeUint64("32"), loc);
 
 				auto extract = std::make_shared<awst::IntrinsicCall>();
 				extract->sourceLocation = loc;
@@ -4719,19 +4689,9 @@ void ContractBuilder::buildStorageDispatch(
 			// Compute offset: (__slot % 256) * 32
 			auto slotVar2 = awst::makeVarExpression("__slot", awst::WType::uint64Type(), loc);
 
-			auto mod256 = std::make_shared<awst::UInt64BinaryOperation>();
-			mod256->sourceLocation = loc;
-			mod256->wtype = awst::WType::uint64Type();
-			mod256->left = std::move(slotVar2);
-			mod256->op = awst::UInt64BinaryOperator::Mod;
-			mod256->right = makeUint64("256");
+			auto mod256 = awst::makeUInt64BinOp(std::move(slotVar2), awst::UInt64BinaryOperator::Mod, makeUint64("256"), loc);
 
-			auto offset = std::make_shared<awst::UInt64BinaryOperation>();
-			offset->sourceLocation = loc;
-			offset->wtype = awst::WType::uint64Type();
-			offset->left = std::move(mod256);
-			offset->op = awst::UInt64BinaryOperator::Mult;
-			offset->right = makeUint64("32");
+			auto offset = awst::makeUInt64BinOp(std::move(mod256), awst::UInt64BinaryOperator::Mult, makeUint64("32"), loc);
 
 			// value as bytes (pad to 32)
 			auto valueVar = awst::makeVarExpression("__value", awst::WType::biguintType(), loc);
@@ -4758,12 +4718,7 @@ void ContractBuilder::buildStorageDispatch(
 			lenCall->opCode = "len";
 			lenCall->stackArgs.push_back(cat);
 
-			auto sub32 = std::make_shared<awst::UInt64BinaryOperation>();
-			sub32->sourceLocation = loc;
-			sub32->wtype = awst::WType::uint64Type();
-			sub32->left = std::move(lenCall);
-			sub32->op = awst::UInt64BinaryOperator::Sub;
-			sub32->right = makeUint64("32");
+			auto sub32 = awst::makeUInt64BinOp(std::move(lenCall), awst::UInt64BinaryOperator::Sub, makeUint64("32"), loc);
 
 			auto paddedVal = std::make_shared<awst::IntrinsicCall>();
 			paddedVal->sourceLocation = loc;
@@ -4840,12 +4795,7 @@ void ContractBuilder::buildStorageDispatch(
 				lenCall->opCode = "len";
 				lenCall->stackArgs.push_back(cat);
 
-				auto sub32 = std::make_shared<awst::UInt64BinaryOperation>();
-				sub32->sourceLocation = loc;
-				sub32->wtype = awst::WType::uint64Type();
-				sub32->left = std::move(lenCall);
-				sub32->op = awst::UInt64BinaryOperator::Sub;
-				sub32->right = makeUint64("32");
+				auto sub32 = awst::makeUInt64BinOp(std::move(lenCall), awst::UInt64BinaryOperator::Sub, makeUint64("32"), loc);
 
 				auto extract = std::make_shared<awst::IntrinsicCall>();
 				extract->sourceLocation = loc;

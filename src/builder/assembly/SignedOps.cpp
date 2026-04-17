@@ -30,12 +30,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTload(
 
 	auto thirtyTwo = awst::makeIntegerConstant("32", _loc);
 
-	auto offset = std::make_shared<awst::UInt64BinaryOperation>();
-	offset->sourceLocation = _loc;
-	offset->wtype = awst::WType::uint64Type();
-	offset->left = std::move(slotU64);
-	offset->op = awst::UInt64BinaryOperator::Mult;
-	offset->right = std::move(thirtyTwo);
+	auto offset = awst::makeUInt64BinOp(std::move(slotU64), awst::UInt64BinaryOperator::Mult, std::move(thirtyTwo), _loc);
 
 	// extract3(__transient, offset, 32)
 	auto blob = awst::makeVarExpression("__transient", awst::WType::bytesType(), _loc);
@@ -77,12 +72,7 @@ void AssemblyBuilder::handleTstore(
 
 	auto thirtyTwo = awst::makeIntegerConstant("32", _loc);
 
-	auto offset = std::make_shared<awst::UInt64BinaryOperation>();
-	offset->sourceLocation = _loc;
-	offset->wtype = awst::WType::uint64Type();
-	offset->left = std::move(slotU64);
-	offset->op = awst::UInt64BinaryOperator::Mult;
-	offset->right = std::move(thirtyTwo);
+	auto offset = awst::makeUInt64BinOp(std::move(slotU64), awst::UInt64BinaryOperator::Mult, std::move(thirtyTwo), _loc);
 
 	// Convert value to 32 bytes: b| with bzero(32)
 	auto valueBytes = awst::makeReinterpretCast(std::move(value), awst::WType::bytesType(), _loc);
@@ -425,12 +415,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSar(
 
 	auto twoFiftySix = awst::makeIntegerConstant("256", _loc);
 
-	auto complementShift = std::make_shared<awst::UInt64BinaryOperation>();
-	complementShift->sourceLocation = _loc;
-	complementShift->wtype = awst::WType::uint64Type();
-	complementShift->left = std::move(twoFiftySix);
-	complementShift->right = std::move(shiftU64);
-	complementShift->op = awst::UInt64BinaryOperator::Sub;
+	auto complementShift = awst::makeUInt64BinOp(std::move(twoFiftySix), awst::UInt64BinaryOperator::Sub, std::move(shiftU64), _loc);
 
 	auto pow2Complement = buildPowerOf2(complementShift, _loc);
 

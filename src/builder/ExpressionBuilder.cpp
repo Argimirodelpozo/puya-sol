@@ -479,12 +479,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			// 255 - n: setbit uses MSB-first ordering, so bit (255-n) = 2^n
 			auto twoFiftyFive = awst::makeIntegerConstant("255", _loc);
 
-			auto bitIdx = std::make_shared<awst::UInt64BinaryOperation>();
-			bitIdx->sourceLocation = _loc;
-			bitIdx->wtype = awst::WType::uint64Type();
-			bitIdx->left = std::move(twoFiftyFive);
-			bitIdx->right = std::move(shiftAmt);
-			bitIdx->op = awst::UInt64BinaryOperator::Sub;
+			auto bitIdx = awst::makeUInt64BinOp(std::move(twoFiftyFive), awst::UInt64BinaryOperator::Sub, std::move(shiftAmt), _loc);
 
 			// setbit(bzero(32), 255-n, 1) → bytes with only bit n set
 			auto one = awst::makeIntegerConstant("1", _loc);

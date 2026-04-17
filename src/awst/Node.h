@@ -308,6 +308,22 @@ struct UInt64BinaryOperation: Expression
 	std::shared_ptr<Expression> right;
 };
 
+// Construct a UInt64BinaryOperation. wtype is uint64Type().
+inline std::shared_ptr<UInt64BinaryOperation> makeUInt64BinOp(
+	std::shared_ptr<Expression> left,
+	UInt64BinaryOperator op,
+	std::shared_ptr<Expression> right,
+	SourceLocation loc)
+{
+	auto node = std::make_shared<UInt64BinaryOperation>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = WType::uint64Type();
+	node->left = std::move(left);
+	node->op = op;
+	node->right = std::move(right);
+	return node;
+}
+
 struct BigUIntBinaryOperation: Expression
 {
 	std::string nodeType() const override { return "BigUIntBinaryOperation"; }

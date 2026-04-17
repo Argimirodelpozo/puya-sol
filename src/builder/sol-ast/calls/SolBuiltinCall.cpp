@@ -55,12 +55,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 
 		auto two2 = awst::makeIntegerConstant("2", m_loc);
 
-		auto prevRound = std::make_shared<awst::UInt64BinaryOperation>();
-		prevRound->sourceLocation = m_loc;
-		prevRound->wtype = awst::WType::uint64Type();
-		prevRound->left = std::move(round);
-		prevRound->op = awst::UInt64BinaryOperator::Sub;
-		prevRound->right = std::move(two2);
+		auto prevRound = awst::makeUInt64BinOp(std::move(round), awst::UInt64BinaryOperator::Sub, std::move(two2), m_loc);
 
 		auto seed = std::make_shared<awst::IntrinsicCall>();
 		seed->sourceLocation = m_loc;
@@ -240,12 +235,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::handleBlockhash()
 
 	auto two = awst::makeIntegerConstant("2", m_loc);
 
-	auto prevRound = std::make_shared<awst::UInt64BinaryOperation>();
-	prevRound->sourceLocation = m_loc;
-	prevRound->wtype = awst::WType::uint64Type();
-	prevRound->left = std::move(round);
-	prevRound->op = awst::UInt64BinaryOperator::Sub;
-	prevRound->right = std::move(two);
+	auto prevRound = awst::makeUInt64BinOp(std::move(round), awst::UInt64BinaryOperator::Sub, std::move(two), m_loc);
 
 	auto e = std::make_shared<awst::IntrinsicCall>();
 	e->sourceLocation = m_loc;

@@ -138,12 +138,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 
 			// __i++
 			auto one = awst::makeIntegerConstant("1", m_loc);
-			auto incr = std::make_shared<awst::UInt64BinaryOperation>();
-			incr->sourceLocation = m_loc;
-			incr->wtype = awst::WType::uint64Type();
-			incr->left = idxVar;
-			incr->op = awst::UInt64BinaryOperator::Add;
-			incr->right = one;
+			auto incr = awst::makeUInt64BinOp(idxVar, awst::UInt64BinaryOperator::Add, one, m_loc);
 			auto incrAssign = std::make_shared<awst::AssignmentStatement>();
 			incrAssign->sourceLocation = m_loc;
 			incrAssign->target = idxVar;

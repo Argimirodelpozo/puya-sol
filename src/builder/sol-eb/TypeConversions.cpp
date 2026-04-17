@@ -213,12 +213,7 @@ std::shared_ptr<awst::Expression> TypeConversionRegistry::leftPadToN(
 
 	auto nConst2 = awst::makeIntegerConstant(std::to_string(_n), _loc);
 
-	auto offset = std::make_shared<awst::UInt64BinaryOperation>();
-	offset->sourceLocation = _loc;
-	offset->wtype = awst::WType::uint64Type();
-	offset->left = std::move(paddedLen);
-	offset->op = awst::UInt64BinaryOperator::Sub;
-	offset->right = std::move(nConst2);
+	auto offset = awst::makeUInt64BinOp(std::move(paddedLen), awst::UInt64BinaryOperator::Sub, std::move(nConst2), _loc);
 
 	auto nConst3 = awst::makeIntegerConstant(std::to_string(_n), _loc);
 

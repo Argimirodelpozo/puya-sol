@@ -1544,12 +1544,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 			{
 				auto groupIdx = makeIntrinsic("txn", {std::string("GroupIndex")}, {}, awst::WType::uint64Type());
 				auto one = makeUint64("1");
-				auto prevIdx = std::make_shared<awst::UInt64BinaryOperation>();
-				prevIdx->sourceLocation = loc;
-				prevIdx->wtype = awst::WType::uint64Type();
-				prevIdx->left = groupIdx;
-				prevIdx->op = awst::UInt64BinaryOperator::Sub;
-				prevIdx->right = one;
+				auto prevIdx = awst::makeUInt64BinOp(groupIdx, awst::UInt64BinaryOperator::Sub, one, loc);
 
 				// gloads slot 0 from the previous txn
 				auto gloadResult = makeIntrinsic("gloads", {0}, {prevIdx}, awst::WType::bytesType());
@@ -1889,12 +1884,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 				if (method.returnType != awst::WType::voidType() && method.returnType != nullptr)
 				{
 					auto groupIdx = makeIntrinsic("txn", {std::string("GroupIndex")}, {}, awst::WType::uint64Type());
-					auto prevIdx = std::make_shared<awst::UInt64BinaryOperation>();
-					prevIdx->sourceLocation = loc;
-					prevIdx->wtype = awst::WType::uint64Type();
-					prevIdx->left = groupIdx;
-					prevIdx->op = awst::UInt64BinaryOperator::Sub;
-					prevIdx->right = makeUint64("1");
+					auto prevIdx = awst::makeUInt64BinOp(groupIdx, awst::UInt64BinaryOperator::Sub, makeUint64("1"), loc);
 
 					auto gloadResult = makeIntrinsic("gloads", {0}, {prevIdx}, awst::WType::bytesType());
 
@@ -2299,12 +2289,7 @@ std::vector<std::shared_ptr<awst::Statement>> ContractSplitter::buildValidationB
 		{
 			auto groupIdx = makeIntrinsic("txn", {std::string("GroupIndex")}, {}, awst::WType::uint64Type());
 			auto one = makeUint64("1");
-			auto prevIdx = std::make_shared<awst::UInt64BinaryOperation>();
-			prevIdx->sourceLocation = _loc;
-			prevIdx->wtype = awst::WType::uint64Type();
-			prevIdx->left = groupIdx;
-			prevIdx->op = awst::UInt64BinaryOperator::Sub;
-			prevIdx->right = one;
+			auto prevIdx = awst::makeUInt64BinOp(groupIdx, awst::UInt64BinaryOperator::Sub, one, _loc);
 
 			auto prevAppId = makeIntrinsic("gtxns", {std::string("ApplicationID")}, {prevIdx}, awst::WType::uint64Type());
 			auto expectedPrev = makeIntrinsic("app_global_get", {}, {makeBytesKey("p")}, awst::WType::uint64Type());
@@ -2318,12 +2303,7 @@ std::vector<std::shared_ptr<awst::Statement>> ContractSplitter::buildValidationB
 		{
 			auto groupIdx = makeIntrinsic("txn", {std::string("GroupIndex")}, {}, awst::WType::uint64Type());
 			auto one = makeUint64("1");
-			auto prevIdx = std::make_shared<awst::UInt64BinaryOperation>();
-			prevIdx->sourceLocation = _loc;
-			prevIdx->wtype = awst::WType::uint64Type();
-			prevIdx->left = groupIdx;
-			prevIdx->op = awst::UInt64BinaryOperator::Sub;
-			prevIdx->right = one;
+			auto prevIdx = awst::makeUInt64BinOp(groupIdx, awst::UInt64BinaryOperator::Sub, one, _loc);
 
 			auto prevArgs0 = makeIntrinsic("gtxnsa", {std::string("ApplicationArgs"), 0}, {prevIdx}, awst::WType::bytesType());
 			auto expectedSel = makeIntrinsic("app_global_get", {}, {makeBytesKey("s")}, awst::WType::bytesType());

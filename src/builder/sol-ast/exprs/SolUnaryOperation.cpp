@@ -294,12 +294,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 	auto zero2 = awst::makeIntegerConstant("0", m_loc, _operand->wtype);
 	if (_operand->wtype == awst::WType::uint64Type())
 	{
-		auto e = std::make_shared<awst::UInt64BinaryOperation>();
-		e->sourceLocation = m_loc;
-		e->wtype = awst::WType::uint64Type();
-		e->left = std::move(zero2);
-		e->op = awst::UInt64BinaryOperator::Sub;
-		e->right = std::move(_operand);
+		auto e = awst::makeUInt64BinOp(std::move(zero2), awst::UInt64BinaryOperator::Sub, std::move(_operand), m_loc);
 		return e;
 	}
 	auto e = std::make_shared<awst::BigUIntBinaryOperation>();
@@ -332,12 +327,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleBitNot(
 		oss << mask;
 
 		auto maxVal = awst::makeIntegerConstant(oss.str(), m_loc);
-		auto xorOp = std::make_shared<awst::UInt64BinaryOperation>();
-		xorOp->sourceLocation = m_loc;
-		xorOp->wtype = awst::WType::uint64Type();
-		xorOp->left = std::move(_operand);
-		xorOp->right = std::move(maxVal);
-		xorOp->op = awst::UInt64BinaryOperator::BitXor;
+		auto xorOp = awst::makeUInt64BinOp(std::move(_operand), awst::UInt64BinaryOperator::BitXor, std::move(maxVal), m_loc);
 		return xorOp;
 	}
 	auto expr = std::move(_operand);
@@ -559,12 +549,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 		else
 		{
 			auto one = awst::makeIntegerConstant("1", m_loc);
-			auto bin = std::make_shared<awst::UInt64BinaryOperation>();
-			bin->sourceLocation = m_loc;
-			bin->wtype = awst::WType::uint64Type();
-			bin->left = std::move(base);
-			bin->op = isInc ? awst::UInt64BinaryOperator::Add : awst::UInt64BinaryOperator::Sub;
-			bin->right = std::move(one);
+			auto bin = awst::makeUInt64BinOp(std::move(base), isInc ? awst::UInt64BinaryOperator::Add : awst::UInt64BinaryOperator::Sub, std::move(one), m_loc);
 			return bin;
 		}
 	};

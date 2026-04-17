@@ -170,12 +170,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 			uint64_t pow2N = uint64_t(1) << m_bits;
 			auto powConst = awst::makeIntegerConstant(std::to_string(pow2N), _loc);
 
-			auto aPlusPow = std::make_shared<awst::UInt64BinaryOperation>();
-			aPlusPow->sourceLocation = _loc;
-			aPlusPow->wtype = awst::WType::uint64Type();
-			aPlusPow->left = std::move(e->left);
-			aPlusPow->op = awst::UInt64BinaryOperator::Add;
-			aPlusPow->right = std::move(powConst);
+			auto aPlusPow = awst::makeUInt64BinOp(std::move(e->left), awst::UInt64BinaryOperator::Add, std::move(powConst), _loc);
 
 			e->left = std::move(aPlusPow);
 			// e->right stays the same: (a + 2^N) - b
@@ -211,12 +206,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 		{
 			uint64_t modVal = uint64_t(1) << m_bits;
 			auto modConst = awst::makeIntegerConstant(std::to_string(modVal), _loc);
-			auto masked = std::make_shared<awst::UInt64BinaryOperation>();
-			masked->sourceLocation = _loc;
-			masked->wtype = awst::WType::uint64Type();
-			masked->left = std::move(powResult);
-			masked->op = awst::UInt64BinaryOperator::Mod;
-			masked->right = std::move(modConst);
+			auto masked = awst::makeUInt64BinOp(std::move(powResult), awst::UInt64BinaryOperator::Mod, std::move(modConst), _loc);
 			powResult = std::move(masked);
 		}
 
@@ -241,12 +231,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 			uint64_t modVal = uint64_t(1) << m_bits;
 			auto modConst = awst::makeIntegerConstant(std::to_string(modVal), _loc);
 
-			auto masked = std::make_shared<awst::UInt64BinaryOperation>();
-			masked->sourceLocation = _loc;
-			masked->wtype = awst::WType::uint64Type();
-			masked->left = std::move(result);
-			masked->op = awst::UInt64BinaryOperator::Mod;
-			masked->right = std::move(modConst);
+			auto masked = awst::makeUInt64BinOp(std::move(result), awst::UInt64BinaryOperator::Mod, std::move(modConst), _loc);
 			result = std::move(masked);
 		}
 	}
@@ -352,22 +337,12 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::compare(
 			signBit->wtype = awst::WType::uint64Type();
 			signBit->value = "9223372036854775808"; // 2^63
 
-			auto xorL = std::make_shared<awst::UInt64BinaryOperation>();
-			xorL->sourceLocation = _loc;
-			xorL->wtype = awst::WType::uint64Type();
-			xorL->left = std::move(lhs);
-			xorL->op = awst::UInt64BinaryOperator::BitXor;
-			xorL->right = signBit;
+			auto xorL = awst::makeUInt64BinOp(std::move(lhs), awst::UInt64BinaryOperator::BitXor, signBit, _loc);
 			lhs = std::move(xorL);
 
 			auto signBit2 = awst::makeIntegerConstant("9223372036854775808", _loc);
 
-			auto xorR = std::make_shared<awst::UInt64BinaryOperation>();
-			xorR->sourceLocation = _loc;
-			xorR->wtype = awst::WType::uint64Type();
-			xorR->left = std::move(rhs);
-			xorR->op = awst::UInt64BinaryOperator::BitXor;
-			xorR->right = std::move(signBit2);
+			auto xorR = awst::makeUInt64BinOp(std::move(rhs), awst::UInt64BinaryOperator::BitXor, std::move(signBit2), _loc);
 			rhs = std::move(xorR);
 		}
 	}
@@ -468,12 +443,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 				// Mask to N bits first (uint64 may hold wider two's complement)
 				auto maskConst = awst::makeIntegerConstant(std::to_string((uint64_t(1) << m_bits) - 1), _loc);
 
-				auto masked = std::make_shared<awst::UInt64BinaryOperation>();
-				masked->sourceLocation = _loc;
-				masked->wtype = awst::WType::uint64Type();
-				masked->left = operand;
-				masked->op = awst::UInt64BinaryOperator::BitAnd;
-				masked->right = std::move(maskConst);
+				auto masked = awst::makeUInt64BinOp(operand, awst::UInt64BinaryOperator::BitAnd, std::move(maskConst), _loc);
 
 				// Promote to biguint for comparison
 				auto itob = std::make_shared<awst::IntrinsicCall>();
@@ -597,12 +567,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 
 			auto maxVal = awst::makeIntegerConstant(oss.str(), _loc);
 
-			auto e = std::make_shared<awst::UInt64BinaryOperation>();
-			e->sourceLocation = _loc;
-			e->wtype = awst::WType::uint64Type();
-			e->left = resolve();
-			e->op = awst::UInt64BinaryOperator::BitXor;
-			e->right = std::move(maxVal);
+			auto e = awst::makeUInt64BinOp(resolve(), awst::UInt64BinaryOperator::BitXor, std::move(maxVal), _loc);
 			return wrap(std::move(e));
 		}
 	}
@@ -705,12 +670,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildBigUIntShift(
 	// 255 - n
 	auto twoFiftyFive = awst::makeIntegerConstant("255", _loc);
 
-	auto bitIdx = std::make_shared<awst::UInt64BinaryOperation>();
-	bitIdx->sourceLocation = _loc;
-	bitIdx->wtype = awst::WType::uint64Type();
-	bitIdx->left = std::move(twoFiftyFive);
-	bitIdx->right = std::move(_shiftAmt);
-	bitIdx->op = awst::UInt64BinaryOperator::Sub;
+	auto bitIdx = awst::makeUInt64BinOp(std::move(twoFiftyFive), awst::UInt64BinaryOperator::Sub, std::move(_shiftAmt), _loc);
 
 	// setbit(bzero(32), 255-n, 1)
 	auto one = awst::makeIntegerConstant("1", _loc);
