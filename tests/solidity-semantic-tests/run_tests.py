@@ -1255,6 +1255,14 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                 )
                 atc.add_transaction(_TWS(pay_txn, _signer))
             atc.add_transaction(_TWS(app_call_txn, _signer))
+            # Auto-discover boxes / foreign apps / accounts the bare call
+            # touches — the fallback/receive dispatch may read state keys
+            # (e.g. `msg.data` copied into a "data" box) that weren't on
+            # the call as static refs.
+            try:
+                atc = au.populate_app_call_resources(atc, _algod)
+            except Exception:
+                pass
 
             try:
                 atc.execute(_algod, 5)
