@@ -76,6 +76,13 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::toPackedBytes(
 {
 	using namespace solidity::frontend;
 
+	// Structs need head/tail EVM encoding (each field in a 32-byte slot);
+	// route through encodeDynamicTail even when the struct is statically
+	// sized so small uint fields get 32-byte padding rather than the raw
+	// ARC4 packed width.
+	if (!_isPacked && dynamic_cast<StructType const*>(_solType))
+		return encodeDynamicTail(_ctx, std::move(_expr), _solType, _loc);
+
 	int packedWidth = 0;
 	if (_isPacked && _solType)
 	{
