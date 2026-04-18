@@ -468,12 +468,31 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 	std::map<std::string, std::vector<FuncPtrEntry const*>> groups;
 	for (auto const& [astId, entry] : s_targets)
 	{
-		// Skip targets that live in a different contract — the dispatch
-		// cannot resolve them as InstanceMethodTarget on the caller. They
-		// still need a fn-ptr representation (so storing them works), but
-		// invoking them routes through an inner txn, not this dispatch.
+		// Skip targets that are genuinely foreign (different non-library,
+		// non-base contract). Library functions are shared subroutines;
+		// base-contract functions reachable via linearized inheritance (or
+		// super-rewrite to \`__super_N\`) are resolvable on the caller.
+		// Heuristic: keep entry if the registered awstName starts with
+		// \`__super_\`, or the funcDef has a non-empty subroutineId, or
+		// the contract is the current one, or it's a library.
 		auto const* fdContract = funcScopeContract(entry.funcDef);
-		if (fdContract && !contractName.empty() && fdContract->name() != contractName)
+		bool foreignNonResolvable = fdContract
+			&& !contractName.empty()
+			&& fdContract->name() != contractName
+			&& !fdContract->isLibrary()
+			&& entry.subroutineId.empty()
+			&& entry.name.find("__super_") != 0;
+		if (foreignNonResolvable)
+		{
+			// Double-check: if the function's visibility is not external/public
+			// (e.g. internal/private from a base contract reachable via
+			// inheritance), keep it — an InstanceMethodTarget on the
+			// derived contract would still resolve via MRO flattening.
+			auto vis = entry.funcDef->visibility();
+			if (vis != Visibility::External && vis != Visibility::Public)
+				foreignNonResolvable = false;
+		}
+		if (foreignNonResolvable)
 			continue;
 		std::string dname = dispatchName(entry.funcType);
 		groups[dname].push_back(&entry);
@@ -520,6 +539,15 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 			}
 			else if (dynamic_cast<BoolType const*>(retSolType))
 				dispatch.returnType = awst::WType::boolType();
+			else if (auto const* arrType = dynamic_cast<ArrayType const*>(retSolType))
+			{
+				if (arrType->isString())
+					dispatch.returnType = awst::WType::stringType();
+				else if (arrType->isByteArray())
+					dispatch.returnType = awst::WType::bytesType();
+				else
+					dispatch.returnType = awst::WType::biguintType();
+			}
 			else
 				dispatch.returnType = awst::WType::biguintType();
 		}
