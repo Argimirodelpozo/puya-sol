@@ -518,17 +518,16 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		submit->wtype = &s_applTxnType;
 		submit->itxns.push_back(std::move(create));
 
-		// Build the inner-txn result expression (coerced to retType)
+		// Read itxn LastLog and coerce the ARC4-prefixed bytes to retType.
 		auto buildInnerTxnResult = [&]() -> std::shared_ptr<awst::Expression> {
 			auto readLog = awst::makeIntrinsicCall("itxn", awst::WType::bytesType(), _loc);
 			readLog->immediates = {std::string("LastLog")};
+			// extract(readLog, 4, 0) — strip the 4-byte ARC4 return prefix.
 			auto strip = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
 			strip->immediates = {4, 0};
 			strip->stackArgs.push_back(std::move(readLog));
 			if (retType == awst::WType::bytesType() || retType == awst::WType::voidType())
 				return strip;
-			if (retType == awst::WType::biguintType())
-				return awst::makeReinterpretCast(std::move(strip), awst::WType::biguintType(), _loc);
 			if (retType == awst::WType::uint64Type())
 			{
 				auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
@@ -537,72 +536,53 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 			}
 			if (retType == awst::WType::boolType())
 			{
+				// ARC4 bool: byte 0's top bit set → true.
 				auto getbit = awst::makeIntrinsicCall("getbit", awst::WType::uint64Type(), _loc);
 				getbit->stackArgs.push_back(std::move(strip));
 				getbit->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
-				auto cmp = awst::makeNumericCompare(std::move(getbit), awst::NumericComparison::Ne, awst::makeIntegerConstant("0", _loc), _loc);
-				return cmp;
+				return awst::makeNumericCompare(
+					std::move(getbit), awst::NumericComparison::Ne,
+					awst::makeIntegerConstant("0", _loc), _loc);
 			}
-			if (retType == awst::WType::stringType())
-				return awst::makeReinterpretCast(std::move(strip), awst::WType::stringType(), _loc);
-			if (retType == awst::WType::accountType())
-				return awst::makeReinterpretCast(std::move(strip), awst::WType::accountType(), _loc);
 			return awst::makeReinterpretCast(std::move(strip), retType, _loc);
 		};
 
-		// Void return: emit both branches as statements (no temp).
+		// Emit `if (isSelf) selfCall else submit (and read result)`. Puts the
+		// if-else into prePendingStatements; the expression this function
+		// returns is the result expression the caller reads.
+		auto ifStmt = std::make_shared<awst::IfElse>();
+		ifStmt->sourceLocation = _loc;
+		ifStmt->condition = isSelf;
+		ifStmt->ifBranch = std::make_shared<awst::Block>();
+		ifStmt->ifBranch->sourceLocation = _loc;
+		ifStmt->elseBranch = std::make_shared<awst::Block>();
+		ifStmt->elseBranch->sourceLocation = _loc;
+
 		if (retType == awst::WType::voidType())
 		{
-			auto ifBlock = std::make_shared<awst::Block>();
-			ifBlock->sourceLocation = _loc;
-			ifBlock->body.push_back(awst::makeExpressionStatement(selfCall, _loc));
-
-			auto elseBlock = std::make_shared<awst::Block>();
-			elseBlock->sourceLocation = _loc;
-			elseBlock->body.push_back(awst::makeExpressionStatement(submit, _loc));
-
-			auto ifStmt = std::make_shared<awst::IfElse>();
-			ifStmt->sourceLocation = _loc;
-			ifStmt->condition = isSelf;
-			ifStmt->ifBranch = std::move(ifBlock);
-			ifStmt->elseBranch = std::move(elseBlock);
+			ifStmt->ifBranch->body.push_back(awst::makeExpressionStatement(selfCall, _loc));
+			ifStmt->elseBranch->body.push_back(awst::makeExpressionStatement(submit, _loc));
 			_ctx.prePendingStatements.push_back(std::move(ifStmt));
-
 			auto vc = std::make_shared<awst::VoidConstant>();
 			vc->sourceLocation = _loc;
 			vc->wtype = awst::WType::voidType();
 			return vc;
 		}
 
-		// Non-void: spill both branches' result into a shared temp; the
-		// containing expression reads the temp.
+		// Non-void: spill both branches' result into a shared temp that the
+		// containing expression reads.
 		static int s_tmpCounter = 0;
 		std::string tmpName = "__fnptr_res_" + std::to_string(++s_tmpCounter);
-
-		auto ifBlock = std::make_shared<awst::Block>();
-		ifBlock->sourceLocation = _loc;
-		{
-			auto tmpTarget = awst::makeVarExpression(tmpName, retType, _loc);
-			ifBlock->body.push_back(awst::makeAssignmentStatement(tmpTarget, selfCall, _loc));
-		}
-
-		auto elseBlock = std::make_shared<awst::Block>();
-		elseBlock->sourceLocation = _loc;
-		{
-			elseBlock->body.push_back(awst::makeExpressionStatement(submit, _loc));
-			auto tmpTarget = awst::makeVarExpression(tmpName, retType, _loc);
-			elseBlock->body.push_back(awst::makeAssignmentStatement(tmpTarget, buildInnerTxnResult(), _loc));
-		}
-
-		auto ifStmt = std::make_shared<awst::IfElse>();
-		ifStmt->sourceLocation = _loc;
-		ifStmt->condition = isSelf;
-		ifStmt->ifBranch = std::move(ifBlock);
-		ifStmt->elseBranch = std::move(elseBlock);
+		auto writeTmp = [&](std::shared_ptr<awst::Expression> _val) {
+			auto target = awst::makeVarExpression(tmpName, retType, _loc);
+			return awst::makeAssignmentStatement(std::move(target), std::move(_val), _loc);
+		};
+		ifStmt->ifBranch->body.push_back(writeTmp(selfCall));
+		ifStmt->elseBranch->body.push_back(awst::makeExpressionStatement(submit, _loc));
+		ifStmt->elseBranch->body.push_back(writeTmp(buildInnerTxnResult()));
 		_ctx.prePendingStatements.push_back(std::move(ifStmt));
 
 		return awst::makeVarExpression(tmpName, retType, _loc);
-
 	}
 
 	// Internal: call __funcptr_dispatch_<signature>(id, args...)
