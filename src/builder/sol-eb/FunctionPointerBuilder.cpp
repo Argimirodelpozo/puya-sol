@@ -570,17 +570,14 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 						decode->value = std::move(retValue);
 						retValue = std::move(decode);
 					}
-					auto ret = std::make_shared<awst::ReturnStatement>();
-					ret->sourceLocation = _loc;
-					ret->value = std::move(retValue);
+					auto ret = awst::makeReturnStatement(std::move(retValue), _loc);
 					ifBlock->body.push_back(std::move(ret));
 				}
 				else
 				{
 					auto stmt = awst::makeExpressionStatement(std::move(call), _loc);
 					ifBlock->body.push_back(std::move(stmt));
-					auto ret = std::make_shared<awst::ReturnStatement>();
-					ret->sourceLocation = _loc;
+					auto ret = awst::makeReturnStatement(nullptr, _loc);
 					ifBlock->body.push_back(std::move(ret));
 				}
 			}

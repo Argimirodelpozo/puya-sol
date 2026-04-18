@@ -771,6 +771,17 @@ struct ReturnStatement: Statement
 	std::shared_ptr<Expression> value;
 };
 
+// Construct a ReturnStatement. `value` is nullable (bare `return;`).
+inline std::shared_ptr<ReturnStatement> makeReturnStatement(
+	std::shared_ptr<Expression> value,
+	SourceLocation loc)
+{
+	auto node = std::make_shared<ReturnStatement>();
+	node->sourceLocation = std::move(loc);
+	node->value = std::move(value);
+	return node;
+}
+
 struct IfElse: Statement
 {
 	std::string nodeType() const override { return "IfElse"; }

@@ -630,8 +630,7 @@ awst::ContractMethod ConstantExternalizer::buildLoadConstantsMethod(
 	}
 
 	// return (void)
-	auto ret = std::make_shared<awst::ReturnStatement>();
-	ret->sourceLocation = _loc;
+	auto ret = awst::makeReturnStatement(nullptr, _loc);
 	body->body.push_back(ret);
 
 	method.body = body;

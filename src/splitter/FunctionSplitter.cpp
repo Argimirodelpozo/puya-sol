@@ -419,8 +419,7 @@ std::vector<std::shared_ptr<awst::Subroutine>> FunctionSplitter::splitFunction(
 
 			if (!liveOut.empty())
 			{
-				auto ret = std::make_shared<awst::ReturnStatement>();
-				ret->sourceLocation = _func->sourceLocation;
+				auto ret = awst::makeReturnStatement(nullptr, _func->sourceLocation);
 
 				if (liveOut.size() == 1)
 				{
@@ -493,9 +492,7 @@ std::vector<std::shared_ptr<awst::Subroutine>> FunctionSplitter::splitFunction(
 			// Otherwise just call it as a statement.
 			if (_func->returnType != awst::WType::voidType())
 			{
-				auto ret = std::make_shared<awst::ReturnStatement>();
-				ret->sourceLocation = _func->sourceLocation;
-				ret->value = call;
+				auto ret = awst::makeReturnStatement(call, _func->sourceLocation);
 				newBody->body.push_back(ret);
 			}
 			else
@@ -1412,8 +1409,7 @@ void FunctionSplitter::convertToValueBasedIO(
 		else
 		{
 			// No return statement — create one
-			auto ret = std::make_shared<awst::ReturnStatement>();
-			ret->sourceLocation = chunk->sourceLocation;
+			auto ret = awst::makeReturnStatement(nullptr, chunk->sourceLocation);
 			if (evalItems.size() == 1)
 			{
 				ret->value = evalItems[0];
@@ -1616,9 +1612,7 @@ void FunctionSplitter::convertToValueBasedIO(
 		else if (isLastChunk && _parent->returnType != awst::WType::voidType() && writes.empty())
 		{
 			// Last chunk returns parent's return value, no eval writes
-			auto ret = std::make_shared<awst::ReturnStatement>();
-			ret->sourceLocation = _parent->sourceLocation;
-			ret->value = newCall;
+			auto ret = awst::makeReturnStatement(newCall, _parent->sourceLocation);
 			newBody->body.push_back(ret);
 		}
 		else

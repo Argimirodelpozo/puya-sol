@@ -195,9 +195,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleSelfdestruct(
 	// Terminate execution after selfdestruct — on EVM, selfdestruct halts
 	// execution so any code after it (e.g. assert(false)) is dead code.
 	// Emit return to prevent subsequent statements from executing.
-	auto retStmt = std::make_shared<awst::ReturnStatement>();
-	retStmt->sourceLocation = _loc;
-	retStmt->value = nullptr;
+	auto retStmt = awst::makeReturnStatement(nullptr, _loc);
 	_ctx.prePendingStatements.push_back(std::move(retStmt));
 
 	auto vc = std::make_shared<awst::VoidConstant>();

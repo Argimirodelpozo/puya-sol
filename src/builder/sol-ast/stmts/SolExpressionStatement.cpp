@@ -89,8 +89,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 {
 	std::vector<std::shared_ptr<awst::Statement>> result;
 
-	auto stmt = std::make_shared<awst::ReturnStatement>();
-	stmt->sourceLocation = m_loc;
+	auto stmt = awst::makeReturnStatement(nullptr, m_loc);
 
 	if (!m_node.expression())
 	{

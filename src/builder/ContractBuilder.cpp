@@ -1097,9 +1097,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				}
 			}
 
-			auto ret = std::make_shared<awst::ReturnStatement>();
-			ret->sourceLocation = loc;
-			ret->value = std::move(readExpr);
+			auto ret = awst::makeReturnStatement(std::move(readExpr), loc);
 			body->body.push_back(std::move(ret));
 
 			getter.body = body;
@@ -2427,9 +2425,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		} // end else (no postInit needed)
 
 		// Return true to complete the create transaction
-		auto createReturn = std::make_shared<awst::ReturnStatement>();
-		createReturn->sourceLocation = method.sourceLocation;
-		createReturn->value = awst::makeBoolConstant(true, method.sourceLocation);
+		auto createReturn = awst::makeReturnStatement(awst::makeBoolConstant(true, method.sourceLocation), method.sourceLocation);
 		createBlock->body.push_back(createReturn);
 
 		auto ifCreate = std::make_shared<awst::IfElse>();
@@ -2556,9 +2552,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		routerExpr->sourceLocation = method.sourceLocation;
 		routerExpr->wtype = awst::WType::boolType();
 
-		auto routerReturn = std::make_shared<awst::ReturnStatement>();
-		routerReturn->sourceLocation = method.sourceLocation;
-		routerReturn->value = routerExpr;
+		auto routerReturn = awst::makeReturnStatement(routerExpr, method.sourceLocation);
 		body->body.push_back(routerReturn);
 	}
 	else
@@ -2623,9 +2617,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		};
 
 		auto makeReturnTrue = [&]() -> std::shared_ptr<awst::Statement> {
-			auto r = std::make_shared<awst::ReturnStatement>();
-			r->sourceLocation = method.sourceLocation;
-			r->value = makeTrueLit();
+			auto r = awst::makeReturnStatement(makeTrueLit(), method.sourceLocation);
 			return r;
 		};
 
@@ -2698,9 +2690,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		// Step 4: return __did_match_routing
 		auto finalRead = awst::makeVarExpression(matchVarName, awst::WType::boolType(), method.sourceLocation);
 
-		auto retStmt = std::make_shared<awst::ReturnStatement>();
-		retStmt->sourceLocation = method.sourceLocation;
-		retStmt->value = std::move(finalRead);
+		auto retStmt = awst::makeReturnStatement(std::move(finalRead), method.sourceLocation);
 		body->body.push_back(std::move(retStmt));
 	}
 
@@ -2724,9 +2714,7 @@ awst::ContractMethod ContractBuilder::buildClearProgram(
 	body->sourceLocation = method.sourceLocation;
 
 	// return true
-	auto ret = std::make_shared<awst::ReturnStatement>();
-	ret->sourceLocation = method.sourceLocation;
-	ret->value = awst::makeBoolConstant(true, method.sourceLocation);
+	auto ret = awst::makeReturnStatement(awst::makeBoolConstant(true, method.sourceLocation), method.sourceLocation);
 
 	body->body.push_back(ret);
 	method.body = body;
@@ -3075,8 +3063,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				if (!rp->name().empty())
 					hasNamedReturns = true;
 
-			auto retStmt = std::make_shared<awst::ReturnStatement>();
-			retStmt->sourceLocation = method.sourceLocation;
+			auto retStmt = awst::makeReturnStatement(nullptr, method.sourceLocation);
 
 			if (hasNamedReturns)
 			{
@@ -4076,9 +4063,7 @@ void ContractBuilder::inlineModifiers(
 					// Create deferred return: return r
 					auto retVar = awst::makeVarExpression(retName, retStmt->value->wtype, retStmt->sourceLocation);
 
-					auto deferRet = std::make_shared<awst::ReturnStatement>();
-					deferRet->sourceLocation = retStmt->sourceLocation;
-					deferRet->value = std::move(retVar);
+					auto deferRet = awst::makeReturnStatement(std::move(retVar), retStmt->sourceLocation);
 					deferredReturn = std::move(deferRet);
 				}
 				else
@@ -4476,8 +4461,7 @@ void ContractBuilder::buildModifierChain(
 
 		// Add return statement using the return variable
 		{
-			auto retStmt = std::make_shared<awst::ReturnStatement>();
-			retStmt->sourceLocation = modSub.sourceLocation;
+			auto retStmt = awst::makeReturnStatement(nullptr, modSub.sourceLocation);
 			if (!retVarName.empty())
 			{
 				auto var = awst::makeVarExpression(retVarName, _method.returnType, modSub.sourceLocation);
@@ -4527,9 +4511,7 @@ void ContractBuilder::buildModifierChain(
 
 	if (_method.returnType != awst::WType::voidType())
 	{
-		auto retStmt = std::make_shared<awst::ReturnStatement>();
-		retStmt->sourceLocation = _method.sourceLocation;
-		retStmt->value = std::move(call);
+		auto retStmt = awst::makeReturnStatement(std::move(call), _method.sourceLocation);
 		entryBody->body.push_back(std::move(retStmt));
 	}
 	else
@@ -4630,9 +4612,7 @@ void ContractBuilder::buildStorageDispatch(
 
 			auto cast = awst::makeReinterpretCast(std::move(boxExtract), awst::WType::biguintType(), loc);
 
-			auto ret = std::make_shared<awst::ReturnStatement>();
-			ret->sourceLocation = loc;
-			ret->value = std::move(cast);
+			auto ret = awst::makeReturnStatement(std::move(cast), loc);
 			defaultBlock->body.push_back(std::move(ret));
 		}
 
@@ -4677,9 +4657,7 @@ void ContractBuilder::buildStorageDispatch(
 
 				auto cast = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), loc);
 
-				auto ret = std::make_shared<awst::ReturnStatement>();
-				ret->sourceLocation = loc;
-				ret->value = std::move(cast);
+				auto ret = awst::makeReturnStatement(std::move(cast), loc);
 				ifBlock->body.push_back(std::move(ret));
 			}
 
@@ -4793,8 +4771,7 @@ void ContractBuilder::buildStorageDispatch(
 			auto replaceStmt = awst::makeExpressionStatement(std::move(boxReplace), loc);
 			defaultBlock->body.push_back(std::move(replaceStmt));
 
-			auto ret = std::make_shared<awst::ReturnStatement>();
-			ret->sourceLocation = loc;
+			auto ret = awst::makeReturnStatement(nullptr, loc);
 			defaultBlock->body.push_back(std::move(ret));
 		}
 
@@ -4842,8 +4819,7 @@ void ContractBuilder::buildStorageDispatch(
 				auto stmt = awst::makeExpressionStatement(std::move(put), loc);
 				ifBlock->body.push_back(std::move(stmt));
 
-				auto ret = std::make_shared<awst::ReturnStatement>();
-				ret->sourceLocation = loc;
+				auto ret = awst::makeReturnStatement(nullptr, loc);
 				ifBlock->body.push_back(std::move(ret));
 			}
 

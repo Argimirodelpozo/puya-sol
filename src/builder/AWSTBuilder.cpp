@@ -582,9 +582,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					// Cast bytes → bytes[32] to match return type
 					auto cast = awst::makeReinterpretCast(std::move(hash), sub->returnType, loc);
 
-					auto ret = std::make_shared<awst::ReturnStatement>();
-					ret->sourceLocation = loc;
-					ret->value = std::move(cast);
+					auto ret = awst::makeReturnStatement(std::move(cast), loc);
 					sub->body->body.push_back(std::move(ret));
 				}
 
@@ -601,15 +599,12 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					if (!hasNamedReturns)
 					{
 						// No named returns — append default return with zero value
-						auto defReturn = std::make_shared<awst::ReturnStatement>();
-						defReturn->sourceLocation = loc;
-						defReturn->value = StorageMapper::makeDefaultValue(sub->returnType, loc);
+						auto defReturn = awst::makeReturnStatement(StorageMapper::makeDefaultValue(sub->returnType, loc), loc);
 						sub->body->body.push_back(std::move(defReturn));
 					}
 					else
 					{
-					auto implicitReturn = std::make_shared<awst::ReturnStatement>();
-					implicitReturn->sourceLocation = loc;
+					auto implicitReturn = awst::makeReturnStatement(nullptr, loc);
 
 					if (returnParams.size() == 1)
 					{
@@ -821,8 +816,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 
 				if (hasNamedReturns)
 				{
-					auto implicitReturn = std::make_shared<awst::ReturnStatement>();
-					implicitReturn->sourceLocation = loc;
+					auto implicitReturn = awst::makeReturnStatement(nullptr, loc);
 
 					if (returnParams.size() == 1)
 					{
@@ -849,9 +843,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				else
 				{
 					// No named returns — append default return with zero value
-					auto defReturn = std::make_shared<awst::ReturnStatement>();
-					defReturn->sourceLocation = loc;
-					defReturn->value = StorageMapper::makeDefaultValue(sub->returnType, loc);
+					auto defReturn = awst::makeReturnStatement(StorageMapper::makeDefaultValue(sub->returnType, loc), loc);
 					sub->body->body.push_back(std::move(defReturn));
 				}
 			}
@@ -930,9 +922,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 
 				auto body = std::make_shared<awst::Block>();
 				body->sourceLocation = dummy.sourceLocation;
-				auto ret = std::make_shared<awst::ReturnStatement>();
-				ret->sourceLocation = dummy.sourceLocation;
-				ret->value = awst::makeBoolConstant(true, dummy.sourceLocation);
+				auto ret = awst::makeReturnStatement(awst::makeBoolConstant(true, dummy.sourceLocation), dummy.sourceLocation);
 				body->body.push_back(ret);
 				dummy.body = body;
 

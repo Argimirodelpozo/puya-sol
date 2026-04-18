@@ -216,9 +216,7 @@ bool FunctionInliner::inlineBlock(
 			if (lastStmt && lastStmt->nodeType() == "ExpressionStatement")
 			{
 				auto& es = static_cast<awst::ExpressionStatement&>(*lastStmt);
-				auto ret = std::make_shared<awst::ReturnStatement>();
-				ret->sourceLocation = es.sourceLocation;
-				ret->value = es.expr;
+				auto ret = awst::makeReturnStatement(es.expr, es.sourceLocation);
 				inlinedStmts.back() = ret;
 			}
 		}
@@ -1661,9 +1659,7 @@ std::shared_ptr<awst::Statement> FunctionInliner::deepCopyStmt(
 	if (type == "ReturnStatement")
 	{
 		auto& src = static_cast<awst::ReturnStatement const&>(*_stmt);
-		auto n = std::make_shared<awst::ReturnStatement>();
-		n->sourceLocation = src.sourceLocation;
-		n->value = deepCopyExpr(src.value);
+		auto n = awst::makeReturnStatement(deepCopyExpr(src.value), src.sourceLocation);
 		return n;
 	}
 	if (type == "IfElse")

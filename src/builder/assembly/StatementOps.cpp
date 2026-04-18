@@ -700,9 +700,7 @@ void AssemblyBuilder::buildExpressionStatement(
 		if (funcName == "stop")
 		{
 			// EVM STOP — halt execution successfully
-			auto retStmt = std::make_shared<awst::ReturnStatement>();
-			retStmt->sourceLocation = loc;
-			retStmt->value = nullptr;
+			auto retStmt = awst::makeReturnStatement(nullptr, loc);
 			_out.push_back(std::move(retStmt));
 			return;
 		}

@@ -396,9 +396,7 @@ void AssemblyBuilder::handleReturn(
 
 		// Flush and return void
 		flushMemoryToScratch(_loc, _out);
-		auto ret = std::make_shared<awst::ReturnStatement>();
-		ret->sourceLocation = _loc;
-		ret->value = nullptr;
+		auto ret = awst::makeReturnStatement(nullptr, _loc);
 		_out.push_back(std::move(ret));
 		return;
 	}
@@ -444,9 +442,7 @@ void AssemblyBuilder::handleReturn(
 	// Flush memory blob to scratch before returning
 	flushMemoryToScratch(_loc, _out);
 
-	auto ret = std::make_shared<awst::ReturnStatement>();
-	ret->sourceLocation = _loc;
-	ret->value = std::move(returnValue);
+	auto ret = awst::makeReturnStatement(std::move(returnValue), _loc);
 	_out.push_back(std::move(ret));
 }
 

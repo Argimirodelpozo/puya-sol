@@ -1115,9 +1115,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 				body->body.push_back(storeStmt);
 			}
 
-			auto ret = std::make_shared<awst::ReturnStatement>();
-			ret->sourceLocation = sub->sourceLocation;
-			ret->value = tmpVar();
+			auto ret = awst::makeReturnStatement(tmpVar(), sub->sourceLocation);
 			body->body.push_back(ret);
 		}
 		else
@@ -1153,15 +1151,12 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 
 				auto varExpr = awst::makeVarExpression(arrayParamName, arrayParamType, sub->sourceLocation);
 
-				auto ret = std::make_shared<awst::ReturnStatement>();
-				ret->sourceLocation = sub->sourceLocation;
-				ret->value = varExpr;
+				auto ret = awst::makeReturnStatement(varExpr, sub->sourceLocation);
 				body->body.push_back(ret);
 			}
 			else
 			{
-				auto ret = std::make_shared<awst::ReturnStatement>();
-				ret->sourceLocation = sub->sourceLocation;
+				auto ret = awst::makeReturnStatement(nullptr, sub->sourceLocation);
 				body->body.push_back(ret);
 			}
 		}
@@ -1196,8 +1191,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 
 		auto body = std::make_shared<awst::Block>();
 		body->sourceLocation = loc;
-		auto ret = std::make_shared<awst::ReturnStatement>();
-		ret->sourceLocation = loc;
+		auto ret = awst::makeReturnStatement(nullptr, loc);
 		body->body.push_back(ret);
 		bareCreate.body = body;
 
@@ -1280,8 +1274,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 			body->body.push_back(stmt);
 		}
 
-		auto ret = std::make_shared<awst::ReturnStatement>();
-		ret->sourceLocation = loc;
+		auto ret = awst::makeReturnStatement(nullptr, loc);
 		body->body.push_back(ret);
 		initMethod.body = body;
 
@@ -1304,9 +1297,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 		routerExpr->sourceLocation = loc;
 		routerExpr->wtype = awst::WType::boolType();
 
-		auto ret = std::make_shared<awst::ReturnStatement>();
-		ret->sourceLocation = loc;
-		ret->value = routerExpr;
+		auto ret = awst::makeReturnStatement(routerExpr, loc);
 		body->body.push_back(ret);
 
 		helper->approvalProgram.sourceLocation = loc;
@@ -1485,8 +1476,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 			}
 
 			// 4. Return true (for bool) or default value (keeps group alive)
-			auto ret = std::make_shared<awst::ReturnStatement>();
-			ret->sourceLocation = loc;
+			auto ret = awst::makeReturnStatement(nullptr, loc);
 			if (method.returnType == awst::WType::boolType())
 			{
 				ret->value = awst::makeBoolConstant(true, loc);
@@ -1570,8 +1560,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 			}
 
 			// 4. Return the result
-			auto ret = std::make_shared<awst::ReturnStatement>();
-			ret->sourceLocation = loc;
+			auto ret = awst::makeReturnStatement(nullptr, loc);
 			if (resultExpr)
 				ret->value = resultExpr;
 			body->body.push_back(ret);
@@ -1608,8 +1597,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 			body->body.push_back(stmt);
 		}
 
-		auto ret = std::make_shared<awst::ReturnStatement>();
-		ret->sourceLocation = loc;
+		auto ret = awst::makeReturnStatement(nullptr, loc);
 		body->body.push_back(ret);
 		bareCreate.body = body;
 
@@ -1633,8 +1621,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 
 		auto body = std::make_shared<awst::Block>();
 		body->sourceLocation = loc;
-		auto ret = std::make_shared<awst::ReturnStatement>();
-		ret->sourceLocation = loc;
+		auto ret = awst::makeReturnStatement(nullptr, loc);
 		body->body.push_back(ret);
 		authMethod.body = body;
 
@@ -1658,9 +1645,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 		routerExpr->sourceLocation = loc;
 		routerExpr->wtype = awst::WType::boolType();
 
-		auto ret = std::make_shared<awst::ReturnStatement>();
-		ret->sourceLocation = loc;
-		ret->value = routerExpr;
+		auto ret = awst::makeReturnStatement(routerExpr, loc);
 		body->body.push_back(ret);
 
 		orch->approvalProgram.sourceLocation = loc;
@@ -1832,8 +1817,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 				}
 
 				// Return default value
-				auto ret = std::make_shared<awst::ReturnStatement>();
-				ret->sourceLocation = loc;
+				auto ret = awst::makeReturnStatement(nullptr, loc);
 				if (method.returnType == awst::WType::boolType())
 				{
 					ret->value = awst::makeBoolConstant(true, loc);
@@ -1902,8 +1886,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 					body->body.push_back(stmt);
 				}
 
-				auto ret = std::make_shared<awst::ReturnStatement>();
-				ret->sourceLocation = loc;
+				auto ret = awst::makeReturnStatement(nullptr, loc);
 				if (resultExpr)
 					ret->value = resultExpr;
 				body->body.push_back(ret);
@@ -1967,8 +1950,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 			}
 		}
 
-		auto ret = std::make_shared<awst::ReturnStatement>();
-		ret->sourceLocation = loc;
+		auto ret = awst::makeReturnStatement(nullptr, loc);
 		body->body.push_back(ret);
 		bareCreate.body = body;
 
@@ -1992,8 +1974,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 
 		auto body = std::make_shared<awst::Block>();
 		body->sourceLocation = loc;
-		auto ret = std::make_shared<awst::ReturnStatement>();
-		ret->sourceLocation = loc;
+		auto ret = awst::makeReturnStatement(nullptr, loc);
 		body->body.push_back(ret);
 		authMethod.body = body;
 
@@ -2017,9 +1998,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 		routerExpr->sourceLocation = loc;
 		routerExpr->wtype = awst::WType::boolType();
 
-		auto ret = std::make_shared<awst::ReturnStatement>();
-		ret->sourceLocation = loc;
-		ret->value = routerExpr;
+		auto ret = awst::makeReturnStatement(routerExpr, loc);
 		body->body.push_back(ret);
 
 		orch->approvalProgram.sourceLocation = loc;
@@ -2159,8 +2138,7 @@ std::shared_ptr<awst::Block> ContractSplitter::buildStubBody(
 	auto body = std::make_shared<awst::Block>();
 	body->sourceLocation = _loc;
 
-	auto ret = std::make_shared<awst::ReturnStatement>();
-	ret->sourceLocation = _loc;
+	auto ret = awst::makeReturnStatement(nullptr, _loc);
 
 	if (_returnType == awst::WType::voidType() || _returnType == nullptr)
 	{
@@ -2331,9 +2309,7 @@ awst::ContractMethod ContractSplitter::buildClearProgram(
 	auto body = std::make_shared<awst::Block>();
 	body->sourceLocation = _loc;
 
-	auto returnStmt = std::make_shared<awst::ReturnStatement>();
-	returnStmt->sourceLocation = _loc;
-	returnStmt->value = awst::makeBoolConstant(true, _loc);
+	auto returnStmt = awst::makeReturnStatement(awst::makeBoolConstant(true, _loc), _loc);
 	body->body.push_back(returnStmt);
 
 	clearProg.body = body;
