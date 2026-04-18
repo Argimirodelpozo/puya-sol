@@ -1,0 +1,120 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_address.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xcdcb8654 0x9d73c9c9 0xb8d71b89 // method "f()address", method "g()(bool,bool)", method "h(uint8[12])address"
+    txna ApplicationArgs 0
+    match f g h
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_address.sol.C.f[routing]() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000001234
+    log
+    intc_0 // 1
+    return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_address.sol.C.g[routing]() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    global CurrentApplicationAddress
+    ==
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_0 // 1
+    dup
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_address.sol.C.h[routing]() -> void:
+h:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 12
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 12>
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
+    pushint 24
+    bzero
+    dig 1
+    extract 0 8
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+h_ternary_false@3:
+    intc_1 // 0
+    b h_ternary_merge@4

@@ -1,19 +1,19 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/store_function.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/store_function.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 12 16
+    intcblock 0 1 12 6
     bytecblock "ev" "x" 0x151f7c75 TMPL_APPROVAL_Other TMPL_CLEAR_Other
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "ev"
-    intc_1 // 0
+    intc_0 // 0
     app_global_put
     bytec_1 // "x"
     pushbytes 0x000000000000000000000000
     app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -35,7 +35,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/store_function.sol.C.store[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/store_function.sol.C.store[routing]() -> void:
 store:
     txna ApplicationArgs 1
     dup
@@ -43,13 +43,13 @@ store:
     intc_2 // 12
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 12>
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/store_function.sol.C.store
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/store_function.sol.C.store
     pop
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/store_function.sol.C.eval[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/store_function.sol.C.eval[routing]() -> void:
 eval:
     txna ApplicationArgs 1
     dup
@@ -57,22 +57,22 @@ eval:
     intc_2 // 12
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 12>
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/store_function.sol.C.eval
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/store_function.sol.C.eval
     pop
     bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/store_function.sol.C.t[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/store_function.sol.C.t[routing]() -> void:
 t:
     txn GroupIndex
     bz t_ternary_false@3
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -80,18 +80,18 @@ t_ternary_merge@4:
     !
     assert // not payable
     bytec_0 // "ev"
-    intc_0 // 1
+    intc_1 // 1
     app_global_put
     itxn_begin
     bytec_3 // TMPL_APPROVAL_Other
     bytec 4 // TMPL_CLEAR_Other
-    pushint 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_3 // 16
+    pushint 16
     itxn_field GlobalNumUint
-    intc_3 // 16
+    pushint 16
     itxn_field GlobalNumByteSlice
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     pushint 3
     itxn_field ExtraProgramPages
@@ -103,64 +103,56 @@ t_ternary_merge@4:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_0 // 1
+    intc_1 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     pushint 1000000
     itxn_field Amount
     itxn_submit
     itob
-    pushbytes 0x00000002
+    pushbytes 0x77a1a0d7 // method "addTwo(uint256)uint256"
     concat
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/store_function.sol.C.store
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/store_function.sol.C.store
     pop
-    intc_1 // 0
+    intc_0 // 0
     bytec_0 // "ev"
     app_global_get_ex
     assert // check ev exists
-    intc_1 // 0
+    intc_0 // 0
     bytec_1 // "x"
     app_global_get_ex
     assert // check x exists
     swap
-    intc_0 // 1
+    intc_1 // 1
     ==
     assert // invalid function pointer
-    dup
-    len
-    pushint 32
-    <=
-    assert // overflow
-    pushint 32
-    bzero
-    b|
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/store_function.sol.C.eval
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/store_function.sol.C.eval
     pop
     bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 t_ternary_false@3:
-    intc_1 // 0
+    intc_0 // 0
     b t_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/store_function.sol.C.store(__arc4_y: bytes) -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/store_function.sol.C.store:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/store_function.sol.C.store(__arc4_y: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/store_function.sol.C.store:
     proto 1 1
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/store_function.sol.C.store_ternary_false@2
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/store_function.sol.C.store_ternary_false@2
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/store_function.sol.C.store_ternary_merge@3:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/store_function.sol.C.store_ternary_merge@3:
     !
     assert // not payable
     bytec_1 // "x"
@@ -169,26 +161,56 @@ t_ternary_false@3:
     frame_dig -1
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/store_function.sol.C.store_ternary_false@2:
-    intc_1 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/store_function.sol.C.store_ternary_merge@3
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/store_function.sol.C.store_ternary_false@2:
+    intc_0 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/store_function.sol.C.store_ternary_merge@3
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/store_function.sol.C.eval(__arc4_y: bytes) -> bytes, bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/store_function.sol.C.eval:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/store_function.sol.C.eval(__arc4_y: bytes) -> bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/store_function.sol.C.eval:
     proto 1 2
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/store_function.sol.C.eval_ternary_false@2
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/store_function.sol.C.eval_ternary_false@2
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/store_function.sol.C.eval_ternary_merge@3:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/store_function.sol.C.eval_ternary_merge@3:
     !
     assert // not payable
-    err // invalid function pointer
+    frame_dig -1
+    intc_0 // 0
+    extract_uint64
+    dup
+    assert // invalid function pointer
+    itxn_begin
+    frame_dig -1
+    extract 8 4
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationArgs
+    itxn_field ApplicationID
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dup
+    len
+    pushint 32
+    <=
+    assert // overflow
+    pushint 32
+    bzero
+    b|
+    frame_dig -1
+    retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/store_function.sol.C.eval_ternary_false@2:
-    intc_1 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/store_function.sol.C.eval_ternary_merge@3
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/store_function.sol.C.eval_ternary_false@2:
+    intc_0 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/store_function.sol.C.eval_ternary_merge@3
