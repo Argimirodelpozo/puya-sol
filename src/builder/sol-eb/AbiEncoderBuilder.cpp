@@ -546,6 +546,81 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeCall(
 
 // ── encodeWithSelector ──
 
+std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgsHeadTail(
+	BuilderContext& _ctx,
+	solidity::frontend::FunctionCall const& _callNode,
+	size_t _startIdx,
+	awst::SourceLocation const& _loc)
+{
+	auto const& args = _callNode.arguments();
+	// StringLiteralType is nominally static per Solidity's type system, but
+	// its encoding is dynamic (length + data) — treat as dynamic so offsets
+	// get emitted in the head.
+	auto isDynArg = [](solidity::frontend::Type const* _t) {
+		if (!_t) return false;
+		return _t->isDynamicallyEncoded()
+			|| _t->category() == solidity::frontend::Type::Category::StringLiteral;
+	};
+	bool hasDynamic = false;
+	for (size_t i = _startIdx; i < args.size(); ++i)
+		if (isDynArg(args[i]->annotation().type))
+			hasDynamic = true;
+
+	if (!hasDynamic)
+	{
+		std::vector<std::shared_ptr<awst::Expression>> parts;
+		for (size_t i = _startIdx; i < args.size(); ++i)
+			parts.push_back(toPackedBytes(_ctx, _ctx.buildExpr(*args[i]), args[i]->annotation().type, false, _loc));
+		return concatByteExprs(std::move(parts), _loc);
+	}
+
+	// Head/tail encoding: each arg in head gets either its packed value
+	// (static) or a 32-byte offset pointer (dynamic) into the tail.
+	size_t numTrailing = args.size() - _startIdx;
+	size_t headSize = numTrailing * 32;
+	std::vector<std::shared_ptr<awst::Expression>> headParts;
+	std::vector<std::shared_ptr<awst::Expression>> tailParts;
+	auto currentOffset = makeUint64(std::to_string(headSize), _loc);
+
+	for (size_t i = _startIdx; i < args.size(); ++i)
+	{
+		auto const* solType = args[i]->annotation().type;
+		auto expr = _ctx.buildExpr(*args[i]);
+		if (!isDynArg(solType))
+		{
+			headParts.push_back(toPackedBytes(_ctx, std::move(expr), solType, false, _loc));
+			continue;
+		}
+		auto offsetItob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
+		offsetItob->stackArgs.push_back(currentOffset);
+		headParts.push_back(leftPadBytes(std::move(offsetItob), 32, _loc));
+
+		auto tail = encodeDynamicTail(_ctx, std::move(expr), solType, _loc);
+		auto tailLen = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
+		tailLen->stackArgs.push_back(tail);
+
+		auto newOffset = std::make_shared<awst::UInt64BinaryOperation>();
+		newOffset->sourceLocation = _loc;
+		newOffset->wtype = awst::WType::uint64Type();
+		newOffset->op = awst::UInt64BinaryOperator::Add;
+		newOffset->left = std::move(currentOffset);
+		newOffset->right = std::move(tailLen);
+		currentOffset = std::move(newOffset);
+		tailParts.push_back(std::move(tail));
+	}
+
+	auto encoded = concatByteExprs(std::move(headParts), _loc);
+	if (!tailParts.empty())
+	{
+		auto tail = concatByteExprs(std::move(tailParts), _loc);
+		auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
+		concat->stackArgs.push_back(std::move(encoded));
+		concat->stackArgs.push_back(std::move(tail));
+		encoded = std::move(concat);
+	}
+	return encoded;
+}
+
 std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeWithSelector(
 	BuilderContext& _ctx,
 	solidity::frontend::FunctionCall const& _callNode,
@@ -609,85 +684,9 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeWithSelector(
 	if (args.size() == 1)
 		return std::make_unique<GenericAbiResult>(_ctx, std::move(selector));
 
-	// Check if trailing args have any dynamic types. StringLiteralType is
-	// static under Solidity's TypeSystem, but its mobileType `string memory`
-	// is dynamically encoded — abi.encodeWithSelector(sel, "") should emit
-	// the head/tail layout, not just the bare selector.
-	auto isDynArg = [](solidity::frontend::Type const* _t) -> bool {
-		if (!_t) return false;
-		if (_t->isDynamicallyEncoded()) return true;
-		if (_t->category() == solidity::frontend::Type::Category::StringLiteral)
-			return true;
-		return false;
-	};
-	bool hasDynamic = false;
-	for (size_t i = 1; i < args.size(); ++i)
-	{
-		auto const* solType = args[i]->annotation().type;
-		if (isDynArg(solType))
-			hasDynamic = true;
-	}
-
 	std::vector<std::shared_ptr<awst::Expression>> parts;
 	parts.push_back(std::move(selector));
-
-	if (!hasDynamic)
-	{
-		// All static: simple concatenation
-		for (size_t i = 1; i < args.size(); ++i)
-			parts.push_back(toPackedBytes(_ctx, _ctx.buildExpr(*args[i]), args[i]->annotation().type, false, _loc));
-	}
-	else
-	{
-		// Head/tail encoding for trailing args
-		size_t numTrailing = args.size() - 1;
-		size_t headSize = numTrailing * 32;
-
-		std::vector<std::shared_ptr<awst::Expression>> headParts;
-		std::vector<std::shared_ptr<awst::Expression>> tailParts;
-		auto currentOffset = makeUint64(std::to_string(headSize), _loc);
-
-		for (size_t i = 1; i < args.size(); ++i)
-		{
-			auto const* solType = args[i]->annotation().type;
-			bool isDyn = isDynArg(solType);
-			auto expr = _ctx.buildExpr(*args[i]);
-
-			if (!isDyn)
-			{
-				headParts.push_back(toPackedBytes(_ctx, std::move(expr), solType, false, _loc));
-			}
-			else
-			{
-				auto offsetItob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-				offsetItob->stackArgs.push_back(currentOffset);
-				headParts.push_back(leftPadBytes(std::move(offsetItob), 32, _loc));
-
-				auto tail = encodeDynamicTail(_ctx, std::move(expr), solType, _loc);
-				auto tailLen = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
-				tailLen->stackArgs.push_back(tail);
-
-				auto newOffset = std::make_shared<awst::UInt64BinaryOperation>();
-				newOffset->sourceLocation = _loc;
-				newOffset->wtype = awst::WType::uint64Type();
-				newOffset->op = awst::UInt64BinaryOperator::Add;
-				newOffset->left = std::move(currentOffset);
-				newOffset->right = std::move(tailLen);
-				currentOffset = std::move(newOffset);
-				tailParts.push_back(std::move(tail));
-			}
-		}
-		auto encoded = concatByteExprs(std::move(headParts), _loc);
-		if (!tailParts.empty())
-		{
-			auto tail = concatByteExprs(std::move(tailParts), _loc);
-			auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-			concat->stackArgs.push_back(std::move(encoded));
-			concat->stackArgs.push_back(std::move(tail));
-			encoded = std::move(concat);
-		}
-		parts.push_back(std::move(encoded));
-	}
+	parts.push_back(encodeArgsHeadTail(_ctx, _callNode, 1, _loc));
 	return std::make_unique<GenericAbiResult>(_ctx, concatByteExprs(std::move(parts), _loc));
 }
 
@@ -719,78 +718,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeWithSignature(
 	if (args.size() == 1)
 		return std::make_unique<GenericAbiResult>(_ctx, concatByteExprs(std::move(parts), _loc));
 
-	// Check if trailing args have dynamic types. StringLiteralType is
-	// static per Solidity's type system, but its encoding is exactly
-	// what ABI dynamic encoding expects (a bytes blob), so we treat it
-	// as dynamic here to match Solidity's head/tail layout.
-	auto isDynArg = [](solidity::frontend::Type const* _t) -> bool {
-		if (!_t) return false;
-		if (_t->isDynamicallyEncoded()) return true;
-		return dynamic_cast<solidity::frontend::StringLiteralType const*>(_t) != nullptr;
-	};
-	bool hasDynamic = false;
-	for (size_t i = 1; i < args.size(); ++i)
-	{
-		auto const* solType = args[i]->annotation().type;
-		if (isDynArg(solType))
-			hasDynamic = true;
-	}
-
-	if (!hasDynamic)
-	{
-		for (size_t i = 1; i < args.size(); ++i)
-			parts.push_back(toPackedBytes(_ctx, _ctx.buildExpr(*args[i]), args[i]->annotation().type, false, _loc));
-	}
-	else
-	{
-		// Head/tail encoding
-		size_t numTrailing = args.size() - 1;
-		size_t headSize = numTrailing * 32;
-		std::vector<std::shared_ptr<awst::Expression>> headParts;
-		std::vector<std::shared_ptr<awst::Expression>> tailParts;
-		auto currentOffset = makeUint64(std::to_string(headSize), _loc);
-
-		for (size_t i = 1; i < args.size(); ++i)
-		{
-			auto const* solType = args[i]->annotation().type;
-			bool isDyn = isDynArg(solType);
-			auto expr = _ctx.buildExpr(*args[i]);
-
-			if (!isDyn)
-			{
-				headParts.push_back(toPackedBytes(_ctx, std::move(expr), solType, false, _loc));
-			}
-			else
-			{
-				auto offsetItob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-				offsetItob->stackArgs.push_back(currentOffset);
-				headParts.push_back(leftPadBytes(std::move(offsetItob), 32, _loc));
-
-				auto tail = encodeDynamicTail(_ctx, std::move(expr), solType, _loc);
-				auto tailLen = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
-				tailLen->stackArgs.push_back(tail);
-
-				auto newOffset = std::make_shared<awst::UInt64BinaryOperation>();
-				newOffset->sourceLocation = _loc;
-				newOffset->wtype = awst::WType::uint64Type();
-				newOffset->op = awst::UInt64BinaryOperator::Add;
-				newOffset->left = std::move(currentOffset);
-				newOffset->right = std::move(tailLen);
-				currentOffset = std::move(newOffset);
-				tailParts.push_back(std::move(tail));
-			}
-		}
-		auto encoded = concatByteExprs(std::move(headParts), _loc);
-		if (!tailParts.empty())
-		{
-			auto tail = concatByteExprs(std::move(tailParts), _loc);
-			auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-			concat->stackArgs.push_back(std::move(encoded));
-			concat->stackArgs.push_back(std::move(tail));
-			encoded = std::move(concat);
-		}
-		parts.push_back(std::move(encoded));
-	}
+	parts.push_back(encodeArgsHeadTail(_ctx, _callNode, 1, _loc));
 	return std::make_unique<GenericAbiResult>(_ctx, concatByteExprs(std::move(parts), _loc));
 }
 

@@ -62,6 +62,18 @@ private:
 		std::vector<std::shared_ptr<awst::Expression>> _parts,
 		awst::SourceLocation const& _loc);
 
+	/// Encode a range of FunctionCall arguments using EVM ABI head/tail
+	/// layout (single bytes blob). Used by abi.encodeWithSelector /
+	/// abi.encodeWithSignature after they've consumed the leading
+	/// selector/signature arg. The range is [_startIdx, args.size()).
+	/// Returns a single concatenated bytes expression; if all args are
+	/// static the result is just packed bytes without offsets.
+	static std::shared_ptr<awst::Expression> encodeArgsHeadTail(
+		BuilderContext& _ctx,
+		solidity::frontend::FunctionCall const& _callNode,
+		size_t _startIdx,
+		awst::SourceLocation const& _loc);
+
 	/// Left-pad bytes to exactly N bytes.
 	static std::shared_ptr<awst::Expression> leftPadBytes(
 		std::shared_ptr<awst::Expression> _expr, int _n,
