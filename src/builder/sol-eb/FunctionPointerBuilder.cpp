@@ -333,15 +333,49 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 			// Simple ABI encoding: uint64 → itob, biguint → reinterpret to bytes
 			// (already 32 bytes), bool → 1 byte, bytes/string → length-prefixed,
 			// anything else → pass-through.
+			// Target ARC4 width for integer types: uint256 → 32 bytes, uint128 → 16, etc.
+			unsigned targetBits = 256;
+			if (paramSolType)
+				if (auto const* intType = dynamic_cast<IntegerType const*>(paramSolType))
+					targetBits = intType->numBits();
+			unsigned targetBytes = targetBits / 8;
+
 			std::shared_ptr<awst::Expression> encoded;
 			if (argExpr->wtype == awst::WType::uint64Type())
 			{
 				auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
 				itob->stackArgs.push_back(std::move(argExpr));
-				encoded = std::move(itob);
+				std::shared_ptr<awst::Expression> bytesExpr = std::move(itob);
+				if (targetBytes > 8 && paramSolType && dynamic_cast<IntegerType const*>(paramSolType))
+				{
+					// Left-pad itob(8) to targetBytes via `b| bzero(targetBytes)`.
+					auto bzero = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
+					bzero->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(targetBytes), _loc));
+					auto orOp = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), _loc);
+					orOp->stackArgs.push_back(std::move(bytesExpr));
+					orOp->stackArgs.push_back(std::move(bzero));
+					bytesExpr = std::move(orOp);
+				}
+				encoded = std::move(bytesExpr);
 			}
 			else if (argExpr->wtype == awst::WType::biguintType())
-				encoded = awst::makeReinterpretCast(std::move(argExpr), awst::WType::bytesType(), _loc);
+			{
+				auto raw = awst::makeReinterpretCast(std::move(argExpr), awst::WType::bytesType(), _loc);
+				if (paramSolType && dynamic_cast<IntegerType const*>(paramSolType))
+				{
+					// Biguint can be shorter than targetBytes; left-pad via b| bzero.
+					auto bzero = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
+					bzero->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(targetBytes), _loc));
+					auto orOp = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), _loc);
+					orOp->stackArgs.push_back(std::move(raw));
+					orOp->stackArgs.push_back(std::move(bzero));
+					encoded = std::move(orOp);
+				}
+				else
+				{
+					encoded = std::move(raw);
+				}
+			}
 			else if (argExpr->wtype == awst::WType::boolType())
 			{
 				// ARC4 bool: 1 byte, 0x80 = true, 0x00 = false.
@@ -741,6 +775,8 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 			}
 			else if (paramSolType && paramSolType->category() == Type::Category::StringLiteral)
 				arg.wtype = awst::WType::stringType();
+			else if (auto const* fnType = dynamic_cast<FunctionType const*>(paramSolType))
+				arg.wtype = mapFunctionType(fnType);
 			else
 				arg.wtype = awst::WType::biguintType();
 			arg.sourceLocation = _loc;
@@ -806,15 +842,33 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 							paramName = "_param" + std::to_string(i);
 					}
 
-					if (isPublic && var->wtype == awst::WType::biguintType())
+					awst::WType const* arc4Type = nullptr;
+					if (isPublic)
 					{
-						// Public target: wrap biguint → ARC4UIntN for ARC4 params
-						auto const* paramSolType = funcType->parameterTypes()[i];
-						unsigned bits = 256;
-						if (auto const* intType = dynamic_cast<IntegerType const*>(paramSolType))
-							bits = intType->numBits();
-						auto arc4Type = new awst::ARC4UIntN(static_cast<int>(bits));
+						if (var->wtype == awst::WType::biguintType())
+						{
+							// Biguint: preserve bit width from Solidity int type
+							auto const* paramSolType = funcType->parameterTypes()[i];
+							unsigned bits = 256;
+							if (auto const* intType = dynamic_cast<IntegerType const*>(paramSolType))
+								bits = intType->numBits();
+							arc4Type = new awst::ARC4UIntN(static_cast<int>(bits));
+						}
+						else if (var->wtype && var->wtype->kind() == awst::WTypeKind::Bytes)
+						{
+							// bytes[N] → arc4.static_array<arc4.uint8, N>
+							auto const* bytesType = static_cast<awst::BytesWType const*>(var->wtype);
+							if (bytesType->length().has_value())
+							{
+								auto const* arc4Byte = new awst::ARC4UIntN(8);
+								arc4Type = new awst::ARC4StaticArray(arc4Byte, bytesType->length().value());
+							}
+						}
+					}
 
+					if (isPublic && arc4Type && arc4Type != var->wtype)
+					{
+						// Public target: wrap native → ARC4 type
 						auto encode = std::make_shared<awst::ARC4Encode>();
 						encode->sourceLocation = _loc;
 						encode->wtype = arc4Type;
