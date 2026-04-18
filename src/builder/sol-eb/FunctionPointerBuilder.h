@@ -52,7 +52,8 @@ public:
 		BuilderContext& _ctx,
 		solidity::frontend::FunctionDefinition const* _funcDef,
 		awst::SourceLocation const& _loc,
-		solidity::frontend::FunctionType const* _callerFuncType = nullptr);
+		solidity::frontend::FunctionType const* _callerFuncType = nullptr,
+		std::shared_ptr<awst::Expression> _receiverAddress = nullptr);
 
 	/// Build a call through a function pointer.
 	/// For internal: calls __funcptr_dispatch(id, args...).

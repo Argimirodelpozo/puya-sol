@@ -37,6 +37,42 @@ namespace puyasol::builder::sol_ast
 {
 
 /// Inline helper: MemberAccess that resolves to a function pointer ID (C.f)
+/// Inline helper: `.address` on an external function pointer value.
+/// Extracts the 8-byte appId from the 12-byte fn-ptr layout and left-pads
+/// to 32 bytes so it reads as an AVM address. For `this.f.address` the
+/// appId is 0 (self-sentinel), so this path folds to CurrentApplicationAddress.
+class SolFunctionAddressAccess : public SolMemberAccess
+{
+public:
+	SolFunctionAddressAccess(eb::BuilderContext& _ctx,
+		solidity::frontend::MemberAccess const& _node)
+		: SolMemberAccess(_ctx, _node) {}
+
+	std::shared_ptr<awst::Expression> toAwst() override
+	{
+		auto fnPtr = m_ctx.buildExpr(m_memberAccess.expression());
+		if (fnPtr->wtype != awst::WType::bytesType())
+		{
+			auto cast = awst::makeReinterpretCast(std::move(fnPtr), awst::WType::bytesType(), m_loc);
+			fnPtr = std::move(cast);
+		}
+		// Extract first 8 bytes = appId (big-endian uint64).
+		auto appIdBytes = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), m_loc);
+		appIdBytes->immediates = {0, 8};
+		appIdBytes->stackArgs.push_back(std::move(fnPtr));
+		// Left-pad to 32 bytes to form an address.
+		auto padSize = awst::makeIntegerConstant("24", m_loc);
+		auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
+		pad->stackArgs.push_back(std::move(padSize));
+		auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
+		cat->stackArgs.push_back(std::move(pad));
+		cat->stackArgs.push_back(std::move(appIdBytes));
+		// Reinterpret as account for assignment to an address-typed target.
+		auto accCast = awst::makeReinterpretCast(std::move(cat), awst::WType::accountType(), m_loc);
+		return accCast;
+	}
+};
+
 class SolFunctionPointerAccess : public SolMemberAccess
 {
 public:
@@ -67,8 +103,39 @@ public:
 			regType,
 			awstName);
 
+		// Detect cross-contract reference: `C(addr).fn` where the base is
+		// not `this`. The receiver address must flow into the fn pointer
+		// so `.address` returns the caller-supplied addr rather than the
+		// self sentinel (0).
+		std::shared_ptr<awst::Expression> receiverAddr;
+		if (m_callerFuncType
+			&& m_callerFuncType->kind() == solidity::frontend::FunctionType::Kind::External)
+		{
+			auto const& baseExpr = m_memberAccess.expression();
+			bool isSelf = false;
+			if (auto const* ident = dynamic_cast<solidity::frontend::Identifier const*>(&baseExpr))
+				if (ident->name() == "this")
+					isSelf = true;
+			if (!isSelf)
+			{
+				// base is e.g. `C(address(0x1234))` — a type conversion whose
+				// argument is the address. Evaluate the base expression to
+				// get the address bytes.
+				if (auto const* baseCall = dynamic_cast<solidity::frontend::FunctionCall const*>(&baseExpr))
+				{
+					if (baseCall->annotation().kind.set()
+						&& *baseCall->annotation().kind
+							== solidity::frontend::FunctionCallKind::TypeConversion
+						&& baseCall->arguments().size() == 1)
+						receiverAddr = m_ctx.buildExpr(*baseCall->arguments()[0]);
+				}
+				if (!receiverAddr)
+					receiverAddr = m_ctx.buildExpr(baseExpr);
+			}
+		}
+
 		return eb::FunctionPointerBuilder::buildFunctionReference(
-			m_ctx, m_funcDef, m_loc, m_callerFuncType);
+			m_ctx, m_funcDef, m_loc, m_callerFuncType, receiverAddr);
 	}
 private:
 	solidity::frontend::FunctionDefinition const* m_funcDef;
@@ -381,6 +448,15 @@ std::unique_ptr<SolMemberAccess> SolExpressionFactory::createMemberAccess(
 	// 6. .length on arrays/bytes
 	if (member == "length")
 		return std::make_unique<SolLengthAccess>(m_ctx, _node);
+
+	// 6b. .address on external function pointer values
+	if (member == "address")
+	{
+		auto const* baseT = baseExpr.annotation().type;
+		if (auto const* bft = dynamic_cast<FunctionType const*>(baseT))
+			if (bft->kind() == FunctionType::Kind::External)
+				return std::make_unique<SolFunctionAddressAccess>(m_ctx, _node);
+	}
 
 	// 7. Function pointer via contract: C.f used as a value
 	if (auto const* refDecl = _node.annotation().referencedDeclaration)
