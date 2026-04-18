@@ -859,16 +859,70 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				// Decode ARC4 element back to native type (e.g. arc4.uint256 → biguint)
 				auto* nativeElem = m_typeMapper.map(arrType->baseType());
 				std::shared_ptr<awst::Expression> result = std::move(indexExpr);
-				if (elemARC4 != nativeElem && elemARC4->name() != nativeElem->name())
-				{
-					auto decode = std::make_shared<awst::ARC4Decode>();
-					decode->sourceLocation = loc;
-					decode->wtype = nativeElem;
-					decode->value = std::move(result);
-					result = std::move(decode);
-				}
 
-				readExpr = std::move(result);
+				// Struct element with multi-field getter signature: decompose
+				// the ARC4 struct into a tuple of non-mapping, non-dynamic-array
+				// fields. Matches Solidity's public-accessor behavior for
+				// `Struct[N] public p` where the getter returns the primitive
+				// fields flat rather than the struct itself.
+				auto const* solStructElem = dynamic_cast<solidity::frontend::StructType const*>(arrType->baseType());
+				if (solStructElem && solReturnTypes.size() > 1)
+				{
+					auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(elemARC4);
+					auto tuple = std::make_shared<awst::TupleExpression>();
+					tuple->sourceLocation = loc;
+					tuple->wtype = getter.returnType;
+
+					for (auto const& member: solStructElem->members(nullptr))
+					{
+						if (member.type->category() == solidity::frontend::Type::Category::Mapping)
+							continue;
+						if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(member.type))
+							if (!at->isByteArrayOrString())
+								continue;
+
+						awst::WType const* arc4FieldType = nullptr;
+						if (arc4Struct)
+							for (auto const& [fname, ftype]: arc4Struct->fields())
+								if (fname == member.name)
+								{
+									arc4FieldType = ftype;
+									break;
+								}
+
+						auto fieldExpr = std::make_shared<awst::FieldExpression>();
+						fieldExpr->sourceLocation = loc;
+						fieldExpr->wtype = arc4FieldType ? arc4FieldType : m_typeMapper.map(member.type);
+						fieldExpr->base = result;
+						fieldExpr->name = member.name;
+
+						auto* nativeFieldType = m_typeMapper.map(member.type);
+						if (arc4FieldType && arc4FieldType != nativeFieldType)
+						{
+							auto decode = std::make_shared<awst::ARC4Decode>();
+							decode->sourceLocation = loc;
+							decode->wtype = nativeFieldType;
+							decode->value = std::move(fieldExpr);
+							tuple->items.push_back(std::move(decode));
+						}
+						else
+							tuple->items.push_back(std::move(fieldExpr));
+					}
+					readExpr = std::move(tuple);
+				}
+				else
+				{
+					if (elemARC4 != nativeElem && elemARC4->name() != nativeElem->name())
+					{
+						auto decode = std::make_shared<awst::ARC4Decode>();
+						decode->sourceLocation = loc;
+						decode->wtype = nativeElem;
+						decode->value = std::move(result);
+						result = std::move(decode);
+					}
+
+					readExpr = std::move(result);
+				}
 			}
 			else
 			{
