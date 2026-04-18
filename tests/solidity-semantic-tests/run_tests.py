@@ -1355,12 +1355,18 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
             elif isinstance(a, int) and _psz_for(i) is not None:
                 # int → byte[N]: convert large int to N-byte list
                 # EVM uses left-aligned encoding for bytesN: left(0xABCD) packs
-                # the significant bytes at the start. Take the FIRST N bytes from
-                # the big-endian representation.
+                # the significant bytes at the start. parse_value's left(...)
+                # already padded to 32 bytes, so always use a 32-byte BE
+                # representation (preserves leading zero bytes like
+                # left(0x0022) which parses to 0x00220000...00 — its first
+                # 2 bytes must be `00 22`, not `22 00`).
                 expected_size = _psz_for(i)
-                byte_len = max(expected_size, (a.bit_length() + 7) // 8) if a else expected_size
-                a_bytes = a.to_bytes(byte_len, 'big') if a else b'\x00' * expected_size
-                # Take first N bytes (left-aligned, matching EVM bytesN encoding)
+                if a:
+                    byte_len = max(32, (a.bit_length() + 7) // 8)
+                else:
+                    byte_len = max(32, expected_size)
+                a_bytes = a.to_bytes(byte_len, 'big') if a else b'\x00' * byte_len
+                # Take first N bytes (left-aligned, matching EVM bytesN encoding).
                 a_bytes = a_bytes[:expected_size]
                 if len(a_bytes) < expected_size:
                     a_bytes = a_bytes + b'\x00' * (expected_size - len(a_bytes))
