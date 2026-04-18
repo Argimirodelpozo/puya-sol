@@ -55,6 +55,41 @@ std::shared_ptr<awst::Expression> leftPadBytes(
 	return orOp;
 }
 
+/// Map a Solidity type to the dispatch-method WType.
+/// _promoteSignedI64Biguint=true treats int8..int64 (signed) as biguint so
+/// that sign-extension works at the ABI boundary — used for dispatch return
+/// types; for arg types it stays uint64.
+awst::WType const* mapDispatchType(
+	solidity::frontend::Type const* _solType, bool _promoteSignedI64Biguint)
+{
+	using namespace solidity::frontend;
+	if (auto const* intType = dynamic_cast<IntegerType const*>(_solType))
+	{
+		if (intType->numBits() <= 64 && _promoteSignedI64Biguint && intType->isSigned())
+			return awst::WType::biguintType();
+		if (intType->numBits() <= 64)
+			return awst::WType::uint64Type();
+		return awst::WType::biguintType();
+	}
+	if (dynamic_cast<BoolType const*>(_solType))
+		return awst::WType::boolType();
+	if (auto const* arrType = dynamic_cast<ArrayType const*>(_solType))
+	{
+		if (arrType->isString())
+			return awst::WType::stringType();
+		if (arrType->isByteArray())
+			return awst::WType::bytesType();
+		return awst::WType::biguintType();
+	}
+	if (_solType && _solType->category() == Type::Category::StringLiteral)
+		return awst::WType::stringType();
+	if (auto const* fnType = dynamic_cast<FunctionType const*>(_solType))
+		return FunctionPointerBuilder::mapFunctionType(fnType);
+	if (auto const* fbType = dynamic_cast<FixedBytesType const*>(_solType))
+		return new awst::BytesWType(static_cast<int>(fbType->numBytes()));
+	return awst::WType::biguintType();
+}
+
 /// Encode one argument as ARC4-raw bytes for an inner-application-call
 /// `ApplicationArgs[i]` field. Follows the ARC4 ABI encoding rules:
 ///   - uintN (N ≤ 64, native uint64): itob, then left-pad to N/8 bytes.
@@ -683,33 +718,8 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		if (funcType->returnParameterTypes().empty())
 			dispatch.returnType = awst::WType::voidType();
 		else if (funcType->returnParameterTypes().size() == 1)
-		{
-			auto const* retSolType = funcType->returnParameterTypes()[0];
-			if (auto const* intType = dynamic_cast<IntegerType const*>(retSolType))
-			{
-				if (intType->numBits() <= 64 && intType->isSigned())
-					dispatch.returnType = awst::WType::biguintType(); // sign-extended
-				else if (intType->numBits() <= 64)
-					dispatch.returnType = awst::WType::uint64Type();
-				else
-					dispatch.returnType = awst::WType::biguintType();
-			}
-			else if (dynamic_cast<BoolType const*>(retSolType))
-				dispatch.returnType = awst::WType::boolType();
-			else if (auto const* arrType = dynamic_cast<ArrayType const*>(retSolType))
-			{
-				if (arrType->isString())
-					dispatch.returnType = awst::WType::stringType();
-				else if (arrType->isByteArray())
-					dispatch.returnType = awst::WType::bytesType();
-				else
-					dispatch.returnType = awst::WType::biguintType();
-			}
-			else if (auto const* retFnType = dynamic_cast<FunctionType const*>(retSolType))
-				dispatch.returnType = mapFunctionType(retFnType);
-			else
-				dispatch.returnType = awst::WType::biguintType();
-		}
+			dispatch.returnType = mapDispatchType(
+				funcType->returnParameterTypes()[0], /*_promoteSignedI64Biguint=*/true);
 		else
 			dispatch.returnType = awst::WType::voidType(); // TODO: tuple returns
 
@@ -725,29 +735,8 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		{
 			awst::SubroutineArgument arg;
 			arg.name = "__arg" + std::to_string(i);
-			auto const* paramSolType = funcType->parameterTypes()[i];
-			if (auto const* intType = dynamic_cast<IntegerType const*>(paramSolType))
-				arg.wtype = intType->numBits() <= 64
-					? awst::WType::uint64Type() : awst::WType::biguintType();
-			else if (dynamic_cast<BoolType const*>(paramSolType))
-				arg.wtype = awst::WType::boolType();
-			else if (auto const* arrType = dynamic_cast<ArrayType const*>(paramSolType))
-			{
-				if (arrType->isString())
-					arg.wtype = awst::WType::stringType();
-				else if (arrType->isByteArray())
-					arg.wtype = awst::WType::bytesType();
-				else
-					arg.wtype = awst::WType::biguintType();
-			}
-			else if (paramSolType && paramSolType->category() == Type::Category::StringLiteral)
-				arg.wtype = awst::WType::stringType();
-			else if (auto const* fnType = dynamic_cast<FunctionType const*>(paramSolType))
-				arg.wtype = mapFunctionType(fnType);
-			else if (auto const* fbType = dynamic_cast<solidity::frontend::FixedBytesType const*>(paramSolType))
-				arg.wtype = new awst::BytesWType(static_cast<int>(fbType->numBytes()));
-			else
-				arg.wtype = awst::WType::biguintType();
+			arg.wtype = mapDispatchType(
+				funcType->parameterTypes()[i], /*_promoteSignedI64Biguint=*/false);
 			arg.sourceLocation = _loc;
 			dispatch.args.push_back(arg);
 		}
