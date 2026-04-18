@@ -1,7 +1,7 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/fallback/inherited.sol.A.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/inherited.sol.A.approval_program() -> uint64:
 main:
     intcblock 1 0 32
     bytecblock "data" 0x
@@ -25,7 +25,7 @@ main_after_if_else@2:
     store 0
     txn NumAppArgs
     bnz main_after_if_else@4
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/fallback/inherited.sol.A.__fallback
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/inherited.sol.A.__fallback
     intc_0 // 1
     return
 
@@ -48,7 +48,7 @@ main_switch_case_next@11:
 main_after_if_else@13:
     dup
     bnz main_after_if_else@6
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/fallback/inherited.sol.A.__fallback
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/inherited.sol.A.__fallback
     intc_0 // 1
     bury 1
 
@@ -73,13 +73,13 @@ main_create_NoOp@12:
     b main_after_if_else@13
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/fallback/inherited.sol.A.__fallback[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/inherited.sol.A.__fallback[routing]() -> void:
 __fallback:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/fallback/inherited.sol.A.__fallback
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/inherited.sol.A.__fallback
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/fallback/inherited.sol.A.getData[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/inherited.sol.A.getData[routing]() -> void:
 getData:
     txn GroupIndex
     bz getData_ternary_false@3
@@ -114,16 +114,16 @@ getData_ternary_false@3:
     b getData_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/fallback/inherited.sol.A.__fallback() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/fallback/inherited.sol.A.__fallback:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/inherited.sol.A.__fallback() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/inherited.sol.A.__fallback:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/fallback/inherited.sol.A.__fallback_ternary_false@2
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/inherited.sol.A.__fallback_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/fallback/inherited.sol.A.__fallback_ternary_merge@3:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/inherited.sol.A.__fallback_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 1
@@ -133,6 +133,6 @@ getData_ternary_false@3:
     app_global_put
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/fallback/inherited.sol.A.__fallback_ternary_false@2:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/inherited.sol.A.__fallback_ternary_false@2:
     intc_1 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/fallback/inherited.sol.A.__fallback_ternary_merge@3
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/inherited.sol.A.__fallback_ternary_merge@3

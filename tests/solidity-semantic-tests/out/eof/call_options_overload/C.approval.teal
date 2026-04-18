@@ -1,0 +1,132 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionCall/eof/call_options_overload.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    pushbytes ""
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn NumAppArgs
+    bnz main_after_if_else@4
+    intc_0 // 1
+    return
+
+main_after_if_else@4:
+    intc_2 // 0
+    bury 1
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    bz main_create_NoOp@13
+    pushbytess 0x1928cd24 0x2b9082ff 0x7231929f 0xf3869829 0xc599eb05 // method "f(uint256)uint256", method "f(uint256,uint256)uint256", method "call()(uint256,uint256)", method "bal()uint256", method "__receive()void"
+    txna ApplicationArgs 0
+    match main_f_route@7 main_f_route@8 main_call_route@9 main_bal_route@10 main___receive_route@11
+
+main_switch_case_next@12:
+    return
+
+main___receive_route@11:
+    intc_0 // 1
+    bury 1
+    b main_switch_case_next@12
+
+main_bal_route@10:
+    callsub bal
+    intc_0 // 1
+    bury 1
+    b main_switch_case_next@12
+
+main_call_route@9:
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002
+    log
+    intc_0 // 1
+    bury 1
+    b main_switch_case_next@12
+
+main_f_route@8:
+    callsub f(u256,u256)
+    intc_0 // 1
+    bury 1
+    b main_switch_case_next@12
+
+main_f_route@7:
+    callsub f(u256)
+    intc_0 // 1
+    bury 1
+    b main_switch_case_next@12
+
+main_create_NoOp@13:
+    dup
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionCall/eof/call_options_overload.sol.C.f(u256)[routing]() -> void:
+f(u256):
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionCall/eof/call_options_overload.sol.C.f(u256,u256)[routing]() -> void:
+f(u256,u256):
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
+    log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionCall/eof/call_options_overload.sol.C.bal[routing]() -> void:
+bal:
+    txn GroupIndex
+    bz bal_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+bal_ternary_merge@4:
+    !
+    assert // not payable
+    global CurrentApplicationAddress
+    acct_params_get AcctBalance
+    pop
+    itob
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    retsub
+
+bal_ternary_false@3:
+    intc_2 // 0
+    b bal_ternary_merge@4

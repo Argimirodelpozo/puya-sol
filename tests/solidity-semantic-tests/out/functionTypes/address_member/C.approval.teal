@@ -1,12 +1,11 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/address_member.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/address_member.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    pushint 1
     return
 
 main_after_if_else@2:
@@ -31,25 +30,23 @@ main_f_route@4:
     b f
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/address_member.sol.C.f[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/address_member.sol.C.f[routing]() -> void:
 f:
     txn GroupIndex
     bz f_ternary_false@3
     txn GroupIndex
-    intc_0 // 1
+    pushint 1
     -
     gtxns Amount
 
 f_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 0
-    assert // invalid size
-    pushbytes 0x151f7c75
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000012340000000000000000000000000000000000000000000000000000000000001234
     log
-    intc_0 // 1
+    pushint 1
     return
 
 f_ternary_false@3:
-    intc_1 // 0
+    pushint 0
     b f_ternary_merge@4

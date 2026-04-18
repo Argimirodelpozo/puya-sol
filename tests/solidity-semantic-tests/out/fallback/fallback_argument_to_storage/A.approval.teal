@@ -141,8 +141,15 @@ f_ternary_merge@4:
     assert // not payable
     pushbytes "abc"
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_argument_to_storage.sol.A.__fallback
-    pop
-    pushbytes 0x151f7c758000030003616263
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x151f7c75800003
+    swap
+    concat
     log
     retsub
 

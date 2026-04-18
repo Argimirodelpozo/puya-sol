@@ -1,9 +1,10 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
+    bytecblock 0x00 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -24,11 +25,11 @@ main_after_if_else@2:
     assert
     pushbytess 0x19eadd1c 0x55410b82 // method "g(string)bool", method "main()bool"
     txna ApplicationArgs 0
-    match g /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.main[routing]
+    match g /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.main[routing]
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.g[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.g[routing]() -> void:
 g:
     txna ApplicationArgs 1
     dup
@@ -36,44 +37,70 @@ g:
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
-    swap
+    dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    txn GroupIndex
-    bz g_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-g_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c7580
+    extract 2 0
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.g
+    bytec_0 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-g_ternary_false@3:
-    intc_1 // 0
-    b g_ternary_merge@4
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.main[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.main[routing]:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.main[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.main[routing]:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.main[routing]_ternary_false@3
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.main[routing]_ternary_false@3
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.main[routing]_ternary_merge@4:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.main[routing]_ternary_merge@4:
     !
     assert // not payable
-    err // invalid function pointer
-
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.main[routing]_ternary_false@3:
+    pushbytes "testString"
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.g
+    bytec_0 // 0x00
     intc_1 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.main[routing]_ternary_merge@4
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.main[routing]_ternary_false@3:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.main[routing]_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.g(_param0: bytes) -> uint64:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.g:
+    proto 1 1
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.g_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.g_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 1
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.g_ternary_false@2:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.g_ternary_merge@3
