@@ -55,6 +55,40 @@ std::shared_ptr<awst::Expression> leftPadBytes(
 	return orOp;
 }
 
+/// For a public/external target function, compute the ARC4 WType that the
+/// target's AWST parameter will have. Mirrors ContractBuilder's param remap:
+///   - biguint (uint128..uint256, etc.): arc4.uintN preserving bit width.
+///   - bytes[12] from a FunctionType param: arc4.static_array<arc4.uint8, 12>.
+///   - other: nullptr (no wrapping needed).
+awst::WType const* dispatchPublicArgArc4Type(
+	awst::WType const* _nativeType, solidity::frontend::Type const* _paramSolType)
+{
+	using namespace solidity::frontend;
+	if (_nativeType == awst::WType::biguintType())
+	{
+		unsigned bits = 256;
+		if (auto const* intType = dynamic_cast<IntegerType const*>(_paramSolType))
+			bits = intType->numBits();
+		return new awst::ARC4UIntN(static_cast<int>(bits));
+	}
+	if (_nativeType && _nativeType->kind() == awst::WTypeKind::Bytes
+		&& dynamic_cast<FunctionType const*>(_paramSolType))
+	{
+		// External fn-ptr bytes[12] → arc4.static_array<arc4.uint8, 12>.
+		// ContractBuilder only ARC4-remaps bytes[N] params when the Solidity
+		// type is FunctionType (see ContractBuilder.cpp isAggregate check);
+		// matching that rule here so the dispatch call-site wraps iff the
+		// target's signature expects an ARC4 arg.
+		auto const* bytesType = static_cast<awst::BytesWType const*>(_nativeType);
+		if (bytesType->length().has_value())
+		{
+			auto const* arc4Byte = new awst::ARC4UIntN(8);
+			return new awst::ARC4StaticArray(arc4Byte, bytesType->length().value());
+		}
+	}
+	return nullptr;
+}
+
 /// Map a Solidity type to the dispatch-method WType.
 /// _promoteSignedI64Biguint=true treats int8..int64 (signed) as biguint so
 /// that sign-extension works at the ABI boundary — used for dispatch return
@@ -800,37 +834,11 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 							paramName = "_param" + std::to_string(i);
 					}
 
-					awst::WType const* arc4Type = nullptr;
-					if (isPublic)
-					{
-						auto const* paramSolType = funcType->parameterTypes()[i];
-						if (var->wtype == awst::WType::biguintType())
-						{
-							// Biguint: preserve bit width from Solidity int type
-							unsigned bits = 256;
-							if (auto const* intType = dynamic_cast<IntegerType const*>(paramSolType))
-								bits = intType->numBits();
-							arc4Type = new awst::ARC4UIntN(static_cast<int>(bits));
-						}
-						else if (var->wtype && var->wtype->kind() == awst::WTypeKind::Bytes
-							&& dynamic_cast<FunctionType const*>(paramSolType))
-						{
-							// External fn-ptr bytes[12] → arc4.static_array<arc4.uint8, 12>.
-							// ContractBuilder only ARC4-remaps bytes[N] params when the
-							// Solidity type is FunctionType (see ContractBuilder.cpp
-							// isAggregate check); matching that rule here so the
-							// dispatch call-site wraps iff the target's signature
-							// expects an ARC4 arg.
-							auto const* bytesType = static_cast<awst::BytesWType const*>(var->wtype);
-							if (bytesType->length().has_value())
-							{
-								auto const* arc4Byte = new awst::ARC4UIntN(8);
-								arc4Type = new awst::ARC4StaticArray(arc4Byte, bytesType->length().value());
-							}
-						}
-					}
+					awst::WType const* arc4Type = isPublic
+						? dispatchPublicArgArc4Type(var->wtype, funcType->parameterTypes()[i])
+						: nullptr;
 
-					if (isPublic && arc4Type && arc4Type != var->wtype)
+					if (arc4Type && arc4Type != var->wtype)
 					{
 						// Public target: wrap native → ARC4 type
 						auto encode = std::make_shared<awst::ARC4Encode>();
