@@ -13,6 +13,157 @@ namespace puyasol::builder::eb
 
 using namespace solidity::frontend;
 
+namespace
+{
+
+/// Map a function type's return parameters to the dispatch return WType.
+/// void for no returns, single WType for one return, WTuple for multiple.
+awst::WType const* computeReturnType(BuilderContext& _ctx, FunctionType const* _funcType)
+{
+	if (!_funcType || _funcType->returnParameterTypes().empty())
+		return awst::WType::voidType();
+	auto const& rts = _funcType->returnParameterTypes();
+	if (rts.size() == 1)
+		return _ctx.typeMapper.map(rts[0]);
+	std::vector<awst::WType const*> retTypes;
+	for (auto const* rt : rts)
+		retTypes.push_back(_ctx.typeMapper.map(rt));
+	return _ctx.typeMapper.createType<awst::WTuple>(std::move(retTypes), std::nullopt);
+}
+
+/// True iff translation is happening from a library subroutine context,
+/// where InstanceMethodTarget fails ("invocation outside of a contract method").
+bool inLibraryContext(BuilderContext const& _ctx, std::string const& _currentCref)
+{
+	return !_ctx.contractName.empty()
+		&& !_currentCref.empty()
+		&& _currentCref.find("." + _ctx.contractName) == std::string::npos;
+}
+
+/// Left-pad `_bytes` to exactly _targetBytes bytes via `b| bzero(_targetBytes)`.
+/// Both operands are shorter-first aligned to the right by `b|`.
+std::shared_ptr<awst::Expression> leftPadBytes(
+	std::shared_ptr<awst::Expression> _bytes,
+	unsigned _targetBytes,
+	awst::SourceLocation const& _loc)
+{
+	auto bzero = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
+	bzero->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(_targetBytes), _loc));
+	auto orOp = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), _loc);
+	orOp->stackArgs.push_back(std::move(_bytes));
+	orOp->stackArgs.push_back(std::move(bzero));
+	return orOp;
+}
+
+/// Encode one argument as ARC4-raw bytes for an inner-application-call
+/// `ApplicationArgs[i]` field. Follows the ARC4 ABI encoding rules:
+///   - uintN (N ≤ 64, native uint64): itob, then left-pad to N/8 bytes.
+///   - biguint: reinterpret; if IntegerType, left-pad to N/8 bytes.
+///   - bool: 1 byte, 0x80 for true else 0x00.
+///   - bytes / string (dynamic): uint16(length) ++ raw bytes.
+///   - other: reinterpret as bytes.
+std::shared_ptr<awst::Expression> encodeArgForInnerTxn(
+	std::shared_ptr<awst::Expression> _argExpr,
+	solidity::frontend::Type const* _paramSolType,
+	awst::SourceLocation const& _loc)
+{
+	unsigned targetBits = 256;
+	if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(_paramSolType))
+		targetBits = intType->numBits();
+	unsigned targetBytes = targetBits / 8;
+
+	if (_argExpr->wtype == awst::WType::uint64Type())
+	{
+		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
+		itob->stackArgs.push_back(std::move(_argExpr));
+		std::shared_ptr<awst::Expression> bytesExpr = std::move(itob);
+		if (targetBytes > 8 && dynamic_cast<solidity::frontend::IntegerType const*>(_paramSolType))
+			bytesExpr = leftPadBytes(std::move(bytesExpr), targetBytes, _loc);
+		return bytesExpr;
+	}
+	if (_argExpr->wtype == awst::WType::biguintType())
+	{
+		auto raw = awst::makeReinterpretCast(std::move(_argExpr), awst::WType::bytesType(), _loc);
+		if (dynamic_cast<solidity::frontend::IntegerType const*>(_paramSolType))
+			return leftPadBytes(std::move(raw), targetBytes, _loc);
+		return raw;
+	}
+	if (_argExpr->wtype == awst::WType::boolType())
+	{
+		// ARC4 bool: 1 byte, 0x80 = true, 0x00 = false.
+		auto setbit = awst::makeIntrinsicCall("setbit", awst::WType::bytesType(), _loc);
+		std::vector<uint8_t> zero1{0};
+		setbit->stackArgs.push_back(awst::makeBytesConstant(std::move(zero1), _loc));
+		setbit->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
+		setbit->stackArgs.push_back(std::move(_argExpr));
+		return setbit;
+	}
+	if (auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(_paramSolType);
+		arrType && arrType->isByteArrayOrString())
+	{
+		// ARC4 byte[] encoding: uint16(length) ++ raw_bytes.
+		if (_argExpr->wtype != awst::WType::bytesType())
+			_argExpr = awst::makeReinterpretCast(std::move(_argExpr), awst::WType::bytesType(), _loc);
+		auto lenExpr = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
+		lenExpr->stackArgs.push_back(_argExpr);
+		auto itobLen = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
+		itobLen->stackArgs.push_back(std::move(lenExpr));
+		auto header = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
+		header->immediates = {6, 2};
+		header->stackArgs.push_back(std::move(itobLen));
+		auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
+		concat->stackArgs.push_back(std::move(header));
+		concat->stackArgs.push_back(std::move(_argExpr));
+		return concat;
+	}
+	// Fallback: reinterpret as bytes.
+	if (_argExpr->wtype != awst::WType::bytesType())
+		return awst::makeReinterpretCast(std::move(_argExpr), awst::WType::bytesType(), _loc);
+	return _argExpr;
+}
+
+} // namespace
+
+std::shared_ptr<awst::SubroutineCallExpression> FunctionPointerBuilder::buildDispatchCall(
+	BuilderContext& _ctx,
+	FunctionType const* _funcType,
+	std::shared_ptr<awst::Expression> _ptrIdExpr,
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	awst::SourceLocation const& _loc)
+{
+	std::string dname = dispatchName(_funcType);
+	s_neededDispatches[dname] = _funcType;
+
+	auto call = std::make_shared<awst::SubroutineCallExpression>();
+	call->sourceLocation = _loc;
+	call->wtype = computeReturnType(_ctx, _funcType);
+	if (inLibraryContext(_ctx, s_currentCref))
+		call->target = awst::SubroutineID{s_currentCref + "." + dname};
+	else
+		call->target = awst::InstanceMethodTarget{dname};
+
+	awst::CallArg idArg;
+	idArg.name = "__funcptr_id";
+	idArg.value = std::move(_ptrIdExpr);
+	call->args.push_back(std::move(idArg));
+
+	for (size_t i = 0; i < _args.size(); ++i)
+	{
+		awst::CallArg arg;
+		arg.name = "__arg" + std::to_string(i);
+		arg.value = _args[i];
+		if (i < _funcType->parameterTypes().size())
+		{
+			auto* expectedType = _ctx.typeMapper.map(_funcType->parameterTypes()[i]);
+			if (arg.value->wtype != expectedType)
+				arg.value = builder::TypeCoercion::implicitNumericCast(
+					std::move(arg.value), expectedType, _loc);
+		}
+		call->args.push_back(std::move(arg));
+	}
+	return call;
+}
+
 // Static members
 std::map<int64_t, FuncPtrEntry> FunctionPointerBuilder::s_targets;
 unsigned FunctionPointerBuilder::s_nextId = 1; // 0 = zero-initialized/invalid
@@ -264,53 +415,10 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		auto internalId = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
 		internalId->stackArgs.push_back(std::move(extractId4));
 
-		// Build internal dispatch call with the same args
-		std::string dname = dispatchName(_funcType);
-		s_neededDispatches[dname] = _funcType;
-
-		awst::WType const* retType = awst::WType::voidType();
-		if (!_funcType->returnParameterTypes().empty())
-		{
-			if (_funcType->returnParameterTypes().size() == 1)
-				retType = _ctx.typeMapper.map(_funcType->returnParameterTypes()[0]);
-			else
-			{
-				std::vector<awst::WType const*> retTypes;
-				for (auto const* rt : _funcType->returnParameterTypes())
-					retTypes.push_back(_ctx.typeMapper.map(rt));
-				retType = _ctx.typeMapper.createType<awst::WTuple>(std::move(retTypes), std::nullopt);
-			}
-		}
-
-		auto selfCall = std::make_shared<awst::SubroutineCallExpression>();
-		selfCall->sourceLocation = _loc;
-		selfCall->wtype = retType;
-		bool inLibraryContext = !_ctx.contractName.empty()
-			&& !s_currentCref.empty()
-			&& s_currentCref.find("." + _ctx.contractName) == std::string::npos;
-		if (inLibraryContext)
-			selfCall->target = awst::SubroutineID{s_currentCref + "." + dname};
-		else
-			selfCall->target = awst::InstanceMethodTarget{dname};
-
-		awst::CallArg selfIdArg;
-		selfIdArg.name = "__funcptr_id";
-		selfIdArg.value = std::move(internalId);
-		selfCall->args.push_back(std::move(selfIdArg));
-		for (size_t i = 0; i < _args.size(); ++i)
-		{
-			awst::CallArg arg;
-			arg.name = "__arg" + std::to_string(i);
-			arg.value = _args[i]; // shared — used by both branches
-			if (i < _funcType->parameterTypes().size())
-			{
-				auto* expectedType = _ctx.typeMapper.map(_funcType->parameterTypes()[i]);
-				if (arg.value->wtype != expectedType)
-					arg.value = builder::TypeCoercion::implicitNumericCast(
-						std::move(arg.value), expectedType, _loc);
-			}
-			selfCall->args.push_back(std::move(arg));
-		}
+		// Build internal dispatch call with the same args (shared with
+		// the inner-txn branch below — hence we pass _args by value)
+		auto selfCall = buildDispatchCall(_ctx, _funcType, std::move(internalId), _args, _loc);
+		awst::WType const* retType = selfCall->wtype;
 
 		// ── Inner-txn (cross-contract) branch ──
 		// Extract selector slot (bytes 8..12) — this was populated at
@@ -327,95 +435,9 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		argsTuple->items.push_back(std::move(sel4));
 		for (size_t i = 0; i < _args.size(); ++i)
 		{
-			auto argExpr = _args[i]; // shared with self-call branch
-			solidity::frontend::Type const* paramSolType = i < _funcType->parameterTypes().size()
-				? _funcType->parameterTypes()[i] : nullptr;
-			// Simple ABI encoding: uint64 → itob, biguint → reinterpret to bytes
-			// (already 32 bytes), bool → 1 byte, bytes/string → length-prefixed,
-			// anything else → pass-through.
-			// Target ARC4 width for integer types: uint256 → 32 bytes, uint128 → 16, etc.
-			unsigned targetBits = 256;
-			if (paramSolType)
-				if (auto const* intType = dynamic_cast<IntegerType const*>(paramSolType))
-					targetBits = intType->numBits();
-			unsigned targetBytes = targetBits / 8;
-
-			std::shared_ptr<awst::Expression> encoded;
-			if (argExpr->wtype == awst::WType::uint64Type())
-			{
-				auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-				itob->stackArgs.push_back(std::move(argExpr));
-				std::shared_ptr<awst::Expression> bytesExpr = std::move(itob);
-				if (targetBytes > 8 && paramSolType && dynamic_cast<IntegerType const*>(paramSolType))
-				{
-					// Left-pad itob(8) to targetBytes via `b| bzero(targetBytes)`.
-					auto bzero = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-					bzero->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(targetBytes), _loc));
-					auto orOp = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), _loc);
-					orOp->stackArgs.push_back(std::move(bytesExpr));
-					orOp->stackArgs.push_back(std::move(bzero));
-					bytesExpr = std::move(orOp);
-				}
-				encoded = std::move(bytesExpr);
-			}
-			else if (argExpr->wtype == awst::WType::biguintType())
-			{
-				auto raw = awst::makeReinterpretCast(std::move(argExpr), awst::WType::bytesType(), _loc);
-				if (paramSolType && dynamic_cast<IntegerType const*>(paramSolType))
-				{
-					// Biguint can be shorter than targetBytes; left-pad via b| bzero.
-					auto bzero = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-					bzero->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(targetBytes), _loc));
-					auto orOp = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), _loc);
-					orOp->stackArgs.push_back(std::move(raw));
-					orOp->stackArgs.push_back(std::move(bzero));
-					encoded = std::move(orOp);
-				}
-				else
-				{
-					encoded = std::move(raw);
-				}
-			}
-			else if (argExpr->wtype == awst::WType::boolType())
-			{
-				// ARC4 bool: 1 byte, 0x80 = true, 0x00 = false.
-				auto setbit = awst::makeIntrinsicCall("setbit", awst::WType::bytesType(), _loc);
-				std::vector<uint8_t> zero1{0};
-				setbit->stackArgs.push_back(awst::makeBytesConstant(std::move(zero1), _loc));
-				setbit->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
-				setbit->stackArgs.push_back(std::move(argExpr));
-				encoded = std::move(setbit);
-			}
-			else if (paramSolType && dynamic_cast<ArrayType const*>(paramSolType)
-				&& dynamic_cast<ArrayType const*>(paramSolType)->isByteArrayOrString())
-			{
-				// ARC4 byte[] encoding: uint16(length) ++ raw_bytes.
-				if (argExpr->wtype != awst::WType::bytesType())
-				{
-					auto cast = awst::makeReinterpretCast(std::move(argExpr), awst::WType::bytesType(), _loc);
-					argExpr = std::move(cast);
-				}
-				auto lenExpr = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
-				lenExpr->stackArgs.push_back(argExpr);
-				auto itobLen = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-				itobLen->stackArgs.push_back(std::move(lenExpr));
-				auto header = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-				header->immediates = {6, 2};
-				header->stackArgs.push_back(std::move(itobLen));
-				auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-				concat->stackArgs.push_back(std::move(header));
-				concat->stackArgs.push_back(std::move(argExpr));
-				encoded = std::move(concat);
-			}
-			else
-			{
-				// Fallback: reinterpret as bytes.
-				if (argExpr->wtype != awst::WType::bytesType())
-					encoded = awst::makeReinterpretCast(std::move(argExpr), awst::WType::bytesType(), _loc);
-				else
-					encoded = std::move(argExpr);
-			}
-			argsTuple->items.push_back(std::move(encoded));
+			solidity::frontend::Type const* paramSolType =
+				i < _funcType->parameterTypes().size() ? _funcType->parameterTypes()[i] : nullptr;
+			argsTuple->items.push_back(encodeArgForInnerTxn(_args[i], paramSolType, _loc));
 		}
 		// Build WTuple type
 		{
@@ -540,64 +562,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 	}
 
 	// Internal: call __funcptr_dispatch_<signature>(id, args...)
-	std::string dname = dispatchName(_funcType);
-	// Track that this dispatch signature is needed (even if no targets registered)
-	s_neededDispatches[dname] = _funcType;
-
-	// Determine return type
-	awst::WType const* retType = awst::WType::voidType();
-	if (!_funcType->returnParameterTypes().empty())
-	{
-		if (_funcType->returnParameterTypes().size() == 1)
-			retType = _ctx.typeMapper.map(_funcType->returnParameterTypes()[0]);
-		else
-		{
-			std::vector<awst::WType const*> retTypes;
-			for (auto const* rt : _funcType->returnParameterTypes())
-				retTypes.push_back(_ctx.typeMapper.map(rt));
-			retType = _ctx.typeMapper.createType<awst::WTuple>(std::move(retTypes), std::nullopt);
-		}
-	}
-
-	auto call = std::make_shared<awst::SubroutineCallExpression>();
-	call->sourceLocation = _loc;
-	call->wtype = retType;
-	// Use SubroutineID from library context (where InstanceMethodTarget
-	// fails with "invocation outside of a contract method"). From contract
-	// context, InstanceMethodTarget resolves correctly.
-	bool inLibraryContext = !_ctx.contractName.empty()
-		&& !s_currentCref.empty()
-		&& s_currentCref.find("." + _ctx.contractName) == std::string::npos;
-	if (inLibraryContext)
-		call->target = awst::SubroutineID{s_currentCref + "." + dname};
-	else
-		call->target = awst::InstanceMethodTarget{dname};
-
-	// First arg: the pointer ID
-	awst::CallArg idArg;
-	idArg.name = "__funcptr_id";
-	idArg.value = std::move(_ptrExpr);
-	call->args.push_back(std::move(idArg));
-
-	// Remaining args: coerce to match dispatch parameter types
-	for (size_t i = 0; i < _args.size(); ++i)
-	{
-		awst::CallArg arg;
-		arg.name = "__arg" + std::to_string(i);
-		arg.value = std::move(_args[i]);
-		// Coerce arg type to match dispatch parameter type
-		if (i < _funcType->parameterTypes().size())
-		{
-			auto const* paramSolType = _funcType->parameterTypes()[i];
-			awst::WType const* expectedType = _ctx.typeMapper.map(paramSolType);
-			if (arg.value->wtype != expectedType)
-				arg.value = builder::TypeCoercion::implicitNumericCast(
-					std::move(arg.value), expectedType, _loc);
-		}
-		call->args.push_back(std::move(arg));
-	}
-
-	return call;
+	return buildDispatchCall(_ctx, _funcType, std::move(_ptrExpr), _args, _loc);
 }
 
 // ── Dispatch name from function type signature ──

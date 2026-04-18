@@ -104,6 +104,17 @@ public:
 	static void reset();
 
 private:
+	/// Build the internal-dispatch SubroutineCallExpression. Used both by
+	/// the standalone internal path and the self-call branch of the external
+	/// path. Caller supplies the pointer-id expression (not stored) and the
+	/// raw args (coerced to the dispatch parameter types).
+	static std::shared_ptr<awst::SubroutineCallExpression> buildDispatchCall(
+		BuilderContext& _ctx,
+		solidity::frontend::FunctionType const* _funcType,
+		std::shared_ptr<awst::Expression> _ptrIdExpr,
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc);
+
 	/// All registered function pointer targets, keyed by AST ID.
 	static std::map<int64_t, FuncPtrEntry> s_targets;
 	/// Next available function pointer ID.
