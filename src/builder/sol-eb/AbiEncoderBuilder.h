@@ -48,10 +48,14 @@ private:
 		std::shared_ptr<awst::Expression> _argExpr,
 		awst::SourceLocation const& _loc);
 
+public:
 	/// Build ARC4 method selector from a FunctionDefinition.
+	/// Exposed for fn-pointer dispatch (cross-contract inner txn).
 	static std::string buildARC4MethodSelector(
 		BuilderContext& _ctx,
 		solidity::frontend::FunctionDefinition const* _funcDef);
+
+private:
 
 	/// Concatenate a list of byte expressions using concat intrinsics.
 	static std::shared_ptr<awst::Expression> concatByteExprs(

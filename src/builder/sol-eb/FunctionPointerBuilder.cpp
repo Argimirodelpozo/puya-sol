@@ -3,6 +3,7 @@
 /// inner app calls for external.
 
 #include "builder/sol-eb/FunctionPointerBuilder.h"
+#include "builder/sol-eb/AbiEncoderBuilder.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
@@ -156,29 +157,18 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 				appIdBytes = std::move(extract);
 			}
 
-			// Selector for f: computed via makeSelectorExpr convention (not available
-			// here, so emit a MethodConstant via the function's ARC4 signature).
-			// We use buildARC4SelectorForFunc util; as a fallback emit 4 zero bytes.
-			// NOTE: for now, emit the method selector as bytes via ARC4 hashing.
-			// To keep this commit minimal we embed the internal fn-id as the
-			// selector slot so self-call optimization still works if the caller
-			// of this fn pointer happens to be the current app.
-			auto const* internalFuncType = _funcDef->functionType(true);
-			if (internalFuncType)
-				registerTarget(_funcDef, internalFuncType);
-			auto idIt = s_targets.find(_funcDef->id());
-			unsigned funcId = (idIt != s_targets.end()) ? idIt->second.id : 0;
-
-			auto idItob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-			auto idConst = awst::makeIntegerConstant(std::to_string(funcId), _loc);
-			idItob->stackArgs.push_back(std::move(idConst));
-			auto idBytes4 = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-			idBytes4->immediates = {4, 4};
-			idBytes4->stackArgs.push_back(std::move(idItob));
+			// Cross-contract: store the target's ARC4 method selector in
+			// the selector slot. At call-time when appId != 0 we emit an
+			// inner app txn with ApplicationArgs[0] = this selector.
+			std::string methodSig = AbiEncoderBuilder::buildARC4MethodSelector(_ctx, _funcDef);
+			auto selectorConst = std::make_shared<awst::MethodConstant>();
+			selectorConst->sourceLocation = _loc;
+			selectorConst->wtype = awst::WType::bytesType();
+			selectorConst->value = methodSig;
 
 			auto packed = awst::makeIntrinsicCall("concat", &s_bytes12, _loc);
 			packed->stackArgs.push_back(std::move(appIdBytes));
-			packed->stackArgs.push_back(std::move(idBytes4));
+			packed->stackArgs.push_back(std::move(selectorConst));
 			return packed;
 		}
 
@@ -295,9 +285,6 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		auto selfCall = std::make_shared<awst::SubroutineCallExpression>();
 		selfCall->sourceLocation = _loc;
 		selfCall->wtype = retType;
-		// Determine context: if we're inside the contract (contractName
-		// matches the cref), use InstanceMethodTarget. From library
-		// context, use SubroutineID.
 		bool inLibraryContext = !_ctx.contractName.empty()
 			&& !s_currentCref.empty()
 			&& s_currentCref.find("." + _ctx.contractName) == std::string::npos;
@@ -325,25 +312,196 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 			selfCall->args.push_back(std::move(arg));
 		}
 
-		// If return type is void, self-call is all we need
+		// ── Inner-txn (cross-contract) branch ──
+		// Extract selector slot (bytes 8..12) — this was populated at
+		// fn-ref construction with either the internal fn-ptr id (self)
+		// or the target's ARC4 method selector (cross-contract). The
+		// router on the callee expects ARC4 selector at ApplicationArgs[0].
+		auto sel4 = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
+		sel4->immediates = {8, 4};
+		sel4->stackArgs.push_back(_ptrExpr);
+
+		// Build ApplicationArgs tuple: [selector, arg0_encoded, arg1_encoded, ...]
+		auto argsTuple = std::make_shared<awst::TupleExpression>();
+		argsTuple->sourceLocation = _loc;
+		argsTuple->items.push_back(std::move(sel4));
+		for (size_t i = 0; i < _args.size(); ++i)
+		{
+			auto argExpr = _args[i]; // shared with self-call branch
+			solidity::frontend::Type const* paramSolType = i < _funcType->parameterTypes().size()
+				? _funcType->parameterTypes()[i] : nullptr;
+			// Simple ABI encoding: uint64 → itob, biguint → reinterpret to bytes
+			// (already 32 bytes), bool → 1 byte, bytes/string → length-prefixed,
+			// anything else → pass-through.
+			std::shared_ptr<awst::Expression> encoded;
+			if (argExpr->wtype == awst::WType::uint64Type())
+			{
+				auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
+				itob->stackArgs.push_back(std::move(argExpr));
+				encoded = std::move(itob);
+			}
+			else if (argExpr->wtype == awst::WType::biguintType())
+				encoded = awst::makeReinterpretCast(std::move(argExpr), awst::WType::bytesType(), _loc);
+			else if (argExpr->wtype == awst::WType::boolType())
+			{
+				// ARC4 bool: 1 byte, 0x80 = true, 0x00 = false.
+				auto setbit = awst::makeIntrinsicCall("setbit", awst::WType::bytesType(), _loc);
+				std::vector<uint8_t> zero1{0};
+				setbit->stackArgs.push_back(awst::makeBytesConstant(std::move(zero1), _loc));
+				setbit->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
+				setbit->stackArgs.push_back(std::move(argExpr));
+				encoded = std::move(setbit);
+			}
+			else if (paramSolType && dynamic_cast<ArrayType const*>(paramSolType)
+				&& dynamic_cast<ArrayType const*>(paramSolType)->isByteArrayOrString())
+			{
+				// ARC4 byte[] encoding: uint16(length) ++ raw_bytes.
+				if (argExpr->wtype != awst::WType::bytesType())
+				{
+					auto cast = awst::makeReinterpretCast(std::move(argExpr), awst::WType::bytesType(), _loc);
+					argExpr = std::move(cast);
+				}
+				auto lenExpr = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
+				lenExpr->stackArgs.push_back(argExpr);
+				auto itobLen = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
+				itobLen->stackArgs.push_back(std::move(lenExpr));
+				auto header = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
+				header->immediates = {6, 2};
+				header->stackArgs.push_back(std::move(itobLen));
+				auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
+				concat->stackArgs.push_back(std::move(header));
+				concat->stackArgs.push_back(std::move(argExpr));
+				encoded = std::move(concat);
+			}
+			else
+			{
+				// Fallback: reinterpret as bytes.
+				if (argExpr->wtype != awst::WType::bytesType())
+					encoded = awst::makeReinterpretCast(std::move(argExpr), awst::WType::bytesType(), _loc);
+				else
+					encoded = std::move(argExpr);
+			}
+			argsTuple->items.push_back(std::move(encoded));
+		}
+		// Build WTuple type
+		{
+			std::vector<awst::WType const*> argTypes;
+			for (auto const& item : argsTuple->items)
+				argTypes.push_back(item->wtype);
+			argsTuple->wtype = _ctx.typeMapper.createType<awst::WTuple>(std::move(argTypes), std::nullopt);
+		}
+
+		// Build CreateInnerTransaction for application call
+		static awst::WInnerTransactionFields s_applFieldsType(6); // TxnTypeAppl
+		auto create = std::make_shared<awst::CreateInnerTransaction>();
+		create->sourceLocation = _loc;
+		create->wtype = &s_applFieldsType;
+		create->fields["TypeEnum"] = awst::makeIntegerConstant("6", _loc);
+		create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
+		{
+			// ApplicationID: reinterpret uint64 appId to application type
+			auto appIdCopy = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
+			appIdCopy->immediates = {0, 8};
+			appIdCopy->stackArgs.push_back(_ptrExpr);
+			auto appIdBtoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
+			appIdBtoi->stackArgs.push_back(std::move(appIdCopy));
+			auto appIdApp = awst::makeReinterpretCast(std::move(appIdBtoi), awst::WType::applicationType(), _loc);
+			create->fields["ApplicationID"] = std::move(appIdApp);
+		}
+		create->fields["OnCompletion"] = awst::makeIntegerConstant("0", _loc);
+		create->fields["ApplicationArgs"] = std::move(argsTuple);
+
+		// Submit + read LastLog (strip 4-byte ARC4 return prefix)
+		static awst::WInnerTransaction s_applTxnType(6);
+		auto submit = std::make_shared<awst::SubmitInnerTransaction>();
+		submit->sourceLocation = _loc;
+		submit->wtype = &s_applTxnType;
+		submit->itxns.push_back(std::move(create));
+
+		// Build the inner-txn result expression (coerced to retType)
+		auto buildInnerTxnResult = [&]() -> std::shared_ptr<awst::Expression> {
+			auto readLog = awst::makeIntrinsicCall("itxn", awst::WType::bytesType(), _loc);
+			readLog->immediates = {std::string("LastLog")};
+			auto strip = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
+			strip->immediates = {4, 0};
+			strip->stackArgs.push_back(std::move(readLog));
+			if (retType == awst::WType::bytesType() || retType == awst::WType::voidType())
+				return strip;
+			if (retType == awst::WType::biguintType())
+				return awst::makeReinterpretCast(std::move(strip), awst::WType::biguintType(), _loc);
+			if (retType == awst::WType::uint64Type())
+			{
+				auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
+				btoi->stackArgs.push_back(std::move(strip));
+				return btoi;
+			}
+			if (retType == awst::WType::boolType())
+			{
+				auto getbit = awst::makeIntrinsicCall("getbit", awst::WType::uint64Type(), _loc);
+				getbit->stackArgs.push_back(std::move(strip));
+				getbit->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
+				auto cmp = awst::makeNumericCompare(std::move(getbit), awst::NumericComparison::Ne, awst::makeIntegerConstant("0", _loc), _loc);
+				return cmp;
+			}
+			if (retType == awst::WType::stringType())
+				return awst::makeReinterpretCast(std::move(strip), awst::WType::stringType(), _loc);
+			if (retType == awst::WType::accountType())
+				return awst::makeReinterpretCast(std::move(strip), awst::WType::accountType(), _loc);
+			return awst::makeReinterpretCast(std::move(strip), retType, _loc);
+		};
+
+		// Void return: emit both branches as statements (no temp).
 		if (retType == awst::WType::voidType())
 		{
-			// Unconditionally use self-call for void returns
-			// (inner txn path for non-self not yet needed for void)
-			auto stmt = awst::makeExpressionStatement(selfCall, _loc);
-			_ctx.prePendingStatements.push_back(std::move(stmt));
+			auto ifBlock = std::make_shared<awst::Block>();
+			ifBlock->sourceLocation = _loc;
+			ifBlock->body.push_back(awst::makeExpressionStatement(selfCall, _loc));
+
+			auto elseBlock = std::make_shared<awst::Block>();
+			elseBlock->sourceLocation = _loc;
+			elseBlock->body.push_back(awst::makeExpressionStatement(submit, _loc));
+
+			auto ifStmt = std::make_shared<awst::IfElse>();
+			ifStmt->sourceLocation = _loc;
+			ifStmt->condition = isSelf;
+			ifStmt->ifBranch = std::move(ifBlock);
+			ifStmt->elseBranch = std::move(elseBlock);
+			_ctx.prePendingStatements.push_back(std::move(ifStmt));
+
 			auto vc = std::make_shared<awst::VoidConstant>();
 			vc->sourceLocation = _loc;
 			vc->wtype = awst::WType::voidType();
 			return vc;
 		}
 
-		// For non-void: use a conditional expression
-		// self-call produces the value directly;
-		// non-self inner txn (TODO — for now, just use self-call always)
-		// Once cross-contract fn-ptrs are supported, this becomes:
-		// isSelf ? selfCall : innerTxnResult
-		return selfCall;
+		// Non-void: spill both branches' result into a shared temp; the
+		// containing expression reads the temp.
+		static int s_tmpCounter = 0;
+		std::string tmpName = "__fnptr_res_" + std::to_string(++s_tmpCounter);
+
+		auto ifBlock = std::make_shared<awst::Block>();
+		ifBlock->sourceLocation = _loc;
+		{
+			auto tmpTarget = awst::makeVarExpression(tmpName, retType, _loc);
+			ifBlock->body.push_back(awst::makeAssignmentStatement(tmpTarget, selfCall, _loc));
+		}
+
+		auto elseBlock = std::make_shared<awst::Block>();
+		elseBlock->sourceLocation = _loc;
+		{
+			elseBlock->body.push_back(awst::makeExpressionStatement(submit, _loc));
+			auto tmpTarget = awst::makeVarExpression(tmpName, retType, _loc);
+			elseBlock->body.push_back(awst::makeAssignmentStatement(tmpTarget, buildInnerTxnResult(), _loc));
+		}
+
+		auto ifStmt = std::make_shared<awst::IfElse>();
+		ifStmt->sourceLocation = _loc;
+		ifStmt->condition = isSelf;
+		ifStmt->ifBranch = std::move(ifBlock);
+		ifStmt->elseBranch = std::move(elseBlock);
+		_ctx.prePendingStatements.push_back(std::move(ifStmt));
+
+		return awst::makeVarExpression(tmpName, retType, _loc);
 
 	}
 
