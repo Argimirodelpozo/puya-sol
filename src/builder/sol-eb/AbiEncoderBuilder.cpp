@@ -166,8 +166,30 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgAsARC4Bytes(
 {
 	auto* wtype = _argExpr->wtype;
 
-	if (wtype == awst::WType::bytesType() || (wtype && wtype->kind() == awst::WTypeKind::Bytes))
+	// Dynamic bytes/string pass through raw (caller handles length header).
+	if (wtype == awst::WType::bytesType())
 		return _argExpr;
+	// Fixed-size bytesN (bytes1..bytes32): EVM stores these left-aligned in a
+	// 32-byte word (value at high bytes, zero at low bytes). Right-pad so
+	// abi.encodeCall lays out arguments exactly like the EVM ABI — otherwise
+	// a bytes2 arg occupies only 2 bytes and the caller sees shifted data.
+	if (wtype && wtype->kind() == awst::WTypeKind::Bytes)
+	{
+		auto const* bw = dynamic_cast<awst::BytesWType const*>(wtype);
+		int len = bw && bw->length() ? *bw->length() : 0;
+		if (len > 0 && len < 32)
+		{
+			auto asBytes = awst::makeReinterpretCast(std::move(_argExpr), awst::WType::bytesType(), _loc);
+			auto padSize = awst::makeIntegerConstant(std::to_string(32 - len), _loc);
+			auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
+			pad->stackArgs.push_back(std::move(padSize));
+			auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
+			cat->stackArgs.push_back(std::move(asBytes));
+			cat->stackArgs.push_back(std::move(pad));
+			return cat;
+		}
+		return _argExpr;
+	}
 	if (wtype == awst::WType::uint64Type())
 	{
 		// Solidity ABI: all integers are 32-byte big-endian
@@ -428,8 +450,89 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeCall(
 	else
 		callArgs.push_back(_callNode.arguments()[1]);
 
-	for (auto const& arg : callArgs)
-		parts.push_back(encodeArgAsARC4Bytes(_ctx, _ctx.buildExpr(*arg), _loc));
+	// Encode each arg using the target parameter type (not the source
+	// expression type) so that implicit conversions at the callsite — e.g.
+	// `0x1234` → bytes2, `"ab"` → bytes2 — produce the EVM ABI layout for
+	// that parameter (bytesN left-aligned in a 32-byte word).
+	auto const& targetParams = targetFuncDef->parameters();
+	for (size_t i = 0; i < callArgs.size(); ++i)
+	{
+		auto const& arg = callArgs[i];
+		auto expr = _ctx.buildExpr(*arg);
+		std::shared_ptr<awst::Expression> encoded;
+
+		solidity::frontend::Type const* paramType =
+			i < targetParams.size() && targetParams[i] ? targetParams[i]->type() : nullptr;
+		auto const* fb = dynamic_cast<FixedBytesType const*>(paramType);
+		if (fb)
+		{
+			unsigned n = fb->numBytes();
+			// Coerce source to exactly n bytes, left-aligned.
+			std::shared_ptr<awst::Expression> bytesN;
+			if (expr->wtype == awst::WType::uint64Type())
+			{
+				auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
+				itob->stackArgs.push_back(std::move(expr));
+				if (n <= 8)
+				{
+					// Take last n bytes of the 8-byte itob result.
+					auto off = awst::makeIntegerConstant(std::to_string(8 - n), _loc);
+					auto nConst = awst::makeIntegerConstant(std::to_string(n), _loc);
+					auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
+					extract->stackArgs.push_back(std::move(itob));
+					extract->stackArgs.push_back(std::move(off));
+					extract->stackArgs.push_back(std::move(nConst));
+					bytesN = std::move(extract);
+				}
+				else
+				{
+					// n > 8: left-pad itob to n bytes.
+					auto padSize = awst::makeIntegerConstant(std::to_string(n - 8), _loc);
+					auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
+					pad->stackArgs.push_back(std::move(padSize));
+					auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
+					cat->stackArgs.push_back(std::move(pad));
+					cat->stackArgs.push_back(std::move(itob));
+					bytesN = std::move(cat);
+				}
+			}
+			else if (expr->wtype == awst::WType::biguintType())
+			{
+				auto asBytes = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), _loc);
+				// biguint is 32-byte big-endian: take last n bytes.
+				auto off = awst::makeIntegerConstant(std::to_string(32 - n), _loc);
+				auto nConst = awst::makeIntegerConstant(std::to_string(n), _loc);
+				auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
+				extract->stackArgs.push_back(std::move(asBytes));
+				extract->stackArgs.push_back(std::move(off));
+				extract->stackArgs.push_back(std::move(nConst));
+				bytesN = std::move(extract);
+			}
+			else
+			{
+				// Source is already bytes (string literal, bytesN, etc.).
+				bytesN = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), _loc);
+			}
+
+			// Right-pad bytesN to 32 bytes.
+			if (n < 32)
+			{
+				auto padSize = awst::makeIntegerConstant(std::to_string(32 - n), _loc);
+				auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
+				pad->stackArgs.push_back(std::move(padSize));
+				auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
+				cat->stackArgs.push_back(std::move(bytesN));
+				cat->stackArgs.push_back(std::move(pad));
+				encoded = std::move(cat);
+			}
+			else
+				encoded = std::move(bytesN);
+		}
+		else
+			encoded = encodeArgAsARC4Bytes(_ctx, std::move(expr), _loc);
+
+		parts.push_back(std::move(encoded));
+	}
 
 	return std::make_unique<GenericAbiResult>(_ctx, concatByteExprs(std::move(parts), _loc));
 }
