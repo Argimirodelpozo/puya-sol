@@ -1792,11 +1792,16 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                             if all(_compare_values(a, c)
                                    for a, c in zip(actual, collapsed[:exp_len])):
                                 return True, f"{actual}"
-                        # Concatenate multi-word data
+                        # Concatenate multi-word data. EVM ABI right-pads bytes
+                        # values to a multiple of 32; the Solidity test format
+                        # writes e.g. "abc" as a 3-byte shorthand, so we have
+                        # to pad here to match the actual on-chain encoding.
                         data = b""
                         for c in collapsed:
                             if isinstance(c, bytes):
                                 data += c
+                                pad = (32 - len(c) % 32) % 32
+                                data += b'\x00' * pad
                             elif isinstance(c, int):
                                 data += c.to_bytes(32, 'big')
                         data = data[:exp_len]  # trim to declared length

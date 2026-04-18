@@ -1153,6 +1153,95 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 		}
 	}
 
+	// Struct: recursively encode fields with EVM head/tail layout.
+	// For a struct S { T1 f1; T2 f2; ... }, the EVM ABI encoding is:
+	//   head = concat(encode_field_i_static | offset_i_if_dynamic) for each i
+	//   tail = concat(encode_dynamic_tail_i) for each dynamic i
+	if (auto const* structType = dynamic_cast<StructType const*>(_solType))
+	{
+		auto const& structDef = structType->structDefinition();
+		size_t numFields = structDef.members().size();
+		if (numFields > 0)
+		{
+			size_t headSize = numFields * 32;
+
+			std::vector<std::shared_ptr<awst::Expression>> headParts;
+			std::vector<std::shared_ptr<awst::Expression>> tailParts;
+			std::shared_ptr<awst::Expression> currentOffset = makeUint64(std::to_string(headSize), _loc);
+
+			for (auto const& memberDecl : structDef.members())
+			{
+				auto const* fieldSolType = memberDecl->type();
+				bool isDyn = fieldSolType
+					&& (fieldSolType->isDynamicallyEncoded()
+						|| fieldSolType->category() == Type::Category::StringLiteral);
+
+				// Build a FieldExpression that pulls the ARC4 field value out
+				// of the struct's packed representation, then ARC4Decode to
+				// the native wtype so downstream encoders see the "logical"
+				// value (e.g. biguint for uint256 rather than arc4.uint256).
+				auto* fieldNativeType = _ctx.typeMapper.map(fieldSolType);
+				awst::WType const* arc4FieldType = nullptr;
+				if (auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(_expr->wtype))
+				{
+					for (auto const& [fname, ftype]: arc4Struct->fields())
+						if (fname == memberDecl->name())
+						{
+							arc4FieldType = ftype;
+							break;
+						}
+				}
+
+				auto fieldExpr = std::make_shared<awst::FieldExpression>();
+				fieldExpr->sourceLocation = _loc;
+				fieldExpr->base = _expr;
+				fieldExpr->name = memberDecl->name();
+				fieldExpr->wtype = arc4FieldType ? arc4FieldType : fieldNativeType;
+
+				std::shared_ptr<awst::Expression> fieldValue = fieldExpr;
+				if (arc4FieldType && arc4FieldType != fieldNativeType)
+				{
+					auto decode = std::make_shared<awst::ARC4Decode>();
+					decode->sourceLocation = _loc;
+					decode->wtype = fieldNativeType;
+					decode->value = std::move(fieldValue);
+					fieldValue = std::move(decode);
+				}
+
+				if (!isDyn)
+					headParts.push_back(toPackedBytes(_ctx, std::move(fieldValue), fieldSolType, false, _loc));
+				else
+				{
+					auto offItob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
+					offItob->stackArgs.push_back(currentOffset);
+					headParts.push_back(leftPadBytes(std::move(offItob), 32, _loc));
+
+					auto tail = encodeDynamicTail(_ctx, std::move(fieldValue), fieldSolType, _loc);
+					auto tailLen = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
+					tailLen->stackArgs.push_back(tail);
+
+					auto newOffset = std::make_shared<awst::UInt64BinaryOperation>();
+					newOffset->sourceLocation = _loc;
+					newOffset->wtype = awst::WType::uint64Type();
+					newOffset->op = awst::UInt64BinaryOperator::Add;
+					newOffset->left = std::move(currentOffset);
+					newOffset->right = std::move(tailLen);
+					currentOffset = std::move(newOffset);
+					tailParts.push_back(std::move(tail));
+				}
+			}
+
+			auto head = concatByteExprs(std::move(headParts), _loc);
+			if (tailParts.empty())
+				return head;
+			auto tail = concatByteExprs(std::move(tailParts), _loc);
+			auto result = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
+			result->stackArgs.push_back(std::move(head));
+			result->stackArgs.push_back(std::move(tail));
+			return result;
+		}
+	}
+
 	// Fallback: just pad to 32
 	return toPackedBytes(_ctx, std::move(_expr), _solType, false, _loc);
 }
