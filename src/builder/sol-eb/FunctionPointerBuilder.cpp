@@ -335,28 +335,32 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 
 	if (isExternal)
 	{
-		// External function pointer = concat(itob(appId), selector).
-		// `this.f` → (0 sentinel, internalFuncId).
-		// `C(addr).f` → (appId from addr's last 8 bytes, f.selector).
-		// The 12-byte representation (8 appId + 4 selector) is stored as
-		// raw bytes. Calling it checks appId == 0 (self) for internal
-		// dispatch; non-zero uses inner txn with that appId.
+		// External function pointer = concat(appIdBytes[8], selectorBytes[4]) = 12 bytes.
+		// `this.f` → (itob(0) sentinel, internalFuncId[:4]) — self-call, uses
+		//   internal dispatch at call time.
+		// `C(addr).f` → (8-byte appId derived from addr, f.ARC4-selector) — inner
+		//   app txn at call time.
+		// Calling code checks appId == 0 (self) for internal dispatch; non-zero
+		// uses inner txn with that appId.
 		static awst::BytesWType s_bytes12(12);
+
+		// Helper: itob(constInt) → 8 bytes.
+		auto makeItobConst = [&](std::string _val) -> std::shared_ptr<awst::Expression> {
+			auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
+			itob->stackArgs.push_back(awst::makeIntegerConstant(std::move(_val), _loc));
+			return itob;
+		};
+
+		std::shared_ptr<awst::Expression> appIdBytes;
+		std::shared_ptr<awst::Expression> selectorBytes;
 
 		if (_receiverAddress)
 		{
-			// Cross-contract external: derive an 8-byte appId slot from
-			// the receiver. Two receiver shapes:
-			//   (a) application — `new Other()` — appId is already a uint64,
-			//       just itob to 8 bytes.
-			//   (b) address — `C(address(N))` — take the last 8 bytes of
-			//       the 32-byte address.
-			// Treating the last 8 bytes of an address as appId preserves
-			// round-trip through `.address` for literal address values used
-			// in Solidity tests, while the application path matches the
-			// runtime reality of \`new Other()\`.
+			// Cross-contract: appId from receiver (application → itob(u64);
+			// address → last 8 bytes of 32-byte address). The 32→8 truncation
+			// round-trips with our .address accessor, which pads appId to 32
+			// bytes for Solidity-test address literals.
 			auto addr = _receiverAddress;
-			std::shared_ptr<awst::Expression> appIdBytes;
 			if (addr->wtype == awst::WType::applicationType())
 			{
 				auto toU64 = awst::makeReinterpretCast(std::move(addr), awst::WType::uint64Type(), _loc);
@@ -367,63 +371,48 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 			else
 			{
 				if (addr->wtype != awst::WType::bytesType())
-				{
-					auto cast = awst::makeReinterpretCast(std::move(addr), awst::WType::bytesType(), _loc);
-					addr = std::move(cast);
-				}
+					addr = awst::makeReinterpretCast(std::move(addr), awst::WType::bytesType(), _loc);
 				auto extract = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
 				extract->immediates = {24, 8};
 				extract->stackArgs.push_back(std::move(addr));
 				appIdBytes = std::move(extract);
 			}
 
-			// Cross-contract: store the target's ARC4 method selector in
-			// the selector slot. At call-time when appId != 0 we emit an
-			// inner app txn with ApplicationArgs[0] = this selector.
-			std::string methodSig = AbiEncoderBuilder::buildARC4MethodSelector(_ctx, _funcDef);
+			// Store the target's ARC4 method selector in the selector slot.
+			// At call-time with appId != 0 we emit an inner app txn with
+			// ApplicationArgs[0] = this selector.
 			auto selectorConst = std::make_shared<awst::MethodConstant>();
 			selectorConst->sourceLocation = _loc;
 			selectorConst->wtype = awst::WType::bytesType();
-			selectorConst->value = methodSig;
+			selectorConst->value = AbiEncoderBuilder::buildARC4MethodSelector(_ctx, _funcDef);
+			selectorBytes = std::move(selectorConst);
+		}
+		else
+		{
+			Logger::instance().warning(
+				"external function pointer '" + _funcDef->name()
+				+ "': reentrancy is not possible on AVM; self-calls will use "
+				"internal dispatch instead of inner transactions", _loc);
 
-			auto packed = awst::makeIntrinsicCall("concat", &s_bytes12, _loc);
-			packed->stackArgs.push_back(std::move(appIdBytes));
-			packed->stackArgs.push_back(std::move(selectorConst));
-			return packed;
+			// Self-reference: appId=0 sentinel means "current application —
+			// use internal dispatch". The selector slot holds the internal
+			// fn-ptr ID so runtime dispatch can route without an inner txn.
+			if (auto const* internalFuncType = _funcDef->functionType(true))
+				registerTarget(_funcDef, internalFuncType);
+			auto idIt = s_targets.find(_funcDef->id());
+			unsigned funcId = (idIt != s_targets.end()) ? idIt->second.id : 0;
+
+			appIdBytes = makeItobConst("0");
+			// itob(funcId)[4:4] — take the low 4 bytes of the 8-byte itob.
+			auto idBytes4 = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
+			idBytes4->immediates = {4, 4};
+			idBytes4->stackArgs.push_back(makeItobConst(std::to_string(funcId)));
+			selectorBytes = std::move(idBytes4);
 		}
 
-		Logger::instance().warning(
-			"external function pointer '" + _funcDef->name()
-			+ "': reentrancy is not possible on AVM; self-calls will use "
-			"internal dispatch instead of inner transactions", _loc);
-
-		// Self-reference: encode as concat(itob(0), itob(internalId)[:4]).
-		// appId=0 is a sentinel that means "current application — use
-		// internal dispatch". The selector slot stores the internal fn-ptr
-		// ID so the runtime dispatch can route without an inner txn.
-		auto const* internalFuncType = _funcDef->functionType(true);
-		if (internalFuncType)
-			registerTarget(_funcDef, internalFuncType);
-		auto idIt = s_targets.find(_funcDef->id());
-		unsigned funcId = (idIt != s_targets.end()) ? idIt->second.id : 0;
-
-		// itob(0) — sentinel appId
-		auto zeroAppId = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-		auto zeroConst = awst::makeIntegerConstant("0", _loc);
-		zeroAppId->stackArgs.push_back(std::move(zeroConst));
-
-		// itob(funcId)[:4] — internal ID in selector slot
-		auto idItob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-		auto idConst = awst::makeIntegerConstant(std::to_string(funcId), _loc);
-		idItob->stackArgs.push_back(std::move(idConst));
-		auto idBytes4 = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-		idBytes4->immediates = {4, 4}; // last 4 bytes of 8-byte itob
-		idBytes4->stackArgs.push_back(std::move(idItob));
-
-		// concat(itob(0), idBytes4) → 12 bytes
 		auto packed = awst::makeIntrinsicCall("concat", &s_bytes12, _loc);
-		packed->stackArgs.push_back(std::move(zeroAppId));
-		packed->stackArgs.push_back(std::move(idBytes4));
+		packed->stackArgs.push_back(std::move(appIdBytes));
+		packed->stackArgs.push_back(std::move(selectorBytes));
 		return packed;
 	}
 
