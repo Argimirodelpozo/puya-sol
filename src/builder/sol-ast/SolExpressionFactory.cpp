@@ -53,9 +53,18 @@ public:
 		if (it != m_ctx.superTargetNames.end())
 			awstName = it->second;
 
+		// Prefer the caller's function type when available — for
+		// `external`-only functions, functionType(true) may return a
+		// placeholder with empty params that yields a useless dispatch
+		// name. The caller's type captures the actual signature.
+		auto const* regType = m_callerFuncType
+			? m_callerFuncType
+			: m_funcDef->functionType(true);
+		if (!regType)
+			regType = m_funcDef->functionType(false);
 		eb::FunctionPointerBuilder::registerTarget(
 			m_funcDef,
-			m_funcDef->functionType(true),
+			regType,
 			awstName);
 
 		return eb::FunctionPointerBuilder::buildFunctionReference(

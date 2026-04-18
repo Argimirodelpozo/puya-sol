@@ -469,6 +469,17 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 					? awst::WType::uint64Type() : awst::WType::biguintType();
 			else if (dynamic_cast<BoolType const*>(paramSolType))
 				arg.wtype = awst::WType::boolType();
+			else if (auto const* arrType = dynamic_cast<ArrayType const*>(paramSolType))
+			{
+				if (arrType->isString())
+					arg.wtype = awst::WType::stringType();
+				else if (arrType->isByteArray())
+					arg.wtype = awst::WType::bytesType();
+				else
+					arg.wtype = awst::WType::biguintType();
+			}
+			else if (paramSolType && paramSolType->category() == Type::Category::StringLiteral)
+				arg.wtype = awst::WType::stringType();
 			else
 				arg.wtype = awst::WType::biguintType();
 			arg.sourceLocation = _loc;
@@ -522,10 +533,17 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 					awst::CallArg arg;
 					auto var = awst::makeVarExpression("__arg" + std::to_string(i), dispatch.args[i + 1].wtype, _loc);
 
-					// Get the actual parameter name from the target function
+					// Get the actual parameter name from the target function.
+					// If the target parameter is unnamed (e.g. `g(string) external`),
+					// fall back to `_paramN` — matching how AWSTBuilder synthesises
+					// names for unnamed parameters.
 					std::string paramName = "__arg" + std::to_string(i);
 					if (entry->funcDef && i < entry->funcDef->parameters().size())
+					{
 						paramName = entry->funcDef->parameters()[i]->name();
+						if (paramName.empty())
+							paramName = "_param" + std::to_string(i);
+					}
 
 					if (isPublic && var->wtype == awst::WType::biguintType())
 					{
