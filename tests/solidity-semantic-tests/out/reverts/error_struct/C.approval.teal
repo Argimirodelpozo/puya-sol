@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/error_struct.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 0
     bytecblock "_struct"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -47,7 +47,7 @@ f_ternary_merge@4:
     err // test
 
 f_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b f_ternary_merge@4
 
 
@@ -56,8 +56,7 @@ g:
     txna ApplicationArgs 1
     dup
     len
-    dup
-    intc_1 // 32
+    pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -70,20 +69,12 @@ g:
 g_ternary_merge@4:
     !
     assert // not payable
-    dup
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    dig 2
-    dig 1
-    b|
     bytec_0 // "_struct"
     dig 1
+    dup
+    cover 2
     app_global_put
     extract 0 32
-    b|
     pushbytes 0x151f7c75
     swap
     concat
@@ -92,5 +83,5 @@ g_ternary_merge@4:
     return
 
 g_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b g_ternary_merge@4

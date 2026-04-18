@@ -4,11 +4,11 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol.Ownable.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "owner"
+    bytecblock "owner" "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "owner"
-    txn Sender
+    bytec_1 // "__ctor_pending"
+    intc_0 // 1
     app_global_put
     intc_0 // 1
     return
@@ -26,10 +26,25 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x64e61812 0x3e2c61e5 0xb1bbb0a8 // method "setOwner(address)void", method "renounceOwnership()void", method "owner()address"
+    pushbytess 0xbacc49e3 0x64e61812 0x3e2c61e5 0xb1bbb0a8 // method "__postInit()void", method "setOwner(address)void", method "renounceOwnership()void", method "owner()address"
     txna ApplicationArgs 0
-    match setOwner renounceOwnership owner
+    match __postInit setOwner renounceOwnership owner
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol.Ownable.__postInit[routing]() -> void:
+__postInit:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_0 // "owner"
+    txn Sender
+    app_global_put
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol.Ownable.setOwner[routing]() -> void:
@@ -63,7 +78,7 @@ setOwner_ternary_merge@4:
     dup
     cover 2
     concat
-    pushbytes 0x9a223efb // method "OwnershipTransferred(address,address)"
+    pushbytes 0x62668fcc // method "OwnershipTransferred(uint8[32],uint8[32])"
     swap
     concat
     log

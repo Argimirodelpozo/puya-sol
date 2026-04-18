@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_storage_push_zero_value.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 2 23
+    intcblock 0 2 1 23
     bytecblock 0x "s" "__ctor_pending" "b"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_2 // "__ctor_pending"
-    intc_1 // 1
+    intc_2 // 1
     app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -32,6 +32,39 @@ main_after_if_else@2:
     err
 
 
+// _puya_lib.arc4.dynamic_array_read_dynamic_element(array: bytes, index: uint64) -> bytes:
+dynamic_array_read_dynamic_element:
+    proto 2 1
+    frame_dig -2
+    extract 2 0
+    frame_dig -2
+    intc_0 // 0
+    extract_uint16
+    frame_dig -1
+    intc_1 // 2
+    *
+    dig 2
+    swap
+    extract_uint16
+    dig 2
+    len
+    frame_dig -1
+    intc_2 // 1
+    +
+    dup
+    intc_1 // 2
+    *
+    dig 5
+    swap
+    extract_uint16
+    uncover 4
+    uncover 2
+    -
+    select
+    substring3
+    retsub
+
+
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_storage_push_zero_value.sol.C.__postInit[routing]() -> void:
 __postInit:
     bytec_2 // "__ctor_pending"
@@ -41,7 +74,7 @@ __postInit:
     intc_0 // 0
     app_global_put
     bytec_1 // "s"
-    intc_2 // 2
+    intc_1 // 2
     box_create
     pop
     bytec_3 // "b"
@@ -50,7 +83,7 @@ __postInit:
     pushbytes "a"
     pushint 17
     app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 
@@ -59,11 +92,11 @@ f:
     intc_0 // 0
     dup
     bytec_0 // ""
-    dupn 3
+    dupn 2
     txn GroupIndex
     bz f_ternary_false@3
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -77,82 +110,80 @@ f_ternary_merge@4:
     intc_0 // 0
     extract_uint16
     dup
-    cover 2
+    intc_2 // 1
+    +
+    itob
+    extract 6 0
     bury 6
+    swap
     extract 2 0
-    bury 7
-    bytec_0 // 0x
     bury 6
-    intc_2 // 2
+    intc_1 // 2
     *
-    bury 1
+    bury 3
     intc_0 // 0
-    bury 2
+    bury 1
 
 f_for_header@6:
-    dup2
+    dup
+    dig 3
     <
     bz f_after_for@8
-    dig 5
-    dig 2
+    dig 4
+    dig 1
     dup
     cover 2
     extract_uint16
-    intc_2 // 2
+    intc_1 // 2
     +
     itob
-    extract 6 2
-    dig 6
+    extract 6 0
+    dig 5
     swap
     concat
-    bury 6
-    intc_2 // 2
+    bury 5
+    intc_1 // 2
     +
-    bury 2
+    bury 1
     b f_for_header@6
 
 f_after_for@8:
-    dig 5
+    dig 4
     len
-    bury 3
-    intc_0 // 0
     bury 2
+    intc_0 // 0
+    bury 1
 
 f_for_header@9:
-    dig 1
-    intc_2 // 2
+    dup
+    intc_1 // 2
     <
     bz f_after_for@11
     pushbytes 0x0002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007a0000
-    dig 2
+    dig 1
     dup
     cover 2
     extract_uint16
-    dig 4
+    dig 3
     +
     itob
-    extract 6 2
-    dig 6
+    extract 6 0
+    dig 5
     swap
     concat
-    bury 6
-    intc_2 // 2
+    bury 5
+    intc_1 // 2
     +
-    bury 2
+    bury 1
     b f_for_header@9
 
 f_after_for@11:
+    dig 4
     dig 3
-    intc_1 // 1
-    +
-    itob
-    extract 6 2
-    dig 5
-    concat
-    dig 6
-    dig 2
-    dig 5
+    dig 3
     substring3
+    dig 4
+    swap
     concat
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007a0000
     concat
@@ -163,55 +194,52 @@ f_after_for@11:
     dig 1
     box_put
     dup
-    extract 2 0
-    swap
     intc_0 // 0
-    extract_uint16 // on error: invalid array length header
-    dig 1
-    intc_0 // 0
-    extract_uint16
-    swap
-    intc_1 // 1
-    - // on error: index access is out of bounds
-    dig 2
-    len
-    dig 3
-    intc_2 // 2
-    extract_uint16
-    uncover 2
-    select
-    substring3
-    dup
+    callsub dynamic_array_read_dynamic_element
     extract 0 32
     bytec_0 // 0x
     b==
     assert
     dup
+    intc_0 // 0
+    callsub dynamic_array_read_dynamic_element
     extract 32 32
     bytec_0 // 0x
     b==
     assert
     dup
+    intc_0 // 0
+    callsub dynamic_array_read_dynamic_element
     pushint 64
     extract_uint64
     !
     assert
     dup
+    intc_0 // 0
+    callsub dynamic_array_read_dynamic_element
     extract 72 48
-    dup
     extract 0 16 // on error: index access is out of bounds
     bytec_0 // 0x
     b==
     assert
     dup
+    intc_0 // 0
+    callsub dynamic_array_read_dynamic_element
+    extract 72 48
     extract 16 16 // on error: index access is out of bounds
     bytec_0 // 0x
     b==
     assert
+    dup
+    intc_0 // 0
+    callsub dynamic_array_read_dynamic_element
+    extract 72 48
     extract 32 16 // on error: index access is out of bounds
     bytec_0 // 0x
     b==
     assert
+    intc_0 // 0
+    callsub dynamic_array_read_dynamic_element
     dup
     pushint 120
     extract_uint16
@@ -238,7 +266,7 @@ f_after_for@11:
     pushint 17
     ==
     assert
-    intc_1 // 1
+    intc_2 // 1
     return
 
 f_ternary_false@3:

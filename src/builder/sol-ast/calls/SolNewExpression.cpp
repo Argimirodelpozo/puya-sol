@@ -9,6 +9,7 @@
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ASTVisitor.h>
 
 namespace puyasol::builder::sol_ast
 {
@@ -315,6 +316,194 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 
 				auto fundStmt = awst::makeExpressionStatement(std::move(fundSubmit), m_loc);
 				m_ctx.prePendingStatements.push_back(std::move(fundStmt));
+			}
+
+			// Call __postInit on the child only when the child's ContractBuilder
+			// will actually emit __postInit. Matches the criteria used there:
+			// constructor body references msg.value/msg.sender/msg.data.
+			// For simpler contracts (no msg.* refs, no box-stored state),
+			// constructor body runs at AppCreate and there's nothing for
+			// us to call here — inner-new args are lost in that path, which
+			// matches pre-v113 behaviour.
+			auto const* childCtor = contractType->contractDefinition().constructor();
+			bool childHasPostInit = false;
+			if (childCtor && childCtor->isImplemented())
+			{
+				struct MsgRefChecker: public solidity::frontend::ASTConstVisitor
+				{
+					bool found = false;
+					bool visit(solidity::frontend::MemberAccess const& _ma) override
+					{
+						if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(&_ma.expression()))
+						{
+							if (id->name() == "msg"
+								&& (_ma.memberName() == "value"
+									|| _ma.memberName() == "sender"
+									|| _ma.memberName() == "data"))
+								found = true;
+						}
+						return !found;
+					}
+				};
+				MsgRefChecker checker;
+				childCtor->body().accept(checker);
+				// Also scan base-contract initializers (mirroring ContractBuilder's scan)
+				auto const& lin = contractType->contractDefinition().annotation().linearizedBaseContracts;
+				for (auto const* base: lin)
+					for (auto const* var: base->stateVariables())
+						if (var->value()) var->value()->accept(checker);
+				childHasPostInit = checker.found;
+			}
+			if (childHasPostInit)
+			{
+				// Build __postInit(t1,t2,...)void signature.
+				auto solTypeToARC4Name = [this](Type const* _type) -> std::string {
+					auto* mapped = m_ctx.typeMapper.map(_type);
+					if (mapped == awst::WType::accountType())
+						return "address";
+					if (auto const* intT = dynamic_cast<IntegerType const*>(_type))
+						return (intT->isSigned() ? "int" : "uint") + std::to_string(intT->numBits());
+					auto* arc4Type = m_ctx.typeMapper.mapToARC4Type(mapped);
+					return builder::TypeCoercion::wtypeToABIName(arc4Type);
+				};
+
+				std::string postInitSig = "__postInit(";
+				bool first = true;
+				for (auto const& p: childCtor->parameters())
+				{
+					if (!first) postInitSig += ",";
+					postInitSig += solTypeToARC4Name(p->type());
+					first = false;
+				}
+				postInitSig += ")void";
+
+				auto methodConst = std::make_shared<awst::MethodConstant>();
+				methodConst->sourceLocation = m_loc;
+				methodConst->wtype = awst::WType::bytesType();
+				methodConst->value = postInitSig;
+
+				auto argsTuple = std::make_shared<awst::TupleExpression>();
+				argsTuple->sourceLocation = m_loc;
+				argsTuple->items.push_back(std::move(methodConst));
+
+				// ARC4-encode each ctor argument.
+				auto const& ctorArgs = m_call.arguments();
+				auto const& ctorParams = childCtor->parameters();
+				for (size_t i = 0; i < ctorArgs.size() && i < ctorParams.size(); ++i)
+				{
+					auto argVal = buildExpr(*ctorArgs[i]);
+					auto* paramSolType = ctorParams[i]->type();
+					auto* paramWType = m_ctx.typeMapper.map(paramSolType);
+					argVal = builder::TypeCoercion::implicitNumericCast(
+						std::move(argVal), paramWType, m_loc);
+
+					// Wrap biguint (uintN, N>64) in ARC4UIntN(bits) so the
+					// on-wire signature matches "uintN" (not "uint512") and
+					// so the callee's byte-length assert holds.
+					if (argVal->wtype == awst::WType::biguintType())
+					{
+						unsigned bits = 256;
+						auto const* intT = dynamic_cast<IntegerType const*>(paramSolType);
+						if (!intT)
+							if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(paramSolType))
+								intT = dynamic_cast<IntegerType const*>(&udvt->underlyingType());
+						if (intT && !intT->isSigned())
+							bits = intT->numBits();
+						auto* arc4T = m_ctx.typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
+						auto encode = std::make_shared<awst::ARC4Encode>();
+						encode->sourceLocation = m_loc;
+						encode->wtype = arc4T;
+						encode->value = std::move(argVal);
+						argVal = std::move(encode);
+					}
+					else if (argVal->wtype == awst::WType::uint64Type())
+					{
+						// uint<=64 → ARC4UIntN(intType->numBits()) for correct width.
+						unsigned bits = 64;
+						auto const* intT = dynamic_cast<IntegerType const*>(paramSolType);
+						if (intT) bits = intT->numBits();
+						auto* arc4T = m_ctx.typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
+						auto encode = std::make_shared<awst::ARC4Encode>();
+						encode->sourceLocation = m_loc;
+						encode->wtype = arc4T;
+						encode->value = std::move(argVal);
+						argVal = std::move(encode);
+					}
+					argsTuple->items.push_back(std::move(argVal));
+				}
+
+				// Set the TupleExpression's wtype to a WTuple over the item
+				// types; without this, puya rejects the AWST (WInnerTxn
+				// fields expect a WTuple, not the default void wtype).
+				{
+					std::vector<awst::WType const*> argTypes;
+					for (auto const& item: argsTuple->items)
+						argTypes.push_back(item->wtype);
+					argsTuple->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
+						std::move(argTypes), std::nullopt);
+				}
+
+				// Payment group companion: sets msg.value inside __postInit.
+				std::shared_ptr<awst::Expression> callValue = extractCallValue();
+				if (!callValue)
+					callValue = awst::makeIntegerConstant("0", m_loc);
+
+				auto postAppId = awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc);
+
+				// Re-read the app's address for the Payment receiver.
+				auto* addrTupleType = m_ctx.typeMapper.createType<awst::WTuple>(
+					std::vector<awst::WType const*>{awst::WType::bytesType(), awst::WType::boolType()});
+				auto postAddrCall = awst::makeIntrinsicCall("app_params_get", addrTupleType, m_loc);
+				postAddrCall->immediates = {std::string("AppAddress")};
+				postAddrCall->stackArgs.push_back(awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc));
+
+				std::string addrTmp = "__postinit_addr_" + std::to_string(newAppIdCounter);
+				auto addrTmpTarget = awst::makeVarExpression(addrTmp, addrTupleType, m_loc);
+				auto addrAssign = std::make_shared<awst::AssignmentStatement>();
+				addrAssign->sourceLocation = m_loc;
+				addrAssign->target = addrTmpTarget;
+				addrAssign->value = std::move(postAddrCall);
+				m_ctx.prePendingStatements.push_back(std::move(addrAssign));
+
+				auto addrRead = awst::makeVarExpression(addrTmp, addrTupleType, m_loc);
+				auto addrBytes = std::make_shared<awst::TupleItemExpression>();
+				addrBytes->sourceLocation = m_loc;
+				addrBytes->wtype = awst::WType::bytesType();
+				addrBytes->base = std::move(addrRead);
+				addrBytes->index = 0;
+				auto receiver = awst::makeReinterpretCast(std::move(addrBytes), awst::WType::accountType(), m_loc);
+
+				// PaymentTxn (sets msg.value for __postInit)
+				static awst::WInnerTransactionFields s_payFieldsType(1);
+				auto payTxn = std::make_shared<awst::CreateInnerTransaction>();
+				payTxn->sourceLocation = m_loc;
+				payTxn->wtype = &s_payFieldsType;
+				payTxn->fields["TypeEnum"] = awst::makeIntegerConstant("1", m_loc);
+				payTxn->fields["Fee"] = awst::makeIntegerConstant("0", m_loc);
+				payTxn->fields["Receiver"] = std::move(receiver);
+				payTxn->fields["Amount"] = std::move(callValue);
+
+				// AppCall __postInit(args)
+				static awst::WInnerTransactionFields s_applFieldsType2(6);
+				auto postCall = std::make_shared<awst::CreateInnerTransaction>();
+				postCall->sourceLocation = m_loc;
+				postCall->wtype = &s_applFieldsType2;
+				postCall->fields["TypeEnum"] = awst::makeIntegerConstant("6", m_loc);
+				postCall->fields["OnCompletion"] = awst::makeIntegerConstant("0", m_loc);
+				postCall->fields["Fee"] = awst::makeIntegerConstant("0", m_loc);
+				postCall->fields["ApplicationID"] = std::move(postAppId);
+				postCall->fields["ApplicationArgs"] = std::move(argsTuple);
+
+				// Submit as a group so the PaymentTxn is visible to __postInit's msg.value.
+				static awst::WInnerTransaction s_payApplGroupType(1);
+				auto postSubmit = std::make_shared<awst::SubmitInnerTransaction>();
+				postSubmit->sourceLocation = m_loc;
+				postSubmit->wtype = &s_payApplGroupType;
+				postSubmit->itxns.push_back(std::move(payTxn));
+				postSubmit->itxns.push_back(std::move(postCall));
+
+				auto postStmt = awst::makeExpressionStatement(std::move(postSubmit), m_loc);
+				m_ctx.prePendingStatements.push_back(std::move(postStmt));
 			}
 
 			// Return CreatedApplicationID as applicationType directly.

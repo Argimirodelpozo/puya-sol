@@ -1,9 +1,9 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_ncf7l18u/B.sol.C.approval_program() -> uint64:
+// /tmp/multisource_x5nb25_3/B.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 32
+    intcblock 0 1
     bytecblock "data"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -35,18 +35,18 @@ main_f_route@4:
     b f
 
 
-// /tmp/multisource_ncf7l18u/B.sol.set(a: bytes, v: bytes) -> void:
+// /tmp/multisource_x5nb25_3/B.sol.set(a: bytes, v: bytes) -> void:
 set:
     proto 2 0
     retsub
 
 
-// /tmp/multisource_ncf7l18u/B.sol.C.f[routing]() -> void:
+// /tmp/multisource_x5nb25_3/B.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -84,13 +84,6 @@ f_ternary_merge@4:
     app_global_get_ex
     assert // check data exists
     extract 0 32
-    intc_2 // 32
-    bzero
-    uncover 2
-    dig 1
-    b|
-    cover 2
-    b|
     concat
     pushbytes 0x151f7c75
     swap

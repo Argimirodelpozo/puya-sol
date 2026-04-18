@@ -1472,6 +1472,49 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		}
 	}
 
+	// Force __postInit when any state-var initializer or constructor body
+	// references msg.value / msg.sender / msg.data. At AppCreate time these
+	// read from the caller's group context (e.g. msg.value sees Amount of the
+	// preceding group txn), which is correct when the contract is deployed
+	// by a PaymentTxn-preceded ApplicationCreateTxn. But when this contract
+	// is deployed as a CHILD via `new C{value: N}()`, the parent's
+	// SolNewExpression groups the Payment+__postInit call (not the Payment+
+	// AppCreate), so msg.value is only visible inside __postInit. Deferring
+	// the initializer is the simplest way to make `new C{value:N}(...)`
+	// with msg.value semantics work.
+	if (!needsPostInit)
+	{
+		struct MsgRefChecker: public solidity::frontend::ASTConstVisitor
+		{
+			bool found = false;
+			bool visit(solidity::frontend::MemberAccess const& _ma) override
+			{
+				if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(&_ma.expression()))
+				{
+					if (id->name() == "msg"
+						&& (_ma.memberName() == "value"
+							|| _ma.memberName() == "sender"
+							|| _ma.memberName() == "data"))
+						found = true;
+				}
+				return !found;
+			}
+		};
+		MsgRefChecker msgChecker;
+		for (auto const* base: _contract.annotation().linearizedBaseContracts)
+			for (auto const* var: base->stateVariables())
+				if (var->value())
+					var->value()->accept(msgChecker);
+		if (auto const* ctor = _contract.constructor())
+			if (ctor->isImplemented())
+				ctor->body().accept(msgChecker);
+		if (msgChecker.found)
+		{
+			needsPostInit = true;
+			Logger::instance().debug("Forcing __postInit: constructor/state-init references msg.*");
+		}
+	}
+
 	// Create-time check: if (Txn.ApplicationID == 0) { base_ctors; ctor_body; return true; }
 	{
 		auto appIdCheck = std::make_shared<awst::IntrinsicCall>();

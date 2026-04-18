@@ -64,7 +64,6 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    dup
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
@@ -90,17 +89,8 @@ f:
 f_ternary_merge@4:
     !
     assert // not payable
-    dig 1
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    dig 3
-    dig 1
-    b|
     pushbytes 0x0001
-    swap
+    dig 2
     concat
     dup
     extract 2 0
@@ -145,7 +135,7 @@ f_ternary_merge@4:
     bytec_2 // 0x0000
     cover 2
     select
-    dig 2
+    dig 1
     swap
     callsub fun
     pop
@@ -159,19 +149,18 @@ f_ternary_merge@4:
     select
     callsub fun
     popn 2
-    bury 1
-    dig 1
+    cover 2
+    pop
+    dup
     len
     intc_1 // 32
     <=
     assert // overflow
-    swap
-    dig 2
+    intc_1 // 32
+    bzero
     b|
     swap
     extract 34 32
-    uncover 2
-    b|
     concat
     pushbytes 0x151f7c75
     swap

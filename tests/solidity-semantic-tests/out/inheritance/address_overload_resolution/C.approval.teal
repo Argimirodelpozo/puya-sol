@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/address_overload_resolution.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -46,7 +46,7 @@ balance_ternary_merge@4:
     return
 
 balance_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b balance_ternary_merge@4
 
 
@@ -55,8 +55,7 @@ transfer:
     txna ApplicationArgs 1
     dup
     len
-    dup
-    intc_1 // 32
+    pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -69,21 +68,13 @@ transfer:
 transfer_ternary_merge@4:
     !
     assert // not payable
-    dup
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    dig 2
-    b|
     pushbytes 0x151f7c75
-    swap
+    dig 1
     concat
     log
     intc_0 // 1
     return
 
 transfer_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b transfer_ternary_merge@4

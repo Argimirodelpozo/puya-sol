@@ -290,33 +290,20 @@ g_ternary_merge@4:
     dig 2
     dup
     extract 0 32
+    dig 2
+    itob
     intc_0 // 32
     bzero
-    swap
-    dig 1
     b|
-    dig 3
-    itob
-    dig 2
-    b|
-    uncover 3
+    uncover 2
     extract 34 32
-    dig 3
-    b|
-    dig 5
+    dig 4
     dup
-    cover 2
     extract 2 32
-    dig 5
-    b|
-    dig 2
+    dig 1
     extract 34 32
-    dig 6
-    b|
-    uncover 3
+    uncover 2
     extract 66 32
-    uncover 6
-    b|
     uncover 5
     uncover 5
     concat
@@ -403,33 +390,20 @@ g2_ternary_merge@4:
     dig 3
     dup
     extract 0 32
+    swap
+    extract 34 32
+    dig 4
+    dup
+    extract 0 32
+    dig 4
+    itob
     intc_0 // 32
     bzero
-    swap
-    dig 1
     b|
     uncover 2
     extract 34 32
-    dig 2
-    b|
-    dig 5
-    dup
-    cover 2
-    extract 0 32
-    dig 4
-    b|
-    dig 5
-    itob
-    dig 5
-    b|
-    uncover 3
-    extract 34 32
-    dig 5
-    b|
-    dig 7
+    dig 6
     extract 2 32
-    uncover 6
-    b|
     uncover 5
     uncover 5
     concat
@@ -472,41 +446,29 @@ h_ternary_merge@4:
     select
     dup
     extract 0 32
-    intc_0 // 32
-    bzero
-    swap
     dig 1
-    b|
-    dig 2
     intc_0 // 32
     extract_uint16
-    dig 3
+    dig 2
     len
-    dig 4
+    dig 3
     cover 2
     substring3
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     itob
-    dig 3
+    intc_0 // 32
+    bzero
     b|
-    uncover 4
+    uncover 3
     extract 34 32
-    dig 4
-    b|
     dig 2
     extract 2 32
-    dig 5
-    b|
     dig 3
     extract 34 32
-    dig 6
-    b|
     uncover 4
     extract 66 32
-    uncover 6
-    b|
     uncover 5
     uncover 5
     concat

@@ -37,7 +37,6 @@ e:
     txna ApplicationArgs 1
     dup
     len
-    dup
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
@@ -51,16 +50,8 @@ e:
 e_ternary_merge@4:
     !
     assert // not payable
-    dup
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    dig 2
-    b|
     bytec_1 // 0x151f7c75
-    swap
+    dig 1
     concat
     log
     intc_0 // 1

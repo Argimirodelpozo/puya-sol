@@ -39,14 +39,12 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    dup
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    dup
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
@@ -61,25 +59,12 @@ f_ternary_merge@4:
     !
     assert // not payable
     bytec_0 // "x"
-    dig 2
+    dig 1
     dup
     cover 2
     app_global_put
-    dig 3
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    dig 5
-    dig 1
-    b|
-    dig 3
-    intc_1 // 32
-    <=
-    assert // overflow
-    cover 2
-    b|
+    dig 2
+    swap
     concat
     bytec_1 // 0x151f7c75
     swap
@@ -116,8 +101,6 @@ g_ternary_merge@4:
     intc_1 // 32
     <=
     assert // overflow
-    swap
-    dig 1
     b|
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003
     swap
@@ -126,16 +109,10 @@ g_ternary_merge@4:
     replace2 0 // on error: index access is out of bounds
     dup
     extract 64 32 // on error: index access is out of bounds
-    dig 2
-    b|
     dig 1
     extract 32 32 // on error: index access is out of bounds
-    dig 3
-    b|
     uncover 2
     extract 0 32 // on error: index access is out of bounds
-    uncover 3
-    b|
     cover 2
     concat
     swap
@@ -175,8 +152,6 @@ h_ternary_merge@4:
     intc_1 // 32
     <=
     assert // overflow
-    swap
-    dig 1
     b|
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000002a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004
     swap
@@ -185,16 +160,10 @@ h_ternary_merge@4:
     replace2 0 // on error: index access is out of bounds
     dup
     extract 64 32 // on error: index access is out of bounds
-    dig 2
-    b|
     dig 1
     extract 32 32 // on error: index access is out of bounds
-    dig 3
-    b|
     uncover 2
     extract 0 32 // on error: index access is out of bounds
-    uncover 3
-    b|
     cover 2
     concat
     swap

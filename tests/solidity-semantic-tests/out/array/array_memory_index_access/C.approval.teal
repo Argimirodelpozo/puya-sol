@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_index_access.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 8
+    intcblock 0 32 1 8
     bytecblock 0x01 "" 0x068101 0x0000 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -31,13 +31,13 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_index_access.sol.C.index[routing]() -> void:
 index:
-    intc_1 // 0
+    intc_0 // 0
     dupn 5
     bytec_1 // ""
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -65,18 +65,18 @@ index_while_top@15:
     itxn_field ApprovalProgram
     bytec_2 // 0x068101
     itxn_field ClearStateProgram
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_submit
     b index_while_top@15
 
 index_after_while@20:
-    intc_1 // 0
+    intc_0 // 0
     itob
     bury 6
     bytec_3 // 0x0000
     bury 8
-    intc_1 // 0
+    intc_0 // 0
     bury 2
 
 index_while_top@5:
@@ -96,7 +96,7 @@ index_while_top@5:
     bz index_after_while@7
     dig 7
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16
     intc_2 // 1
     +
@@ -129,10 +129,10 @@ index_while_top@8:
     b+
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     dig 1
     b|
@@ -144,7 +144,7 @@ index_while_top@8:
     intc_3 // 8
     -
     extract_uint64
-    intc_0 // 32
+    intc_1 // 32
     *
     pushint 2
     +
@@ -178,9 +178,9 @@ index_while_top@11:
     dig 8
     extract 2 0
     swap
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_0 // 32
+    intc_1 // 32
     extract3 // on error: index access is out of bounds
     swap
     bytec_0 // 0x01
@@ -193,13 +193,13 @@ index_while_top@11:
 
 index_after_while@13:
     dig 6
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
     itob
     dig 1
     b==
     pushbytes 0x00
-    intc_1 // 0
+    intc_0 // 0
     uncover 2
     setbit
     bytec 5 // 0x151f7c75
@@ -210,25 +210,25 @@ index_after_while@13:
     return
 
 index_ternary_false@3:
-    intc_1 // 0
+    intc_0 // 0
     b index_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_index_access.sol.C.accessIndex[routing]() -> void:
 accessIndex:
-    intc_1 // 0
+    intc_0 // 0
     dupn 3
     bytec_1 // ""
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -241,12 +241,12 @@ accessIndex:
 accessIndex_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 0
+    intc_0 // 0
     itob
     bury 5
     bytec_3 // 0x0000
     bury 7
-    intc_1 // 0
+    intc_0 // 0
     bury 3
 
 accessIndex_while_top@5:
@@ -266,7 +266,7 @@ accessIndex_while_top@5:
     bz accessIndex_after_while@7
     dig 6
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16
     intc_2 // 1
     +
@@ -297,10 +297,10 @@ accessIndex_while_top@8:
     b+
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     dig 1
     b|
@@ -312,7 +312,7 @@ accessIndex_while_top@8:
     intc_3 // 8
     -
     extract_uint64
-    intc_0 // 32
+    intc_1 // 32
     *
     pushint 2
     +
@@ -336,18 +336,10 @@ accessIndex_after_while@10:
     dig 6
     extract 2 0
     swap
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_0 // 32
+    intc_1 // 32
     extract3 // on error: index access is out of bounds
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
     bytec 5 // 0x151f7c75
     swap
     concat
@@ -356,5 +348,5 @@ accessIndex_after_while@10:
     return
 
 accessIndex_ternary_false@3:
-    intc_1 // 0
+    intc_0 // 0
     b accessIndex_ternary_merge@4

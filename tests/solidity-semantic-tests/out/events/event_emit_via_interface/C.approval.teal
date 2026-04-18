@@ -3,10 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_emit_via_interface.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    pushint 1
     return
 
 main_after_if_else@2:
@@ -36,14 +35,13 @@ emitEvent:
     txna ApplicationArgs 1
     dup
     len
-    dup
-    intc_1 // 32
+    pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz emitEvent_ternary_false@3
     txn GroupIndex
-    intc_0 // 1
+    pushint 1
     -
     gtxns Amount
 
@@ -52,19 +50,12 @@ emitEvent_ternary_merge@4:
     assert // not payable
     txn Sender
     dig 1
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    dig 3
-    b|
     concat
-    pushbytes 0x51542f67 // method "Event()"
+    pushbytes 0x8469202e // method "Event(uint8[32],uint256)"
     swap
     concat
     log
-    intc_0 // 1
+    pushint 1
     return
 
 emitEvent_ternary_false@3:

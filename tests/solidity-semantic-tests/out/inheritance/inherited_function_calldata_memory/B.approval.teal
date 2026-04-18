@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol.B.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 0 32
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -33,9 +33,9 @@ main_after_if_else@2:
 f:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_1 // 32
+    intc_2 // 32
     *
     pushint 2
     +
@@ -65,14 +65,14 @@ g:
 g_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 32
+    intc_2 // 32
     bzero
     pushbytes 0x0002000000000000000000000000000000000000000000000000000000000000002a0000000000000000000000000000000000000000000000000000000000000017
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol.B.f
     pop
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
     b|
@@ -84,7 +84,7 @@ g_ternary_merge@4:
     return
 
 g_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b g_ternary_merge@4
 
 
@@ -103,12 +103,9 @@ g_ternary_false@3:
     assert // not payable
     frame_dig -1
     extract 34 32
-    intc_1 // 32
-    bzero
-    b|
     frame_dig -1
     retsub
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol.B.f_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol.B.f_ternary_merge@3

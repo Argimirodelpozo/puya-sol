@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/check_var_init.sol.D.approval_program() -> uint64:
 main:
-    intcblock 0 1 16 6 1000000
-    bytecblock TMPL_APPROVAL_C TMPL_CLEAR_C
+    intcblock 0 1 6 16 1000000
+    bytecblock TMPL_APPROVAL_C TMPL_CLEAR_C 0xbacc49e3
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -44,49 +44,11 @@ f_ternary_merge@4:
     itxn_begin
     bytec_0 // TMPL_APPROVAL_C
     bytec_1 // TMPL_CLEAR_C
-    intc_3 // 6
+    intc_2 // 6
     itxn_field TypeEnum
-    intc_2 // 16
+    intc_3 // 16
     itxn_field GlobalNumUint
-    intc_2 // 16
-    itxn_field GlobalNumByteSlice
-    intc_0 // 0
-    itxn_field Fee
-    pushint 3
-    itxn_field ExtraProgramPages
-    itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
-    itxn_submit
-    itxn CreatedApplicationID
-    app_params_get AppAddress
-    pop
-    itxn_begin
-    intc_1 // 1
-    itxn_field TypeEnum
-    itxn_field Receiver
-    intc_0 // 0
-    itxn_field Fee
-    intc 4 // 1000000
-    itxn_field Amount
-    itxn_submit
-    intc_1 // 1
-    return
-
-f_ternary_false@3:
-    intc_0 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/check_var_init.sol.D.g[routing]() -> void:
-g:
-    itxn_begin
-    bytec_0 // TMPL_APPROVAL_C
-    bytec_1 // TMPL_CLEAR_C
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_2 // 16
-    itxn_field GlobalNumUint
-    intc_2 // 16
+    intc_3 // 16
     itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
@@ -108,8 +70,92 @@ g:
     intc 4 // 1000000
     itxn_field Amount
     itxn_submit
+    dup
+    app_params_get AppAddress
+    pop
     itxn_begin
-    intc_3 // 6
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    intc_0 // 0
+    itxn_field Amount
+    itxn_next
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "__postInit()void"
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_1 // 1
+    return
+
+f_ternary_false@3:
+    intc_0 // 0
+    b f_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/check_var_init.sol.D.g[routing]() -> void:
+g:
+    itxn_begin
+    bytec_0 // TMPL_APPROVAL_C
+    bytec_1 // TMPL_CLEAR_C
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_3 // 16
+    itxn_field GlobalNumUint
+    intc_3 // 16
+    itxn_field GlobalNumByteSlice
+    intc_0 // 0
+    itxn_field Fee
+    pushint 3
+    itxn_field ExtraProgramPages
+    itxn_field ClearStateProgram
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    dup
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    intc 4 // 1000000
+    itxn_field Amount
+    itxn_submit
+    dup
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    pushint 11
+    itxn_field Amount
+    itxn_next
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec_2 // method "__postInit()void"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn_begin
+    intc_2 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion

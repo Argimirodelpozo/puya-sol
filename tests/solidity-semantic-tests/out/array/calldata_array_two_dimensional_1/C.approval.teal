@@ -202,7 +202,7 @@ test(18,u256)_ternary_merge@8:
     dup
     dig 6
     <
-    assert // index access is out of bounds
+    assert // index out of bounds
     intc_1 // 2
     *
     dig 2
@@ -457,13 +457,13 @@ reenc_ternary_false@7:
     -
     extract_uint64
     frame_dig -3
-    extract 2 0
-    frame_dig -3
     intc_0 // 0
-    extract_uint16 // on error: invalid array length header
-    dig 3
+    extract_uint16
+    dig 2
     >
-    assert // index access is out of bounds
+    assert // index out of bounds
+    frame_dig -3
+    extract 2 0
     uncover 2
     intc_1 // 2
     *
@@ -483,14 +483,6 @@ reenc_ternary_false@7:
     *
     intc_2 // 32
     extract3 // on error: index access is out of bounds
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
     frame_dig -3
     retsub
 

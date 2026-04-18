@@ -3,20 +3,12 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_constructor.sol.ClientReceipt.approval_program() -> uint64:
 main:
+    bytecblock "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
-    txn Sender
-    pushint 7
-    itob
-    swap
-    pushbytes 0x6162630000000000000000000000000000000000000000000000000000000000
-    concat
-    swap
-    concat
-    pushbytes 0x7e080067 // method "Deposit(address,byte[32],uint256)"
-    swap
-    concat
-    log
+    bytec_0 // "__ctor_pending"
+    pushint 1
+    app_global_put
     pushint 1
     return
 
@@ -28,11 +20,39 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    txn NumAppArgs
-    !
-    assert
+    pushbytes 0xbacc49e3 // method "__postInit()void"
+    txna ApplicationArgs 0
+    match main___postInit_route@4
+    err
+
+main___postInit_route@4:
     txn OnCompletion
     !
     txn ApplicationID
     &&
+    assert
+    b __postInit
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_constructor.sol.ClientReceipt.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    pushint 0
+    app_global_put
+    txn Sender
+    pushint 7
+    itob
+    swap
+    pushbytes 0x6162630000000000000000000000000000000000000000000000000000000000
+    concat
+    swap
+    concat
+    pushbytes 0xc782f767 // method "Deposit(uint8[32],uint8[32],uint64)"
+    swap
+    concat
+    log
+    pushint 1
     return

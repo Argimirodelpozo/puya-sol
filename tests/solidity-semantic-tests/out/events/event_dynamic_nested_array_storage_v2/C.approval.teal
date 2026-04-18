@@ -32,89 +32,94 @@ main_after_if_else@2:
     err
 
 
-// _puya_lib.arc4.dynamic_array_concat_dynamic_element(array_items_count: uint64, array_head_and_tail: bytes, new_items_count: uint64, new_head_and_tail: bytes) -> bytes:
+// _puya_lib.arc4.dynamic_array_concat_dynamic_element(array: bytes, new_head_and_tail: bytes, new_items_count: uint64) -> bytes:
 dynamic_array_concat_dynamic_element:
-    proto 4 1
+    proto 3 1
     pushbytes ""
+    frame_dig -3
+    intc_2 // 0
+    extract_uint16
     dup
-    frame_dig -2
+    frame_dig -1
+    +
+    itob
+    extract 6 0
+    swap
+    frame_dig -3
+    extract 2 0
+    swap
     intc_0 // 2
     *
-    frame_dig -4
+    frame_dig -1
     intc_0 // 2
     *
     intc_2 // 0
 
 dynamic_array_concat_dynamic_element_for_header@1:
-    frame_dig 4
+    frame_dig 5
     frame_dig 3
     <
     bz dynamic_array_concat_dynamic_element_after_for@4
-    frame_dig -3
-    frame_dig 4
+    frame_dig 2
+    frame_dig 5
     dup
     cover 2
     extract_uint16
-    frame_dig 2
+    frame_dig 4
     +
     itob
-    extract 6 2
+    extract 6 0
     frame_dig 1
     swap
     concat
     frame_bury 1
     intc_0 // 2
     +
-    frame_bury 4
+    frame_bury 5
     b dynamic_array_concat_dynamic_element_for_header@1
 
 dynamic_array_concat_dynamic_element_after_for@4:
-    frame_dig -3
+    frame_dig 2
     len
     frame_bury 0
     intc_2 // 0
-    frame_bury 4
+    frame_bury 5
 
 dynamic_array_concat_dynamic_element_for_header@5:
+    frame_dig 5
     frame_dig 4
-    frame_dig 2
     <
     bz dynamic_array_concat_dynamic_element_after_for@8
-    frame_dig -1
-    frame_dig 4
+    frame_dig -2
+    frame_dig 5
     dup
     cover 2
     extract_uint16
     frame_dig 0
     +
     itob
-    extract 6 2
+    extract 6 0
     frame_dig 1
     swap
     concat
     frame_bury 1
     intc_0 // 2
     +
-    frame_bury 4
+    frame_bury 5
     b dynamic_array_concat_dynamic_element_for_header@5
 
 dynamic_array_concat_dynamic_element_after_for@8:
-    frame_dig -4
-    frame_dig -2
-    +
-    itob
-    extract 6 2
-    frame_dig 1
-    concat
-    frame_dig -3
+    frame_dig 2
     frame_dig 3
     frame_dig 0
     substring3
+    frame_dig 1
+    swap
     concat
-    frame_dig -1
+    frame_dig -2
     len
-    frame_dig -1
-    frame_dig 2
+    frame_dig -2
+    frame_dig 4
     uncover 2
     substring3
     concat
@@ -143,7 +148,6 @@ createEvent:
     txna ApplicationArgs 1
     dup
     len
-    dup
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
@@ -160,13 +164,8 @@ createEvent_ternary_merge@4:
     bytec_0 // "arr"
     box_get
     assert // box exists
-    dup
-    intc_2 // 0
-    extract_uint16
-    swap
-    extract 2 0
-    intc_1 // 1
     bytec_2 // 0x0002000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    intc_1 // 1
     callsub dynamic_array_concat_dynamic_element
     bytec_0 // "arr"
     box_del
@@ -174,13 +173,8 @@ createEvent_ternary_merge@4:
     bytec_0 // "arr"
     dig 1
     box_put
-    dup
-    intc_2 // 0
-    extract_uint16
-    swap
-    extract 2 0
-    intc_1 // 1
     bytec_2 // 0x0002000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    intc_1 // 1
     callsub dynamic_array_concat_dynamic_element
     bytec_0 // "arr"
     box_del
@@ -188,17 +182,6 @@ createEvent_ternary_merge@4:
     bytec_0 // "arr"
     swap
     box_put
-    dup
-    intc_3 // 32
-    <=
-    assert // overflow
-    intc_3 // 32
-    bzero
-    dig 2
-    dup
-    cover 2
-    dig 1
-    b|
     bytec_0 // "arr"
     intc_0 // 2
     dup
@@ -216,9 +199,11 @@ createEvent_ternary_merge@4:
     +
     bytec_0 // "arr"
     swap
-    uncover 2
+    dig 2
+    dup
+    cover 3
     box_replace // on error: index out of bounds
-    dig 1
+    dup
     pushbytes 0x01
     b+
     dup
@@ -226,6 +211,9 @@ createEvent_ternary_merge@4:
     intc_3 // 32
     <=
     assert // overflow
+    intc_3 // 32
+    bzero
+    swap
     dig 1
     b|
     bytec_0 // "arr"

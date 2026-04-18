@@ -1,0 +1,187 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/shanghai/evmone_support.sol.Test.approval_program() -> uint64:
+main:
+    intcblock 0 1 6 24
+    bytecblock "__ctor_pending" "shortReturn" 0xbacc49e3 TMPL_APPROVAL_ShortReturn TMPL_CLEAR_ShortReturn
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    bytec_2 // method "__postInit()void"
+    pushbytess 0x9668a0c9 0xd616bbe8 // method "bytecode()byte[]", method "isPush0Supported()bool"
+    txna ApplicationArgs 0
+    match __postInit bytecode isPush0Supported
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/shanghai/evmone_support.sol.Test.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    itxn_begin
+    bytec_3 // TMPL_APPROVAL_ShortReturn
+    bytec 4 // TMPL_CLEAR_ShortReturn
+    intc_2 // 6
+    itxn_field TypeEnum
+    pushint 16
+    itxn_field GlobalNumUint
+    pushint 16
+    itxn_field GlobalNumByteSlice
+    intc_0 // 0
+    itxn_field Fee
+    pushint 3
+    itxn_field ExtraProgramPages
+    itxn_field ClearStateProgram
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    dup
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    pushint 1000000
+    itxn_field Amount
+    itxn_submit
+    dup
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    intc_0 // 0
+    itxn_field Amount
+    itxn_next
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec_2 // method "__postInit()void"
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_3 // 24
+    bzero
+    swap
+    itob
+    concat
+    bytec_1 // "shortReturn"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/shanghai/evmone_support.sol.Test.bytecode[routing]() -> void:
+bytecode:
+    txn GroupIndex
+    bz bytecode_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+bytecode_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_1 // "shortReturn"
+    app_global_get_ex
+    assert // check shortReturn exists
+    intc_3 // 24
+    extract_uint64
+    app_params_get AppApprovalProgram
+    pop
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+bytecode_ternary_false@3:
+    intc_0 // 0
+    b bytecode_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/shanghai/evmone_support.sol.Test.isPush0Supported[routing]() -> void:
+isPush0Supported:
+    txn GroupIndex
+    bz isPush0Supported_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+isPush0Supported_ternary_merge@4:
+    !
+    assert // not payable
+    itxn_begin
+    intc_0 // 0
+    bytec_1 // "shortReturn"
+    app_global_get_ex
+    assert // check shortReturn exists
+    intc_3 // 24
+    extract_uint64
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0xeddddc3d // method "foo()uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    pushbytes 0x
+    b==
+    assert
+    pushbytes 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+isPush0Supported_ternary_false@3:
+    intc_0 // 0
+    b isPush0Supported_ternary_merge@4

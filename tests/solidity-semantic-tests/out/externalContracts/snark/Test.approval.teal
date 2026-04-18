@@ -68,13 +68,8 @@ Pairing.negate_after_if_else@3:
     dig 1
     b>=
     assert // underflow
-    intc_2 // 32
-    bzero
-    frame_dig 0
-    dig 1
-    b|
     bytec 11 // 0x0130644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47
-    uncover 3
+    swap
     b-
     bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -83,8 +78,11 @@ Pairing.negate_after_if_else@3:
     intc_2 // 32
     <=
     assert // overflow
-    uncover 2
+    intc_2 // 32
+    bzero
     b|
+    frame_dig 0
+    swap
     concat
     swap
     retsub
@@ -192,15 +190,10 @@ Pairing.pairing_while_top@4:
     extract3 // on error: index access is out of bounds
     dup
     extract 0 32
-    intc_2 // 32
-    bzero
-    swap
-    dig 1
-    b|
-    dig 4
+    dig 3
     pushbytes 0x06
     b*
-    dig 6
+    dig 5
     dig 1
     concat
     dup
@@ -216,14 +209,12 @@ Pairing.pairing_while_top@4:
     swap
     uncover 3
     replace3 // on error: index access is out of bounds
-    uncover 3
+    uncover 2
     extract 32 32
-    dig 3
-    b|
     dig 2
     bytec_3 // 0x01
     b+
-    dig 7
+    dig 6
     swap
     concat
     dup
@@ -239,7 +230,7 @@ Pairing.pairing_while_top@4:
     replace3 // on error: index access is out of bounds
     frame_dig -1
     extract 2 0
-    uncover 4
+    uncover 3
     pushint 128
     *
     pushint 128
@@ -248,12 +239,10 @@ Pairing.pairing_while_top@4:
     extract 0 64
     dup
     extract 0 32 // on error: index access is out of bounds
-    dig 5
-    b|
     dig 4
     pushbytes 0x02
     b+
-    dig 8
+    dig 7
     swap
     concat
     dup
@@ -271,12 +260,10 @@ Pairing.pairing_while_top@4:
     replace3 // on error: index access is out of bounds
     swap
     extract 32 32 // on error: index access is out of bounds
-    dig 4
-    b|
     dig 3
     pushbytes 0x03
     b+
-    dig 7
+    dig 6
     swap
     concat
     dup
@@ -294,12 +281,10 @@ Pairing.pairing_while_top@4:
     extract 64 64
     dup
     extract 0 32 // on error: index access is out of bounds
-    dig 4
-    b|
     dig 3
     pushbytes 0x04
     b+
-    dig 7
+    dig 6
     swap
     concat
     dup
@@ -317,8 +302,6 @@ Pairing.pairing_while_top@4:
     replace3 // on error: index access is out of bounds
     swap
     extract 32 32 // on error: index access is out of bounds
-    uncover 3
-    b|
     uncover 2
     pushbytes 0x05
     b+

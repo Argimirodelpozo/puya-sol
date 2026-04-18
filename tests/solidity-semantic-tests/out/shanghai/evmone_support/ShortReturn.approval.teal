@@ -1,0 +1,53 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/shanghai/evmone_support.sol.ShortReturn.approval_program() -> uint64:
+main:
+    bytecblock "__ctor_pending"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    pushint 1
+    app_global_put
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0xbacc49e3 // method "__postInit()void"
+    txna ApplicationArgs 0
+    match main___postInit_route@4
+    err
+
+main___postInit_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b __postInit
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/shanghai/evmone_support.sol.ShortReturn.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    pushint 0
+    app_global_put
+    load 0
+    pushbytes 0x60205ff300000000000000000000000000000000000000000000000000000000
+    replace2 0
+    dup
+    extract 0 4
+    log
+    store 0
+    pushint 1
+    return

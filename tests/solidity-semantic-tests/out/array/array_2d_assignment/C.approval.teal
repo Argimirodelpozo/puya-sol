@@ -40,12 +40,11 @@ dynamic_array_replace_dynamic_element:
     btoi
     frame_dig -3
     extract 2 0
-    frame_dig -1
-    intc_1 // 2
-    *
-    dig 1
-    swap
-    extract_uint16
+    frame_dig -2
+    len
+    cover 2
+    dup
+    len
     frame_dig -1
     intc_0 // 1
     +
@@ -54,33 +53,32 @@ dynamic_array_replace_dynamic_element:
     dig 2
     dig 1
     extract_uint16
-    dig 3
-    len
-    dig 5
+    dig 4
     frame_dig -1
     -
     intc_0 // 1
     -
-    dig 1
-    uncover 3
-    uncover 2
+    dig 3
+    cover 2
     select
-    dup
+    frame_dig -1
+    intc_1 // 2
+    *
     dig 4
+    swap
+    extract_uint16
+    dup2
     -
-    cover 6
-    frame_dig -2
-    len
     cover 6
     dig 4
     intc_2 // 0
-    uncover 5
+    uncover 2
     substring3
     frame_dig -2
     concat
     uncover 4
     uncover 2
-    uncover 3
+    uncover 4
     substring3
     concat
     cover 2
@@ -100,12 +98,12 @@ dynamic_array_replace_dynamic_element_for_header@2:
     dup
     cover 3
     extract_uint16
-    frame_dig 2
-    +
     frame_dig 1
+    +
+    frame_dig 2
     -
     itob
-    extract 6 2
+    extract 6 0
     dig 2
     swap
     replace3
@@ -130,7 +128,6 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    dup
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
@@ -145,19 +142,19 @@ f_ternary_merge@4:
     !
     assert // not payable
     pushbytes 0x00020004000600000000
-    bury 4
+    bury 3
     intc_2 // 0
     itob
-    bury 3
+    bury 2
 
 f_while_top@5:
-    dig 2
+    dig 1
     pushbytes 0x02
     b<
     bz f_after_while@7
     pushint 8
     bzero
-    dig 3
+    dig 2
     dup
     cover 2
     concat
@@ -166,42 +163,26 @@ f_while_top@5:
     pushint 8
     -
     extract_uint64
-    dig 5
-    dup
-    cover 2
-    intc_2 // 0
-    extract_uint16 // on error: invalid array length header
-    dig 1
-    >
-    assert // index access is out of bounds
+    dig 4
     pushbytes 0x0003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    swap
+    uncover 2
     callsub dynamic_array_replace_dynamic_element
-    bury 5
+    bury 4
     pushbytes 0x01
     b+
-    bury 3
+    bury 2
     b f_while_top@5
 
 f_after_while@7:
-    dup
-    intc_3 // 32
-    <=
-    assert // overflow
-    intc_3 // 32
-    bzero
     dig 2
-    dig 1
-    b|
-    dig 5
     dup
-    extract 2 0
-    dig 1
     intc_2 // 0
-    extract_uint16 // on error: invalid array length header
+    extract_uint16
     intc_0 // 1
     >
-    assert // index access is out of bounds
+    assert // index out of bounds
+    dup
+    extract 2 0
     dup
     intc_1 // 2
     extract_uint16
@@ -212,18 +193,17 @@ f_after_while@7:
     intc_1 // 2
     +
     extract3
-    uncover 2
+    dig 2
     replace2 34 // on error: index access is out of bounds
     intc_0 // 1
     callsub dynamic_array_replace_dynamic_element
     dup
-    extract 2 0
-    swap
     intc_2 // 0
-    extract_uint16 // on error: invalid array length header
+    extract_uint16
     intc_0 // 1
     >
-    assert // index access is out of bounds
+    assert // index out of bounds
+    extract 2 0
     dup
     intc_1 // 2
     extract_uint16
@@ -235,7 +215,6 @@ f_after_while@7:
     +
     extract3
     extract 34 32
-    b|
     pushbytes 0x151f7c75
     swap
     concat

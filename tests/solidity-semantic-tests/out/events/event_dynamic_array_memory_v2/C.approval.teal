@@ -36,7 +36,6 @@ createEvent:
     txna ApplicationArgs 1
     dup
     len
-    dup
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
@@ -50,21 +49,12 @@ createEvent:
 createEvent_ternary_merge@4:
     !
     assert // not payable
-    dup
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    dig 2
+    pushbytes 0x0003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    dig 1
     dup
     cover 2
-    dig 1
-    b|
-    pushbytes 0x0003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    swap
     replace2 2 // on error: index access is out of bounds
-    dig 2
+    dig 1
     pushbytes 0x01
     b+
     dup
@@ -72,8 +62,13 @@ createEvent_ternary_merge@4:
     intc_0 // 32
     <=
     assert // overflow
-    dig 2
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
     b|
+    uncover 2
+    swap
     replace2 34 // on error: index access is out of bounds
     uncover 2
     pushbytes 0x02

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_dynamic_array_storage_v2.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 2 1 0
+    intcblock 2 32 1 0
     bytecblock "arr" "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -41,7 +41,7 @@ __postInit:
     intc_3 // 0
     app_global_put
     bytec_0 // "arr"
-    intc_1 // 2
+    intc_0 // 2
     box_create
     pop
     intc_2 // 1
@@ -53,8 +53,7 @@ createEvent:
     txna ApplicationArgs 1
     dup
     len
-    dup
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -72,7 +71,7 @@ createEvent_while_top@5:
     bytec_0 // "arr"
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
     >=
     bz createEvent_ternary_false@7
     bytec_0 // "arr"
@@ -80,9 +79,9 @@ createEvent_while_top@5:
     pop
 
 createEvent_ternary_merge@8:
-    intc_1 // 2
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
     pushbytes 0x03
@@ -90,13 +89,13 @@ createEvent_ternary_merge@8:
     bz createEvent_after_while@10
     bytec_0 // "arr"
     intc_3 // 0
-    intc_1 // 2
+    intc_0 // 2
     box_extract
     btoi
     bytec_0 // "arr"
     box_len
     pop
-    intc_0 // 32
+    intc_1 // 32
     +
     bytec_0 // "arr"
     swap
@@ -110,9 +109,9 @@ createEvent_ternary_merge@8:
     intc_3 // 0
     uncover 2
     box_replace
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     bytec_0 // "arr"
     swap
@@ -122,29 +121,23 @@ createEvent_ternary_merge@8:
     b createEvent_while_top@5
 
 createEvent_after_while@10:
-    dup
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
+    bytec_0 // "arr"
+    intc_0 // 2
     dig 2
     dup
-    cover 2
-    dig 1
-    b|
-    bytec_0 // "arr"
-    intc_1 // 2
-    uncover 2
+    cover 3
     box_replace // on error: index out of bounds
-    dig 1
+    dup
     pushbytes 0x01
     b+
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
+    intc_1 // 32
+    bzero
+    swap
     dig 1
     b|
     bytec_0 // "arr"
@@ -156,7 +149,7 @@ createEvent_after_while@10:
     b+
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
     b|
@@ -177,7 +170,7 @@ createEvent_after_while@10:
     return
 
 createEvent_ternary_false@7:
-    intc_1 // 2
+    intc_0 // 2
     b createEvent_ternary_merge@8
 
 createEvent_ternary_false@3:

@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/delete.sol.C.approval_program() -> uint64:
 main:
-    intcblock 2 32 1 0
+    intcblock 2 1 32 0
     bytecblock "array" 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x151f7c75 0x0000
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_3 // "__ctor_pending"
-    intc_2 // 1
+    intc_1 // 1
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -86,7 +86,7 @@ __postInit:
     intc_0 // 2
     box_create
     pop
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -96,33 +96,33 @@ fillArray:
     txn GroupIndex
     bz fillArray_ternary_false@3
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
 fillArray_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 32
+    intc_2 // 32
     bzero
     bury 1
     bytec_0 // "array"
     intc_3 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
-    intc_2 // 1
-    intc_1 // 32
+    intc_1 // 1
+    intc_2 // 32
     callsub box_dynamic_array_concat_fixed
     bytec_0 // "array"
     intc_3 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
-    intc_2 // 1
-    intc_1 // 32
+    intc_1 // 1
+    intc_2 // 32
     callsub box_dynamic_array_concat_fixed
     bytec_0 // "array"
     intc_3 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
-    intc_2 // 1
-    intc_1 // 32
+    intc_1 // 1
+    intc_2 // 32
     callsub box_dynamic_array_concat_fixed
     bytec_0 // "array"
     box_len
@@ -137,7 +137,7 @@ fillArray_ternary_merge@4:
 fillArray_ternary_merge@7:
     intc_0 // 2
     -
-    intc_1 // 32
+    intc_2 // 32
     /
     itob
     dig 1
@@ -146,7 +146,7 @@ fillArray_ternary_merge@7:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 fillArray_ternary_false@6:
@@ -165,7 +165,7 @@ deleteLast:
     txn GroupIndex
     bz deleteLast_ternary_false@3
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -185,7 +185,7 @@ deleteLast_ternary_merge@4:
 deleteLast_ternary_merge@7:
     intc_0 // 2
     -
-    intc_1 // 32
+    intc_2 // 32
     /
     itob
     bytec_1 // 0x01
@@ -204,7 +204,7 @@ deleteLast_ternary_merge@7:
 deleteLast_ternary_merge@10:
     intc_0 // 2
     -
-    intc_1 // 32
+    intc_2 // 32
     /
     itob
     bytec_1 // 0x01
@@ -226,7 +226,7 @@ deleteLast_ternary_merge@10:
 deleteLast_ternary_merge@19:
     intc_0 // 2
     -
-    intc_1 // 32
+    intc_2 // 32
     /
     itob
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -252,7 +252,7 @@ deleteLast_ternary_merge@19:
 deleteLast_ternary_merge@22:
     intc_0 // 2
     -
-    intc_1 // 32
+    intc_2 // 32
     /
     itob
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -270,7 +270,7 @@ deleteLast_ternary_merge@22:
     dig 1
     swap
     extract_uint64
-    intc_1 // 32
+    intc_2 // 32
     *
     intc_0 // 2
     +
@@ -278,7 +278,7 @@ deleteLast_ternary_merge@22:
     swap
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     box_replace // on error: index out of bounds
-    intc_2 // 1
+    intc_1 // 1
     return
 
 deleteLast_ternary_false@21:
@@ -307,7 +307,7 @@ deleteArray:
     txn GroupIndex
     bz deleteArray_ternary_false@3
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -320,7 +320,7 @@ deleteArray_ternary_merge@4:
     bytec_0 // "array"
     bytec 5 // 0x0000
     box_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 deleteArray_ternary_false@3:
@@ -333,7 +333,7 @@ arrayLength:
     txn GroupIndex
     bz arrayLength_ternary_false@3
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -353,17 +353,17 @@ arrayLength_ternary_merge@4:
 arrayLength_ternary_merge@7:
     intc_0 // 2
     -
-    intc_1 // 32
+    intc_2 // 32
     /
     itob
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     bytec 4 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 arrayLength_ternary_false@6:
@@ -380,13 +380,13 @@ array:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz array_ternary_false@3
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -410,23 +410,15 @@ array_ternary_merge@4:
     swap
     extract 2 0
     swap
-    intc_1 // 32
+    intc_2 // 32
     *
-    intc_1 // 32
+    intc_2 // 32
     extract3 // on error: index access is out of bounds
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    b|
     bytec 4 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 array_ternary_false@3:
