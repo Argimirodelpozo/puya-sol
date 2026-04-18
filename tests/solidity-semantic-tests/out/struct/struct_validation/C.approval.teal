@@ -1,0 +1,77 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/abiEncoderV2/struct/struct_validation.sol.C.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0x84b3816b // method "f((uint64,uint64,uint8[2]))(uint512,uint512,uint512)"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/abiEncoderV2/struct/struct_validation.sol.C.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    len
+    pushint 18
+    ==
+    assert // invalid number of bytes for S
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    load 0
+    dup
+    extract 32 32
+    dig 1
+    extract 64 32
+    uncover 2
+    store 0
+    pushint 64
+    bzero
+    uncover 2
+    dig 1
+    b|
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    concat
+    cover 2
+    b|
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return
+
+f_ternary_false@3:
+    pushint 0
+    b f_ternary_merge@4

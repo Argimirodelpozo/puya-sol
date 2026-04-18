@@ -4,17 +4,17 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.approval_program() -> uint64:
 main:
     intcblock 0 1 24 6
-    bytecblock "c" 0x0000000000000000000000000000000000000000000000000000000000000000 "account1" "account2" 0xb30e2ea6 0x151f7c75 TMPL_APPROVAL_C TMPL_CLEAR_C
+    bytecblock "c" "account1" "account2" 0xb30e2ea6 0x151f7c75 TMPL_APPROVAL_C TMPL_CLEAR_C
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "account1"
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // "account1"
+    pushbytes 0x0000000000000000000000001111111111111111111111111111111111111111
     app_global_put
-    bytec_3 // "account2"
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // "account2"
+    pushbytes 0x0000000000000000000000002222222222222222222222222222222222222222
     app_global_put
     bytec_0 // "c"
-    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     app_global_put
     intc_1 // 1
     return
@@ -33,7 +33,7 @@ main_after_if_else@2:
     txn ApplicationID
     assert
     pushbytes 0x739b0889 // method "deploy()void"
-    bytec 4 // method "terminate(address)void"
+    bytec_3 // method "terminate(address)void"
     pushbytess 0xcf19aed1 0x082c5ced 0xd7fc866d // method "test_deploy_and_terminate_twice()void", method "exists()bool", method "c()address"
     txna ApplicationArgs 0
     match deploy terminate test_deploy_and_terminate_twice exists c
@@ -74,12 +74,12 @@ test_deploy_and_terminate_twice_ternary_merge@4:
     assert // not payable
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.deploy
     intc_0 // 0
-    bytec_2 // "account1"
+    bytec_1 // "account1"
     app_global_get_ex
     assert // check account1 exists
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.terminate
     intc_0 // 0
-    bytec_3 // "account2"
+    bytec_2 // "account2"
     app_global_get_ex
     assert // check account2 exists
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.terminate
@@ -119,7 +119,7 @@ exists_ternary_merge@4:
     intc_0 // 0
     uncover 2
     setbit
-    bytec 5 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -147,7 +147,7 @@ c_ternary_merge@4:
     bytec_0 // "c"
     app_global_get_ex
     assert // check c exists
-    bytec 5 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -162,8 +162,8 @@ c_ternary_false@3:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.deploy() -> void:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.deploy:
     itxn_begin
-    bytec 6 // TMPL_APPROVAL_C
-    bytec 7 // TMPL_CLEAR_C
+    bytec 5 // TMPL_APPROVAL_C
+    bytec 6 // TMPL_CLEAR_C
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -228,7 +228,7 @@ c_ternary_false@3:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 4 // method "terminate(address)void"
+    bytec_3 // method "terminate(address)void"
     itxn_field ApplicationArgs
     frame_dig -1
     itxn_field ApplicationArgs

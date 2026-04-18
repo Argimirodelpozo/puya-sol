@@ -1,0 +1,163 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/abiEncoderV2/struct/struct_function.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    bytecblock 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x4bd0e6fc 0x619fed17 0x4b2c0376 // method "f((uint8[12],uint256))(uint256,uint256)", method "test()(uint256,uint256)", method "g()uint256"
+    txna ApplicationArgs 0
+    match f test g
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/abiEncoderV2/struct/struct_function.sol.C.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 44
+    ==
+    assert // invalid number of bytes for S
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/abiEncoderV2/struct/struct_function.sol.C.f
+    pop
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/abiEncoderV2/struct/struct_function.sol.C.test[routing]() -> void:
+test:
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    pushbytes 0x0000000000000000000000010000000000000000000000000000000000000000000000000000000000000003
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/abiEncoderV2/struct/struct_function.sol.C.f
+    pop
+    swap
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    dig 1
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    swap
+    uncover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+test_ternary_false@3:
+    intc_2 // 0
+    b test_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/abiEncoderV2/struct/struct_function.sol.C.g[routing]() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000007
+    log
+    intc_0 // 1
+    return
+
+g_ternary_false@3:
+    intc_2 // 0
+    b g_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/abiEncoderV2/struct/struct_function.sol.C.f(s: bytes) -> bytes, bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/abiEncoderV2/struct/struct_function.sol.C.f:
+    proto 1 3
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/abiEncoderV2/struct/struct_function.sol.C.f_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/abiEncoderV2/struct/struct_function.sol.C.f_ternary_merge@3:
+    !
+    assert // not payable
+    itxn_begin
+    frame_dig -1
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x5040e1d5 // method "f()uint8[12]"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    frame_dig -1
+    extract 12 32
+    frame_dig -1
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/abiEncoderV2/struct/struct_function.sol.C.f_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/semanticTests/abiEncoderV2/struct/struct_function.sol.C.f_ternary_merge@3

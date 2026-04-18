@@ -1,0 +1,122 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/syntaxTests/array/contract_array.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1 2 32
+    bytecblock "y" "__ctor_pending" "x"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x2d4970c7 // method "__postInit()void", method "f()void"
+    txna ApplicationArgs 0
+    match __postInit f
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/syntaxTests/array/contract_array.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "y"
+    intc_2 // 2
+    box_create
+    pop
+    bytec_2 // "x"
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/syntaxTests/array/contract_array.sol.C.f[routing]() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x0001
+    global CurrentApplicationAddress
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    bytec_0 // "y"
+    intc_0 // 0
+    intc_2 // 2
+    box_extract
+    btoi
+    bytec_0 // "y"
+    box_len
+    pop
+    dig 2
+    intc_3 // 32
+    *
+    +
+    bytec_0 // "y"
+    swap
+    box_resize
+    dup
+    uncover 2
+    +
+    itob
+    extract 6 2
+    bytec_0 // "y"
+    intc_0 // 0
+    uncover 2
+    box_replace
+    intc_3 // 32
+    *
+    intc_2 // 2
+    +
+    bytec_0 // "y"
+    swap
+    intc_0 // 0
+    uncover 3
+    box_splice
+    global CurrentApplicationAddress
+    intc_0 // 0
+    bytec_2 // "x"
+    app_global_get_ex
+    assert // check x exists
+    swap
+    replace2 0 // on error: index access is out of bounds
+    bytec_2 // "x"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+f_ternary_false@3:
+    intc_0 // 0
+    b f_ternary_merge@4

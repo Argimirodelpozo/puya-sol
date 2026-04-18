@@ -1,0 +1,68 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/syntaxTests/inheritance/virtual/simple.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x84467aff 0x77324f0d // method "foo()void", method "foo2()void"
+    txna ApplicationArgs 0
+    match foo foo2
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/syntaxTests/inheritance/virtual/simple.sol.C.foo[routing]() -> void:
+foo:
+    txn GroupIndex
+    bz foo_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+foo_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
+
+foo_ternary_false@3:
+    intc_1 // 0
+    b foo_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/solidity/test/libsolidity/syntaxTests/inheritance/virtual/simple.sol.C.foo2[routing]() -> void:
+foo2:
+    txn GroupIndex
+    bz foo2_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+foo2_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
+
+foo2_ternary_false@3:
+    intc_1 // 0
+    b foo2_ternary_merge@4
