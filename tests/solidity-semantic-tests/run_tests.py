@@ -1426,7 +1426,10 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
 
             _sp = _algod.suggested_params()
             _sp.flat_fee = True
-            _sp.fee = 5000
+            # Pool enough fees for inner txns — payable methods often spawn
+            # multiple inner deploys / payments. 50_000 µAlgos covers up to
+            # ~50 inner transactions at the 1000-µAlgo minimum.
+            _sp.fee = 50_000
 
             # Group: payment + method call
             atc = _PayATC()
