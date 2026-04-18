@@ -242,14 +242,70 @@ njson AWSTSerializer::serializeExpression(awst::Expression const& _expr)
 
 	if (auto const* e = dynamic_cast<awst::IntegerConstant const*>(&_expr))
 	{
-		// value is stored as string for biguint support, but puya expects int
+		// value is stored as string for biguint support, but puya expects int.
+		// Detect hex prefix (0x / -0x) so std::stoll doesn't silently stop at
+		// 'x' and return 0 for large hex literals like 0x6465... .
+		std::string const& s = e->value;
+		bool neg = !s.empty() && s[0] == '-';
+		size_t off = neg ? 1 : 0;
+		bool isHex = s.size() > off + 2 && s[off] == '0' && (s[off + 1] == 'x' || s[off + 1] == 'X');
 		try
 		{
-			j["value"] = std::stoll(e->value);
+			if (isHex)
+			{
+				// Parse as hex; stoll with base 16 needs the prefix stripped.
+				long long val = std::stoll(s.substr(off + 2), nullptr, 16);
+				j["value"] = neg ? -val : val;
+			}
+			else
+				j["value"] = std::stoll(s);
 		}
 		catch (...)
 		{
-			j["value"] = e->value;
+			if (isHex)
+			{
+				// Hex too large for int64: convert to decimal string so puya
+				// sees the correct numeric value rather than the literal "0x…".
+				std::string hex = s.substr(off + 2);
+				// Big-integer decimal from hex via repeated base-10 division.
+				std::vector<unsigned> digits; // big-endian hex digits
+				digits.reserve(hex.size());
+				for (char c : hex)
+				{
+					unsigned d = 0;
+					if (c >= '0' && c <= '9') d = c - '0';
+					else if (c >= 'a' && c <= 'f') d = 10 + (c - 'a');
+					else if (c >= 'A' && c <= 'F') d = 10 + (c - 'A');
+					else { digits.clear(); break; }
+					digits.push_back(d);
+				}
+				std::string dec;
+				if (digits.empty())
+					dec = "0";
+				else
+				{
+					while (!digits.empty())
+					{
+						unsigned rem = 0;
+						std::vector<unsigned> next;
+						next.reserve(digits.size());
+						for (unsigned d : digits)
+						{
+							unsigned cur = rem * 16 + d;
+							unsigned q = cur / 10;
+							rem = cur % 10;
+							if (!next.empty() || q) next.push_back(q);
+						}
+						dec.push_back(char('0' + rem));
+						digits = std::move(next);
+					}
+					std::reverse(dec.begin(), dec.end());
+				}
+				if (neg) dec.insert(dec.begin(), '-');
+				j["value"] = dec;
+			}
+			else
+				j["value"] = s;
 		}
 		j["teal_alias"] = nullptr;
 	}
