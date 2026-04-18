@@ -3,16 +3,16 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/functions_called_by_constructor_through_dispatch.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 32 8
-    bytecblock "name" 0x151f7c75
+    intcblock 1 0 32 8
+    bytecblock "name" 0x616263646566 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "name"
-    pushbytes 0x616263646566
+    bytec_1 // 0x616263646566
     app_global_put
-    pushbytess 0x0000000000000000000000000000000000000000000000000000616263646566 0x0000000000000000000000000000000000000000000000000000000000000003
+    bytec_1 // 0x616263646566
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/functions_called_by_constructor_through_dispatch.sol.Test.leftByteShift
-    pop
     bytec_0 // "name"
     swap
     app_global_put
@@ -32,7 +32,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xdcf1e005 0x5551e9d0 // method "getName()byte[6]", method "leftByteShift(uint8[6],uint256)byte[6]"
+    pushbytess 0xdcf1e005 0xa5407532 // method "getName()byte[6]", method "leftByteShift(byte[6],uint256)byte[6]"
     txna ApplicationArgs 0
     match getName leftByteShift
     err
@@ -40,16 +40,30 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/functions_called_by_constructor_through_dispatch.sol.Test.getName[routing]() -> void:
 getName:
-    pushint 0
+    txn GroupIndex
+    bz getName_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getName_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
     bytec_0 // "name"
     app_global_get_ex
     assert // check name exists
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
+
+getName_ternary_false@3:
+    intc_1 // 0
+    b getName_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/functions_called_by_constructor_through_dispatch.sol.Test.leftByteShift[routing]() -> void:
@@ -63,12 +77,11 @@ leftByteShift:
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/functions_called_by_constructor_through_dispatch.sol.Test.leftByteShift
-    pop
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -76,15 +89,25 @@ leftByteShift:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/functions_called_by_constructor_through_dispatch.sol.Test.leftByteShift(__arc4__value: bytes, __arc4__shift: bytes) -> bytes, bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/functions_called_by_constructor_through_dispatch.sol.Test.leftByteShift(_value: bytes, __arc4__shift: bytes) -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/functions_called_by_constructor_through_dispatch.sol.Test.leftByteShift:
-    proto 2 2
+    proto 2 1
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/functions_called_by_constructor_through_dispatch.sol.Test.leftByteShift_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/functions_called_by_constructor_through_dispatch.sol.Test.leftByteShift_ternary_merge@3:
+    !
+    assert // not payable
     frame_dig -2
     btoi
     itob
-    intc_1 // 32
+    intc_2 // 32
     bzero
-    intc_2 // 8
+    intc_3 // 8
     bzero
     frame_dig -1
     pushbytes 0x08
@@ -92,7 +115,7 @@ leftByteShift:
     concat
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     -
     extract_uint64
     pushint 255
@@ -101,5 +124,8 @@ leftByteShift:
     intc_0 // 1
     setbit
     b*
-    frame_dig -2
     retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/functions_called_by_constructor_through_dispatch.sol.Test.leftByteShift_ternary_false@2:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/functions_called_by_constructor_through_dispatch.sol.Test.leftByteShift_ternary_merge@3

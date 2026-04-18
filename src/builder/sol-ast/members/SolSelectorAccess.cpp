@@ -197,15 +197,18 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 	if (sig.empty())
 	{
 		// Function pointer variable: extract selector from bytes representation.
-		// External function pointers are encoded as address(20) + selector(4) = 24 bytes.
+		// puya-sol encodes external fn-ptrs as 12 bytes = itob(appId, 8) + selector(4).
 		if (funcType && funcType->kind() == FunctionType::Kind::External)
 		{
 			auto base = buildExpr(baseExpr);
+			// Coerce to bytes if typed as bytes[12].
+			if (base && base->wtype && base->wtype->kind() == awst::WTypeKind::Bytes)
+				base = awst::makeReinterpretCast(std::move(base), awst::WType::bytesType(), m_loc);
 			if (base && base->wtype == awst::WType::bytesType())
 			{
-				// extract(base, 20, 4) — selector is last 4 bytes of 24-byte encoding
+				// selector is bytes 8..12 of the 12-byte encoding.
 				auto extract = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), m_loc);
-				extract->immediates = {20, 4};
+				extract->immediates = {8, 4};
 				extract->stackArgs.push_back(std::move(base));
 
 				auto* targetType = m_ctx.typeMapper.map(m_memberAccess.annotation().type);
