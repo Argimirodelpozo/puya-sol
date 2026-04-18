@@ -444,34 +444,31 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		// External function pointer call: check if self-call (appId == 0
 		// sentinel) and route to internal dispatch, otherwise inner txn.
 
-		// Extract appId: btoi(extract(_ptr, 0, 8))
-		auto zero = awst::makeIntegerConstant("0", _loc);
-		auto eight = awst::makeIntegerConstant("8", _loc);
+		// Helper: extract N bytes starting at offset from the 12-byte ptr.
+		auto extractSlice = [&](int _offset, int _length) {
+			auto e = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
+			e->immediates = {_offset, _length};
+			e->stackArgs.push_back(_ptrExpr);
+			return e;
+		};
+		// Helper: btoi(extractSlice(offset, 8)) — extract a uint64 from ptr.
+		auto extractU64 = [&](int _offset) {
+			auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
+			btoi->stackArgs.push_back(extractSlice(_offset, 8));
+			return btoi;
+		};
 
-		auto extractAppId = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-		extractAppId->stackArgs.push_back(_ptrExpr);
-		extractAppId->stackArgs.push_back(std::move(zero));
-		extractAppId->stackArgs.push_back(std::move(eight));
-
-		auto appId = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-		appId->stackArgs.push_back(std::move(extractAppId));
-
-		// Check if self-call: appId == 0 (sentinel for current app)
+		// Check if self-call: appId == 0 (sentinel for current app).
 		auto isSelf = std::make_shared<awst::NumericComparisonExpression>();
 		isSelf->sourceLocation = _loc;
 		isSelf->wtype = awst::WType::boolType();
-		isSelf->lhs = appId; // shared
+		isSelf->lhs = extractU64(0);
 		isSelf->op = awst::NumericComparison::Eq;
-		auto zeroCheck = awst::makeIntegerConstant("0", _loc);
-		isSelf->rhs = std::move(zeroCheck);
+		isSelf->rhs = awst::makeIntegerConstant("0", _loc);
 
-		// Self-call path: extract internal ID from selector slot, dispatch
-		auto extractId4 = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-		extractId4->immediates = {8, 4};
-		extractId4->stackArgs.push_back(_ptrExpr);
-
+		// Self-call path: extract internal ID from selector slot (bytes 8..12).
 		auto internalId = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-		internalId->stackArgs.push_back(std::move(extractId4));
+		internalId->stackArgs.push_back(extractSlice(8, 4));
 
 		// Build internal dispatch call with the same args (shared with
 		// the inner-txn branch below — hence we pass _args by value)
@@ -479,13 +476,9 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		awst::WType const* retType = selfCall->wtype;
 
 		// ── Inner-txn (cross-contract) branch ──
-		// Extract selector slot (bytes 8..12) — this was populated at
-		// fn-ref construction with either the internal fn-ptr id (self)
-		// or the target's ARC4 method selector (cross-contract). The
-		// router on the callee expects ARC4 selector at ApplicationArgs[0].
-		auto sel4 = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-		sel4->immediates = {8, 4};
-		sel4->stackArgs.push_back(_ptrExpr);
+		// Selector slot (bytes 8..12) = ARC4 method selector for the callee's
+		// router; used as ApplicationArgs[0].
+		auto sel4 = extractSlice(8, 4);
 
 		// Build ApplicationArgs tuple: [selector, arg0_encoded, arg1_encoded, ...]
 		auto argsTuple = std::make_shared<awst::TupleExpression>();
@@ -512,16 +505,9 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		create->wtype = &s_applFieldsType;
 		create->fields["TypeEnum"] = awst::makeIntegerConstant("6", _loc);
 		create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
-		{
-			// ApplicationID: reinterpret uint64 appId to application type
-			auto appIdCopy = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-			appIdCopy->immediates = {0, 8};
-			appIdCopy->stackArgs.push_back(_ptrExpr);
-			auto appIdBtoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-			appIdBtoi->stackArgs.push_back(std::move(appIdCopy));
-			auto appIdApp = awst::makeReinterpretCast(std::move(appIdBtoi), awst::WType::applicationType(), _loc);
-			create->fields["ApplicationID"] = std::move(appIdApp);
-		}
+		// ApplicationID: reinterpret uint64 appId to application type
+		create->fields["ApplicationID"] = awst::makeReinterpretCast(
+			extractU64(0), awst::WType::applicationType(), _loc);
 		create->fields["OnCompletion"] = awst::makeIntegerConstant("0", _loc);
 		create->fields["ApplicationArgs"] = std::move(argsTuple);
 
