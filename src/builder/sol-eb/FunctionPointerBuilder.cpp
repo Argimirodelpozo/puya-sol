@@ -777,6 +777,8 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 				arg.wtype = awst::WType::stringType();
 			else if (auto const* fnType = dynamic_cast<FunctionType const*>(paramSolType))
 				arg.wtype = mapFunctionType(fnType);
+			else if (auto const* fbType = dynamic_cast<solidity::frontend::FixedBytesType const*>(paramSolType))
+				arg.wtype = new awst::BytesWType(static_cast<int>(fbType->numBytes()));
 			else
 				arg.wtype = awst::WType::biguintType();
 			arg.sourceLocation = _loc;
@@ -845,18 +847,24 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 					awst::WType const* arc4Type = nullptr;
 					if (isPublic)
 					{
+						auto const* paramSolType = funcType->parameterTypes()[i];
 						if (var->wtype == awst::WType::biguintType())
 						{
 							// Biguint: preserve bit width from Solidity int type
-							auto const* paramSolType = funcType->parameterTypes()[i];
 							unsigned bits = 256;
 							if (auto const* intType = dynamic_cast<IntegerType const*>(paramSolType))
 								bits = intType->numBits();
 							arc4Type = new awst::ARC4UIntN(static_cast<int>(bits));
 						}
-						else if (var->wtype && var->wtype->kind() == awst::WTypeKind::Bytes)
+						else if (var->wtype && var->wtype->kind() == awst::WTypeKind::Bytes
+							&& dynamic_cast<FunctionType const*>(paramSolType))
 						{
-							// bytes[N] → arc4.static_array<arc4.uint8, N>
+							// External fn-ptr bytes[12] → arc4.static_array<arc4.uint8, 12>.
+							// ContractBuilder only ARC4-remaps bytes[N] params when the
+							// Solidity type is FunctionType (see ContractBuilder.cpp
+							// isAggregate check); matching that rule here so the
+							// dispatch call-site wraps iff the target's signature
+							// expects an ARC4 arg.
 							auto const* bytesType = static_cast<awst::BytesWType const*>(var->wtype);
 							if (bytesType->length().has_value())
 							{
