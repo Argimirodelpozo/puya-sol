@@ -611,6 +611,72 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 		}
 	}
 
+	// Struct field holding a function pointer: `s.fn(...)` where `fn` is
+	// declared as `function(...) returns (...)` in the struct. The
+	// InstanceMethodTarget{"fn"} lookup would try to call `fn` on the
+	// current contract, which fails. Instead: read the struct field
+	// (FieldExpression → ARC4Decode if needed) to get the pointer id and
+	// dispatch via FunctionPointerBuilder.
+	if (auto const* refDecl = _memberAccess.annotation().referencedDeclaration)
+	{
+		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(refDecl))
+		{
+			auto const* funcType = dynamic_cast<FunctionType const*>(varDecl->type());
+			bool isStructField = varDecl->scope()
+				&& dynamic_cast<StructDefinition const*>(varDecl->scope());
+			if (funcType && isStructField)
+			{
+				auto baseExpr = m_ctx.buildExpr(_memberAccess.expression());
+				auto* ptrNativeType = eb::FunctionPointerBuilder::mapFunctionType(funcType);
+				std::shared_ptr<awst::Expression> ptrExpr;
+				if (baseExpr->wtype && baseExpr->wtype->kind() == awst::WTypeKind::ARC4Struct)
+				{
+					auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(baseExpr->wtype);
+					awst::WType const* arc4FieldType = nullptr;
+					for (auto const& [fname, ftype] : arc4Struct->fields())
+						if (fname == _memberAccess.memberName())
+						{
+							arc4FieldType = ftype;
+							break;
+						}
+					auto field = std::make_shared<awst::FieldExpression>();
+					field->sourceLocation = m_loc;
+					field->base = std::move(baseExpr);
+					field->name = _memberAccess.memberName();
+					field->wtype = arc4FieldType ? arc4FieldType : ptrNativeType;
+					if (arc4FieldType && arc4FieldType != ptrNativeType)
+					{
+						auto decode = std::make_shared<awst::ARC4Decode>();
+						decode->sourceLocation = m_loc;
+						decode->wtype = ptrNativeType;
+						decode->value = std::move(field);
+						ptrExpr = std::move(decode);
+					}
+					else
+						ptrExpr = std::move(field);
+				}
+				else
+				{
+					auto field = std::make_shared<awst::FieldExpression>();
+					field->sourceLocation = m_loc;
+					field->base = std::move(baseExpr);
+					field->name = _memberAccess.memberName();
+					field->wtype = ptrNativeType;
+					ptrExpr = std::move(field);
+				}
+
+				std::vector<std::shared_ptr<awst::Expression>> args;
+				for (auto const& arg : m_call.arguments())
+					args.push_back(m_ctx.buildExpr(*arg));
+
+				auto result = eb::FunctionPointerBuilder::buildFunctionPointerCall(
+					m_ctx, std::move(ptrExpr), funcType, std::move(args), m_loc);
+				if (result)
+					return result;
+			}
+		}
+	}
+
 	// Fallback: InstanceMethodTarget
 	std::string methodName = _memberAccess.memberName();
 	if (resolvedFuncDef)
