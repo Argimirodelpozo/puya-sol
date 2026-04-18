@@ -124,23 +124,37 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 
 		if (_receiverAddress)
 		{
-			// Cross-contract external: extract appId from the last 8 bytes
-			// of the 32-byte receiver address. On AVM an app address is
-			// derived from its appId via SHA-512/256 with a "appID" prefix,
-			// so you can't recover appId from an arbitrary address — but
-			// the Solidity test semantic of storing "an external fn ptr on
-			// some known app" treats the last 8 bytes as appId, which
-			// preserves round-trip for the `.address` accessor.
+			// Cross-contract external: derive an 8-byte appId slot from
+			// the receiver. Two receiver shapes:
+			//   (a) application — `new Other()` — appId is already a uint64,
+			//       just itob to 8 bytes.
+			//   (b) address — `C(address(N))` — take the last 8 bytes of
+			//       the 32-byte address.
+			// Treating the last 8 bytes of an address as appId preserves
+			// round-trip through `.address` for literal address values used
+			// in Solidity tests, while the application path matches the
+			// runtime reality of \`new Other()\`.
 			auto addr = _receiverAddress;
-			if (addr->wtype != awst::WType::bytesType())
+			std::shared_ptr<awst::Expression> appIdBytes;
+			if (addr->wtype == awst::WType::applicationType())
 			{
-				auto cast = awst::makeReinterpretCast(std::move(addr), awst::WType::bytesType(), _loc);
-				addr = std::move(cast);
+				auto toU64 = awst::makeReinterpretCast(std::move(addr), awst::WType::uint64Type(), _loc);
+				auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
+				itob->stackArgs.push_back(std::move(toU64));
+				appIdBytes = std::move(itob);
 			}
-			// Extract last 8 bytes of the 32-byte address → appId.
-			auto appIdBytes = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-			appIdBytes->immediates = {24, 8}; // last 8 bytes of 32
-			appIdBytes->stackArgs.push_back(std::move(addr));
+			else
+			{
+				if (addr->wtype != awst::WType::bytesType())
+				{
+					auto cast = awst::makeReinterpretCast(std::move(addr), awst::WType::bytesType(), _loc);
+					addr = std::move(cast);
+				}
+				auto extract = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
+				extract->immediates = {24, 8};
+				extract->stackArgs.push_back(std::move(addr));
+				appIdBytes = std::move(extract);
+			}
 
 			// Selector for f: computed via makeSelectorExpr convention (not available
 			// here, so emit a MethodConstant via the function's ARC4 signature).
@@ -438,10 +452,29 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 	if (s_targets.empty() && s_neededDispatches.empty())
 		return methods;
 
+	// Helper: figure out which contract a function is defined in.
+	auto funcScopeContract = [](FunctionDefinition const* fd) -> ContractDefinition const* {
+		if (!fd) return nullptr;
+		auto const* scope = fd->scope();
+		return dynamic_cast<ContractDefinition const*>(scope);
+	};
+	// Find our current contract from _cref: last "."-separated segment.
+	std::string contractName;
+	auto dotPos = _cref.find_last_of('.');
+	if (dotPos != std::string::npos)
+		contractName = _cref.substr(dotPos + 1);
+
 	// Group targets by dispatch name (= signature)
 	std::map<std::string, std::vector<FuncPtrEntry const*>> groups;
 	for (auto const& [astId, entry] : s_targets)
 	{
+		// Skip targets that live in a different contract — the dispatch
+		// cannot resolve them as InstanceMethodTarget on the caller. They
+		// still need a fn-ptr representation (so storing them works), but
+		// invoking them routes through an inner txn, not this dispatch.
+		auto const* fdContract = funcScopeContract(entry.funcDef);
+		if (fdContract && !contractName.empty() && fdContract->name() != contractName)
+			continue;
 		std::string dname = dispatchName(entry.funcType);
 		groups[dname].push_back(&entry);
 	}
