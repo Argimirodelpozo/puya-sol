@@ -721,11 +721,11 @@ std::shared_ptr<awst::Expression> SolInternalCall::toAwst()
 	if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(&funcExpr))
 		return resolveMemberAccessCall(*memberAccess);
 
-	if (auto const* innerCall = dynamic_cast<FunctionCall const*>(&funcExpr))
-		return resolveFunctionPointerCast(*innerCall);
-
 	// Generic function pointer call: evaluate the expression to get a pointer ID,
-	// then dispatch through the function pointer table.
+	// then dispatch through the function pointer table. Try this before the
+	// function-pointer-cast resolver so `x()()` (nested fn-ptr returning
+	// another fn-ptr that is immediately called) dispatches correctly rather
+	// than being mis-classified as a cast with no identifier args.
 	{
 		auto const* exprType = funcExpr.annotation().type;
 		auto const* funcType = dynamic_cast<FunctionType const*>(exprType);
@@ -745,6 +745,9 @@ std::shared_ptr<awst::Expression> SolInternalCall::toAwst()
 			}
 		}
 	}
+
+	if (auto const* innerCall = dynamic_cast<FunctionCall const*>(&funcExpr))
+		return resolveFunctionPointerCast(*innerCall);
 
 	// Fallback: unresolvable call
 	Logger::instance().warning("could not resolve function call target", m_loc);
