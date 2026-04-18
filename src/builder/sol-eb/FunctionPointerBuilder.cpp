@@ -740,6 +740,8 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 				else
 					dispatch.returnType = awst::WType::biguintType();
 			}
+			else if (auto const* retFnType = dynamic_cast<FunctionType const*>(retSolType))
+				dispatch.returnType = mapFunctionType(retFnType);
 			else
 				dispatch.returnType = awst::WType::biguintType();
 		}
