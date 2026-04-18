@@ -94,10 +94,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 			// __arr = NewArray()
 			auto arrVar = awst::makeVarExpression(arrName, resultType, m_loc);
 
-			auto initArr = std::make_shared<awst::AssignmentStatement>();
-			initArr->sourceLocation = m_loc;
-			initArr->target = arrVar;
-			initArr->value = e;
+			auto initArr = awst::makeAssignmentStatement(arrVar, e, m_loc);
 			m_ctx.prePendingStatements.push_back(std::move(initArr));
 
 			// __i = 0
@@ -137,10 +134,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 			// __i++
 			auto one = awst::makeIntegerConstant("1", m_loc);
 			auto incr = awst::makeUInt64BinOp(idxVar, awst::UInt64BinaryOperator::Add, one, m_loc);
-			auto incrAssign = std::make_shared<awst::AssignmentStatement>();
-			incrAssign->sourceLocation = m_loc;
-			incrAssign->target = idxVar;
-			incrAssign->value = incr;
+			auto incrAssign = awst::makeAssignmentStatement(idxVar, incr, m_loc);
 			loopBody->body.push_back(std::move(incrAssign));
 
 			loop->loopBody = loopBody;
@@ -250,10 +244,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			static int newAppIdCounter = 0;
 			std::string newAppIdVarName = "__new_app_id_" + std::to_string(newAppIdCounter++);
 			auto newAppIdTarget = awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc);
-			auto newAppIdAssign = std::make_shared<awst::AssignmentStatement>();
-			newAppIdAssign->sourceLocation = m_loc;
-			newAppIdAssign->target = newAppIdTarget;
-			newAppIdAssign->value = std::move(createdAppIdCall);
+			auto newAppIdAssign = awst::makeAssignmentStatement(newAppIdTarget, std::move(createdAppIdCall), m_loc);
 			m_ctx.prePendingStatements.push_back(std::move(newAppIdAssign));
 
 			// Use the stored app ID from now on
@@ -272,10 +263,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 
 				std::string fundTmpName = "__fund_app_result";
 				auto fundTmpTarget = awst::makeVarExpression(fundTmpName, fundTupleType, m_loc);
-				auto fundAssign = std::make_shared<awst::AssignmentStatement>();
-				fundAssign->sourceLocation = m_loc;
-				fundAssign->target = fundTmpTarget;
-				fundAssign->value = std::move(fundAppParams);
+				auto fundAssign = awst::makeAssignmentStatement(fundTmpTarget, std::move(fundAppParams), m_loc);
 				m_ctx.prePendingStatements.push_back(std::move(fundAssign));
 
 				auto fundTupleRead = awst::makeVarExpression(fundTmpName, fundTupleType, m_loc);
@@ -459,10 +447,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 
 				std::string addrTmp = "__postinit_addr_" + std::to_string(newAppIdCounter);
 				auto addrTmpTarget = awst::makeVarExpression(addrTmp, addrTupleType, m_loc);
-				auto addrAssign = std::make_shared<awst::AssignmentStatement>();
-				addrAssign->sourceLocation = m_loc;
-				addrAssign->target = addrTmpTarget;
-				addrAssign->value = std::move(postAddrCall);
+				auto addrAssign = awst::makeAssignmentStatement(addrTmpTarget, std::move(postAddrCall), m_loc);
 				m_ctx.prePendingStatements.push_back(std::move(addrAssign));
 
 				auto addrRead = awst::makeVarExpression(addrTmp, addrTupleType, m_loc);

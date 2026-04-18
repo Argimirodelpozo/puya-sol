@@ -231,10 +231,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 
 		auto target = awst::makeVarExpression(name, origType, loc);
 
-		auto assign = std::make_shared<awst::AssignmentStatement>();
-		assign->sourceLocation = loc;
-		assign->target = std::move(target);
-		assign->value = std::move(converted);
+		auto assign = awst::makeAssignmentStatement(std::move(target), std::move(converted), loc);
 		result.push_back(std::move(assign));
 
 		// Restore the type in m_locals
@@ -325,10 +322,7 @@ void AssemblyBuilder::assignMemoryVar(
 {
 	auto target = awst::makeVarExpression(MEMORY_VAR, awst::WType::bytesType(), _loc);
 
-	auto assign = std::make_shared<awst::AssignmentStatement>();
-	assign->sourceLocation = _loc;
-	assign->target = std::move(target);
-	assign->value = std::move(_value);
+	auto assign = awst::makeAssignmentStatement(std::move(target), std::move(_value), _loc);
 	_out.push_back(std::move(assign));
 }
 

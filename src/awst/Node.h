@@ -787,6 +787,19 @@ struct AssignmentStatement: Statement
 	std::shared_ptr<Expression> value;
 };
 
+// Construct an AssignmentStatement. Standard 3-field shape.
+inline std::shared_ptr<AssignmentStatement> makeAssignmentStatement(
+	std::shared_ptr<Expression> target,
+	std::shared_ptr<Expression> value,
+	SourceLocation loc)
+{
+	auto node = std::make_shared<AssignmentStatement>();
+	node->sourceLocation = std::move(loc);
+	node->target = std::move(target);
+	node->value = std::move(value);
+	return node;
+}
+
 struct Goto: Statement
 {
 	std::string nodeType() const override { return "Goto"; }

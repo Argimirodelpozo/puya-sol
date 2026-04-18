@@ -160,10 +160,7 @@ void AssemblyBuilder::handleEcRecover(
 
 	auto tupleTarget = awst::makeVarExpression(tupleVar, tupleTypePtr, _loc);
 
-	auto assignTuple = std::make_shared<awst::AssignmentStatement>();
-	assignTuple->sourceLocation = _loc;
-	assignTuple->target = tupleTarget;
-	assignTuple->value = std::move(ecdsaRecover);
+	auto assignTuple = awst::makeAssignmentStatement(tupleTarget, std::move(ecdsaRecover), _loc);
 	_out.push_back(std::move(assignTuple));
 
 	// 4. Extract pubkey_x (index 0) and pubkey_y (index 1)
@@ -366,10 +363,7 @@ void AssemblyBuilder::handleModExp(
 		std::shared_ptr<awst::Expression> value
 	) -> std::shared_ptr<awst::AssignmentStatement>
 	{
-		auto assign = std::make_shared<awst::AssignmentStatement>();
-		assign->sourceLocation = _loc;
-		assign->target = makeVar(target);
-		assign->value = std::move(value);
+		auto assign = awst::makeAssignmentStatement(makeVar(target), std::move(value), _loc);
 		return assign;
 	};
 

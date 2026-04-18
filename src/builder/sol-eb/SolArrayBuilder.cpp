@@ -79,10 +79,7 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 
 		auto tmpVar = awst::makeVarExpression(tmpName, result->wtype, _loc);
 
-		auto assignTmp = std::make_shared<awst::AssignmentStatement>();
-		assignTmp->sourceLocation = _loc;
-		assignTmp->target = tmpVar;
-		assignTmp->value = result;
+		auto assignTmp = awst::makeAssignmentStatement(tmpVar, result, _loc);
 		m_ctx.prePendingStatements.push_back(std::move(assignTmp));
 
 		auto cmpLhs = TypeCoercion::implicitNumericCast(

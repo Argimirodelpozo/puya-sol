@@ -65,10 +65,7 @@ std::shared_ptr<awst::Statement> TransientStorage::buildInit(
 
 	auto target = awst::makeVarExpression(BLOB_VAR, awst::WType::bytesType(), _loc);
 
-	auto assign = std::make_shared<awst::AssignmentStatement>();
-	assign->sourceLocation = _loc;
-	assign->target = std::move(target);
-	assign->value = std::move(bzero);
+	auto assign = awst::makeAssignmentStatement(std::move(target), std::move(bzero), _loc);
 	return assign;
 }
 
@@ -175,10 +172,7 @@ std::shared_ptr<awst::Statement> TransientStorage::buildWrite(
 
 	auto target = awst::makeVarExpression(BLOB_VAR, awst::WType::bytesType(), _loc);
 
-	auto assign = std::make_shared<awst::AssignmentStatement>();
-	assign->sourceLocation = _loc;
-	assign->target = std::move(target);
-	assign->value = std::move(replace);
+	auto assign = awst::makeAssignmentStatement(std::move(target), std::move(replace), _loc);
 	return assign;
 }
 

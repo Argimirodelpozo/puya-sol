@@ -284,10 +284,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	// Stash v in a temp so we can read it multiple times.
 	std::string vTmpName = "__ecrecover_v";
 	auto vTmpTarget = awst::makeVarExpression(vTmpName, awst::WType::uint64Type(), _loc);
-	auto vAssign = std::make_shared<awst::AssignmentStatement>();
-	vAssign->sourceLocation = _loc;
-	vAssign->target = vTmpTarget;
-	vAssign->value = std::move(vUint);
+	auto vAssign = awst::makeAssignmentStatement(vTmpTarget, std::move(vUint), _loc);
 	_ctx.prePendingStatements.push_back(std::move(vAssign));
 
 	auto readV = [&]() -> std::shared_ptr<awst::Expression> {
@@ -334,10 +331,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	std::string tmpName = "__ecrecover_result";
 	auto tmpTarget = awst::makeVarExpression(tmpName, tupleType, _loc);
 
-	auto assignTuple = std::make_shared<awst::AssignmentStatement>();
-	assignTuple->sourceLocation = _loc;
-	assignTuple->target = tmpTarget;
-	assignTuple->value = std::move(ecdsaRecover);
+	auto assignTuple = awst::makeAssignmentStatement(tmpTarget, std::move(ecdsaRecover), _loc);
 	_ctx.prePendingStatements.push_back(std::move(assignTuple));
 
 	// Extract pubkey_x and pubkey_y

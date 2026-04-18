@@ -557,10 +557,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 				std::shared_ptr<awst::Expression> value
 			) -> std::shared_ptr<awst::AssignmentStatement>
 			{
-				auto assign = std::make_shared<awst::AssignmentStatement>();
-				assign->sourceLocation = _loc;
-				assign->target = makeVar(target);
-				assign->value = std::move(value);
+				auto assign = awst::makeAssignmentStatement(makeVar(target), std::move(value), _loc);
 				return assign;
 			};
 			auto makeBinOp = [&](

@@ -1076,10 +1076,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 			};
 
 			// Assign result to temp
-			auto assign = std::make_shared<awst::AssignmentStatement>();
-			assign->sourceLocation = sub->sourceLocation;
-			assign->target = tmpVar();
-			assign->value = callExpr;
+			auto assign = awst::makeAssignmentStatement(tmpVar(), callExpr, sub->sourceLocation);
 			body->body.push_back(assign);
 
 			// Store result to scratch slot 0 as bytes (for gloads)

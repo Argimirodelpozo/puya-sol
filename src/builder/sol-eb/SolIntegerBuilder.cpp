@@ -611,10 +611,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::emitOverflowCheck(
 
 	auto tmpVar = awst::makeVarExpression(tmpName, resType, _loc);
 
-	auto assign = std::make_shared<awst::AssignmentStatement>();
-	assign->sourceLocation = _loc;
-	assign->target = tmpVar;
-	assign->value = std::move(_result);
+	auto assign = awst::makeAssignmentStatement(tmpVar, std::move(_result), _loc);
 	m_ctx.prePendingStatements.push_back(std::move(assign));
 
 	auto maxConst = std::make_shared<awst::IntegerConstant>();
@@ -713,10 +710,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildBigUIntExp(
 		return c;
 	};
 	auto makeAssign = [&](std::string const& target, std::shared_ptr<awst::Expression> value) {
-		auto a = std::make_shared<awst::AssignmentStatement>();
-		a->sourceLocation = _loc;
-		a->target = makeVar(target);
-		a->value = std::move(value);
+		auto a = awst::makeAssignmentStatement(makeVar(target), std::move(value), _loc);
 		return a;
 	};
 	auto makeBinOp = [&](std::shared_ptr<awst::Expression> l, awst::BigUIntBinaryOperator op,

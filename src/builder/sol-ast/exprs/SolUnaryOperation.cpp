@@ -128,10 +128,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			// __neg_tmp = 0
 			auto tmpVar = awst::makeVarExpression(tmpName, awst::WType::biguintType(), m_loc);
 
-			auto initStmt = std::make_shared<awst::AssignmentStatement>();
-			initStmt->sourceLocation = m_loc;
-			initStmt->target = tmpVar;
-			initStmt->value = makeBiguintConst("0");
+			auto initStmt = awst::makeAssignmentStatement(tmpVar, makeBiguintConst("0"), m_loc);
 			m_ctx.prePendingStatements.push_back(std::move(initStmt));
 
 			// if (x != 0) { __neg_tmp = (2^256 - x) % 2^256; }
@@ -151,10 +148,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			mod->op = awst::BigUIntBinaryOperator::Mod;
 			mod->right = makeBiguintConst(pow2NStr);
 
-			auto assignTmp = std::make_shared<awst::AssignmentStatement>();
-			assignTmp->sourceLocation = m_loc;
-			assignTmp->target = tmpVar;
-			assignTmp->value = std::move(mod);
+			auto assignTmp = awst::makeAssignmentStatement(tmpVar, std::move(mod), m_loc);
 
 			auto ifBody = std::make_shared<awst::Block>();
 			ifBody->sourceLocation = m_loc;
@@ -556,20 +550,14 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 		auto tempVar = awst::makeVarExpression(tempName, _operand->wtype, m_loc);
 
 		// Save old value: temp = a
-		auto saveStmt = std::make_shared<awst::AssignmentStatement>();
-		saveStmt->sourceLocation = m_loc;
-		saveStmt->target = tempVar;
-		saveStmt->value = _operand;
+		auto saveStmt = awst::makeAssignmentStatement(tempVar, _operand, m_loc);
 		m_ctx.prePendingStatements.push_back(std::move(saveStmt));
 
 		// Compute new value from the saved temp (not re-reading a)
 		auto newValue = makeNewValue(tempVar);
 
 		// a = temp + 1 (for inc) or temp - 1 (for dec)
-		auto incrStmt = std::make_shared<awst::AssignmentStatement>();
-		incrStmt->sourceLocation = m_loc;
-		incrStmt->target = makeWriteTarget();
-		incrStmt->value = std::move(newValue);
+		auto incrStmt = awst::makeAssignmentStatement(makeWriteTarget(), std::move(newValue), m_loc);
 		m_ctx.prePendingStatements.push_back(std::move(incrStmt));
 
 		return tempVar;
@@ -653,10 +641,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 			if (auto const* sg = dynamic_cast<awst::StateGet const*>(base.get()))
 				writeTarget = sg->field;
 
-			auto assignStmt = std::make_shared<awst::AssignmentStatement>();
-			assignStmt->sourceLocation = m_loc;
-			assignStmt->target = std::move(writeTarget);
-			assignStmt->value = std::move(newStruct);
+			auto assignStmt = awst::makeAssignmentStatement(std::move(writeTarget), std::move(newStruct), m_loc);
 			m_ctx.pendingStatements.push_back(std::move(assignStmt));
 			return _operand;
 		}
@@ -715,10 +700,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 		return _operand;
 	}
 
-	auto assignStmt = std::make_shared<awst::AssignmentStatement>();
-	assignStmt->sourceLocation = m_loc;
-	assignStmt->target = target;
-	assignStmt->value = std::move(defaultVal);
+	auto assignStmt = awst::makeAssignmentStatement(target, std::move(defaultVal), m_loc);
 	m_ctx.pendingStatements.push_back(std::move(assignStmt));
 	return _operand;
 }

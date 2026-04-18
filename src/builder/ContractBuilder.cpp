@@ -1128,10 +1128,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 
 					auto target = awst::makeVarExpression(origName, awst::WType::biguintType(), loc);
 
-					auto assign = std::make_shared<awst::AssignmentStatement>();
-					assign->sourceLocation = loc;
-					assign->target = std::move(target);
-					assign->value = std::move(decode);
+					auto assign = awst::makeAssignmentStatement(std::move(target), std::move(decode), loc);
 					decodeStmts.push_back(std::move(assign));
 				}
 				if (!decodeStmts.empty())
@@ -1842,10 +1839,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 				auto target = awst::makeVarExpression(param->name(), paramType, method.sourceLocation);
 
-				auto assignment = std::make_shared<awst::AssignmentStatement>();
-				assignment->sourceLocation = method.sourceLocation;
-				assignment->target = target;
-				assignment->value = std::move(paramVal);
+				auto assignment = awst::makeAssignmentStatement(target, std::move(paramVal), method.sourceLocation);
 				createBlock->body.push_back(std::move(assignment));
 
 				++argIndex;
@@ -2067,10 +2061,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 				auto target = awst::makeVarExpression(decode.origName, decode.origType, method.sourceLocation);
 
-				auto assign = std::make_shared<awst::AssignmentStatement>();
-				assign->sourceLocation = method.sourceLocation;
-				assign->target = std::move(target);
-				assign->value = std::move(decodeExpr);
+				auto assign = awst::makeAssignmentStatement(std::move(target), std::move(decodeExpr), method.sourceLocation);
 				postInitBody->body.push_back(std::move(assign));
 			}
 
@@ -2231,10 +2222,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 							std::move(argExpr), target->wtype, target->sourceLocation
 						);
 
-						auto assignment = std::make_shared<awst::AssignmentStatement>();
-						assignment->sourceLocation = target->sourceLocation;
-						assignment->target = target;
-						assignment->value = std::move(argExpr);
+						auto assignment = awst::makeAssignmentStatement(target, std::move(argExpr), target->sourceLocation);
 						postInitBody->body.push_back(std::move(assignment));
 					}
 				}
@@ -2313,10 +2301,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 					auto target = awst::makeVarExpression(params[i]->name(), targetType, makeLoc(args[i]->location()));
 
-					auto assignment = std::make_shared<awst::AssignmentStatement>();
-					assignment->sourceLocation = target->sourceLocation;
-					assignment->target = target;
-					assignment->value = std::move(argExpr);
+					auto assignment = awst::makeAssignmentStatement(target, std::move(argExpr), target->sourceLocation);
 					createBlock->body.push_back(std::move(assignment));
 				}
 			}
@@ -2357,10 +2342,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 					auto target = awst::makeVarExpression(params[i]->name(), targetType, makeLoc(args[i]->location()));
 
-					auto assignment = std::make_shared<awst::AssignmentStatement>();
-					assignment->sourceLocation = target->sourceLocation;
-					assignment->target = target;
-					assignment->value = std::move(argExpr);
+					auto assignment = awst::makeAssignmentStatement(target, std::move(argExpr), target->sourceLocation);
 					createBlock->body.push_back(std::move(assignment));
 				}
 
@@ -2408,10 +2390,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 					auto target = awst::makeVarExpression(params[i]->name(), m_typeMapper.map(params[i]->type()), method.sourceLocation);
 
-					auto assignment = std::make_shared<awst::AssignmentStatement>();
-					assignment->sourceLocation = method.sourceLocation;
-					assignment->target = target;
-					assignment->value = evaledArgs[i];
+					auto assignment = awst::makeAssignmentStatement(target, evaledArgs[i], method.sourceLocation);
 					createBlock->body.push_back(std::move(assignment));
 				}
 			}
@@ -2685,10 +2664,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			routerExpr->sourceLocation = method.sourceLocation;
 			routerExpr->wtype = awst::WType::boolType();
 
-			auto assignMatch = std::make_shared<awst::AssignmentStatement>();
-			assignMatch->sourceLocation = method.sourceLocation;
-			assignMatch->target = std::move(matchVar);
-			assignMatch->value = std::move(routerExpr);
+			auto assignMatch = awst::makeAssignmentStatement(std::move(matchVar), std::move(routerExpr), method.sourceLocation);
 			body->body.push_back(std::move(assignMatch));
 		}
 
@@ -2709,10 +2685,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			// Set __did_match = true so the approval returns true.
 			auto matchVarWrite = awst::makeVarExpression(matchVarName, awst::WType::boolType(), method.sourceLocation);
 
-			auto assignTrue = std::make_shared<awst::AssignmentStatement>();
-			assignTrue->sourceLocation = method.sourceLocation;
-			assignTrue->target = std::move(matchVarWrite);
-			assignTrue->value = makeTrueLit();
+			auto assignTrue = awst::makeAssignmentStatement(std::move(matchVarWrite), makeTrueLit(), method.sourceLocation);
 			dispatchBlock->body.push_back(std::move(assignTrue));
 
 			auto ifNoMatch = std::make_shared<awst::IfElse>();
@@ -3077,10 +3050,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 				auto zeroVal = StorageMapper::makeDefaultValue(rpType, method.sourceLocation);
 
-				auto assign = std::make_shared<awst::AssignmentStatement>();
-				assign->sourceLocation = method.sourceLocation;
-				assign->target = std::move(target);
-				assign->value = std::move(zeroVal);
+				auto assign = awst::makeAssignmentStatement(std::move(target), std::move(zeroVal), method.sourceLocation);
 				inits.push_back(std::move(assign));
 			}
 			if (!inits.empty())
@@ -3348,10 +3318,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 								std::string tmpName = "__ret_tmp_" + std::to_string(retTmpCounter++);
 								auto tmpVar = awst::makeVarExpression(tmpName, ret->value->wtype, ret->sourceLocation);
 
-								auto assign = std::make_shared<awst::AssignmentStatement>();
-								assign->sourceLocation = ret->sourceLocation;
-								assign->target = tmpVar;
-								assign->value = std::move(ret->value);
+								auto assign = awst::makeAssignmentStatement(tmpVar, std::move(ret->value), ret->sourceLocation);
 
 								auto newTuple = std::make_shared<awst::TupleExpression>();
 								newTuple->sourceLocation = assign->sourceLocation;
@@ -3593,10 +3560,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 				auto target = awst::makeVarExpression(pd.name, pd.nativeType, pd.loc);
 
-				auto assign = std::make_shared<awst::AssignmentStatement>();
-				assign->sourceLocation = pd.loc;
-				assign->target = std::move(target);
-				assign->value = std::move(decodeExpr);
+				auto assign = awst::makeAssignmentStatement(std::move(target), std::move(decodeExpr), pd.loc);
 				decodeStmts.push_back(std::move(assign));
 			}
 			method.body->body.insert(
@@ -3694,10 +3658,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 				auto target = awst::makeVarExpression(param->name(), awst::WType::uint64Type(), loc);
 
-				auto assign = std::make_shared<awst::AssignmentStatement>();
-				assign->sourceLocation = loc;
-				assign->target = std::move(target);
-				assign->value = std::move(bitAnd);
+				auto assign = awst::makeAssignmentStatement(std::move(target), std::move(bitAnd), loc);
 				maskStmts.push_back(std::move(assign));
 			}
 			// ABI v2 validation for bool params: assert value <= 1
@@ -4034,10 +3995,7 @@ void ContractBuilder::inlineModifiers(
 				// Create assignment: __mod_role_N = <evaluated arg>
 				auto target = awst::makeVarExpression(uniqueName, paramType, modLoc);
 
-				auto assignment = std::make_shared<awst::AssignmentStatement>();
-				assignment->sourceLocation = modLoc;
-				assignment->target = target;
-				assignment->value = std::move(argExpr);
+				auto assignment = awst::makeAssignmentStatement(target, std::move(argExpr), modLoc);
 				modBody->body.push_back(std::move(assignment));
 
 				// Register remap so modifier body references resolve to the unique name
@@ -4111,10 +4069,7 @@ void ContractBuilder::inlineModifiers(
 						// Create assignment: r = expr
 						auto target = awst::makeVarExpression(retName, retStmt->value->wtype, retStmt->sourceLocation);
 
-						auto assign = std::make_shared<awst::AssignmentStatement>();
-						assign->sourceLocation = retStmt->sourceLocation;
-						assign->target = std::move(target);
-						assign->value = retStmt->value;
+						auto assign = awst::makeAssignmentStatement(std::move(target), retStmt->value, retStmt->sourceLocation);
 						placeholderBody->body.push_back(std::move(assign));
 					}
 
@@ -4176,10 +4131,7 @@ void ContractBuilder::inlineModifiers(
 			// Helper: create flag = true assignment
 			auto makeFlagSet = [&]() -> std::shared_ptr<awst::Statement> {
 				auto target = awst::makeVarExpression(flagName, awst::WType::boolType(), flagLoc);
-				auto assign = std::make_shared<awst::AssignmentStatement>();
-				assign->sourceLocation = flagLoc;
-				assign->target = std::move(target);
-				assign->value = awst::makeBoolConstant(true, flagLoc);
+				auto assign = awst::makeAssignmentStatement(std::move(target), awst::makeBoolConstant(true, flagLoc), flagLoc);
 				return assign;
 			};
 
@@ -4417,10 +4369,7 @@ void ContractBuilder::buildModifierChain(
 
 				auto target = awst::makeVarExpression(uniqueName, paramType, modLoc);
 
-				auto assignment = std::make_shared<awst::AssignmentStatement>();
-				assignment->sourceLocation = modLoc;
-				assignment->target = target;
-				assignment->value = std::move(argExpr);
+				auto assignment = awst::makeAssignmentStatement(target, std::move(argExpr), modLoc);
 				modBody->body.push_back(std::move(assignment));
 
 				m_exprBuilder->addParamRemap(param->id(), uniqueName, paramType);
@@ -4464,10 +4413,7 @@ void ContractBuilder::buildModifierChain(
 				// Assign call result to return variable
 				auto retTarget = awst::makeVarExpression(retVarName, _method.returnType, modSub.sourceLocation);
 
-				auto assign = std::make_shared<awst::AssignmentStatement>();
-				assign->sourceLocation = modSub.sourceLocation;
-				assign->target = std::move(retTarget);
-				assign->value = std::move(call);
+				auto assign = awst::makeAssignmentStatement(std::move(retTarget), std::move(call), modSub.sourceLocation);
 				placeholderBlock->body.push_back(std::move(assign));
 			}
 			else
@@ -4482,10 +4428,7 @@ void ContractBuilder::buildModifierChain(
 		{
 			auto target = awst::makeVarExpression(retVarName, _method.returnType, modSub.sourceLocation);
 			auto zeroVal = StorageMapper::makeDefaultValue(_method.returnType, modSub.sourceLocation);
-			auto assign = std::make_shared<awst::AssignmentStatement>();
-			assign->sourceLocation = modSub.sourceLocation;
-			assign->target = std::move(target);
-			assign->value = std::move(zeroVal);
+			auto assign = awst::makeAssignmentStatement(std::move(target), std::move(zeroVal), modSub.sourceLocation);
 			modBody->body.push_back(std::move(assign));
 		}
 
@@ -4564,10 +4507,7 @@ void ContractBuilder::buildModifierChain(
 		auto target = awst::makeVarExpression(rp->name(), rpType, _method.sourceLocation);
 
 		auto zeroVal = StorageMapper::makeDefaultValue(rpType, _method.sourceLocation);
-		auto assign = std::make_shared<awst::AssignmentStatement>();
-		assign->sourceLocation = _method.sourceLocation;
-		assign->target = std::move(target);
-		assign->value = std::move(zeroVal);
+		auto assign = awst::makeAssignmentStatement(std::move(target), std::move(zeroVal), _method.sourceLocation);
 		entryBody->body.push_back(std::move(assign));
 	}
 

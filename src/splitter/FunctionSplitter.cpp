@@ -1879,10 +1879,7 @@ bool FunctionSplitter::expandRewrittenCallees(
 					if (assignTarget)
 					{
 						// Caller was assigning: target = returnValue
-						auto assign = std::make_shared<awst::AssignmentStatement>();
-						assign->sourceLocation = rs.sourceLocation;
-						assign->target = assignTarget;
-						assign->value = rs.value;
+						auto assign = awst::makeAssignmentStatement(assignTarget, rs.value, rs.sourceLocation);
 						newBody.push_back(assign);
 					}
 					else

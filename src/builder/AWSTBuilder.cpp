@@ -517,10 +517,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 							zeroVal = StorageMapper::makeDefaultValue(rpType, loc);
 						}
 
-						auto assign = std::make_shared<awst::AssignmentStatement>();
-						assign->sourceLocation = loc;
-						assign->target = std::move(target);
-						assign->value = std::move(zeroVal);
+						auto assign = awst::makeAssignmentStatement(std::move(target), std::move(zeroVal), loc);
 						inits.push_back(std::move(assign));
 					}
 					if (!inits.empty())
@@ -800,10 +797,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 						zeroVal = StorageMapper::makeDefaultValue(rpType, loc);
 					}
 
-					auto assign = std::make_shared<awst::AssignmentStatement>();
-					assign->sourceLocation = loc;
-					assign->target = std::move(target);
-					assign->value = std::move(zeroVal);
+					auto assign = awst::makeAssignmentStatement(std::move(target), std::move(zeroVal), loc);
 					inits.push_back(std::move(assign));
 				}
 				if (!inits.empty())

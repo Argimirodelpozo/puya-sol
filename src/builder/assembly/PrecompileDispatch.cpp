@@ -171,10 +171,7 @@ void AssemblyBuilder::handlePrecompileCall(
 			val = std::move(intVal);
 		}
 
-		auto assign = std::make_shared<awst::AssignmentStatement>();
-		assign->sourceLocation = _loc;
-		assign->target = std::move(target);
-		assign->value = std::move(val);
+		auto assign = awst::makeAssignmentStatement(std::move(target), std::move(val), _loc);
 		_out.push_back(std::move(assign));
 	}
 }

@@ -238,10 +238,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 				tempVar->wtype = storageArgType;
 				tempVar->name = tempName;
 
-				auto assignTemp = std::make_shared<awst::AssignmentStatement>();
-				assignTemp->sourceLocation = m_loc;
-				assignTemp->target = tempVar;
-				assignTemp->value = std::shared_ptr<awst::Expression>(call);
+				auto assignTemp = awst::makeAssignmentStatement(tempVar, std::shared_ptr<awst::Expression>(call), m_loc);
 				m_ctx.prePendingStatements.push_back(std::move(assignTemp));
 
 				modifiedArg = tempVar;
@@ -260,10 +257,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 				tempVar->wtype = tupleType;
 				tempVar->name = tempName;
 
-				auto assignTemp = std::make_shared<awst::AssignmentStatement>();
-				assignTemp->sourceLocation = m_loc;
-				assignTemp->target = tempVar;
-				assignTemp->value = std::shared_ptr<awst::Expression>(call);
+				auto assignTemp = awst::makeAssignmentStatement(tempVar, std::shared_ptr<awst::Expression>(call), m_loc);
 				m_ctx.prePendingStatements.push_back(std::move(assignTemp));
 
 				auto origTup = std::make_shared<awst::TupleItemExpression>();

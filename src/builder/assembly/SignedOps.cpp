@@ -87,10 +87,7 @@ void AssemblyBuilder::handleTstore(
 	// __transient = replace3(...)
 	auto target = awst::makeVarExpression("__transient", awst::WType::bytesType(), _loc);
 
-	auto assign = std::make_shared<awst::AssignmentStatement>();
-	assign->sourceLocation = _loc;
-	assign->target = std::move(target);
-	assign->value = std::move(replace);
+	auto assign = awst::makeAssignmentStatement(std::move(target), std::move(replace), _loc);
 	_out.push_back(std::move(assign));
 }
 

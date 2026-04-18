@@ -150,10 +150,7 @@ void AssemblyBuilder::storeResultToMemory(
 
 	auto resultTarget = awst::makeVarExpression(resultVar, awst::WType::bytesType(), _loc);
 
-	auto assignResult = std::make_shared<awst::AssignmentStatement>();
-	assignResult->sourceLocation = _loc;
-	assignResult->target = resultTarget;
-	assignResult->value = std::move(_result);
+	auto assignResult = awst::makeAssignmentStatement(resultTarget, std::move(_result), _loc);
 	_out.push_back(std::move(assignResult));
 
 	// Write each 32-byte chunk from the result into the blob

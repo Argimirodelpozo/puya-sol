@@ -308,10 +308,7 @@ void AssemblyBuilder::buildVariableDeclaration(
 
 					auto target = awst::makeVarExpression(varName, awst::WType::biguintType(), loc);
 
-					auto assign = std::make_shared<awst::AssignmentStatement>();
-					assign->sourceLocation = loc;
-					assign->target = std::move(target);
-					assign->value = std::move(retVar);
+					auto assign = awst::makeAssignmentStatement(std::move(target), std::move(retVar), loc);
 					_out.push_back(std::move(assign));
 				}
 				return;
@@ -364,10 +361,7 @@ void AssemblyBuilder::buildVariableDeclaration(
 		// Coerce value to match target (biguint) — Yul values are always 256-bit
 		value = ensureBiguint(std::move(value), loc);
 
-		auto assign = std::make_shared<awst::AssignmentStatement>();
-		assign->sourceLocation = loc;
-		assign->target = std::move(target);
-		assign->value = std::move(value);
+		auto assign = awst::makeAssignmentStatement(std::move(target), std::move(value), loc);
 		_out.push_back(std::move(assign));
 	}
 }
@@ -412,10 +406,7 @@ void AssemblyBuilder::buildAssignment(
 
 						auto target = awst::makeVarExpression(varName, awst::WType::biguintType(), loc);
 
-						auto assign = std::make_shared<awst::AssignmentStatement>();
-						assign->sourceLocation = loc;
-						assign->target = std::move(target);
-						assign->value = std::move(retVar);
+						auto assign = awst::makeAssignmentStatement(std::move(target), std::move(retVar), loc);
 						_out.push_back(std::move(assign));
 					}
 					return;
@@ -460,10 +451,7 @@ void AssemblyBuilder::buildAssignment(
 
 				auto target = awst::makeVarExpression(baseName, awst::WType::biguintType(), loc);
 
-				auto assign = std::make_shared<awst::AssignmentStatement>();
-				assign->sourceLocation = loc;
-				assign->target = std::move(target);
-				assign->value = std::move(slotExpr);
+				auto assign = awst::makeAssignmentStatement(std::move(target), std::move(slotExpr), loc);
 				_out.push_back(std::move(assign));
 			}
 		}
@@ -638,10 +626,7 @@ void AssemblyBuilder::buildAssignment(
 		}
 	}
 
-	auto assign = std::make_shared<awst::AssignmentStatement>();
-	assign->sourceLocation = loc;
-	assign->target = std::move(target);
-	assign->value = std::move(value);
+	auto assign = awst::makeAssignmentStatement(std::move(target), std::move(value), loc);
 	_out.push_back(std::move(assign));
 }
 
@@ -855,10 +840,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 
 		auto target = awst::makeVarExpression(paramName, paramType, _loc);
 
-		auto assign = std::make_shared<awst::AssignmentStatement>();
-		assign->sourceLocation = _loc;
-		assign->target = std::move(target);
-		assign->value = _args[i];
+		auto assign = awst::makeAssignmentStatement(std::move(target), _args[i], _loc);
 		_out.push_back(std::move(assign));
 	}
 
@@ -872,10 +854,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 
 		auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 
-		auto assign = std::make_shared<awst::AssignmentStatement>();
-		assign->sourceLocation = _loc;
-		assign->target = std::move(target);
-		assign->value = std::move(zero);
+		auto assign = awst::makeAssignmentStatement(std::move(target), std::move(zero), _loc);
 		_out.push_back(std::move(assign));
 	}
 

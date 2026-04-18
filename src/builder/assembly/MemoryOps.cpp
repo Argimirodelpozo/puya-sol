@@ -247,10 +247,7 @@ bool AssemblyBuilder::tryHandleBytesMemoryWrite(
 	// x = newValue
 	auto target = awst::makeVarExpression(varName, varType, _loc);
 
-	auto assign = std::make_shared<awst::AssignmentStatement>();
-	assign->sourceLocation = _loc;
-	assign->target = std::move(target);
-	assign->value = std::move(newValue);
+	auto assign = awst::makeAssignmentStatement(std::move(target), std::move(newValue), _loc);
 	_out.push_back(std::move(assign));
 
 	return true;

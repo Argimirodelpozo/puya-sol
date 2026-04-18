@@ -131,10 +131,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				// Also emit the call as an assignment so the slot value is available
 				auto slotVar = awst::makeVarExpression(decl.name(), awst::WType::biguintType(), m_loc);
 
-				auto assign = std::make_shared<awst::AssignmentStatement>();
-				assign->sourceLocation = m_loc;
-				assign->target = std::move(slotVar);
-				assign->value = std::move(value);
+				auto assign = awst::makeAssignmentStatement(std::move(slotVar), std::move(value), m_loc);
 				result.push_back(std::move(assign));
 
 				for (auto& p: m_ctx.takePrePending())
@@ -145,10 +142,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			}
 		}
 
-		auto assign = std::make_shared<awst::AssignmentStatement>();
-		assign->sourceLocation = m_loc;
-		assign->target = std::move(target);
-		assign->value = std::move(value);
+		auto assign = awst::makeAssignmentStatement(std::move(target), std::move(value), m_loc);
 
 		for (auto& p: m_ctx.takePrePending())
 			result.push_back(std::move(p));
@@ -186,10 +180,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			itemExpr->base = rhsExpr;
 			itemExpr->index = static_cast<int>(i);
 
-			auto assign = std::make_shared<awst::AssignmentStatement>();
-			assign->sourceLocation = m_loc;
-			assign->target = std::move(target);
-			assign->value = std::move(itemExpr);
+			auto assign = awst::makeAssignmentStatement(std::move(target), std::move(itemExpr), m_loc);
 			result.push_back(assign);
 		}
 	}

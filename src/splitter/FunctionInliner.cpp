@@ -302,10 +302,7 @@ std::vector<std::shared_ptr<awst::Statement>> FunctionInliner::inlineCall(
 
 		auto target = awst::makeVarExpression(renamedParam, _callee.args[i].wtype, loc);
 
-		auto assign = std::make_shared<awst::AssignmentStatement>();
-		assign->sourceLocation = loc;
-		assign->target = target;
-		assign->value = _call.args[i].value;
+		auto assign = awst::makeAssignmentStatement(target, _call.args[i].value, loc);
 		result.push_back(assign);
 	}
 
@@ -341,10 +338,7 @@ std::vector<std::shared_ptr<awst::Statement>> FunctionInliner::inlineCall(
 				{
 					if (_assignTarget)
 					{
-						auto assign = std::make_shared<awst::AssignmentStatement>();
-						assign->sourceLocation = rs.sourceLocation;
-						assign->target = _assignTarget;
-						assign->value = rs.value;
+						auto assign = awst::makeAssignmentStatement(_assignTarget, rs.value, rs.sourceLocation);
 						result.push_back(assign);
 					}
 					else
@@ -359,10 +353,7 @@ std::vector<std::shared_ptr<awst::Statement>> FunctionInliner::inlineCall(
 				// Inner return: assign + skip remaining (unreachable)
 				if (rs.value && _assignTarget)
 				{
-					auto assign = std::make_shared<awst::AssignmentStatement>();
-					assign->sourceLocation = rs.sourceLocation;
-					assign->target = _assignTarget;
-					assign->value = rs.value;
+					auto assign = awst::makeAssignmentStatement(_assignTarget, rs.value, rs.sourceLocation);
 					result.push_back(assign);
 				}
 				break;
@@ -895,10 +886,7 @@ void FunctionInliner::flattenExpr(
 			std::string tmpName = "__flat" + std::to_string(m_flattenCounter++) + "_";
 			auto tmpVar = awst::makeVarExpression(tmpName, call.wtype, _loc);
 
-			auto assign = std::make_shared<awst::AssignmentStatement>();
-			assign->sourceLocation = _loc;
-			assign->target = tmpVar;
-			assign->value = _expr;
+			auto assign = awst::makeAssignmentStatement(tmpVar, _expr, _loc);
 			_hoisted.push_back(assign);
 
 			// Replace the call expression with the temp variable reference
@@ -1667,10 +1655,7 @@ std::shared_ptr<awst::Statement> FunctionInliner::deepCopyStmt(
 	if (type == "AssignmentStatement")
 	{
 		auto& src = static_cast<awst::AssignmentStatement const&>(*_stmt);
-		auto n = std::make_shared<awst::AssignmentStatement>();
-		n->sourceLocation = src.sourceLocation;
-		n->target = deepCopyExpr(src.target);
-		n->value = deepCopyExpr(src.value);
+		auto n = awst::makeAssignmentStatement(deepCopyExpr(src.target), deepCopyExpr(src.value), src.sourceLocation);
 		return n;
 	}
 	if (type == "ReturnStatement")
