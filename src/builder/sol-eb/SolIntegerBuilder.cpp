@@ -308,22 +308,12 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::compare(
 			solidity::u256 signBitVal = solidity::u256(1) << 255;
 			auto signBit = awst::makeIntegerConstant(signBitVal.str(), _loc, awst::WType::biguintType());
 
-			auto xorL = std::make_shared<awst::BigUIntBinaryOperation>();
-			xorL->sourceLocation = _loc;
-			xorL->wtype = awst::WType::biguintType();
-			xorL->left = std::move(lhs);
-			xorL->op = awst::BigUIntBinaryOperator::BitXor;
-			xorL->right = signBit;
+			auto xorL = awst::makeBigUIntBinOp(std::move(lhs), awst::BigUIntBinaryOperator::BitXor, signBit, _loc);
 			lhs = std::move(xorL);
 
 			auto signBit2 = awst::makeIntegerConstant(signBitVal.str(), _loc, awst::WType::biguintType());
 
-			auto xorR = std::make_shared<awst::BigUIntBinaryOperation>();
-			xorR->sourceLocation = _loc;
-			xorR->wtype = awst::WType::biguintType();
-			xorR->left = std::move(rhs);
-			xorR->op = awst::BigUIntBinaryOperator::BitXor;
-			xorR->right = std::move(signBit2);
+			auto xorR = awst::makeBigUIntBinOp(std::move(rhs), awst::BigUIntBinaryOperator::BitXor, std::move(signBit2), _loc);
 			rhs = std::move(xorR);
 		}
 		else
@@ -475,22 +465,12 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 
 			auto one = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType());
 
-			auto addOne = std::make_shared<awst::BigUIntBinaryOperation>();
-			addOne->sourceLocation = _loc;
-			addOne->wtype = awst::WType::biguintType();
-			addOne->left = std::move(castBack);
-			addOne->op = awst::BigUIntBinaryOperator::Add;
-			addOne->right = std::move(one);
+			auto addOne = awst::makeBigUIntBinOp(std::move(castBack), awst::BigUIntBinaryOperator::Add, std::move(one), _loc);
 
 			// Mod 2^256 to handle -0 overflow (2^256 wraps to 0)
 			auto modConst = awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
 
-			auto wrapped = std::make_shared<awst::BigUIntBinaryOperation>();
-			wrapped->sourceLocation = _loc;
-			wrapped->wtype = awst::WType::biguintType();
-			wrapped->left = std::move(addOne);
-			wrapped->op = awst::BigUIntBinaryOperator::Mod;
-			wrapped->right = std::move(modConst);
+			auto wrapped = awst::makeBigUIntBinOp(std::move(addOne), awst::BigUIntBinaryOperator::Mod, std::move(modConst), _loc);
 
 			return wrap(std::move(wrapped));
 		}
@@ -509,22 +489,12 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			pow2_64->wtype = awst::WType::biguintType();
 			pow2_64->value = "18446744073709551616"; // 2^64
 
-			auto sub = std::make_shared<awst::BigUIntBinaryOperation>();
-			sub->sourceLocation = _loc;
-			sub->wtype = awst::WType::biguintType();
-			sub->left = std::move(pow2_64);
-			sub->op = awst::BigUIntBinaryOperator::Sub;
-			sub->right = std::move(castBiguint);
+			auto sub = awst::makeBigUIntBinOp(std::move(pow2_64), awst::BigUIntBinaryOperator::Sub, std::move(castBiguint), _loc);
 
 			// mod 2^64 to wrap
 			auto pow2_64_2 = awst::makeIntegerConstant("18446744073709551616", _loc, awst::WType::biguintType());
 
-			auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
-			mod->sourceLocation = _loc;
-			mod->wtype = awst::WType::biguintType();
-			mod->left = std::move(sub);
-			mod->op = awst::BigUIntBinaryOperator::Mod;
-			mod->right = std::move(pow2_64_2);
+			auto mod = awst::makeBigUIntBinOp(std::move(sub), awst::BigUIntBinaryOperator::Mod, std::move(pow2_64_2), _loc);
 
 			// Back to uint64: safe extract
 			auto result = TypeCoercion::implicitNumericCast(std::move(mod), awst::WType::uint64Type(), _loc);
@@ -667,12 +637,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildBigUIntShift(
 
 	auto castPow = awst::makeReinterpretCast(std::move(setbit), awst::WType::biguintType(), _loc);
 
-	auto e = std::make_shared<awst::BigUIntBinaryOperation>();
-	e->sourceLocation = _loc;
-	e->wtype = awst::WType::biguintType();
-	e->left = std::move(_value);
-	e->right = std::move(castPow);
-	e->op = _isLeftShift ? awst::BigUIntBinaryOperator::Mult : awst::BigUIntBinaryOperator::FloorDiv;
+	auto e = awst::makeBigUIntBinOp(std::move(_value), _isLeftShift ? awst::BigUIntBinaryOperator::Mult : awst::BigUIntBinaryOperator::FloorDiv, std::move(castPow), _loc);
 
 	std::shared_ptr<awst::Expression> result = e;
 
@@ -715,12 +680,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildBigUIntExp(
 	};
 	auto makeBinOp = [&](std::shared_ptr<awst::Expression> l, awst::BigUIntBinaryOperator op,
 		std::shared_ptr<awst::Expression> r) {
-		auto b = std::make_shared<awst::BigUIntBinaryOperation>();
-		b->sourceLocation = _loc;
-		b->wtype = awst::WType::biguintType();
-		b->left = std::move(l);
-		b->op = op;
-		b->right = std::move(r);
+		auto b = awst::makeBigUIntBinOp(std::move(l), op, std::move(r), _loc);
 		return b;
 	};
 
@@ -806,19 +766,9 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildWrappingSubtract(
 	// (a + 2^256 - b) % 2^256
 	auto pow256 = awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
 
-	auto addPow = std::make_shared<awst::BigUIntBinaryOperation>();
-	addPow->sourceLocation = _loc;
-	addPow->wtype = awst::WType::biguintType();
-	addPow->left = std::move(_left);
-	addPow->op = awst::BigUIntBinaryOperator::Add;
-	addPow->right = pow256;
+	auto addPow = awst::makeBigUIntBinOp(std::move(_left), awst::BigUIntBinaryOperator::Add, pow256, _loc);
 
-	auto diff = std::make_shared<awst::BigUIntBinaryOperation>();
-	diff->sourceLocation = _loc;
-	diff->wtype = awst::WType::biguintType();
-	diff->left = std::move(addPow);
-	diff->op = awst::BigUIntBinaryOperator::Sub;
-	diff->right = std::move(_right);
+	auto diff = awst::makeBigUIntBinOp(std::move(addPow), awst::BigUIntBinaryOperator::Sub, std::move(_right), _loc);
 
 	return wrapMod256(std::move(diff), _loc);
 }
@@ -833,12 +783,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::wrapMod256(
 {
 	auto pow256 = awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
 
-	auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
-	mod->sourceLocation = _loc;
-	mod->wtype = awst::WType::biguintType();
-	mod->left = std::move(_expr);
-	mod->op = awst::BigUIntBinaryOperator::Mod;
-	mod->right = std::move(pow256);
+	auto mod = awst::makeBigUIntBinOp(std::move(_expr), awst::BigUIntBinaryOperator::Mod, std::move(pow256), _loc);
 	return mod;
 }
 
@@ -865,12 +810,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildSignedModDiv(
 	auto isLeftNeg = awst::makeNumericCompare(_left, awst::NumericComparison::Gte, makeConst(POW_2_255), _loc);
 
 	// absLeft = isLeftNeg ? (2^256 - left) : left
-	auto negLeft = std::make_shared<awst::BigUIntBinaryOperation>();
-	negLeft->sourceLocation = _loc;
-	negLeft->wtype = awst::WType::biguintType();
-	negLeft->left = makeConst(kPow2_256);
-	negLeft->op = awst::BigUIntBinaryOperator::Sub;
-	negLeft->right = _left;
+	auto negLeft = awst::makeBigUIntBinOp(makeConst(kPow2_256), awst::BigUIntBinaryOperator::Sub, _left, _loc);
 
 	auto absLeft = std::make_shared<awst::ConditionalExpression>();
 	absLeft->sourceLocation = _loc;
@@ -883,12 +823,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildSignedModDiv(
 	auto isRightNeg = awst::makeNumericCompare(_right, awst::NumericComparison::Gte, makeConst(POW_2_255), _loc);
 
 	// absRight = isRightNeg ? (2^256 - right) : right
-	auto negRight = std::make_shared<awst::BigUIntBinaryOperation>();
-	negRight->sourceLocation = _loc;
-	negRight->wtype = awst::WType::biguintType();
-	negRight->left = makeConst(kPow2_256);
-	negRight->op = awst::BigUIntBinaryOperator::Sub;
-	negRight->right = _right;
+	auto negRight = awst::makeBigUIntBinOp(makeConst(kPow2_256), awst::BigUIntBinaryOperator::Sub, _right, _loc);
 
 	auto absRight = std::make_shared<awst::ConditionalExpression>();
 	absRight->sourceLocation = _loc;
@@ -903,22 +838,12 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildSignedModDiv(
 		? awst::BigUIntBinaryOperator::Mod
 		: awst::BigUIntBinaryOperator::FloorDiv;
 
-	auto absResult = std::make_shared<awst::BigUIntBinaryOperation>();
-	absResult->sourceLocation = _loc;
-	absResult->wtype = awst::WType::biguintType();
-	absResult->left = std::move(absLeft);
-	absResult->op = unsignedOp;
-	absResult->right = std::move(absRight);
+	auto absResult = awst::makeBigUIntBinOp(std::move(absLeft), unsignedOp, std::move(absRight), _loc);
 
 	// Apply sign:
 	// mod: sign follows dividend (left)
 	// div: sign is negative if signs differ
-	auto negResult = std::make_shared<awst::BigUIntBinaryOperation>();
-	negResult->sourceLocation = _loc;
-	negResult->wtype = awst::WType::biguintType();
-	negResult->left = makeConst(kPow2_256);
-	negResult->op = awst::BigUIntBinaryOperator::Sub;
-	negResult->right = absResult;
+	auto negResult = awst::makeBigUIntBinOp(makeConst(kPow2_256), awst::BigUIntBinaryOperator::Sub, absResult, _loc);
 
 	std::shared_ptr<awst::Expression> shouldNegate;
 	if (_op == BuilderBinaryOp::Mod)

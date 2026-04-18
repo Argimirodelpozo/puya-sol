@@ -506,28 +506,13 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			// Pattern: (a + 2^256 - b) % 2^256
 			auto pow256 = awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
 
-			auto addPow = std::make_shared<awst::BigUIntBinaryOperation>();
-			addPow->sourceLocation = _loc;
-			addPow->wtype = awst::WType::biguintType();
-			addPow->left = std::move(_left);
-			addPow->op = awst::BigUIntBinaryOperator::Add;
-			addPow->right = pow256;
+			auto addPow = awst::makeBigUIntBinOp(std::move(_left), awst::BigUIntBinaryOperator::Add, pow256, _loc);
 
-			auto diff = std::make_shared<awst::BigUIntBinaryOperation>();
-			diff->sourceLocation = _loc;
-			diff->wtype = awst::WType::biguintType();
-			diff->left = std::move(addPow);
-			diff->op = awst::BigUIntBinaryOperator::Sub;
-			diff->right = std::move(_right);
+			auto diff = awst::makeBigUIntBinOp(std::move(addPow), awst::BigUIntBinaryOperator::Sub, std::move(_right), _loc);
 
 			auto pow256b = awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
 
-			auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
-			mod->sourceLocation = _loc;
-			mod->wtype = awst::WType::biguintType();
-			mod->left = std::move(diff);
-			mod->op = awst::BigUIntBinaryOperator::Mod;
-			mod->right = std::move(pow256b);
+			auto mod = awst::makeBigUIntBinOp(std::move(diff), awst::BigUIntBinaryOperator::Mod, std::move(pow256b), _loc);
 			return mod;
 		}
 
@@ -566,12 +551,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 				std::shared_ptr<awst::Expression> rhs
 			) -> std::shared_ptr<awst::BigUIntBinaryOperation>
 			{
-				auto bin = std::make_shared<awst::BigUIntBinaryOperation>();
-				bin->sourceLocation = _loc;
-				bin->wtype = awst::WType::biguintType();
-				bin->left = std::move(lhs);
-				bin->op = op;
-				bin->right = std::move(rhs);
+				auto bin = awst::makeBigUIntBinOp(std::move(lhs), op, std::move(rhs), _loc);
 				return bin;
 			};
 
@@ -605,12 +585,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 				-> std::shared_ptr<awst::Expression>
 			{
 				if (!wrapMod) return v;
-				auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
-				mod->sourceLocation = _loc;
-				mod->wtype = awst::WType::biguintType();
-				mod->left = std::move(v);
-				mod->op = awst::BigUIntBinaryOperator::Mod;
-				mod->right = makeConst(kPow2_256);
+				auto mod = awst::makeBigUIntBinOp(std::move(v), awst::BigUIntBinaryOperator::Mod, makeConst(kPow2_256), _loc);
 				return mod;
 			};
 
@@ -678,12 +653,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 		{
 			auto pow256 = awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
 
-			auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
-			mod->sourceLocation = _loc;
-			mod->wtype = awst::WType::biguintType();
-			mod->left = e;
-			mod->op = awst::BigUIntBinaryOperator::Mod;
-			mod->right = std::move(pow256);
+			auto mod = awst::makeBigUIntBinOp(e, awst::BigUIntBinaryOperator::Mod, std::move(pow256), _loc);
 			return mod;
 		}
 

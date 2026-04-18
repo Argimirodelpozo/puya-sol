@@ -114,19 +114,9 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleMulmod(
 	// EVM reverts on mod by zero
 	emitModByZeroCheck(_ctx, z, _loc);
 
-	auto mul = std::make_shared<awst::BigUIntBinaryOperation>();
-	mul->sourceLocation = _loc;
-	mul->wtype = awst::WType::biguintType();
-	mul->left = std::move(x);
-	mul->right = std::move(y);
-	mul->op = awst::BigUIntBinaryOperator::Mult;
+	auto mul = awst::makeBigUIntBinOp(std::move(x), awst::BigUIntBinaryOperator::Mult, std::move(y), _loc);
 
-	auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
-	mod->sourceLocation = _loc;
-	mod->wtype = awst::WType::biguintType();
-	mod->left = std::move(mul);
-	mod->right = std::move(z);
-	mod->op = awst::BigUIntBinaryOperator::Mod;
+	auto mod = awst::makeBigUIntBinOp(std::move(mul), awst::BigUIntBinaryOperator::Mod, std::move(z), _loc);
 
 	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(mod));
 }
@@ -145,19 +135,9 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleAddmod(
 	// EVM reverts on mod by zero
 	emitModByZeroCheck(_ctx, z, _loc);
 
-	auto add = std::make_shared<awst::BigUIntBinaryOperation>();
-	add->sourceLocation = _loc;
-	add->wtype = awst::WType::biguintType();
-	add->left = std::move(x);
-	add->right = std::move(y);
-	add->op = awst::BigUIntBinaryOperator::Add;
+	auto add = awst::makeBigUIntBinOp(std::move(x), awst::BigUIntBinaryOperator::Add, std::move(y), _loc);
 
-	auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
-	mod->sourceLocation = _loc;
-	mod->wtype = awst::WType::biguintType();
-	mod->left = std::move(add);
-	mod->right = std::move(z);
-	mod->op = awst::BigUIntBinaryOperator::Mod;
+	auto mod = awst::makeBigUIntBinOp(std::move(add), awst::BigUIntBinaryOperator::Mod, std::move(z), _loc);
 
 	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(mod));
 }

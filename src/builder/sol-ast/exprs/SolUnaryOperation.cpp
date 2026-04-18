@@ -98,12 +98,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		// Mask to N bits first (uint64 two's complement may be wider)
 		if (bits < 256)
 		{
-			auto mask = std::make_shared<awst::BigUIntBinaryOperation>();
-			mask->sourceLocation = m_loc;
-			mask->wtype = awst::WType::biguintType();
-			mask->left = std::move(operand);
-			mask->op = awst::BigUIntBinaryOperator::Mod;
-			mask->right = makeBiguintConst(pow2NStr);
+			auto mask = awst::makeBigUIntBinOp(std::move(operand), awst::BigUIntBinaryOperator::Mod, makeBiguintConst(pow2NStr), m_loc);
 			operand = std::move(mask);
 		}
 
@@ -134,19 +129,9 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			// if (x != 0) { __neg_tmp = (2^256 - x) % 2^256; }
 			auto isNonZero = awst::makeNumericCompare(operand, awst::NumericComparison::Ne, makeBiguintConst("0"), m_loc);
 
-			auto sub = std::make_shared<awst::BigUIntBinaryOperation>();
-			sub->sourceLocation = m_loc;
-			sub->wtype = awst::WType::biguintType();
-			sub->left = makeBiguintConst(pow2NStr);
-			sub->op = awst::BigUIntBinaryOperator::Sub;
-			sub->right = operand;
+			auto sub = awst::makeBigUIntBinOp(makeBiguintConst(pow2NStr), awst::BigUIntBinaryOperator::Sub, operand, m_loc);
 
-			auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
-			mod->sourceLocation = m_loc;
-			mod->wtype = awst::WType::biguintType();
-			mod->left = std::move(sub);
-			mod->op = awst::BigUIntBinaryOperator::Mod;
-			mod->right = makeBiguintConst(pow2NStr);
+			auto mod = awst::makeBigUIntBinOp(std::move(sub), awst::BigUIntBinaryOperator::Mod, makeBiguintConst(pow2NStr), m_loc);
 
 			auto assignTmp = awst::makeAssignmentStatement(tmpVar, std::move(mod), m_loc);
 
@@ -164,19 +149,9 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		}
 		else
 		{
-			auto sub = std::make_shared<awst::BigUIntBinaryOperation>();
-			sub->sourceLocation = m_loc;
-			sub->wtype = awst::WType::biguintType();
-			sub->left = makeBiguintConst(pow2NStr);
-			sub->op = awst::BigUIntBinaryOperator::Sub;
-			sub->right = std::move(operand);
+			auto sub = awst::makeBigUIntBinOp(makeBiguintConst(pow2NStr), awst::BigUIntBinaryOperator::Sub, std::move(operand), m_loc);
 
-			auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
-			mod->sourceLocation = m_loc;
-			mod->wtype = awst::WType::biguintType();
-			mod->left = std::move(sub);
-			mod->op = awst::BigUIntBinaryOperator::Mod;
-			mod->right = makeBiguintConst(pow2NStr);
+			auto mod = awst::makeBigUIntBinOp(std::move(sub), awst::BigUIntBinaryOperator::Mod, makeBiguintConst(pow2NStr), m_loc);
 
 			negated = std::move(mod);
 		}
@@ -234,12 +209,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 
 		// Non-constant unsigned negation: 0 - x
 		auto zero = awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType());
-		auto e = std::make_shared<awst::BigUIntBinaryOperation>();
-		e->sourceLocation = m_loc;
-		e->wtype = awst::WType::biguintType();
-		e->left = std::move(zero);
-		e->op = awst::BigUIntBinaryOperator::Sub;
-		e->right = std::move(_operand);
+		auto e = awst::makeBigUIntBinOp(std::move(zero), awst::BigUIntBinaryOperator::Sub, std::move(_operand), m_loc);
 		return e;
 	}
 	// For uint64 constant negation, produce two's complement biguint.
@@ -273,12 +243,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		auto e = awst::makeUInt64BinOp(std::move(zero2), awst::UInt64BinaryOperator::Sub, std::move(_operand), m_loc);
 		return e;
 	}
-	auto e = std::make_shared<awst::BigUIntBinaryOperation>();
-	e->sourceLocation = m_loc;
-	e->wtype = awst::WType::biguintType();
-	e->left = std::move(zero2);
-	e->op = awst::BigUIntBinaryOperator::Sub;
-	e->right = std::move(_operand);
+	auto e = awst::makeBigUIntBinOp(std::move(zero2), awst::BigUIntBinaryOperator::Sub, std::move(_operand), m_loc);
 	return e;
 }
 
@@ -401,12 +366,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 			// Mask to N bits
 			if (signedBits < 256)
 			{
-				auto mask = std::make_shared<awst::BigUIntBinaryOperation>();
-				mask->sourceLocation = m_loc;
-				mask->wtype = awst::WType::biguintType();
-				mask->left = std::move(val);
-				mask->op = awst::BigUIntBinaryOperator::Mod;
-				mask->right = makeBConst(pow2NStr2);
+				auto mask = awst::makeBigUIntBinOp(std::move(val), awst::BigUIntBinaryOperator::Mod, makeBConst(pow2NStr2), m_loc);
 				val = std::move(mask);
 			}
 
@@ -433,12 +393,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 			std::shared_ptr<awst::Expression> added;
 			if (isInc)
 			{
-				auto add = std::make_shared<awst::BigUIntBinaryOperation>();
-				add->sourceLocation = m_loc;
-				add->wtype = awst::WType::biguintType();
-				add->left = std::move(val);
-				add->op = awst::BigUIntBinaryOperator::Add;
-				add->right = makeBConst("1");
+				auto add = awst::makeBigUIntBinOp(std::move(val), awst::BigUIntBinaryOperator::Add, makeBConst("1"), m_loc);
 				added = std::move(add);
 			}
 			else
@@ -454,21 +409,11 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 				{
 					std::ostringstream oss; oss << decOffset; decOffsetStr = oss.str();
 				}
-				auto add = std::make_shared<awst::BigUIntBinaryOperation>();
-				add->sourceLocation = m_loc;
-				add->wtype = awst::WType::biguintType();
-				add->left = std::move(val);
-				add->op = awst::BigUIntBinaryOperator::Add;
-				add->right = makeBConst(decOffsetStr);
+				auto add = awst::makeBigUIntBinOp(std::move(val), awst::BigUIntBinaryOperator::Add, makeBConst(decOffsetStr), m_loc);
 				added = std::move(add);
 			}
 
-			auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
-			mod->sourceLocation = m_loc;
-			mod->wtype = awst::WType::biguintType();
-			mod->left = std::move(added);
-			mod->op = awst::BigUIntBinaryOperator::Mod;
-			mod->right = makeBConst(pow2NStr2);
+			auto mod = awst::makeBigUIntBinOp(std::move(added), awst::BigUIntBinaryOperator::Mod, makeBConst(pow2NStr2), m_loc);
 
 			// Convert back to uint64 for ≤64-bit types
 			if (signedBits <= 64)
@@ -496,12 +441,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 		else if (isBigUInt(base->wtype))
 		{
 			auto one = awst::makeIntegerConstant("1", m_loc, awst::WType::biguintType());
-			auto bin = std::make_shared<awst::BigUIntBinaryOperation>();
-			bin->sourceLocation = m_loc;
-			bin->wtype = awst::WType::biguintType();
-			bin->left = std::move(base);
-			bin->op = isInc ? awst::BigUIntBinaryOperator::Add : awst::BigUIntBinaryOperator::Sub;
-			bin->right = std::move(one);
+			auto bin = awst::makeBigUIntBinOp(std::move(base), isInc ? awst::BigUIntBinaryOperator::Add : awst::BigUIntBinaryOperator::Sub, std::move(one), m_loc);
 			return bin;
 		}
 		else
@@ -667,12 +607,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 		{
 			auto jConst = awst::makeIntegerConstant(std::to_string(j), m_loc, awst::WType::biguintType());
 
-			auto slotJ = std::make_shared<awst::BigUIntBinaryOperation>();
-			slotJ->sourceLocation = m_loc;
-			slotJ->wtype = awst::WType::biguintType();
-			slotJ->left = target; // shared, reused
-			slotJ->op = awst::BigUIntBinaryOperator::Add;
-			slotJ->right = std::move(jConst);
+			auto slotJ = awst::makeBigUIntBinOp(target, awst::BigUIntBinaryOperator::Add, std::move(jConst), m_loc);
 
 			auto btoi = builder::StorageMapper::biguintSlotToBtoi(slotJ, m_loc);
 

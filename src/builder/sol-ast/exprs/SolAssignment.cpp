@@ -607,12 +607,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 				// slot + j
 				auto jConst = awst::makeIntegerConstant(std::to_string(j), m_loc, awst::WType::biguintType());
 
-				auto slotJ = std::make_shared<awst::BigUIntBinaryOperation>();
-				slotJ->sourceLocation = m_loc;
-				slotJ->wtype = awst::WType::biguintType();
-				slotJ->left = target; // shared, not moved (reused each iteration)
-				slotJ->op = awst::BigUIntBinaryOperator::Add;
-				slotJ->right = std::move(jConst);
+				auto slotJ = awst::makeBigUIntBinOp(target, awst::BigUIntBinaryOperator::Add, std::move(jConst), m_loc);
 
 				// btoi(slot + j) for __storage_write
 				auto castBytes = awst::makeReinterpretCast(std::move(slotJ), awst::WType::bytesType(), m_loc);

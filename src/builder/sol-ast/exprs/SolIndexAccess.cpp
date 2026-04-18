@@ -487,19 +487,9 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 							// newSlot = slot + index * innerLen
 							auto stride = awst::makeIntegerConstant(std::to_string(innerLen), m_loc, awst::WType::biguintType());
 
-							auto mul = std::make_shared<awst::BigUIntBinaryOperation>();
-							mul->sourceLocation = m_loc;
-							mul->wtype = awst::WType::biguintType();
-							mul->left = std::move(indexExpr);
-							mul->op = awst::BigUIntBinaryOperator::Mult;
-							mul->right = std::move(stride);
+							auto mul = awst::makeBigUIntBinOp(std::move(indexExpr), awst::BigUIntBinaryOperator::Mult, std::move(stride), m_loc);
 
-							auto add = std::make_shared<awst::BigUIntBinaryOperation>();
-							add->sourceLocation = m_loc;
-							add->wtype = awst::WType::biguintType();
-							add->left = std::move(slotVar);
-							add->op = awst::BigUIntBinaryOperator::Add;
-							add->right = std::move(mul);
+							auto add = awst::makeBigUIntBinOp(std::move(slotVar), awst::BigUIntBinaryOperator::Add, std::move(mul), m_loc);
 							return add;
 						}
 					}
@@ -512,12 +502,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 				if (indexExpr)
 				{
 					// computedSlot = base + j
-					auto add = std::make_shared<awst::BigUIntBinaryOperation>();
-					add->sourceLocation = m_loc;
-					add->wtype = awst::WType::biguintType();
-					add->left = std::move(slotVar);
-					add->op = awst::BigUIntBinaryOperator::Add;
-					add->right = std::move(indexExpr);
+					auto add = awst::makeBigUIntBinOp(std::move(slotVar), awst::BigUIntBinaryOperator::Add, std::move(indexExpr), m_loc);
 
 					// __storage_read expects uint64 slot, but we have biguint.
 					// Truncate: btoi(add)
@@ -579,12 +564,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 						indexExpr = std::move(cast);
 					}
 
-					auto add = std::make_shared<awst::BigUIntBinaryOperation>();
-					add->sourceLocation = m_loc;
-					add->wtype = awst::WType::biguintType();
-					add->left = std::move(baseExpr);
-					add->op = awst::BigUIntBinaryOperator::Add;
-					add->right = std::move(indexExpr);
+					auto add = awst::makeBigUIntBinOp(std::move(baseExpr), awst::BigUIntBinaryOperator::Add, std::move(indexExpr), m_loc);
 
 					// Read: __storage_read(truncated_slot)
 					if (!m_indexAccess.annotation().willBeWrittenTo)

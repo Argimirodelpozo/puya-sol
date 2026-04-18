@@ -416,12 +416,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::applyNarrowingMask(
 		{
 			solidity::u256 maskVal = (solidity::u256(1) << targetBits) - 1;
 			auto mask = awst::makeIntegerConstant(maskVal.str(), m_loc, awst::WType::biguintType());
-			auto bitAnd = std::make_shared<awst::BigUIntBinaryOperation>();
-			bitAnd->sourceLocation = m_loc;
-			bitAnd->wtype = awst::WType::biguintType();
-			bitAnd->left = std::move(_expr);
-			bitAnd->op = awst::BigUIntBinaryOperator::BitAnd;
-			bitAnd->right = std::move(mask);
+			auto bitAnd = awst::makeBigUIntBinOp(std::move(_expr), awst::BigUIntBinaryOperator::BitAnd, std::move(mask), m_loc);
 			return bitAnd;
 		}
 	}

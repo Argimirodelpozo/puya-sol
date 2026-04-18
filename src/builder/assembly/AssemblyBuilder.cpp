@@ -217,12 +217,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 
 			auto maskConst = awst::makeIntegerConstant(maskStr.str(), loc, awst::WType::biguintType());
 
-			auto andOp = std::make_shared<awst::BigUIntBinaryOperation>();
-			andOp->sourceLocation = loc;
-			andOp->wtype = awst::WType::biguintType();
-			andOp->left = std::move(valueToCast);
-			andOp->op = awst::BigUIntBinaryOperator::BitAnd;
-			andOp->right = std::move(maskConst);
+			auto andOp = awst::makeBigUIntBinOp(std::move(valueToCast), awst::BigUIntBinaryOperator::BitAnd, std::move(maskConst), loc);
 			valueToCast = std::move(andOp);
 		}
 
@@ -678,12 +673,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::makeBigUIntBinOp(
 	awst::SourceLocation const& _loc
 )
 {
-	auto node = std::make_shared<awst::BigUIntBinaryOperation>();
-	node->sourceLocation = _loc;
-	node->wtype = awst::WType::biguintType();
-	node->left = ensureBiguint(std::move(_left), _loc);
-	node->op = _op;
-	node->right = ensureBiguint(std::move(_right), _loc);
+	auto node = awst::makeBigUIntBinOp(ensureBiguint(std::move(_left), _loc), _op, ensureBiguint(std::move(_right), _loc), _loc);
 	return node;
 }
 

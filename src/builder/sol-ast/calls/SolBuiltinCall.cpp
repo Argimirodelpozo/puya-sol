@@ -123,12 +123,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		// minus1 = h1_int - 1
 		auto one = awst::makeIntegerConstant("1", m_loc, awst::WType::biguintType());
 
-		auto sub = std::make_shared<awst::BigUIntBinaryOperation>();
-		sub->sourceLocation = m_loc;
-		sub->wtype = awst::WType::biguintType();
-		sub->left = std::move(h1Int);
-		sub->op = awst::BigUIntBinaryOperator::Sub;
-		sub->right = std::move(one);
+		auto sub = awst::makeBigUIntBinOp(std::move(h1Int), awst::BigUIntBinaryOperator::Sub, std::move(one), m_loc);
 
 		// minus1_bytes = 32-byte big-endian via b|(sub, bzero(32))
 		auto minusBytesCast = awst::makeReinterpretCast(std::move(sub), awst::WType::bytesType(), m_loc);

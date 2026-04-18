@@ -332,6 +332,22 @@ struct BigUIntBinaryOperation: Expression
 	std::shared_ptr<Expression> right;
 };
 
+// Construct a BigUIntBinaryOperation. wtype is biguintType().
+inline std::shared_ptr<BigUIntBinaryOperation> makeBigUIntBinOp(
+	std::shared_ptr<Expression> left,
+	BigUIntBinaryOperator op,
+	std::shared_ptr<Expression> right,
+	SourceLocation loc)
+{
+	auto node = std::make_shared<BigUIntBinaryOperation>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = WType::biguintType();
+	node->left = std::move(left);
+	node->op = op;
+	node->right = std::move(right);
+	return node;
+}
+
 struct BytesBinaryOperation: Expression
 {
 	std::string nodeType() const override { return "BytesBinaryOperation"; }

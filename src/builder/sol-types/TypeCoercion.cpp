@@ -117,12 +117,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint256(
 		solidity::u256 maskVal = (solidity::u256(1) << _bits) - 1;
 		auto maskConst = awst::makeIntegerConstant(maskVal.str(), _loc, awst::WType::biguintType());
 
-		auto masked = std::make_shared<awst::BigUIntBinaryOperation>();
-		masked->sourceLocation = _loc;
-		masked->wtype = awst::WType::biguintType();
-		masked->left = promoted;
-		masked->op = awst::BigUIntBinaryOperator::BitAnd;
-		masked->right = std::move(maskConst);
+		auto masked = awst::makeBigUIntBinOp(promoted, awst::BigUIntBinaryOperator::BitAnd, std::move(maskConst), _loc);
 		promoted = masked;
 	}
 
@@ -140,22 +135,12 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint256(
 
 	auto offsetConst = awst::makeIntegerConstant(offsetStr, _loc, awst::WType::biguintType());
 
-	auto add = std::make_shared<awst::BigUIntBinaryOperation>();
-	add->sourceLocation = _loc;
-	add->wtype = awst::WType::biguintType();
-	add->left = promoted;
-	add->op = awst::BigUIntBinaryOperator::Add;
-	add->right = std::move(offsetConst);
+	auto add = awst::makeBigUIntBinOp(promoted, awst::BigUIntBinaryOperator::Add, std::move(offsetConst), _loc);
 
 	// Mod 2^256 to keep within 32 bytes
 	auto pow256Const = awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
 
-	auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
-	mod->sourceLocation = _loc;
-	mod->wtype = awst::WType::biguintType();
-	mod->left = std::move(add);
-	mod->op = awst::BigUIntBinaryOperator::Mod;
-	mod->right = std::move(pow256Const);
+	auto mod = awst::makeBigUIntBinOp(std::move(add), awst::BigUIntBinaryOperator::Mod, std::move(pow256Const), _loc);
 
 	auto ternary = std::make_shared<awst::ConditionalExpression>();
 	ternary->sourceLocation = _loc;

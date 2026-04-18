@@ -559,12 +559,7 @@ void AssemblyBuilder::buildAssignment(
 
 					auto maskConst = awst::makeIntegerConstant(maskStr.str(), loc, awst::WType::biguintType());
 
-					auto andOp = std::make_shared<awst::BigUIntBinaryOperation>();
-					andOp->sourceLocation = loc;
-					andOp->wtype = awst::WType::biguintType();
-					andOp->left = std::move(value);
-					andOp->op = awst::BigUIntBinaryOperator::BitAnd;
-					andOp->right = std::move(maskConst);
+					auto andOp = awst::makeBigUIntBinOp(std::move(value), awst::BigUIntBinaryOperator::BitAnd, std::move(maskConst), loc);
 					value = std::move(andOp);
 				}
 				value = safeBtoi(std::move(value), loc);

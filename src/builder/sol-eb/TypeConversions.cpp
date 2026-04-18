@@ -100,12 +100,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToInteger(
 			solidity::u256 mask = (solidity::u256(1) << targetBits) - 1;
 			auto maskConst = awst::makeIntegerConstant(mask.str(), _loc, awst::WType::biguintType());
 
-			auto masked = std::make_shared<awst::BigUIntBinaryOperation>();
-			masked->sourceLocation = _loc;
-			masked->wtype = awst::WType::biguintType();
-			masked->left = std::move(_arg);
-			masked->op = awst::BigUIntBinaryOperator::BitAnd;
-			masked->right = std::move(maskConst);
+			auto masked = awst::makeBigUIntBinOp(std::move(_arg), awst::BigUIntBinaryOperator::BitAnd, std::move(maskConst), _loc);
 
 			return std::make_unique<SolIntegerBuilder>(_ctx, targetInt, std::move(masked));
 		}
