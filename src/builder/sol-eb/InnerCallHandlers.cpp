@@ -774,10 +774,11 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 			}
 
 			bool fallbackTakesBytes = fallbackFunc->parameters().size() == 1;
+			bool fallbackReturnsBytes = !fallbackFunc->returnParameters().empty();
 
 			auto call = std::make_shared<awst::SubroutineCallExpression>();
 			call->sourceLocation = _loc;
-			call->wtype = awst::WType::voidType();
+			call->wtype = fallbackReturnsBytes ? awst::WType::bytesType() : awst::WType::voidType();
 			call->target = awst::InstanceMethodTarget{"__fallback"};
 			if (fallbackTakesBytes)
 			{
@@ -787,11 +788,29 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 				call->args.push_back(std::move(ca));
 			}
 
+			// When the fallback returns bytes, spill the subroutine call
+			// result into a named local so the caller's `retval` reads it.
+			// The router wrapper logs but doesn't return, so the direct
+			// InstanceMethodTarget to the bytes-returning fallback is what
+			// we invoke.
+			if (fallbackReturnsBytes)
+			{
+				static int s_tmpCounter = 0;
+				std::string tmpName = "__fallback_ret_" + std::to_string(++s_tmpCounter);
+				auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::bytesType(), _loc);
+				auto assign = awst::makeAssignmentStatement(tmpTarget, std::move(call), _loc);
+				_ctx.prePendingStatements.push_back(std::move(assign));
+
+				auto retRead = awst::makeVarExpression(tmpName, awst::WType::bytesType(), _loc);
+				return std::make_unique<GenericResultBuilder>(_ctx,
+					makeBoolBytesTuple(true, std::move(retRead), _loc));
+			}
+
 			auto stmt = awst::makeExpressionStatement(call, _loc);
 			_ctx.prePendingStatements.push_back(std::move(stmt));
 
 			return std::make_unique<GenericResultBuilder>(_ctx,
-				makeBoolBytesTuple(true, std::move(dataExpr), _loc));
+				makeBoolBytesTuple(true, awst::makeBytesConstant({}, _loc), _loc));
 		}
 
 		// Non-self raw .call(data) → stub (true, empty bytes).
