@@ -825,6 +825,25 @@ def _call_with_extra_budget(app, method, args, extra_calls=15):
     return r
 
 
+class _MalformedArc4:
+    """Sentinel wrapping a deliberately-malformed ARC4 blob.
+
+    EVM semantic tests in `revertStrings/` feed calldata with declared array
+    lengths longer than the data actually present. On EVM this trips the
+    ABI decoder and reverts. The harness normally "heals" such inputs
+    (padding with zeros / truncating), which hides the FAILURE behavior from
+    our TEAL. When `_regroup_args` detects declared-length > available-data
+    for a dynamic-typed param, it emits this sentinel instead. The call
+    executor routes any call containing a sentinel through a raw
+    ApplicationCallTxn path — the malformed blob lands in ApplicationArgs,
+    our compiler's length-header assert fires, and the test sees FAILURE.
+    """
+    __slots__ = ('raw_bytes',)
+
+    def __init__(self, raw_bytes: bytes):
+        self.raw_bytes = raw_bytes
+
+
 def _regroup_args(raw_args, method_sig):
     """Regroup flat EVM ABI-encoded args into structured ARC4 args.
 
@@ -1075,7 +1094,12 @@ def _regroup_args(raw_args, method_sig):
                                 else:
                                     result.append(val)
                             else:
-                                result.append("" if pt == 'string' else b"")
+                                # Declared length > 0 but no data (or length too
+                                # large). EVM would revert on ABI decode; emit a
+                                # malformed ARC4 blob so the compiler's length
+                                # assert fires. Clamp length to uint16 max.
+                                clamped = min(int(length), 0xFFFF)
+                                result.append(_MalformedArc4(clamped.to_bytes(2, 'big')))
                         else:
                             # Dynamic array: collect elements
                             # Check if it's a nested dynamic array (e.g., uint256[][])
@@ -1084,7 +1108,42 @@ def _regroup_args(raw_args, method_sig):
 
                             if is_nested_dynamic and length > 0:
                                 # Nested dynamic array: each element has an offset
-                                # pointing to its own length + data
+                                # pointing to its own length + data. Detect EVM
+                                # "malformed calldata" patterns and emit a sentinel
+                                # blob so our length assertions fire, mirroring the
+                                # EVM revert.
+                                malformed = False
+                                # No head offsets at all (declared length > 0).
+                                if data_start >= len(raw_args):
+                                    malformed = True
+                                else:
+                                    for j in range(int(length)):
+                                        if data_start + j >= len(raw_args):
+                                            malformed = True
+                                            break
+                                        eo = raw_args[data_start + j]
+                                        if not isinstance(eo, int):
+                                            malformed = True
+                                            break
+                                        ew = word_idx + 1 + eo // 32
+                                        if ew >= len(raw_args):
+                                            malformed = True
+                                            break
+                                        el = raw_args[ew]
+                                        if not isinstance(el, int):
+                                            malformed = True
+                                            break
+                                        # Inner length absurd or exceeds remaining.
+                                        if el > 0xFFFF:
+                                            malformed = True
+                                            break
+                                        if el > (len(raw_args) - (ew + 1)):
+                                            malformed = True
+                                            break
+                                if malformed:
+                                    clamped = min(int(length), 0xFFFF)
+                                    result.append(_MalformedArc4(clamped.to_bytes(2, 'big')))
+                                    continue
                                 n_elems = min(int(length), 100)
                                 arr = []
                                 for j in range(n_elems):
@@ -1135,6 +1194,24 @@ def _regroup_args(raw_args, method_sig):
                                         result.append(arr)
                                 else:
                                     n_avail = len(raw_args) - data_start
+                                    # Declared length > available data (or
+                                    # length absurdly large): build malformed
+                                    # ARC4 blob so the compiler's length assert
+                                    # fires — EVM reverts on this pattern.
+                                    if length > 0 and (length > n_avail or length > 0xFFFF):
+                                        clamped = min(int(length), 0xFFFF)
+                                        blob = clamped.to_bytes(2, 'big')
+                                        # Include any available element bytes
+                                        # so we don't accidentally fail a
+                                        # different assert first.
+                                        for j in range(min(n_avail, clamped)):
+                                            wv = raw_args[data_start + j]
+                                            if isinstance(wv, int):
+                                                blob += (wv & ((1 << 256) - 1)).to_bytes(32, 'big')
+                                            elif isinstance(wv, bytes):
+                                                blob += wv.ljust(32, b'\x00')[:32]
+                                        result.append(_MalformedArc4(blob))
+                                        continue
                                     n_elems = min(int(length), n_avail) if length <= 10000 else n_avail
                                     arr = []
                                     for j in range(n_elems):
@@ -1621,6 +1698,59 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                             return True, f"{actual_val}"
                     return False, f"expected {expected_list}, got {actual_list}"
                 return True, "ok (no return data)"
+            except Exception as ex:
+                if call.expect_failure:
+                    return True, "correctly reverted"
+                return False, f"exception: {str(ex)[:200]}"
+
+        # Malformed-ARC4 args: revertStrings tests feed calldata whose declared
+        # array length exceeds the data actually present. `_regroup_args`
+        # flagged these with `_MalformedArc4` sentinels. Route through raw
+        # ApplicationCallTxn with hand-built ApplicationArgs — algokit's
+        # type-safe encoder would reject the blob.
+        if any(isinstance(a, _MalformedArc4) for a in args):
+            from algosdk.transaction import ApplicationCallTxn as _MACT, OnComplete as _MOC
+            from algosdk.atomic_transaction_composer import (
+                AtomicTransactionComposer as _MATC,
+                TransactionWithSigner as _MTWS,
+            )
+            from algosdk.abi import Method as _MMethod, ABIType as _MABIType
+            _algod = app.algorand.client.algod
+            _sender = app._default_sender
+            _signer = app._default_signer or app.algorand.account.get_signer(_sender)
+            _sp = _algod.suggested_params()
+            _sp.flat_fee = True
+            _sp.fee = 5000
+
+            _m = _MMethod.from_signature(method)
+            _app_args = [_m.get_selector()]
+            for _i, _a in enumerate(args):
+                if isinstance(_a, _MalformedArc4):
+                    _app_args.append(_a.raw_bytes)
+                else:
+                    # Use the method's parameter ABI type to encode normal args.
+                    _arg_type = _MABIType.from_string(str(_m.args[_i].type))
+                    _app_args.append(_arg_type.encode(_a))
+
+            _box_refs = None
+            if hasattr(app, '_box_refs') and app._box_refs:
+                from algosdk.transaction import BoxReference as _MBR
+                _box_refs = [_MBR(app_index=0, name=r[1]) for r in app._box_refs]
+
+            _txn = _MACT(sender=_sender, sp=_sp, index=app.app_id,
+                         on_complete=_MOC.NoOpOC, app_args=_app_args,
+                         boxes=_box_refs)
+            _atc = _MATC()
+            _atc.add_transaction(_MTWS(_txn, _signer))
+            try:
+                try:
+                    _atc = au.populate_app_call_resources(_atc, _algod)
+                except Exception:
+                    pass
+                _atc.execute(_algod, 5)
+                if call.expect_failure:
+                    return False, "expected FAILURE but succeeded"
+                return True, "ok (malformed arg path)"
             except Exception as ex:
                 if call.expect_failure:
                     return True, "correctly reverted"
