@@ -53,6 +53,7 @@ f_ternary_false@3:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_selector.sol.C.h[routing]() -> void:
 h:
     txna ApplicationArgs 1
+    dup
     len
     pushint 12
     ==
@@ -67,7 +68,11 @@ h:
 h_ternary_merge@4:
     !
     assert // not payable
-    pushbytes 0x151f7c7500000000
+    dup
+    extract 8 4
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return

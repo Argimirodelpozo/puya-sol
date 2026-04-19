@@ -1,0 +1,105 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_pointers.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x2d4970c7 0xf2b65f27 0x35841bcc 0x829312b1 // method "f()void", method "g()void", method "h2()void", method "k2()void"
+    txna ApplicationArgs 0
+    match f g h2 k2
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_pointers.sol.C.f[routing]() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    err // invalid function pointer
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_pointers.sol.C.g[routing]() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    err // invalid function pointer
+
+g_ternary_false@3:
+    intc_1 // 0
+    b g_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_pointers.sol.C.h2[routing]() -> void:
+h2:
+    txn GroupIndex
+    bz h2_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h2_ternary_merge@4:
+    !
+    assert // not payable
+    err // invalid function pointer
+
+h2_ternary_false@3:
+    intc_1 // 0
+    b h2_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_pointers.sol.C.k2[routing]() -> void:
+k2:
+    txn GroupIndex
+    bz k2_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+k2_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
+
+k2_ternary_false@3:
+    intc_1 // 0
+    b k2_ternary_merge@4

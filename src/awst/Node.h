@@ -482,6 +482,60 @@ inline std::shared_ptr<IntrinsicCall> makeIntrinsicCall(
 	return node;
 }
 
+// `itob(uint64Expr)` → 8-byte big-endian bytes. Common enough to deserve
+// a convenience helper.
+inline std::shared_ptr<IntrinsicCall> makeItob(
+	std::shared_ptr<Expression> uint64Expr, SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("itob", WType::bytesType(), std::move(loc));
+	node->stackArgs.push_back(std::move(uint64Expr));
+	return node;
+}
+
+// `btoi(bytesExpr)` → uint64. bytesExpr must be ≤ 8 bytes.
+inline std::shared_ptr<IntrinsicCall> makeBtoi(
+	std::shared_ptr<Expression> bytesExpr, SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("btoi", WType::uint64Type(), std::move(loc));
+	node->stackArgs.push_back(std::move(bytesExpr));
+	return node;
+}
+
+// `len(bytesExpr)` → uint64.
+inline std::shared_ptr<IntrinsicCall> makeLen(
+	std::shared_ptr<Expression> bytesExpr, SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("len", WType::uint64Type(), std::move(loc));
+	node->stackArgs.push_back(std::move(bytesExpr));
+	return node;
+}
+
+// `concat(left, right)` → bytes. Two-arg form; callers wanting N-way concat
+// should chain or use a dedicated helper.
+inline std::shared_ptr<IntrinsicCall> makeConcat(
+	std::shared_ptr<Expression> left,
+	std::shared_ptr<Expression> right,
+	SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("concat", WType::bytesType(), std::move(loc));
+	node->stackArgs.push_back(std::move(left));
+	node->stackArgs.push_back(std::move(right));
+	return node;
+}
+
+// `extract <offset> <length>; <bytesExpr>` — 2-immediate form for constant
+// offset/length; stack arg is the source bytes expression.
+inline std::shared_ptr<IntrinsicCall> makeExtract(
+	std::shared_ptr<Expression> bytesExpr,
+	int offset, int length,
+	SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("extract", WType::bytesType(), std::move(loc));
+	node->immediates = {offset, length};
+	node->stackArgs.push_back(std::move(bytesExpr));
+	return node;
+}
+
 struct FieldExpression: Expression
 {
 	std::string nodeType() const override { return "FieldExpression"; }

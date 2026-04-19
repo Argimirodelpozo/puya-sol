@@ -3939,32 +3939,56 @@ void ContractBuilder::inlineModifiers(
 	std::vector<std::shared_ptr<awst::Statement>> hoistedInits;
 	if (!returnParamNames.empty() && !_body->body.empty())
 	{
+		// Scan the prefix of the body for compiler-inserted named-return inits.
+		// Skip benign non-return-var prefix stmts (ExpressionStatement from
+		// ensure_budget/ABI asserts, and parameter narrowing like `a = a & 0xff`)
+		// but stop at control flow or any assignment that references a return
+		// var in its value to avoid reordering user-written logic.
+		std::set<std::string> seen;
 		auto it = _body->body.begin();
 		while (it != _body->body.end())
 		{
 			if (auto* assign = dynamic_cast<awst::AssignmentStatement*>(it->get()))
 			{
 				auto* target = dynamic_cast<awst::VarExpression*>(assign->target.get());
-				// Only hoist zero-value init assignments for named return vars
 				bool isZeroInit = false;
-				if (auto* intConst = dynamic_cast<awst::IntegerConstant*>(assign->value.get()))
+				auto const* val = assign->value.get();
+				if (auto* intConst = dynamic_cast<awst::IntegerConstant const*>(val))
 					isZeroInit = (intConst->value == "0");
-				else if (auto* boolConst = dynamic_cast<awst::BoolConstant*>(assign->value.get()))
+				else if (auto* boolConst = dynamic_cast<awst::BoolConstant const*>(val))
 					isZeroInit = !boolConst->value;
-				else if (auto* bytesConst = dynamic_cast<awst::BytesConstant*>(assign->value.get()))
-					isZeroInit = true; // BytesConstant defaults are always zero-value
+				else if (dynamic_cast<awst::BytesConstant const*>(val))
+					isZeroInit = true;
+				else if (dynamic_cast<awst::NewStruct const*>(val)
+					|| dynamic_cast<awst::NewArray const*>(val)
+					|| dynamic_cast<awst::TupleExpression const*>(val))
+					isZeroInit = true;
 
-				if (target && returnParamNames.count(target->name) && isZeroInit)
+				if (target && returnParamNames.count(target->name) && isZeroInit
+					&& !seen.count(target->name))
 				{
+					seen.insert(target->name);
 					hoistedInits.push_back(std::move(*it));
 					it = _body->body.erase(it);
 					continue;
 				}
+				// Assignment to a non-return-var (e.g. parameter narrowing
+				// `a = a & 0xff`): skip, keep scanning.
+				if (target && !returnParamNames.count(target->name))
+				{
+					++it;
+					continue;
+				}
+				break;
 			}
-			break; // only hoist consecutive inits at the start
+			if (dynamic_cast<awst::ExpressionStatement*>(it->get()))
+			{
+				++it;
+				continue;
+			}
+			break;
 		}
 	}
-
 	// Default-init the synthetic return var so the deferred `return` always
 	// reads a valid value, even on execution paths that don't reach the split
 	// assignment (e.g. early revert inside the modifier).

@@ -143,9 +143,7 @@ std::shared_ptr<awst::Expression> encodeArgForInnerTxn(
 
 	if (_argExpr->wtype == awst::WType::uint64Type())
 	{
-		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-		itob->stackArgs.push_back(std::move(_argExpr));
-		std::shared_ptr<awst::Expression> bytesExpr = std::move(itob);
+		std::shared_ptr<awst::Expression> bytesExpr = awst::makeItob(std::move(_argExpr), _loc);
 		if (targetBytes > 8 && dynamic_cast<solidity::frontend::IntegerType const*>(_paramSolType))
 			bytesExpr = leftPadBytes(std::move(bytesExpr), targetBytes, _loc);
 		return bytesExpr;
@@ -173,17 +171,8 @@ std::shared_ptr<awst::Expression> encodeArgForInnerTxn(
 		// ARC4 byte[] encoding: uint16(length) ++ raw_bytes.
 		if (_argExpr->wtype != awst::WType::bytesType())
 			_argExpr = awst::makeReinterpretCast(std::move(_argExpr), awst::WType::bytesType(), _loc);
-		auto lenExpr = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
-		lenExpr->stackArgs.push_back(_argExpr);
-		auto itobLen = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-		itobLen->stackArgs.push_back(std::move(lenExpr));
-		auto header = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-		header->immediates = {6, 2};
-		header->stackArgs.push_back(std::move(itobLen));
-		auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-		concat->stackArgs.push_back(std::move(header));
-		concat->stackArgs.push_back(std::move(_argExpr));
-		return concat;
+		auto header = awst::makeExtract(awst::makeItob(awst::makeLen(_argExpr, _loc), _loc), 6, 2, _loc);
+		return awst::makeConcat(std::move(header), std::move(_argExpr), _loc);
 	}
 	// Fallback: reinterpret as bytes.
 	if (_argExpr->wtype != awst::WType::bytesType())
@@ -346,9 +335,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 
 		// Helper: itob(constInt) → 8 bytes.
 		auto makeItobConst = [&](std::string _val) -> std::shared_ptr<awst::Expression> {
-			auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-			itob->stackArgs.push_back(awst::makeIntegerConstant(std::move(_val), _loc));
-			return itob;
+			return awst::makeItob(awst::makeIntegerConstant(std::move(_val), _loc), _loc);
 		};
 
 		std::shared_ptr<awst::Expression> appIdBytes;
@@ -444,18 +431,12 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		// External function pointer call: check if self-call (appId == 0
 		// sentinel) and route to internal dispatch, otherwise inner txn.
 
-		// Helper: extract N bytes starting at offset from the 12-byte ptr.
+		// Local helpers: extract N bytes at offset; btoi(8-byte-slice).
 		auto extractSlice = [&](int _offset, int _length) {
-			auto e = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-			e->immediates = {_offset, _length};
-			e->stackArgs.push_back(_ptrExpr);
-			return e;
+			return awst::makeExtract(_ptrExpr, _offset, _length, _loc);
 		};
-		// Helper: btoi(extractSlice(offset, 8)) — extract a uint64 from ptr.
 		auto extractU64 = [&](int _offset) {
-			auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-			btoi->stackArgs.push_back(extractSlice(_offset, 8));
-			return btoi;
+			return awst::makeBtoi(extractSlice(_offset, 8), _loc);
 		};
 
 		// Check if self-call: appId == 0 (sentinel for current app).
