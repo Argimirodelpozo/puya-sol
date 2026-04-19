@@ -85,6 +85,8 @@ h:
     dupn 2
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
+    dup
+    cover 2
     intc_0 // 32
     *
     pushint 2
@@ -133,7 +135,14 @@ h_ternary_merge@4:
     intc_3 // 8
     -
     extract_uint64
-    dig 4
+    dup2
+    <=
+    assert // slice: start > end
+    dup
+    dig 5
+    <=
+    assert // slice: end > length
+    dig 5
     cover 2
     substring3
     dup

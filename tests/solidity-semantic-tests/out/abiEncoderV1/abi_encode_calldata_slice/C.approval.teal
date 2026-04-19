@@ -566,6 +566,9 @@ test_uint256_ternary_false@3:
     intc_1 // 8
     -
     extract_uint64
+    dup2
+    <=
+    assert // slice: start > end
     frame_dig -3
     cover 2
     substring3
@@ -607,6 +610,9 @@ test_uint256_ternary_false@3:
     intc_1 // 8
     -
     extract_uint64
+    dup2
+    <=
+    assert // slice: start > end
     frame_dig -3
     cover 2
     substring3
@@ -648,6 +654,9 @@ test_uint256_ternary_false@3:
     intc_1 // 8
     -
     extract_uint64
+    dup2
+    <=
+    assert // slice: start > end
     frame_dig -3
     cover 2
     substring3
@@ -674,8 +683,6 @@ test_uint256_ternary_false@3:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_encode_calldata_slice.sol.C.enc_bytes_reference_ternary_merge@3:
     !
     assert // not payable
-    intc_2 // 32
-    bzero
     intc_1 // 8
     bzero
     dup
@@ -694,8 +701,14 @@ test_uint256_ternary_false@3:
     intc_1 // 8
     -
     extract_uint64
+    dup2
+    <=
+    assert // slice: start > end
+    intc_2 // 32
+    bzero
     frame_dig -3
-    cover 2
+    uncover 3
+    uncover 3
     substring3
     dup
     len
@@ -767,6 +780,15 @@ test_uint256_ternary_false@3:
     intc_1 // 8
     -
     extract_uint64
+    dup2
+    <=
+    assert // slice: start > end
+    frame_dig -3
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    dig 1
+    >=
+    assert // slice: end > length
     frame_dig -3
     cover 2
     substring3
@@ -812,6 +834,15 @@ test_uint256_ternary_false@3:
     intc_1 // 8
     -
     extract_uint64
+    dup2
+    <=
+    assert // slice: start > end
+    frame_dig -3
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    dig 1
+    >=
+    assert // slice: end > length
     frame_dig -3
     cover 2
     substring3
@@ -857,6 +888,15 @@ test_uint256_ternary_false@3:
     intc_1 // 8
     -
     extract_uint64
+    dup2
+    <=
+    assert // slice: start > end
+    frame_dig -3
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    dig 1
+    >=
+    assert // slice: end > length
     frame_dig -3
     cover 2
     substring3
@@ -899,6 +939,15 @@ test_uint256_ternary_false@3:
     intc_1 // 8
     -
     extract_uint64
+    dup2
+    <=
+    assert // slice: start > end
+    frame_dig -3
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    dig 1
+    >=
+    assert // slice: end > length
     frame_dig -3
     cover 2
     substring3

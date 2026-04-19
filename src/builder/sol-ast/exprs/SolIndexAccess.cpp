@@ -6,6 +6,7 @@
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "awst/WType.h"
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
@@ -662,6 +663,8 @@ std::shared_ptr<awst::Expression> SolIndexRangeAccess::toAwst()
 		end = buildExpr(*m_rangeAccess.endExpression());
 	else
 	{
+		// Default end for substring3: byte-count via `len` intrinsic,
+		// preserving pre-existing full-slice semantics.
 		auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), m_loc);
 		lenCall->stackArgs.push_back(base);
 		end = std::move(lenCall);
@@ -671,6 +674,68 @@ std::shared_ptr<awst::Expression> SolIndexRangeAccess::toAwst()
 		std::move(start), awst::WType::uint64Type(), m_loc);
 	end = builder::TypeCoercion::implicitNumericCast(
 		std::move(end), awst::WType::uint64Type(), m_loc);
+
+	// Bounds checks for explicit `arr[start:end]` — Solidity reverts on
+	// start > end or end > arr.length even if the slice result is unused.
+	// Stash bounds in temps and emit asserts via prePendingStatements so
+	// they survive DCE when the slice expression is discarded. Only applied
+	// when the user supplied at least one explicit bound; default `[:]`
+	// slices are by construction in-range and keep the old semantics.
+	bool hasExplicitBound
+		= m_rangeAccess.startExpression() || m_rangeAccess.endExpression();
+
+	if (hasExplicitBound)
+	{
+		std::string idSuffix = std::to_string(m_rangeAccess.id());
+		std::string startVarName = "__slice_start_" + idSuffix;
+		std::string endVarName = "__slice_end_" + idSuffix;
+
+		auto startVar = awst::makeVarExpression(startVarName, awst::WType::uint64Type(), m_loc);
+		m_ctx.prePendingStatements.push_back(
+			awst::makeAssignmentStatement(startVar, start, m_loc));
+
+		auto endVar = awst::makeVarExpression(endVarName, awst::WType::uint64Type(), m_loc);
+		m_ctx.prePendingStatements.push_back(
+			awst::makeAssignmentStatement(endVar, end, m_loc));
+
+		// assert(start <= end)
+		{
+			auto cmp = awst::makeNumericCompare(
+				awst::makeVarExpression(startVarName, awst::WType::uint64Type(), m_loc),
+				awst::NumericComparison::Lte,
+				awst::makeVarExpression(endVarName, awst::WType::uint64Type(), m_loc),
+				m_loc);
+			m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+				awst::makeAssert(std::move(cmp), m_loc, "slice: start > end"), m_loc));
+		}
+
+		// assert(end <= base.length) — only for base shapes that support a
+		// length query. Inner slices that fell back to bytes-of-unknown-shape
+		// skip this check.
+		auto const* bt = base->wtype;
+		std::shared_ptr<awst::Expression> lenExpr;
+		if (dynamic_cast<awst::ReferenceArray const*>(bt)
+			|| dynamic_cast<awst::ARC4DynamicArray const*>(bt)
+			|| dynamic_cast<awst::ARC4StaticArray const*>(bt))
+		{
+			auto lenNode = std::make_shared<awst::ArrayLength>();
+			lenNode->sourceLocation = m_loc;
+			lenNode->wtype = awst::WType::uint64Type();
+			lenNode->array = base;
+			lenExpr = std::move(lenNode);
+		}
+
+		if (lenExpr)
+		{
+			auto cmp = awst::makeNumericCompare(
+				awst::makeVarExpression(endVarName, awst::WType::uint64Type(), m_loc),
+				awst::NumericComparison::Lte,
+				std::move(lenExpr),
+				m_loc);
+			m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+				awst::makeAssert(std::move(cmp), m_loc, "slice: end > length"), m_loc));
+		}
+	}
 
 	auto slice = awst::makeIntrinsicCall("substring3", m_ctx.typeMapper.map(m_rangeAccess.annotation().type), m_loc);
 	slice->stackArgs.push_back(std::move(base));

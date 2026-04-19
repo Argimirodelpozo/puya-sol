@@ -35,6 +35,8 @@ f(4,u256,u256):
     dupn 2
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
+    dup
+    cover 2
     intc_0 // 32
     *
     pushint 2
@@ -83,7 +85,14 @@ f(4,u256,u256)_ternary_merge@4:
     intc_1 // 8
     -
     extract_uint64
-    dig 4
+    dup2
+    <=
+    assert // slice: start > end
+    dup
+    dig 5
+    <=
+    assert // slice: end > length
+    dig 5
     cover 2
     substring3
     intc_2 // 0
@@ -110,6 +119,8 @@ f(27,u256,u256,u256,u256):
     dupn 2
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
+    dup
+    cover 2
     intc_0 // 32
     *
     pushint 2
@@ -170,10 +181,22 @@ f(27,u256,u256,u256,u256)_ternary_merge@4:
     intc_1 // 8
     -
     extract_uint64
-    dig 7
-    cover 2
-    substring3
-    dig 1
+    dup2
+    <=
+    assert // slice: start > end
+    dup
+    dig 8
+    <=
+    assert // slice: end > length
+    dig 2
+    dig 5
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 3
     dig 4
     concat
     dup
@@ -181,14 +204,14 @@ f(27,u256,u256,u256,u256)_ternary_merge@4:
     intc_1 // 8
     -
     extract_uint64
-    uncover 2
-    dig 3
-    concat
-    dup
-    len
-    intc_1 // 8
-    -
-    extract_uint64
+    dup2
+    <=
+    assert // slice: start > end
+    dig 9
+    uncover 4
+    uncover 4
+    substring3
+    cover 2
     substring3
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
@@ -214,6 +237,8 @@ f_s_only:
     dupn 2
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
+    dup
+    cover 2
     intc_0 // 32
     *
     pushint 2
@@ -249,9 +274,18 @@ f_s_only_ternary_merge@4:
     intc_1 // 8
     -
     extract_uint64
+    dup
     dig 3
-    swap
-    dig 3
+    dup
+    cover 2
+    <=
+    assert // slice: start > end
+    dup
+    dig 5
+    <=
+    assert // slice: end > length
+    dig 5
+    cover 2
     substring3
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
@@ -277,6 +311,8 @@ f_e_only:
     dupn 2
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
+    dup
+    cover 2
     intc_0 // 32
     *
     pushint 2
@@ -310,7 +346,11 @@ f_e_only_ternary_merge@4:
     intc_1 // 8
     -
     extract_uint64
-    dig 2
+    dup
+    dig 3
+    <=
+    assert // slice: end > length
+    dig 3
     intc_2 // 0
     uncover 2
     substring3
@@ -338,6 +378,8 @@ g:
     dupn 2
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
+    dup
+    cover 2
     intc_0 // 32
     *
     pushint 2
@@ -392,7 +434,14 @@ g_ternary_merge@4:
     intc_1 // 8
     -
     extract_uint64
-    dig 6
+    dup2
+    <=
+    assert // slice: start > end
+    dup
+    dig 7
+    <=
+    assert // slice: end > length
+    dig 7
     cover 2
     substring3
     swap
@@ -428,6 +477,8 @@ gg:
     dupn 2
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
+    dup
+    cover 2
     intc_0 // 32
     *
     pushint 2
@@ -482,7 +533,14 @@ gg_ternary_merge@4:
     intc_1 // 8
     -
     extract_uint64
-    dig 6
+    dup2
+    <=
+    assert // slice: start > end
+    dup
+    dig 7
+    <=
+    assert // slice: end > length
+    dig 7
     cover 2
     substring3
     swap
@@ -513,6 +571,8 @@ gg_s_only:
     dupn 2
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
+    dup
+    cover 2
     intc_0 // 32
     *
     pushint 2
@@ -555,9 +615,18 @@ gg_s_only_ternary_merge@4:
     intc_1 // 8
     -
     extract_uint64
+    dup
     dig 5
-    swap
-    dig 5
+    dup
+    cover 2
+    <=
+    assert // slice: start > end
+    dup
+    dig 7
+    <=
+    assert // slice: end > length
+    dig 7
+    cover 2
     substring3
     swap
     dig 2
@@ -587,6 +656,8 @@ gg_e_only:
     dupn 2
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
+    dup
+    cover 2
     intc_0 // 32
     *
     pushint 2
@@ -627,7 +698,11 @@ gg_e_only_ternary_merge@4:
     intc_1 // 8
     -
     extract_uint64
-    dig 4
+    dup
+    dig 5
+    <=
+    assert // slice: end > length
+    dig 5
     intc_2 // 0
     uncover 2
     substring3
