@@ -12,16 +12,19 @@
 namespace puyasol::builder
 {
 
-/// Manages transient storage variables.
+/// Manages Solidity transient state variables (`transient T x;`).
 ///
-/// Transient storage resets per-transaction (EVM EIP-1153).
-/// On AVM, mapped to a local variable holding a zeroed bytes blob.
-/// Each transient var is accessed by offset within the blob.
+/// Transient storage resets per-transaction (EVM EIP-1153). On AVM the
+/// blob lives in scratch slot AssemblyBuilder::TRANSIENT_SLOT, bzero'd
+/// once per app call in the approval preamble — scratch is per-txn, so
+/// the blob clears implicitly between top-level app calls and persists
+/// across callsub within one app call.
 ///
 /// Layout: | var0 (32B) | var1 (32B) | ... | varN (32B) |
 ///
-/// The blob variable is named "__transient" and initialized to
-/// bzero(numSlots * 32) at the start of each method body.
+/// buildRead / buildWrite emit load/store intrinsics against the scratch
+/// slot directly, so named-transient-var writes can't be DCE'd and are
+/// visible to subsequent `this.f()` callsub frames within the same call.
 class TransientStorage
 {
 public:
