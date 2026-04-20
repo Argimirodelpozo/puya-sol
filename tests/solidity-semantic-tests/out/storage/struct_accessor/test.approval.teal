@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/struct_accessor.sol.test.approval_program() -> uint64:
 main:
-    intcblock 0 1 32 40 336
-    bytecblock 0x6461746148428bdb7ddd829410d6bbb924fdeb3a3d7e88c2577bffae073b990c6f061d08 0x00 "__ctor_pending" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000002b0000 "data" 0x002b 0x6366687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    intcblock 0 1 32 33 280
+    bytecblock 0x6461746148428bdb7ddd829410d6bbb924fdeb3a3d7e88c2577bffae073b990c6f061d08 0x00 "__ctor_pending" 0x00000000000000000000000000000000000000000000000000000000000000000000240000 "data" 0x6366687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
     pushint 4096
     bzero
     dup
@@ -49,13 +49,13 @@ __postInit:
     pop
     bytec_0 // 0x6461746148428bdb7ddd829410d6bbb924fdeb3a3d7e88c2577bffae073b990c6f061d08
     box_get
-    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000002b0000
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000240000
     cover 2
     select
     dup
-    extract 32 8
+    extract 32 1
     dig 1
-    intc_3 // 40
+    intc_3 // 33
     extract_uint16
     dig 2
     len
@@ -64,7 +64,7 @@ __postInit:
     substring3
     extract 2 0
     uncover 2
-    intc 4 // 336
+    intc 4 // 280
     getbit
     bytec_1 // 0x00
     intc_0 // 0
@@ -80,7 +80,7 @@ __postInit:
     uncover 3
     concat
     swap
-    bytec 5 // 0x002b
+    pushbytes 0x0024
     concat
     uncover 2
     concat
@@ -94,35 +94,30 @@ __postInit:
     box_put
     dup
     extract 0 32
-    pushint 2
-    itob
-    dig 2
-    intc_3 // 40
+    dig 1
+    intc_3 // 33
     extract_uint16
-    dig 3
+    dig 2
     len
-    dig 4
+    dig 3
     cover 2
     substring3
     extract 2 0
-    uncover 3
-    intc 4 // 336
+    uncover 2
+    intc 4 // 280
     getbit
     bytec_1 // 0x00
     intc_0 // 0
     uncover 2
     setbit
-    uncover 3
-    uncover 3
-    concat
-    dig 2
+    dig 1
     len
     itob
     extract 6 2
-    uncover 3
+    uncover 2
     concat
-    swap
-    bytec 5 // 0x002b
+    uncover 2
+    pushbytes 0x020024
     concat
     uncover 2
     concat
@@ -136,23 +131,23 @@ __postInit:
     box_put
     pushint 3
     itob
-    bytec 6 // 0x6366687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    bytec 5 // 0x6366687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
     box_del
     pop
-    bytec 6 // 0x6366687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    bytec 5 // 0x6366687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
     swap
     box_put
     bytec_0 // 0x6461746148428bdb7ddd829410d6bbb924fdeb3a3d7e88c2577bffae073b990c6f061d08
     box_get
-    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000002b0000
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000240000
     cover 2
     select
     dup
     extract 0 32
     dig 1
-    extract 32 8
+    extract 32 1
     dig 2
-    intc_3 // 40
+    intc_3 // 33
     extract_uint16
     dig 3
     len
@@ -169,7 +164,7 @@ __postInit:
     uncover 2
     concat
     swap
-    pushbytes 0x002b80
+    pushbytes 0x002480
     concat
     swap
     concat
@@ -216,15 +211,16 @@ data_ternary_merge@4:
     swap
     concat
     box_get
-    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000002b0000
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000240000
     cover 2
     select
     dup
     extract 0 32
     dig 1
-    extract 32 8
+    intc_2 // 32
+    getbyte
     uncover 2
-    intc 4 // 336
+    intc 4 // 280
     getbit
     bytec_1 // 0x00
     intc_0 // 0
@@ -237,6 +233,7 @@ data_ternary_merge@4:
     uncover 3
     b|
     uncover 2
+    itob
     concat
     bytec_1 // 0x00
     intc_0 // 0

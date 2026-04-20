@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_to_struct.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock "__ctor_pending" "x" 0x78d6ba9329f8932c12192b37849f772104d20048f76434a3290512d9d814e4116f 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytecblock "__ctor_pending" "x" 0x78d6ba9329f8932c12192b37849f772104d20048f76434a3290512d9d814e4116f 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -47,20 +47,18 @@ __postInit:
     pushint 2
     box_create
     pop
-    pushint 3
-    itob
     bytec_2 // 0x78d6ba9329f8932c12192b37849f772104d20048f76434a3290512d9d814e4116f
     box_get
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
-    extract 8 8
+    extract 1 2
     dig 1
-    extract 16 32
+    extract 3 16
     uncover 2
-    extract 48 32
-    uncover 3
+    extract 19 32
+    pushbytes 0x03
     uncover 3
     concat
     uncover 2
@@ -68,38 +66,36 @@ __postInit:
     swap
     concat
     dup
-    extract 0 8
-    pushint 4
-    itob
-    dig 2
-    extract 16 32
-    uncover 3
-    extract 48 32
-    uncover 3
-    uncover 3
+    extract 0 1
+    dig 1
+    extract 3 16
+    uncover 2
+    extract 19 32
+    uncover 2
+    pushbytes 0x0004
     concat
     uncover 2
     concat
     swap
     concat
     dup
-    extract 0 8
+    extract 0 1
     dig 1
-    extract 8 8
+    extract 1 2
     uncover 2
-    extract 48 32
+    extract 19 32
     cover 2
     concat
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000005
+    pushbytes 0x00000000000000000000000000000005
     concat
     swap
     concat
     dup
-    extract 0 8
+    extract 0 1
     dig 1
-    extract 8 8
+    extract 1 2
     uncover 2
-    extract 16 32
+    extract 3 16
     cover 2
     concat
     swap
@@ -163,19 +159,23 @@ x_ternary_merge@4:
     swap
     concat
     box_get
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
-    extract 0 8
+    intc_2 // 0
+    getbyte
     dig 1
-    extract 8 8
+    intc_1 // 1
+    extract_uint16
     dig 2
-    extract 16 32
+    extract 3 16
     uncover 3
-    extract 48 32
+    extract 19 32
     uncover 3
+    itob
     uncover 3
+    itob
     concat
     pushint 64
     bzero

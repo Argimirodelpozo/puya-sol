@@ -3,15 +3,15 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_storage_to_memory_function_ptr.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "__ctor_pending"
+    intcblock 1 0 4294967295 52
+    bytecblock "x" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -37,16 +37,19 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_storage_to_memory_function_ptr.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 0
     app_global_put
     pushbytes "arr"
     pushint 2528
     box_create
     pop
+    bytec_0 // "x"
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000c0000002a0000000000000000000000000000001700000000000000000000000000000000000000000000000000000000000000220000000000000001
+    box_put
     intc_0 // 1
     return
 
@@ -63,8 +66,75 @@ f:
 f_ternary_merge@4:
     !
     assert // not payable
-    err // invalid function pointer
+    bytec_0 // "x"
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 32 60
+    dup
+    intc_1 // 0
+    extract_uint32
+    intc_2 // 4294967295
+    &
+    dig 1
+    extract 4 16
+    dig 2
+    extract 20 32
+    uncover 3
+    intc_3 // 52
+    extract_uint64
+    callsub __funcptr_dispatch_ret_u32
+    intc_2 // 4294967295
+    &
+    bytec_0 // "x"
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 32 60
+    intc_3 // 52
+    extract_uint64
+    callsub __funcptr_dispatch_ret_u32
+    intc_2 // 4294967295
+    &
+    uncover 4
+    itob
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    itob
+    concat
+    swap
+    itob
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
 
 f_ternary_false@3:
     intc_1 // 0
     b f_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_storage_to_memory_function_ptr.sol.C.__funcptr_dispatch_ret_u32(__funcptr_id: uint64) -> uint64:
+__funcptr_dispatch_ret_u32:
+    proto 1 1
+    frame_dig -1
+    intc_0 // 1
+    ==
+    assert // invalid function pointer
+    bytec_0 // "x"
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 32 60
+    intc_1 // 0
+    extract_uint32
+    retsub

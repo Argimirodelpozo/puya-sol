@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/copy_to_mapping.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 12
-    bytecblock "s" 0x000c000e000000000000000000000000 0x151f7c75 "__ctor_pending" 0x000c 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925 0x6dec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5 0x6d9267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2 0x6dd9147961436944f43cd99d28b2bbddbf452ef872b30c8279e255e7daafc7f946
+    intcblock 1 0 2 6
+    bytecblock "s" 0x00060008000000000000 0x151f7c75 "__ctor_pending" 0x0006 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925 0x6dec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5 0x6d9267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2 0x6dd9147961436944f43cd99d28b2bbddbf452ef872b30c8279e255e7daafc7f946
     pushint 4096
     bzero
     dup
@@ -29,7 +29,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x3716d8b3 0x46a4b2a5 0x5f2cbcb0 0xbbb98e9b // method "__postInit()void", method "from_state()(byte[],uint16[],uint64)", method "from_storage()(byte[],uint16[],uint64)", method "from_memory()(byte[],uint16[],uint64)", method "from_calldata((byte[],uint16[],uint64))(byte[],uint16[],uint64)"
+    pushbytess 0xbacc49e3 0xc0b107a4 0x4f1f412d 0xb9fa804e 0xe38e8ea9 // method "__postInit()void", method "from_state()(byte[],uint16[],uint16)", method "from_storage()(byte[],uint16[],uint16)", method "from_memory()(byte[],uint16[],uint16)", method "from_calldata((byte[],uint16[],uint16))(byte[],uint16[],uint16)"
     txna ApplicationArgs 0
     match __postInit from_state from_storage from_memory from_calldata
     err
@@ -49,7 +49,7 @@ __postInit:
     pop
     bytec_0 // "s"
     box_get
-    bytec_1 // 0x000c000e000000000000000000000000
+    bytec_1 // 0x00060008000000000000
     cover 2
     select
     dup
@@ -61,8 +61,8 @@ __postInit:
     cover 2
     substring3
     swap
-    extract 4 8
-    pushbytes 0x000c0011
+    extract 4 2
+    pushbytes 0x0006000b
     swap
     concat
     pushbytes 0x0003666f6f
@@ -85,14 +85,14 @@ __postInit:
     cover 2
     substring3
     swap
-    extract 4 8
+    extract 4 2
     dig 1
     len
-    intc_3 // 12
+    intc_3 // 6
     +
     itob
     extract 6 2
-    bytec 4 // 0x000c
+    bytec 4 // 0x0006
     swap
     concat
     swap
@@ -123,18 +123,16 @@ __postInit:
     swap
     uncover 3
     substring3
-    pushint 21
-    itob
-    dig 1
+    dup
     len
-    intc_3 // 12
+    intc_3 // 6
     +
     itob
     extract 6 2
-    bytec 4 // 0x000c
+    bytec 4 // 0x0006
     swap
     concat
-    swap
+    pushbytes 0x0015
     concat
     swap
     concat
@@ -164,7 +162,7 @@ from_state_ternary_merge@4:
     assert // not payable
     bytec_0 // "s"
     box_get
-    bytec_1 // 0x000c000e000000000000000000000000
+    bytec_1 // 0x00060008000000000000
     cover 2
     select
     bytec 5 // 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
@@ -199,7 +197,7 @@ from_storage_ternary_merge@4:
     assert // not payable
     bytec_0 // "s"
     box_get
-    bytec_1 // 0x000c000e000000000000000000000000
+    bytec_1 // 0x00060008000000000000
     cover 2
     select
     bytec 6 // 0x6dec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
@@ -234,7 +232,7 @@ from_memory_ternary_merge@4:
     assert // not payable
     bytec_0 // "s"
     box_get
-    bytec_1 // 0x000c000e000000000000000000000000
+    bytec_1 // 0x00060008000000000000
     cover 2
     select
     bytec 7 // 0x6d9267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
@@ -264,16 +262,16 @@ from_calldata:
     intc_1 // 0
     extract_uint16 // on error: invalid tuple encoding
     dup
-    intc_3 // 12
+    intc_3 // 6
     ==
-    assert // invalid tail pointer at index 0 of ((len+uint8[]),(len+uint16[]),uint64)
+    assert // invalid tail pointer at index 0 of ((len+uint8[]),(len+uint16[]),uint16)
     dig 2
     swap
     dig 2
     substring3
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 14
+    pushint 8
     +
     dig 2
     intc_2 // 2
@@ -281,7 +279,7 @@ from_calldata:
     dup
     dig 2
     ==
-    assert // invalid tail pointer at index 1 of ((len+uint8[]),(len+uint16[]),uint64)
+    assert // invalid tail pointer at index 1 of ((len+uint8[]),(len+uint16[]),uint16)
     uncover 3
     swap
     dig 3

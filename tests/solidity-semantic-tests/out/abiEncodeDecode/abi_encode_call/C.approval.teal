@@ -25,7 +25,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x025ff000 0x6dd6bff0 // method "callMeMaybe((uint256[],uint256,string,byte[],uint64),uint256,string)void", method "callExternal()bool"
+    pushbytess 0xc5e435fe 0x6dd6bff0 // method "callMeMaybe((uint256[],uint256,string,byte[],uint8),uint256,string)void", method "callExternal()bool"
     txna ApplicationArgs 0
     match callMeMaybe callExternal
     err
@@ -40,9 +40,9 @@ callMeMaybe:
     intc_0 // 0
     extract_uint16 // on error: invalid tuple encoding
     dup
-    pushint 46
+    pushint 39
     ==
-    assert // invalid tail pointer at index 0 of ((len+uint256[]),uint256,(len+utf8[]),(len+uint8[]),uint64)
+    assert // invalid tail pointer at index 0 of ((len+uint256[]),uint256,(len+utf8[]),(len+uint8[]),uint8)
     dig 2
     swap
     dig 2
@@ -51,7 +51,7 @@ callMeMaybe:
     extract_uint16 // on error: invalid array length header
     intc_3 // 32
     *
-    pushint 48
+    pushint 41
     +
     dig 2
     pushint 34
@@ -59,7 +59,7 @@ callMeMaybe:
     dup
     dig 2
     ==
-    assert // invalid tail pointer at index 2 of ((len+uint256[]),uint256,(len+utf8[]),(len+uint8[]),uint64)
+    assert // invalid tail pointer at index 2 of ((len+uint256[]),uint256,(len+utf8[]),(len+uint8[]),uint8)
     dig 3
     swap
     dig 3
@@ -75,7 +75,7 @@ callMeMaybe:
     dup
     dig 2
     ==
-    assert // invalid tail pointer at index 3 of ((len+uint256[]),uint256,(len+utf8[]),(len+uint8[]),uint64)
+    assert // invalid tail pointer at index 3 of ((len+uint256[]),uint256,(len+utf8[]),(len+uint8[]),uint8)
     uncover 3
     swap
     dig 3

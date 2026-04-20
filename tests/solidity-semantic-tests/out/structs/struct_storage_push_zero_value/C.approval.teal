@@ -162,7 +162,7 @@ f_for_header@9:
     intc_1 // 2
     <
     bz f_after_for@11
-    pushbytes 0x0002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007a0000
+    pushbytes 0x00020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000660000
     dig 1
     dup
     cover 2
@@ -188,7 +188,7 @@ f_after_for@11:
     dig 4
     swap
     concat
-    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007a0000
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000660000
     concat
     bytec_1 // "s"
     box_del
@@ -206,21 +206,21 @@ f_after_for@11:
     dup
     intc_0 // 0
     callsub dynamic_array_read_dynamic_element
-    extract 32 32
+    extract 32 16
     bytec_0 // 0x
     b==
     assert
     dup
     intc_0 // 0
     callsub dynamic_array_read_dynamic_element
-    pushint 64
-    extract_uint64
+    pushint 48
+    extract_uint32
     !
     assert
     dup
     intc_0 // 0
     callsub dynamic_array_read_dynamic_element
-    extract 72 48
+    extract 52 48
     extract 0 16 // on error: index access is out of bounds
     bytec_0 // 0x
     b==
@@ -228,7 +228,7 @@ f_after_for@11:
     dup
     intc_0 // 0
     callsub dynamic_array_read_dynamic_element
-    extract 72 48
+    extract 52 48
     extract 16 16 // on error: index access is out of bounds
     bytec_0 // 0x
     b==
@@ -236,7 +236,7 @@ f_after_for@11:
     dup
     intc_0 // 0
     callsub dynamic_array_read_dynamic_element
-    extract 72 48
+    extract 52 48
     extract 32 16 // on error: index access is out of bounds
     bytec_0 // 0x
     b==
@@ -244,7 +244,7 @@ f_after_for@11:
     intc_0 // 0
     callsub dynamic_array_read_dynamic_element
     dup
-    pushint 120
+    pushint 100
     extract_uint16
     dig 1
     len

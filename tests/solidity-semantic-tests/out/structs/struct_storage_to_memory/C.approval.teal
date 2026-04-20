@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_storage_to_memory.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "__ctor_pending"
+    bytecblock "__ctor_pending" "x"
     pushint 4096
     bzero
     dup
@@ -47,6 +47,9 @@ __postInit:
     pushint 2528
     box_create
     pop
+    bytec_1 // "x"
+    pushbytes 0x0000000c0000002a000000000000000000000000000000170000000000000000000000000000000000000000000000000000000000000022
+    box_put
     intc_0 // 1
     return
 
@@ -63,26 +66,21 @@ f:
 f_ternary_merge@4:
     !
     assert // not payable
-    pushbytes "x"
+    bytec_1 // "x"
     box_get
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
-    extract 8 72
+    extract 4 52
     dup
     intc_1 // 0
-    extract_uint64
+    extract_uint32
     pushint 4294967295
     &
     dig 1
-    extract 8 32
-    intc_1 // 0
-    assert // overflow
-    pushint 16
-    bzero
-    b|
+    extract 4 16
     uncover 2
-    extract 40 32
+    extract 20 32
     uncover 2
     itob
     uncover 2

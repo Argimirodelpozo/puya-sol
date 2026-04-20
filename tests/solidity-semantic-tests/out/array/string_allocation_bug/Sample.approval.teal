@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol.Sample.approval_program() -> uint64:
 main:
-    intcblock 2 1 0 8
+    intcblock 2 1 0 4
     bytecblock "p" "__ctor_pending"
     pushint 4096
     bzero
@@ -97,7 +97,7 @@ __postInit:
     intc_2 // 0
     uncover 2
     substring3
-    pushbytes 0x000000000000bbbb000000000000cccc0014001b000568656c6c6f0005776f726c64
+    pushbytes 0xbbbbcccc0008000f000568656c6c6f0005776f726c64
     concat
     uncover 3
     uncover 2
@@ -108,7 +108,7 @@ __postInit:
 
 __postInit_for_header@2:
     dup
-    pushint 4
+    intc_3 // 4
     <
     bz __postInit_after_for@4
     dig 1
@@ -117,7 +117,7 @@ __postInit_for_header@2:
     dup
     cover 3
     extract_uint16
-    pushint 34
+    pushint 22
     +
     dig 5
     -
@@ -166,33 +166,35 @@ p_ternary_merge@4:
     pushbytes 0x
     cover 2
     select
-    intc_3 // 8
+    pushint 8
     bzero
     dig 2
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     dup2
     intc_0 // 2
     callsub static_array_read_dynamic_element
-    extract 0 8
+    intc_2 // 0
+    extract_uint16
     dig 2
     dig 2
     intc_0 // 2
     callsub static_array_read_dynamic_element
-    extract 8 8
+    intc_0 // 2
+    extract_uint16
     dig 3
     dig 3
     intc_0 // 2
     callsub static_array_read_dynamic_element
     dup
-    pushint 16
+    intc_3 // 4
     extract_uint16
     dig 1
-    pushint 18
+    pushint 6
     extract_uint16
     substring3
     extract 2 0
@@ -201,14 +203,16 @@ p_ternary_merge@4:
     intc_0 // 2
     callsub static_array_read_dynamic_element
     dup
-    pushint 18
+    pushint 6
     extract_uint16
     dig 1
     len
     substring3
     extract 2 0
     uncover 3
+    itob
     uncover 3
+    itob
     concat
     dig 2
     len

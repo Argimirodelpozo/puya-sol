@@ -3,15 +3,15 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_uint.sol.C.approval_program() -> uint64:
 main:
-    intcblock 8 0 1 2 43981 56491
-    bytecblock "data" 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x1234567890
+    intcblock 1 0 2 43981
+    bytecblock "data" 0x00000000000000000000000000000000000000000000000000000000000000000000 0x1234567890
     pushint 4096
     bzero
     dup
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -40,25 +40,24 @@ test:
     txn GroupIndex
     bz test_ternary_false@3
     txn GroupIndex
-    intc_2 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 test_ternary_merge@4:
     !
     assert // not payable
-    intc_3 // 2
-    itob
     bytec_0 // "data"
     box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
-    extract 8 8
+    extract 1 2
     swap
-    extract 16 32
-    cover 2
+    extract 3 31
+    pushbytes 0x02
+    uncover 2
     concat
     swap
     concat
@@ -66,8 +65,8 @@ test_ternary_merge@4:
     dig 1
     box_put
     intc_1 // 0
-    extract_uint64
-    intc_3 // 2
+    getbyte
+    intc_2 // 2
     !=
     bz test_after_if_else@6
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
@@ -77,31 +76,30 @@ test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     swap
     concat
     log
-    intc_2 // 1
+    intc_0 // 1
     return
 
 test_after_if_else@6:
     bytec_0 // "data"
     box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
-    extract 0 8
-    intc 4 // 43981
-    itob
-    uncover 2
-    extract 16 32
-    cover 2
+    extract 0 1
+    swap
+    extract 3 31
+    swap
+    pushbytes 0xabcd
     concat
     swap
     concat
     bytec_0 // "data"
     dig 1
     box_put
-    intc_0 // 8
-    extract_uint64
-    intc 4 // 43981
+    intc_0 // 1
+    extract_uint16
+    intc_3 // 43981
     !=
     bz test_after_if_else@8
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
@@ -110,20 +108,20 @@ test_after_if_else@6:
 test_after_if_else@8:
     bytec_0 // "data"
     box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
-    extract 0 8
+    extract 0 1
     swap
-    extract 8 8
+    extract 1 2
     concat
-    pushbytes 0x0000000000000000000000000000000000000000000000000000001234567890
+    pushbytes 0x00000000000000000000000000000000000000000000000000001234567890
     concat
     bytec_0 // "data"
     dig 1
     box_put
-    extract 16 32
+    extract 3 31
     bytec_2 // 0x1234567890
     b!=
     bz test_after_if_else@10
@@ -133,30 +131,29 @@ test_after_if_else@8:
 test_after_if_else@10:
     bytec_0 // "data"
     box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     intc_1 // 0
-    extract_uint64
-    intc_3 // 2
+    getbyte
+    intc_2 // 2
     !=
     bz test_after_if_else@12
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000005
     b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_uint.sol.C.test@23
 
 test_after_if_else@12:
-    intc_0 // 8
-    itob
     bytec_0 // "data"
     box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
-    extract 8 8
+    extract 1 2
     swap
-    extract 16 32
-    cover 2
+    extract 3 31
+    pushbytes 0x08
+    uncover 2
     concat
     swap
     concat
@@ -164,8 +161,8 @@ test_after_if_else@12:
     dig 1
     box_put
     intc_1 // 0
-    extract_uint64
-    intc_0 // 8
+    getbyte
+    pushint 8
     !=
     bz test_after_if_else@14
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000006
@@ -174,12 +171,12 @@ test_after_if_else@12:
 test_after_if_else@14:
     bytec_0 // "data"
     box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
-    intc_0 // 8
-    extract_uint64
-    intc 4 // 43981
+    intc_0 // 1
+    extract_uint16
+    intc_3 // 43981
     !=
     bz test_after_if_else@16
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
@@ -188,25 +185,24 @@ test_after_if_else@14:
 test_after_if_else@16:
     bytec_0 // "data"
     box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
-    extract 0 8
-    intc 5 // 56491
-    itob
-    uncover 2
-    extract 16 32
-    cover 2
+    extract 0 1
+    swap
+    extract 3 31
+    swap
+    pushbytes 0xdcab
     concat
     swap
     concat
     bytec_0 // "data"
     dig 1
     box_put
-    intc_0 // 8
-    extract_uint64
-    intc 5 // 56491
+    intc_0 // 1
+    extract_uint16
+    pushint 56491
     !=
     bz test_after_if_else@18
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
@@ -215,10 +211,10 @@ test_after_if_else@16:
 test_after_if_else@18:
     bytec_0 // "data"
     box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
-    extract 16 32
+    extract 3 31
     bytec_2 // 0x1234567890
     b!=
     bz test_after_if_else@20
@@ -228,20 +224,20 @@ test_after_if_else@18:
 test_after_if_else@20:
     bytec_0 // "data"
     box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
-    extract 0 8
+    extract 0 1
     swap
-    extract 8 8
+    extract 1 2
     concat
-    pushbytes 0x0000000000000000000000000000000000000000000000000000009876543210
+    pushbytes 0x00000000000000000000000000000000000000000000000000009876543210
     concat
     bytec_0 // "data"
     dig 1
     box_put
-    extract 16 32
+    extract 3 31
     pushbytes 0x9876543210
     b!=
     bz test_after_if_else@22

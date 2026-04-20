@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_struct_cleaning.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 32 0
     pushint 4096
     bzero
     dup
@@ -20,7 +20,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xd1bc6b89 // method "f((uint64,uint8[1]))(uint512,byte[32])"
+    pushbytes 0x330c439d // method "f((uint8,uint8[1]))(uint512,byte[32])"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -39,7 +39,7 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    pushint 9
+    pushint 2
     ==
     assert // invalid number of bytes for S
     txn GroupIndex
@@ -53,15 +53,18 @@ f_ternary_merge@4:
     !
     assert // not payable
     dupn 2
-    extract 0 8
+    intc_2 // 0
+    getbyte
     swap
-    extract 8 1
+    extract 1 1
     load 0
+    uncover 2
+    itob
     intc_1 // 32
     bzero
     pushint 31
     bzero
-    uncover 3
+    uncover 4
     swap
     concat
     concat
@@ -72,7 +75,7 @@ f_ternary_merge@4:
     intc_1 // 32
     extract3
     extract 0 32
-    swap
+    uncover 2
     store 0
     pushint 64
     bzero
@@ -88,5 +91,5 @@ f_ternary_merge@4:
     return
 
 f_ternary_false@3:
-    pushint 0
+    intc_2 // 0
     b f_ternary_merge@4
