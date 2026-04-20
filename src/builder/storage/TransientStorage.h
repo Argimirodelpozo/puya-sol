@@ -27,7 +27,6 @@ class TransientStorage
 public:
 	static constexpr unsigned SLOT_SIZE = 32; // bytes per slot (EVM word)
 	static constexpr unsigned MAX_SLOTS = 5;
-	static constexpr const char* BLOB_VAR = "__transient";
 
 	/// Collect transient state variables from a contract and assign offsets.
 	void collectVars(solidity::frontend::ContractDefinition const& _contract, TypeMapper& _typeMapper);
@@ -43,9 +42,6 @@ public:
 
 	/// Get the byte offset for a transient variable. Returns -1 if not found.
 	int getOffset(std::string const& _name) const;
-
-	/// Build the initialization statement: __transient = bzero(blobSize)
-	std::shared_ptr<awst::Statement> buildInit(awst::SourceLocation const& _loc) const;
 
 	/// Build a read expression for a transient variable.
 	/// Extracts 32 bytes at the variable's offset, reinterprets as the target type.

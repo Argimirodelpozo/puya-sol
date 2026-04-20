@@ -1,4 +1,5 @@
 #include "builder/storage/TransientStorage.h"
+#include "builder/assembly/AssemblyBuilder.h"
 #include "Logger.h"
 
 namespace puyasol::builder
@@ -53,20 +54,14 @@ int TransientStorage::getOffset(std::string const& _name) const
 	return static_cast<int>(m_vars[it->second].offset);
 }
 
-std::shared_ptr<awst::Statement> TransientStorage::buildInit(
-	awst::SourceLocation const& _loc) const
+namespace
 {
-	// __transient = bzero(size) — always at least MAX_SLOTS for assembly tload/tstore
-	unsigned sz = std::max(blobSize(), MAX_SLOTS * SLOT_SIZE);
-	auto size = awst::makeIntegerConstant(std::to_string(sz), _loc);
-
-	auto bzero = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-	bzero->stackArgs.push_back(std::move(size));
-
-	auto target = awst::makeVarExpression(BLOB_VAR, awst::WType::bytesType(), _loc);
-
-	auto assign = awst::makeAssignmentStatement(std::move(target), std::move(bzero), _loc);
-	return assign;
+	std::shared_ptr<awst::Expression> loadTransientBlob(awst::SourceLocation const& _loc)
+	{
+		auto loadOp = awst::makeIntrinsicCall("load", awst::WType::bytesType(), _loc);
+		loadOp->immediates = {AssemblyBuilder::TRANSIENT_SLOT};
+		return loadOp;
+	}
 }
 
 std::shared_ptr<awst::Expression> TransientStorage::buildRead(
@@ -77,8 +72,8 @@ std::shared_ptr<awst::Expression> TransientStorage::buildRead(
 	if (offset < 0)
 		return nullptr;
 
-	// Load blob
-	auto blob = awst::makeVarExpression(BLOB_VAR, awst::WType::bytesType(), _loc);
+	// Load blob from scratch slot TRANSIENT_SLOT (backed across callsub).
+	auto blob = loadTransientBlob(_loc);
 
 	// extract(blob, offset, 32) → 32 raw bytes
 	auto extract = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
@@ -97,7 +92,7 @@ std::shared_ptr<awst::Expression> TransientStorage::buildRead(
 		auto extract8 = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
 		extract8->immediates = {offset + static_cast<int>(SLOT_SIZE) - 8, 8};
 
-		auto blobRef = awst::makeVarExpression(BLOB_VAR, awst::WType::bytesType(), _loc);
+		auto blobRef = loadTransientBlob(_loc);
 		extract8->stackArgs.push_back(std::move(blobRef));
 
 		auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
@@ -162,18 +157,21 @@ std::shared_ptr<awst::Statement> TransientStorage::buildWrite(
 		bytes32 = std::move(_value);
 	}
 
-	// Load blob, replace at offset, store back
-	auto blobRead = awst::makeVarExpression(BLOB_VAR, awst::WType::bytesType(), _loc);
+	// replace2(load TRANSIENT_SLOT, bytes32) at compile-time offset
+	auto blobRead = loadTransientBlob(_loc);
 
 	auto replace = awst::makeIntrinsicCall("replace2", awst::WType::bytesType(), _loc);
 	replace->immediates = {offset};
 	replace->stackArgs.push_back(std::move(blobRead));
 	replace->stackArgs.push_back(std::move(bytes32));
 
-	auto target = awst::makeVarExpression(BLOB_VAR, awst::WType::bytesType(), _loc);
+	// store TRANSIENT_SLOT ← replace2(...)
+	auto storeOp = awst::makeIntrinsicCall("store", awst::WType::voidType(), _loc);
+	storeOp->immediates = {AssemblyBuilder::TRANSIENT_SLOT};
+	storeOp->stackArgs.push_back(std::move(replace));
 
-	auto assign = awst::makeAssignmentStatement(std::move(target), std::move(replace), _loc);
-	return assign;
+	auto stmt = awst::makeExpressionStatement(std::move(storeOp), _loc);
+	return stmt;
 }
 
 } // namespace puyasol::builder

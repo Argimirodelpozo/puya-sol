@@ -243,6 +243,7 @@ std::vector<int> AssemblyBuilder::reservedScratchSlots()
 	std::vector<int> slots;
 	for (int i = MEMORY_SLOT_FIRST; i <= MEMORY_SLOT_LAST; ++i)
 		slots.push_back(i);
+	slots.push_back(TRANSIENT_SLOT);
 	return slots;
 }
 

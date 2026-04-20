@@ -79,6 +79,12 @@ public:
 	static constexpr int MEMORY_SLOT_COUNT = MEMORY_SLOT_LAST - MEMORY_SLOT_FIRST + 1;
 	static constexpr int SLOT_SIZE = 4096;
 
+	/// Scratch slot reserved for EIP-1153 transient storage.
+	/// Holds a 4096-byte zeroed blob; persists across callsub within one app
+	/// call, cleared implicitly when the next app call starts (scratch slots
+	/// are per-txn), matching Solidity's per-transaction transient semantics.
+	static constexpr int TRANSIENT_SLOT = 5;
+
 	/// Get the set of scratch slots to reserve on the Contract node.
 	static std::vector<int> reservedScratchSlots();
 

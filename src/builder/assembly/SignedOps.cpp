@@ -15,7 +15,10 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTload(
 	awst::SourceLocation const& _loc
 )
 {
-	// tload(slot) → extract 32 bytes from __transient blob at slot*32
+	// tload(slot) → extract 32 bytes from the transient-storage scratch slot
+	// at offset slot*32. The scratch slot is bzero'd in the approval preamble
+	// and persists across callsub within an app call, so writes from earlier
+	// `this.f()` frames are visible to later tload callers.
 	if (_args.empty()) return nullptr;
 
 	auto slot = ensureBiguint(_args[0], _loc);
@@ -29,13 +32,15 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTload(
 
 	auto offset = awst::makeUInt64BinOp(std::move(slotU64), awst::UInt64BinaryOperator::Mult, std::move(thirtyTwo), _loc);
 
-	// extract3(__transient, offset, 32)
-	auto blob = awst::makeVarExpression("__transient", awst::WType::bytesType(), _loc);
+	// load TRANSIENT_SLOT
+	auto loadBlob = awst::makeIntrinsicCall("load", awst::WType::bytesType(), _loc);
+	loadBlob->immediates = {TRANSIENT_SLOT};
 
+	// extract3(blob, offset, 32)
 	auto thirtyTwo2 = awst::makeIntegerConstant("32", _loc);
 
 	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	extract->stackArgs.push_back(std::move(blob));
+	extract->stackArgs.push_back(std::move(loadBlob));
 	extract->stackArgs.push_back(std::move(offset));
 	extract->stackArgs.push_back(std::move(thirtyTwo2));
 
@@ -76,19 +81,24 @@ void AssemblyBuilder::handleTstore(
 	padded->stackArgs.push_back(std::move(zeros));
 	padded->stackArgs.push_back(std::move(valueBytes));
 
-	// replace3(__transient, offset, padded_value)
-	auto blobRead = awst::makeVarExpression("__transient", awst::WType::bytesType(), _loc);
+	// replace3(load TRANSIENT_SLOT, offset, padded_value)
+	auto blobRead = awst::makeIntrinsicCall("load", awst::WType::bytesType(), _loc);
+	blobRead->immediates = {TRANSIENT_SLOT};
 
 	auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
 	replace->stackArgs.push_back(std::move(blobRead));
 	replace->stackArgs.push_back(std::move(offset));
 	replace->stackArgs.push_back(std::move(padded));
 
-	// __transient = replace3(...)
-	auto target = awst::makeVarExpression("__transient", awst::WType::bytesType(), _loc);
+	// store TRANSIENT_SLOT ← replace3(...)
+	// Direct scratch write: write persists across callsub within the app call,
+	// and can't be DCE'd because store is a side-effectful intrinsic.
+	auto storeOp = awst::makeIntrinsicCall("store", awst::WType::voidType(), _loc);
+	storeOp->immediates = {TRANSIENT_SLOT};
+	storeOp->stackArgs.push_back(std::move(replace));
 
-	auto assign = awst::makeAssignmentStatement(std::move(target), std::move(replace), _loc);
-	_out.push_back(std::move(assign));
+	auto stmt = awst::makeExpressionStatement(std::move(storeOp), _loc);
+	_out.push_back(std::move(stmt));
 }
 
 // ─── Signed integer helpers ──────────────────────────────────────────────────

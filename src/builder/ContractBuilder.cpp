@@ -2482,6 +2482,27 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		auto createReturn = awst::makeReturnStatement(awst::makeBoolConstant(true, method.sourceLocation), method.sourceLocation);
 		createBlock->body.push_back(createReturn);
 
+		// Initialize the transient-storage blob in scratch slot TRANSIENT_SLOT
+		// before the create/dispatch split, so the constructor body can also
+		// use tload/tstore (the create branch returns before reaching the
+		// post-dispatch preamble below). Scratch slots are per-txn on AVM, so
+		// a fresh bzero(SLOT_SIZE) per app call matches EIP-1153 per-tx
+		// transient semantics; writes persist across callsub within an app
+		// call because scratch slots do.
+		{
+			auto blobSize = awst::makeIntegerConstant(std::to_string(AssemblyBuilder::SLOT_SIZE), method.sourceLocation);
+
+			auto bzeroCall = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), method.sourceLocation);
+			bzeroCall->stackArgs.push_back(std::move(blobSize));
+
+			auto storeOp = awst::makeIntrinsicCall("store", awst::WType::voidType(), method.sourceLocation);
+			storeOp->immediates = {AssemblyBuilder::TRANSIENT_SLOT};
+			storeOp->stackArgs.push_back(std::move(bzeroCall));
+
+			auto exprStmt = awst::makeExpressionStatement(std::move(storeOp), method.sourceLocation);
+			body->body.push_back(std::move(exprStmt));
+		}
+
 		auto ifCreate = std::make_shared<awst::IfElse>();
 		ifCreate->sourceLocation = method.sourceLocation;
 		ifCreate->condition = isCreate;
@@ -3768,40 +3789,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			}
 		}
 
-		// Initialize transient storage blob at method entry
-		// Needed for Solidity transient vars AND assembly tload/tstore
-		// (in the function body *or* any modifier body).
-		auto hasInlineAsmInBlock = [](solidity::frontend::Block const& _blk) {
-			for (auto const& s : _blk.statements())
-				if (dynamic_cast<solidity::frontend::InlineAssembly const*>(s.get()))
-					return true;
-			return false;
-		};
-		bool hasInlineAsm = hasInlineAsmInBlock(_func.body());
-		if (!hasInlineAsm)
-		{
-			for (auto const& modInvocation : _func.modifiers())
-			{
-				auto const* modDef = dynamic_cast<
-					solidity::frontend::ModifierDefinition const*>(
-					modInvocation->name().annotation().referencedDeclaration);
-				// Virtual modifiers without a body (e.g. `modifier mod virtual;`)
-				// have no statements to walk — skip them, otherwise modDef->body()
-				// will trip a Solidity internal assertion.
-				if (modDef && modDef->isImplemented()
-					&& hasInlineAsmInBlock(modDef->body()))
-				{
-					hasInlineAsm = true;
-					break;
-				}
-			}
-		}
-		if (method.arc4MethodConfig.has_value()
-			&& (m_transientStorage.hasTransientVars() || hasInlineAsm))
-		{
-			auto initStmt = m_transientStorage.buildInit(method.sourceLocation);
-			method.body->body.insert(method.body->body.begin(), std::move(initStmt));
-		}
+		// Transient-storage blob init lives in the approval-program preamble
+		// (scratch slot TRANSIENT_SLOT, bzero(SLOT_SIZE)). Per-method init
+		// would reset the blob mid-dispatch, clobbering writes made by
+		// earlier callsub frames in the same app call.
 
 
 		// Modifier inlining strategy depends on codegen mode:
