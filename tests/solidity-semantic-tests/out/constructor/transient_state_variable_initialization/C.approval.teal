@@ -4,25 +4,21 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/transient_state_variable_initialization.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 16
-    bytecblock "x" 0x "y"
     pushint 4096
     bzero
     dup
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "x"
-    bytec_1 // 0x
+    pushbytess "x" 0x
     app_global_put
-    bytec_2 // "y"
-    bytec_1 // 0x
-    app_global_put
-    pushint 100
-    itob
-    bytec_0 // "x"
-    dig 1
-    app_global_put
-    bytec_2 // "y"
+    load 5
+    pushbytes 0x00000000000000000000000000000064
+    replace2 16
+    store 5
+    load 5
+    extract 16 16
+    pushbytes "y"
     swap
     app_global_put
     intc_0 // 1
@@ -35,9 +31,6 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    bytec_0 // "x"
-    bytec_1 // 0x
-    app_global_put
     pushbytes 0x599dbca4 // method "f()uint128"
     txna ApplicationArgs 0
     match main_f_route@4
@@ -65,7 +58,7 @@ f_ternary_merge@4:
     !
     assert // not payable
     intc_1 // 0
-    bytec_2 // "y"
+    pushbytes "y"
     app_global_get_ex
     assert // check y exists
     dup

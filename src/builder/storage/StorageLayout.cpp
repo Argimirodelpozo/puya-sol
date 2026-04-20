@@ -52,6 +52,10 @@ void StorageLayout::computeLayout(
 		{
 			if (var->isConstant() || var->immutable())
 				continue;
+			// Transient vars have their own independent slot namespace (EIP-1153);
+			// TransientStorage computes that layout separately.
+			if (var->referenceLocation() == VariableDeclaration::Location::Transient)
+				continue;
 			// Skip if already seen (inherited and not overridden)
 			bool alreadySeen = false;
 			for (auto const* existing: allVars)

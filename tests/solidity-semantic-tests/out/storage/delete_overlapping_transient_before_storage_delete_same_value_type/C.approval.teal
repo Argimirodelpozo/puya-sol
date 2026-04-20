@@ -4,19 +4,19 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_delete_same_value_type.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock 0x "varStorage" "varTransient"
+    bytecblock "varStorage" 0x
     pushint 4096
     bzero
     dup
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "varTransient"
-    bytec_0 // 0x
+    pushbytes "varTransient"
+    bytec_1 // 0x
     app_global_put
     pushint 1026210852590
     itob
-    bytec_1 // "varStorage"
+    bytec_0 // "varStorage"
     swap
     app_global_put
     intc_0 // 1
@@ -29,9 +29,6 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    bytec_2 // "varTransient"
-    bytec_0 // 0x
-    app_global_put
     txn OnCompletion
     !
     assert
@@ -55,16 +52,26 @@ setAndClear:
 setAndClear_ternary_merge@4:
     !
     assert // not payable
-    bytec_2 // "varTransient"
-    bytec_0 // 0x
-    app_global_put
+    load 5
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000ffffffff
+    replace2 0
+    store 5
+    load 5
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 0
+    store 5
+    load 5
+    extract 0 32
+    bytec_1 // 0x
+    b==
+    assert
     intc_1 // 0
-    bytec_1 // "varStorage"
+    bytec_0 // "varStorage"
     app_global_get_ex
     bury 1
     assert // check varStorage exists
-    bytec_1 // "varStorage"
-    bytec_0 // 0x
+    bytec_0 // "varStorage"
+    bytec_1 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -87,7 +94,7 @@ varStorage_ternary_merge@4:
     !
     assert // not payable
     intc_1 // 0
-    bytec_1 // "varStorage"
+    bytec_0 // "varStorage"
     app_global_get_ex
     assert // check varStorage exists
     dup

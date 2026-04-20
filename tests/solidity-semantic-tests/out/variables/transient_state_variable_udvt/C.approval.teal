@@ -3,16 +3,15 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_udvt.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 64
-    bytecblock "x" 0x151f7c75 0x
+    intcblock 1 0 32
+    bytecblock 0x151f7c75
     pushint 4096
     bzero
     dup
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "x"
-    bytec_2 // 0x
+    pushbytess "x" 0x
     app_global_put
     intc_0 // 1
     return
@@ -24,9 +23,6 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    bytec_0 // "x"
-    bytec_2 // 0x
-    app_global_put
     txn OnCompletion
     !
     assert
@@ -57,25 +53,17 @@ g:
 g_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 0
-    itob
-    bytec_0 // "x"
-    swap
-    app_global_put
+    load 5
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 0
+    store 5
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_udvt.sol.C.f
-    intc_1 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
+    load 5
+    extract 0 32
     intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -99,19 +87,12 @@ h:
 h_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
+    load 5
+    extract 0 32
     intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -135,19 +116,12 @@ x:
 x_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
-    dup
-    len
-    intc_3 // 64
-    <=
-    assert // overflow
-    intc_3 // 64
+    load 5
+    extract 0 32
+    pushint 64
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -171,11 +145,10 @@ x_ternary_false@3:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_udvt.sol.C.f_ternary_merge@3:
     !
     assert // not payable
-    pushint 2
-    itob
-    bytec_0 // "x"
-    swap
-    app_global_put
+    load 5
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+    replace2 0
+    store 5
     retsub
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_udvt.sol.C.f_ternary_false@2:

@@ -3,24 +3,24 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable_abstract_contract.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 64
-    bytecblock 0x "x" "z" "y" "w"
+    intcblock 0 1 64 32
+    bytecblock 0x "y" "w" 0x01
     pushint 4096
     bzero
     dup
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "x"
+    pushbytes "x"
     bytec_0 // 0x
     app_global_put
-    bytec_3 // "y"
+    bytec_1 // "y"
     bytec_0 // 0x
     app_global_put
-    bytec 4 // "w"
+    bytec_2 // "w"
     bytec_0 // 0x
     app_global_put
-    bytec_2 // "z"
+    pushbytes "z"
     bytec_0 // 0x
     app_global_put
     intc_1 // 1
@@ -33,12 +33,6 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    bytec_2 // "z"
-    bytec_0 // 0x
-    app_global_put
-    bytec_1 // "x"
-    bytec_0 // 0x
-    app_global_put
     txn OnCompletion
     !
     assert
@@ -69,46 +63,39 @@ f:
 f_ternary_merge@4:
     !
     assert // not payable
-    intc_0 // 0
-    bytec_1 // "x"
-    app_global_get_ex
-    assert // check x exists
-    pushbytes 0x01
+    load 5
+    intc_3 // 32
+    bzero
+    load 5
+    extract 0 32
+    bytec_3 // 0x01
     b+
-    bytec_1 // "x"
-    swap
-    app_global_put
+    b|
+    extract 0 32
+    replace2 0
+    store 5
     intc_0 // 0
-    bytec_3 // "y"
+    bytec_1 // "y"
     app_global_get_ex
     assert // check y exists
-    pushbytes 0x01
+    bytec_3 // 0x01
     b+
-    bytec_3 // "y"
+    bytec_1 // "y"
     swap
     app_global_put
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable_abstract_contract.sol.C.g
+    load 5
+    extract 0 32
     intc_0 // 0
-    bytec_1 // "x"
-    app_global_get_ex
-    assert // check x exists
-    intc_0 // 0
-    bytec_3 // "y"
+    bytec_1 // "y"
     app_global_get_ex
     assert // check y exists
     intc_0 // 0
-    bytec 4 // "w"
+    bytec_2 // "w"
     app_global_get_ex
     assert // check w exists
-    intc_0 // 0
-    bytec_2 // "z"
-    app_global_get_ex
-    assert // check z exists
-    dig 3
-    len
-    intc_2 // 64
-    <=
-    assert // overflow
+    load 5
+    extract 32 32
     intc_2 // 64
     bzero
     uncover 4
@@ -132,11 +119,6 @@ f_ternary_merge@4:
     dig 2
     b|
     concat
-    dig 2
-    len
-    intc_2 // 64
-    <=
-    assert // overflow
     cover 2
     b|
     concat
@@ -165,23 +147,25 @@ f_ternary_false@3:
     !
     assert // not payable
     intc_0 // 0
-    bytec 4 // "w"
+    bytec_2 // "w"
     app_global_get_ex
     assert // check w exists
     pushbytes 0x02
     b+
-    bytec 4 // "w"
+    bytec_2 // "w"
     swap
     app_global_put
-    intc_0 // 0
-    bytec_2 // "z"
-    app_global_get_ex
-    assert // check z exists
+    load 5
+    intc_3 // 32
+    bzero
+    load 5
+    extract 32 32
     pushbytes 0x02
     b+
-    bytec_2 // "z"
-    swap
-    app_global_put
+    b|
+    extract 0 32
+    replace2 32
+    store 5
     retsub
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable_abstract_contract.sol.C.g_ternary_false@2:

@@ -4,18 +4,18 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/delete_transient_storage.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "x" "a" 0x 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 0x
     pushint 4096
     bzero
     dup
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "x"
-    bytec_2 // 0x
+    pushbytes "x"
+    bytec_1 // 0x
     app_global_put
-    bytec_1 // "a"
-    bytec_3 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    pushbytes "a"
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     app_global_put
     intc_0 // 1
     return
@@ -27,12 +27,6 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    bytec_0 // "x"
-    bytec_2 // 0x
-    app_global_put
-    bytec_1 // "a"
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    app_global_put
     txn OnCompletion
     !
     assert
@@ -57,28 +51,26 @@ f_ternary_merge@4:
     !
     assert // not payable
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/delete_transient_storage.sol.C.g
-    intc_1 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    bury 1
-    assert // check x exists
-    bytec_0 // "x"
-    bytec_2 // 0x
-    app_global_put
-    intc_1 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    bury 1
-    assert // check a exists
-    bytec_1 // "a"
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    app_global_put
-    intc_1 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
-    bytec_2 // 0x
+    load 5
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 0
+    store 5
+    load 5
+    pushbytes 0x0000000000000000000000000000000000000000
+    replace2 44
+    store 5
+    load 5
+    extract 0 32
+    bytec_1 // 0x
     b==
+    assert
+    pushint 12
+    bzero
+    load 5
+    extract 44 20
+    concat
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    ==
     assert
     intc_0 // 1
     return
@@ -107,14 +99,14 @@ g:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/delete_transient_storage.sol.C.g_ternary_merge@3:
     !
     assert // not payable
-    pushint 99
-    itob
-    bytec_0 // "x"
-    swap
-    app_global_put
-    bytec_1 // "a"
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000001234
-    app_global_put
+    load 5
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000063
+    replace2 0
+    store 5
+    load 5
+    pushbytes 0x0000000000000000000000000000000000001234
+    replace2 44
+    store 5
     retsub
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/delete_transient_storage.sol.C.g_ternary_false@2:

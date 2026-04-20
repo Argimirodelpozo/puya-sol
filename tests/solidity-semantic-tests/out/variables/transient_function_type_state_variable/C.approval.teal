@@ -4,15 +4,14 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_function_type_state_variable.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "f" 0x000000000000000000000000 0x000000000000000000000001
+    bytecblock 0x000000000000000000000001
     pushint 4096
     bzero
     dup
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "f"
-    bytec_1 // 0x000000000000000000000000
+    pushbytess "f" 0x000000000000000000000000
     app_global_put
     intc_0 // 1
     return
@@ -24,9 +23,6 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    bytec_0 // "f"
-    bytec_1 // 0x000000000000000000000000
-    app_global_put
     txn OnCompletion
     !
     assert
@@ -70,17 +66,26 @@ test:
 test_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 0
-    bytec_0 // "f"
-    app_global_get_ex
-    assert // check f exists
-    bytec_2 // 0x000000000000000000000001
+    load 5
+    extract 20 12
+    bytec_0 // 0x000000000000000000000001
     !=
     assert
-    bytec_0 // "f"
-    bytec_2 // 0x000000000000000000000001
-    app_global_put
-    pushbytes 0x151f7c7580
+    load 5
+    bytec_0 // 0x000000000000000000000001
+    replace2 20
+    store 5
+    load 5
+    extract 20 12
+    bytec_0 // 0x000000000000000000000001
+    ==
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return

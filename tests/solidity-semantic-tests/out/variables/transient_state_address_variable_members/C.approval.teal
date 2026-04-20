@@ -3,16 +3,15 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_address_variable_members.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    bytecblock "a" 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    intcblock 1 12 32 0
+    bytecblock 0x151f7c75
     pushint 4096
     bzero
     dup
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "a"
-    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    pushbytess "a" base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // "a", addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     app_global_put
     intc_0 // 1
     return
@@ -24,9 +23,6 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    bytec_0 // "a"
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    app_global_put
     txn OnCompletion
     !
     assert
@@ -50,17 +46,23 @@ f:
 f_ternary_merge@4:
     !
     assert // not payable
+    load 5
     txn Sender
-    bytec_0 // "a"
-    dig 1
-    app_global_put
+    extract 12 20
+    replace2 12
+    store 5
+    intc_1 // 12
+    bzero
+    load 5
+    extract 12 20
+    concat
     acct_params_get AcctBalance
     pop
     itob
     intc_2 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -68,7 +70,7 @@ f_ternary_merge@4:
     return
 
 f_ternary_false@3:
-    intc_1 // 0
+    intc_3 // 0
     b f_ternary_merge@4
 
 
@@ -84,17 +86,18 @@ g:
 g_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 0
-    bytec_0 // "a"
-    app_global_get_ex
-    assert // check a exists
+    intc_1 // 12
+    bzero
+    load 5
+    extract 12 20
+    concat
     acct_params_get AcctBalance
     pop
     itob
     intc_2 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -102,5 +105,5 @@ g_ternary_merge@4:
     return
 
 g_ternary_false@3:
-    intc_1 // 0
+    intc_3 // 0
     b g_ternary_merge@4

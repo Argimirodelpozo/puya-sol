@@ -3,15 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_enum_variable.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "myPet"
+    intcblock 1 0 31
     pushint 4096
     bzero
     dup
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "myPet"
+    pushbytes "myPet"
     intc_1 // 0
     app_global_put
     intc_0 // 1
@@ -24,9 +23,6 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    bytec_0 // "myPet"
-    intc_1 // 0
-    app_global_put
     txn OnCompletion
     !
     assert
@@ -50,18 +46,20 @@ f:
 f_ternary_merge@4:
     !
     assert // not payable
-    bytec_0 // "myPet"
-    pushint 2
-    app_global_put
+    load 5
+    pushbytes 0x02
+    replace2 31
+    store 5
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_enum_variable.sol.C.g
-    intc_1 // 0
-    bytec_0 // "myPet"
-    app_global_get_ex
-    assert // check myPet exists
-    dup
+    load 5
+    intc_2 // 31
+    getbyte
     pushint 4
     <
     assert // enum out of range
+    load 5
+    intc_2 // 31
+    getbyte
     intc_0 // 1
     ==
     assert
@@ -92,9 +90,10 @@ g:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_enum_variable.sol.C.g_ternary_merge@3:
     !
     assert // not payable
-    bytec_0 // "myPet"
-    intc_0 // 1
-    app_global_put
+    load 5
+    pushbytes 0x01
+    replace2 31
+    store 5
     retsub
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_enum_variable.sol.C.g_ternary_false@2:

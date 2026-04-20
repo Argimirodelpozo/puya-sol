@@ -4,14 +4,14 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_mapping_delete_same_value_type.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock 0x 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925 "__ctor_pending" "t"
+    bytecblock 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925 "__ctor_pending" 0x
     pushint 4096
     bzero
     dup
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -24,9 +24,6 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    bytec_3 // "t"
-    bytec_0 // 0x
-    app_global_put
     txn OnCompletion
     !
     assert
@@ -40,18 +37,18 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_mapping_delete_same_value_type.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 0
     app_global_put
     pushbytes "m"
     pushint 2
     box_create
     pop
-    bytec_3 // "t"
-    bytec_0 // 0x
+    pushbytes "t"
+    bytec_2 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -71,16 +68,26 @@ setAndClear_ternary_merge@4:
     assert // not payable
     intc_0 // 1
     itob
-    bytec_1 // 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    bytec_0 // 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
     box_del
     pop
-    bytec_1 // 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    bytec_0 // 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
     swap
     box_put
-    bytec_3 // "t"
-    bytec_0 // 0x
-    app_global_put
-    bytec_1 // 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    load 5
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+    replace2 0
+    store 5
+    load 5
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 0
+    store 5
+    load 5
+    extract 0 32
+    bytec_2 // 0x
+    b==
+    assert
+    bytec_0 // 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
     box_del
     pop
     intc_0 // 1
@@ -103,9 +110,9 @@ getM:
 getM_ternary_merge@4:
     !
     assert // not payable
-    bytec_1 // 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    bytec_0 // 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
     box_get
-    bytec_0 // 0x
+    bytec_2 // 0x
     cover 2
     select
     dup

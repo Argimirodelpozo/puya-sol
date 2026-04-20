@@ -153,6 +153,7 @@ public:
 
 	/// Set constructor context: immutable variables are writable during construction.
 	void setTransientStorage(TransientStorage* _ts) { m_transientStorage = _ts; }
+	TransientStorage* transientStorage() const { return m_transientStorage; }
 	void setInConstructor(bool _inConstructor) { m_inConstructor = _inConstructor; }
 	bool inConstructor() const { return m_inConstructor; }
 

@@ -820,9 +820,19 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 					// Read with original storage type (not promoted return type)
 					auto* readType = signedGetterBits > 0
 						? m_typeMapper.map(var->type()) : getter.returnType;
-					readExpr = m_storageMapper.createStateRead(
-						var->name(), readType, storageKind, loc
-					);
+
+					// Transient state vars: route through TransientStorage
+					// (scratch slot TRANSIENT_SLOT packed blob) so the getter
+					// sees the same storage as direct named-var reads/writes.
+					if (var->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Transient
+						&& m_transientStorage.isTransient(*var))
+					{
+						readExpr = m_transientStorage.buildRead(var->name(), readType, loc);
+					}
+					if (!readExpr)
+						readExpr = m_storageMapper.createStateRead(
+							var->name(), readType, storageKind, loc
+						);
 				}
 			}
 			else if (dynamic_cast<solidity::frontend::ArrayType const*>(var->type())
@@ -2486,11 +2496,16 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		// before the create/dispatch split, so the constructor body can also
 		// use tload/tstore (the create branch returns before reaching the
 		// post-dispatch preamble below). Scratch slots are per-txn on AVM, so
-		// a fresh bzero(SLOT_SIZE) per app call matches EIP-1153 per-tx
-		// transient semantics; writes persist across callsub within an app
-		// call because scratch slots do.
+		// a fresh bzero per app call matches EIP-1153 per-tx transient
+		// semantics; writes persist across callsub within an app call because
+		// scratch slots do. Size covers all declared transient vars (packed)
+		// plus at least one slot to back asm tload/tstore when no named vars
+		// are declared.
 		{
-			auto blobSize = awst::makeIntegerConstant(std::to_string(AssemblyBuilder::SLOT_SIZE), method.sourceLocation);
+			unsigned blobBytes = m_transientStorage.blobSize();
+			if (blobBytes < AssemblyBuilder::SLOT_SIZE)
+				blobBytes = AssemblyBuilder::SLOT_SIZE;
+			auto blobSize = awst::makeIntegerConstant(std::to_string(blobBytes), method.sourceLocation);
 
 			auto bzeroCall = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), method.sourceLocation);
 			bzeroCall->stackArgs.push_back(std::move(blobSize));
@@ -2558,47 +2573,10 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		body->body.push_back(std::move(fmpStmt));
 	}
 
-	// Reset transient state vars at the top of the approval program.
-	// On AVM transient state lives in app-global storage (sol-ast builders
-	// don't route through TransientStorage), so we have to clear it once
-	// per outer call to match Solidity's EIP-1153 semantics. The approval
-	// program preamble runs exactly once per app call (before method
-	// dispatch), so the reset doesn't recur for inner subroutine
-	// invocations like `this.f()`. The reset runs after the constructor
-	// `if (create)` branch above so it doesn't interfere with the initial
-	// constructor state writes (those happen inside the create branch).
-	if (m_transientStorage.hasTransientVars())
-	{
-		std::set<std::string> seen;
-		for (auto const* base: _contract.annotation().linearizedBaseContracts)
-		{
-			for (auto const* var: base->stateVariables())
-			{
-				if (var->isConstant() || var->immutable())
-					continue;
-				if (var->referenceLocation()
-					!= solidity::frontend::VariableDeclaration::Location::Transient)
-					continue;
-				if (!seen.insert(var->name()).second)
-					continue;
-				auto* varType = m_typeMapper.map(var->type());
-				if (!varType)
-					continue;
-				auto kind = builder::StorageMapper::shouldUseBoxStorage(*var)
-					? awst::AppStorageKind::Box
-					: awst::AppStorageKind::AppGlobal;
-				auto zero = StorageMapper::makeDefaultValue(
-					varType, method.sourceLocation);
-				auto write = m_storageMapper.createStateWrite(
-					var->name(), std::move(zero), varType, kind,
-					method.sourceLocation);
-				if (!write)
-					continue;
-				auto stmt = awst::makeExpressionStatement(std::move(write), method.sourceLocation);
-				body->body.push_back(std::move(stmt));
-			}
-		}
-	}
+	// Transient state vars live in scratch slot TRANSIENT_SLOT (packed blob,
+	// shared with asm tload/tstore). Scratch is per-txn on AVM, so the
+	// scratch bzero in the preamble above already satisfies EIP-1153 per-tx
+	// reset — no per-call app_global reset needed.
 
 	// Detect fallback and receive functions across the MRO.
 	// Solidity allows only one of each in the linearized hierarchy.

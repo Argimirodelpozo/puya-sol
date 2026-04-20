@@ -3,18 +3,18 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.approval_program() -> uint64:
 main:
-    intcblock 8 0 1 32
-    bytecblock "x" 0xff 0x0100 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    intcblock 8 1 31 0
+    bytecblock 0x0100 0xff 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x01
     pushint 4096
     bzero
     dup
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "x"
-    intc_1 // 0
+    pushbytes "x"
+    intc_3 // 0
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -24,9 +24,6 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    bytec_0 // "x"
-    intc_1 // 0
-    app_global_put
     txn OnCompletion
     !
     assert
@@ -43,19 +40,21 @@ f:
     txn GroupIndex
     bz f_ternary_false@3
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
 f_ternary_merge@4:
     !
     assert // not payable
+    load 5
     intc_0 // 8
     bzero
     dup
-    bytec_0 // "x"
-    pushint 18446744073709551615
-    app_global_put
+    uncover 2
+    bytec_1 // 0xff
+    replace2 31
+    store 5
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.h
     dig 1
     swap
@@ -71,7 +70,7 @@ f_ternary_merge@4:
     extract3
     bytec_1 // 0xff
     b&
-    bytec_3 // 0x80
+    bytec_2 // 0x80
     b>=
     bz f_ternary_false@6
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.h
@@ -89,25 +88,25 @@ f_ternary_merge@4:
     extract3
     bytec_1 // 0xff
     b&
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
-    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 f_ternary_merge@7:
     dup
     len
-    intc_3 // 32
+    pushint 32
     <=
     assert // overflow
-    intc_3 // 32
+    pushint 32
     bzero
     b|
-    bytec 6 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 f_ternary_false@6:
@@ -129,25 +128,25 @@ f_ternary_false@6:
     b f_ternary_merge@7
 
 f_ternary_false@3:
-    intc_1 // 0
+    intc_3 // 0
     b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.g[routing]() -> void:
 g:
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.g
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.h[routing]() -> void:
 h:
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.h
-    bytec 6 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -162,11 +161,11 @@ x:
     pushint 64
     bzero
     b|
-    bytec 6 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -175,84 +174,103 @@ x:
     txn GroupIndex
     bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.g_ternary_false@2
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.g_ternary_merge@3:
     !
     assert // not payable
-    intc_1 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
+    load 5
+    intc_2 // 31
+    getbyte
     itob
-    bytec_2 // 0x0100
+    bytec_0 // 0x0100
     b%
-    bytec_3 // 0x80
+    bytec_2 // 0x80
     b<
     bnz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.g_bool_true@5
-    intc_1 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
+    load 5
+    intc_2 // 31
+    getbyte
     itob
-    bytec_2 // 0x0100
+    bytec_0 // 0x0100
     b%
-    dup
-    bytec_3 // 0x80
+    bytec_2 // 0x80
     b<
     !
-    swap
-    bytec_2 // 0x0100
-    b+
-    pushbytes 0x01
-    b-
-    bytec_2 // 0x0100
+    load 5
+    intc_2 // 31
+    getbyte
+    itob
+    bytec_0 // 0x0100
     b%
-    bytec_3 // 0x80
+    bytec_0 // 0x0100
+    b+
+    bytec 6 // 0x01
+    b-
+    bytec_0 // 0x0100
+    b%
+    bytec_2 // 0x80
     b<
     !
     ==
     bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.g_bool_false@6
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.g_bool_true@5:
-    intc_2 // 1
+    intc_1 // 1
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.g_bool_merge@7:
     assert // signed arithmetic overflow
+    load 5
     intc_0 // 8
     bzero
-    intc_1 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
+    load 5
+    intc_2 // 31
+    getbyte
     itob
-    bytec_2 // 0x0100
+    bytec_0 // 0x0100
     b%
-    bytec_2 // 0x0100
+    bytec_0 // 0x0100
     b+
-    pushbytes 0x01
+    bytec 6 // 0x01
     b-
-    bytec_2 // 0x0100
+    bytec_0 // 0x0100
     b%
+    dig 1
+    swap
     concat
-    dup
+    load 5
+    intc_2 // 31
+    getbyte
+    itob
+    bytec_0 // 0x0100
+    b%
+    bytec_0 // 0x0100
+    b+
+    bytec 6 // 0x01
+    b-
+    bytec_0 // 0x0100
+    b%
+    uncover 2
+    swap
+    concat
     len
     intc_0 // 8
     -
-    extract_uint64
-    bytec_0 // "x"
-    swap
-    app_global_put
+    intc_0 // 8
+    extract3
+    extract 7 1
+    replace2 31
+    store 5
     retsub
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.g_bool_false@6:
-    intc_1 // 0
+    intc_3 // 0
     b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.g_bool_merge@7
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.g_ternary_false@2:
-    intc_1 // 0
+    intc_3 // 0
     b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.g_ternary_merge@3
 
 
@@ -261,7 +279,7 @@ x:
     txn GroupIndex
     bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.h_ternary_false@2
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -287,7 +305,7 @@ x:
     extract3
     bytec_1 // 0xff
     b&
-    bytec_3 // 0x80
+    bytec_2 // 0x80
     b>=
     bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.h_ternary_false@5
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.x
@@ -305,18 +323,18 @@ x:
     extract3
     bytec_1 // 0xff
     b&
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
-    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.h_ternary_merge@6:
     dup
     len
-    intc_3 // 32
+    pushint 32
     <=
     assert // overflow
-    intc_3 // 32
+    pushint 32
     bzero
     b|
     retsub
@@ -340,7 +358,7 @@ x:
     b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.h_ternary_merge@6
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.h_ternary_false@2:
-    intc_1 // 0
+    intc_3 // 0
     b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.h_ternary_merge@3
 
 
@@ -349,46 +367,43 @@ x:
     txn GroupIndex
     bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.x_ternary_false@2
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.x_ternary_merge@3:
     !
     assert // not payable
-    intc_1 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
+    load 5
+    intc_2 // 31
+    getbyte
     itob
     bytec_1 // 0xff
     b&
-    bytec_3 // 0x80
+    bytec_2 // 0x80
     b>=
     bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.x_ternary_false@5
-    intc_1 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
+    load 5
+    intc_2 // 31
+    getbyte
     itob
     bytec_1 // 0xff
     b&
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
-    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     retsub
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.x_ternary_false@5:
-    intc_1 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
+    load 5
+    intc_2 // 31
+    getbyte
     itob
     bytec_1 // 0xff
     b&
     retsub
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.x_ternary_false@2:
-    intc_1 // 0
+    intc_3 // 0
     b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.x_ternary_merge@3

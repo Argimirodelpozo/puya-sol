@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_struct_delete_same_value_type.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "s" "t" 0x
+    bytecblock "s" 0x
     pushint 4096
     bzero
     dup
@@ -14,8 +14,8 @@ main:
     bytec_0 // "s"
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000001234
     app_global_put
-    bytec_1 // "t"
-    bytec_2 // 0x
+    pushbytes "t"
+    bytec_1 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -27,9 +27,6 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    bytec_1 // "t"
-    bytec_2 // 0x
-    app_global_put
     txn OnCompletion
     !
     assert
@@ -53,9 +50,19 @@ setAndDelete:
 setAndDelete_ternary_merge@4:
     !
     assert // not payable
-    bytec_1 // "t"
-    bytec_2 // 0x
-    app_global_put
+    load 5
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+    replace2 0
+    store 5
+    load 5
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 0
+    store 5
+    load 5
+    extract 0 32
+    bytec_1 // 0x
+    b==
+    assert
     intc_1 // 0
     bytec_0 // "s"
     app_global_get_ex

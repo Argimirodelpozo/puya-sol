@@ -4,23 +4,23 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 16777215 64
-    bytecblock "z" "y" 0xffffff "x" "w" 0x800000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytecblock "y" 0xffffff "w" 0x800000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000 0x010000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_3 // "x"
+    pushbytes "x"
     intc_0 // 0
     app_global_put
-    bytec_1 // "y"
+    bytec_0 // "y"
     intc_0 // 0
     app_global_put
-    bytec 4 // "w"
+    bytec_2 // "w"
     intc_0 // 0
     app_global_put
-    bytec_0 // "z"
+    pushbytes "z"
     intc_0 // 0
     app_global_put
     intc_1 // 1
@@ -33,12 +33,6 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    bytec_0 // "z"
-    intc_0 // 0
-    app_global_put
-    bytec_3 // "x"
-    intc_0 // 0
-    app_global_put
     pushbytes 0x24efe58c // method "f()(uint64,uint512,uint64,uint512)"
     txna ApplicationArgs 0
     match main_f_route@4
@@ -68,30 +62,32 @@ f:
 f_ternary_merge@4:
     !
     assert // not payable
-    intc_0 // 0
-    bytec_3 // "x"
-    app_global_get_ex
-    assert // check x exists
+    load 5
+    extract 29 3
+    btoi
     intc_1 // 1
     +
     dup
     intc_2 // 16777215
     <=
     assert // overflow
-    bytec_3 // "x"
+    load 5
     swap
-    app_global_put
+    itob
+    extract 5 3
+    replace2 29
+    store 5
     intc_0 // 0
-    bytec_1 // "y"
+    bytec_0 // "y"
     app_global_get_ex
     assert // check y exists
     pushint 2
     +
-    bytec_1 // "y"
+    bytec_0 // "y"
     swap
     app_global_put
     intc_0 // 0
-    bytec 4 // "w"
+    bytec_2 // "w"
     app_global_get_ex
     assert // check w exists
     pushint 3
@@ -100,76 +96,74 @@ f_ternary_merge@4:
     intc_2 // 16777215
     <=
     assert // overflow
-    bytec 4 // "w"
+    bytec_2 // "w"
     swap
     app_global_put
-    intc_0 // 0
-    bytec_0 // "z"
-    app_global_get_ex
-    assert // check z exists
+    load 5
+    dup
+    extract 26 3
+    btoi
     pushint 4
     +
-    bytec_0 // "z"
-    swap
-    app_global_put
-    intc_0 // 0
-    bytec_3 // "x"
-    app_global_get_ex
-    assert // check x exists
+    itob
+    extract 5 3
+    replace2 26
+    store 5
+    load 5
+    extract 29 3
+    btoi
     intc_2 // 16777215
     &
     bury 2
     intc_0 // 0
-    bytec_1 // "y"
+    bytec_0 // "y"
     app_global_get_ex
     assert // check y exists
     itob
-    bytec_2 // 0xffffff
+    bytec_1 // 0xffffff
     b&
-    bytec 5 // 0x800000
+    bytec_3 // 0x800000
     b>=
     bz f_ternary_false@6
     intc_0 // 0
-    bytec_1 // "y"
+    bytec_0 // "y"
     app_global_get_ex
     assert // check y exists
     itob
-    bytec_2 // 0xffffff
+    bytec_1 // 0xffffff
     b&
-    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
     b+
-    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bury 3
 
 f_ternary_merge@7:
     intc_0 // 0
-    bytec 4 // "w"
+    bytec_2 // "w"
     app_global_get_ex
     assert // check w exists
     intc_2 // 16777215
     &
     bury 1
-    intc_0 // 0
-    bytec_0 // "z"
-    app_global_get_ex
-    assert // check z exists
+    load 5
+    extract 26 3
+    btoi
     itob
-    bytec_2 // 0xffffff
+    bytec_1 // 0xffffff
     b&
-    bytec 5 // 0x800000
+    bytec_3 // 0x800000
     b>=
     bz f_ternary_false@9
-    intc_0 // 0
-    bytec_0 // "z"
-    app_global_get_ex
-    assert // check z exists
+    load 5
+    extract 26 3
+    btoi
     itob
-    bytec_2 // 0xffffff
+    bytec_1 // 0xffffff
     b&
-    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
     b+
-    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 f_ternary_merge@10:
@@ -209,22 +203,21 @@ f_ternary_merge@10:
     return
 
 f_ternary_false@9:
-    intc_0 // 0
-    bytec_0 // "z"
-    app_global_get_ex
-    assert // check z exists
+    load 5
+    extract 26 3
+    btoi
     itob
-    bytec_2 // 0xffffff
+    bytec_1 // 0xffffff
     b&
     b f_ternary_merge@10
 
 f_ternary_false@6:
     intc_0 // 0
-    bytec_1 // "y"
+    bytec_0 // "y"
     app_global_get_ex
     assert // check y exists
     itob
-    bytec_2 // 0xffffff
+    bytec_1 // 0xffffff
     b&
     bury 3
     b f_ternary_merge@7

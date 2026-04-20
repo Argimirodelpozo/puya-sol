@@ -3,16 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.B.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    bytecblock "value" 0x
+    intcblock 1 32 0
     pushint 4096
     bzero
     dup
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "value"
-    bytec_1 // 0x
+    pushbytess "value" 0x
     app_global_put
     intc_0 // 1
     return
@@ -24,9 +22,6 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    bytec_0 // "value"
-    bytec_1 // 0x
-    app_global_put
     txn OnCompletion
     !
     assert
@@ -43,7 +38,7 @@ setValue:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -56,20 +51,22 @@ setValue:
 setValue_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 0
-    bytec_0 // "value"
-    app_global_get_ex
-    assert // check value exists
-    dig 1
+    load 5
+    intc_1 // 32
+    bzero
+    load 5
+    extract 0 32
+    dig 3
     b+
-    bytec_0 // "value"
-    swap
-    app_global_put
+    b|
+    extract 0 32
+    replace2 0
+    store 5
     intc_0 // 1
     return
 
 setValue_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b setValue_ternary_merge@4
 
 
@@ -85,16 +82,9 @@ value:
 value_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 0
-    bytec_0 // "value"
-    app_global_get_ex
-    assert // check value exists
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
+    load 5
+    extract 0 32
+    intc_1 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -105,5 +95,5 @@ value_ternary_merge@4:
     return
 
 value_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b value_ternary_merge@4

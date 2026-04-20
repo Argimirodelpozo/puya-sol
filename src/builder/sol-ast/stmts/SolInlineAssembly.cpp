@@ -2,9 +2,11 @@
 /// Migrated from InlineAssemblyBuilder.cpp.
 
 #include "builder/sol-ast/stmts/SolInlineAssembly.h"
+#include "builder/ExpressionBuilder.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/storage/StorageLayout.h"
+#include "builder/storage/TransientStorage.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/Types.h>
@@ -175,20 +177,44 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				std::string yulName = yulId->name.str();
 				std::string suffix = extInfo.suffix;
 
-				auto const* varInfo = layout.getVarInfo(varDecl->name());
-				if (!varInfo) continue;
+				// Transient vars live in a separate slot namespace; resolve
+				// via TransientStorage, which mirrors the packed layout but
+				// with its own slot numbering (EIP-1153).
+				bool isTransient = varDecl->referenceLocation() == VariableDeclaration::Location::Transient;
+				unsigned slotNum = 0, byteOffset = 0;
+				bool resolved = false;
+				if (isTransient)
+				{
+					auto* ts = m_ctx.exprBuilder ? m_ctx.exprBuilder->transientStorage() : nullptr;
+					if (ts)
+					{
+						if (auto const* tv = ts->getVarInfo(varDecl->name()))
+						{
+							slotNum = tv->slot;
+							byteOffset = tv->byteOffset;
+							resolved = true;
+						}
+					}
+				}
+				else
+				{
+					if (auto const* varInfo = layout.getVarInfo(varDecl->name()))
+					{
+						slotNum = varInfo->slot;
+						byteOffset = varInfo->byteOffset;
+						resolved = true;
+					}
+				}
+				if (!resolved) continue;
 
 				if (suffix == "slot")
 				{
-
-					// z.slot → slot number as constant, plus slot→varName mapping
-					constants[yulName] = std::to_string(varInfo->slot);
+					constants[yulName] = std::to_string(slotNum);
 					storageSlotVars[yulName] = varDecl->name();
 				}
 				else if (suffix == "offset")
 				{
-					// y.offset → byte offset within the 32-byte slot
-					constants[yulName] = std::to_string(varInfo->byteOffset);
+					constants[yulName] = std::to_string(byteOffset);
 				}
 			}
 		}

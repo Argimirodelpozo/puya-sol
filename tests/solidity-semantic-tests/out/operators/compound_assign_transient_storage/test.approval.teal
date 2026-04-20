@@ -3,21 +3,21 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/operators/compound_assign_transient_storage.sol.test.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    bytecblock "value2" "value1" 0x
+    intcblock 1 32 0
+    bytecblock "value1" 0x
     pushint 4096
     bzero
     dup
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "value1"
-    bytec_2 // 0x
+    bytec_0 // "value1"
+    bytec_1 // 0x
     app_global_put
-    bytec_0 // "value2"
-    bytec_2 // 0x
+    pushbytes "value2"
+    bytec_1 // 0x
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -27,9 +27,6 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    bytec_0 // "value2"
-    bytec_2 // 0x
-    app_global_put
     pushbytes 0x2b9082ff // method "f(uint256,uint256)uint256"
     txna ApplicationArgs 0
     match main_f_route@4
@@ -49,19 +46,19 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz f_ternary_false@3
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -69,45 +66,53 @@ f_ternary_merge@4:
     !
     assert // not payable
     intc_2 // 0
-    bytec_1 // "value1"
+    bytec_0 // "value1"
     app_global_get_ex
     assert // check value1 exists
     dig 2
     dup
     cover 2
     b+
-    bytec_1 // "value1"
+    bytec_0 // "value1"
     dig 1
     app_global_put
     dig 2
     uncover 2
     b*
-    intc_2 // 0
-    bytec_0 // "value2"
-    app_global_get_ex
-    assert // check value2 exists
-    swap
+    load 5
+    intc_1 // 32
+    bzero
+    load 5
+    extract 0 32
+    uncover 3
+    uncover 4
+    b+
+    b+
+    dig 1
+    b|
+    extract 0 32
     uncover 2
-    b+
-    b+
+    swap
+    replace2 0
+    store 5
+    load 5
+    dup
+    extract 0 32
     pushbytes 0x07
     b+
-    bytec_0 // "value2"
-    dig 1
-    app_global_put
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
+    dig 2
+    b|
+    extract 0 32
+    replace2 0
+    store 5
+    load 5
+    extract 0 32
     b|
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 f_ternary_false@3:

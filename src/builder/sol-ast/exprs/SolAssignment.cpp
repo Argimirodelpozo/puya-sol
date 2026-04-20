@@ -4,6 +4,7 @@
 #include "builder/sol-ast/exprs/SolAssignment.h"
 #include "builder/sol-eb/AssignmentHelper.h"
 #include "builder/storage/StorageMapper.h"
+#include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
@@ -489,6 +490,53 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 {
 	Token op = m_assignment.assignmentOperator();
+
+	// Transient state var write: intercept before the generic path so the
+	// write goes through TransientStorage (scratch slot TRANSIENT_SLOT
+	// packed blob) rather than through the app_global storage mapper.
+	// Covers simple `x = v` and compound `x += v` forms for identifier LHS.
+	if (auto const* lhsIdent = dynamic_cast<Identifier const*>(&m_assignment.leftHandSide()))
+	{
+		auto const* lhsDecl = dynamic_cast<VariableDeclaration const*>(
+			lhsIdent->annotation().referencedDeclaration);
+		if (lhsDecl && lhsDecl->isStateVariable()
+			&& lhsDecl->referenceLocation() == VariableDeclaration::Location::Transient
+			&& m_ctx.transientStorage
+			&& m_ctx.transientStorage->isTransient(*lhsDecl))
+		{
+			auto* ts = m_ctx.transientStorage;
+			auto* varType = m_ctx.typeMapper.map(lhsDecl->type());
+			auto rhs = buildExpr(m_assignment.rightHandSide());
+
+			std::shared_ptr<awst::Expression> newValue;
+			if (op == Token::Assign)
+			{
+				newValue = std::move(rhs);
+			}
+			else
+			{
+				auto currentValue = ts->buildRead(lhsIdent->name(), varType, m_loc);
+				auto* solType = m_assignment.leftHandSide().annotation().type;
+				auto builderResult = eb::AssignmentHelper::tryComputeCompoundValue(
+					m_ctx, op, solType, currentValue, rhs, m_loc);
+				if (builderResult)
+					newValue = std::move(builderResult);
+				else
+					newValue = m_ctx.buildBinaryOp(
+						op, std::move(currentValue), std::move(rhs), varType, m_loc);
+			}
+
+			newValue = builder::TypeCoercion::coerceForAssignment(std::move(newValue), varType, m_loc);
+
+			auto stmt = ts->buildWrite(lhsIdent->name(), newValue, m_loc);
+			if (stmt)
+				m_ctx.pendingStatements.push_back(std::move(stmt));
+
+			// Return the new value so assignment-as-expression yields the
+			// written value (Solidity semantics).
+			return ts->buildRead(lhsIdent->name(), varType, m_loc);
+		}
+	}
 
 	// Storage pointer reassignment: `mapping storage m = m1; ...; m = m2;`
 	// The LHS is a local with Storage reference location. There is no

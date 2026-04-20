@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "__ctor_pending" "t" 0x "large" "small"
+    bytecblock "__ctor_pending" "large" "small" 0x
     pushint 4096
     bzero
     dup
@@ -24,9 +24,6 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    bytec_1 // "t"
-    bytec_2 // 0x
-    app_global_put
     txn OnCompletion
     !
     assert
@@ -46,15 +43,15 @@ __postInit:
     bytec_0 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    bytec_3 // "large"
+    bytec_1 // "large"
     pushint 128
     box_create
     pop
-    bytec 4 // "small"
+    bytec_2 // "small"
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     app_global_put
-    bytec_1 // "t"
-    bytec_2 // 0x
+    pushbytes "t"
+    bytec_3 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -72,21 +69,24 @@ setAndClear:
 setAndClear_ternary_merge@4:
     !
     assert // not payable
-    bytec 4 // "small"
+    bytec_2 // "small"
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000014
     app_global_put
-    bytec_1 // "t"
-    bytec_2 // 0x
-    app_global_put
-    intc_1 // 0
-    bytec 4 // "small"
-    app_global_get_ex
-    assert // check small exists
-    pushint 64
-    bzero
-    concat
-    bytec_3 // "large"
-    swap
+    load 5
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000063
+    replace2 0
+    store 5
+    load 5
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 0
+    store 5
+    load 5
+    extract 0 32
+    bytec_3 // 0x
+    b==
+    assert
+    bytec_1 // "large"
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000001400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     box_put
     intc_0 // 1
     return
@@ -108,7 +108,7 @@ getLarge:
 getLarge_ternary_merge@4:
     !
     assert // not payable
-    bytec_3 // "large"
+    bytec_1 // "large"
     box_get
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2

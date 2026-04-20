@@ -6,6 +6,7 @@
 #include "builder/sol-eb/NodeBuilder.h"
 #include "builder/sol-eb/BuilderOps.h"
 #include "builder/storage/StorageMapper.h"
+#include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
 
 #include <libsolidity/ast/AST.h>
@@ -296,6 +297,52 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 	bool isPrefix = m_unaryOp.isPrefixOperation();
 	bool isInc = (m_unaryOp.getOperator() == Token::Inc);
 
+	// Transient state variable inc/dec: read/compute/write via TransientStorage.
+	// The normal path builds an AssignmentStatement with the read expr as
+	// target, which isn't an lvalue for packed transient slots.
+	if (auto const* ident = dynamic_cast<Identifier const*>(&m_unaryOp.subExpression()))
+	{
+		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
+				ident->annotation().referencedDeclaration))
+		{
+			if (varDecl->isStateVariable()
+				&& varDecl->referenceLocation() == VariableDeclaration::Location::Transient
+				&& m_ctx.transientStorage
+				&& m_ctx.transientStorage->isTransient(*varDecl))
+			{
+				auto const* info = m_ctx.transientStorage->getVarInfoById(varDecl->id());
+				auto* wt = info ? info->wtype : _operand->wtype;
+				auto one = (wt == awst::WType::biguintType())
+					? awst::makeIntegerConstant("1", m_loc, awst::WType::biguintType())
+					: awst::makeIntegerConstant("1", m_loc);
+				std::shared_ptr<awst::Expression> newValue;
+				if (wt == awst::WType::biguintType())
+					newValue = awst::makeBigUIntBinOp(_operand,
+						isInc ? awst::BigUIntBinaryOperator::Add : awst::BigUIntBinaryOperator::Sub,
+						std::move(one), m_loc);
+				else
+					newValue = awst::makeUInt64BinOp(_operand,
+						isInc ? awst::UInt64BinaryOperator::Add : awst::UInt64BinaryOperator::Sub,
+						std::move(one), m_loc);
+				auto writeStmt = m_ctx.transientStorage->buildWrite(
+					varDecl->name(), newValue, m_loc);
+				if (!writeStmt)
+					return _operand;
+				if (isPrefix)
+				{
+					m_ctx.prePendingStatements.push_back(std::move(writeStmt));
+					// Re-read for the expression value (post-update)
+					return m_ctx.transientStorage->buildRead(varDecl->name(), wt, m_loc);
+				}
+				else
+				{
+					m_ctx.pendingStatements.push_back(std::move(writeStmt));
+					return _operand;
+				}
+			}
+		}
+	}
+
 	bool isSigned = false;
 	if (auto const* intType = dynamic_cast<IntegerType const*>(
 			m_unaryOp.subExpression().annotation().type))
@@ -507,6 +554,30 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 	std::shared_ptr<awst::Expression> _operand)
 {
+	// Transient state variable delete: write zero via TransientStorage.
+	// Intercept before building the expression so we skip the non-lvalue read.
+	if (auto const* ident = dynamic_cast<Identifier const*>(&m_unaryOp.subExpression()))
+	{
+		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
+				ident->annotation().referencedDeclaration))
+		{
+			if (varDecl->isStateVariable()
+				&& varDecl->referenceLocation() == VariableDeclaration::Location::Transient
+				&& m_ctx.transientStorage
+				&& m_ctx.transientStorage->isTransient(*varDecl))
+			{
+				auto const* info = m_ctx.transientStorage->getVarInfoById(varDecl->id());
+				auto* wt = info ? info->wtype : m_ctx.typeMapper.map(varDecl->type());
+				auto zero = builder::StorageMapper::makeDefaultValue(wt, m_loc);
+				if (auto stmt = m_ctx.transientStorage->buildWrite(
+						varDecl->name(), std::move(zero), m_loc))
+					m_ctx.pendingStatements.push_back(std::move(stmt));
+				m_ctx.funcPtrTargets.erase(varDecl->id());
+				return _operand;
+			}
+		}
+	}
+
 	auto target = buildExpr(m_unaryOp.subExpression());
 
 	// Clear function pointer tracking on delete (e.g., delete y where y is a func ptr)

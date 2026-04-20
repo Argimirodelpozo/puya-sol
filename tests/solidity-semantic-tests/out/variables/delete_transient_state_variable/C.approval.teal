@@ -3,15 +3,13 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/delete_transient_state_variable.sol.C.approval_program() -> uint64:
 main:
-    bytecblock "x" 0x
     pushint 4096
     bzero
     dup
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "x"
-    bytec_1 // 0x
+    pushbytess "x" 0x
     app_global_put
     pushint 1
     return
@@ -23,9 +21,6 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    bytec_0 // "x"
-    bytec_1 // 0x
-    app_global_put
     pushbytes 0xcd78b354 // method "f()uint256"
     txna ApplicationArgs 0
     match main_f_route@4
@@ -52,10 +47,22 @@ f:
 f_ternary_merge@4:
     !
     assert // not payable
-    bytec_0 // "x"
-    bytec_1 // 0x
-    app_global_put
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    load 5
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a
+    replace2 0
+    store 5
+    load 5
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 0
+    store 5
+    load 5
+    extract 0 32
+    pushint 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
     pushint 1
     return
