@@ -1070,9 +1070,20 @@ def _regroup_args(raw_args, method_sig):
                     if isinstance(length, int):
                         data_start = word_idx + 1
                         if pt in dynamic_types:
-                            # string/bytes: collect data words and concatenate
+                            # string/bytes: collect data words and concatenate.
+                            # If the declared length exceeds the actually-
+                            # available calldata bytes (words after data_start),
+                            # EVM reverts on ABI decode — emit a malformed
+                            # sentinel so the compiler's length assert fires
+                            # on AVM too. This mirrors revertStrings/
+                            # invalid_abi_decoding_calldata_v1 case where the
+                            # inner length pointer is bogus.
+                            avail_bytes = max(0, len(raw_args) - data_start) * 32
                             if length == 0:
                                 result.append("" if pt == 'string' else b"")
+                            elif isinstance(length, int) and int(length) > avail_bytes:
+                                clamped = min(int(length), 0xFFFF)
+                                result.append(_MalformedArc4(clamped.to_bytes(2, 'big')))
                             elif data_start < len(raw_args) and length <= 10000:
                                 val = raw_args[data_start]
                                 if isinstance(val, bytes):
