@@ -2586,7 +2586,7 @@ def main():
         icon = {"PASS": "✓", "FAIL": "✗",
                 "COMPILE_ERROR": "⚠", "DEPLOY_ERROR": "⚠"}.get(status, "?")
         short_detail = detail.split("\n")[0][:60]
-        print(f"  {icon} {test.name}: {short_detail}")
+        print(f"  {icon} {test.name}: {short_detail}", flush=True)
 
         # Progress report every 50 tests
         if tests_done % 50 == 0:
