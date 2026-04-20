@@ -7,6 +7,10 @@ main:
     bytecblock 0x "x" 0x151f7c75
     bytec_0 // ""
     dup
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "x"
@@ -16,8 +20,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
@@ -33,7 +36,7 @@ main_after_if_else@2:
 
 main_after_if_else@4:
     intc_1 // 0
-    bury 2
+    bury 3
     txn OnCompletion
     !
     assert
@@ -44,42 +47,43 @@ main_after_if_else@4:
     match main___fallback_route@9 main_f_route@10 main_x_route@11
 
 main_switch_case_next@12:
-    dig 1
-    bury 1
+    dig 2
+    bury 2
 
 main_after_if_else@14:
-    dup
+    dig 1
     bnz main_after_if_else@6
     txna ApplicationArgs 0
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_argument.sol.A.__fallback
     pop
     intc_0 // 1
-    bury 1
+    bury 2
 
 main_after_if_else@6:
+    dig 1
     return
 
 main_x_route@11:
     callsub x
     intc_0 // 1
-    bury 2
+    bury 3
     b main_switch_case_next@12
 
 main_f_route@10:
     callsub f
     intc_0 // 1
-    bury 2
+    bury 3
     b main_switch_case_next@12
 
 main___fallback_route@9:
     callsub __fallback
     intc_0 // 1
-    bury 2
+    bury 3
     b main_switch_case_next@12
 
 main_create_NoOp@13:
-    dig 1
-    bury 1
+    dig 2
+    bury 2
     b main_after_if_else@14
 
 

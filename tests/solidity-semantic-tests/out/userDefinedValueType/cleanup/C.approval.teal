@@ -5,6 +5,10 @@
 main:
     intcblock 1 0 255 8 511
     bytecblock 0x151f7c75 "a" "c" "b"
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "a"
@@ -20,8 +24,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080

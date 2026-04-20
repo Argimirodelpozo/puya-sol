@@ -3,16 +3,19 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_sanity_checks.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 160 8192
+    intcblock 1 0 8192 64
     bytecblock "__dyn_storage" 0x000000000000000000000000000000000000000000000000000000000000002a
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
@@ -41,24 +44,22 @@ f:
 f_ternary_merge@4:
     !
     assert // not payable
-    intc_2 // 160
-    bzero
     load 0
-    swap
+    load 5
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000015
     replace2 0
-    swap
+    store 5
     bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000002a
     replace2 0
     bytec_0 // "__dyn_storage"
-    intc_3 // 8192
+    intc_2 // 8192
     box_create
     pop
     bytec_0 // "__dyn_storage"
     intc_1 // 0
     bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000002a
     box_replace
-    swap
+    load 5
     extract 0 32
     pushbytes 0x15
     b==
@@ -86,11 +87,9 @@ g:
 g_ternary_merge@4:
     !
     assert // not payable
-    intc_2 // 160
-    bzero
     load 0
     bytec_0 // "__dyn_storage"
-    intc_3 // 8192
+    intc_2 // 8192
     box_create
     pop
     bytec_0 // "__dyn_storage"
@@ -99,16 +98,16 @@ g_ternary_merge@4:
     box_extract
     dig 1
     extract 0 32
-    uncover 3
+    load 5
     extract 0 32
     uncover 3
     store 0
     dig 2
     len
-    pushint 64
+    intc_3 // 64
     <=
     assert // overflow
-    pushint 64
+    intc_3 // 64
     bzero
     uncover 3
     dig 1

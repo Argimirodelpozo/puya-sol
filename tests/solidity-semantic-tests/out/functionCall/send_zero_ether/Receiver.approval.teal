@@ -4,14 +4,17 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/send_zero_ether.sol.Receiver.approval_program() -> uint64:
 main:
     pushbytes ""
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     pushint 1
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
@@ -24,10 +27,11 @@ main_after_if_else@2:
 
 main_after_if_else@4:
     pushint 0
-    bury 1
+    bury 2
     pushbytes 0xc599eb05 // method "__receive()void"
     txna ApplicationArgs 0
     match main___receive_route@6
+    dig 1
     return
 
 main___receive_route@6:

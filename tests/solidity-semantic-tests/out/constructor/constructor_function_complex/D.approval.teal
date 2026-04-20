@@ -4,6 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_function_complex.sol.D.approval_program() -> uint64:
 main:
     intcblock 0 1 32
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@6
     txna ApplicationArgs 0
@@ -33,8 +37,7 @@ main:
     return
 
 main_after_if_else@6:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080

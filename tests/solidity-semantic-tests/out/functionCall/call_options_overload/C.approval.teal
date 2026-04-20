@@ -5,14 +5,17 @@
 main:
     intcblock 1 32 0
     pushbytes ""
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
@@ -25,7 +28,7 @@ main_after_if_else@2:
 
 main_after_if_else@4:
     intc_2 // 0
-    bury 1
+    bury 2
     txn OnCompletion
     !
     assert
@@ -36,40 +39,41 @@ main_after_if_else@4:
     match main_f_route@7 main_f_route@8 main_call_route@9 main_bal_route@10 main___receive_route@11
 
 main_switch_case_next@12:
+    dig 1
     return
 
 main___receive_route@11:
     intc_0 // 1
-    bury 1
+    bury 2
     b main_switch_case_next@12
 
 main_bal_route@10:
     callsub bal
     intc_0 // 1
-    bury 1
+    bury 2
     b main_switch_case_next@12
 
 main_call_route@9:
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002
     log
     intc_0 // 1
-    bury 1
+    bury 2
     b main_switch_case_next@12
 
 main_f_route@8:
     callsub f(u256,u256)
     intc_0 // 1
-    bury 1
+    bury 2
     b main_switch_case_next@12
 
 main_f_route@7:
     callsub f(u256)
     intc_0 // 1
-    bury 1
+    bury 2
     b main_switch_case_next@12
 
 main_create_NoOp@13:
-    dup
+    dig 1
     return
 
 

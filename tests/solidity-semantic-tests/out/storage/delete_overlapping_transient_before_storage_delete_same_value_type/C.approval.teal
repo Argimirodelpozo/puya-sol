@@ -5,6 +5,10 @@
 main:
     intcblock 1 0 32
     bytecblock 0x "varStorage" "varTransient"
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_2 // "varTransient"
@@ -19,8 +23,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080

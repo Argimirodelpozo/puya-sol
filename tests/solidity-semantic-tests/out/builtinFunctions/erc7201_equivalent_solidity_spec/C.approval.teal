@@ -5,6 +5,10 @@
 main:
     intcblock 0 1 32
     bytecblock 0x01 "namespace" "example.main" 0x00 "expectedSlot" 0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     bytec 4 // "expectedSlot"
@@ -17,8 +21,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080

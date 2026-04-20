@@ -1,10 +1,14 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_qgqio_mt/B.sol.C.approval_program() -> uint64:
+// /tmp/multisource_1u58zjpc/B.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1
     bytecblock "data"
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "data"
@@ -14,8 +18,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
@@ -35,13 +38,13 @@ main_f_route@4:
     b f
 
 
-// /tmp/multisource_qgqio_mt/B.sol.set(a: bytes, v: bytes) -> void:
+// /tmp/multisource_1u58zjpc/B.sol.set(a: bytes, v: bytes) -> void:
 set:
     proto 2 0
     retsub
 
 
-// /tmp/multisource_qgqio_mt/B.sol.C.f[routing]() -> void:
+// /tmp/multisource_1u58zjpc/B.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
     dup

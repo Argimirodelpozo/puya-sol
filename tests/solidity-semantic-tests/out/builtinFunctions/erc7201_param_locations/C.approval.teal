@@ -5,6 +5,10 @@
 main:
     intcblock 0 1 32 2
     bytecblock 0x00 0x151f7c75 0x01 "example.contract" "example.main" "storageVarStr" 0x010000000000000000000000000000000000000000000000000000000000000000 0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     bytec 5 // "storageVarStr"
@@ -14,8 +18,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080

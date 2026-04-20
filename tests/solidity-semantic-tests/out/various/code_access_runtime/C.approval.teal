@@ -5,14 +5,17 @@
 main:
     intcblock 1 0 32 16
     bytecblock 0x 0x64 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470 TMPL_APPROVAL_D TMPL_CLEAR_D
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080

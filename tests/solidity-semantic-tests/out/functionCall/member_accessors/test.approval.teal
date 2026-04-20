@@ -5,6 +5,10 @@
 main:
     intcblock 1 0 32
     bytecblock 0x151f7c75 "data" "name" "a_hash" "an_address" 0x0000000000000000000000000000000000000000000000000000000000000000 "super_secret_data"
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "data"
@@ -45,8 +49,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080

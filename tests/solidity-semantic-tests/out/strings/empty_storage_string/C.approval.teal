@@ -5,6 +5,10 @@
 main:
     intcblock 0 1 32 31
     bytecblock 0x151f7c75 "emptyBytes" "uninitializedString" "emptyString" "nonEmptyString" "__ctor_pending" 0x0004 0x0000000000000000000000000000000000000000000000000000000000000020 "nonEmptyString2"
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     bytec 5 // "__ctor_pending"
@@ -14,8 +18,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080

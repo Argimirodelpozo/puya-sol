@@ -1,17 +1,20 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_6c_0gt3t/s2.sol.C.approval_program() -> uint64:
+// /tmp/multisource_lqr5fyaj/s2.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
@@ -28,7 +31,7 @@ main_after_if_else@2:
     err
 
 
-// /tmp/multisource_6c_0gt3t/s2.sol.C.a[routing]() -> void:
+// /tmp/multisource_lqr5fyaj/s2.sol.C.a[routing]() -> void:
 a:
     txn GroupIndex
     bz a_ternary_false@3
@@ -47,7 +50,7 @@ a_ternary_false@3:
     b a_ternary_merge@4
 
 
-// /tmp/multisource_6c_0gt3t/s2.sol.C.b[routing]() -> void:
+// /tmp/multisource_lqr5fyaj/s2.sol.C.b[routing]() -> void:
 b:
     txn GroupIndex
     bz b_ternary_false@3

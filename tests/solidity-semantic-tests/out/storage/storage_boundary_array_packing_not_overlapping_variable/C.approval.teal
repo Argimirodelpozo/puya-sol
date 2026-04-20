@@ -5,6 +5,10 @@
 main:
     intcblock 1 0 32 8 18446744073709551615
     bytecblock 0x "__dyn_storage"
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     load 0
@@ -13,8 +17,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080

@@ -7,6 +7,10 @@ main:
     bytecblock 0x "data" "__ctor_pending" "balance" 0x151f7c75 "externalData"
     bytec_0 // ""
     dup
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_2 // "__ctor_pending"
@@ -16,8 +20,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
@@ -31,7 +34,7 @@ main_after_if_else@2:
 
 main_after_if_else@4:
     intc_0 // 0
-    bury 2
+    bury 3
     txn OnCompletion
     !
     assert
@@ -42,52 +45,53 @@ main_after_if_else@4:
     match main___postInit_route@9 main___fallback_route@10 main_data_route@11 main_balance_route@12 main_externalData_route@13
 
 main_switch_case_next@14:
-    dig 1
-    bury 1
+    dig 2
+    bury 2
 
 main_after_if_else@16:
-    dup
+    dig 1
     bnz main_after_if_else@6
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback
     intc_1 // 1
-    bury 1
+    bury 2
 
 main_after_if_else@6:
+    dig 1
     return
 
 main_externalData_route@13:
     callsub externalData
     intc_1 // 1
-    bury 2
+    bury 3
     b main_switch_case_next@14
 
 main_balance_route@12:
     callsub balance
     intc_1 // 1
-    bury 2
+    bury 3
     b main_switch_case_next@14
 
 main_data_route@11:
     callsub data
     intc_1 // 1
-    bury 2
+    bury 3
     b main_switch_case_next@14
 
 main___fallback_route@10:
     callsub __fallback
     intc_1 // 1
-    bury 2
+    bury 3
     b main_switch_case_next@14
 
 main___postInit_route@9:
     callsub __postInit
     intc_1 // 1
-    bury 2
+    bury 3
     b main_switch_case_next@14
 
 main_create_NoOp@15:
-    dig 1
-    bury 1
+    dig 2
+    bury 2
     b main_after_if_else@16
 
 

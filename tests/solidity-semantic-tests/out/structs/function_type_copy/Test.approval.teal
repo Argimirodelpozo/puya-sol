@@ -5,6 +5,10 @@
 main:
     intcblock 1 0 6 16
     bytecblock "__ctor_pending" "c" TMPL_APPROVAL_C TMPL_CLEAR_C
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "__ctor_pending"
@@ -14,8 +18,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080

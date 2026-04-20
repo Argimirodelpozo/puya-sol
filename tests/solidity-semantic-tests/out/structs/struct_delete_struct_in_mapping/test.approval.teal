@@ -5,6 +5,10 @@
 main:
     intcblock 1 0
     bytecblock "__ctor_pending" 0x63616d706169676e7366687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "__ctor_pending"
@@ -14,8 +18,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080

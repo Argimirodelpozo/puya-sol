@@ -4,14 +4,17 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.D.approval_program() -> uint64:
 main:
     intcblock 1 0
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
@@ -41,6 +44,19 @@ addOne_ternary_merge@4:
     !
     assert // not payable
     load 0
+    load 5
+    extract 0 32
+    load 5
+    pushint 32
+    bzero
+    uncover 2
+    pushbytes 0x01
+    b+
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b|
+    replace2 0
+    store 5
     store 0
     intc_0 // 1
     return
@@ -62,10 +78,8 @@ get:
 get_ternary_merge@4:
     !
     assert // not payable
-    pushint 160
-    bzero
     load 0
-    swap
+    load 5
     extract 0 32
     swap
     store 0

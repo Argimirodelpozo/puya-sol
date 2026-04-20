@@ -7,6 +7,10 @@ main:
     bytecblock "data" "__ctor_pending" 0x
     bytec_2 // ""
     dup
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
@@ -16,8 +20,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
@@ -31,7 +34,7 @@ main_after_if_else@2:
 
 main_after_if_else@4:
     intc_0 // 0
-    bury 2
+    bury 3
     txn OnCompletion
     !
     assert
@@ -42,52 +45,53 @@ main_after_if_else@4:
     match main___postInit_route@9 main_set_route@10 main_checkIfDataIsEmpty_route@11 main_sendMessage_route@12 main___fallback_route@13
 
 main_switch_case_next@14:
-    dig 1
-    bury 1
+    dig 2
+    bury 2
 
 main_after_if_else@16:
-    dup
+    dig 1
     bnz main_after_if_else@6
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.__fallback
     intc_1 // 1
-    bury 1
+    bury 2
 
 main_after_if_else@6:
+    dig 1
     return
 
 main___fallback_route@13:
     callsub __fallback
     intc_1 // 1
-    bury 2
+    bury 3
     b main_switch_case_next@14
 
 main_sendMessage_route@12:
     callsub sendMessage
     intc_1 // 1
-    bury 2
+    bury 3
     b main_switch_case_next@14
 
 main_checkIfDataIsEmpty_route@11:
     callsub checkIfDataIsEmpty
     intc_1 // 1
-    bury 2
+    bury 3
     b main_switch_case_next@14
 
 main_set_route@10:
     callsub set
     intc_1 // 1
-    bury 2
+    bury 3
     b main_switch_case_next@14
 
 main___postInit_route@9:
     callsub __postInit
     intc_1 // 1
-    bury 2
+    bury 3
     b main_switch_case_next@14
 
 main_create_NoOp@15:
-    dig 1
-    bury 1
+    dig 2
+    bury 2
     b main_after_if_else@16
 
 

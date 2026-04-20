@@ -5,6 +5,10 @@
 main:
     intcblock 0 1 64 32
     bytecblock "z" "y" 0x151f7c75 "x"
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_3 // "x"
@@ -20,8 +24,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
@@ -60,6 +63,10 @@ f_ternary_merge@4:
     !
     assert // not payable
     load 0
+    load 5
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
+    replace2 32
+    store 5
     store 0
     intc_0 // 0
     bytec_0 // "z"

@@ -6,6 +6,10 @@ main:
     intcblock 1 0 16
     bytecblock "__ctor_pending" "a" TMPL_APPROVAL_A TMPL_CLEAR_A
     pushbytes ""
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "__ctor_pending"
@@ -15,8 +19,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
@@ -29,7 +32,7 @@ main_after_if_else@2:
 
 main_after_if_else@4:
     intc_1 // 0
-    bury 1
+    bury 2
     txn OnCompletion
     !
     assert
@@ -40,39 +43,40 @@ main_after_if_else@4:
     match main___postInit_route@7 main___receive_route@8 main_f_route@9 main_h_route@10 main_g_route@11
 
 main_switch_case_next@12:
+    dig 1
     return
 
 main_g_route@11:
     callsub g
     intc_0 // 1
-    bury 1
+    bury 2
     b main_switch_case_next@12
 
 main_h_route@10:
     callsub h
     intc_0 // 1
-    bury 1
+    bury 2
     b main_switch_case_next@12
 
 main_f_route@9:
     callsub f
     intc_0 // 1
-    bury 1
+    bury 2
     b main_switch_case_next@12
 
 main___receive_route@8:
     intc_0 // 1
-    bury 1
+    bury 2
     b main_switch_case_next@12
 
 main___postInit_route@7:
     callsub __postInit
     intc_0 // 1
-    bury 1
+    bury 2
     b main_switch_case_next@12
 
 main_create_NoOp@13:
-    dup
+    dig 1
     return
 
 

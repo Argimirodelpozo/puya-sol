@@ -5,6 +5,10 @@
 main:
     intcblock 0 1
     bytecblock "storedFn"
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@4
     bytec_0 // "storedFn"
@@ -19,8 +23,7 @@ main:
     err // invalid function pointer
 
 main_after_if_else@4:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080

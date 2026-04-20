@@ -6,6 +6,10 @@ main:
     intcblock 1 0 32
     bytecblock "x" 0x
     bytec_1 // ""
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
@@ -15,8 +19,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
@@ -30,7 +33,7 @@ main_after_if_else@2:
 
 main_after_if_else@4:
     intc_1 // 0
-    bury 1
+    bury 2
     txn OnCompletion
     !
     assert
@@ -41,22 +44,23 @@ main_after_if_else@4:
     match main___receive_route@7 main_x_route@8
 
 main_switch_case_next@9:
+    dig 1
     return
 
 main_x_route@8:
     callsub x
     intc_0 // 1
-    bury 1
+    bury 2
     b main_switch_case_next@9
 
 main___receive_route@7:
     callsub __receive
     intc_0 // 1
-    bury 1
+    bury 2
     b main_switch_case_next@9
 
 main_create_NoOp@10:
-    dup
+    dig 1
     return
 
 
