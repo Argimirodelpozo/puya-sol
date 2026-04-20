@@ -1608,11 +1608,43 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					? awst::AppStorageKind::Box
 					: awst::AppStorageKind::AppGlobal;
 
+				auto* wtype = m_typeMapper.map(var->type());
+
+				// Box-stored ARC4 struct with explicit initializer: encode
+				// the initializer and box_put it. Box arrays/bytes/dyn
+				// arrays are handled by the dedicated m_boxArrayVarNames
+				// loop above, so skip those kinds here.
+				if (kind == awst::AppStorageKind::Box)
+				{
+					if (!var->value())
+						continue;
+					bool isStructBox = wtype
+						&& wtype->kind() == awst::WTypeKind::ARC4Struct;
+					if (!isStructBox)
+						continue;
+					auto initVal = m_exprBuilder->build(*var->value());
+					if (!initVal)
+						continue;
+					initVal = TypeCoercion::coerceForAssignment(
+						std::move(initVal), wtype, method.sourceLocation);
+					for (auto& preStmt: m_exprBuilder->takePrePendingStatements())
+						targetBody.push_back(std::move(preStmt));
+					for (auto& postStmt: m_exprBuilder->takePendingStatements())
+						targetBody.push_back(std::move(postStmt));
+					auto boxKey = awst::makeUtf8BytesConstant(
+						var->name(), method.sourceLocation);
+					auto put = awst::makeIntrinsicCall(
+						"box_put", awst::WType::voidType(), method.sourceLocation);
+					put->stackArgs.push_back(std::move(boxKey));
+					put->stackArgs.push_back(std::move(initVal));
+					targetBody.push_back(awst::makeExpressionStatement(
+						std::move(put), method.sourceLocation));
+					continue;
+				}
+
 				// Only zero-initialize global state (not box storage)
 				if (kind != awst::AppStorageKind::AppGlobal)
 					continue;
-
-				auto* wtype = m_typeMapper.map(var->type());
 
 				// Build key
 				auto key = awst::makeUtf8BytesConstant(var->name(), method.sourceLocation);

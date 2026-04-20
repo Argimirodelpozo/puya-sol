@@ -293,8 +293,7 @@ awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _
 			fields.emplace_back(member->name(), awst::WType::bytesType());
 			continue;
 		}
-		auto const* rawType = map(member->type());
-		auto const* arc4Type = mapToARC4Type(rawType);
+		auto const* arc4Type = mapSolTypeToARC4(member->type());
 		fields.emplace_back(member->name(), arc4Type);
 	}
 
