@@ -599,11 +599,11 @@ def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0)
                 _atc.execute(_algod, wait_rounds=4)
             except Exception as e:
                 import sys
-                print(f"  [warn] __postInit failed: {str(e)[:100]}", file=sys.stderr)
+                print(f"  [warn] __postInit failed: {str(e)[:500]}", file=sys.stderr)
 
         # Kept as an empty list for API compatibility with call-site code
         # that checks `app._box_refs` to seed a box-ref list; simulate
-        # discovers the real refs at each call.
+        # discovers the real refs at each call via populate.
         app_client._box_refs = []
         # Record the AVM baseline so _compare_values can subtract it when
         # tests read `address(this).balance`. Read the app account's real
@@ -752,6 +752,7 @@ def _call_with_extra_budget(app, method, args, extra_calls=15):
     # Pull dynamic box refs (e.g. string-keyed mapping runtime-computed box keys)
     # out of the sim response so they're passed to the real execute.
     discovered_box_refs = []
+    extra_box_refs = 0
     try:
         from algosdk.v2client.models import SimulateRequest
         sim_req = SimulateRequest(
@@ -762,6 +763,7 @@ def _call_with_extra_budget(app, method, args, extra_calls=15):
         sim_result = sim_atc.simulate(algod, sim_req)
         _tg = sim_result.simulate_response.get("txn-groups", [{}])[0]
         _group_ur = _tg.get("unnamed-resources-accessed", {})
+        extra_box_refs = _group_ur.get("extra-box-refs", 0) or 0
         import base64 as _b64
         for _box in _group_ur.get("boxes", []):
             _name_b64 = _box.get("name")
@@ -793,26 +795,56 @@ def _call_with_extra_budget(app, method, args, extra_calls=15):
             box_refs.append(_r)
             _seen_names.add(_r.name)
 
-    # Step 2: Build the real ATC with discovered resources + budget pooling
+    # Step 2: Build the real ATC with discovered resources + budget pooling.
+    # Use a generous fee: tests that exceed simulate's 700-op budget typically
+    # include a TEAL `ensure_budget` loop that self-spawns Fee=0 inner app
+    # creations (~243 txns for a 170k budget target). Those inner txns draw
+    # from the group fee pool; too-small fee → "fee too small" at execute.
+    # 1M microAlgos covers up to ~1000 inner txns, which is well over the
+    # ~350 needed for even the heaviest ensure_budget targets we emit.
     sp = algod.suggested_params()
     sp.flat_fee = True
-    sp.fee = 1000 * (extra_calls + 1) + ensure_fee
+    sp.fee = max(1000 * (extra_calls + 1) + ensure_fee, 1_000_000)
+
+    # Convert BoxReference objects → (app_index, name) tuples. ATC prefers the
+    # tuple form; passing BoxReference instances can leave the ref with the
+    # wrong foreign-app index when the group has no explicit foreign_apps list.
+    box_refs_tuples = [(0, r.name) for r in box_refs] if box_refs else None
+
+    # Distribute `extra-box-refs` (I/O budget pads) across the group.
+    # Each apbx entry adds 1024 bytes to the group's read/write I/O budget,
+    # pooled across all app-call txns. Algokit's populate does this via
+    # empty-name refs `(0, b"")`. Fill the main txn up to the 8-ref limit
+    # first, then spill to dummy helper txns.
+    MAX_REFS_PER_TXN = 8
+    main_pad = 0
+    if extra_box_refs > 0:
+        existing = len(box_refs_tuples or [])
+        main_pad = min(extra_box_refs, MAX_REFS_PER_TXN - existing)
+        if main_pad > 0:
+            box_refs_tuples = (box_refs_tuples or []) + [(0, b"")] * main_pad
 
     atc = AtomicTransactionComposer()
     atc.add_method_call(
         app_id=app_id, method=abi_method, sender=sender,
         sp=sp, signer=signer, method_args=args if args else [],
         note=os.urandom(8),
-        boxes=box_refs if box_refs else None,
+        boxes=box_refs_tuples,
     )
 
+    # Remaining pads go on helper txns (up to 8 per txn).
+    pads_left = max(0, extra_box_refs - main_pad)
     sp_dummy = algod.suggested_params()
     sp_dummy.flat_fee = True
     sp_dummy.fee = 0
     for _ in range(extra_calls):
+        per_txn = min(pads_left, MAX_REFS_PER_TXN)
+        helper_boxes = [(0, b"")] * per_txn if per_txn else None
+        pads_left -= per_txn
         txn = ApplicationCallTxn(
             sender=sender, sp=sp_dummy, index=helper_id,
             on_complete=OnComplete.NoOpOC, note=os.urandom(8),
+            boxes=helper_boxes,
         )
         atc.add_transaction(TransactionWithSigner(txn, signer))
 
@@ -1780,20 +1812,21 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                 return True, "correctly reverted"
         else:
             if hasattr(app, '_ensure_budget_fee') and app._ensure_budget_fee > 3000:
-                # ensure_budget was injected — simulate with extra budget first,
-                # then execute with real fee
+                # ensure_budget was injected — simulate with extra budget first
+                # to discover refs + I/O budget pads, then execute with real fee.
                 from algosdk.atomic_transaction_composer import AtomicTransactionComposer as _ATC
                 from algosdk.abi import Method as _AbiMethod
                 from algosdk.transaction import BoxReference as _BoxRef
                 from algosdk.v2client.models import SimulateRequest
                 import os as _os
+                import base64 as _b64
                 _algod = app.algorand.client.algod
                 _sender = app._default_sender
                 _signer = app._default_signer or app.algorand.account.get_signer(_sender)
                 _fee = 1000 + app._ensure_budget_fee
-                _boxes = [_BoxRef(app_index=0, name=r[1]) for r in app._box_refs] if hasattr(app, '_box_refs') and app._box_refs else None
+                _boxes_init = None
 
-                # Step 1: Simulate with extra_opcode_budget to discover resources
+                # Step 1: Simulate with extra_opcode_budget to discover resources.
                 _sim_sp = _algod.suggested_params()
                 _sim_sp.flat_fee = True
                 _sim_sp.fee = _fee
@@ -1802,17 +1835,41 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                     app_id=app.app_id, method=_AbiMethod.from_signature(method),
                     sender=_sender, sp=_sim_sp, signer=_signer,
                     method_args=args if args else [],
-                    note=_os.urandom(8), boxes=_boxes,
+                    note=_os.urandom(8), boxes=_boxes_init,
                 )
+                _disc_boxes = []
+                _extra_box_refs = 0
                 try:
                     _sim_req = SimulateRequest(
                         txn_groups=[],
                         allow_unnamed_resources=True,
                         extra_opcode_budget=320000,
                     )
-                    _sim_atc.simulate(_algod, _sim_req)
+                    _sim_resp = _sim_atc.simulate(_algod, _sim_req)
+                    _tg = _sim_resp.simulate_response.get("txn-groups", [{}])[0]
+                    _gur = _tg.get("unnamed-resources-accessed", {})
+                    _extra_box_refs = _gur.get("extra-box-refs", 0) or 0
+                    for _b in _gur.get("boxes", []):
+                        _n = _b.get("name")
+                        if _n:
+                            _disc_boxes.append(_b64.b64decode(_n))
+                    for _tr in _tg.get("txn-results", []):
+                        _tur = _tr.get("unnamed-resources-accessed", {})
+                        for _b in _tur.get("boxes", []):
+                            _n = _b.get("name")
+                            if _n:
+                                _raw = _b64.b64decode(_n)
+                                if _raw not in _disc_boxes:
+                                    _disc_boxes.append(_raw)
                 except Exception:
-                    pass  # simulation may fail but we still try execution
+                    pass
+
+                # Build box list: discovered refs + I/O-budget pads.
+                _MAX_REFS = 8
+                _box_tuples = [(0, _n) for _n in _disc_boxes]
+                _pad_count = min(_extra_box_refs, _MAX_REFS - len(_box_tuples))
+                if _pad_count > 0:
+                    _box_tuples.extend([(0, b"")] * _pad_count)
 
                 # Step 2: Execute with real fee
                 _sp = _algod.suggested_params()
@@ -1823,7 +1880,8 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                     app_id=app.app_id, method=_AbiMethod.from_signature(method),
                     sender=_sender, sp=_sp, signer=_signer,
                     method_args=args if args else [],
-                    note=_os.urandom(8), boxes=_boxes,
+                    note=_os.urandom(8),
+                    boxes=(_box_tuples if _box_tuples else None),
                 )
                 _raw = _atc.execute(_algod, wait_rounds=4)
                 class _R: pass
