@@ -526,6 +526,23 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 		assignValue2 = std::move(outerNewStruct);
 	}
 
+	// If the outermost write target is an IndexExpression whose base is
+	// wrapped in StateGet (e.g. `data[2].x = v` on a box-stored static
+	// array struct), unwrap the StateGet so the assignment target carries
+	// a raw BoxValue — puya rejects StateGet nested inside an Lvalue.
+	if (auto const* idx = dynamic_cast<awst::IndexExpression const*>(assignTarget2.get()))
+	{
+		if (auto const* sg = dynamic_cast<awst::StateGet const*>(idx->base.get()))
+		{
+			auto newIdx = std::make_shared<awst::IndexExpression>();
+			newIdx->sourceLocation = idx->sourceLocation;
+			newIdx->wtype = idx->wtype;
+			newIdx->base = sg->field;
+			newIdx->index = idx->index;
+			assignTarget2 = std::move(newIdx);
+		}
+	}
+
 	auto e = std::make_shared<awst::AssignmentExpression>();
 	e->sourceLocation = m_loc;
 	e->wtype = assignTarget2->wtype;

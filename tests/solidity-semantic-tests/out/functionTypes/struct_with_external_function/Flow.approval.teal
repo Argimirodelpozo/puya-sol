@@ -1,0 +1,285 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/struct_with_external_function.sol.Flow.approval_program() -> uint64:
+main:
+    intcblock 0 1 16 32
+    bytecblock "t" 0x0000000000000000000000000000000000000000000000000000000000000000 0xff07 "__ctor_pending" 0xb221145f
+    pushint 4096
+    bzero
+    dup
+    store 5
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    dup
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xb583a38a 0xbfb0782e 0x219b312e // method "__postInit()void", method "X()uint256", method "Y()uint256", method "f()(uint256,uint256)"
+    txna ApplicationArgs 0
+    match __postInit X Y f
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/struct_with_external_function.sol.Flow.__postInit[routing]() -> void:
+__postInit:
+    bytec_3 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_3 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "t"
+    pushint 64
+    box_create
+    pop
+    bytec_0 // "t"
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 0 16 // on error: index access is out of bounds
+    dup
+    extract 14 2
+    swap
+    extract 2 12
+    bytec_2 // 0xff07
+    swap
+    concat
+    swap
+    concat
+    bytec_0 // "t"
+    intc_0 // 0
+    uncover 2
+    box_replace // on error: index out of bounds
+    bytec_0 // "t"
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 0 16 // on error: index access is out of bounds
+    dup
+    extract 0 2
+    swap
+    extract 2 12
+    concat
+    bytec_2 // 0xff07
+    concat
+    bytec_0 // "t"
+    intc_0 // 0
+    uncover 2
+    box_replace // on error: index out of bounds
+    bytec_0 // "t"
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 16 16 // on error: index access is out of bounds
+    dup
+    extract 0 2
+    swap
+    extract 14 2
+    swap
+    pushbytes 0x000000000000000000000001
+    concat
+    swap
+    concat
+    bytec_0 // "t"
+    intc_2 // 16
+    uncover 2
+    box_replace // on error: index out of bounds
+    bytec_0 // "t"
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 16 16 // on error: index access is out of bounds
+    dup
+    extract 14 2
+    swap
+    extract 2 12
+    bytec_2 // 0xff07
+    swap
+    concat
+    swap
+    concat
+    bytec_0 // "t"
+    intc_2 // 16
+    uncover 2
+    box_replace // on error: index out of bounds
+    bytec_0 // "t"
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 16 16 // on error: index access is out of bounds
+    dup
+    extract 0 2
+    swap
+    extract 2 12
+    concat
+    bytec_2 // 0xff07
+    concat
+    bytec_0 // "t"
+    intc_2 // 16
+    uncover 2
+    box_replace // on error: index out of bounds
+    bytec_0 // "t"
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 0 16 // on error: index access is out of bounds
+    dup
+    extract 0 2
+    swap
+    extract 14 2
+    swap
+    pushbytes 0x000000000000000000000002
+    concat
+    swap
+    concat
+    bytec_0 // "t"
+    intc_0 // 0
+    uncover 2
+    box_replace // on error: index out of bounds
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/struct_with_external_function.sol.Flow.X[routing]() -> void:
+X:
+    txn GroupIndex
+    bz X_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+X_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    intc_1 // 1
+    return
+
+X_ternary_false@3:
+    intc_0 // 0
+    b X_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/struct_with_external_function.sol.Flow.Y[routing]() -> void:
+Y:
+    txn GroupIndex
+    bz Y_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+Y_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
+    log
+    intc_1 // 1
+    return
+
+Y_ternary_false@3:
+    intc_0 // 0
+    b Y_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/struct_with_external_function.sol.Flow.f[routing]() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    itxn_begin
+    bytec_0 // "t"
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 16 // on error: index access is out of bounds
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 4 // method "x()uint8[12]"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn_begin
+    extract 16 16 // on error: index access is out of bounds
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 4 // method "x()uint8[12]"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dup
+    len
+    intc_3 // 32
+    <=
+    assert // overflow
+    intc_3 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    itxn LastLog
+    extract 4 0
+    dup
+    len
+    intc_3 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+f_ternary_false@3:
+    intc_0 // 0
+    b f_ternary_merge@4

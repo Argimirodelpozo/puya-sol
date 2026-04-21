@@ -1,0 +1,227 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_read_write.sol.Test.approval_program() -> uint64:
+main:
+    intcblock 1 0 74 255
+    bytecblock "data" 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending"
+    pushint 4096
+    bzero
+    dup
+    store 5
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    dup
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x327cf618 0x9804a8ae 0x74dc582b // method "__postInit()void", method "testInit()(uint64,uint64,uint256,uint64,bool)", method "testCopyRead()(uint64,uint64,uint256,uint64)", method "testAssign()(uint64,uint64,uint256,uint64)"
+    txna ApplicationArgs 0
+    match __postInit testInit testCopyRead testAssign
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_read_write.sol.Test.__postInit[routing]() -> void:
+__postInit:
+    bytec_2 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_2 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_0 // "data"
+    pushint 160
+    box_create
+    pop
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_read_write.sol.Test.testInit[routing]() -> void:
+testInit:
+    txn GroupIndex
+    bz testInit_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+testInit_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080
+    log
+    intc_0 // 1
+    return
+
+testInit_ternary_false@3:
+    intc_1 // 0
+    b testInit_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_read_write.sol.Test.testCopyRead[routing]() -> void:
+testCopyRead:
+    txn GroupIndex
+    bz testCopyRead_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+testCopyRead_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 74 37 // on error: index access is out of bounds
+    dup
+    extract 35 2
+    dig 1
+    extract 1 2
+    uncover 2
+    extract 3 32
+    pushbytes 0x01
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    bytec_0 // "data"
+    intc_2 // 74
+    uncover 2
+    box_replace // on error: index out of bounds
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 74 37 // on error: index access is out of bounds
+    dup
+    extract 35 2
+    dig 1
+    extract 0 1
+    uncover 2
+    extract 3 32
+    swap
+    pushbytes 0x0002
+    concat
+    swap
+    concat
+    swap
+    concat
+    bytec_0 // "data"
+    intc_2 // 74
+    uncover 2
+    box_replace // on error: index out of bounds
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 74 37 // on error: index access is out of bounds
+    dup
+    extract 35 2
+    dig 1
+    extract 0 1
+    uncover 2
+    extract 1 2
+    concat
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
+    concat
+    swap
+    concat
+    bytec_0 // "data"
+    intc_2 // 74
+    uncover 2
+    box_replace // on error: index out of bounds
+    bytec_0 // "data"
+    pushint 110
+    pushbytes 0x04
+    box_replace // on error: index out of bounds
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 74 37 // on error: index access is out of bounds
+    dup
+    intc_1 // 0
+    getbyte
+    dig 1
+    intc_0 // 1
+    extract_uint16
+    dig 2
+    extract 3 32
+    uncover 3
+    extract 35 2
+    intc_0 // 1
+    getbyte
+    uncover 3
+    intc_3 // 255
+    &
+    uncover 3
+    pushint 65535
+    &
+    uncover 2
+    intc_3 // 255
+    &
+    uncover 2
+    itob
+    uncover 2
+    itob
+    concat
+    uncover 2
+    concat
+    swap
+    itob
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+testCopyRead_ternary_false@3:
+    intc_1 // 0
+    b testCopyRead_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_read_write.sol.Test.testAssign[routing]() -> void:
+testAssign:
+    txn GroupIndex
+    bz testAssign_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+testAssign_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000001000000000000000200000000000000000000000000000000000000000000000000000000000000030000000000000004
+    log
+    intc_0 // 1
+    return
+
+testAssign_ternary_false@3:
+    intc_1 // 0
+    b testAssign_ternary_merge@4
