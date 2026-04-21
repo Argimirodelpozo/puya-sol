@@ -54,7 +54,8 @@ std::shared_ptr<awst::Expression> SolAssignment::buildTupleWithUpdatedField(
 
 std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 	std::shared_ptr<awst::Expression> _target,
-	std::shared_ptr<awst::Expression> _value)
+	std::shared_ptr<awst::Expression> _value,
+	solidity::frontend::TupleExpression const* _sourceLhs)
 {
 	auto const* tupleTarget = dynamic_cast<awst::TupleExpression const*>(_target.get());
 	auto const& items = tupleTarget->items;
@@ -79,7 +80,50 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 				break;
 			}
 		}
-		if (allLocalVars)
+		// Also snapshot scalar RHS items when the LHS targets any transient
+		// state variable: transient writes go through a subroutine (TSTORE
+		// on a packed scratch blob), which can clobber other transient
+		// state reads in the same tuple. Snapshotting RHS reads into temps
+		// first preserves the pre-assignment values. Aggregate types keep
+		// the in-place swap semantics Solidity documents for tuple swaps.
+		bool hasTransientLhs = false;
+		if (_sourceLhs && m_ctx.transientStorage)
+		{
+			for (auto const& comp : _sourceLhs->components())
+			{
+				if (!comp) continue;
+				auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(comp.get());
+				if (!id) continue;
+				auto const* d = dynamic_cast<solidity::frontend::VariableDeclaration const*>(
+					id->annotation().referencedDeclaration);
+				if (d && d->isStateVariable()
+					&& d->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Transient
+					&& m_ctx.transientStorage->isTransient(*d))
+				{
+					hasTransientLhs = true;
+					break;
+				}
+			}
+		}
+		bool allScalars = hasTransientLhs && !rhsTuple->items.empty();
+		for (auto const& it : rhsTuple->items)
+		{
+			if (!allScalars) break;
+			auto const* t = it->wtype;
+			if (!t) { allScalars = false; break; }
+			bool scalar = (t == awst::WType::uint64Type()
+				|| t == awst::WType::biguintType()
+				|| t == awst::WType::boolType()
+				|| t == awst::WType::accountType()
+				|| t == awst::WType::applicationType()
+				|| t == awst::WType::assetType()
+				|| t == awst::WType::stringType()
+				|| t == awst::WType::bytesType()
+				|| t->kind() == awst::WTypeKind::ARC4UIntN
+				|| t->kind() == awst::WTypeKind::Bytes);
+			if (!scalar) { allScalars = false; break; }
+		}
+		if (allLocalVars || allScalars)
 		{
 			std::vector<awst::WType const*> tmpTypes;
 			auto newTuple = std::make_shared<awst::TupleExpression>();
@@ -221,6 +265,33 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 		{
 			handleTupleAssignment(assignTarget, std::move(assignValue));
 			continue;
+		}
+
+		// Transient state variable write: route through TransientStorage so
+		// the assignment hits the scratch-slot packed blob rather than
+		// producing an AssignmentExpression whose target is a ReinterpretCast
+		// (which isn't an Lvalue in puya's AWST).
+		if (_sourceLhs && m_ctx.transientStorage
+			&& i < _sourceLhs->components().size() && _sourceLhs->components()[i])
+		{
+			if (auto const* srcIdent = dynamic_cast<solidity::frontend::Identifier const*>(
+					_sourceLhs->components()[i].get()))
+			{
+				auto const* srcDecl = dynamic_cast<solidity::frontend::VariableDeclaration const*>(
+					srcIdent->annotation().referencedDeclaration);
+				if (srcDecl && srcDecl->isStateVariable()
+					&& srcDecl->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Transient
+					&& m_ctx.transientStorage->isTransient(*srcDecl))
+				{
+					auto* varType = m_ctx.typeMapper.map(srcDecl->type());
+					auto coerced = builder::TypeCoercion::coerceForAssignment(
+						std::move(assignValue), varType, m_loc);
+					auto stmt = m_ctx.transientStorage->buildWrite(srcIdent->name(), coerced, m_loc);
+					if (stmt)
+						m_ctx.pendingStatements.push_back(std::move(stmt));
+					continue;
+				}
+			}
 		}
 
 		auto e = std::make_shared<awst::AssignmentExpression>();
@@ -794,7 +865,11 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 
 	// Tuple decomposition
 	if (dynamic_cast<awst::TupleExpression const*>(target.get()))
-		return handleTupleAssignment(std::move(target), std::move(value));
+	{
+		auto const* sourceLhs = dynamic_cast<solidity::frontend::TupleExpression const*>(
+			&m_assignment.leftHandSide());
+		return handleTupleAssignment(std::move(target), std::move(value), sourceLhs);
+	}
 
 	// Bytes element assignment: bytes[i] = value
 	if (auto const* indexExpr = dynamic_cast<awst::IndexExpression const*>(target.get()))

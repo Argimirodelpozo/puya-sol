@@ -936,31 +936,47 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 			}
 			else
 			{
-				// Mapping/array getter — build box read with key from arguments.
-				// Unwound value type: walk past mappings and arrays to get the stored type.
+				// Mapping/array getter — build box read with key from mapping arguments,
+				// then index into the stored value for each nested array dimension.
+				// Walk mappings first to determine how many args feed the box key.
 				solidity::frontend::Type const* valueType = var->type();
-				size_t paramIdx = 0;
-				while (paramIdx < getter.args.size())
+				size_t keyArgCount = 0;
+				while (keyArgCount < getter.args.size())
 				{
 					if (auto const* mt = dynamic_cast<solidity::frontend::MappingType const*>(valueType))
 					{
 						valueType = mt->valueType();
-						paramIdx++;
-					}
-					else if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(valueType))
-					{
-						if (at->isByteArrayOrString())
-							break;
-						valueType = at->baseType();
-						paramIdx++;
+						keyArgCount++;
 					}
 					else
 						break;
 				}
 
-				// Map the unwound value type (may be a struct, in which case we need
-				// the full stored type, not the getter return type).
-				awst::WType const* storedWType = m_typeMapper.map(valueType);
+				// The type stored in the box (may be a nested array/struct).
+				// Remaining args index into this value after the box read.
+				solidity::frontend::Type const* storedValueType = valueType;
+
+				// Walk nested arrays for index args.
+				size_t indexArgCount = 0;
+				solidity::frontend::Type const* elemType = storedValueType;
+				while (keyArgCount + indexArgCount < getter.args.size())
+				{
+					if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(elemType))
+					{
+						if (at->isByteArrayOrString())
+							break;
+						elemType = at->baseType();
+						indexArgCount++;
+					}
+					else
+						break;
+				}
+
+				// Map the box-stored type (before indexing).
+				awst::WType const* storedWType = m_typeMapper.map(storedValueType);
+				// The unwound value type used for struct-field decomposition below
+				// is the element type after indexing.
+				valueType = elemType;
 
 				// Build the box key from the getter arguments.
 				// Each arg is converted to bytes, concatenated, then sha256-hashed.
@@ -968,7 +984,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 					var->name(), loc, awst::WType::boxKeyType());
 
 				std::vector<std::shared_ptr<awst::Expression>> keyParts;
-				for (size_t i = 0; i < getter.args.size(); ++i)
+				for (size_t i = 0; i < keyArgCount; ++i)
 				{
 					auto argRef = awst::makeVarExpression(getter.args[i].name, getter.args[i].wtype, loc);
 
@@ -1059,20 +1075,49 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				stateGet->field = std::move(boxExpr);
 				stateGet->defaultValue = std::move(defaultVal);
 
+				// Apply index accesses for any array dimensions nested inside the box value
+				// (e.g. `mapping(K => T[N])` keys by K, then indexes into T[N]).
+				std::shared_ptr<awst::Expression> indexed = std::move(stateGet);
+				{
+					solidity::frontend::Type const* walkType = storedValueType;
+					for (size_t i = 0; i < indexArgCount; ++i)
+					{
+						auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(walkType);
+						if (!at)
+							break;
+						auto* elemARC4 = m_typeMapper.mapSolTypeToARC4(at->baseType());
+
+						auto idxRef = awst::makeVarExpression(
+							getter.args[keyArgCount + i].name,
+							getter.args[keyArgCount + i].wtype, loc);
+						auto idx = ExpressionBuilder::implicitNumericCast(
+							idxRef, awst::WType::uint64Type(), loc);
+
+						auto indexExpr = std::make_shared<awst::IndexExpression>();
+						indexExpr->sourceLocation = loc;
+						indexExpr->wtype = elemARC4;
+						indexExpr->base = std::move(indexed);
+						indexExpr->index = std::move(idx);
+						indexed = std::move(indexExpr);
+
+						walkType = at->baseType();
+					}
+				}
+
 				// If the stored type is a struct but the getter returns a tuple
 				// of selected fields, extract and ARC4-decode each field.
 				if (auto const* structType = dynamic_cast<solidity::frontend::StructType const*>(valueType))
 				{
 					if (solReturnTypes.size() > 1)
 					{
-						// stateGet returns the full ARC4Struct; extract fields.
-						std::shared_ptr<awst::Expression> fullStruct = std::move(stateGet);
+						// indexed returns the full ARC4Struct; extract fields.
+						std::shared_ptr<awst::Expression> fullStruct = std::move(indexed);
 						auto tuple = std::make_shared<awst::TupleExpression>();
 						tuple->sourceLocation = loc;
 						tuple->wtype = getter.returnType;
 
 						// Get the ARC4Struct type's field types for FieldExpression
-						auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(storedWType);
+						auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(fullStruct->wtype);
 
 						for (auto const& member: structType->members(nullptr))
 						{
@@ -1115,12 +1160,28 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 					}
 					else
 					{
-						readExpr = std::move(stateGet);
+						readExpr = std::move(indexed);
 					}
 				}
 				else
 				{
-					readExpr = std::move(stateGet);
+					readExpr = std::move(indexed);
+
+					// Decode ARC4 element to native getter return type if needed
+					// (e.g. indexing into ARC4StaticArray<uint8,N> gives arc4.uint8 → uint64).
+					if (readExpr && readExpr->wtype && readExpr->wtype != getter.returnType)
+					{
+						auto const* arc4Elem = dynamic_cast<awst::ARC4UIntN const*>(readExpr->wtype);
+						if (arc4Elem && (getter.returnType == awst::WType::uint64Type()
+							|| getter.returnType == awst::WType::biguintType()))
+						{
+							auto decode = std::make_shared<awst::ARC4Decode>();
+							decode->sourceLocation = loc;
+							decode->wtype = getter.returnType;
+							decode->value = std::move(readExpr);
+							readExpr = std::move(decode);
+						}
+					}
 				}
 			}
 

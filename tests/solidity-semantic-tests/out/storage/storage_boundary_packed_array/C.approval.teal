@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_packed_array.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 0 8
-    bytecblock 0x "__dyn_storage" 0x068101
+    bytecblock 0x "__dyn_storage"
     pushint 4096
     bzero
     dup
@@ -92,27 +92,6 @@ clearArray:
 clearArray_ternary_merge@4:
     !
     assert // not payable
-
-clearArray_while_top@6:
-    pushint 170010
-    global OpcodeBudget
-    >
-    bz clearArray_after_while@11
-    itxn_begin
-    pushint 6 // appl
-    itxn_field TypeEnum
-    pushint 5 // DeleteApplication
-    itxn_field OnCompletion
-    bytec_2 // 0x068101
-    itxn_field ApprovalProgram
-    bytec_2 // 0x068101
-    itxn_field ClearStateProgram
-    intc_2 // 0
-    itxn_field Fee
-    itxn_submit
-    b clearArray_while_top@6
-
-clearArray_after_while@11:
     load 0
     store 0
     pushint 18446744073709551611

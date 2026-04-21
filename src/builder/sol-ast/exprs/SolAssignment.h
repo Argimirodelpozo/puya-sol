@@ -21,7 +21,8 @@ private:
 
 	std::shared_ptr<awst::Expression> handleTupleAssignment(
 		std::shared_ptr<awst::Expression> _target,
-		std::shared_ptr<awst::Expression> _value);
+		std::shared_ptr<awst::Expression> _value,
+		solidity::frontend::TupleExpression const* _sourceLhs = nullptr);
 
 	std::shared_ptr<awst::Expression> handleBytesElementAssignment(
 		awst::IndexExpression const* _indexExpr,

@@ -1,0 +1,127 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_tuple_assignment.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock 0x "y" "z"
+    pushint 4096
+    bzero
+    dup
+    store 5
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytes "x"
+    bytec_0 // 0x
+    app_global_put
+    bytec_1 // "y"
+    bytec_0 // 0x
+    app_global_put
+    pushbytes "w"
+    bytec_0 // 0x
+    app_global_put
+    bytec_2 // "z"
+    bytec_0 // 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    dup
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0xb34b38c7 // method "f()(uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_tuple_assignment.sol.C.f[routing]() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    load 5
+    pushint 32
+    bzero
+    swap
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
+    replace2 0
+    store 5
+    pushint 2
+    itob
+    bytec_1 // "y"
+    swap
+    app_global_put
+    load 5
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
+    replace2 32
+    store 5
+    pushint 4
+    itob
+    bytec_2 // "z"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec_1 // "y"
+    app_global_get_ex
+    assert // check y exists
+    load 5
+    extract 32 32
+    load 5
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
+    replace2 32
+    store 5
+    bytec_1 // "y"
+    dig 1
+    app_global_put
+    load 5
+    dig 3
+    uncover 3
+    b|
+    extract 0 32
+    replace2 0
+    store 5
+    load 5
+    extract 0 32
+    dig 2
+    b|
+    swap
+    dig 2
+    b|
+    load 5
+    extract 32 32
+    uncover 3
+    b|
+    cover 2
+    concat
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+f_ternary_false@3:
+    intc_1 // 0
+    b f_ternary_merge@4
