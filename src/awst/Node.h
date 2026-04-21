@@ -575,6 +575,13 @@ struct ARC4Decode: Expression
 	std::shared_ptr<Expression> value;
 };
 
+struct ARC4FromBytes: Expression
+{
+	std::string nodeType() const override { return "ARC4FromBytes"; }
+	std::shared_ptr<Expression> value;
+	bool validate = false;
+};
+
 struct ARC4Router: Expression
 {
 	std::string nodeType() const override { return "ARC4Router"; }

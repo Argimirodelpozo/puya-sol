@@ -453,6 +453,11 @@ njson AWSTSerializer::serializeExpression(awst::Expression const& _expr)
 		j["value"] = serializeExpression(*e->value);
 		j["error_message"] = nullptr;
 	}
+	else if (auto const* e = dynamic_cast<awst::ARC4FromBytes const*>(&_expr))
+	{
+		j["value"] = serializeExpression(*e->value);
+		j["validate"] = e->validate;
+	}
 	else if (dynamic_cast<awst::ARC4Router const*>(&_expr))
 	{
 		// no extra fields

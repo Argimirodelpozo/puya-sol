@@ -356,6 +356,40 @@ std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
 			}
 		}
 
+		// Case 4: fn-ptr stored in an array or struct: `arr[i](args)` /
+		// `s.fn(args)`. The callee expression evaluates to a function type.
+		if (auto const* callExprType = callExpr->annotation().type)
+		{
+			if (dynamic_cast<solidity::frontend::FunctionType const*>(callExprType))
+			{
+				if (dynamic_cast<solidity::frontend::IndexAccess const*>(callExpr))
+					return std::make_unique<SolInternalCall>(m_ctx, _node);
+				if (auto const* ma = dynamic_cast<
+						solidity::frontend::MemberAccess const*>(callExpr))
+				{
+					// Only treat struct-field fn-ptrs here (not method calls on
+					// contracts). Check the base's referenced decl: if it's a
+					// VariableDeclaration whose type is (nested) struct, route
+					// to SolInternalCall.
+					auto const* baseType = ma->expression().annotation().type;
+					while (baseType)
+					{
+						if (dynamic_cast<solidity::frontend::StructType const*>(baseType))
+						{
+							return std::make_unique<SolInternalCall>(m_ctx, _node);
+						}
+						if (auto const* at = dynamic_cast<
+								solidity::frontend::ArrayType const*>(baseType))
+						{
+							baseType = at->baseType();
+							continue;
+						}
+						break;
+					}
+				}
+			}
+		}
+
 		return std::make_unique<SolExternalCall>(m_ctx, _node);
 	}
 

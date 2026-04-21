@@ -729,10 +729,46 @@ std::shared_ptr<awst::Expression> SolInternalCall::toAwst()
 	{
 		auto const* exprType = funcExpr.annotation().type;
 		auto const* funcType = dynamic_cast<FunctionType const*>(exprType);
-		if (funcType && funcType->kind() == FunctionType::Kind::Internal)
+		if (funcType
+			&& (funcType->kind() == FunctionType::Kind::Internal
+				|| funcType->kind() == FunctionType::Kind::External
+				|| funcType->kind() == FunctionType::Kind::DelegateCall))
 		{
 			auto ptrExpr = m_ctx.buildExpr(funcExpr);
-			if (ptrExpr && ptrExpr->wtype == awst::WType::uint64Type())
+			auto* wantedType = eb::FunctionPointerBuilder::mapFunctionType(funcType);
+			// Structural match: uint64 vs uint64, or bytes[12] vs bytes[12]
+			// (TypeMapper and FunctionPointerBuilder may create distinct
+			// BytesWType instances — compare by shape, not pointer).
+			auto shapeMatches = [](awst::WType const* _a, awst::WType const* _b) {
+				if (_a == _b) return true;
+				if (!_a || !_b) return false;
+				if (_a->kind() != _b->kind()) return false;
+				if (_a->kind() == awst::WTypeKind::Bytes)
+				{
+					auto const* ab = static_cast<awst::BytesWType const*>(_a);
+					auto const* bb = static_cast<awst::BytesWType const*>(_b);
+					return ab->length() == bb->length();
+				}
+				return _a == _b;
+			};
+			if (ptrExpr && !shapeMatches(ptrExpr->wtype, wantedType))
+			{
+				// Coerce ARC4-encoded fn-ptr (read from an ARC4 array/struct)
+				// to the builder's native ptr type (uint64 or bytes[12]).
+				auto const* srcKind = ptrExpr->wtype;
+				bool srcIsArc4 = srcKind
+					&& (srcKind->kind() == awst::WTypeKind::ARC4UIntN
+						|| srcKind->kind() == awst::WTypeKind::ARC4StaticArray);
+				if (srcIsArc4)
+				{
+					auto decode = std::make_shared<awst::ARC4Decode>();
+					decode->sourceLocation = m_loc;
+					decode->wtype = wantedType;
+					decode->value = std::move(ptrExpr);
+					ptrExpr = std::move(decode);
+				}
+			}
+			if (ptrExpr && shapeMatches(ptrExpr->wtype, wantedType))
 			{
 				std::vector<std::shared_ptr<awst::Expression>> args;
 				for (auto const& arg : m_call.arguments())

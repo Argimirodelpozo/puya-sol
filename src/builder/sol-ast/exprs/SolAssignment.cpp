@@ -1063,12 +1063,20 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 		}
 		if (targetIsArc4)
 		{
-			value = builder::TypeCoercion::stringToBytes(std::move(value), m_loc);
-			auto encode = std::make_shared<awst::ARC4Encode>();
-			encode->sourceLocation = m_loc;
-			encode->wtype = target->wtype;
-			encode->value = std::move(value);
-			value = std::move(encode);
+			// If value is already ARC4 with structurally matching type (pointers
+			// differ only because TypeMapper didn't intern), skip the redundant
+			// encode — it would otherwise double-encode an ARC4 aggregate.
+			bool sameShape = value->wtype->kind() == target->wtype->kind()
+				&& value->wtype->name() == target->wtype->name();
+			if (!sameShape)
+			{
+				value = builder::TypeCoercion::stringToBytes(std::move(value), m_loc);
+				auto encode = std::make_shared<awst::ARC4Encode>();
+				encode->sourceLocation = m_loc;
+				encode->wtype = target->wtype;
+				encode->value = std::move(value);
+				value = std::move(encode);
+			}
 		}
 	}
 

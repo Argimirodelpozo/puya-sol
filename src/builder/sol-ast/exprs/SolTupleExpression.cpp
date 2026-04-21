@@ -57,6 +57,26 @@ std::shared_ptr<awst::Expression> SolTupleExpression::toAwst()
 					// ARC4Encode if still not matching element type (native → ARC4)
 					if (val->wtype != elementType)
 					{
+						// Bytes-backed value targeting an ARC4 aggregate (fn-ptr as
+						// ARC4StaticArray<uint8,N>): reinterpret via ARC4FromBytes
+						// rather than ARC4Encode which would expect a tuple.
+						if (auto const* bw = dynamic_cast<awst::BytesWType const*>(val->wtype))
+						{
+							bool isArc4Aggregate =
+								dynamic_cast<awst::ARC4StaticArray const*>(elementType)
+								|| dynamic_cast<awst::ARC4DynamicArray const*>(elementType)
+								|| dynamic_cast<awst::ARC4Struct const*>(elementType);
+							if (isArc4Aggregate)
+							{
+								auto fromBytes = std::make_shared<awst::ARC4FromBytes>();
+								fromBytes->sourceLocation = m_loc;
+								fromBytes->wtype = elementType;
+								fromBytes->value = std::move(val);
+								fromBytes->validate = false;
+								e->values.push_back(std::move(fromBytes));
+								continue;
+							}
+						}
 						// For sub-64-bit ARC4 types, encode via the full-width
 						// ARC4 type first, then reinterpret to target width.
 						auto const* arc4uint = dynamic_cast<awst::ARC4UIntN const*>(elementType);
