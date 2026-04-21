@@ -3,16 +3,19 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code_complex.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 6 16 1000000
-    bytecblock TMPL_APPROVAL_A TMPL_CLEAR_A 0xbacc49e3 0x151f7c75
+    intcblock 0 1 16 6 1000000
+    bytecblock TMPL_APPROVAL_A TMPL_CLEAR_A 0x151f7c75
+    pushint 4096
+    bzero
+    dup
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
+    dup
     store 0
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
@@ -44,11 +47,11 @@ f_ternary_merge@4:
     itxn_begin
     bytec_0 // TMPL_APPROVAL_A
     bytec_1 // TMPL_CLEAR_A
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_3 // 16
+    intc_2 // 16
     itxn_field GlobalNumUint
-    intc_3 // 16
+    intc_2 // 16
     itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
@@ -58,7 +61,6 @@ f_ternary_merge@4:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
-    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -69,37 +71,15 @@ f_ternary_merge@4:
     itxn_field Fee
     intc 4 // 1000000
     itxn_field Amount
-    itxn_submit
-    dup
-    app_params_get AppAddress
-    pop
-    itxn_begin
-    intc_1 // 1
-    itxn_field TypeEnum
-    itxn_field Receiver
-    intc_0 // 0
-    itxn_field Fee
-    intc_0 // 0
-    itxn_field Amount
-    itxn_next
-    intc_2 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_2 // method "__postInit()void"
-    itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
     bytec_0 // TMPL_APPROVAL_A
     bytec_1 // TMPL_CLEAR_A
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_3 // 16
+    intc_2 // 16
     itxn_field GlobalNumUint
-    intc_3 // 16
+    intc_2 // 16
     itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
@@ -120,29 +100,6 @@ f_ternary_merge@4:
     itxn_field Fee
     intc 4 // 1000000
     itxn_field Amount
-    itxn_submit
-    dup
-    app_params_get AppAddress
-    pop
-    itxn_begin
-    intc_1 // 1
-    itxn_field TypeEnum
-    itxn_field Receiver
-    intc_0 // 0
-    itxn_field Fee
-    intc_0 // 0
-    itxn_field Amount
-    itxn_next
-    intc_2 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dup
-    itxn_field ApplicationID
-    bytec_2 // method "__postInit()void"
-    itxn_field ApplicationArgs
     itxn_submit
     pushint 24
     bzero
@@ -159,7 +116,7 @@ f_ternary_merge@4:
     extract 6 2
     swap
     concat
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -186,11 +143,11 @@ g_ternary_merge@4:
     itxn_begin
     bytec_0 // TMPL_APPROVAL_A
     bytec_1 // TMPL_CLEAR_A
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_3 // 16
+    intc_2 // 16
     itxn_field GlobalNumUint
-    intc_3 // 16
+    intc_2 // 16
     itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
@@ -200,7 +157,6 @@ g_ternary_merge@4:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
-    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -211,37 +167,15 @@ g_ternary_merge@4:
     itxn_field Fee
     intc 4 // 1000000
     itxn_field Amount
-    itxn_submit
-    dup
-    app_params_get AppAddress
-    pop
-    itxn_begin
-    intc_1 // 1
-    itxn_field TypeEnum
-    itxn_field Receiver
-    intc_0 // 0
-    itxn_field Fee
-    intc_0 // 0
-    itxn_field Amount
-    itxn_next
-    intc_2 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_2 // method "__postInit()void"
-    itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
     bytec_0 // TMPL_APPROVAL_A
     bytec_1 // TMPL_CLEAR_A
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_3 // 16
+    intc_2 // 16
     itxn_field GlobalNumUint
-    intc_3 // 16
+    intc_2 // 16
     itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
@@ -262,29 +196,6 @@ g_ternary_merge@4:
     itxn_field Fee
     intc 4 // 1000000
     itxn_field Amount
-    itxn_submit
-    dup
-    app_params_get AppAddress
-    pop
-    itxn_begin
-    intc_1 // 1
-    itxn_field TypeEnum
-    itxn_field Receiver
-    intc_0 // 0
-    itxn_field Fee
-    intc_0 // 0
-    itxn_field Amount
-    itxn_next
-    intc_2 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dup
-    itxn_field ApplicationID
-    bytec_2 // method "__postInit()void"
-    itxn_field ApplicationArgs
     itxn_submit
     pushint 24
     bzero
@@ -300,7 +211,7 @@ g_ternary_merge@4:
     pushint 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log

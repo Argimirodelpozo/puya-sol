@@ -1,0 +1,93 @@
+#pragma version 10
+#pragma typetrack false
+
+// /tmp/split_61c895ek/B.C.approval_program() -> uint64:
+main:
+    intcblock 1 32
+    pushint 4096
+    bzero
+    dup
+    store 5
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    dup
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0xcd78b354 // method "f()uint256"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b /tmp/split_61c895ek/B.C.f[routing]
+
+
+// /tmp/split_61c895ek/B.f(x: bytes) -> bytes:
+f:
+    proto 1 1
+    frame_dig -1
+    pushbytes 0x01
+    b+
+    retsub
+
+
+// /tmp/split_61c895ek/B.g(x: bytes) -> bytes:
+g:
+    proto 1 1
+    frame_dig -1
+    pushbytes 0x0a
+    b+
+    retsub
+
+
+// /tmp/split_61c895ek/B.cr() -> bytes:
+cr:
+    pushbytes 0x
+    retsub
+
+
+// /tmp/split_61c895ek/B.C.f[routing]() -> void:
+/tmp/split_61c895ek/B.C.f[routing]:
+    txn GroupIndex
+    bz /tmp/split_61c895ek/B.C.f[routing]_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/tmp/split_61c895ek/B.C.f[routing]_ternary_merge@4:
+    !
+    assert // not payable
+    callsub cr
+    callsub f
+    callsub g
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+/tmp/split_61c895ek/B.C.f[routing]_ternary_false@3:
+    pushint 0
+    b /tmp/split_61c895ek/B.C.f[routing]_ternary_merge@4

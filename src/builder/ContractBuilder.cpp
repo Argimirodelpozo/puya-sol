@@ -2420,6 +2420,14 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		}
 		else
 		{
+		// Constructor body is inlined into the bool-returning approval program.
+		// Assembly `return(offset, size)` inside the ctor needs to emit a bool
+		// return (handled by AssemblyBuilder::handleReturn when m_returnType is
+		// bool). Set stmtCtx.returnType accordingly; restore at the end of the
+		// else branch.
+		auto const* savedReturnType = m_stmtCtx.returnType;
+		m_stmtCtx.returnType = awst::WType::boolType();
+
 		// Pre-evaluate constructor arguments in dependency order.
 		// In viaIR, all ctor args are evaluated before any state var init or ctor body.
 		// For transitive args (D→C→A), C's params must be assigned first so that
@@ -2595,6 +2603,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			for (auto& stmt: ctorBody->body)
 				createBlock->body.push_back(std::move(stmt));
 		}
+		m_stmtCtx.returnType = savedReturnType;
 		} // end else (no postInit needed)
 
 		// Return true to complete the create transaction

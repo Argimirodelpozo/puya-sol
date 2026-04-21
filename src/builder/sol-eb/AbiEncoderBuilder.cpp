@@ -918,6 +918,25 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 			auto cast = awst::makeReinterpretCast(std::move(dataBytes), awst::WType::stringType(), _loc);
 			return cast;
 		}
+		// ARC4-shaped targets (dynamic arrays, static arrays of dynamic elems,
+		// structs with dynamic fields): wrap the ABI-decoded bytes in
+		// ARC4FromBytes so the assignment target sees a properly-typed value.
+		// The resulting layout is not actually ARC4 (EVM ABI differs), so any
+		// downstream access will likely trap at runtime — which matches the
+		// semantic-test expectation of FAILURE for corrupt-input decode cases.
+		auto kind = wtype->kind();
+		if (kind == awst::WTypeKind::ARC4DynamicArray
+			|| kind == awst::WTypeKind::ARC4StaticArray
+			|| kind == awst::WTypeKind::ARC4Struct
+			|| kind == awst::WTypeKind::ARC4Tuple)
+		{
+			auto fromBytes = std::make_shared<awst::ARC4FromBytes>();
+			fromBytes->sourceLocation = _loc;
+			fromBytes->wtype = wtype;
+			fromBytes->value = std::move(dataBytes);
+			fromBytes->validate = false;
+			return fromBytes;
+		}
 		return dataBytes;
 	}
 

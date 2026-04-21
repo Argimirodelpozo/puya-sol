@@ -66,6 +66,10 @@ static void removeDeadCode(std::vector<std::shared_ptr<awst::Statement>>& _body)
 		{
 			if (whileLoop->loopBody) removeDeadCode(whileLoop->loopBody->body);
 		}
+		else if (auto* forLoop = dynamic_cast<awst::ForInLoop*>(_body[i].get()))
+		{
+			if (forLoop->loopBody) removeDeadCode(forLoop->loopBody->body);
+		}
 
 		// If this statement always terminates, remove everything after it
 		if (statementAlwaysTerminates(*_body[i]) && i + 1 < _body.size())
