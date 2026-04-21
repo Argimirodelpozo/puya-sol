@@ -1,0 +1,460 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1 8 6
+    bytecblock 0x151f7c75 "counter" 0x 0x01 TMPL_APPROVAL_D TMPL_CLEAR_D
+    pushint 4096
+    bzero
+    dup
+    store 5
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "counter"
+    bytec_2 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    dup
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x34914231 0xcf0aa045 0xcd78b354 0x4b2c0376 0x5935cd14 0xb238366a // method "test()(uint256,uint256,uint256)", method "e()uint256", method "f()uint256", method "g()uint256", method "h()byte[12]", method "htwo()byte[12]"
+    txna ApplicationArgs 0
+    match test e f g h htwo
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.test[routing]() -> void:
+test:
+    intc_0 // 0
+    dupn 4
+    bytec_2 // ""
+    dupn 2
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x000a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bury 4
+    intc_0 // 0
+    itob
+    bury 6
+
+test_while_top@5:
+    dig 3
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    itob
+    dig 6
+    b>
+    bz test_after_while@7
+    intc_2 // 8
+    bzero
+    dig 6
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    pushint 12
+    *
+    pushint 2
+    +
+    dig 5
+    swap
+    pushbytes 0x000000000000000000000001
+    replace3 // on error: index access is out of bounds
+    bury 5
+    bytec_3 // 0x01
+    b+
+    bury 6
+    b test_while_top@5
+
+test_after_while@7:
+    dig 3
+    pushbytes 0x000000000000000000000002
+    replace2 2 // on error: index access is out of bounds
+    itxn_begin
+    bytec 4 // TMPL_APPROVAL_D
+    bytec 5 // TMPL_CLEAR_D
+    intc_3 // 6
+    itxn_field TypeEnum
+    pushint 16
+    itxn_field GlobalNumUint
+    pushint 16
+    itxn_field GlobalNumByteSlice
+    intc_0 // 0
+    itxn_field Fee
+    pushint 3
+    itxn_field ExtraProgramPages
+    itxn_field ClearStateProgram
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    dup
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    pushint 1000000
+    itxn_field Amount
+    itxn_submit
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x78cd3a23 // method "f(uint8[12][])uint8[12][3]"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    bury 6
+    extract 4 12
+    dup
+    intc_0 // 0
+    extract_uint64
+    dup
+    bury 5
+    bnz test_else_body@12
+    intc_2 // 8
+    extract_uint32
+    callsub __funcptr_dispatch_ret_u256
+    bury 8
+
+test_after_if_else@14:
+    dig 4
+    extract 16 12
+    dup
+    intc_0 // 0
+    extract_uint64
+    dup
+    bury 4
+    bnz test_else_body@16
+    intc_2 // 8
+    extract_uint32
+    callsub __funcptr_dispatch_ret_u256
+    bury 7
+
+test_after_if_else@18:
+    dig 4
+    extract 28 12
+    dup
+    intc_0 // 0
+    extract_uint64
+    dup
+    bury 3
+    bnz test_else_body@20
+    intc_2 // 8
+    extract_uint32
+    callsub __funcptr_dispatch_ret_u256
+
+test_after_if_else@22:
+    dig 8
+    dup
+    len
+    pushint 32
+    <=
+    assert // overflow
+    pushint 32
+    bzero
+    swap
+    dig 1
+    b|
+    dig 9
+    dup
+    len
+    pushint 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    uncover 3
+    dup
+    len
+    pushint 32
+    <=
+    assert // overflow
+    uncover 3
+    b|
+    cover 2
+    concat
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+test_else_body@20:
+    itxn_begin
+    extract 8 4
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dig 1
+    itxn_field ApplicationID
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    b test_after_if_else@22
+
+test_else_body@16:
+    itxn_begin
+    extract 8 4
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dig 2
+    itxn_field ApplicationID
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    bury 7
+    b test_after_if_else@18
+
+test_else_body@12:
+    itxn_begin
+    extract 8 4
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dig 3
+    itxn_field ApplicationID
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    bury 8
+    b test_after_if_else@14
+
+test_ternary_false@3:
+    intc_0 // 0
+    b test_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.e[routing]() -> void:
+e:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.e
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.f[routing]() -> void:
+f:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.f
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.g[routing]() -> void:
+g:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.g
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.h[routing]() -> void:
+h:
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_1 // "counter"
+    app_global_get_ex
+    assert // check counter exists
+    dup
+    bytec_3 // 0x01
+    b+
+    bytec_1 // "counter"
+    swap
+    app_global_put
+    bytec_2 // 0x
+    b==
+    bz h_ternary_false@6
+    pushbytes 0x000000000000000000000003
+
+h_ternary_merge@7:
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+h_ternary_false@6:
+    pushbytes 0x000000000000000000000004
+    b h_ternary_merge@7
+
+h_ternary_false@3:
+    intc_0 // 0
+    b h_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.htwo[routing]() -> void:
+htwo:
+    txn GroupIndex
+    bz htwo_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+htwo_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75000000000000000000000005
+    log
+    intc_1 // 1
+    return
+
+htwo_ternary_false@3:
+    intc_0 // 0
+    b htwo_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.e() -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.e:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.e_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.e_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000005
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.e_ternary_false@2:
+    intc_0 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.e_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.f() -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.f:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.f_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.f_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000006
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.f_ternary_false@2:
+    intc_0 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.f_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.g() -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.g:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.g_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.g_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.g_ternary_false@2:
+    intc_0 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.g_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.__funcptr_dispatch_ret_u256(__funcptr_id: uint64) -> bytes:
+__funcptr_dispatch_ret_u256:
+    proto 1 1
+    frame_dig -1
+    pushint 4
+    ==
+    bz __funcptr_dispatch_ret_u256_else_body@2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.g
+    retsub
+
+__funcptr_dispatch_ret_u256_else_body@2:
+    frame_dig -1
+    pushint 3
+    ==
+    bz __funcptr_dispatch_ret_u256_else_body@4
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.f
+    retsub
+
+__funcptr_dispatch_ret_u256_else_body@4:
+    frame_dig -1
+    pushint 5
+    ==
+    assert // invalid function pointer
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.C.e
+    retsub

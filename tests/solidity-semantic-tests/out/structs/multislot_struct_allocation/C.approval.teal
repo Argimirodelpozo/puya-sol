@@ -40,37 +40,13 @@ o:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz o_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-o_ternary_merge@4:
-    !
-    assert // not payable
-    dup
-    pushbytes 0x01
-    b+
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    b|
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/multislot_struct_allocation.sol.C.o
     bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
-
-o_ternary_false@3:
-    intc_2 // 0
-    b o_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/multislot_struct_allocation.sol.C.f[routing]() -> void:
@@ -85,26 +61,10 @@ f:
 f_ternary_merge@4:
     !
     assert // not payable
-    intc_0 // 1
-    itob
     intc_1 // 32
     bzero
-    itxn_begin
-    pushint 6
-    itxn_field TypeEnum
-    intc_2 // 0
-    itxn_field OnCompletion
-    intc_2 // 0
-    itxn_field Fee
-    intc_0 // 1
-    itxn_field ApplicationID
-    pushbytes 0xb221145f // method "x()uint8[12]"
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/multislot_struct_allocation.sol.C.o
     dup
     len
     intc_1 // 32
@@ -121,3 +81,34 @@ f_ternary_merge@4:
 f_ternary_false@3:
     intc_2 // 0
     b f_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/multislot_struct_allocation.sol.C.o(__arc4_a: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/multislot_struct_allocation.sol.C.o:
+    proto 1 1
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/multislot_struct_allocation.sol.C.o_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/multislot_struct_allocation.sol.C.o_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    pushbytes 0x01
+    b+
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/multislot_struct_allocation.sol.C.o_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/multislot_struct_allocation.sol.C.o_ternary_merge@3

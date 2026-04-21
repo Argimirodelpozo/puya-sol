@@ -4,14 +4,14 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 2 12
-    bytecblock "array" "externalCalled" "__ctor_pending" 0x0000 0x83cec4cd
+    bytecblock "array" 0x0000 "externalCalled" "__ctor_pending"
     pushint 4096
     bzero
     dup
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -79,10 +79,10 @@ box_dynamic_array_concat_fixed:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_0 // 0
     app_global_put
     bytec_0 // "array"
@@ -91,7 +91,7 @@ __postInit:
     pop
     intc_0 // 0
     itob
-    bytec_1 // "externalCalled"
+    bytec_2 // "externalCalled"
     swap
     app_global_put
     intc_1 // 1
@@ -100,37 +100,9 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.ext[routing]() -> void:
 ext:
-    txn GroupIndex
-    bz ext_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-ext_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 0
-    bytec_1 // "externalCalled"
-    app_global_get_ex
-    assert // check externalCalled exists
-    dup
-    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b!=
-    assert // signed inc/dec overflow
-    pushbytes 0x01
-    b+
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bytec_1 // "externalCalled"
-    swap
-    app_global_put
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.ext
     intc_1 // 1
     return
-
-ext_ternary_false@3:
-    intc_0 // 0
-    b ext_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.f[routing]() -> void:
@@ -153,7 +125,7 @@ f_ternary_merge@4:
     callsub box_dynamic_array_concat_fixed
     bytec_0 // "array"
     box_get
-    bytec_3 // 0x0000
+    bytec_1 // 0x0000
     cover 2
     select
     extract 2 12
@@ -171,42 +143,58 @@ f_ternary_merge@4:
     uncover 3
     intc_3 // 12
     callsub box_dynamic_array_concat_fixed
-    itxn_begin
     bytec_0 // "array"
     box_get
-    bytec_3 // 0x0000
+    bytec_1 // 0x0000
     cover 2
     select
-    dup
     extract 2 12
-    pushint 24
+    extract 0 12
+    intc_0 // 0
     extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec 4 // method "el()uint8[12]"
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn_begin
+    bnz f_else_body@6
+    bytec_0 // "array"
+    box_get
+    bytec_1 // 0x0000
+    cover 2
+    select
+    extract 2 12
+    extract 0 12
+    pushint 8
+    extract_uint32
+    intc_1 // 1
+    ==
+    assert // invalid function pointer
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.ext
+
+f_after_if_else@8:
+    bytec_0 // "array"
+    box_get
+    bytec_1 // 0x0000
+    cover 2
+    select
     extract 14 12
-    pushint 24
+    extract 0 12
+    intc_0 // 0
     extract_uint64
-    pushint 6
-    itxn_field TypeEnum
+    bnz f_else_body@10
+    bytec_0 // "array"
+    box_get
+    bytec_1 // 0x0000
+    cover 2
+    select
+    extract 14 12
+    extract 0 12
+    pushint 8
+    extract_uint32
+    intc_1 // 1
+    ==
+    assert // invalid function pointer
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.ext
+
+f_after_if_else@12:
     intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec 4 // method "el()uint8[12]"
-    itxn_field ApplicationArgs
-    itxn_submit
-    intc_0 // 0
-    bytec_1 // "externalCalled"
+    bytec_2 // "externalCalled"
     app_global_get_ex
     assert // check externalCalled exists
     pushbytes 0x02
@@ -215,6 +203,90 @@ f_ternary_merge@4:
     intc_1 // 1
     return
 
+f_else_body@10:
+    itxn_begin
+    bytec_0 // "array"
+    box_get
+    bytec_1 // 0x0000
+    cover 2
+    select
+    extract 14 12
+    extract 0 12
+    dup
+    extract 8 4
+    swap
+    intc_0 // 0
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    itxn_field ApplicationArgs
+    itxn_submit
+    b f_after_if_else@12
+
+f_else_body@6:
+    itxn_begin
+    bytec_0 // "array"
+    box_get
+    bytec_1 // 0x0000
+    cover 2
+    select
+    extract 2 12
+    extract 0 12
+    dup
+    extract 8 4
+    swap
+    intc_0 // 0
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    itxn_field ApplicationArgs
+    itxn_submit
+    b f_after_if_else@8
+
 f_ternary_false@3:
     intc_0 // 0
     b f_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.ext() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.ext:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.ext_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.ext_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_2 // "externalCalled"
+    app_global_get_ex
+    assert // check externalCalled exists
+    dup
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b!=
+    assert // signed inc/dec overflow
+    pushbytes 0x01
+    b+
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_2 // "externalCalled"
+    swap
+    app_global_put
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.ext_ternary_false@2:
+    intc_0 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.ext_ternary_merge@3

@@ -2540,7 +2540,7 @@
               }
             },
             {
-              "_type": "ExpressionStatement",
+              "_type": "IfElse",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
                 "line": 236,
@@ -2549,8 +2549,8 @@
                 "column": null,
                 "end_column": null
               },
-              "expr": {
-                "_type": "SubmitInnerTransaction",
+              "condition": {
+                "_type": "NumericComparisonExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
                   "line": 236,
@@ -2560,103 +2560,52 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WInnerTransaction",
-                  "name": "inner_transaction_appl",
-                  "immutable": true,
-                  "transaction_type": 6
+                  "_type": "WType",
+                  "name": "bool",
+                  "immutable": true
                 },
-                "itxns": [
-                  {
-                    "_type": "CreateInnerTransaction",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                      "line": 236,
-                      "end_line": 249,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WInnerTransactionFields",
-                      "name": "inner_transaction_fields_appl",
-                      "immutable": true,
-                      "transaction_type": 6
-                    },
-                    "fields": {
-                      "ApplicationArgs": {
-                        "_type": "TupleExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                          "line": 236,
-                          "end_line": 249,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WTuple",
-                          "name": "tuple",
-                          "immutable": true,
-                          "types": [
-                            {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            }
-                          ],
-                          "names": null,
-                          "source_location": null
-                        },
-                        "items": [
-                          {
-                            "_type": "MethodConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                              "line": 236,
-                              "end_line": 249,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            "value": {
-                              "_type": "MethodSignatureString",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                                "line": 236,
-                                "end_line": 249,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "value": "el()uint8[12]"
-                            }
-                          }
-                        ]
+                "lhs": {
+                  "_type": "IntrinsicCall",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                    "line": 236,
+                    "end_line": 249,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "uint64",
+                    "immutable": true
+                  },
+                  "op_code": "btoi",
+                  "immediates": [],
+                  "stack_args": [
+                    {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                        "line": 236,
+                        "end_line": 249,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
                       },
-                      "ApplicationID": {
-                        "_type": "ReinterpretCast",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                          "line": 236,
-                          "end_line": 249,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "application",
-                          "immutable": true
-                        },
-                        "expr": {
-                          "_type": "IntrinsicCall",
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "extract",
+                      "immediates": [
+                        0,
+                        8
+                      ],
+                      "stack_args": [
+                        {
+                          "_type": "ARC4Decode",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
                             "line": 236,
@@ -2666,37 +2615,86 @@
                             "end_column": null
                           },
                           "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
+                            "_type": "BytesWType",
+                            "name": "bytes[12]",
+                            "immutable": true,
+                            "length": 12
                           },
-                          "op_code": "btoi",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "IntrinsicCall",
+                          "value": {
+                            "_type": "FieldExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                              "line": 236,
+                              "end_line": 249,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "ARC4StaticArray",
+                              "name": "arc4.static_array<arc4.uint8, 12>",
+                              "immutable": false,
+                              "element_type": {
+                                "_type": "ARC4UIntN",
+                                "name": "arc4.uint8",
+                                "immutable": true,
+                                "n": 8,
+                                "arc4_alias": null,
+                                "source_location": null
+                              },
+                              "array_size": 12,
+                              "arc4_alias": null,
+                              "source_location": null
+                            },
+                            "base": {
+                              "_type": "IndexExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
                                 "line": 236,
-                                "end_line": 249,
+                                "end_line": 244,
                                 "comment_lines": 0,
                                 "column": null,
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
+                                "_type": "ARC4Struct",
+                                "name": "Struct",
+                                "immutable": false,
+                                "fields": {
+                                  "el": {
+                                    "_type": "ARC4StaticArray",
+                                    "name": "arc4.static_array<arc4.uint8, 12>",
+                                    "immutable": false,
+                                    "element_type": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint8",
+                                      "immutable": true,
+                                      "n": 8,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "array_size": 12,
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  }
+                                },
+                                "frozen": true,
+                                "arc4_alias": null,
+                                "source_location": null,
+                                "desc": null
                               },
-                              "op_code": "extract",
-                              "immediates": [
-                                24,
-                                8
-                              ],
-                              "stack_args": [
-                                {
-                                  "_type": "IndexExpression",
+                              "base": {
+                                "_type": "StateGet",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                  "line": 236,
+                                  "end_line": 244,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "field": {
+                                  "_type": "BoxValueExpression",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
                                     "line": 236,
@@ -2706,11 +2704,264 @@
                                     "end_column": null
                                   },
                                   "wtype": {
-                                    "_type": "ARC4Struct",
-                                    "name": "Struct",
+                                    "_type": "ARC4DynamicArray",
+                                    "name": "arc4.dynamic_array<Struct>",
                                     "immutable": false,
-                                    "fields": {
-                                      "el": {
+                                    "element_type": {
+                                      "_type": "ARC4Struct",
+                                      "name": "Struct",
+                                      "immutable": false,
+                                      "fields": {
+                                        "el": {
+                                          "_type": "ARC4StaticArray",
+                                          "name": "arc4.static_array<arc4.uint8, 12>",
+                                          "immutable": false,
+                                          "element_type": {
+                                            "_type": "ARC4UIntN",
+                                            "name": "arc4.uint8",
+                                            "immutable": true,
+                                            "n": 8,
+                                            "arc4_alias": null,
+                                            "source_location": null
+                                          },
+                                          "array_size": 12,
+                                          "arc4_alias": null,
+                                          "source_location": null
+                                        }
+                                      },
+                                      "frozen": true,
+                                      "arc4_alias": null,
+                                      "source_location": null,
+                                      "desc": null
+                                    },
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "key": {
+                                    "_type": "BytesConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                      "line": 236,
+                                      "end_line": 244,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "box_key",
+                                      "immutable": true
+                                    },
+                                    "value": "VRCX|c>",
+                                    "encoding": "utf8"
+                                  },
+                                  "exists_assertion_message": null
+                                },
+                                "default": {
+                                  "_type": "BytesConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                    "line": 236,
+                                    "end_line": 244,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "ARC4DynamicArray",
+                                    "name": "arc4.dynamic_array<Struct>",
+                                    "immutable": false,
+                                    "element_type": {
+                                      "_type": "ARC4Struct",
+                                      "name": "Struct",
+                                      "immutable": false,
+                                      "fields": {
+                                        "el": {
+                                          "_type": "ARC4StaticArray",
+                                          "name": "arc4.static_array<arc4.uint8, 12>",
+                                          "immutable": false,
+                                          "element_type": {
+                                            "_type": "ARC4UIntN",
+                                            "name": "arc4.uint8",
+                                            "immutable": true,
+                                            "n": 8,
+                                            "arc4_alias": null,
+                                            "source_location": null
+                                          },
+                                          "array_size": 12,
+                                          "arc4_alias": null,
+                                          "source_location": null
+                                        }
+                                      },
+                                      "frozen": true,
+                                      "arc4_alias": null,
+                                      "source_location": null,
+                                      "desc": null
+                                    },
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "value": "000",
+                                  "encoding": "base16"
+                                }
+                              },
+                              "index": {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                  "line": 242,
+                                  "end_line": 243,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 0,
+                                "teal_alias": null
+                              }
+                            },
+                            "name": "el"
+                          },
+                          "error_message": null
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "operator": "==",
+                "rhs": {
+                  "_type": "IntegerConstant",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                    "line": 236,
+                    "end_line": 249,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "uint64",
+                    "immutable": true
+                  },
+                  "value": 0,
+                  "teal_alias": null
+                }
+              },
+              "if_branch": {
+                "_type": "Block",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                  "line": 236,
+                  "end_line": 249,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "body": [
+                  {
+                    "_type": "ExpressionStatement",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                      "line": 236,
+                      "end_line": 249,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "expr": {
+                      "_type": "SubroutineCallExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                        "line": 236,
+                        "end_line": 249,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "void",
+                        "immutable": true
+                      },
+                      "target": {
+                        "_type": "InstanceMethodTarget",
+                        "member_name": "__funcptr_dispatch_ret"
+                      },
+                      "args": [
+                        {
+                          "name": "__funcptr_id",
+                          "value": {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                              "line": 236,
+                              "end_line": 249,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "op_code": "btoi",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                  "line": 236,
+                                  "end_line": 249,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "extract",
+                                "immediates": [
+                                  8,
+                                  4
+                                ],
+                                "stack_args": [
+                                  {
+                                    "_type": "ARC4Decode",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                      "line": 236,
+                                      "end_line": 249,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes[12]",
+                                      "immutable": true,
+                                      "length": 12
+                                    },
+                                    "value": {
+                                      "_type": "FieldExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                        "line": 236,
+                                        "end_line": 249,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
                                         "_type": "ARC4StaticArray",
                                         "name": "arc4.static_array<arc4.uint8, 12>",
                                         "immutable": false,
@@ -2725,69 +2976,9 @@
                                         "array_size": 12,
                                         "arc4_alias": null,
                                         "source_location": null
-                                      }
-                                    },
-                                    "frozen": true,
-                                    "arc4_alias": null,
-                                    "source_location": null,
-                                    "desc": null
-                                  },
-                                  "base": {
-                                    "_type": "StateGet",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                                      "line": 236,
-                                      "end_line": 244,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "field": {
-                                      "_type": "BoxValueExpression",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                                        "line": 236,
-                                        "end_line": 244,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
                                       },
-                                      "wtype": {
-                                        "_type": "ARC4DynamicArray",
-                                        "name": "arc4.dynamic_array<Struct>",
-                                        "immutable": false,
-                                        "element_type": {
-                                          "_type": "ARC4Struct",
-                                          "name": "Struct",
-                                          "immutable": false,
-                                          "fields": {
-                                            "el": {
-                                              "_type": "ARC4StaticArray",
-                                              "name": "arc4.static_array<arc4.uint8, 12>",
-                                              "immutable": false,
-                                              "element_type": {
-                                                "_type": "ARC4UIntN",
-                                                "name": "arc4.uint8",
-                                                "immutable": true,
-                                                "n": 8,
-                                                "arc4_alias": null,
-                                                "source_location": null
-                                              },
-                                              "array_size": 12,
-                                              "arc4_alias": null,
-                                              "source_location": null
-                                            }
-                                          },
-                                          "frozen": true,
-                                          "arc4_alias": null,
-                                          "source_location": null,
-                                          "desc": null
-                                        },
-                                        "arc4_alias": null,
-                                        "source_location": null
-                                      },
-                                      "key": {
-                                        "_type": "BytesConstant",
+                                      "base": {
+                                        "_type": "IndexExpression",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
                                           "line": 236,
@@ -2797,30 +2988,6 @@
                                           "end_column": null
                                         },
                                         "wtype": {
-                                          "_type": "WType",
-                                          "name": "box_key",
-                                          "immutable": true
-                                        },
-                                        "value": "VRCX|c>",
-                                        "encoding": "utf8"
-                                      },
-                                      "exists_assertion_message": null
-                                    },
-                                    "default": {
-                                      "_type": "BytesConstant",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                                        "line": 236,
-                                        "end_line": 244,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "ARC4DynamicArray",
-                                        "name": "arc4.dynamic_array<Struct>",
-                                        "immutable": false,
-                                        "element_type": {
                                           "_type": "ARC4Struct",
                                           "name": "Struct",
                                           "immutable": false,
@@ -2847,94 +3014,2178 @@
                                           "source_location": null,
                                           "desc": null
                                         },
-                                        "arc4_alias": null,
-                                        "source_location": null
+                                        "base": {
+                                          "_type": "StateGet",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                            "line": 236,
+                                            "end_line": 244,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "field": {
+                                            "_type": "BoxValueExpression",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                              "line": 236,
+                                              "end_line": 244,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "ARC4DynamicArray",
+                                              "name": "arc4.dynamic_array<Struct>",
+                                              "immutable": false,
+                                              "element_type": {
+                                                "_type": "ARC4Struct",
+                                                "name": "Struct",
+                                                "immutable": false,
+                                                "fields": {
+                                                  "el": {
+                                                    "_type": "ARC4StaticArray",
+                                                    "name": "arc4.static_array<arc4.uint8, 12>",
+                                                    "immutable": false,
+                                                    "element_type": {
+                                                      "_type": "ARC4UIntN",
+                                                      "name": "arc4.uint8",
+                                                      "immutable": true,
+                                                      "n": 8,
+                                                      "arc4_alias": null,
+                                                      "source_location": null
+                                                    },
+                                                    "array_size": 12,
+                                                    "arc4_alias": null,
+                                                    "source_location": null
+                                                  }
+                                                },
+                                                "frozen": true,
+                                                "arc4_alias": null,
+                                                "source_location": null,
+                                                "desc": null
+                                              },
+                                              "arc4_alias": null,
+                                              "source_location": null
+                                            },
+                                            "key": {
+                                              "_type": "BytesConstant",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                                "line": 236,
+                                                "end_line": 244,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "box_key",
+                                                "immutable": true
+                                              },
+                                              "value": "VRCX|c>",
+                                              "encoding": "utf8"
+                                            },
+                                            "exists_assertion_message": null
+                                          },
+                                          "default": {
+                                            "_type": "BytesConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                              "line": 236,
+                                              "end_line": 244,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "ARC4DynamicArray",
+                                              "name": "arc4.dynamic_array<Struct>",
+                                              "immutable": false,
+                                              "element_type": {
+                                                "_type": "ARC4Struct",
+                                                "name": "Struct",
+                                                "immutable": false,
+                                                "fields": {
+                                                  "el": {
+                                                    "_type": "ARC4StaticArray",
+                                                    "name": "arc4.static_array<arc4.uint8, 12>",
+                                                    "immutable": false,
+                                                    "element_type": {
+                                                      "_type": "ARC4UIntN",
+                                                      "name": "arc4.uint8",
+                                                      "immutable": true,
+                                                      "n": 8,
+                                                      "arc4_alias": null,
+                                                      "source_location": null
+                                                    },
+                                                    "array_size": 12,
+                                                    "arc4_alias": null,
+                                                    "source_location": null
+                                                  }
+                                                },
+                                                "frozen": true,
+                                                "arc4_alias": null,
+                                                "source_location": null,
+                                                "desc": null
+                                              },
+                                              "arc4_alias": null,
+                                              "source_location": null
+                                            },
+                                            "value": "000",
+                                            "encoding": "base16"
+                                          }
+                                        },
+                                        "index": {
+                                          "_type": "IntegerConstant",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                            "line": 242,
+                                            "end_line": 243,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "value": 0,
+                                          "teal_alias": null
+                                        }
                                       },
-                                      "value": "000",
-                                      "encoding": "base16"
-                                    }
+                                      "name": "el"
+                                    },
+                                    "error_message": null
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "label": null,
+                "comment": null
+              },
+              "else_branch": {
+                "_type": "Block",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                  "line": 236,
+                  "end_line": 249,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "body": [
+                  {
+                    "_type": "ExpressionStatement",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                      "line": 236,
+                      "end_line": 249,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "expr": {
+                      "_type": "SubmitInnerTransaction",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                        "line": 236,
+                        "end_line": 249,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WInnerTransaction",
+                        "name": "inner_transaction_appl",
+                        "immutable": true,
+                        "transaction_type": 6
+                      },
+                      "itxns": [
+                        {
+                          "_type": "CreateInnerTransaction",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                            "line": 236,
+                            "end_line": 249,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WInnerTransactionFields",
+                            "name": "inner_transaction_fields_appl",
+                            "immutable": true,
+                            "transaction_type": 6
+                          },
+                          "fields": {
+                            "ApplicationArgs": {
+                              "_type": "TupleExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                "line": 236,
+                                "end_line": 249,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WTuple",
+                                "name": "tuple",
+                                "immutable": true,
+                                "types": [
+                                  {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  }
+                                ],
+                                "names": null,
+                                "source_location": null
+                              },
+                              "items": [
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                    "line": 236,
+                                    "end_line": 249,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
                                   },
-                                  "index": {
-                                    "_type": "IntegerConstant",
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "extract",
+                                  "immediates": [
+                                    8,
+                                    4
+                                  ],
+                                  "stack_args": [
+                                    {
+                                      "_type": "ARC4Decode",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                        "line": 236,
+                                        "end_line": 249,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes[12]",
+                                        "immutable": true,
+                                        "length": 12
+                                      },
+                                      "value": {
+                                        "_type": "FieldExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                          "line": 236,
+                                          "end_line": 249,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "ARC4StaticArray",
+                                          "name": "arc4.static_array<arc4.uint8, 12>",
+                                          "immutable": false,
+                                          "element_type": {
+                                            "_type": "ARC4UIntN",
+                                            "name": "arc4.uint8",
+                                            "immutable": true,
+                                            "n": 8,
+                                            "arc4_alias": null,
+                                            "source_location": null
+                                          },
+                                          "array_size": 12,
+                                          "arc4_alias": null,
+                                          "source_location": null
+                                        },
+                                        "base": {
+                                          "_type": "IndexExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                            "line": 236,
+                                            "end_line": 244,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "ARC4Struct",
+                                            "name": "Struct",
+                                            "immutable": false,
+                                            "fields": {
+                                              "el": {
+                                                "_type": "ARC4StaticArray",
+                                                "name": "arc4.static_array<arc4.uint8, 12>",
+                                                "immutable": false,
+                                                "element_type": {
+                                                  "_type": "ARC4UIntN",
+                                                  "name": "arc4.uint8",
+                                                  "immutable": true,
+                                                  "n": 8,
+                                                  "arc4_alias": null,
+                                                  "source_location": null
+                                                },
+                                                "array_size": 12,
+                                                "arc4_alias": null,
+                                                "source_location": null
+                                              }
+                                            },
+                                            "frozen": true,
+                                            "arc4_alias": null,
+                                            "source_location": null,
+                                            "desc": null
+                                          },
+                                          "base": {
+                                            "_type": "StateGet",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                              "line": 236,
+                                              "end_line": 244,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "field": {
+                                              "_type": "BoxValueExpression",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                                "line": 236,
+                                                "end_line": 244,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "ARC4DynamicArray",
+                                                "name": "arc4.dynamic_array<Struct>",
+                                                "immutable": false,
+                                                "element_type": {
+                                                  "_type": "ARC4Struct",
+                                                  "name": "Struct",
+                                                  "immutable": false,
+                                                  "fields": {
+                                                    "el": {
+                                                      "_type": "ARC4StaticArray",
+                                                      "name": "arc4.static_array<arc4.uint8, 12>",
+                                                      "immutable": false,
+                                                      "element_type": {
+                                                        "_type": "ARC4UIntN",
+                                                        "name": "arc4.uint8",
+                                                        "immutable": true,
+                                                        "n": 8,
+                                                        "arc4_alias": null,
+                                                        "source_location": null
+                                                      },
+                                                      "array_size": 12,
+                                                      "arc4_alias": null,
+                                                      "source_location": null
+                                                    }
+                                                  },
+                                                  "frozen": true,
+                                                  "arc4_alias": null,
+                                                  "source_location": null,
+                                                  "desc": null
+                                                },
+                                                "arc4_alias": null,
+                                                "source_location": null
+                                              },
+                                              "key": {
+                                                "_type": "BytesConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                                  "line": 236,
+                                                  "end_line": 244,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "box_key",
+                                                  "immutable": true
+                                                },
+                                                "value": "VRCX|c>",
+                                                "encoding": "utf8"
+                                              },
+                                              "exists_assertion_message": null
+                                            },
+                                            "default": {
+                                              "_type": "BytesConstant",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                                "line": 236,
+                                                "end_line": 244,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "ARC4DynamicArray",
+                                                "name": "arc4.dynamic_array<Struct>",
+                                                "immutable": false,
+                                                "element_type": {
+                                                  "_type": "ARC4Struct",
+                                                  "name": "Struct",
+                                                  "immutable": false,
+                                                  "fields": {
+                                                    "el": {
+                                                      "_type": "ARC4StaticArray",
+                                                      "name": "arc4.static_array<arc4.uint8, 12>",
+                                                      "immutable": false,
+                                                      "element_type": {
+                                                        "_type": "ARC4UIntN",
+                                                        "name": "arc4.uint8",
+                                                        "immutable": true,
+                                                        "n": 8,
+                                                        "arc4_alias": null,
+                                                        "source_location": null
+                                                      },
+                                                      "array_size": 12,
+                                                      "arc4_alias": null,
+                                                      "source_location": null
+                                                    }
+                                                  },
+                                                  "frozen": true,
+                                                  "arc4_alias": null,
+                                                  "source_location": null,
+                                                  "desc": null
+                                                },
+                                                "arc4_alias": null,
+                                                "source_location": null
+                                              },
+                                              "value": "000",
+                                              "encoding": "base16"
+                                            }
+                                          },
+                                          "index": {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                              "line": 242,
+                                              "end_line": 243,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 0,
+                                            "teal_alias": null
+                                          }
+                                        },
+                                        "name": "el"
+                                      },
+                                      "error_message": null
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            "ApplicationID": {
+                              "_type": "ReinterpretCast",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                "line": 236,
+                                "end_line": 249,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "application",
+                                "immutable": true
+                              },
+                              "expr": {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                  "line": 236,
+                                  "end_line": 249,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "op_code": "btoi",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntrinsicCall",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                                      "line": 242,
-                                      "end_line": 243,
+                                      "line": 236,
+                                      "end_line": 249,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "extract",
+                                    "immediates": [
+                                      0,
+                                      8
+                                    ],
+                                    "stack_args": [
+                                      {
+                                        "_type": "ARC4Decode",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                          "line": 236,
+                                          "end_line": 249,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes[12]",
+                                          "immutable": true,
+                                          "length": 12
+                                        },
+                                        "value": {
+                                          "_type": "FieldExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                            "line": 236,
+                                            "end_line": 249,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "ARC4StaticArray",
+                                            "name": "arc4.static_array<arc4.uint8, 12>",
+                                            "immutable": false,
+                                            "element_type": {
+                                              "_type": "ARC4UIntN",
+                                              "name": "arc4.uint8",
+                                              "immutable": true,
+                                              "n": 8,
+                                              "arc4_alias": null,
+                                              "source_location": null
+                                            },
+                                            "array_size": 12,
+                                            "arc4_alias": null,
+                                            "source_location": null
+                                          },
+                                          "base": {
+                                            "_type": "IndexExpression",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                              "line": 236,
+                                              "end_line": 244,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "ARC4Struct",
+                                              "name": "Struct",
+                                              "immutable": false,
+                                              "fields": {
+                                                "el": {
+                                                  "_type": "ARC4StaticArray",
+                                                  "name": "arc4.static_array<arc4.uint8, 12>",
+                                                  "immutable": false,
+                                                  "element_type": {
+                                                    "_type": "ARC4UIntN",
+                                                    "name": "arc4.uint8",
+                                                    "immutable": true,
+                                                    "n": 8,
+                                                    "arc4_alias": null,
+                                                    "source_location": null
+                                                  },
+                                                  "array_size": 12,
+                                                  "arc4_alias": null,
+                                                  "source_location": null
+                                                }
+                                              },
+                                              "frozen": true,
+                                              "arc4_alias": null,
+                                              "source_location": null,
+                                              "desc": null
+                                            },
+                                            "base": {
+                                              "_type": "StateGet",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                                "line": 236,
+                                                "end_line": 244,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "field": {
+                                                "_type": "BoxValueExpression",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                                  "line": 236,
+                                                  "end_line": 244,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "ARC4DynamicArray",
+                                                  "name": "arc4.dynamic_array<Struct>",
+                                                  "immutable": false,
+                                                  "element_type": {
+                                                    "_type": "ARC4Struct",
+                                                    "name": "Struct",
+                                                    "immutable": false,
+                                                    "fields": {
+                                                      "el": {
+                                                        "_type": "ARC4StaticArray",
+                                                        "name": "arc4.static_array<arc4.uint8, 12>",
+                                                        "immutable": false,
+                                                        "element_type": {
+                                                          "_type": "ARC4UIntN",
+                                                          "name": "arc4.uint8",
+                                                          "immutable": true,
+                                                          "n": 8,
+                                                          "arc4_alias": null,
+                                                          "source_location": null
+                                                        },
+                                                        "array_size": 12,
+                                                        "arc4_alias": null,
+                                                        "source_location": null
+                                                      }
+                                                    },
+                                                    "frozen": true,
+                                                    "arc4_alias": null,
+                                                    "source_location": null,
+                                                    "desc": null
+                                                  },
+                                                  "arc4_alias": null,
+                                                  "source_location": null
+                                                },
+                                                "key": {
+                                                  "_type": "BytesConstant",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                                    "line": 236,
+                                                    "end_line": 244,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "box_key",
+                                                    "immutable": true
+                                                  },
+                                                  "value": "VRCX|c>",
+                                                  "encoding": "utf8"
+                                                },
+                                                "exists_assertion_message": null
+                                              },
+                                              "default": {
+                                                "_type": "BytesConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                                  "line": 236,
+                                                  "end_line": 244,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "ARC4DynamicArray",
+                                                  "name": "arc4.dynamic_array<Struct>",
+                                                  "immutable": false,
+                                                  "element_type": {
+                                                    "_type": "ARC4Struct",
+                                                    "name": "Struct",
+                                                    "immutable": false,
+                                                    "fields": {
+                                                      "el": {
+                                                        "_type": "ARC4StaticArray",
+                                                        "name": "arc4.static_array<arc4.uint8, 12>",
+                                                        "immutable": false,
+                                                        "element_type": {
+                                                          "_type": "ARC4UIntN",
+                                                          "name": "arc4.uint8",
+                                                          "immutable": true,
+                                                          "n": 8,
+                                                          "arc4_alias": null,
+                                                          "source_location": null
+                                                        },
+                                                        "array_size": 12,
+                                                        "arc4_alias": null,
+                                                        "source_location": null
+                                                      }
+                                                    },
+                                                    "frozen": true,
+                                                    "arc4_alias": null,
+                                                    "source_location": null,
+                                                    "desc": null
+                                                  },
+                                                  "arc4_alias": null,
+                                                  "source_location": null
+                                                },
+                                                "value": "000",
+                                                "encoding": "base16"
+                                              }
+                                            },
+                                            "index": {
+                                              "_type": "IntegerConstant",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                                "line": 242,
+                                                "end_line": 243,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "uint64",
+                                                "immutable": true
+                                              },
+                                              "value": 0,
+                                              "teal_alias": null
+                                            }
+                                          },
+                                          "name": "el"
+                                        },
+                                        "error_message": null
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            },
+                            "Fee": {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                "line": 236,
+                                "end_line": 249,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 0,
+                              "teal_alias": null
+                            },
+                            "OnCompletion": {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                "line": 236,
+                                "end_line": 249,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 0,
+                              "teal_alias": null
+                            },
+                            "TypeEnum": {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                "line": 236,
+                                "end_line": 249,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 6,
+                              "teal_alias": null
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "label": null,
+                "comment": null
+              }
+            },
+            {
+              "_type": "ExpressionStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                "line": 236,
+                "end_line": 249,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "expr": {
+                "_type": "VoidConstant",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                  "line": 236,
+                  "end_line": 249,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "void",
+                  "immutable": true
+                }
+              }
+            },
+            {
+              "_type": "IfElse",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                "line": 253,
+                "end_line": 266,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "condition": {
+                "_type": "NumericComparisonExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                  "line": 253,
+                  "end_line": 266,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "bool",
+                  "immutable": true
+                },
+                "lhs": {
+                  "_type": "IntrinsicCall",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                    "line": 253,
+                    "end_line": 266,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "uint64",
+                    "immutable": true
+                  },
+                  "op_code": "btoi",
+                  "immediates": [],
+                  "stack_args": [
+                    {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                        "line": 253,
+                        "end_line": 266,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "extract",
+                      "immediates": [
+                        0,
+                        8
+                      ],
+                      "stack_args": [
+                        {
+                          "_type": "ARC4Decode",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                            "line": 253,
+                            "end_line": 266,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes[12]",
+                            "immutable": true,
+                            "length": 12
+                          },
+                          "value": {
+                            "_type": "FieldExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                              "line": 253,
+                              "end_line": 266,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "ARC4StaticArray",
+                              "name": "arc4.static_array<arc4.uint8, 12>",
+                              "immutable": false,
+                              "element_type": {
+                                "_type": "ARC4UIntN",
+                                "name": "arc4.uint8",
+                                "immutable": true,
+                                "n": 8,
+                                "arc4_alias": null,
+                                "source_location": null
+                              },
+                              "array_size": 12,
+                              "arc4_alias": null,
+                              "source_location": null
+                            },
+                            "base": {
+                              "_type": "IndexExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                "line": 253,
+                                "end_line": 261,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "ARC4Struct",
+                                "name": "Struct",
+                                "immutable": false,
+                                "fields": {
+                                  "el": {
+                                    "_type": "ARC4StaticArray",
+                                    "name": "arc4.static_array<arc4.uint8, 12>",
+                                    "immutable": false,
+                                    "element_type": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint8",
+                                      "immutable": true,
+                                      "n": 8,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "array_size": 12,
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  }
+                                },
+                                "frozen": true,
+                                "arc4_alias": null,
+                                "source_location": null,
+                                "desc": null
+                              },
+                              "base": {
+                                "_type": "StateGet",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                  "line": 253,
+                                  "end_line": 261,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "field": {
+                                  "_type": "BoxValueExpression",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                    "line": 253,
+                                    "end_line": 261,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "ARC4DynamicArray",
+                                    "name": "arc4.dynamic_array<Struct>",
+                                    "immutable": false,
+                                    "element_type": {
+                                      "_type": "ARC4Struct",
+                                      "name": "Struct",
+                                      "immutable": false,
+                                      "fields": {
+                                        "el": {
+                                          "_type": "ARC4StaticArray",
+                                          "name": "arc4.static_array<arc4.uint8, 12>",
+                                          "immutable": false,
+                                          "element_type": {
+                                            "_type": "ARC4UIntN",
+                                            "name": "arc4.uint8",
+                                            "immutable": true,
+                                            "n": 8,
+                                            "arc4_alias": null,
+                                            "source_location": null
+                                          },
+                                          "array_size": 12,
+                                          "arc4_alias": null,
+                                          "source_location": null
+                                        }
+                                      },
+                                      "frozen": true,
+                                      "arc4_alias": null,
+                                      "source_location": null,
+                                      "desc": null
+                                    },
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "key": {
+                                    "_type": "BytesConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                      "line": 253,
+                                      "end_line": 261,
                                       "comment_lines": 0,
                                       "column": null,
                                       "end_column": null
                                     },
                                     "wtype": {
                                       "_type": "WType",
-                                      "name": "uint64",
+                                      "name": "box_key",
                                       "immutable": true
                                     },
-                                    "value": 0,
-                                    "teal_alias": null
-                                  }
+                                    "value": "VRCX|c>",
+                                    "encoding": "utf8"
+                                  },
+                                  "exists_assertion_message": null
+                                },
+                                "default": {
+                                  "_type": "BytesConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                    "line": 253,
+                                    "end_line": 261,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "ARC4DynamicArray",
+                                    "name": "arc4.dynamic_array<Struct>",
+                                    "immutable": false,
+                                    "element_type": {
+                                      "_type": "ARC4Struct",
+                                      "name": "Struct",
+                                      "immutable": false,
+                                      "fields": {
+                                        "el": {
+                                          "_type": "ARC4StaticArray",
+                                          "name": "arc4.static_array<arc4.uint8, 12>",
+                                          "immutable": false,
+                                          "element_type": {
+                                            "_type": "ARC4UIntN",
+                                            "name": "arc4.uint8",
+                                            "immutable": true,
+                                            "n": 8,
+                                            "arc4_alias": null,
+                                            "source_location": null
+                                          },
+                                          "array_size": 12,
+                                          "arc4_alias": null,
+                                          "source_location": null
+                                        }
+                                      },
+                                      "frozen": true,
+                                      "arc4_alias": null,
+                                      "source_location": null,
+                                      "desc": null
+                                    },
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "value": "000",
+                                  "encoding": "base16"
                                 }
-                              ]
-                            }
-                          ]
+                              },
+                              "index": {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                  "line": 259,
+                                  "end_line": 260,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 1,
+                                "teal_alias": null
+                              }
+                            },
+                            "name": "el"
+                          },
+                          "error_message": null
                         }
+                      ]
+                    }
+                  ]
+                },
+                "operator": "==",
+                "rhs": {
+                  "_type": "IntegerConstant",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                    "line": 253,
+                    "end_line": 266,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "uint64",
+                    "immutable": true
+                  },
+                  "value": 0,
+                  "teal_alias": null
+                }
+              },
+              "if_branch": {
+                "_type": "Block",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                  "line": 253,
+                  "end_line": 266,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "body": [
+                  {
+                    "_type": "ExpressionStatement",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                      "line": 253,
+                      "end_line": 266,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "expr": {
+                      "_type": "SubroutineCallExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                        "line": 253,
+                        "end_line": 266,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
                       },
-                      "Fee": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                          "line": 236,
-                          "end_line": 249,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "void",
+                        "immutable": true
                       },
-                      "OnCompletion": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                          "line": 236,
-                          "end_line": 249,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
+                      "target": {
+                        "_type": "InstanceMethodTarget",
+                        "member_name": "__funcptr_dispatch_ret"
                       },
-                      "TypeEnum": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                          "line": 236,
-                          "end_line": 249,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 6,
-                        "teal_alias": null
-                      }
+                      "args": [
+                        {
+                          "name": "__funcptr_id",
+                          "value": {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                              "line": 253,
+                              "end_line": 266,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "op_code": "btoi",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                  "line": 253,
+                                  "end_line": 266,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "extract",
+                                "immediates": [
+                                  8,
+                                  4
+                                ],
+                                "stack_args": [
+                                  {
+                                    "_type": "ARC4Decode",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                      "line": 253,
+                                      "end_line": 266,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes[12]",
+                                      "immutable": true,
+                                      "length": 12
+                                    },
+                                    "value": {
+                                      "_type": "FieldExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                        "line": 253,
+                                        "end_line": 266,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "ARC4StaticArray",
+                                        "name": "arc4.static_array<arc4.uint8, 12>",
+                                        "immutable": false,
+                                        "element_type": {
+                                          "_type": "ARC4UIntN",
+                                          "name": "arc4.uint8",
+                                          "immutable": true,
+                                          "n": 8,
+                                          "arc4_alias": null,
+                                          "source_location": null
+                                        },
+                                        "array_size": 12,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "base": {
+                                        "_type": "IndexExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                          "line": 253,
+                                          "end_line": 261,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "ARC4Struct",
+                                          "name": "Struct",
+                                          "immutable": false,
+                                          "fields": {
+                                            "el": {
+                                              "_type": "ARC4StaticArray",
+                                              "name": "arc4.static_array<arc4.uint8, 12>",
+                                              "immutable": false,
+                                              "element_type": {
+                                                "_type": "ARC4UIntN",
+                                                "name": "arc4.uint8",
+                                                "immutable": true,
+                                                "n": 8,
+                                                "arc4_alias": null,
+                                                "source_location": null
+                                              },
+                                              "array_size": 12,
+                                              "arc4_alias": null,
+                                              "source_location": null
+                                            }
+                                          },
+                                          "frozen": true,
+                                          "arc4_alias": null,
+                                          "source_location": null,
+                                          "desc": null
+                                        },
+                                        "base": {
+                                          "_type": "StateGet",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                            "line": 253,
+                                            "end_line": 261,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "field": {
+                                            "_type": "BoxValueExpression",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                              "line": 253,
+                                              "end_line": 261,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "ARC4DynamicArray",
+                                              "name": "arc4.dynamic_array<Struct>",
+                                              "immutable": false,
+                                              "element_type": {
+                                                "_type": "ARC4Struct",
+                                                "name": "Struct",
+                                                "immutable": false,
+                                                "fields": {
+                                                  "el": {
+                                                    "_type": "ARC4StaticArray",
+                                                    "name": "arc4.static_array<arc4.uint8, 12>",
+                                                    "immutable": false,
+                                                    "element_type": {
+                                                      "_type": "ARC4UIntN",
+                                                      "name": "arc4.uint8",
+                                                      "immutable": true,
+                                                      "n": 8,
+                                                      "arc4_alias": null,
+                                                      "source_location": null
+                                                    },
+                                                    "array_size": 12,
+                                                    "arc4_alias": null,
+                                                    "source_location": null
+                                                  }
+                                                },
+                                                "frozen": true,
+                                                "arc4_alias": null,
+                                                "source_location": null,
+                                                "desc": null
+                                              },
+                                              "arc4_alias": null,
+                                              "source_location": null
+                                            },
+                                            "key": {
+                                              "_type": "BytesConstant",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                                "line": 253,
+                                                "end_line": 261,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "box_key",
+                                                "immutable": true
+                                              },
+                                              "value": "VRCX|c>",
+                                              "encoding": "utf8"
+                                            },
+                                            "exists_assertion_message": null
+                                          },
+                                          "default": {
+                                            "_type": "BytesConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                              "line": 253,
+                                              "end_line": 261,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "ARC4DynamicArray",
+                                              "name": "arc4.dynamic_array<Struct>",
+                                              "immutable": false,
+                                              "element_type": {
+                                                "_type": "ARC4Struct",
+                                                "name": "Struct",
+                                                "immutable": false,
+                                                "fields": {
+                                                  "el": {
+                                                    "_type": "ARC4StaticArray",
+                                                    "name": "arc4.static_array<arc4.uint8, 12>",
+                                                    "immutable": false,
+                                                    "element_type": {
+                                                      "_type": "ARC4UIntN",
+                                                      "name": "arc4.uint8",
+                                                      "immutable": true,
+                                                      "n": 8,
+                                                      "arc4_alias": null,
+                                                      "source_location": null
+                                                    },
+                                                    "array_size": 12,
+                                                    "arc4_alias": null,
+                                                    "source_location": null
+                                                  }
+                                                },
+                                                "frozen": true,
+                                                "arc4_alias": null,
+                                                "source_location": null,
+                                                "desc": null
+                                              },
+                                              "arc4_alias": null,
+                                              "source_location": null
+                                            },
+                                            "value": "000",
+                                            "encoding": "base16"
+                                          }
+                                        },
+                                        "index": {
+                                          "_type": "IntegerConstant",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                            "line": 259,
+                                            "end_line": 260,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "value": 1,
+                                          "teal_alias": null
+                                        }
+                                      },
+                                      "name": "el"
+                                    },
+                                    "error_message": null
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
                     }
                   }
-                ]
+                ],
+                "label": null,
+                "comment": null
+              },
+              "else_branch": {
+                "_type": "Block",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                  "line": 253,
+                  "end_line": 266,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "body": [
+                  {
+                    "_type": "ExpressionStatement",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                      "line": 253,
+                      "end_line": 266,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "expr": {
+                      "_type": "SubmitInnerTransaction",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                        "line": 253,
+                        "end_line": 266,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WInnerTransaction",
+                        "name": "inner_transaction_appl",
+                        "immutable": true,
+                        "transaction_type": 6
+                      },
+                      "itxns": [
+                        {
+                          "_type": "CreateInnerTransaction",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                            "line": 253,
+                            "end_line": 266,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WInnerTransactionFields",
+                            "name": "inner_transaction_fields_appl",
+                            "immutable": true,
+                            "transaction_type": 6
+                          },
+                          "fields": {
+                            "ApplicationArgs": {
+                              "_type": "TupleExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                "line": 253,
+                                "end_line": 266,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WTuple",
+                                "name": "tuple",
+                                "immutable": true,
+                                "types": [
+                                  {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  }
+                                ],
+                                "names": null,
+                                "source_location": null
+                              },
+                              "items": [
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                    "line": 253,
+                                    "end_line": 266,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "extract",
+                                  "immediates": [
+                                    8,
+                                    4
+                                  ],
+                                  "stack_args": [
+                                    {
+                                      "_type": "ARC4Decode",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                        "line": 253,
+                                        "end_line": 266,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes[12]",
+                                        "immutable": true,
+                                        "length": 12
+                                      },
+                                      "value": {
+                                        "_type": "FieldExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                          "line": 253,
+                                          "end_line": 266,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "ARC4StaticArray",
+                                          "name": "arc4.static_array<arc4.uint8, 12>",
+                                          "immutable": false,
+                                          "element_type": {
+                                            "_type": "ARC4UIntN",
+                                            "name": "arc4.uint8",
+                                            "immutable": true,
+                                            "n": 8,
+                                            "arc4_alias": null,
+                                            "source_location": null
+                                          },
+                                          "array_size": 12,
+                                          "arc4_alias": null,
+                                          "source_location": null
+                                        },
+                                        "base": {
+                                          "_type": "IndexExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                            "line": 253,
+                                            "end_line": 261,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "ARC4Struct",
+                                            "name": "Struct",
+                                            "immutable": false,
+                                            "fields": {
+                                              "el": {
+                                                "_type": "ARC4StaticArray",
+                                                "name": "arc4.static_array<arc4.uint8, 12>",
+                                                "immutable": false,
+                                                "element_type": {
+                                                  "_type": "ARC4UIntN",
+                                                  "name": "arc4.uint8",
+                                                  "immutable": true,
+                                                  "n": 8,
+                                                  "arc4_alias": null,
+                                                  "source_location": null
+                                                },
+                                                "array_size": 12,
+                                                "arc4_alias": null,
+                                                "source_location": null
+                                              }
+                                            },
+                                            "frozen": true,
+                                            "arc4_alias": null,
+                                            "source_location": null,
+                                            "desc": null
+                                          },
+                                          "base": {
+                                            "_type": "StateGet",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                              "line": 253,
+                                              "end_line": 261,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "field": {
+                                              "_type": "BoxValueExpression",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                                "line": 253,
+                                                "end_line": 261,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "ARC4DynamicArray",
+                                                "name": "arc4.dynamic_array<Struct>",
+                                                "immutable": false,
+                                                "element_type": {
+                                                  "_type": "ARC4Struct",
+                                                  "name": "Struct",
+                                                  "immutable": false,
+                                                  "fields": {
+                                                    "el": {
+                                                      "_type": "ARC4StaticArray",
+                                                      "name": "arc4.static_array<arc4.uint8, 12>",
+                                                      "immutable": false,
+                                                      "element_type": {
+                                                        "_type": "ARC4UIntN",
+                                                        "name": "arc4.uint8",
+                                                        "immutable": true,
+                                                        "n": 8,
+                                                        "arc4_alias": null,
+                                                        "source_location": null
+                                                      },
+                                                      "array_size": 12,
+                                                      "arc4_alias": null,
+                                                      "source_location": null
+                                                    }
+                                                  },
+                                                  "frozen": true,
+                                                  "arc4_alias": null,
+                                                  "source_location": null,
+                                                  "desc": null
+                                                },
+                                                "arc4_alias": null,
+                                                "source_location": null
+                                              },
+                                              "key": {
+                                                "_type": "BytesConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                                  "line": 253,
+                                                  "end_line": 261,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "box_key",
+                                                  "immutable": true
+                                                },
+                                                "value": "VRCX|c>",
+                                                "encoding": "utf8"
+                                              },
+                                              "exists_assertion_message": null
+                                            },
+                                            "default": {
+                                              "_type": "BytesConstant",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                                "line": 253,
+                                                "end_line": 261,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "ARC4DynamicArray",
+                                                "name": "arc4.dynamic_array<Struct>",
+                                                "immutable": false,
+                                                "element_type": {
+                                                  "_type": "ARC4Struct",
+                                                  "name": "Struct",
+                                                  "immutable": false,
+                                                  "fields": {
+                                                    "el": {
+                                                      "_type": "ARC4StaticArray",
+                                                      "name": "arc4.static_array<arc4.uint8, 12>",
+                                                      "immutable": false,
+                                                      "element_type": {
+                                                        "_type": "ARC4UIntN",
+                                                        "name": "arc4.uint8",
+                                                        "immutable": true,
+                                                        "n": 8,
+                                                        "arc4_alias": null,
+                                                        "source_location": null
+                                                      },
+                                                      "array_size": 12,
+                                                      "arc4_alias": null,
+                                                      "source_location": null
+                                                    }
+                                                  },
+                                                  "frozen": true,
+                                                  "arc4_alias": null,
+                                                  "source_location": null,
+                                                  "desc": null
+                                                },
+                                                "arc4_alias": null,
+                                                "source_location": null
+                                              },
+                                              "value": "000",
+                                              "encoding": "base16"
+                                            }
+                                          },
+                                          "index": {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                              "line": 259,
+                                              "end_line": 260,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 1,
+                                            "teal_alias": null
+                                          }
+                                        },
+                                        "name": "el"
+                                      },
+                                      "error_message": null
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            "ApplicationID": {
+                              "_type": "ReinterpretCast",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                "line": 253,
+                                "end_line": 266,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "application",
+                                "immutable": true
+                              },
+                              "expr": {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                  "line": 253,
+                                  "end_line": 266,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "op_code": "btoi",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                      "line": 253,
+                                      "end_line": 266,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "extract",
+                                    "immediates": [
+                                      0,
+                                      8
+                                    ],
+                                    "stack_args": [
+                                      {
+                                        "_type": "ARC4Decode",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                          "line": 253,
+                                          "end_line": 266,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes[12]",
+                                          "immutable": true,
+                                          "length": 12
+                                        },
+                                        "value": {
+                                          "_type": "FieldExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                            "line": 253,
+                                            "end_line": 266,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "ARC4StaticArray",
+                                            "name": "arc4.static_array<arc4.uint8, 12>",
+                                            "immutable": false,
+                                            "element_type": {
+                                              "_type": "ARC4UIntN",
+                                              "name": "arc4.uint8",
+                                              "immutable": true,
+                                              "n": 8,
+                                              "arc4_alias": null,
+                                              "source_location": null
+                                            },
+                                            "array_size": 12,
+                                            "arc4_alias": null,
+                                            "source_location": null
+                                          },
+                                          "base": {
+                                            "_type": "IndexExpression",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                              "line": 253,
+                                              "end_line": 261,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "ARC4Struct",
+                                              "name": "Struct",
+                                              "immutable": false,
+                                              "fields": {
+                                                "el": {
+                                                  "_type": "ARC4StaticArray",
+                                                  "name": "arc4.static_array<arc4.uint8, 12>",
+                                                  "immutable": false,
+                                                  "element_type": {
+                                                    "_type": "ARC4UIntN",
+                                                    "name": "arc4.uint8",
+                                                    "immutable": true,
+                                                    "n": 8,
+                                                    "arc4_alias": null,
+                                                    "source_location": null
+                                                  },
+                                                  "array_size": 12,
+                                                  "arc4_alias": null,
+                                                  "source_location": null
+                                                }
+                                              },
+                                              "frozen": true,
+                                              "arc4_alias": null,
+                                              "source_location": null,
+                                              "desc": null
+                                            },
+                                            "base": {
+                                              "_type": "StateGet",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                                "line": 253,
+                                                "end_line": 261,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "field": {
+                                                "_type": "BoxValueExpression",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                                  "line": 253,
+                                                  "end_line": 261,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "ARC4DynamicArray",
+                                                  "name": "arc4.dynamic_array<Struct>",
+                                                  "immutable": false,
+                                                  "element_type": {
+                                                    "_type": "ARC4Struct",
+                                                    "name": "Struct",
+                                                    "immutable": false,
+                                                    "fields": {
+                                                      "el": {
+                                                        "_type": "ARC4StaticArray",
+                                                        "name": "arc4.static_array<arc4.uint8, 12>",
+                                                        "immutable": false,
+                                                        "element_type": {
+                                                          "_type": "ARC4UIntN",
+                                                          "name": "arc4.uint8",
+                                                          "immutable": true,
+                                                          "n": 8,
+                                                          "arc4_alias": null,
+                                                          "source_location": null
+                                                        },
+                                                        "array_size": 12,
+                                                        "arc4_alias": null,
+                                                        "source_location": null
+                                                      }
+                                                    },
+                                                    "frozen": true,
+                                                    "arc4_alias": null,
+                                                    "source_location": null,
+                                                    "desc": null
+                                                  },
+                                                  "arc4_alias": null,
+                                                  "source_location": null
+                                                },
+                                                "key": {
+                                                  "_type": "BytesConstant",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                                    "line": 253,
+                                                    "end_line": 261,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "box_key",
+                                                    "immutable": true
+                                                  },
+                                                  "value": "VRCX|c>",
+                                                  "encoding": "utf8"
+                                                },
+                                                "exists_assertion_message": null
+                                              },
+                                              "default": {
+                                                "_type": "BytesConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                                  "line": 253,
+                                                  "end_line": 261,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "ARC4DynamicArray",
+                                                  "name": "arc4.dynamic_array<Struct>",
+                                                  "immutable": false,
+                                                  "element_type": {
+                                                    "_type": "ARC4Struct",
+                                                    "name": "Struct",
+                                                    "immutable": false,
+                                                    "fields": {
+                                                      "el": {
+                                                        "_type": "ARC4StaticArray",
+                                                        "name": "arc4.static_array<arc4.uint8, 12>",
+                                                        "immutable": false,
+                                                        "element_type": {
+                                                          "_type": "ARC4UIntN",
+                                                          "name": "arc4.uint8",
+                                                          "immutable": true,
+                                                          "n": 8,
+                                                          "arc4_alias": null,
+                                                          "source_location": null
+                                                        },
+                                                        "array_size": 12,
+                                                        "arc4_alias": null,
+                                                        "source_location": null
+                                                      }
+                                                    },
+                                                    "frozen": true,
+                                                    "arc4_alias": null,
+                                                    "source_location": null,
+                                                    "desc": null
+                                                  },
+                                                  "arc4_alias": null,
+                                                  "source_location": null
+                                                },
+                                                "value": "000",
+                                                "encoding": "base16"
+                                              }
+                                            },
+                                            "index": {
+                                              "_type": "IntegerConstant",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                                "line": 259,
+                                                "end_line": 260,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "uint64",
+                                                "immutable": true
+                                              },
+                                              "value": 1,
+                                              "teal_alias": null
+                                            }
+                                          },
+                                          "name": "el"
+                                        },
+                                        "error_message": null
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            },
+                            "Fee": {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                "line": 253,
+                                "end_line": 266,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 0,
+                              "teal_alias": null
+                            },
+                            "OnCompletion": {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                "line": 253,
+                                "end_line": 266,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 0,
+                              "teal_alias": null
+                            },
+                            "TypeEnum": {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
+                                "line": 253,
+                                "end_line": 266,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 6,
+                              "teal_alias": null
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "label": null,
+                "comment": null
               }
             },
             {
@@ -2948,7 +5199,7 @@
                 "end_column": null
               },
               "expr": {
-                "_type": "SubmitInnerTransaction",
+                "_type": "VoidConstant",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
                   "line": 253,
@@ -2958,381 +5209,10 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WInnerTransaction",
-                  "name": "inner_transaction_appl",
-                  "immutable": true,
-                  "transaction_type": 6
-                },
-                "itxns": [
-                  {
-                    "_type": "CreateInnerTransaction",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                      "line": 253,
-                      "end_line": 266,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WInnerTransactionFields",
-                      "name": "inner_transaction_fields_appl",
-                      "immutable": true,
-                      "transaction_type": 6
-                    },
-                    "fields": {
-                      "ApplicationArgs": {
-                        "_type": "TupleExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                          "line": 253,
-                          "end_line": 266,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WTuple",
-                          "name": "tuple",
-                          "immutable": true,
-                          "types": [
-                            {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            }
-                          ],
-                          "names": null,
-                          "source_location": null
-                        },
-                        "items": [
-                          {
-                            "_type": "MethodConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                              "line": 253,
-                              "end_line": 266,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            "value": {
-                              "_type": "MethodSignatureString",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                                "line": 253,
-                                "end_line": 266,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "value": "el()uint8[12]"
-                            }
-                          }
-                        ]
-                      },
-                      "ApplicationID": {
-                        "_type": "ReinterpretCast",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                          "line": 253,
-                          "end_line": 266,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "application",
-                          "immutable": true
-                        },
-                        "expr": {
-                          "_type": "IntrinsicCall",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                            "line": 253,
-                            "end_line": 266,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "op_code": "btoi",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "IntrinsicCall",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                                "line": 253,
-                                "end_line": 266,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "op_code": "extract",
-                              "immediates": [
-                                24,
-                                8
-                              ],
-                              "stack_args": [
-                                {
-                                  "_type": "IndexExpression",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                                    "line": 253,
-                                    "end_line": 261,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "ARC4Struct",
-                                    "name": "Struct",
-                                    "immutable": false,
-                                    "fields": {
-                                      "el": {
-                                        "_type": "ARC4StaticArray",
-                                        "name": "arc4.static_array<arc4.uint8, 12>",
-                                        "immutable": false,
-                                        "element_type": {
-                                          "_type": "ARC4UIntN",
-                                          "name": "arc4.uint8",
-                                          "immutable": true,
-                                          "n": 8,
-                                          "arc4_alias": null,
-                                          "source_location": null
-                                        },
-                                        "array_size": 12,
-                                        "arc4_alias": null,
-                                        "source_location": null
-                                      }
-                                    },
-                                    "frozen": true,
-                                    "arc4_alias": null,
-                                    "source_location": null,
-                                    "desc": null
-                                  },
-                                  "base": {
-                                    "_type": "StateGet",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                                      "line": 253,
-                                      "end_line": 261,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "field": {
-                                      "_type": "BoxValueExpression",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                                        "line": 253,
-                                        "end_line": 261,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "ARC4DynamicArray",
-                                        "name": "arc4.dynamic_array<Struct>",
-                                        "immutable": false,
-                                        "element_type": {
-                                          "_type": "ARC4Struct",
-                                          "name": "Struct",
-                                          "immutable": false,
-                                          "fields": {
-                                            "el": {
-                                              "_type": "ARC4StaticArray",
-                                              "name": "arc4.static_array<arc4.uint8, 12>",
-                                              "immutable": false,
-                                              "element_type": {
-                                                "_type": "ARC4UIntN",
-                                                "name": "arc4.uint8",
-                                                "immutable": true,
-                                                "n": 8,
-                                                "arc4_alias": null,
-                                                "source_location": null
-                                              },
-                                              "array_size": 12,
-                                              "arc4_alias": null,
-                                              "source_location": null
-                                            }
-                                          },
-                                          "frozen": true,
-                                          "arc4_alias": null,
-                                          "source_location": null,
-                                          "desc": null
-                                        },
-                                        "arc4_alias": null,
-                                        "source_location": null
-                                      },
-                                      "key": {
-                                        "_type": "BytesConstant",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                                          "line": 253,
-                                          "end_line": 261,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "WType",
-                                          "name": "box_key",
-                                          "immutable": true
-                                        },
-                                        "value": "VRCX|c>",
-                                        "encoding": "utf8"
-                                      },
-                                      "exists_assertion_message": null
-                                    },
-                                    "default": {
-                                      "_type": "BytesConstant",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                                        "line": 253,
-                                        "end_line": 261,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "ARC4DynamicArray",
-                                        "name": "arc4.dynamic_array<Struct>",
-                                        "immutable": false,
-                                        "element_type": {
-                                          "_type": "ARC4Struct",
-                                          "name": "Struct",
-                                          "immutable": false,
-                                          "fields": {
-                                            "el": {
-                                              "_type": "ARC4StaticArray",
-                                              "name": "arc4.static_array<arc4.uint8, 12>",
-                                              "immutable": false,
-                                              "element_type": {
-                                                "_type": "ARC4UIntN",
-                                                "name": "arc4.uint8",
-                                                "immutable": true,
-                                                "n": 8,
-                                                "arc4_alias": null,
-                                                "source_location": null
-                                              },
-                                              "array_size": 12,
-                                              "arc4_alias": null,
-                                              "source_location": null
-                                            }
-                                          },
-                                          "frozen": true,
-                                          "arc4_alias": null,
-                                          "source_location": null,
-                                          "desc": null
-                                        },
-                                        "arc4_alias": null,
-                                        "source_location": null
-                                      },
-                                      "value": "000",
-                                      "encoding": "base16"
-                                    }
-                                  },
-                                  "index": {
-                                    "_type": "IntegerConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                                      "line": 259,
-                                      "end_line": 260,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "value": 1,
-                                    "teal_alias": null
-                                  }
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      },
-                      "Fee": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                          "line": 253,
-                          "end_line": 266,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      },
-                      "OnCompletion": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                          "line": 253,
-                          "end_line": 266,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      },
-                      "TypeEnum": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol",
-                          "line": 253,
-                          "end_line": 266,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 6,
-                        "teal_alias": null
-                      }
-                    }
-                  }
-                ]
+                  "_type": "WType",
+                  "name": "void",
+                  "immutable": true
+                }
               }
             },
             {

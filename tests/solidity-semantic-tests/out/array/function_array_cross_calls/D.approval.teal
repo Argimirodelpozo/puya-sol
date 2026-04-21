@@ -1,0 +1,138 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.D.approval_program() -> uint64:
+main:
+    intcblock 0 1 6
+    pushint 4096
+    bzero
+    dup
+    store 5
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    dup
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0x78cd3a23 // method "f(uint8[12][])uint8[12][3]"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.D.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    dupn 2
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 12
+    *
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 12>>
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
+    extract 2 12
+    dup
+    intc_0 // 0
+    extract_uint64
+    dup
+    assert // invalid function pointer
+    itxn_begin
+    swap
+    extract 8 4
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationArgs
+    itxn_field ApplicationID
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    replace2 0 // on error: index access is out of bounds
+    dig 1
+    extract 14 12
+    dup
+    intc_0 // 0
+    extract_uint64
+    dup
+    assert // invalid function pointer
+    itxn_begin
+    swap
+    extract 8 4
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationArgs
+    itxn_field ApplicationID
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    replace2 12 // on error: index access is out of bounds
+    swap
+    extract 26 12
+    dup
+    intc_0 // 0
+    extract_uint64
+    dup
+    assert // invalid function pointer
+    itxn_begin
+    swap
+    extract 8 4
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationArgs
+    itxn_field ApplicationID
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    replace2 24 // on error: index access is out of bounds
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+f_ternary_false@3:
+    intc_0 // 0
+    b f_ternary_merge@4
