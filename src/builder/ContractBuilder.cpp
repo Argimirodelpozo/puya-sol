@@ -978,6 +978,19 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				// is the element type after indexing.
 				valueType = elemType;
 
+				std::shared_ptr<awst::Expression> storageRead;
+				if (keyArgCount == 0)
+				{
+					// No mapping keys — the state var is a plain multi-dim array.
+					// Use a regular state read (box/app-global) of the whole value.
+					auto storageKind = StorageMapper::shouldUseBoxStorage(*var)
+						? awst::AppStorageKind::Box
+						: awst::AppStorageKind::AppGlobal;
+					storageRead = m_storageMapper.createStateRead(
+						var->name(), storedWType, storageKind, loc);
+				}
+				else
+				{
 				// Build the box key from the getter arguments.
 				// Each arg is converted to bytes, concatenated, then sha256-hashed.
 				auto prefix = awst::makeUtf8BytesConstant(
@@ -1075,9 +1088,12 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				stateGet->field = std::move(boxExpr);
 				stateGet->defaultValue = std::move(defaultVal);
 
+				storageRead = std::move(stateGet);
+				} // end keyArgCount > 0 branch
+
 				// Apply index accesses for any array dimensions nested inside the box value
 				// (e.g. `mapping(K => T[N])` keys by K, then indexes into T[N]).
-				std::shared_ptr<awst::Expression> indexed = std::move(stateGet);
+				std::shared_ptr<awst::Expression> indexed = std::move(storageRead);
 				{
 					solidity::frontend::Type const* walkType = storedValueType;
 					for (size_t i = 0; i < indexArgCount; ++i)
