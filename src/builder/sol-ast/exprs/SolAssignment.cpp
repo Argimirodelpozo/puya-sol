@@ -370,6 +370,23 @@ std::shared_ptr<awst::Expression> SolAssignment::handleBytesElementAssignment(
 	std::shared_ptr<awst::Expression> replaceValue = replace;
 	while (auto const* cast = dynamic_cast<awst::ReinterpretCast const*>(target.get()))
 		target = cast->expr;
+
+	// Nested bytes field: `s.b[i] = v` where `s.b` is `bytes` but the struct
+	// holds it as an ARC4 byte[]. The target here is ARC4Decode(FieldExpr)
+	// which puya rejects as an lvalue — route through a NewStruct write-back.
+	if (auto const* decode = dynamic_cast<awst::ARC4Decode const*>(target.get()))
+	{
+		if (auto const* fe = dynamic_cast<awst::FieldExpression const*>(decode->value.get()))
+		{
+			auto const* structType = dynamic_cast<awst::ARC4Struct const*>(fe->base->wtype);
+			if (!structType)
+				if (auto const* sg = dynamic_cast<awst::StateGet const*>(fe->base.get()))
+					structType = dynamic_cast<awst::ARC4Struct const*>(sg->field->wtype);
+			if (structType)
+				return buildStructFieldBytesWrite(fe, structType, std::move(replaceValue));
+		}
+	}
+
 	if (target->wtype != replaceValue->wtype)
 	{
 		auto adaptCast = awst::makeReinterpretCast(std::move(replaceValue), target->wtype, m_loc);
@@ -381,6 +398,126 @@ std::shared_ptr<awst::Expression> SolAssignment::handleBytesElementAssignment(
 	e->wtype = target->wtype;
 	e->target = target;
 	e->value = std::move(replaceValue);
+	return e;
+}
+
+std::shared_ptr<awst::Expression> SolAssignment::buildStructFieldBytesWrite(
+	awst::FieldExpression const* _fieldExpr,
+	awst::ARC4Struct const* _structType,
+	std::shared_ptr<awst::Expression> _newBytes)
+{
+	auto base = _fieldExpr->base;
+	std::string fieldName = _fieldExpr->name;
+
+	// Unwrap StateGet for write targets (StateGet is not an Lvalue)
+	if (auto const* sg = dynamic_cast<awst::StateGet const*>(base.get()))
+		base = sg->field;
+
+	// Wrap bytes → ARC4 byte[] encoding (prepends length prefix in puya)
+	awst::WType const* arc4FieldType = nullptr;
+	for (auto const& [fname, ftype]: _structType->fields())
+		if (fname == fieldName) { arc4FieldType = ftype; break; }
+
+	std::shared_ptr<awst::Expression> encodedValue = std::move(_newBytes);
+	if (arc4FieldType && encodedValue->wtype != arc4FieldType)
+	{
+		auto encode = std::make_shared<awst::ARC4Encode>();
+		encode->sourceLocation = m_loc;
+		encode->wtype = arc4FieldType;
+		encode->value = std::move(encodedValue);
+		encodedValue = std::move(encode);
+	}
+
+	// Build NewStruct with replaced field
+	auto newStruct = std::make_shared<awst::NewStruct>();
+	newStruct->sourceLocation = m_loc;
+	newStruct->wtype = _structType;
+	for (auto const& [fname, ftype]: _structType->fields())
+	{
+		if (fname == fieldName)
+			newStruct->values[fname] = encodedValue;
+		else
+		{
+			auto f = std::make_shared<awst::FieldExpression>();
+			f->sourceLocation = m_loc;
+			f->base = base;
+			f->name = fname;
+			f->wtype = ftype;
+			newStruct->values[fname] = std::move(f);
+		}
+	}
+
+	// Walk outer FieldExpression chain, rebuilding NewStructs (copy-on-write
+	// for nested `outer.inner.b[i] = v` patterns).
+	auto assignTarget = base;
+	std::shared_ptr<awst::Expression> assignValue = std::move(newStruct);
+
+	while (auto const* outerField = dynamic_cast<awst::FieldExpression const*>(assignTarget.get()))
+	{
+		auto const* outerStructType = dynamic_cast<awst::ARC4Struct const*>(outerField->base->wtype);
+		if (!outerStructType)
+			if (auto const* sg = dynamic_cast<awst::StateGet const*>(outerField->base.get()))
+				outerStructType = dynamic_cast<awst::ARC4Struct const*>(sg->field->wtype);
+		if (!outerStructType) break;
+
+		auto outerBase = outerField->base;
+		auto outerWriteBase = outerBase;
+		if (auto const* sg = dynamic_cast<awst::StateGet const*>(outerBase.get()))
+			outerWriteBase = sg->field;
+		auto outerReadBase = outerBase;
+		if (dynamic_cast<awst::BoxValueExpression const*>(outerWriteBase.get())
+			&& !dynamic_cast<awst::StateGet const*>(outerBase.get()))
+		{
+			auto sg = std::make_shared<awst::StateGet>();
+			sg->sourceLocation = m_loc;
+			sg->wtype = outerWriteBase->wtype;
+			sg->field = outerWriteBase;
+			sg->defaultValue = builder::StorageMapper::makeDefaultValue(outerWriteBase->wtype, m_loc);
+			outerReadBase = sg;
+		}
+
+		std::string outerFieldName = outerField->name;
+
+		auto outerNewStruct = std::make_shared<awst::NewStruct>();
+		outerNewStruct->sourceLocation = m_loc;
+		outerNewStruct->wtype = outerStructType;
+		for (auto const& [fn, ft]: outerStructType->fields())
+		{
+			if (fn == outerFieldName)
+				outerNewStruct->values[fn] = std::move(assignValue);
+			else
+			{
+				auto f = std::make_shared<awst::FieldExpression>();
+				f->sourceLocation = m_loc;
+				f->base = outerReadBase;
+				f->name = fn;
+				f->wtype = ft;
+				outerNewStruct->values[fn] = std::move(f);
+			}
+		}
+		assignTarget = std::move(outerWriteBase);
+		assignValue = std::move(outerNewStruct);
+	}
+
+	// Unwrap StateGet nested inside an IndexExpression lvalue (puya rejects).
+	if (auto const* idx = dynamic_cast<awst::IndexExpression const*>(assignTarget.get()))
+	{
+		if (auto const* sg = dynamic_cast<awst::StateGet const*>(idx->base.get()))
+		{
+			auto newIdx = std::make_shared<awst::IndexExpression>();
+			newIdx->sourceLocation = idx->sourceLocation;
+			newIdx->wtype = idx->wtype;
+			newIdx->base = sg->field;
+			newIdx->index = idx->index;
+			assignTarget = std::move(newIdx);
+		}
+	}
+
+	auto e = std::make_shared<awst::AssignmentExpression>();
+	e->sourceLocation = m_loc;
+	e->wtype = assignTarget->wtype;
+	e->target = std::move(assignTarget);
+	e->value = std::move(assignValue);
 	return e;
 }
 

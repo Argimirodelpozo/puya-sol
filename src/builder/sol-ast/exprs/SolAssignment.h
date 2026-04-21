@@ -28,6 +28,15 @@ private:
 		awst::IndexExpression const* _indexExpr,
 		std::shared_ptr<awst::Expression> _value);
 
+	/// Copy-on-write write-back when the bytes-element target is a struct
+	/// field: `s.b[i] = v` where `s.b` is `bytes` (ARC4-encoded as byte[]).
+	/// _newBytes is the already-computed raw bytes for the field (replace3
+	/// result). Builds a NewStruct chain and emits the struct assignment.
+	std::shared_ptr<awst::Expression> buildStructFieldBytesWrite(
+		awst::FieldExpression const* _fieldExpr,
+		awst::ARC4Struct const* _structType,
+		std::shared_ptr<awst::Expression> _newBytes);
+
 	std::shared_ptr<awst::Expression> handleStructFieldAssignment(
 		awst::FieldExpression const* _fieldExpr,
 		std::shared_ptr<awst::Expression> _value,
