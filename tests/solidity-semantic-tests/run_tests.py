@@ -243,6 +243,18 @@ def _get_constructor_param_types(app_spec, artifacts):
     sol_path = artifacts.get("sol_path")
     if sol_path and sol_path.exists():
         source = sol_path.read_text()
+        # Resolve file-level constants so array sizes like [LEN] become [3].
+        # Solidity allows `uint256 constant NAME = 123;` (and file-level
+        # constants). Build a name→int map via a simple regex scan.
+        const_map = {}
+        for cm in _re.finditer(
+            r'\b\w+\s+constant\s+(\w+)\s*=\s*([0-9xXa-fA-F]+)\s*;',
+            source,
+        ):
+            try:
+                const_map[cm.group(1)] = int(cm.group(2), 0)
+            except ValueError:
+                pass
         # Find constructor declaration
         ctor_match = _re.search(r'constructor\s*\(([^)]*)\)', source)
         if ctor_match:
@@ -260,7 +272,13 @@ def _get_constructor_param_types(app_spec, artifacts):
                     # Check for array suffix on type: uint256[3]
                     if len(parts) > 1 and parts[1].startswith('['):
                         ptype += parts[1]
-                    # Check if type itself has array brackets
+                    # Substitute named array-size constants with their int value
+                    def _resolve_size(match):
+                        name = match.group(1)
+                        if name in const_map:
+                            return f'[{const_map[name]}]'
+                        return match.group(0)
+                    ptype = _re.sub(r'\[([A-Za-z_]\w*)\]', _resolve_size, ptype)
                     param_types.append(ptype)
             return param_types if param_types else None
 

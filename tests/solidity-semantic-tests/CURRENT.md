@@ -1,6 +1,9 @@
-# Semantic Test Status — v146
+# Semantic Test Status — v147
 
-**Totals**: 1013 PASS / 246 FAIL / 63 COMPILE_ERR = **1013/1322 (76.6%)**
+**Totals**: 1014 PASS / 245 FAIL / 63 COMPILE_ERR = **1014/1322 (76.7%)**
+
+vs v146 (1013): one harness fix (+1 pass, -1 fail):
+- `array/constant_var_as_array_length`: FAIL → PASS. `_get_constructor_param_types` in run_tests.py regex-scans file-level `uint<N> constant NAME = literal;` definitions and substitutes named array-size brackets like `[LEN]` → `[3]`. Previously the array-size regex required digits, so `constructor(uint256[LEN] memory _a)` fell through to the scalar path and only the first value was encoded into ApplicationArgs[0] — the getter then walked past the 32-byte blob for indices ≥1 and returned out-of-bounds. Purely additive; tests without named constants are unaffected.
 
 vs v143 (1011): three fixes landed (+2 net pass, -2 compile_err, +1 fail→pass):
 - `inlineAssembly/inline_assembly_recursion`: COMPILE_ERR → PASS. Recursive Yul user-defined functions previously blew the C++ stack during inlining. AssemblyBuilder now detects self-reachable functions via a call graph and emits them as real AWST Subroutines; callsites go through a registered subroutine-id map in StatementOps::handleUserFunctionCall. Pending subroutines are drained by ContractBuilder into m_dispatchSubroutines.
