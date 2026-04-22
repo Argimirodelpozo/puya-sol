@@ -21,6 +21,7 @@ private:
 	std::shared_ptr<awst::Expression> handleDynamicArrayAccess();
 	std::shared_ptr<awst::Expression> handleMappingAccess();
 	std::shared_ptr<awst::Expression> handleRegularIndex();
+	std::shared_ptr<awst::Expression> handleSlicedIndex();
 };
 
 /// arr[start:end] range access.

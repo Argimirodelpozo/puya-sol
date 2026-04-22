@@ -1,0 +1,250 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/calldata_slice_access.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 8 1 0
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000
+    pushint 4096
+    bzero
+    dup
+    store 5
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    dup
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x99d4fa18 0xe968dde5 // method "f(uint256[],uint256,uint256)void", method "g(uint256[],uint256,uint256,uint256)(uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match f g
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/calldata_slice_access.sol.C.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    dup
+    intc_3 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    cover 2
+    intc_0 // 32
+    *
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz f_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 8
+    bzero
+    dup
+    dig 3
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    swap
+    dig 2
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    swap
+    dig 1
+    <=
+    assert // slice: start > end
+    dig 3
+    <=
+    assert // slice: end > length
+    intc_2 // 1
+    return
+
+f_ternary_false@3:
+    intc_3 // 0
+    b f_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/calldata_slice_access.sol.C.g[routing]() -> void:
+g:
+    txna ApplicationArgs 1
+    dupn 2
+    intc_3 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    cover 2
+    intc_0 // 32
+    *
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 8
+    bzero
+    dup
+    dig 4
+    dup
+    cover 3
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dig 1
+    dig 5
+    dup
+    cover 4
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dup2
+    <=
+    assert // slice: start > end
+    dup
+    dig 9
+    dup
+    cover 5
+    <=
+    assert // slice: end > length
+    dig 1
+    -
+    dig 2
+    dig 7
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dup
+    uncover 2
+    <
+    assert // slice index out of bounds
+    dig 1
+    dig 4
+    <=
+    assert // slice: start > end
+    uncover 3
+    dig 2
+    -
+    dig 4
+    dig 6
+    b>=
+    assert // underflow
+    uncover 4
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    uncover 5
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 4
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dup
+    uncover 2
+    <=
+    assert // slice: end > length
+    dig 1
+    >
+    assert // slice index out of bounds
+    +
+    dig 5
+    extract 2 0
+    swap
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dup
+    dig 1
+    concat
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+g_ternary_false@3:
+    intc_3 // 0
+    b g_ternary_merge@4

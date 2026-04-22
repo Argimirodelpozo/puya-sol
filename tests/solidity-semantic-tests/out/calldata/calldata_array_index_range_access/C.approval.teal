@@ -543,19 +543,28 @@ gg_ternary_merge@4:
     dig 7
     <=
     assert // slice: end > length
-    dig 7
-    cover 2
-    substring3
-    swap
-    dig 2
+    dig 1
+    -
+    uncover 2
+    dig 3
     concat
     dup
     len
     intc_1 // 8
     -
     extract_uint64
-    intc_3 // 1
-    extract3
+    dup
+    uncover 2
+    <
+    assert // slice index out of bounds
+    +
+    dig 5
+    extract 2 0
+    swap
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -582,8 +591,6 @@ gg_s_only:
     +
     swap
     len
-    dup
-    uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
     txna ApplicationArgs 2
@@ -624,23 +631,28 @@ gg_s_only_ternary_merge@4:
     cover 2
     <=
     assert // slice: start > end
-    dup
-    dig 7
-    <=
-    assert // slice: end > length
-    dig 7
-    cover 2
-    substring3
-    swap
-    dig 2
+    dig 1
+    -
+    uncover 2
+    dig 3
     concat
     dup
     len
     intc_1 // 8
     -
     extract_uint64
-    intc_3 // 1
-    extract3
+    dup
+    uncover 2
+    <
+    assert // slice index out of bounds
+    +
+    dig 4
+    extract 2 0
+    swap
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -705,10 +717,6 @@ gg_e_only_ternary_merge@4:
     dig 5
     <=
     assert // slice: end > length
-    dig 5
-    intc_2 // 0
-    uncover 2
-    substring3
     swap
     dig 2
     concat
@@ -717,8 +725,17 @@ gg_e_only_ternary_merge@4:
     intc_1 // 8
     -
     extract_uint64
-    intc_3 // 1
-    extract3
+    dup
+    uncover 2
+    <
+    assert // slice index out of bounds
+    dig 4
+    extract 2 0
+    swap
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
     bytec_0 // 0x151f7c75
     swap
     concat

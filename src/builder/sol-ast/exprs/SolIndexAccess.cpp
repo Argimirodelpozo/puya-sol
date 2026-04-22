@@ -431,9 +431,212 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 	return e;
 }
 
+std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
+{
+	// Fold `root[a:b][c:d]...[i]` into `root[effective_offset + i]` with
+	// bounds checks, preserving Solidity semantics where each slice level
+	// reverts on start > end, end > parent_length, and index >= slice_length.
+	//
+	// The root base must be an ArrayType whose element type maps to ARC4
+	// (uint256[] calldata, etc.). Slice-of-slice of-slice chains are
+	// flattened bottom-up: the cumulative offset is the sum of all starts
+	// and the cumulative length is (outermost_end - outermost_start) after
+	// per-level clamping by the enclosing slice.
+
+	using namespace solidity::frontend;
+
+	// Walk down the IndexRangeAccess chain to find the root base.
+	std::vector<IndexRangeAccess const*> slices;
+	Expression const* cur = &m_indexAccess.baseExpression();
+	while (auto const* r = dynamic_cast<IndexRangeAccess const*>(cur))
+	{
+		slices.push_back(r);
+		cur = &r->baseExpression();
+	}
+	// slices is outermost→innermost from AST walk; reverse to innermost→outermost
+	// so we apply slices in source order (closest-to-root first).
+	std::reverse(slices.begin(), slices.end());
+
+	auto const* rootArrType = dynamic_cast<ArrayType const*>(cur->annotation().type);
+	if (!rootArrType || rootArrType->isByteArrayOrString())
+		return nullptr; // fall through to default handling
+
+	auto rootBase = buildExpr(*cur);
+
+	// Stash the root base in a temp so we can reference it both for ArrayLength
+	// and for indexing without duplicating the (possibly expensive) evaluation.
+	std::string idSuffix = std::to_string(m_indexAccess.id());
+	std::string rootVarName = "__slice_root_" + idSuffix;
+	auto rootVar = awst::makeVarExpression(rootVarName, rootBase->wtype, m_loc);
+	m_ctx.prePendingStatements.push_back(
+		awst::makeAssignmentStatement(rootVar, rootBase, m_loc));
+
+	auto makeLen = [&](std::shared_ptr<awst::Expression> arr) {
+		auto lenNode = std::make_shared<awst::ArrayLength>();
+		lenNode->sourceLocation = m_loc;
+		lenNode->wtype = awst::WType::uint64Type();
+		lenNode->array = std::move(arr);
+		return std::static_pointer_cast<awst::Expression>(lenNode);
+	};
+
+	// Initial cumulative offset = 0, length = len(root)
+	std::shared_ptr<awst::Expression> cumOffset
+		= awst::makeIntegerConstant("0", m_loc);
+	std::shared_ptr<awst::Expression> cumLength = makeLen(
+		awst::makeVarExpression(rootVarName, rootBase->wtype, m_loc));
+
+	// Stash length in a temp so we can use it in the end-default and the
+	// bounds check without re-emitting ArrayLength.
+	std::string lenVarName = "__slice_rootlen_" + idSuffix;
+	auto lenVar = awst::makeVarExpression(lenVarName, awst::WType::uint64Type(), m_loc);
+	m_ctx.prePendingStatements.push_back(
+		awst::makeAssignmentStatement(lenVar, cumLength, m_loc));
+	cumLength = awst::makeVarExpression(lenVarName, awst::WType::uint64Type(), m_loc);
+
+	int sliceIx = 0;
+	for (auto const* rg: slices)
+	{
+		std::string sIx = idSuffix + "_" + std::to_string(sliceIx++);
+		std::string startName = "__slice_s_" + sIx;
+		std::string endName = "__slice_e_" + sIx;
+
+		std::shared_ptr<awst::Expression> startExpr;
+		if (rg->startExpression())
+			startExpr = buildExpr(*rg->startExpression());
+		else
+			startExpr = awst::makeIntegerConstant("0", m_loc);
+		startExpr = builder::TypeCoercion::implicitNumericCast(
+			std::move(startExpr), awst::WType::uint64Type(), m_loc);
+
+		std::shared_ptr<awst::Expression> endExpr;
+		if (rg->endExpression())
+			endExpr = buildExpr(*rg->endExpression());
+		else
+			endExpr = cumLength;
+		endExpr = builder::TypeCoercion::implicitNumericCast(
+			std::move(endExpr), awst::WType::uint64Type(), m_loc);
+
+		// Stash start/end in temps.
+		auto startVar = awst::makeVarExpression(startName, awst::WType::uint64Type(), m_loc);
+		m_ctx.prePendingStatements.push_back(
+			awst::makeAssignmentStatement(startVar, startExpr, m_loc));
+		auto endVar = awst::makeVarExpression(endName, awst::WType::uint64Type(), m_loc);
+		m_ctx.prePendingStatements.push_back(
+			awst::makeAssignmentStatement(endVar, endExpr, m_loc));
+
+		// assert(start <= end)
+		{
+			auto cmp = awst::makeNumericCompare(
+				awst::makeVarExpression(startName, awst::WType::uint64Type(), m_loc),
+				awst::NumericComparison::Lte,
+				awst::makeVarExpression(endName, awst::WType::uint64Type(), m_loc),
+				m_loc);
+			m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+				awst::makeAssert(std::move(cmp), m_loc, "slice: start > end"), m_loc));
+		}
+
+		// assert(end <= parent_length) — cumLength is the length before this slice
+		{
+			auto cmp = awst::makeNumericCompare(
+				awst::makeVarExpression(endName, awst::WType::uint64Type(), m_loc),
+				awst::NumericComparison::Lte,
+				cumLength,
+				m_loc);
+			m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+				awst::makeAssert(std::move(cmp), m_loc, "slice: end > length"), m_loc));
+		}
+
+		// cumOffset += start
+		cumOffset = awst::makeUInt64BinOp(
+			std::move(cumOffset), awst::UInt64BinaryOperator::Add,
+			awst::makeVarExpression(startName, awst::WType::uint64Type(), m_loc),
+			m_loc);
+
+		// cumLength = end - start
+		cumLength = awst::makeUInt64BinOp(
+			awst::makeVarExpression(endName, awst::WType::uint64Type(), m_loc),
+			awst::UInt64BinaryOperator::Sub,
+			awst::makeVarExpression(startName, awst::WType::uint64Type(), m_loc),
+			m_loc);
+
+		// Stash updated cumLength in a per-level var so next iteration's
+		// bounds check / end-default can reference it symbolically.
+		std::string nextLenName = "__slice_l_" + sIx;
+		auto nextLenVar = awst::makeVarExpression(nextLenName, awst::WType::uint64Type(), m_loc);
+		m_ctx.prePendingStatements.push_back(
+			awst::makeAssignmentStatement(nextLenVar, cumLength, m_loc));
+		cumLength = awst::makeVarExpression(nextLenName, awst::WType::uint64Type(), m_loc);
+
+		std::string nextOffName = "__slice_o_" + sIx;
+		auto nextOffVar = awst::makeVarExpression(nextOffName, awst::WType::uint64Type(), m_loc);
+		m_ctx.prePendingStatements.push_back(
+			awst::makeAssignmentStatement(nextOffVar, cumOffset, m_loc));
+		cumOffset = awst::makeVarExpression(nextOffName, awst::WType::uint64Type(), m_loc);
+	}
+
+	// Now the index access: bounds-check i < cumLength, then access root[cumOffset + i].
+	auto idx = buildExpr(*m_indexAccess.indexExpression());
+	idx = builder::TypeCoercion::implicitNumericCast(
+		std::move(idx), awst::WType::uint64Type(), m_loc);
+
+	std::string idxName = "__slice_i_" + idSuffix;
+	auto idxVar = awst::makeVarExpression(idxName, awst::WType::uint64Type(), m_loc);
+	m_ctx.prePendingStatements.push_back(
+		awst::makeAssignmentStatement(idxVar, idx, m_loc));
+
+	// assert(index < slice_length)
+	{
+		auto cmp = awst::makeNumericCompare(
+			awst::makeVarExpression(idxName, awst::WType::uint64Type(), m_loc),
+			awst::NumericComparison::Lt,
+			cumLength,
+			m_loc);
+		m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+			awst::makeAssert(std::move(cmp), m_loc, "slice index out of bounds"), m_loc));
+	}
+
+	// effective = offset + i
+	auto effective = awst::makeUInt64BinOp(
+		std::move(cumOffset), awst::UInt64BinaryOperator::Add,
+		awst::makeVarExpression(idxName, awst::WType::uint64Type(), m_loc),
+		m_loc);
+
+	// Determine element type on the root array
+	auto* rawElemType = m_ctx.typeMapper.map(rootArrType->baseType());
+	auto* arc4ElemType = m_ctx.typeMapper.mapSolTypeToARC4(rootArrType->baseType());
+
+	auto indexExpr = std::make_shared<awst::IndexExpression>();
+	indexExpr->sourceLocation = m_loc;
+	indexExpr->base = awst::makeVarExpression(rootVarName, rootBase->wtype, m_loc);
+	indexExpr->index = std::move(effective);
+	indexExpr->wtype = arc4ElemType;
+
+	bool needsDecode = rawElemType != arc4ElemType && rawElemType->name() != arc4ElemType->name();
+	if (needsDecode)
+	{
+		auto decode = std::make_shared<awst::ARC4Decode>();
+		decode->sourceLocation = m_loc;
+		decode->wtype = rawElemType;
+		decode->value = std::move(indexExpr);
+		return decode;
+	}
+	return indexExpr;
+}
+
 std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 {
 	auto const* baseType = m_indexAccess.baseExpression().annotation().type;
+
+	// Calldata/memory slice indexing: `root[a:b]...[i]`. We fold the slice
+	// chain into a direct index on the root array; the bytes-substring3 path
+	// would drop the element type and produce bytes[1] instead of the
+	// declared element (uint256 etc).
+	if (dynamic_cast<solidity::frontend::IndexRangeAccess const*>(
+			&m_indexAccess.baseExpression()))
+	{
+		if (auto result = handleSlicedIndex())
+			return result;
+	}
 
 	// Slot-based storage reference: _x[i] → __storage_read(slot + i)
 	// For multi-dim: _x[i][j] → __storage_read(slot + i * stride + j)
