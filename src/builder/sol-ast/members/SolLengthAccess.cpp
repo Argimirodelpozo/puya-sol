@@ -5,6 +5,7 @@
 #include "builder/sol-ast/members/SolLengthAccess.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-types/TypeCoercion.h"
 
 #include <libsolidity/ast/AST.h>
 
@@ -15,9 +16,141 @@ namespace puyasol::builder::sol_ast
 
 using namespace solidity::frontend;
 
+namespace {
+
+// Peel a type-conversion FunctionCall wrapping an IndexRangeAccess:
+// `uint256[](x[s:e])` → returns the inner IndexRangeAccess. Direct
+// IndexRangeAccess passes through unchanged. Returns nullptr for anything
+// else.
+IndexRangeAccess const* peelToSlice(Expression const& expr)
+{
+	if (auto const* rg = dynamic_cast<IndexRangeAccess const*>(&expr))
+		return rg;
+	if (auto const* call = dynamic_cast<FunctionCall const*>(&expr))
+	{
+		if (call->annotation().kind.set()
+			&& *call->annotation().kind == FunctionCallKind::TypeConversion
+			&& !call->arguments().empty())
+		{
+			return peelToSlice(*call->arguments()[0]);
+		}
+	}
+	return nullptr;
+}
+
+} // namespace
+
 std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 {
 	auto const& baseExpr = baseExpression();
+
+	// Slice length: `x[s:e].length`, or the cast form `uint256[](x[s:e]).length`.
+	// Walk the slice chain, emit bounds asserts, and compute
+	//   final_length = end_outer - start_outer - ... (per-level clamped)
+	// without materialising the intermediate substring3 bytes.
+	if (auto const* rg = peelToSlice(baseExpr))
+	{
+		std::vector<IndexRangeAccess const*> slices;
+		Expression const* cur = rg;
+		while (auto const* r = dynamic_cast<IndexRangeAccess const*>(cur))
+		{
+			slices.push_back(r);
+			cur = &r->baseExpression();
+		}
+		std::reverse(slices.begin(), slices.end());
+
+		auto const* rootArrType = dynamic_cast<ArrayType const*>(cur->annotation().type);
+		if (rootArrType && !rootArrType->isByteArrayOrString())
+		{
+			auto rootBase = buildExpr(*cur);
+			std::string idSuffix = std::to_string(m_memberAccess.id());
+			std::string rootVarName = "__slice_root_" + idSuffix;
+			auto rootVar = awst::makeVarExpression(rootVarName, rootBase->wtype, m_loc);
+			m_ctx.prePendingStatements.push_back(
+				awst::makeAssignmentStatement(rootVar, rootBase, m_loc));
+
+			auto makeLen = [&](std::shared_ptr<awst::Expression> arr) {
+				auto lenNode = std::make_shared<awst::ArrayLength>();
+				lenNode->sourceLocation = m_loc;
+				lenNode->wtype = awst::WType::uint64Type();
+				lenNode->array = std::move(arr);
+				return std::static_pointer_cast<awst::Expression>(lenNode);
+			};
+
+			std::string lenVarName = "__slice_rootlen_" + idSuffix;
+			auto lenSeed = makeLen(
+				awst::makeVarExpression(rootVarName, rootBase->wtype, m_loc));
+			auto lenVar = awst::makeVarExpression(lenVarName, awst::WType::uint64Type(), m_loc);
+			m_ctx.prePendingStatements.push_back(
+				awst::makeAssignmentStatement(lenVar, lenSeed, m_loc));
+			std::shared_ptr<awst::Expression> cumLength
+				= awst::makeVarExpression(lenVarName, awst::WType::uint64Type(), m_loc);
+
+			int sliceIx = 0;
+			for (auto const* slice: slices)
+			{
+				std::string sIx = idSuffix + "_" + std::to_string(sliceIx++);
+				std::string startName = "__slice_s_" + sIx;
+				std::string endName = "__slice_e_" + sIx;
+
+				std::shared_ptr<awst::Expression> startExpr;
+				if (slice->startExpression())
+					startExpr = buildExpr(*slice->startExpression());
+				else
+					startExpr = awst::makeIntegerConstant("0", m_loc);
+				startExpr = builder::TypeCoercion::implicitNumericCast(
+					std::move(startExpr), awst::WType::uint64Type(), m_loc);
+
+				std::shared_ptr<awst::Expression> endExpr;
+				if (slice->endExpression())
+					endExpr = buildExpr(*slice->endExpression());
+				else
+					endExpr = cumLength;
+				endExpr = builder::TypeCoercion::implicitNumericCast(
+					std::move(endExpr), awst::WType::uint64Type(), m_loc);
+
+				auto startVar = awst::makeVarExpression(startName, awst::WType::uint64Type(), m_loc);
+				m_ctx.prePendingStatements.push_back(
+					awst::makeAssignmentStatement(startVar, startExpr, m_loc));
+				auto endVar = awst::makeVarExpression(endName, awst::WType::uint64Type(), m_loc);
+				m_ctx.prePendingStatements.push_back(
+					awst::makeAssignmentStatement(endVar, endExpr, m_loc));
+
+				{
+					auto cmp = awst::makeNumericCompare(
+						awst::makeVarExpression(startName, awst::WType::uint64Type(), m_loc),
+						awst::NumericComparison::Lte,
+						awst::makeVarExpression(endName, awst::WType::uint64Type(), m_loc),
+						m_loc);
+					m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+						awst::makeAssert(std::move(cmp), m_loc, "slice: start > end"), m_loc));
+				}
+				{
+					auto cmp = awst::makeNumericCompare(
+						awst::makeVarExpression(endName, awst::WType::uint64Type(), m_loc),
+						awst::NumericComparison::Lte,
+						cumLength,
+						m_loc);
+					m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+						awst::makeAssert(std::move(cmp), m_loc, "slice: end > length"), m_loc));
+				}
+
+				auto diff = awst::makeUInt64BinOp(
+					awst::makeVarExpression(endName, awst::WType::uint64Type(), m_loc),
+					awst::UInt64BinaryOperator::Sub,
+					awst::makeVarExpression(startName, awst::WType::uint64Type(), m_loc),
+					m_loc);
+
+				std::string nextLenName = "__slice_l_" + sIx;
+				auto nextLenVar = awst::makeVarExpression(nextLenName, awst::WType::uint64Type(), m_loc);
+				m_ctx.prePendingStatements.push_back(
+					awst::makeAssignmentStatement(nextLenVar, diff, m_loc));
+				cumLength = awst::makeVarExpression(nextLenName, awst::WType::uint64Type(), m_loc);
+			}
+
+			return cumLength;
+		}
+	}
 
 	// Box-backed dynamic array: length = box_len(key) / elemSize
 	if (auto const* ident = dynamic_cast<Identifier const*>(&baseExpr))

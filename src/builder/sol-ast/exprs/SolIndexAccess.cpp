@@ -446,12 +446,28 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 	using namespace solidity::frontend;
 
 	// Walk down the IndexRangeAccess chain to find the root base.
+	// Also peel off type-conversion FunctionCall wrappers like
+	// `uint256[](x[s:e])` — Solidity inserts these when the slice is assigned
+	// to a local with an explicit array type.
+	auto peelCast = [](Expression const& e) -> Expression const& {
+		Expression const* cur = &e;
+		while (auto const* call = dynamic_cast<FunctionCall const*>(cur))
+		{
+			if (call->annotation().kind.set()
+				&& *call->annotation().kind == FunctionCallKind::TypeConversion
+				&& !call->arguments().empty())
+				cur = call->arguments()[0].get();
+			else
+				break;
+		}
+		return *cur;
+	};
 	std::vector<IndexRangeAccess const*> slices;
-	Expression const* cur = &m_indexAccess.baseExpression();
+	Expression const* cur = &peelCast(m_indexAccess.baseExpression());
 	while (auto const* r = dynamic_cast<IndexRangeAccess const*>(cur))
 	{
 		slices.push_back(r);
-		cur = &r->baseExpression();
+		cur = &peelCast(r->baseExpression());
 	}
 	// slices is outermost→innermost from AST walk; reverse to innermost→outermost
 	// so we apply slices in source order (closest-to-root first).
@@ -631,11 +647,22 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 	// chain into a direct index on the root array; the bytes-substring3 path
 	// would drop the element type and produce bytes[1] instead of the
 	// declared element (uint256 etc).
-	if (dynamic_cast<solidity::frontend::IndexRangeAccess const*>(
-			&m_indexAccess.baseExpression()))
 	{
-		if (auto result = handleSlicedIndex())
-			return result;
+		auto const* peeled = &m_indexAccess.baseExpression();
+		while (auto const* call = dynamic_cast<solidity::frontend::FunctionCall const*>(peeled))
+		{
+			if (call->annotation().kind.set()
+				&& *call->annotation().kind == solidity::frontend::FunctionCallKind::TypeConversion
+				&& !call->arguments().empty())
+				peeled = call->arguments()[0].get();
+			else
+				break;
+		}
+		if (dynamic_cast<solidity::frontend::IndexRangeAccess const*>(peeled))
+		{
+			if (auto result = handleSlicedIndex())
+				return result;
+		}
 	}
 
 	// Slot-based storage reference: _x[i] → __storage_read(slot + i)
