@@ -26,7 +26,11 @@ awst::WType const* SolInternalCall::returnTypeFrom(FunctionDefinition const* _fu
 
 	// Unwrap UDVT / enum to locate a signed integer type for biguint promotion.
 	// ContractBuilder upgrades signed int ≤64 bit returns to biguint so sign
-	// extension works; we mirror that here so call-site wtypes match.
+	// extension works — but only at the ABI boundary (public/external). For
+	// private/internal callees the target retains its native uint64 return,
+	// so the call-site wtype must match.
+	bool isAbiBoundary = _funcDef->visibility() == Visibility::Public
+		|| _funcDef->visibility() == Visibility::External;
 	auto mapReturnType = [&](solidity::frontend::Type const* solType) -> awst::WType const* {
 		auto* mapped = m_ctx.typeMapper.map(solType);
 		auto const* t = solType;
@@ -36,7 +40,7 @@ awst::WType const* SolInternalCall::returnTypeFrom(FunctionDefinition const* _fu
 		if (!intType)
 			if (auto const* enumType = dynamic_cast<EnumType const*>(t))
 				intType = dynamic_cast<IntegerType const*>(enumType->encodingType());
-		if (intType && intType->isSigned() && intType->numBits() <= 64)
+		if (intType && intType->isSigned() && intType->numBits() <= 64 && isAbiBoundary)
 			return awst::WType::biguintType();
 		return mapped;
 	};

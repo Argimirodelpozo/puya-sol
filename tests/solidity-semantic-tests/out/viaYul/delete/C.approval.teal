@@ -1,0 +1,78 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/delete.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock 0x151f7c7580
+    pushint 4096
+    bzero
+    dup
+    store 5
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    dup
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x8102fc43 0x63868542 // method "call_internal_func()bool", method "call_deleted_internal_func()bool"
+    txna ApplicationArgs 0
+    match call_internal_func call_deleted_internal_func
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/delete.sol.C.call_internal_func[routing]() -> void:
+call_internal_func:
+    txn GroupIndex
+    bz call_internal_func_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+call_internal_func_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_0 // 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+call_internal_func_ternary_false@3:
+    intc_1 // 0
+    b call_internal_func_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/delete.sol.C.call_deleted_internal_func[routing]() -> void:
+call_deleted_internal_func:
+    txn GroupIndex
+    bz call_deleted_internal_func_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+call_deleted_internal_func_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
+    assert // invalid function pointer
+    bytec_0 // 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+call_deleted_internal_func_ternary_false@3:
+    intc_1 // 0
+    b call_deleted_internal_func_ternary_merge@4

@@ -684,12 +684,26 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		dispatch.pure = false;
 
 		// Return type — must match what buildFunction produces for the target.
-		// Signed integers ≤64 bits get promoted to biguint for ABI sign extension.
+		// Signed ≤64-bit returns are only promoted to biguint when at least one
+		// entry is public/external (ARC4 boundary). With all-private entries,
+		// the callees return native uint64 and the dispatcher must too —
+		// otherwise the declared type won't match the returned value.
+		bool anyPublic = false;
+		for (auto const* entry : entries)
+		{
+			if (entry->funcDef && (
+				entry->funcDef->visibility() == Visibility::Public
+				|| entry->funcDef->visibility() == Visibility::External))
+			{
+				anyPublic = true;
+				break;
+			}
+		}
 		if (funcType->returnParameterTypes().empty())
 			dispatch.returnType = awst::WType::voidType();
 		else if (funcType->returnParameterTypes().size() == 1)
 			dispatch.returnType = mapDispatchType(
-				funcType->returnParameterTypes()[0], /*_promoteSignedI64Biguint=*/true);
+				funcType->returnParameterTypes()[0], /*_promoteSignedI64Biguint=*/anyPublic);
 		else
 			dispatch.returnType = awst::WType::voidType(); // TODO: tuple returns
 

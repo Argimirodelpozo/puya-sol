@@ -3009,15 +3009,22 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(retSolType))
 				intType = dynamic_cast<solidity::frontend::IntegerType const*>(
 					enumType->encodingType());
+		// Biguint promotion is only for ABI sign-extension (public/external).
+		// Private/internal functions keep the native uint64 return so their
+		// body's `return IntegerConstant(uint64, …)` matches the declared type.
+		bool isAbiBoundary = _func.visibility() == solidity::frontend::Visibility::Public
+			|| _func.visibility() == solidity::frontend::Visibility::External;
 		if (intType && intType->isSigned())
 		{
-			if (intType->numBits() <= 64)
+			if (intType->numBits() <= 64 && isAbiBoundary)
 				method.returnType = awst::WType::biguintType();
-			signedReturns.push_back({intType->numBits(), 0});
+			if (isAbiBoundary)
+				signedReturns.push_back({intType->numBits(), 0});
 		}
 		else if (intType && !intType->isSigned() && intType->numBits() < 64)
 		{
-			unsignedMasks.push_back({intType->numBits(), 0});
+			if (isAbiBoundary)
+				unsignedMasks.push_back({intType->numBits(), 0});
 		}
 	}
 	else
@@ -3039,17 +3046,22 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(retSolType))
 					intType = dynamic_cast<solidity::frontend::IntegerType const*>(
 						enumType->encodingType());
+			// Biguint promotion only at ABI boundary (public/external).
+			bool isAbiBoundary = _func.visibility() == solidity::frontend::Visibility::Public
+				|| _func.visibility() == solidity::frontend::Visibility::External;
 			if (intType)
 			{
 				if (intType->isSigned())
 				{
-					if (intType->numBits() <= 64)
+					if (intType->numBits() <= 64 && isAbiBoundary)
 						mappedType = awst::WType::biguintType();
-					signedReturns.push_back({intType->numBits(), ri});
+					if (isAbiBoundary)
+						signedReturns.push_back({intType->numBits(), ri});
 				}
 				else if (!intType->isSigned() && intType->numBits() < 64)
 				{
-					unsignedMasks.push_back({intType->numBits(), ri});
+					if (isAbiBoundary)
+						unsignedMasks.push_back({intType->numBits(), ri});
 				}
 			}
 			types.push_back(mappedType);
