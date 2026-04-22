@@ -46,6 +46,9 @@ static bool blockAlwaysTerminates(awst::Block const& _block)
 		bool elseTerminates = blockAlwaysTerminates(*ifElse->elseBranch);
 		return ifTerminates && elseTerminates;
 	}
+	// Nested Block: recurse — brace-less branches wrap their single stmt in a Block
+	if (auto const* inner = dynamic_cast<awst::Block const*>(last.get()))
+		return blockAlwaysTerminates(*inner);
 	return false;
 }
 
@@ -84,6 +87,15 @@ static void removeDeadCode(std::vector<std::shared_ptr<awst::Statement>>& _body)
 				&& blockAlwaysTerminates(*ifElse->ifBranch)
 				&& blockAlwaysTerminates(*ifElse->elseBranch)
 				&& i + 1 < _body.size())
+			{
+				_body.erase(_body.begin() + i + 1, _body.end());
+				break;
+			}
+		}
+		// Nested Block that terminates → trim following
+		if (auto const* inner = dynamic_cast<awst::Block const*>(_body[i].get()))
+		{
+			if (blockAlwaysTerminates(*inner) && i + 1 < _body.size())
 			{
 				_body.erase(_body.begin() + i + 1, _body.end());
 				break;

@@ -145,6 +145,8 @@ static bool blockAlwaysTerminates(awst::Block const& _block)
 			return false;
 		return blockAlwaysTerminates(*ifElse->ifBranch) && blockAlwaysTerminates(*ifElse->elseBranch);
 	}
+	if (auto const* inner = dynamic_cast<awst::Block const*>(last.get()))
+		return blockAlwaysTerminates(*inner);
 	return false;
 }
 
