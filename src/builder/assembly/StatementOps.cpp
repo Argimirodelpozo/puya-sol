@@ -785,6 +785,54 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
+	// Recursive Yul functions are lowered to AWST Subroutines (emitted in
+	// AssemblyBuilder::buildBlock). Dispatch via SubroutineCallExpression
+	// instead of inlining so calls don't recurse at compile time.
+	auto subIt = m_yulFuncSubroutineIds.find(_name);
+	if (subIt != m_yulFuncSubroutineIds.end())
+	{
+		auto defIt = m_asmFunctions.find(_name);
+		if (defIt == m_asmFunctions.end())
+		{
+			Logger::instance().error("unknown assembly function: " + _name, _loc);
+			return nullptr;
+		}
+		auto const& funcDef = *defIt->second;
+		if (_args.size() != funcDef.parameters.size())
+		{
+			Logger::instance().error(
+				"assembly function '" + _name + "' called with wrong number of arguments", _loc);
+			return nullptr;
+		}
+
+		auto call = std::make_shared<awst::SubroutineCallExpression>();
+		call->sourceLocation = _loc;
+		call->wtype = funcDef.returnVariables.size() == 1
+			? awst::WType::biguintType()
+			: awst::WType::voidType();
+		call->target = awst::SubroutineID{subIt->second};
+		for (auto const& a: _args)
+		{
+			awst::CallArg ca;
+			ca.value = ensureBiguint(a, _loc);
+			call->args.push_back(std::move(ca));
+		}
+
+		if (funcDef.returnVariables.size() == 1)
+		{
+			std::string retName = funcDef.returnVariables[0].name.str();
+			m_locals[retName] = awst::WType::biguintType();
+			auto target = awst::makeVarExpression(retName, awst::WType::biguintType(), _loc);
+			auto assign = awst::makeAssignmentStatement(std::move(target), call, _loc);
+			_out.push_back(std::move(assign));
+			return awst::makeVarExpression(retName, awst::WType::biguintType(), _loc);
+		}
+
+		auto exprStmt = awst::makeExpressionStatement(call, _loc);
+		_out.push_back(std::move(exprStmt));
+		return std::make_shared<awst::VoidConstant>();
+	}
+
 	// Recursion guard: Yul function inlining expands each call at the AST
 	// level. Recursive Yul functions (e.g. `function fac(n) -> nf { ... fac(sub(n,1)) ... }`)
 	// otherwise recurse forever here and blow the C++ stack. Emit an error

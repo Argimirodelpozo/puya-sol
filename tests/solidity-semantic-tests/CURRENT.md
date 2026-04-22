@@ -1,22 +1,27 @@
-# Semantic Test Status — v143
+# Semantic Test Status — v146
 
-**Totals**: 1011 PASS / 246 FAIL / 65 COMPILE_ERR = **1011/1322 (76.5%)**
+**Totals**: 1013 PASS / 246 FAIL / 63 COMPILE_ERR = **1013/1322 (76.6%)**
 
-vs v142 (1009): `viaYul/delete` gained (COMPILE_ERR → PASS) — fn-ptr `delete` works via zero-sentinel + dispatcher "invalid function pointer" assert. Root cause was a private-visibility signed-int return type mismatch across three files (ContractBuilder declaration, FunctionPointerBuilder dispatcher, SolInternalCall callsite): all three unconditionally promoted signed int ≤64 returns to biguint, but sign-extension only runs at the ABI boundary. Gated all three on `isAbiBoundary` (public/external). `uncalled_blockhash` also gained (previously flaky).
+vs v143 (1011): three fixes landed (+2 net pass, -2 compile_err, +1 fail→pass):
+- `inlineAssembly/inline_assembly_recursion`: COMPILE_ERR → PASS. Recursive Yul user-defined functions previously blew the C++ stack during inlining. AssemblyBuilder now detects self-reachable functions via a call graph and emits them as real AWST Subroutines; callsites go through a registered subroutine-id map in StatementOps::handleUserFunctionCall. Pending subroutines are drained by ContractBuilder into m_dispatchSubroutines.
+- `storageLayoutSpecifier/storage_reference_array`: COMPILE_ERR → PASS. `uint[] storage ptr = stateArr; ptr.push(x);` was producing `ArrayExtend.base = StateGet(BoxValueExpression)` — puya backend rejects StateGet as a write target. SolArrayMethod now detects Identifier→storageAlias, unwraps StateGet to the underlying BoxValueExpression, and emits ArrayExtend/ArrayPop against the writable target (same pattern SolIndexAccess already uses).
+- `inlineAssembly/selfbalance`: FAIL → PASS. Was a hardcoded 0 stub. Now maps Yul `selfbalance()` → `balance(global CurrentApplicationAddress)` (uint64) → itob → biguint.
+
+`mapping_contract_key` flipped ✓→✗ in the v146 run but passes consistently solo — flaky localnet hiccup, not a true regression.
 
 ## Category breakdown (sorted by gap size)
 
 | Category | PASS | FAIL | COMPILE_ERR | Total | Pass % |
 |---|---:|---:|---:|---:|---:|
 | array | 44 | 27 | 2 | 73 | 60.3% |
-| inlineAssembly | 50 | 24 | 4 | 78 | 64.1% |
+| inlineAssembly | 52 | 23 | 3 | 78 | 66.7% |
 | various | 46 | 11 | 11 | 68 | 67.6% |
 | tryCatch | 0 | 19 | 1 | 20 | 0.0% |
 | libraries | 42 | 13 | 7 | 62 | 67.7% |
 | abiEncoderV2 | 24 | 20 | 0 | 44 | 54.5% |
 | functionCall | 29 | 14 | 5 | 48 | 60.4% |
 | storage | 28 | 9 | 7 | 44 | 63.6% |
-| storageLayoutSpecifier | 22 | 11 | 1 | 34 | 64.7% |
+| storageLayoutSpecifier | 23 | 11 | 0 | 34 | 67.6% |
 | abiEncoderV1 | 18 | 10 | 0 | 28 | 64.3% |
 | userDefinedValueType | 21 | 9 | 0 | 30 | 70.0% |
 | viaYul | 56 | 8 | 0 | 64 | 87.5% |

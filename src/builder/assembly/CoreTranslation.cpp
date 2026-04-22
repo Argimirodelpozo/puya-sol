@@ -499,8 +499,22 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), loc);
 		return cast;
 	}
+	if (funcName == "selfbalance")
+	{
+		// Yul selfbalance() returns the balance of the executing contract.
+		// Map to AVM `balance(global CurrentApplicationAddress)` (uint64),
+		// then widen to biguint so the Yul value type matches EVM's uint256.
+		auto appAddr = awst::makeIntrinsicCall("global", awst::WType::bytesType(), loc);
+		appAddr->immediates = {std::string("CurrentApplicationAddress")};
+		auto bal = awst::makeIntrinsicCall("balance", awst::WType::uint64Type(), loc);
+		bal->stackArgs.push_back(std::move(appAddr));
+		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), loc);
+		itob->stackArgs.push_back(std::move(bal));
+		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), loc);
+		return cast;
+	}
 	if (funcName == "coinbase" || funcName == "gasprice" || funcName == "basefee"
-		|| funcName == "blobbasefee" || funcName == "selfbalance")
+		|| funcName == "blobbasefee")
 	{
 		// Stub: return 0 for EVM-specific block properties with no AVM equivalent
 		Logger::instance().warning(

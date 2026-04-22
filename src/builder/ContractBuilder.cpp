@@ -258,6 +258,10 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	std::string contractName = _contract.name();
 	std::string contractId = m_sourceFile + "." + contractName;
 
+	// Reset the recursive-Yul subroutine sink so assembly blocks within this
+	// contract can register their emitted Subroutines and we drain them below.
+	AssemblyBuilder::resetPendingSubroutines();
+
 	// Collect transient state variables
 	m_transientStorage.collectVars(_contract, m_typeMapper);
 	// Note: setTransientStorage called after m_exprBuilder is created (below)
@@ -1444,6 +1448,14 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		for (auto& m : dispatchMethods)
 			contract->methods.push_back(std::move(m));
 		eb::FunctionPointerBuilder::reset();
+	}
+
+	// Drain any Subroutines emitted for recursive Yul functions so the
+	// contract-builder caller picks them up alongside fn-ptr dispatchers.
+	{
+		auto yulSubs = AssemblyBuilder::takePendingSubroutines();
+		for (auto& sub: yulSubs)
+			m_dispatchSubroutines.push_back(std::move(sub));
 	}
 
 	return contract;

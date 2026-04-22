@@ -7,6 +7,7 @@
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libevmasm/Instruction.h>
 
+#include <algorithm>
 #include <array>
 #include <optional>
 #include <sstream>
@@ -165,6 +166,101 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 		}
 	};
 	collectFunctions(_block.statements);
+
+	// Build direct-call graph between collected Yul functions (only calls to
+	// other Yul-user-defined functions count — builtins are irrelevant for
+	// recursion detection).
+	m_recursiveYulFuncs.clear();
+	m_yulFuncSubroutineIds.clear();
+	std::map<std::string, std::set<std::string>> yulDirectCalls;
+	std::function<void(solidity::yul::Expression const&, std::set<std::string>&)> scanExpr;
+	std::function<void(std::vector<solidity::yul::Statement> const&, std::set<std::string>&)> scanStmts;
+	scanExpr = [&](solidity::yul::Expression const& _expr, std::set<std::string>& _out)
+	{
+		if (auto const* call = std::get_if<solidity::yul::FunctionCall>(&_expr))
+		{
+			std::string n = getFunctionName(call->functionName);
+			if (m_asmFunctions.count(n))
+				_out.insert(n);
+			for (auto const& a: call->arguments)
+				scanExpr(a, _out);
+		}
+	};
+	scanStmts = [&](std::vector<solidity::yul::Statement> const& stmts, std::set<std::string>& _out)
+	{
+		for (auto const& s: stmts)
+		{
+			if (auto const* fd = std::get_if<solidity::yul::FunctionDefinition>(&s))
+				scanStmts(fd->body.statements, _out);
+			else if (auto const* blk = std::get_if<solidity::yul::Block>(&s))
+				scanStmts(blk->statements, _out);
+			else if (auto const* iff = std::get_if<solidity::yul::If>(&s))
+			{
+				scanExpr(*iff->condition, _out);
+				scanStmts(iff->body.statements, _out);
+			}
+			else if (auto const* sw = std::get_if<solidity::yul::Switch>(&s))
+			{
+				scanExpr(*sw->expression, _out);
+				for (auto const& c: sw->cases)
+					scanStmts(c.body.statements, _out);
+			}
+			else if (auto const* fl = std::get_if<solidity::yul::ForLoop>(&s))
+			{
+				scanStmts(fl->pre.statements, _out);
+				scanExpr(*fl->condition, _out);
+				scanStmts(fl->post.statements, _out);
+				scanStmts(fl->body.statements, _out);
+			}
+			else if (auto const* vd = std::get_if<solidity::yul::VariableDeclaration>(&s))
+			{
+				if (vd->value) scanExpr(*vd->value, _out);
+			}
+			else if (auto const* as = std::get_if<solidity::yul::Assignment>(&s))
+			{
+				if (as->value) scanExpr(*as->value, _out);
+			}
+			else if (auto const* es = std::get_if<solidity::yul::ExpressionStatement>(&s))
+			{
+				scanExpr(es->expression, _out);
+			}
+		}
+	};
+	for (auto const& [name, def]: m_asmFunctions)
+	{
+		std::set<std::string> callees;
+		scanStmts(def->body.statements, callees);
+		yulDirectCalls[name] = std::move(callees);
+	}
+	// Reachable-from-self (each function) → recursive iff reaches itself.
+	for (auto const& [name, _]: m_asmFunctions)
+	{
+		std::set<std::string> visited;
+		std::function<bool(std::string const&)> reaches = [&](std::string const& n) -> bool
+		{
+			auto it = yulDirectCalls.find(n);
+			if (it == yulDirectCalls.end()) return false;
+			for (auto const& c: it->second)
+			{
+				if (c == name) return true;
+				if (visited.insert(c).second)
+					if (reaches(c)) return true;
+			}
+			return false;
+		};
+		if (reaches(name))
+			m_recursiveYulFuncs.insert(name);
+	}
+	// Emit a Subroutine for each recursive Yul function.
+	for (auto const& name: m_recursiveYulFuncs)
+	{
+		std::string safeCtx = m_contextName;
+		std::replace(safeCtx.begin(), safeCtx.end(), '.', '_');
+		std::string subId = m_sourceFile + "." + m_contextName + "::__yul_" + name;
+		std::string subName = "__yul_" + safeCtx + "_" + name;
+		m_yulFuncSubroutineIds[name] = subId;
+		buildRecursiveYulSubroutine(*m_asmFunctions.at(name), subId, subName);
+	}
 
 	// Second pass: translate statements (skipping function definitions)
 	std::vector<std::shared_ptr<awst::Statement>> result;
@@ -752,6 +848,142 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::safeBtoi(
 	extractU64->stackArgs.push_back(std::move(start));
 
 	return extractU64;
+}
+
+// ─── Recursive Yul function subroutine sink ─────────────────────────────────
+
+namespace {
+std::vector<std::shared_ptr<awst::Subroutine>>& pendingSubroutinesRef()
+{
+	static std::vector<std::shared_ptr<awst::Subroutine>> s;
+	return s;
+}
+}
+
+std::vector<std::shared_ptr<awst::Subroutine>> AssemblyBuilder::takePendingSubroutines()
+{
+	return std::move(pendingSubroutinesRef());
+}
+
+void AssemblyBuilder::resetPendingSubroutines()
+{
+	pendingSubroutinesRef().clear();
+}
+
+void AssemblyBuilder::buildRecursiveYulSubroutine(
+	solidity::yul::FunctionDefinition const& _funcDef,
+	std::string const& _subroutineId,
+	std::string const& _subroutineName
+)
+{
+	auto loc = makeLoc(_funcDef.debugData);
+
+	if (_funcDef.returnVariables.size() > 1)
+	{
+		Logger::instance().error(
+			"recursive Yul function '" + _funcDef.name.str()
+			+ "' with multiple return variables is not yet supported",
+			loc);
+		return;
+	}
+
+	// Save state that translateStatement touches so the outer block can resume.
+	auto savedLocals = std::move(m_locals);
+	auto savedConstants = std::move(m_localConstants);
+	auto savedUpgraded = std::move(m_upgradedLocals);
+	auto savedParamBitWidths = m_paramBitWidths;
+	auto savedPending = std::move(m_pendingStatements);
+	auto savedHalt = m_haltEmitted;
+	auto savedInlineDepth = m_inlineDepth;
+	auto savedArrayParamName = m_arrayParamName;
+	auto savedArrayParamType = m_arrayParamType;
+	auto savedArrayParamSize = m_arrayParamSize;
+	auto savedReturnType = m_returnType;
+
+	m_locals.clear();
+	m_localConstants.clear();
+	m_upgradedLocals.clear();
+	m_pendingStatements.clear();
+	m_haltEmitted = false;
+	m_inlineDepth = 0;
+	m_arrayParamName.clear();
+	m_arrayParamType = nullptr;
+	m_arrayParamSize = 0;
+	m_returnType = awst::WType::biguintType();
+
+	// Params
+	std::vector<awst::SubroutineArgument> subArgs;
+	for (auto const& p: _funcDef.parameters)
+	{
+		std::string pName = p.name.str();
+		m_locals[pName] = awst::WType::biguintType();
+		awst::SubroutineArgument arg;
+		arg.name = pName;
+		arg.wtype = awst::WType::biguintType();
+		arg.sourceLocation = makeLoc(p.debugData);
+		subArgs.push_back(std::move(arg));
+	}
+
+	// Return variables as locals
+	for (auto const& r: _funcDef.returnVariables)
+		m_locals[r.name.str()] = awst::WType::biguintType();
+
+	std::vector<std::shared_ptr<awst::Statement>> bodyStmts;
+
+	// Init return vars to 0 (Yul semantics)
+	for (auto const& r: _funcDef.returnVariables)
+	{
+		auto rLoc = makeLoc(r.debugData);
+		auto target = awst::makeVarExpression(r.name.str(), awst::WType::biguintType(), rLoc);
+		auto zero = awst::makeIntegerConstant("0", rLoc, awst::WType::biguintType());
+		auto init = awst::makeAssignmentStatement(std::move(target), std::move(zero), rLoc);
+		bodyStmts.push_back(std::move(init));
+	}
+
+	// Translate body
+	for (auto const& stmt: _funcDef.body.statements)
+		buildStatement(stmt, bodyStmts);
+
+	// Final return
+	awst::WType const* retType = awst::WType::voidType();
+	if (_funcDef.returnVariables.size() == 1)
+	{
+		retType = awst::WType::biguintType();
+		std::string retName = _funcDef.returnVariables[0].name.str();
+		auto retVar = awst::makeVarExpression(retName, awst::WType::biguintType(), loc);
+		bodyStmts.push_back(awst::makeReturnStatement(std::move(retVar), loc));
+	}
+	else
+	{
+		bodyStmts.push_back(awst::makeReturnStatement(nullptr, loc));
+	}
+
+	auto block = std::make_shared<awst::Block>();
+	block->sourceLocation = loc;
+	block->body = std::move(bodyStmts);
+
+	auto sub = std::make_shared<awst::Subroutine>();
+	sub->sourceLocation = loc;
+	sub->id = _subroutineId;
+	sub->name = _subroutineName;
+	sub->args = std::move(subArgs);
+	sub->returnType = retType;
+	sub->body = std::move(block);
+
+	pendingSubroutinesRef().push_back(std::move(sub));
+
+	// Restore outer state
+	m_locals = std::move(savedLocals);
+	m_localConstants = std::move(savedConstants);
+	m_upgradedLocals = std::move(savedUpgraded);
+	m_paramBitWidths = std::move(savedParamBitWidths);
+	m_pendingStatements = std::move(savedPending);
+	m_haltEmitted = savedHalt;
+	m_inlineDepth = savedInlineDepth;
+	m_arrayParamName = std::move(savedArrayParamName);
+	m_arrayParamType = savedArrayParamType;
+	m_arrayParamSize = savedArrayParamSize;
+	m_returnType = savedReturnType;
 }
 
 // ─── Expression translation ─────────────────────────────────────────────────

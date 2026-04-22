@@ -9,6 +9,7 @@
 
 #include <map>
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -602,6 +603,35 @@ private:
 		awst::SourceLocation const& _loc,
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
+
+	/// Names of Yul functions that directly or transitively call themselves
+	/// within the current assembly block. For these we emit an AWST Subroutine
+	/// instead of inlining, since inlining recursive calls recurses unboundedly
+	/// at compile time.
+	std::set<std::string> m_recursiveYulFuncs;
+
+	/// Mapping from recursive Yul function name to the AWST SubroutineID used
+	/// to reference its emitted Subroutine at call sites.
+	std::map<std::string, std::string> m_yulFuncSubroutineIds;
+
+	/// Build a root-level Subroutine node from a recursive Yul function and
+	/// push it onto the pending sink. Only supports zero/one return values
+	/// and rejects `leave` (would need return-with-value rewriting).
+	void buildRecursiveYulSubroutine(
+		solidity::yul::FunctionDefinition const& _funcDef,
+		std::string const& _subroutineId,
+		std::string const& _subroutineName
+	);
+
+public:
+	/// Drain subroutines emitted for recursive Yul functions across all
+	/// assembly blocks translated since the last reset.
+	static std::vector<std::shared_ptr<awst::Subroutine>> takePendingSubroutines();
+
+	/// Clear the pending-subroutines sink. Called once per contract build.
+	static void resetPendingSubroutines();
+
+private:
 
 	// ── Utilities ───────────────────────────────────────────────────────
 

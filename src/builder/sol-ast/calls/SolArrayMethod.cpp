@@ -24,6 +24,118 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 	std::string memberName = memberAccess->memberName();
 	auto const& baseExpr = memberAccess->expression();
 
+	// Storage-pointer alias: `uint[] storage ptr = stateArr; ptr.push(x);`
+	// The Identifier `ptr` refers to a local whose AWST alias is
+	// StateGet(BoxValueExpression). ArrayExtend/ArrayPop require a writable
+	// target — StateGet is read-only, so emit the op against the unwrapped
+	// BoxValueExpression directly (same pattern used by SolIndexAccess).
+	if (auto const* ident = dynamic_cast<Identifier const*>(&baseExpr))
+	{
+		if (auto const* decl = dynamic_cast<VariableDeclaration const*>(
+				ident->annotation().referencedDeclaration))
+		{
+			if (!decl->isStateVariable())
+			{
+				auto aliasIt = m_ctx.storageAliases.find(decl->id());
+				if (aliasIt != m_ctx.storageAliases.end()
+					&& (memberName == "push" || memberName == "pop"))
+				{
+					auto const* solArrType = dynamic_cast<ArrayType const*>(decl->type());
+					if (solArrType && !solArrType->isByteArrayOrString())
+					{
+						std::shared_ptr<awst::Expression> aliasExpr = aliasIt->second;
+						// Unwrap StateGet to underlying writable target.
+						if (auto const* sg = dynamic_cast<awst::StateGet const*>(
+								aliasExpr.get()))
+							aliasExpr = sg->field;
+						// Only proceed if underlying target is a BoxValueExpression
+						// (the typical case for dynamic arrays — mapped to box storage).
+						if (dynamic_cast<awst::BoxValueExpression const*>(aliasExpr.get()))
+						{
+							auto* rawElemType = m_ctx.typeMapper.map(solArrType->baseType());
+							auto* elemType = m_ctx.typeMapper.mapSolTypeToARC4(solArrType->baseType());
+							auto* arrWType = aliasExpr->wtype
+								? aliasExpr->wtype
+								: m_ctx.typeMapper.map(solArrType);
+
+							if (memberName == "push" && !m_call.arguments().empty())
+							{
+								auto val = buildExpr(*m_call.arguments()[0]);
+								auto encoded = std::make_shared<awst::ARC4Encode>();
+								encoded->sourceLocation = m_loc;
+								encoded->wtype = elemType;
+								encoded->value = std::move(val);
+
+								auto singleArr = std::make_shared<awst::NewArray>();
+								singleArr->sourceLocation = m_loc;
+								singleArr->wtype = arrWType;
+								singleArr->values.push_back(std::move(encoded));
+
+								auto e = std::make_shared<awst::ArrayExtend>();
+								e->sourceLocation = m_loc;
+								e->wtype = awst::WType::voidType();
+								e->base = aliasExpr;
+								e->other = std::move(singleArr);
+								return e;
+							}
+							if (memberName == "push" && m_call.arguments().empty())
+							{
+								std::shared_ptr<awst::Expression> elem;
+								bool fromAssign = static_cast<bool>(m_ctx.pendingArrayPushValue);
+								if (fromAssign)
+								{
+									auto coerced = builder::TypeCoercion::coerceForAssignment(
+										std::move(m_ctx.pendingArrayPushValue), rawElemType, m_loc);
+									auto encoded = std::make_shared<awst::ARC4Encode>();
+									encoded->sourceLocation = m_loc;
+									encoded->wtype = elemType;
+									encoded->value = std::move(coerced);
+									elem = std::move(encoded);
+								}
+								else
+									elem = builder::TypeCoercion::makeDefaultValue(elemType, m_loc);
+
+								auto singleArr = std::make_shared<awst::NewArray>();
+								singleArr->sourceLocation = m_loc;
+								singleArr->wtype = arrWType;
+								singleArr->values.push_back(std::move(elem));
+
+								auto e = std::make_shared<awst::ArrayExtend>();
+								e->sourceLocation = m_loc;
+								e->wtype = awst::WType::voidType();
+								e->base = aliasExpr;
+								e->other = std::move(singleArr);
+
+								if (fromAssign)
+									return e;
+
+								auto stmt = awst::makeExpressionStatement(std::move(e), m_loc);
+								m_ctx.pendingStatements.push_back(std::move(stmt));
+								auto vc = std::make_shared<awst::VoidConstant>();
+								vc->sourceLocation = m_loc;
+								vc->wtype = awst::WType::voidType();
+								return vc;
+							}
+							if (memberName == "pop")
+							{
+								auto popExpr = std::make_shared<awst::ArrayPop>();
+								popExpr->sourceLocation = m_loc;
+								popExpr->wtype = elemType;
+								popExpr->base = aliasExpr;
+
+								auto decode = std::make_shared<awst::ARC4Decode>();
+								decode->sourceLocation = m_loc;
+								decode->wtype = rawElemType;
+								decode->value = std::move(popExpr);
+								return decode;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
 	// Check if this is a state variable array
 	if (auto const* ident = dynamic_cast<Identifier const*>(&baseExpr))
 	{
