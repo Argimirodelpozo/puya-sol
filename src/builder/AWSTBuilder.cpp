@@ -697,17 +697,40 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				sub->args.push_back(std::move(arg));
 			}
 
+			// Free functions taking non-mapping storage references need their
+			// modified args threaded back to callers. Same mechanism as library
+			// functions — augment the return type with the storage-arg types
+			// and callers write back via SolInternalCall.
+			std::vector<size_t> storageParamIndices;
+			bool freeIsMutating = func->stateMutability() != solidity::frontend::StateMutability::View
+				&& func->stateMutability() != solidity::frontend::StateMutability::Pure;
+			if (freeIsMutating)
+			{
+				for (size_t pi = 0; pi < func->parameters().size(); ++pi)
+				{
+					auto const& param = func->parameters()[pi];
+					if (param->referenceLocation() != solidity::frontend::VariableDeclaration::Location::Storage)
+						continue;
+					if (dynamic_cast<solidity::frontend::MappingType const*>(param->type()))
+						continue;
+					storageParamIndices.push_back(pi);
+				}
+			}
+
 			auto const& returnParams = func->returnParameters();
-			if (returnParams.empty())
-				sub->returnType = awst::WType::voidType();
-			else if (returnParams.size() == 1)
-				sub->returnType = m_typeMapper.map(returnParams[0]->type());
-			else
 			{
 				std::vector<awst::WType const*> types;
 				for (auto const& rp: returnParams)
 					types.push_back(m_typeMapper.map(rp->type()));
-				sub->returnType = new awst::WTuple(std::move(types));
+				for (size_t idx: storageParamIndices)
+					types.push_back(sub->args[idx].wtype);
+
+				if (types.empty())
+					sub->returnType = awst::WType::voidType();
+				else if (types.size() == 1)
+					sub->returnType = types[0];
+				else
+					sub->returnType = new awst::WTuple(std::move(types));
 			}
 
 			sub->pure = func->stateMutability() == solidity::frontend::StateMutability::Pure;
@@ -809,16 +832,70 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				}
 			}
 
-			// Synthesize implicit return for named return parameters
+			// Augment return statements: append storage param values so
+			// callers can write the modified struct back to their storage.
+			if (!storageParamIndices.empty())
+			{
+				std::function<void(awst::Block&)> augmentReturns;
+				augmentReturns = [&](awst::Block& block) {
+					for (auto& stmt: block.body)
+					{
+						if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
+						{
+							auto tuple = std::make_shared<awst::TupleExpression>();
+							tuple->sourceLocation = ret->sourceLocation;
+							tuple->wtype = sub->returnType;
+							if (ret->value)
+								tuple->items.push_back(ret->value);
+							for (size_t idx: storageParamIndices)
+							{
+								auto pv = awst::makeVarExpression(sub->args[idx].name, sub->args[idx].wtype, ret->sourceLocation);
+								tuple->items.push_back(std::move(pv));
+							}
+							ret->value = std::move(tuple);
+						}
+						if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
+						{
+							if (ifElse->ifBranch) augmentReturns(*ifElse->ifBranch);
+							if (ifElse->elseBranch) augmentReturns(*ifElse->elseBranch);
+						}
+					}
+				};
+				augmentReturns(*sub->body);
+			}
+
+			// Synthesize implicit return for named return parameters OR
+			// for functions with only storage-param augmentation.
 			if (!blockAlwaysTerminates(*sub->body)
-				&& !returnParams.empty())
+				&& (!returnParams.empty() || !storageParamIndices.empty()))
 			{
 				bool hasNamedReturns = false;
 				for (auto const& rp: returnParams)
 					if (!rp->name().empty())
 						hasNamedReturns = true;
 
-				if (hasNamedReturns)
+				if (!hasNamedReturns && returnParams.empty() && !storageParamIndices.empty())
+				{
+					// Void return with storage augmentation — append trailing
+					// return of (storage args...) so all paths terminate.
+					auto implicitReturn = awst::makeReturnStatement(nullptr, loc);
+					if (storageParamIndices.size() == 1)
+					{
+						size_t idx = storageParamIndices[0];
+						implicitReturn->value = awst::makeVarExpression(sub->args[idx].name, sub->args[idx].wtype, loc);
+					}
+					else
+					{
+						auto tuple = std::make_shared<awst::TupleExpression>();
+						tuple->sourceLocation = loc;
+						tuple->wtype = sub->returnType;
+						for (size_t idx: storageParamIndices)
+							tuple->items.push_back(awst::makeVarExpression(sub->args[idx].name, sub->args[idx].wtype, loc));
+						implicitReturn->value = std::move(tuple);
+					}
+					sub->body->body.push_back(std::move(implicitReturn));
+				}
+				else if (hasNamedReturns)
 				{
 					auto implicitReturn = awst::makeReturnStatement(nullptr, loc);
 

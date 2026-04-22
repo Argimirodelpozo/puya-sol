@@ -145,15 +145,14 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		call->args.push_back(std::move(ca));
 	}
 
-	// Storage write-back for library calls whose first parameter is a
-	// storage reference. AWSTBuilder augments non-private, non-pure/view
-	// library functions to thread the modified storage arg back through
-	// the return value as `WTuple(R, T)` (or just `T` when R is void).
+	// Storage write-back for calls whose first parameter is a storage
+	// reference. AWSTBuilder augments non-private, non-pure/view library
+	// functions AND free functions to thread the modified storage arg
+	// back through the return value as `WTuple(R, T)` (or just `T` when
+	// R is void).
 	//
-	// Only library functions get this augmentation — contract methods and
-	// free functions are NOT augmented. So the call-site unpack must be
-	// scoped to library callees, otherwise we'd build a tuple return for
-	// a callee that actually returns a scalar.
+	// Contract methods are NOT augmented — they access storage directly.
+	// So the call-site unpack is scoped to library/free callees.
 	//
 	// Two receiver shapes are supported:
 	//  1. Box-backed state (StateGet → BoxValueExpression), optionally with
@@ -162,20 +161,23 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	//     state variable — the common case for small struct state vars).
 	bool calleeIsLibrary = false;
 	bool calleeIsPrivate = false;
+	bool calleeIsFree = false;
 	if (_funcDef)
 	{
 		calleeIsPrivate = _funcDef->visibility() == Visibility::Private;
+		calleeIsFree = _funcDef->isFree();
 		if (auto const* scope = _funcDef->scope())
 			if (auto const* contractDef = dynamic_cast<ContractDefinition const*>(scope))
 				calleeIsLibrary = contractDef->isLibrary();
 	}
 	if (_funcDef && !call->args.empty()
-		&& calleeIsLibrary && !calleeIsPrivate
+		&& ((calleeIsLibrary && !calleeIsPrivate) || calleeIsFree)
 		&& _funcDef->stateMutability() != StateMutability::View
 		&& _funcDef->stateMutability() != StateMutability::Pure
 		&& !_funcDef->parameters().empty()
 		&& _funcDef->parameters()[0]->referenceLocation()
-			== VariableDeclaration::Location::Storage)
+			== VariableDeclaration::Location::Storage
+		&& !dynamic_cast<MappingType const*>(_funcDef->parameters()[0]->type()))
 	{
 		auto const* receiverExpr = call->args[0].value.get();
 		std::shared_ptr<awst::BoxValueExpression> rootBox;
