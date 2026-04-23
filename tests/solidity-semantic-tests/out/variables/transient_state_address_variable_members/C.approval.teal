@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_address_variable_members.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 12 32 0
+    intcblock 1 32 0
     bytecblock 0x151f7c75
     pushint 4096
     bzero
@@ -48,18 +48,14 @@ f_ternary_merge@4:
     assert // not payable
     load 5
     txn Sender
-    extract 12 20
-    replace2 12
+    replace2 0
     store 5
-    intc_1 // 12
-    bzero
     load 5
-    extract 12 20
-    concat
+    extract 0 32
     acct_params_get AcctBalance
     pop
     itob
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -70,7 +66,7 @@ f_ternary_merge@4:
     return
 
 f_ternary_false@3:
-    intc_3 // 0
+    intc_2 // 0
     b f_ternary_merge@4
 
 
@@ -86,15 +82,12 @@ g:
 g_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 12
-    bzero
     load 5
-    extract 12 20
-    concat
+    extract 0 32
     acct_params_get AcctBalance
     pop
     itob
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -105,5 +98,5 @@ g_ternary_merge@4:
     return
 
 g_ternary_false@3:
-    intc_3 // 0
+    intc_2 // 0
     b g_ternary_merge@4

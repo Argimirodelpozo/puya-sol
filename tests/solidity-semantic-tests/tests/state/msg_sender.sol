@@ -1,3 +1,7 @@
+// ============================================================================
+// THIS TEST MODIFIED FROM UPSTREAM SOLIDITY
+// See inline comments for AVM adaptation notes.
+// ============================================================================
 contract C {
     // AVM: msg.sender maps to `txn Sender` — the 32-byte Algorand address
     // of the transaction sender. Different format from EVM's 20-byte address.

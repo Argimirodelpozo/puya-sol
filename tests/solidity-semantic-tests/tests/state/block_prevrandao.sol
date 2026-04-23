@@ -1,3 +1,7 @@
+// ============================================================================
+// THIS TEST MODIFIED FROM UPSTREAM SOLIDITY
+// See inline comments for AVM adaptation notes.
+// ============================================================================
 contract C {
     // AVM: block.prevrandao maps to `block BlkSeed (global Round - 1)` —
     // the VRF output (block seed) of the previous round. Analogous to EVM

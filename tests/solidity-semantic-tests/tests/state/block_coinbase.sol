@@ -1,3 +1,7 @@
+// ============================================================================
+// THIS TEST MODIFIED FROM UPSTREAM SOLIDITY
+// See inline comments for AVM adaptation notes.
+// ============================================================================
 contract C {
     // AVM has no miner/coinbase concept — blocks are produced by rotating
     // validators chosen by VRF. block.coinbase is stubbed as the current

@@ -1,3 +1,7 @@
+// ============================================================================
+// THIS TEST MODIFIED FROM UPSTREAM SOLIDITY
+// See inline comments for AVM adaptation notes.
+// ============================================================================
 contract C {
     // AVM: tx.origin maps to `txn Sender` — same as msg.sender on AVM
     // since there's no contract-to-contract call chain distinction.

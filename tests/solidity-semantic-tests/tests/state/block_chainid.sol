@@ -1,3 +1,7 @@
+// ============================================================================
+// THIS TEST MODIFIED FROM UPSTREAM SOLIDITY
+// See inline comments for AVM adaptation notes.
+// ============================================================================
 contract C {
     // AVM: block.chainid maps to `global GenesisHash` — the 32-byte hash
     // that uniquely identifies the Algorand network (mainnet/testnet/localnet).

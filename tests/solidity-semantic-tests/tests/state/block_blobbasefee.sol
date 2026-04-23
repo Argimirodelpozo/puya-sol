@@ -1,3 +1,7 @@
+// ============================================================================
+// THIS TEST MODIFIED FROM UPSTREAM SOLIDITY
+// See inline comments for AVM adaptation notes.
+// ============================================================================
 contract C {
     // AVM: no blob data pricing on Algorand — block.blobbasefee is stubbed
     // as 0. Original EVM expected: f() -> 1, g() -> 1

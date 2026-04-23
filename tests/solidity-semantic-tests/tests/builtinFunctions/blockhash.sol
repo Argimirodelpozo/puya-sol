@@ -1,3 +1,6 @@
+// ============================================================================
+// THIS TEST MODIFIED FROM UPSTREAM SOLIDITY
+// ----------------------------------------------------------------------------
 // AVM adaptation: blockhash() maps to AVM 'block BlkSeed' (VRF output).
 // AVM has no block hash field — BlkSeed is the closest unique-per-block value.
 // The test checks that blockhash returns a non-zero value for valid rounds,

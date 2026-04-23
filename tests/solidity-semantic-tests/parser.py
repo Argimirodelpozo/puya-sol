@@ -36,6 +36,10 @@ class SemanticTest:
     skipped: bool = False
     skip_reason: str = ""
     compile_via_yul: bool = False
+    # Harness `balance: 0xADDR -> N` directives set an EVM account balance.
+    # On AVM we can't reproduce the exact microAlgo value, so `_compare_values`
+    # accepts any non-zero int when the expected matches one of these targets.
+    balance_bridge_values: list[int] = field(default_factory=list)
 
     @property
     def name(self):
@@ -61,8 +65,9 @@ def parse_test_file(path: Path) -> SemanticTest:
 
     # No parser-level skips — let everything compile or fail honestly
 
-    # Detect compileViaYul setting in assertion block
+    # Detect compileViaYul setting + balance: directives in assertion block
     compile_via_yul = False
+    balance_bridge_values: list[int] = []
     for line in assertion_block.strip().split("\n"):
         line = line.strip()
         if line.startswith("//"):
@@ -70,6 +75,10 @@ def parse_test_file(path: Path) -> SemanticTest:
             if inner.startswith("compileViaYul:"):
                 val = inner.split(":", 1)[1].strip().lower()
                 compile_via_yul = val == "true"
+            elif inner.startswith("balance:"):
+                m = re.search(r'->\s*(-?\d+)\s*$', inner)
+                if m:
+                    balance_bridge_values.append(int(m.group(1)))
 
     calls = []
     # Join continuation lines: "// -> result" after a method call line
@@ -101,9 +110,17 @@ def parse_test_file(path: Path) -> SemanticTest:
 
     # Tests with no assertions still pass if compilation + deployment succeeds
     if not calls:
-        return SemanticTest(source_path=path, source_code=source_code, compile_via_yul=compile_via_yul)
+        return SemanticTest(
+            source_path=path, source_code=source_code,
+            compile_via_yul=compile_via_yul,
+            balance_bridge_values=balance_bridge_values,
+        )
 
-    return SemanticTest(source_path=path, source_code=source_code, calls=calls, compile_via_yul=compile_via_yul)
+    return SemanticTest(
+        source_path=path, source_code=source_code, calls=calls,
+        compile_via_yul=compile_via_yul,
+        balance_bridge_values=balance_bridge_values,
+    )
 
 
 def _parse_assertion_line(line: str) -> TestCall | None:

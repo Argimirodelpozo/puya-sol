@@ -1,3 +1,7 @@
+// ============================================================================
+// THIS TEST MODIFIED FROM UPSTREAM SOLIDITY
+// See inline comments for AVM adaptation notes.
+// ============================================================================
 contract C {
     // AVM has a fixed opcode budget per app call (700), poolable across a
     // 16-txn group. block.gaslimit is stubbed as a sentinel 70000 so

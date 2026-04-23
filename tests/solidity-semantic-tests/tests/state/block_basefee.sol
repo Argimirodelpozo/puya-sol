@@ -1,3 +1,7 @@
+// ============================================================================
+// THIS TEST MODIFIED FROM UPSTREAM SOLIDITY
+// See inline comments for AVM adaptation notes.
+// ============================================================================
 contract C {
     // AVM: no EIP-1559 base fee concept — transactions pay a flat per-txn
     // fee (typically 1000 microAlgos). block.basefee is stubbed as 0.

@@ -1,3 +1,7 @@
+// ============================================================================
+// THIS TEST MODIFIED FROM UPSTREAM SOLIDITY
+// See inline comments for AVM adaptation notes.
+// ============================================================================
 contract C {
     // AVM: block.timestamp maps to `global LatestTimestamp` — the Unix
     // timestamp of the latest confirmed block. Analogous to EVM block.timestamp

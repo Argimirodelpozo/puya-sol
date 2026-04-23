@@ -1,3 +1,7 @@
+// ============================================================================
+// THIS TEST MODIFIED FROM UPSTREAM SOLIDITY
+// See inline comments for AVM adaptation notes.
+// ============================================================================
 contract C {
     // AVM: block.difficulty returns 0 — Algorand has no proof-of-work.
     // Pre-Paris EVM returned the mining difficulty; post-Paris it was

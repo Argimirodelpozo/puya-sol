@@ -1,3 +1,7 @@
+// ============================================================================
+// THIS TEST MODIFIED FROM UPSTREAM SOLIDITY
+// See inline comments for AVM adaptation notes.
+// ============================================================================
 contract C {
     // AVM: tx.gasprice maps to `txn Fee` — the flat transaction fee in
     // microAlgos. NOT equivalent to EVM gas price (wei per gas unit).

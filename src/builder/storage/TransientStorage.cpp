@@ -57,11 +57,13 @@ void TransientStorage::collectVars(
 		}
 
 		// AVM addresses are 32-byte account public keys, not EVM's 20-byte
-		// hashes, but following Solidity's 20-byte layout keeps asm
-		// .slot/.offset values in sync with EVM expectations. Writes/reads
-		// truncate to 20 bytes — full account recovery is not possible
-		// through transient storage for address-typed vars.
+		// hashes. Store addresses at their native 32-byte width so that
+		// acct_params_get / asset_holding_get / balance lookups round-trip.
+		// This diverges from Solidity's 20-byte .slot/.offset packing for
+		// address-typed transient vars — the AVM address semantics wins.
 		auto* mappedType = _typeMapper.map(solType);
+		if (dynamic_cast<AddressType const*>(solType))
+			byteSize = 32;
 		// Function pointers: Solidity says 24 bytes (address+selector) but
 		// puya's AWST representation is bytes[12] (external) or uint64
 		// (internal). Use the AWST width so read/write sizes match.

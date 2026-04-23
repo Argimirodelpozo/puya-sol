@@ -1,3 +1,7 @@
+// ============================================================================
+// THIS TEST MODIFIED FROM UPSTREAM SOLIDITY
+// See tail-of-file comments for AVM adaptation notes.
+// ============================================================================
 contract C {
     function f() public returns (bool) {
         return gasleft() > 0;
