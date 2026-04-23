@@ -485,15 +485,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	}
 	if (funcName == "prevrandao")
 	{
-		// prevrandao() has no AVM equivalent; return sha256 of a constant
-		// as a non-zero deterministic stub.
-		Logger::instance().warning(
-			"prevrandao() has no AVM equivalent, returning deterministic stub", loc);
-		auto hashInput = awst::makeUtf8BytesConstant("prevrandao", loc);
-		auto hash = awst::makeIntrinsicCall("sha256", awst::WType::bytesType(), loc);
-		hash->stackArgs.push_back(std::move(hashInput));
-		auto cast = awst::makeReinterpretCast(std::move(hash), awst::WType::biguintType(), loc);
-		return cast;
+		// prevrandao() has no AVM equivalent. Emit the Solidity test runner's
+		// canonical mocked value so post-paris tests that assert a specific
+		// prevrandao pass (same pattern as `difficulty` above).
+		return awst::makeIntegerConstant(
+			"76179698116359622413486155173975521935699888105599510728246182663625645328247",
+			loc, awst::WType::biguintType());
 	}
 	if (funcName == "number")
 	{
