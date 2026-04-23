@@ -56,19 +56,16 @@ f_ternary_merge@4:
     replace2 0
     store 5
     load 5
-    pushbytes 0x0000000000000000000000000000000000000000
-    replace2 44
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 32
     store 5
     load 5
     extract 0 32
     bytec_1 // 0x
     b==
     assert
-    pushint 12
-    bzero
     load 5
-    extract 44 20
-    concat
+    extract 32 32
     bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     ==
     assert
@@ -104,8 +101,8 @@ g:
     replace2 0
     store 5
     load 5
-    pushbytes 0x0000000000000000000000000000000000001234
-    replace2 44
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000001234
+    replace2 32
     store 5
     retsub
 

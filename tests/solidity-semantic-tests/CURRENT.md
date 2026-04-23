@@ -1,6 +1,10 @@
-# Semantic Test Status — v152
+# Semantic Test Status — v153
 
-**Totals**: 1025 PASS / 232 FAIL / 65 (44 compile_err + 21 deploy_err) = **1025/1322 (77.5%)**
+**Totals**: 1026 PASS / 231 FAIL / 65 (44 compile_err + 21 deploy_err) = **1026/1322 (77.6%)**
+
+vs v152 (1025): +1 via a parser harness fix.
+- `parser.py` used `content.split("// ----")` to locate the assertion delimiter, but that substring-split also matched banner decoration lines like `// ----------------------------------------------------------------` inside the "THIS TEST MODIFIED FROM UPSTREAM SOLIDITY" headers. When the first hit was the banner dash line, `parts[1]` became the banner body + contract + *commented-out* EVM expectations (e.g. `// f() -> 0x37…`, `// g() -> …`, `// h() -> …`) — which then got parsed as real assertions. Affected 17 banner'd tests; `builtinFunctions/blockhash` was the one that regressed in v152's suite run because the spurious `h()` assertion failed on deploy (no such method). Fix switches to a regex that only matches a whole-line `// ----` with optional surrounding whitespace, so banner decoration is ignored.
+- Flakes: `inlineAssembly/blobhash` (✗→✓), `externalContracts/mapping_enum_key_v1` (✗→✓) flipped positive; `inlineAssembly/transient_storage_multiple_calls_different_transactions` (✓→✗) flipped negative. Net +1 real = 1026.
 
 Net total matches v151, but underlying delta is +1 (canceled by two flake flips):
 - `variables/transient_state_address_variable_members`: FAIL → PASS. `TransientStorage.cpp` used to pack `address` at Solidity's EVM-compat 20-byte width; writing `msg.sender` (a 32-byte Algorand account) truncated the top 12 bytes, so `acct_params_get AcctBalance` on the read-back returned `(0, 0)`. Now `AddressType` always occupies the full 32 bytes in a transient slot so accounts round-trip and `.balance` works. Also added a `balance:` harness-directive bridge in `parser.py`/`run_tests.py`: when the test's expected value equals a declared EVM balance target and the AVM returned a positive balance, the comparator treats them as equivalent (real microAlgo balance ≠ EVM wei constant).

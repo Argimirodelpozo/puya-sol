@@ -54,14 +54,17 @@ def parse_test_file(path: Path) -> SemanticTest:
     """Parse a Solidity semantic test file."""
     content = path.read_text()
 
-    # Split on `// ----`
-    parts = content.split("// ----")
-    if len(parts) < 2:
+    # Split on the `// ----` assertion delimiter. Match only whole-line
+    # occurrences (with optional surrounding whitespace) so banner decorations
+    # like `// ----------------------------------------------------------------`
+    # aren't treated as the delimiter.
+    m = re.search(r'(?m)^[ \t]*//[ \t]*----[ \t]*$', content)
+    if not m:
         return SemanticTest(source_path=path, source_code=content,
                            skipped=True, skip_reason="no assertion delimiter")
 
-    source_code = parts[0].strip()
-    assertion_block = parts[1]
+    source_code = content[: m.start()].rstrip()
+    assertion_block = content[m.end():]
 
     # No parser-level skips — let everything compile or fail honestly
 
