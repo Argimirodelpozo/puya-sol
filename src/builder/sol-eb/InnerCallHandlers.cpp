@@ -585,6 +585,62 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 
 	switch (_precompileAddr)
 	{
+	case 1: // ecRecover
+	{
+		Logger::instance().debug("staticcall precompile 0x01: ecRecover → ecdsa_pk_recover Secp256k1", _loc);
+		// Input (128 bytes): hash(0..32), v(32..64), r(64..96), s(96..128)
+		auto msgHash = makeExtract(_inputData, 0, 32, _loc);
+		// recovery_id = v - 27, taken as uint64 from last byte of v-word
+		auto vByte = makeExtract(_inputData, 63, 1, _loc);
+		auto vInt = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
+		vInt->stackArgs.push_back(std::move(vByte));
+		auto recoveryId = awst::makeUInt64BinOp(
+			std::move(vInt), awst::UInt64BinaryOperator::Sub,
+			makeUint64("27", _loc), _loc);
+		auto r = makeExtract(_inputData, 64, 32, _loc);
+		auto s = makeExtract(_inputData, 96, 32, _loc);
+
+		awst::WType const* tupleTypePtr = _ctx.typeMapper.createType<awst::WTuple>(
+			std::vector<awst::WType const*>{awst::WType::bytesType(), awst::WType::bytesType()});
+		auto ecdsaRecover = awst::makeIntrinsicCall("ecdsa_pk_recover", tupleTypePtr, _loc);
+		ecdsaRecover->immediates.push_back("Secp256k1");
+		ecdsaRecover->stackArgs.push_back(std::move(msgHash));
+		ecdsaRecover->stackArgs.push_back(std::move(recoveryId));
+		ecdsaRecover->stackArgs.push_back(std::move(r));
+		ecdsaRecover->stackArgs.push_back(std::move(s));
+
+		static int s_ecRecoverTmpCounter = 0;
+		std::string tupleVar = "__ecrecover_result_" + std::to_string(++s_ecRecoverTmpCounter);
+		auto tupleTarget = awst::makeVarExpression(tupleVar, tupleTypePtr, _loc);
+		auto assignTuple = awst::makeAssignmentStatement(tupleTarget, std::move(ecdsaRecover), _loc);
+		_ctx.prePendingStatements.push_back(std::move(assignTuple));
+
+		auto tupleRead0 = awst::makeVarExpression(tupleVar, tupleTypePtr, _loc);
+		auto pubkeyX = std::make_shared<awst::TupleItemExpression>();
+		pubkeyX->sourceLocation = _loc;
+		pubkeyX->wtype = awst::WType::bytesType();
+		pubkeyX->base = std::move(tupleRead0);
+		pubkeyX->index = 0;
+
+		auto tupleRead1 = awst::makeVarExpression(tupleVar, tupleTypePtr, _loc);
+		auto pubkeyY = std::make_shared<awst::TupleItemExpression>();
+		pubkeyY->sourceLocation = _loc;
+		pubkeyY->wtype = awst::WType::bytesType();
+		pubkeyY->base = std::move(tupleRead1);
+		pubkeyY->index = 1;
+
+		auto pubkeyConcat = makeConcat(std::move(pubkeyX), std::move(pubkeyY), _loc);
+		auto hash = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), _loc);
+		hash->stackArgs.push_back(std::move(pubkeyConcat));
+
+		// extract last 20 bytes (offset 12)
+		auto addr20 = makeExtract(std::move(hash), 12, 20, _loc);
+		// Left-pad to 32 bytes: concat(bzero(12), addr20)
+		auto pad12 = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
+		pad12->stackArgs.push_back(makeUint64("12", _loc));
+		resultBytes = makeConcat(std::move(pad12), std::move(addr20), _loc);
+		break;
+	}
 	case 6: // ecAdd
 	{
 		Logger::instance().debug("staticcall precompile 0x06: ecAdd → ec_add BN254g1", _loc);
@@ -718,6 +774,32 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 			if (encodeMA && encodeMA->memberName() == "encodeCall" && encodeCallExpr->arguments().size() >= 2)
 			{
 				auto result = handleCallWithEncodeCall(_ctx, std::move(_receiver), *encodeCallExpr, _loc);
+				if (result) return result;
+			}
+		}
+
+		// .call(data) to known precompile address → route like .staticcall
+		{
+			std::optional<uint64_t> precompileAddr;
+			if (auto const* baseCall = dynamic_cast<FunctionCall const*>(&_baseExpr))
+			{
+				if (baseCall->annotation().kind.set()
+					&& *baseCall->annotation().kind == FunctionCallKind::TypeConversion
+					&& !baseCall->arguments().empty())
+				{
+					auto const* argType = baseCall->arguments()[0]->annotation().type;
+					if (auto const* ratType = dynamic_cast<RationalNumberType const*>(argType))
+					{
+						auto val = ratType->literalValue(nullptr);
+						if (val >= 1 && val <= 10)
+							precompileAddr = static_cast<uint64_t>(val);
+					}
+				}
+			}
+			if (precompileAddr)
+			{
+				auto inputData = _ctx.buildExpr(dataArg);
+				auto result = handleStaticCallPrecompile(_ctx, *precompileAddr, std::move(inputData), _loc);
 				if (result) return result;
 			}
 		}
