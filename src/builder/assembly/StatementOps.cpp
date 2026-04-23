@@ -721,7 +721,18 @@ void AssemblyBuilder::buildExpressionStatement(
 		if (funcName == "mcopy")
 		{
 			// mcopy(dst, src, length): copy memory slot src to dst
-			// In our memory-slot model, this is equivalent to mstore(dst, mload(src))
+			// In our memory-slot model, this is equivalent to mstore(dst, mload(src)).
+			// A compile-time length of 0 is a no-op — skip entirely so we don't
+			// dereference possibly-out-of-bounds src offsets (mcopy_empty pattern).
+			if (args.size() >= 3)
+			{
+				if (auto const* lenConst =
+					dynamic_cast<awst::IntegerConstant const*>(args[2].get()))
+				{
+					if (lenConst->value == "0")
+						return;
+				}
+			}
 			if (args.size() >= 2)
 			{
 				auto mloadArgs = std::vector<std::shared_ptr<awst::Expression>>{args[1]};
