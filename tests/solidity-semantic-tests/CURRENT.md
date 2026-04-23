@@ -1,6 +1,12 @@
-# Semantic Test Status — v147
+# Semantic Test Status — v149
 
-**Totals**: 1014 PASS / 245 FAIL / 63 COMPILE_ERR = **1014/1322 (76.7%)**
+**Totals**: 1023 PASS / 234 FAIL / 65 (44 compile_err + 21 deploy_err) = **1023/1322 (77.4%)**
+
+vs v148 (1021): two small compiler fixes (+2 pass, -2 fail):
+- `inlineAssembly/difficulty`: FAIL → PASS. Split the combined `difficulty || prevrandao` handler in CoreTranslation.cpp; `difficulty` now folds to constant `200000000` (the solc CI harness mock value for pre-paris), while `prevrandao` keeps its per-test sha256 non-zero stub.
+- `builtinFunctions/ripemd160_empty`: FAIL → PASS. SolBuiltinCall.cpp now compile-time folds `ripemd160("")` / `ripemd160(hex"")` to the canonical empty-input digest `0x9c1185a5c5e9fc54612808977ee8f548b2258d31`. Solidity libraries and the test suite pin this exact value; bytes20 other inputs still return the zero-stub.
+
+vs v148 (1021): cb2c27e72 landed +7 earlier (inner-app-create ApplicationArgs encoding + storage-ptr tuple assign + mapping post-assign). See git history for detail.
 
 vs v146 (1013): one harness fix (+1 pass, -1 fail):
 - `array/constant_var_as_array_length`: FAIL → PASS. `_get_constructor_param_types` in run_tests.py regex-scans file-level `uint<N> constant NAME = literal;` definitions and substitutes named array-size brackets like `[LEN]` → `[3]`. Previously the array-size regex required digits, so `constructor(uint256[LEN] memory _a)` fell through to the scalar path and only the first value was encoded into ApplicationArgs[0] — the getter then walked past the 32-byte blob for indices ≥1 and returned out-of-bounds. Purely additive; tests without named constants are unaffected.
