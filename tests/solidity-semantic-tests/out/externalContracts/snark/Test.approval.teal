@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/snark.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 0 1 32 8 170000
+    intcblock 32 0 1 8 170000
     bytecblock 0x 0x00 0x151f7c75 0x01 0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47 0x010000000000000000000000000000000000000000000000000000000000000000 0x1c76476f4def4bb94541d57ebba1193381ffa7aa76ada664dd31c16024c43f593034dd2920f673e204fee2811c678745fc819b55d3e9d294e45c9b03a76aef41 0x1213d2149b006137fcfb23036606f848d638d576a120ca981b5b1a5f9300b3ee2276cf730cf493cd95d64677bbb75fc42db72513a4c1e387b476d056f80aa75f21ee6226d31426322afcda621464d0611d226783262e21bb3bc86b537e986237096df1f82dff337dd5972e32a8ad43e28a78a96a823ef1cd4debe12b6552ea5f 0x0f25929bcb43d5a57391564615c9e70a992b10eafa4db109709649cf48c50dd216da2f5cb6be7a0aa72c440c53c9bbdfec6c36c7d515536431b3a865468acbba 0x068101 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x0130644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47 0x00020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
@@ -11,7 +11,7 @@ main:
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -66,7 +66,7 @@ ensure_budget_switch_case_1@4:
     b ensure_budget_switch_case_next@5
 
 ensure_budget_switch_case_0@3:
-    intc_0 // 0
+    intc_1 // 0
     itxn_field Fee
     b ensure_budget_switch_case_next@5
 
@@ -120,10 +120,10 @@ Pairing.negate_after_if_else@3:
     b%
     dup
     len
-    intc_2 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_0 // 32
     bzero
     b|
     frame_dig 0
@@ -136,29 +136,158 @@ Pairing.negate_after_if_else@3:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/snark.sol.Pairing.add(p1: bytes, p2: bytes) -> bytes:
 Pairing.add:
     proto 2 1
-    bytec_0 // 0x
+    frame_dig -2
+    extract 0 32
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    replace2 0 // on error: index access is out of bounds
+    frame_dig -2
+    extract 32 32
+    replace2 32 // on error: index access is out of bounds
+    frame_dig -1
+    extract 0 32
+    replace2 64 // on error: index access is out of bounds
+    frame_dig -1
+    extract 32 32
+    replace2 96 // on error: index access is out of bounds
+    intc_0 // 32
+    bzero
+    dig 1
+    extract 0 32 // on error: index access is out of bounds
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 32 // on error: index access is out of bounds
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 2
+    extract 64 32 // on error: index access is out of bounds
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    uncover 2
+    extract 96 32 // on error: index access is out of bounds
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dup
+    extract 0 64
+    swap
+    extract 64 64
+    ec_add BN254g1
+    extract 0 32
     retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/snark.sol.Pairing.mul(p: bytes, s: bytes) -> bytes:
 Pairing.mul:
     proto 2 1
-    bytec_0 // 0x
+    frame_dig -2
+    extract 0 32
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    replace2 0 // on error: index access is out of bounds
+    frame_dig -2
+    extract 32 32
+    replace2 32 // on error: index access is out of bounds
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    dig 1
+    b|
+    uncover 2
+    swap
+    replace2 64 // on error: index access is out of bounds
+    dup
+    extract 0 32 // on error: index access is out of bounds
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    extract 32 32 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    swap
+    extract 64 32 // on error: index access is out of bounds
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dup
+    extract 0 64
+    swap
+    extract 64 32
+    ec_scalar_mul BN254g1
+    extract 0 32
     retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/snark.sol.Pairing.pairing(p1: bytes, p2: bytes) -> uint64, bytes, bytes:
 Pairing.pairing:
     proto 2 3
-    intc_0 // 0
+    intc_1 // 0
     dupn 4
     frame_dig -2
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     itob
     dup
     frame_dig -1
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     itob
     dig 1
@@ -166,10 +295,10 @@ Pairing.pairing:
     assert
     pushbytes 0x06
     b*
-    intc_0 // 0
+    intc_1 // 0
     itob
     pushbytes 0x0000
-    intc_0 // 0
+    intc_1 // 0
 
 Pairing.pairing_while_top@1:
     intc_3 // 8
@@ -188,9 +317,9 @@ Pairing.pairing_while_top@1:
     bz Pairing.pairing_after_while@3
     frame_dig 8
     dup
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16
-    intc_1 // 1
+    intc_2 // 1
     +
     itob
     extract 6 0
@@ -199,7 +328,7 @@ Pairing.pairing_while_top@1:
     concat
     frame_bury 8
     frame_dig 9
-    intc_1 // 1
+    intc_2 // 1
     +
     frame_bury 9
     b Pairing.pairing_while_top@1
@@ -246,7 +375,7 @@ Pairing.pairing_while_top@4:
     intc_3 // 8
     -
     extract_uint64
-    intc_2 // 32
+    intc_0 // 32
     *
     pushint 2
     +
@@ -267,7 +396,7 @@ Pairing.pairing_while_top@4:
     intc_3 // 8
     -
     extract_uint64
-    intc_2 // 32
+    intc_0 // 32
     *
     pushint 2
     +
@@ -295,7 +424,7 @@ Pairing.pairing_while_top@4:
     intc_3 // 8
     -
     extract_uint64
-    intc_2 // 32
+    intc_0 // 32
     *
     pushint 2
     +
@@ -316,7 +445,7 @@ Pairing.pairing_while_top@4:
     intc_3 // 8
     -
     extract_uint64
-    intc_2 // 32
+    intc_0 // 32
     *
     pushint 2
     +
@@ -337,7 +466,7 @@ Pairing.pairing_while_top@4:
     intc_3 // 8
     -
     extract_uint64
-    intc_2 // 32
+    intc_0 // 32
     *
     pushint 2
     +
@@ -358,7 +487,7 @@ Pairing.pairing_while_top@4:
     intc_3 // 8
     -
     extract_uint64
-    intc_2 // 32
+    intc_0 // 32
     *
     pushint 2
     +
@@ -412,9 +541,9 @@ Pairing.pairing_while_top@7:
     frame_dig 3
     extract 2 0
     swap
-    intc_2 // 32
+    intc_0 // 32
     *
-    intc_2 // 32
+    intc_0 // 32
     extract3 // on error: index access is out of bounds
     load 0
     frame_dig 0
@@ -430,15 +559,15 @@ Pairing.pairing_while_top@7:
     intc_3 // 8
     -
     extract_uint64
-    intc_2 // 32
+    intc_0 // 32
     bzero
     uncover 3
     concat
     dup
     len
-    intc_2 // 32
+    intc_0 // 32
     -
-    intc_2 // 32
+    intc_0 // 32
     extract3
     replace3
     store 0
@@ -446,7 +575,51 @@ Pairing.pairing_while_top@7:
     b Pairing.pairing_while_top@7
 
 Pairing.pairing_after_while@9:
-    intc_0 // 0
+    pushint 24
+    bzero
+    frame_dig 0
+    dup
+    extract 0 64
+    dig 1
+    extract 192 64
+    concat
+    dig 1
+    extract 96 32
+    dig 2
+    extract 64 32
+    concat
+    dig 2
+    extract 160 32
+    dig 3
+    extract 128 32
+    concat
+    concat
+    dig 2
+    pushint 288
+    intc_0 // 32
+    extract3
+    dig 3
+    pushint 256
+    intc_0 // 32
+    extract3
+    concat
+    dig 3
+    pushint 352
+    intc_0 // 32
+    extract3
+    uncover 4
+    pushint 320
+    intc_0 // 32
+    extract3
+    concat
+    concat
+    concat
+    ec_pairing_check BN254g1
+    itob
+    concat
+    btoi
+    intc_1 // 0
+    !=
     frame_dig -2
     frame_dig -1
     frame_bury 2
@@ -503,18 +676,21 @@ Pairing.pairingProd3:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/snark.sol.Test.f[routing]() -> void:
 f:
-    intc_0 // 0
+    intc_1 // 0
     dup
     txn GroupIndex
     bz f_ternary_false@3
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
 f_ternary_merge@4:
     !
     assert // not payable
+    intc 4 // 170000
+    intc_1 // 0
+    callsub ensure_budget
     pushint 2
     itob
     bytec 4 // 0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002
@@ -539,36 +715,36 @@ f_ternary_merge@4:
     extract 32 32
     b==
     bz f_bool_false@7
-    intc_1 // 1
+    intc_2 // 1
 
 f_bool_merge@8:
     bytec_1 // 0x00
-    intc_0 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 f_bool_false@7:
-    intc_0 // 0
+    intc_1 // 0
     b f_bool_merge@8
 
 f_ternary_false@3:
-    intc_0 // 0
+    intc_1 // 0
     b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/snark.sol.Test.g[routing]() -> void:
 g:
-    intc_0 // 0
+    intc_1 // 0
     txn GroupIndex
     bz g_ternary_false@3
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -590,36 +766,36 @@ g_ternary_merge@4:
     bytec_0 // 0x
     b==
     bz g_bool_false@7
-    intc_1 // 1
+    intc_2 // 1
 
 g_bool_merge@8:
     bytec_1 // 0x00
-    intc_0 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 g_bool_false@7:
-    intc_0 // 0
+    intc_1 // 0
     b g_bool_merge@8
 
 g_ternary_false@3:
-    intc_0 // 0
+    intc_1 // 0
     b g_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/snark.sol.Test.testMul[routing]() -> void:
 testMul:
-    intc_0 // 0
+    intc_1 // 0
     txn GroupIndex
     bz testMul_ternary_false@3
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -639,37 +815,37 @@ testMul_ternary_merge@4:
     pushbytes 0x0f6ca982921c98fe59a3d42894ec8e0546704a4236d52d3a87472510067351a3
     b==
     bz testMul_bool_false@7
-    intc_1 // 1
+    intc_2 // 1
 
 testMul_bool_merge@8:
     bytec_1 // 0x00
-    intc_0 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 testMul_bool_false@7:
-    intc_0 // 0
+    intc_1 // 0
     b testMul_bool_merge@8
 
 testMul_ternary_false@3:
-    intc_0 // 0
+    intc_1 // 0
     b testMul_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/snark.sol.Test.pair[routing]() -> void:
 pair:
-    intc_0 // 0
+    intc_1 // 0
     dupn 2
     txn GroupIndex
     bz pair_ternary_false@3
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -677,9 +853,9 @@ pair_ternary_merge@4:
     !
     assert // not payable
     intc 4 // 170000
-    intc_0 // 0
+    intc_1 // 0
     callsub ensure_budget
-    intc_2 // 32
+    intc_0 // 32
     bzero
     bury 3
     callsub Pairing.P1
@@ -702,18 +878,18 @@ pair_ternary_merge@4:
     bury 3
     bury 3
     bnz pair_after_if_else@6
-    intc_0 // 0
+    intc_1 // 0
 
 pair_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/snark.sol.Test.pair@9:
     bytec_1 // 0x00
-    intc_0 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 pair_after_if_else@6:
@@ -740,7 +916,7 @@ pair_after_if_else@6:
     b%
     dup
     len
-    intc_2 // 32
+    intc_0 // 32
     <=
     assert // overflow
     dig 5
@@ -756,26 +932,26 @@ pair_after_if_else@6:
     callsub Pairing.pairing
     popn 2
     bnz pair_after_if_else@8
-    intc_0 // 0
+    intc_1 // 0
     b pair_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/snark.sol.Test.pair@9
 
 pair_after_if_else@8:
-    intc_1 // 1
+    intc_2 // 1
     b pair_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/snark.sol.Test.pair@9
 
 pair_ternary_false@3:
-    intc_0 // 0
+    intc_1 // 0
     b pair_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/snark.sol.Test.verifyTx[routing]() -> void:
 verifyTx:
-    intc_0 // 0
+    intc_1 // 0
     dupn 3
     txn GroupIndex
     bz verifyTx_ternary_false@3
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -783,12 +959,12 @@ verifyTx_ternary_merge@4:
     !
     assert // not payable
     intc 4 // 170000
-    intc_0 // 0
+    intc_1 // 0
     callsub ensure_budget
     pushint 9
     itob
     bury 4
-    intc_0 // 0
+    intc_1 // 0
     itob
     dup
     bury 4
@@ -829,11 +1005,11 @@ verifyTx_while_top@9:
     intc_3 // 8
     -
     extract_uint64
-    intc_2 // 32
+    intc_0 // 32
     *
     pushbytes 0x1eec35a0e955cad4bee5846ae0f1d0b742d8636b278450c534e38e06a60509f9016086cc934d5cab679c6991a4efcedbab26d7e4fb23b6a1ad4e6b5c2fb59ce51887420878c0c8e37605291c626585eabbec8d8b97a848fe8d58a37b004583510ea71d0abb524cac7cfff5323e1d0b14ab705842426c978f96753ccce258ed930689c3dc4311426ee11707866b2cbdf9751dacd07245bf99d2113d3f5a8cac47030f7b0c405c888aff922307ea2cd1c70f64664bab76899500341f4260a209290c692b41f1acc961f6ea83bae2c3a1a55c54f766c63ba76989f52c149c17b5e71551dcd4965285ef049512d2d30cbfc1a91acd5baad4a6e19e22e93176197f1700000000000000000000000000000000000000e40800000000000000008cdcbc
     swap
-    intc_2 // 32
+    intc_0 // 32
     extract3 // on error: index access is out of bounds
     callsub Pairing.mul
     dig 2
@@ -858,7 +1034,7 @@ verifyTx_after_while@11:
     callsub Pairing.pairingProd2
     popn 2
     bnz verifyTx_after_if_else@13
-    intc_1 // 1
+    intc_2 // 1
     itob
 
 verifyTx_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/snark.sol.Test.verify@22:
@@ -867,22 +1043,22 @@ verifyTx_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-
     bz verifyTx_else_body@6
     pushbytes 0x634ba617000200165375636365737366756c6c792076657269666965642e
     log
-    intc_1 // 1
+    intc_2 // 1
 
 verifyTx_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/snark.sol.Test.verifyTx@7:
     bytec_1 // 0x00
-    intc_0 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 verifyTx_else_body@6:
-    intc_0 // 0
+    intc_1 // 0
     b verifyTx_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/snark.sol.Test.verifyTx@7
 
 verifyTx_after_if_else@13:
@@ -964,5 +1140,5 @@ verifyTx_after_if_else@21:
     b verifyTx_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/snark.sol.Test.verify@22
 
 verifyTx_ternary_false@3:
-    intc_0 // 0
+    intc_1 // 0
     b verifyTx_ternary_merge@4

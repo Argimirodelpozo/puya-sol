@@ -3,15 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/mcopy_empty.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 8 1 0
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000
+    intcblock 1 0
     pushint 4096
     bzero
     dup
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -39,19 +38,18 @@ main_mcopy_zero_route@4:
 mcopy_zero:
     txna ApplicationArgs 1
     dupn 2
-    intc_3 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    extract 2 0
     txn GroupIndex
     bz mcopy_zero_ternary_false@3
     txn GroupIndex
-    intc_2 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -59,131 +57,14 @@ mcopy_zero_ternary_merge@4:
     !
     assert // not payable
     load 0
-    intc_1 // 8
-    bzero
-    dig 2
-    dup
-    cover 2
-    pushbytes 0x20
-    b+
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_1 // 8
-    -
-    extract_uint64
-    intc_0 // 32
-    bzero
-    dig 3
-    pushbytes 0x30
-    b+
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_1 // 8
-    -
-    extract_uint64
-    dig 5
-    dig 1
-    intc_0 // 32
-    extract3
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    uncover 6
-    uncover 4
-    uncover 2
-    replace3
-    dup
-    dig 2
-    intc_0 // 32
-    extract3
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 2
-    swap
-    replace3
-    dig 4
-    pushbytes 0x40
-    b+
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dig 4
-    swap
-    concat
-    dup
-    len
-    intc_1 // 8
-    -
-    extract_uint64
-    dig 1
-    uncover 3
-    intc_0 // 32
-    extract3
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    replace3
-    uncover 3
-    pushbytes 0x21
-    b+
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_1 // 8
-    -
-    extract_uint64
-    dig 1
-    extract 0 32
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    replace3
     store 0
     pushbytes 0x151f7c75
-    dig 2
+    dig 1
     concat
     log
-    intc_2 // 1
+    intc_0 // 1
     return
 
 mcopy_zero_ternary_false@3:
-    intc_3 // 0
+    intc_1 // 0
     b mcopy_zero_ternary_merge@4
