@@ -1,6 +1,10 @@
-# Semantic Test Status — v149
+# Semantic Test Status — v150
 
-**Totals**: 1023 PASS / 234 FAIL / 65 (44 compile_err + 21 deploy_err) = **1023/1322 (77.4%)**
+**Totals**: 1025 PASS / 232 FAIL / 65 (44 compile_err + 21 deploy_err) = **1025/1322 (77.5%)**
+
+vs v149 (1023): two more inlineAssembly fixes (+2 pass, -2 fail, zero regressions):
+- `inlineAssembly/prevrandao`: FAIL → PASS. CoreTranslation.cpp now returns the exact solc post-paris harness constant `0xa86c2e601b6c44eb4848f7d23d9df3113fbcac42041c49cbed5000cb4f118777` (as biguint IntegerConstant) instead of the old sha256("prevrandao") stub. The Solidity test runner mocks this deterministic value for post-paris tests.
+- `inlineAssembly/mcopy_empty`: FAIL → PASS. StatementOps.cpp now detects compile-time `IntegerConstant` length==0 in Yul `mcopy(dst, src, 0)` and skips emission entirely. Previously always emitted `mload(src)` which failed with "extraction start is beyond length: 4096" when src offset is outside the allocated memory bounds but length is zero (valid no-op under EVM semantics).
 
 vs v148 (1021): two small compiler fixes (+2 pass, -2 fail):
 - `inlineAssembly/difficulty`: FAIL → PASS. Split the combined `difficulty || prevrandao` handler in CoreTranslation.cpp; `difficulty` now folds to constant `200000000` (the solc CI harness mock value for pre-paris), while `prevrandao` keeps its per-test sha256 non-zero stub.
