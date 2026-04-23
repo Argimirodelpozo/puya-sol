@@ -40,6 +40,9 @@ class SemanticTest:
     # On AVM we can't reproduce the exact microAlgo value, so `_compare_values`
     # accepts any non-zero int when the expected matches one of these targets.
     balance_bridge_values: list[int] = field(default_factory=list)
+    # `// allowNonExistingFunctions: true` — the harness should treat a call
+    # to an undefined method as a raw calldata delivery (fallback dispatch).
+    allow_non_existing_functions: bool = False
 
     @property
     def name(self):
@@ -68,9 +71,21 @@ def parse_test_file(path: Path) -> SemanticTest:
 
     # No parser-level skips — let everything compile or fail honestly
 
-    # Detect compileViaYul setting + balance: directives in assertion block
+    # Detect compileViaYul setting + balance: directives in assertion block.
+    # The isoltest format also places settings in a `// ====` preamble
+    # block between the source and the `// ----` delimiter, so scan the
+    # whole file for directives (both locations are supported upstream).
     compile_via_yul = False
     balance_bridge_values: list[int] = []
+    allow_non_existing_functions = False
+    for line in content.split("\n"):
+        line = line.strip()
+        if line.startswith("//"):
+            inner = line[2:].strip()
+            if inner.startswith("allowNonExistingFunctions:"):
+                val = inner.split(":", 1)[1].strip().lower()
+                if val == "true":
+                    allow_non_existing_functions = True
     for line in assertion_block.strip().split("\n"):
         line = line.strip()
         if line.startswith("//"):
@@ -78,6 +93,9 @@ def parse_test_file(path: Path) -> SemanticTest:
             if inner.startswith("compileViaYul:"):
                 val = inner.split(":", 1)[1].strip().lower()
                 compile_via_yul = val == "true"
+            elif inner.startswith("allowNonExistingFunctions:"):
+                val = inner.split(":", 1)[1].strip().lower()
+                allow_non_existing_functions = val == "true"
             elif inner.startswith("balance:"):
                 m = re.search(r'->\s*(-?\d+)\s*$', inner)
                 if m:
@@ -123,6 +141,7 @@ def parse_test_file(path: Path) -> SemanticTest:
         source_path=path, source_code=source_code, calls=calls,
         compile_via_yul=compile_via_yul,
         balance_bridge_values=balance_bridge_values,
+        allow_non_existing_functions=allow_non_existing_functions,
     )
 
 

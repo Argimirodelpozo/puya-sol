@@ -3,9 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.approval_program() -> uint64:
 main:
-    intcblock 0 1 6 16
-    bytecblock "savedData" "__ctor_pending" 0x "rec" 0x151f7c7580 TMPL_APPROVAL_receiver TMPL_CLEAR_receiver
-    bytec_2 // ""
+    intcblock 0 1 6 4
+    bytecblock 0x "savedData" "__ctor_pending" "rec" 0x151f7c7580 TMPL_APPROVAL_receiver TMPL_CLEAR_receiver
+    bytec_0 // ""
     dup
     pushint 4096
     bzero
@@ -13,7 +13,7 @@ main:
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -97,10 +97,10 @@ main_create_NoOp@15:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__postInit[routing]() -> void:
 __postInit:
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_0 // 0
     app_global_put
     itxn_begin
@@ -108,9 +108,9 @@ __postInit:
     bytec 6 // TMPL_CLEAR_receiver
     intc_2 // 6
     itxn_field TypeEnum
-    intc_3 // 16
+    pushint 16
     itxn_field GlobalNumUint
-    intc_3 // 16
+    pushint 16
     itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
@@ -151,6 +151,11 @@ __fallback:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.forward[routing]() -> void:
 forward:
+    proto 0 0
+    intc_0 // 0
+    dup
+    bytec_0 // ""
+    dup
     txn GroupIndex
     bz forward_ternary_false@3
     txn GroupIndex
@@ -161,9 +166,67 @@ forward:
 forward_ternary_merge@4:
     !
     assert // not payable
+    bytec_1 // "savedData"
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    frame_bury 0
+    itxn_begin
+    len
+    dup
+    frame_bury 2
+    intc_3 // 4
+    >=
+    dup
+    frame_bury 3
+    bz forward_ternary_false@6
+    frame_dig 0
+    extract 0 4
+    frame_bury 1
+
+forward_ternary_merge@7:
+    frame_dig 3
+    bz forward_ternary_false@9
+    frame_dig 2
+    intc_3 // 4
+    -
+    frame_dig 0
+    intc_3 // 4
+    uncover 2
+    extract3
+
+forward_ternary_merge@10:
+    intc_0 // 0
+    bytec_3 // "rec"
+    app_global_get_ex
+    assert // check rec exists
+    pushint 24
+    extract_uint64
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    frame_dig 1
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
     bytec 4 // 0x151f7c7580
     log
     retsub
+
+forward_ternary_false@9:
+    bytec_0 // 0x
+    b forward_ternary_merge@10
+
+forward_ternary_false@6:
+    frame_dig 0
+    frame_bury 1
+    b forward_ternary_merge@7
 
 forward_ternary_false@3:
     intc_0 // 0
@@ -182,11 +245,11 @@ clear:
 clear_ternary_merge@4:
     !
     assert // not payable
-    bytec_0 // "savedData"
+    bytec_1 // "savedData"
     box_del
     pop
-    bytec_0 // "savedData"
-    bytec_2 // 0x
+    bytec_1 // "savedData"
+    bytec_0 // 0x
     box_put
     bytec 4 // 0x151f7c7580
     log
@@ -304,7 +367,7 @@ val_ternary_false@3:
     concat
     frame_bury 3
     txn NumAppArgs
-    pushint 4
+    intc_3 // 4
     >
     bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@18
     txna ApplicationArgs 4
@@ -436,10 +499,10 @@ val_ternary_false@3:
     concat
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@54:
-    bytec_0 // "savedData"
+    bytec_1 // "savedData"
     box_del
     pop
-    bytec_0 // "savedData"
+    bytec_1 // "savedData"
     swap
     box_put
     retsub

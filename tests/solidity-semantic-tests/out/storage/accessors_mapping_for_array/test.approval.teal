@@ -3,15 +3,15 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/accessors_mapping_for_array.sol.test.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 8
-    bytecblock "__ctor_pending" "data" "dynamicData" 0x646174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2 0x0000000000000000000000000000000000000000000000000000000000000008 0x151f7c75
+    intcblock 32 1 0 2
+    bytecblock 0x64796e616d6963446174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2 "__ctor_pending" "data" "dynamicData" 0x646174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2 0x0000000000000000000000000000000000000000000000000000000000000008 0x151f7c75
     pushint 4096
     bzero
     dup
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -37,27 +37,27 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/accessors_mapping_for_array.sol.test.__postInit[routing]() -> void:
 __postInit:
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    bytec_1 // "data"
-    pushint 2
+    bytec_2 // "data"
+    intc_3 // 2
     box_create
     pop
-    bytec_2 // "dynamicData"
-    pushint 2
+    bytec_3 // "dynamicData"
+    intc_3 // 2
     box_create
     pop
-    bytec_3 // 0x646174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    bytec 4 // 0x646174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
     pushint 256
     box_create
     pop
-    bytec_3 // 0x646174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    bytec 4 // 0x646174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
     pushint 64
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000008
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000008
     box_replace // on error: index out of bounds
     intc_2 // 0
     itob
@@ -66,17 +66,58 @@ __postInit_while_top@2:
     dup
     pushbytes 0x03
     b<
-    bz __postInit_after_while@4
+    bz __postInit_after_while@6
+    bytec_0 // 0x64796e616d6963446174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    box_len
+    bury 1
+    bnz __postInit_after_if_else@5
+    bytec_0 // 0x64796e616d6963446174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    intc_3 // 2
+    box_create
+    pop
+
+__postInit_after_if_else@5:
+    bytec_0 // 0x64796e616d6963446174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    intc_2 // 0
+    intc_3 // 2
+    box_extract
+    btoi
+    bytec_0 // 0x64796e616d6963446174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    box_len
+    pop
+    intc_0 // 32
+    +
+    bytec_0 // 0x64796e616d6963446174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    swap
+    box_resize
+    dup
+    intc_1 // 1
+    +
+    itob
+    extract 6 2
+    bytec_0 // 0x64796e616d6963446174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    intc_2 // 0
+    uncover 2
+    box_replace
+    intc_0 // 32
+    *
+    intc_3 // 2
+    +
+    bytec_0 // 0x64796e616d6963446174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    swap
+    intc_2 // 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    box_splice
     dup
     pushbytes 0x01
     b+
     bury 1
     b __postInit_while_top@2
 
-__postInit_after_while@4:
-    pushbytes 0x64796e616d6963446174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+__postInit_after_while@6:
+    bytec_0 // 0x64796e616d6963446174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
     pushint 66
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000008
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000008
     box_replace // on error: index out of bounds
     intc_1 // 1
     return
@@ -117,27 +158,27 @@ data_ternary_merge@4:
     intc_0 // 32
     extract3
     sha256
-    bytec_1 // "data"
+    bytec_2 // "data"
     swap
     concat
     box_get
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
-    intc_3 // 8
+    pushint 8
     bzero
     dig 2
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     intc_0 // 32
     *
     intc_0 // 32
     extract3 // on error: index access is out of bounds
-    bytec 5 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -184,20 +225,20 @@ dynamicData_ternary_merge@4:
     intc_0 // 32
     extract3
     sha256
-    bytec_2 // "dynamicData"
+    bytec_3 // "dynamicData"
     swap
     concat
     box_get
     pushbytes 0x0000
     cover 2
     select
-    intc_3 // 8
+    pushint 8
     bzero
     dig 2
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     swap
@@ -207,7 +248,7 @@ dynamicData_ternary_merge@4:
     *
     intc_0 // 32
     extract3 // on error: index access is out of bounds
-    bytec 5 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log

@@ -535,12 +535,67 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 		_dataBytes = std::move(cast);
 	}
 
-	// Build ApplicationArgs = [rawBytes]
+	// Split the runtime blob into [selector, rest] so the callee's ARC4
+	// router matches on the 4-byte method selector and the remainder flows
+	// into ApplicationArgs[1] (a single packed arg — works for the common
+	// single-arg forward case). Empty / short blobs produce empty selectors
+	// that will miss the router's match table and fall through to fallback.
+	static int s_rawCallTmpCounter = 0;
+	std::string tmpName = "__rawcall_data_" + std::to_string(++s_rawCallTmpCounter);
+	auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::bytesType(), _loc);
+	auto tmpAssign = awst::makeAssignmentStatement(tmpTarget, std::move(_dataBytes), _loc);
+	_ctx.prePendingStatements.push_back(std::move(tmpAssign));
+
+	auto tmpRead = [&]() {
+		return awst::makeVarExpression(tmpName, awst::WType::bytesType(), _loc);
+	};
+	auto makeLen = [&]() {
+		auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
+		lenCall->stackArgs.push_back(tmpRead());
+		return lenCall;
+	};
+	auto makeGe4 = [&]() {
+		return awst::makeNumericCompare(
+			makeLen(), awst::NumericComparison::Gte,
+			awst::makeIntegerConstant("4", _loc), _loc);
+	};
+
+	// selector = len >= 4 ? extract3(data, 0, 4) : data
+	auto extractSel = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
+	extractSel->stackArgs.push_back(tmpRead());
+	extractSel->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
+	extractSel->stackArgs.push_back(awst::makeIntegerConstant("4", _loc));
+
+	auto selector = std::make_shared<awst::ConditionalExpression>();
+	selector->sourceLocation = _loc;
+	selector->wtype = awst::WType::bytesType();
+	selector->condition = makeGe4();
+	selector->trueExpr = std::move(extractSel);
+	selector->falseExpr = tmpRead();
+
+	// rest = len >= 4 ? extract3(data, 4, len - 4) : empty
+	auto restLen = awst::makeUInt64BinOp(
+		makeLen(), awst::UInt64BinaryOperator::Sub,
+		awst::makeIntegerConstant("4", _loc), _loc);
+	auto extractRest = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
+	extractRest->stackArgs.push_back(tmpRead());
+	extractRest->stackArgs.push_back(awst::makeIntegerConstant("4", _loc));
+	extractRest->stackArgs.push_back(std::move(restLen));
+
+	auto rest = std::make_shared<awst::ConditionalExpression>();
+	rest->sourceLocation = _loc;
+	rest->wtype = awst::WType::bytesType();
+	rest->condition = makeGe4();
+	rest->trueExpr = std::move(extractRest);
+	rest->falseExpr = awst::makeBytesConstant({}, _loc);
+
 	auto argsTuple = std::make_shared<awst::TupleExpression>();
 	argsTuple->sourceLocation = _loc;
-	argsTuple->items.push_back(std::move(_dataBytes));
+	argsTuple->items.push_back(std::move(selector));
+	argsTuple->items.push_back(std::move(rest));
 
-	std::vector<awst::WType const*> argTypes = {awst::WType::bytesType()};
+	std::vector<awst::WType const*> argTypes = {
+		awst::WType::bytesType(), awst::WType::bytesType()};
 	argsTuple->wtype = _ctx.typeMapper.createType<awst::WTuple>(
 		std::move(argTypes), std::nullopt);
 
@@ -895,13 +950,30 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 				makeBoolBytesTuple(true, awst::makeBytesConstant({}, _loc), _loc));
 		}
 
-		// Non-self raw .call(data) → stub (true, empty bytes).
-		Logger::instance().warning(
-			"address.call(data) stubbed — returns (true, empty). "
-			"Cross-contract raw calls not supported (AVM blocks self-calls).", _loc);
-		for (auto const& arg : _callNode.arguments())
-			_ctx.buildExpr(*arg);
-		return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTupleEmpty(_loc));
+		// Non-self raw .call(data) → inner app call. Splits the blob into
+		// [selector, rest] so the callee's ARC4 router can dispatch.
+		// Compile-time empty-literal `.call("")` is stubbed as `(true, "")`
+		// — matches EVM's low-level "call to non-contract returns true" and
+		// avoids spurious inner-txn failures when the target app doesn't
+		// exist (see tests/functionCall/bare_call_no_returndatacopy.sol and
+		// calling_nonexisting_contract_throws.sol).
+		auto dataExpr = _ctx.buildExpr(dataArg);
+		auto isEmptyConst = [](awst::Expression const* e) {
+			// Unwrap ReinterpretCast (string→bytes, etc.) to inspect the inner.
+			while (auto const* rc = dynamic_cast<awst::ReinterpretCast const*>(e))
+				e = rc->expr.get();
+			if (auto const* bc = dynamic_cast<awst::BytesConstant const*>(e))
+				return bc->value.empty();
+			if (auto const* sc = dynamic_cast<awst::StringConstant const*>(e))
+				return sc->value.empty();
+			return false;
+		};
+		if (isEmptyConst(dataExpr.get()))
+		{
+			return std::make_unique<GenericResultBuilder>(_ctx,
+				makeBoolBytesTupleEmpty(_loc));
+		}
+		return handleCallWithRawData(_ctx, _receiver, std::move(dataExpr), _loc);
 	}
 
 	// .staticcall(data) → precompile routing

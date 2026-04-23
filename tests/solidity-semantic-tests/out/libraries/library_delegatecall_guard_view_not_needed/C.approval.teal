@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_delegatecall_guard_view_not_needed.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 2 32
-    bytecblock "y" "__ctor_pending" 0x151f7c758000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytecblock "y" "__ctor_pending"
     pushint 4096
     bzero
     dup
@@ -139,7 +139,7 @@ g_ternary_merge@4:
     assert // not payable
     load 0
     store 0
-    bytec_2 // 0x151f7c758000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x151f7c758000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
@@ -151,6 +151,7 @@ g_ternary_false@3:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_delegatecall_guard_view_not_needed.sol.C.h[routing]() -> void:
 h:
+    intc_1 // 0
     txn GroupIndex
     bz h_ternary_false@3
     txn GroupIndex
@@ -163,7 +164,30 @@ h_ternary_merge@4:
     assert // not payable
     load 0
     store 0
-    bytec_2 // 0x151f7c758000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    itxn_begin
+    dup
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x54b3e294
+    itxn_field ApplicationArgs
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 0 32
+    pushint 64
+    bzero
+    b|
+    pushbytes 0x151f7c7580
+    swap
+    concat
     log
     intc_0 // 1
     return

@@ -1292,6 +1292,11 @@ def _regroup_args(raw_args, method_sig):
     return result
 
 
+# Thread-unsafe "current test" flag consumed by execute_call to avoid
+# widening the function signature.
+_CURRENT_ALLOW_NON_EXISTING = False
+
+
 def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
     """Execute a test call and return (passed, detail)."""
     try:
@@ -1407,6 +1412,72 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                 if call.expect_failure:
                     return False, "expected FAILURE but succeeded"
                 return True, "bare call ok"
+            except Exception as ex:
+                if call.expect_failure:
+                    return True, "correctly reverted"
+                return False, f"exception: {str(ex)[:200]}"
+
+        # `allowNonExistingFunctions: true` — if the called method isn't in
+        # the contract's ARC56 spec, dispatch as a raw NoOp app call with
+        # ApplicationArgs[0] = ARC4 selector for the name + args packed as
+        # 32-byte big-endian words. Our on-chain router falls through to
+        # __fallback on no selector match (a 36+ byte blob never equals a
+        # 4-byte method selector), and msg.data maps to ApplicationArgs[0]
+        # so the fallback sees the full EVM-style calldata to capture /
+        # forward — matching Solidity's semantics for this directive.
+        _allow_non_existing = _CURRENT_ALLOW_NON_EXISTING
+        if (_allow_non_existing and app_spec is not None
+                and not any(m.name == call.method_name for m in app_spec.methods)):
+            from algosdk.transaction import (
+                ApplicationCallTxn as _ACT2, OnComplete as _OC2,
+            )
+            from algosdk.abi import Method as _M2
+            _sol_sig = call.method_signature
+            _arc4_sig = _sol_sig + "void" if ")" in _sol_sig else _sol_sig + "()void"
+            try:
+                _selector = _M2.from_signature(_arc4_sig).get_selector()
+            except Exception:
+                _selector = b"\x00\x00\x00\x00"
+            _packed = _selector
+            for _arg_str in call.args:
+                _v = parse_value(_arg_str)
+                if isinstance(_v, bool):
+                    _packed += b"\x00" * 31 + (b"\x01" if _v else b"\x00")
+                elif isinstance(_v, int):
+                    _packed += (_v & ((1 << 256) - 1)).to_bytes(32, "big")
+                elif isinstance(_v, bytes):
+                    _packed += _v.ljust(32, b"\x00")[:32]
+                else:
+                    _packed += b"\x00" * 32
+            _algod2 = app.algorand.client.algod
+            _sender2 = app._default_sender
+            _signer2 = app._default_signer or app.algorand.account.get_signer(_sender2)
+            _sp2 = _algod2.suggested_params()
+            _sp2.flat_fee = True
+            _sp2.fee = 5000
+            _box_refs2 = None
+            if hasattr(app, "_box_refs") and app._box_refs:
+                from algosdk.transaction import BoxReference as _BR2
+                _box_refs2 = [_BR2(app_index=0, name=r[1]) for r in app._box_refs]
+            _txn2 = _ACT2(
+                sender=_sender2, sp=_sp2, index=app.app_id,
+                on_complete=_OC2.NoOpOC, app_args=[_packed],
+                boxes=_box_refs2,
+            )
+            try:
+                from algosdk.atomic_transaction_composer import (
+                    AtomicTransactionComposer as _ATC2, TransactionWithSigner as _TWS2,
+                )
+                _atc2 = _ATC2()
+                _atc2.add_transaction(_TWS2(_txn2, _signer2))
+                try:
+                    _atc2 = au.populate_app_call_resources(_atc2, _algod2)
+                except Exception:
+                    pass
+                _atc2.execute(_algod2, 5)
+                if call.expect_failure:
+                    return False, "expected FAILURE but succeeded"
+                return True, "ok (non-existing routed to fallback)"
             except Exception as ex:
                 if call.expect_failure:
                     return True, "correctly reverted"
@@ -2576,6 +2647,8 @@ def run_test(test: SemanticTest, localnet, account, verbose=False, _budget_retry
     skipped = 0
     details = []
 
+    global _CURRENT_ALLOW_NON_EXISTING
+    _CURRENT_ALLOW_NON_EXISTING = getattr(test, "allow_non_existing_functions", False)
     for call in test.calls:
         # Skip constructor calls — handled during deployment
         if call.method_name == "constructor":
