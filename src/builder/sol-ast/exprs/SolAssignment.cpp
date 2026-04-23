@@ -170,6 +170,62 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 			if (varExpr->name.empty())
 				continue;
 
+		// Storage-pointer reassignment in tuple: `(m, v) = (m2, 21);` where
+		// `m` is a `mapping storage`/`T[] storage` local. The AWST target
+		// resolves to the current alias (e.g. BoxValueExpression for m1),
+		// which is not a runtime lvalue for a pointer swap. Update the
+		// compile-time alias and skip the slot's assignment stmt — mirrors
+		// the simple `m = m2;` path above.
+		if (_sourceLhs && i < _sourceLhs->components().size())
+		{
+			auto const& comp = _sourceLhs->components()[i];
+			if (comp)
+			{
+				auto const* lhsIdent = dynamic_cast<solidity::frontend::Identifier const*>(comp.get());
+				auto const* lhsDecl = lhsIdent ? dynamic_cast<solidity::frontend::VariableDeclaration const*>(
+					lhsIdent->annotation().referencedDeclaration) : nullptr;
+				if (lhsDecl
+					&& lhsDecl->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
+					&& !lhsDecl->isStateVariable())
+				{
+					// Prefer the RHS tuple's i-th AWST item directly: it
+					// carries the underlying BoxValueExpression/AppStateExpression
+					// needed for downstream mapping-key resolution. A
+					// TupleItemExpression slice would lose that structure.
+					std::shared_ptr<awst::Expression> aliasExpr;
+					if (auto const* rhsTuple = dynamic_cast<awst::TupleExpression const*>(_value.get()))
+					{
+						if (i < rhsTuple->items.size())
+							aliasExpr = rhsTuple->items[i];
+					}
+					if (!aliasExpr)
+					{
+						auto const* valueTuple = dynamic_cast<awst::WTuple const*>(_value->wtype);
+						auto sliceType = (valueTuple && i < valueTuple->types().size())
+							? valueTuple->types()[i] : item->wtype;
+						auto slice = std::make_shared<awst::TupleItemExpression>();
+						slice->sourceLocation = m_loc;
+						slice->wtype = sliceType;
+						slice->base = _value;
+						slice->index = static_cast<int>(i);
+						aliasExpr = slice;
+					}
+					if (dynamic_cast<awst::BoxValueExpression const*>(aliasExpr.get())
+						|| dynamic_cast<awst::AppStateExpression const*>(aliasExpr.get()))
+					{
+						auto sg = std::make_shared<awst::StateGet>();
+						sg->sourceLocation = m_loc;
+						sg->wtype = aliasExpr->wtype;
+						sg->field = aliasExpr;
+						sg->defaultValue = StorageMapper::makeDefaultValue(aliasExpr->wtype, m_loc);
+						aliasExpr = sg;
+					}
+					m_ctx.storageAliases[lhsDecl->id()] = std::move(aliasExpr);
+					continue;
+				}
+			}
+		}
+
 		auto itemExpr = std::make_shared<awst::TupleItemExpression>();
 		itemExpr->sourceLocation = m_loc;
 		// Use the VALUE tuple's element type (not the target's type)

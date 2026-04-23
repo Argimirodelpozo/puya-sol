@@ -194,6 +194,88 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			// Track this child contract for .tmpl file generation
 			s_childContracts.insert(childName);
 
+			// Determine whether the child needs a separate __postInit call
+			// (contracts that read msg.value/sender/data in the ctor body or
+			// base state initializers must run those at post-init time, not
+			// at AppCreate time where the itxn sender/value are the parent).
+			auto const* childCtor = contractType->contractDefinition().constructor();
+			bool childHasPostInit = false;
+			if (childCtor && childCtor->isImplemented())
+			{
+				struct MsgRefChecker: public solidity::frontend::ASTConstVisitor
+				{
+					bool found = false;
+					bool visit(solidity::frontend::MemberAccess const& _ma) override
+					{
+						if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(&_ma.expression()))
+						{
+							if (id->name() == "msg"
+								&& (_ma.memberName() == "value"
+									|| _ma.memberName() == "sender"
+									|| _ma.memberName() == "data"))
+								found = true;
+						}
+						return !found;
+					}
+				};
+				MsgRefChecker checker;
+				childCtor->body().accept(checker);
+				auto const& lin = contractType->contractDefinition().annotation().linearizedBaseContracts;
+				for (auto const* base: lin)
+					for (auto const* var: base->stateVariables())
+						if (var->value()) var->value()->accept(checker);
+				childHasPostInit = checker.found;
+			}
+
+			// Build the ARC4-encoded ctor args once — reused either as
+			// AppCreate's ApplicationArgs (no __postInit) or as the
+			// __postInit selector+args tuple.
+			auto buildEncodedCtorArgs = [&]() {
+				std::vector<std::shared_ptr<awst::Expression>> out;
+				if (!childCtor) return out;
+				auto const& ctorArgs = m_call.arguments();
+				auto const& ctorParams = childCtor->parameters();
+				for (size_t i = 0; i < ctorArgs.size() && i < ctorParams.size(); ++i)
+				{
+					auto argVal = buildExpr(*ctorArgs[i]);
+					auto* paramSolType = ctorParams[i]->type();
+					auto* paramWType = m_ctx.typeMapper.map(paramSolType);
+					argVal = builder::TypeCoercion::implicitNumericCast(
+						std::move(argVal), paramWType, m_loc);
+
+					if (argVal->wtype == awst::WType::biguintType())
+					{
+						unsigned bits = 256;
+						auto const* intT = dynamic_cast<IntegerType const*>(paramSolType);
+						if (!intT)
+							if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(paramSolType))
+								intT = dynamic_cast<IntegerType const*>(&udvt->underlyingType());
+						if (intT && !intT->isSigned())
+							bits = intT->numBits();
+						auto* arc4T = m_ctx.typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
+						auto encode = std::make_shared<awst::ARC4Encode>();
+						encode->sourceLocation = m_loc;
+						encode->wtype = arc4T;
+						encode->value = std::move(argVal);
+						argVal = std::move(encode);
+					}
+					else if (argVal->wtype == awst::WType::uint64Type())
+					{
+						unsigned bits = 64;
+						auto const* intT = dynamic_cast<IntegerType const*>(paramSolType);
+						if (intT) bits = intT->numBits();
+						auto* arc4T = m_ctx.typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
+						auto encode = std::make_shared<awst::ARC4Encode>();
+						encode->sourceLocation = m_loc;
+						encode->wtype = arc4T;
+						encode->value = std::move(argVal);
+						argVal = std::move(encode);
+					}
+					out.push_back(std::move(argVal));
+				}
+				return out;
+			};
+
 			// Build inner appl create transaction with TemplateVar programs
 			static awst::WInnerTransactionFields s_applFieldsType(6); // appl
 			auto create = std::make_shared<awst::CreateInnerTransaction>();
@@ -225,6 +307,29 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			clearTmpl->wtype = awst::WType::bytesType();
 			clearTmpl->name = "TMPL_CLEAR_" + childName;
 			create->fields["ClearStateProgram"] = std::move(clearTmpl);
+
+			// Child has no __postInit: its ctor runs during AppCreate, reading
+			// ApplicationArgs[0..N-1] directly (same pattern as any ARC4
+			// external-call routing but without a leading selector). Attach
+			// the ARC4-encoded ctor args to the create itxn.
+			if (!childHasPostInit && childCtor && !m_call.arguments().empty())
+			{
+				auto encodedArgs = buildEncodedCtorArgs();
+				if (!encodedArgs.empty())
+				{
+					auto argsTuple = std::make_shared<awst::TupleExpression>();
+					argsTuple->sourceLocation = m_loc;
+					std::vector<awst::WType const*> argTypes;
+					for (auto& a: encodedArgs)
+					{
+						argTypes.push_back(a->wtype);
+						argsTuple->items.push_back(std::move(a));
+					}
+					argsTuple->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
+						std::move(argTypes), std::nullopt);
+					create->fields["ApplicationArgs"] = std::move(argsTuple);
+				}
+			}
 
 			// Submit the inner transaction
 			static awst::WInnerTransaction s_applTxnType(6);
@@ -306,42 +411,6 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				m_ctx.prePendingStatements.push_back(std::move(fundStmt));
 			}
 
-			// Call __postInit on the child only when the child's ContractBuilder
-			// will actually emit __postInit. Matches the criteria used there:
-			// constructor body references msg.value/msg.sender/msg.data.
-			// For simpler contracts (no msg.* refs, no box-stored state),
-			// constructor body runs at AppCreate and there's nothing for
-			// us to call here — inner-new args are lost in that path, which
-			// matches pre-v113 behaviour.
-			auto const* childCtor = contractType->contractDefinition().constructor();
-			bool childHasPostInit = false;
-			if (childCtor && childCtor->isImplemented())
-			{
-				struct MsgRefChecker: public solidity::frontend::ASTConstVisitor
-				{
-					bool found = false;
-					bool visit(solidity::frontend::MemberAccess const& _ma) override
-					{
-						if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(&_ma.expression()))
-						{
-							if (id->name() == "msg"
-								&& (_ma.memberName() == "value"
-									|| _ma.memberName() == "sender"
-									|| _ma.memberName() == "data"))
-								found = true;
-						}
-						return !found;
-					}
-				};
-				MsgRefChecker checker;
-				childCtor->body().accept(checker);
-				// Also scan base-contract initializers (mirroring ContractBuilder's scan)
-				auto const& lin = contractType->contractDefinition().annotation().linearizedBaseContracts;
-				for (auto const* base: lin)
-					for (auto const* var: base->stateVariables())
-						if (var->value()) var->value()->accept(checker);
-				childHasPostInit = checker.found;
-			}
 			if (childHasPostInit)
 			{
 				// Build __postInit(t1,t2,...)void signature.
@@ -374,51 +443,9 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				argsTuple->sourceLocation = m_loc;
 				argsTuple->items.push_back(std::move(methodConst));
 
-				// ARC4-encode each ctor argument.
-				auto const& ctorArgs = m_call.arguments();
-				auto const& ctorParams = childCtor->parameters();
-				for (size_t i = 0; i < ctorArgs.size() && i < ctorParams.size(); ++i)
-				{
-					auto argVal = buildExpr(*ctorArgs[i]);
-					auto* paramSolType = ctorParams[i]->type();
-					auto* paramWType = m_ctx.typeMapper.map(paramSolType);
-					argVal = builder::TypeCoercion::implicitNumericCast(
-						std::move(argVal), paramWType, m_loc);
-
-					// Wrap biguint (uintN, N>64) in ARC4UIntN(bits) so the
-					// on-wire signature matches "uintN" (not "uint512") and
-					// so the callee's byte-length assert holds.
-					if (argVal->wtype == awst::WType::biguintType())
-					{
-						unsigned bits = 256;
-						auto const* intT = dynamic_cast<IntegerType const*>(paramSolType);
-						if (!intT)
-							if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(paramSolType))
-								intT = dynamic_cast<IntegerType const*>(&udvt->underlyingType());
-						if (intT && !intT->isSigned())
-							bits = intT->numBits();
-						auto* arc4T = m_ctx.typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
-						auto encode = std::make_shared<awst::ARC4Encode>();
-						encode->sourceLocation = m_loc;
-						encode->wtype = arc4T;
-						encode->value = std::move(argVal);
-						argVal = std::move(encode);
-					}
-					else if (argVal->wtype == awst::WType::uint64Type())
-					{
-						// uint<=64 → ARC4UIntN(intType->numBits()) for correct width.
-						unsigned bits = 64;
-						auto const* intT = dynamic_cast<IntegerType const*>(paramSolType);
-						if (intT) bits = intT->numBits();
-						auto* arc4T = m_ctx.typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
-						auto encode = std::make_shared<awst::ARC4Encode>();
-						encode->sourceLocation = m_loc;
-						encode->wtype = arc4T;
-						encode->value = std::move(argVal);
-						argVal = std::move(encode);
-					}
-					argsTuple->items.push_back(std::move(argVal));
-				}
+				auto encodedArgs = buildEncodedCtorArgs();
+				for (auto& e: encodedArgs)
+					argsTuple->items.push_back(std::move(e));
 
 				// Set the TupleExpression's wtype to a WTuple over the item
 				// types; without this, puya rejects the AWST (WInnerTxn

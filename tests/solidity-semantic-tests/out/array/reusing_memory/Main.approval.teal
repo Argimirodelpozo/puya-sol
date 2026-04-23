@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/reusing_memory.sol.Main.approval_program() -> uint64:
 main:
     intcblock 32 1 0 6
-    bytecblock "__ctor_pending" "map" 0x151f7c75 TMPL_APPROVAL_Helper TMPL_CLEAR_Helper
+    bytecblock "__ctor_pending" "map" 0x 0x151f7c75 TMPL_APPROVAL_Helper TMPL_CLEAR_Helper
     pushint 4096
     bzero
     dup
@@ -89,11 +89,34 @@ f_ternary_merge@4:
     dup
     box_del
     pop
-    swap
+    dup
+    dig 2
     box_put
     itxn_begin
-    bytec_3 // TMPL_APPROVAL_Helper
-    bytec 4 // TMPL_CLEAR_Helper
+    swap
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/reusing_memory.sol.Main.g
+    dig 2
+    swap
+    concat
+    swap
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/reusing_memory.sol.Main.g
+    dig 2
+    swap
+    concat
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    keccak256
+    dig 1
+    b|
+    bytec 4 // TMPL_APPROVAL_Helper
+    bytec 5 // TMPL_CLEAR_Helper
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -106,6 +129,7 @@ f_ternary_merge@4:
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
     itxn_field ApprovalProgram
+    itxn_field ApplicationArgs
     itxn_submit
     itxn CreatedApplicationID
     dup
@@ -139,7 +163,7 @@ f_ternary_merge@4:
     <=
     assert // overflow
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -159,20 +183,32 @@ g:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/reusing_memory.sol.Main.g
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/reusing_memory.sol.Main.g(__arc4_a: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/reusing_memory.sol.Main.g:
+    proto 1 1
     txn GroupIndex
-    bz g_ternary_false@3
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/reusing_memory.sol.Main.g_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-g_ternary_merge@4:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/reusing_memory.sol.Main.g_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 32
     bzero
     dup
-    dig 2
+    frame_dig -1
     concat
     dup
     len
@@ -185,7 +221,7 @@ g_ternary_merge@4:
     swap
     concat
     box_get
-    pushbytes 0x
+    bytec_2 // 0x
     cover 2
     select
     dup
@@ -194,13 +230,8 @@ g_ternary_merge@4:
     <=
     assert // overflow
     b|
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
+    retsub
 
-g_ternary_false@3:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/reusing_memory.sol.Main.g_ternary_false@2:
     intc_2 // 0
-    b g_ternary_merge@4
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/reusing_memory.sol.Main.g_ternary_merge@3

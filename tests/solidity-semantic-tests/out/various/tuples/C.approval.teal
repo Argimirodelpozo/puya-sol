@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 2 32
-    bytecblock "data" "__ctor_pending" "m_c" 0x151f7c75
+    bytecblock "data" "__ctor_pending" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -47,7 +47,7 @@ __postInit:
     intc_2 // 2
     box_create
     pop
-    bytec_2 // "m_c"
+    pushbytes "m_c"
     intc_2 // 2
     box_create
     pop
@@ -59,7 +59,7 @@ __postInit:
 h:
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol.C.h
     concat
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -130,7 +130,7 @@ f_if_body@6:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
 
 f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol.C.f@18:
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -143,12 +143,6 @@ f_after_if_else@7:
     pushbytes 0x0000
     cover 2
     select
-    bytec_2 // "m_c"
-    box_del
-    pop
-    bytec_2 // "m_c"
-    dig 1
-    box_put
     extract 2 32
     pushbytes 0x03
     b!=

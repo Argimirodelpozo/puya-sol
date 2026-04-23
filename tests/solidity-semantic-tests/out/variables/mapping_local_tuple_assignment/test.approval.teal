@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol.test.approval_program() -> uint64:
 main:
     intcblock 1 0 255 2
-    bytecblock "__ctor_pending" "m1" "m2" 0x6d31cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
+    bytecblock "__ctor_pending" 0x6d31cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
     pushint 4096
     bzero
     dup
@@ -43,11 +43,11 @@ __postInit:
     bytec_0 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    bytec_1 // "m1"
+    pushbytes "m1"
     intc_3 // 2
     box_create
     pop
-    bytec_2 // "m2"
+    pushbytes "m2"
     intc_3 // 2
     box_create
     pop
@@ -69,26 +69,25 @@ f_ternary_merge@4:
     assert // not payable
     pushint 42
     itob
-    bytec_3 // 0x6d31cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
-    swap
-    box_put
-    bytec_2 // "m2"
-    box_get
-    pushbytes 0x
-    cover 2
-    select
-    bytec_1 // "m1"
-    box_del
-    pop
-    bytec_1 // "m1"
+    bytec_1 // 0x6d31cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
     swap
     box_put
     pushint 21
     itob
-    pushbytes 0x6d31cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
+    pushbytes 0x6d32cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
     dig 1
     box_put
-    bytec_3 // 0x6d31cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
+    bytec_1 // 0x6d31cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    intc_2 // 255
+    &
+    pushbytes 0x6d31cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
     box_get
     swap
     btoi
@@ -108,25 +107,15 @@ f_ternary_merge@4:
     select
     intc_2 // 255
     &
-    pushbytes 0x6d32cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
-    box_get
-    swap
-    btoi
-    intc_1 // 0
-    swap
-    uncover 2
-    select
-    intc_2 // 255
-    &
     uncover 2
     itob
-    uncover 3
-    concat
     uncover 2
     itob
     concat
     swap
     itob
+    concat
+    swap
     concat
     pushbytes 0x151f7c75
     swap

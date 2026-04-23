@@ -44,7 +44,7 @@ f:
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
-    dup
+    dupn 2
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     intc_1 // 32
@@ -80,6 +80,11 @@ f_ternary_merge@4:
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
     itxn_field ApprovalProgram
+    dup
+    itxn_field ApplicationArgs
+    dig 1
+    dup
+    itxn_field ApplicationArgs
     itxn_submit
     itxn CreatedApplicationID
     dup
@@ -118,7 +123,7 @@ f_ternary_merge@4:
     itxn_begin
     intc_1 // 32
     bzero
-    dig 3
+    uncover 3
     concat
     dup
     len

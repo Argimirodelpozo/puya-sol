@@ -111,6 +111,30 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 			indexExprs.push_back(idxAccess->indexExpression());
 		cursor = &idxAccess->baseExpression();
 	}
+	// Peel wrappers: `(m = m2)[k]` — the assignment's value is whatever the
+	// RHS points to. Realize the assignment so its side effect (updating
+	// storageAliases for mapping-storage pointers) is preserved, then
+	// continue resolving from the RHS. Solidity wraps parenthesised
+	// expressions in TupleExpressions, so peel those too.
+	while (true)
+	{
+		if (auto const* assign = dynamic_cast<Assignment const*>(cursor))
+		{
+			buildExpr(*assign);
+			cursor = &assign->rightHandSide();
+			continue;
+		}
+		if (auto const* tuple = dynamic_cast<TupleExpression const*>(cursor))
+		{
+			if (!tuple->isInlineArray() && tuple->components().size() == 1
+				&& tuple->components()[0])
+			{
+				cursor = tuple->components()[0].get();
+				continue;
+			}
+		}
+		break;
+	}
 	Type const* rootMappingType = nullptr;
 	if (auto const* ident = dynamic_cast<Identifier const*>(cursor))
 	{

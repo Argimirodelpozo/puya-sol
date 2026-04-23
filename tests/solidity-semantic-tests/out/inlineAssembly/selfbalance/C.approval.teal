@@ -36,8 +36,17 @@ main_f_route@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/selfbalance.sol.C.f[routing]() -> void:
 f:
     load 0
+    global CurrentApplicationAddress
+    balance
+    itob
+    swap
     store 0
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    pushint 64
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
     pushint 1
     return

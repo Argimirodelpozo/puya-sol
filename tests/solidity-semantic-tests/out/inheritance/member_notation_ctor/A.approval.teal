@@ -1,7 +1,7 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_e86gnxi3/B.sol.A.approval_program() -> uint64:
+// /tmp/multisource_lmjflyna/B.sol.A.approval_program() -> uint64:
 main:
     intcblock 0 1 32 6
     bytecblock TMPL_APPROVAL_D TMPL_CLEAR_D
@@ -35,9 +35,10 @@ main_g_route@4:
     b g
 
 
-// /tmp/multisource_e86gnxi3/B.sol.A.g[routing]() -> void:
+// /tmp/multisource_lmjflyna/B.sol.A.g[routing]() -> void:
 g:
     txna ApplicationArgs 1
+    dup
     len
     intc_2 // 32
     ==
@@ -67,6 +68,8 @@ g_ternary_merge@4:
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
     itxn_field ApprovalProgram
+    dup
+    itxn_field ApplicationArgs
     itxn_submit
     itxn CreatedApplicationID
     dup

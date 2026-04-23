@@ -38,6 +38,8 @@ main_f_route@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/saltedCreate/salted_create_with_value.sol.A.f[routing]() -> void:
 f:
     itxn_begin
+    pushint 32
+    bzero
     bytec_0 // TMPL_APPROVAL_B
     bytec_1 // TMPL_CLEAR_B
     intc_1 // 6
@@ -52,6 +54,8 @@ f:
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
     itxn_field ApprovalProgram
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
+    itxn_field ApplicationArgs
     itxn_submit
     itxn CreatedApplicationID
     dup
@@ -88,6 +92,8 @@ f:
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
     itxn_field ApprovalProgram
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
+    itxn_field ApplicationArgs
     itxn_submit
     itxn CreatedApplicationID
     dup
@@ -121,6 +127,8 @@ f:
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
     itxn_field ApprovalProgram
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000009
+    itxn_field ApplicationArgs
     itxn_submit
     itxn CreatedApplicationID
     dup
@@ -187,9 +195,6 @@ f:
     pushint 32
     <=
     assert // overflow
-    pushint 32
-    bzero
-    swap
     dig 1
     b|
     itxn LastLog
