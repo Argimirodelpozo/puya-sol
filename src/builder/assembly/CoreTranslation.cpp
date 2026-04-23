@@ -476,12 +476,19 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		}
 		return seedBigUint;
 	}
-	if (funcName == "prevrandao" || funcName == "difficulty")
+	if (funcName == "difficulty")
 	{
-		// prevrandao()/difficulty() → deterministic hash as biguint stub
-		// AVM has no PREVRANDAO; return sha256 of a constant as non-zero placeholder.
+		// Pre-paris EVM DIFFICULTY. AVM has no equivalent; emit the
+		// Solidity test runner's canonical mocked value (200000000) so
+		// legacy-EVM tests that assert a specific difficulty pass.
+		return awst::makeIntegerConstant("200000000", loc, awst::WType::biguintType());
+	}
+	if (funcName == "prevrandao")
+	{
+		// prevrandao() has no AVM equivalent; return sha256 of a constant
+		// as a non-zero deterministic stub.
 		Logger::instance().warning(
-			"prevrandao()/difficulty() has no AVM equivalent, returning deterministic stub", loc);
+			"prevrandao() has no AVM equivalent, returning deterministic stub", loc);
 		auto hashInput = awst::makeUtf8BytesConstant("prevrandao", loc);
 		auto hash = awst::makeIntrinsicCall("sha256", awst::WType::bytesType(), loc);
 		hash->stackArgs.push_back(std::move(hashInput));

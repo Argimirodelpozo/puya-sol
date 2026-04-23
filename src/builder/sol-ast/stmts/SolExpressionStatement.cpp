@@ -272,14 +272,51 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 						auto* expectedElemType = m_ctx.typeMapper->map(retParams[i]->type());
 						tupleExpr->items[i] = ExpressionBuilder::implicitNumericCast(
 							std::move(tupleExpr->items[i]), expectedElemType, m_loc);
-						// Bytes type widening: e.g. bytes2 → bytes16
+						// Bytes type widening/narrowing: e.g. bytes2 → bytes32.
+						// Solidity right-pads on widening and truncates on
+						// narrowing; a bare ReinterpretCast mislabels the
+						// underlying width, leaving the ARC4 encoder to emit
+						// too few bytes at the call boundary.
 						if (tupleExpr->items[i]->wtype != expectedElemType
 							&& tupleExpr->items[i]->wtype
 							&& tupleExpr->items[i]->wtype->kind() == awst::WTypeKind::Bytes
 							&& expectedElemType->kind() == awst::WTypeKind::Bytes)
 						{
-							auto cast = awst::makeReinterpretCast(std::move(tupleExpr->items[i]), expectedElemType, m_loc);
-							tupleExpr->items[i] = std::move(cast);
+							auto const* srcBytes = dynamic_cast<awst::BytesWType const*>(tupleExpr->items[i]->wtype);
+							auto const* dstBytes = dynamic_cast<awst::BytesWType const*>(expectedElemType);
+							int srcLen = (srcBytes && srcBytes->length()) ? *srcBytes->length() : 0;
+							int dstLen = (dstBytes && dstBytes->length()) ? *dstBytes->length() : 0;
+							if (srcLen > 0 && dstLen > 0 && srcLen != dstLen)
+							{
+								auto toBytes = awst::makeReinterpretCast(std::move(tupleExpr->items[i]), awst::WType::bytesType(), m_loc);
+								std::shared_ptr<awst::Expression> widened;
+								if (dstLen > srcLen)
+								{
+									auto padSize = awst::makeIntegerConstant(std::to_string(dstLen - srcLen), m_loc);
+									auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
+									pad->stackArgs.push_back(std::move(padSize));
+									auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
+									cat->stackArgs.push_back(std::move(toBytes));
+									cat->stackArgs.push_back(std::move(pad));
+									widened = std::move(cat);
+								}
+								else
+								{
+									auto zero = awst::makeIntegerConstant("0", m_loc);
+									auto width = awst::makeIntegerConstant(std::to_string(dstLen), m_loc);
+									auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
+									extract->stackArgs.push_back(std::move(toBytes));
+									extract->stackArgs.push_back(std::move(zero));
+									extract->stackArgs.push_back(std::move(width));
+									widened = std::move(extract);
+								}
+								tupleExpr->items[i] = awst::makeReinterpretCast(std::move(widened), expectedElemType, m_loc);
+							}
+							else
+							{
+								auto cast = awst::makeReinterpretCast(std::move(tupleExpr->items[i]), expectedElemType, m_loc);
+								tupleExpr->items[i] = std::move(cast);
+							}
 						}
 						expectedTypes.push_back(tupleExpr->items[i]->wtype);
 					}
