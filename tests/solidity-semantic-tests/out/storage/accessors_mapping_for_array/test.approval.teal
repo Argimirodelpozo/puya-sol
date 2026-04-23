@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/accessors_mapping_for_array.sol.test.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8
-    bytecblock "__ctor_pending" "data" "dynamicData" 0x0000000000000000000000000000000000000000000000000000000000000008 0x151f7c75
+    bytecblock "__ctor_pending" "data" "dynamicData" 0x646174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2 0x0000000000000000000000000000000000000000000000000000000000000008 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -51,9 +51,13 @@ __postInit:
     pushint 2
     box_create
     pop
-    pushbytes 0x646174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    bytec_3 // 0x646174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    pushint 256
+    box_create
+    pop
+    bytec_3 // 0x646174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
     pushint 64
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000008
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000008
     box_replace // on error: index out of bounds
     intc_2 // 0
     itob
@@ -72,7 +76,7 @@ __postInit_while_top@2:
 __postInit_after_while@4:
     pushbytes 0x64796e616d6963446174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
     pushint 66
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000008
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000008
     box_replace // on error: index out of bounds
     intc_1 // 1
     return
@@ -133,7 +137,7 @@ data_ternary_merge@4:
     *
     intc_0 // 32
     extract3 // on error: index access is out of bounds
-    bytec 4 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
@@ -203,7 +207,7 @@ dynamicData_ternary_merge@4:
     *
     intc_0 // 32
     extract3 // on error: index access is out of bounds
-    bytec 4 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log

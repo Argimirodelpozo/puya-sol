@@ -1,6 +1,10 @@
-# Semantic Test Status — v153
+# Semantic Test Status — v154
 
-**Totals**: 1026 PASS / 231 FAIL / 65 (44 compile_err + 21 deploy_err) = **1026/1322 (77.6%)**
+**Totals**: 1028 PASS / 229 FAIL / 65 (44 compile_err + 21 deploy_err) = **1028/1322 (77.8%)**
+
+vs v153 (1026): +2 (one real fix + one flake recovery, zero regressions).
+- `getters/mapping_of_string`: FAIL → PASS. `mapping(string => uint8[3]) public x` with constructor-side writes (`x["abc"][0] = 1`) failed with `no such box 0x78ba7816bf…` at deploy. The write lowers to `box_replace` on a per-entry key `"x" + sha256(keyArg)` (33 bytes), but nothing ever created that box — the only `box_create` emitted was for the mapping holder `"x"` of size 2, which isn't the per-entry box. Fix in `SolAssignment.cpp`: when the final assignment target is `IndexExpression(base=BoxValueExpression(key=BoxPrefixedKey, fixed-size wtype), idx)`, emit `box_create(sameKey, totalSize)` as a pending pre-statement so the per-entry box exists before `box_replace`. Size computed from `ARC4StaticArray(elemSize × arraySize)` or `bytes[N]`; capped at 32KB. Idempotent on subsequent writes (box_create no-ops when box exists with same size). Also unblocks the `data[2][2]=8` leg of `storage/accessors_mapping_for_array` (that test still fails on a separate `dynamicData` write to a dynamic-array value type that isn't in scope here).
+- Flake recovery: `inlineAssembly/transient_storage_multiple_calls_different_transactions` (✗→✓). Known localnet throughput flake.
 
 vs v152 (1025): +1 via a parser harness fix.
 - `parser.py` used `content.split("// ----")` to locate the assertion delimiter, but that substring-split also matched banner decoration lines like `// ----------------------------------------------------------------` inside the "THIS TEST MODIFIED FROM UPSTREAM SOLIDITY" headers. When the first hit was the banner dash line, `parts[1]` became the banner body + contract + *commented-out* EVM expectations (e.g. `// f() -> 0x37…`, `// g() -> …`, `// h() -> …`) — which then got parsed as real assertions. Affected 17 banner'd tests; `builtinFunctions/blockhash` was the one that regressed in v152's suite run because the spurious `h()` assertion failed on deploy (no such method). Fix switches to a regex that only matches a whole-line `// ----` with optional surrounding whitespace, so banner decoration is ignored.

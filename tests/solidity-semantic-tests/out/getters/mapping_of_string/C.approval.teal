@@ -3,15 +3,15 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 8
-    bytecblock "__ctor_pending" 0x78ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad "x"
+    intcblock 1 0 3 2
+    bytecblock 0x78ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad "__ctor_pending" "x" 0x78cb8379ac2098aa165029e3938a51da0bcecfc008fd6795f401178647f96c5b34
     pushint 4096
     bzero
     dup
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -37,29 +37,45 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 0
     app_global_put
     bytec_2 // "x"
-    intc_2 // 2
+    intc_3 // 2
     box_create
     pop
-    bytec_1 // 0x78ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    bytec_0 // 0x78ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    intc_2 // 3
+    box_create
+    pop
+    bytec_0 // 0x78ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
     intc_1 // 0
     pushbytes 0x01
     box_replace // on error: index out of bounds
-    bytec_1 // 0x78ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
-    intc_2 // 2
+    bytec_0 // 0x78ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    intc_2 // 3
+    box_create
+    pop
+    bytec_0 // 0x78ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    intc_3 // 2
     pushbytes 0x03
     box_replace // on error: index out of bounds
-    bytec_1 // 0x78ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    bytec_0 // 0x78ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    intc_2 // 3
+    box_create
+    pop
+    bytec_0 // 0x78ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
     intc_0 // 1
     pushbytes 0x02
     box_replace // on error: index out of bounds
-    pushbytes 0x78cb8379ac2098aa165029e3938a51da0bcecfc008fd6795f401178647f96c5b34
+    bytec_3 // 0x78cb8379ac2098aa165029e3938a51da0bcecfc008fd6795f401178647f96c5b34
+    intc_2 // 3
+    box_create
+    pop
+    bytec_3 // 0x78cb8379ac2098aa165029e3938a51da0bcecfc008fd6795f401178647f96c5b34
     intc_0 // 1
     pushbytes 0x09
     box_replace // on error: index out of bounds
@@ -73,7 +89,7 @@ x:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_2 // 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -105,13 +121,13 @@ x_ternary_merge@4:
     pushbytes 0x000000
     cover 2
     select
-    intc_3 // 8
+    pushint 8
     bzero
     dig 2
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     getbyte

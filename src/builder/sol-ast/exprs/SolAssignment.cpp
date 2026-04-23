@@ -1273,6 +1273,55 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 		}
 	}
 
+	// Mapping-entry partial write: `m[k][i] = v` where m is `mapping(K => T[N])`
+	// or `mapping(K => bytes[N])`. The outer IndexExpression lowers to a
+	// box_replace on the per-entry key, but the per-entry box is only created
+	// lazily. Emit a box_create(key, total_size) as a pending pre-statement
+	// so the box exists before box_replace runs. Idempotent when the box
+	// already exists with the same size.
+	if (auto const* idx = dynamic_cast<awst::IndexExpression const*>(target.get()))
+	{
+		if (auto const* bv = dynamic_cast<awst::BoxValueExpression const*>(idx->base.get()))
+		{
+			if (bv->key && dynamic_cast<awst::BoxPrefixedKeyExpression const*>(bv->key.get()))
+			{
+				uint64_t totalSize = 0;
+				if (bv->wtype)
+				{
+					if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(bv->wtype))
+					{
+						uint64_t elemSize = 32;
+						if (auto const* elemT = sa->elementType())
+						{
+							if (auto const* uintN = dynamic_cast<awst::ARC4UIntN const*>(elemT))
+								elemSize = std::max<uint64_t>(1u, static_cast<uint64_t>(uintN->n() / 8));
+							else if (auto const* bw = dynamic_cast<awst::BytesWType const*>(elemT))
+								if (bw->length().has_value())
+									elemSize = *bw->length();
+						}
+						if (sa->arraySize() > 0)
+							totalSize = elemSize * static_cast<uint64_t>(sa->arraySize());
+					}
+					else if (auto const* bw = dynamic_cast<awst::BytesWType const*>(bv->wtype))
+					{
+						if (bw->length().has_value() && *bw->length() > 0)
+							totalSize = static_cast<uint64_t>(*bw->length());
+					}
+				}
+				if (totalSize > 0 && totalSize <= 32768)
+				{
+					auto createCall = awst::makeIntrinsicCall(
+						"box_create", awst::WType::boolType(), m_loc);
+					createCall->stackArgs.push_back(bv->key);
+					createCall->stackArgs.push_back(
+						awst::makeIntegerConstant(std::to_string(totalSize), m_loc));
+					auto createStmt = awst::makeExpressionStatement(std::move(createCall), m_loc);
+					m_ctx.prePendingStatements.push_back(std::move(createStmt));
+				}
+			}
+		}
+	}
+
 	auto e = std::make_shared<awst::AssignmentExpression>();
 	e->sourceLocation = m_loc;
 	e->wtype = target->wtype;
