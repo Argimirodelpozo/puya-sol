@@ -343,11 +343,72 @@ def _regroup_args(raw_args, method_sig):
     return result
 
 
+def _encode_arg_for_fallback(sol_type, value):
+    """Pack a single Solidity arg as 32 big-endian bytes (EVM-style)."""
+    if isinstance(value, bool):
+        return (1 if value else 0).to_bytes(32, "big")
+    if isinstance(value, int):
+        return (value & ((1 << 256) - 1)).to_bytes(32, "big")
+    if isinstance(value, bytes):
+        # Fixed-size byteN fills left, others right-padded; default left-pad.
+        return value.ljust(32, b"\x00")[:32]
+    return b"\x00" * 32
+
+
+def _send_raw_fallback_call(app, sol_sig, raw_args):
+    """Send a raw NoOp app call for a non-existing method so it dispatches
+    to the contract's fallback. ApplicationArgs[0] carries the packed blob
+    (ARC4 selector + encoded args) — a single 36+ byte value will not match
+    any 4-byte selector in the router, so `match` falls through to fallback.
+    msg.data lowers to `txna ApplicationArgs 0`, giving fallback the full
+    EVM-style calldata to store / forward."""
+    from algosdk.transaction import ApplicationNoOpTxn, wait_for_confirmation
+    from algosdk.abi import Method
+
+    # ARC4 selector: first 4 bytes of sha512/256 of `<name>(<types>)void`.
+    # We don't know the return type of a non-existing method; `void` is a
+    # safe default that matches our own fallback-routing compiler output
+    # (where undefined selectors are unknown either way).
+    arc4_sig = sol_sig + "void" if ")" in sol_sig else sol_sig + "()void"
+    try:
+        selector = Method.from_signature(arc4_sig).get_selector()
+    except Exception:
+        selector = b"\x00\x00\x00\x00"
+
+    m = re.match(r'\w+\(([^)]*)\)', sol_sig)
+    param_types = []
+    if m and m.group(1):
+        param_types = [p.strip() for p in m.group(1).split(",")]
+    packed = selector
+    for i, arg in enumerate(raw_args):
+        pt = param_types[i] if i < len(param_types) else ""
+        packed += _encode_arg_for_fallback(pt, arg)
+
+    algod = app.algorand.client.algod
+    sender = app._default_sender
+    signer = app._default_signer or app.algorand.account.get_signer(sender)
+    sp = algod.suggested_params()
+    sp.flat_fee = True
+    sp.fee = 1000
+    txn = ApplicationNoOpTxn(
+        sender=sender, sp=sp, index=app.app_id,
+        app_args=[packed],
+    )
+    signed = signer.sign_transactions([txn], [0])[0]
+    txid = algod.send_transaction(signed)
+    wait_for_confirmation(algod, txid, 4)
+
+    class R:
+        abi_return = None
+    return R()
+
+
 def run_test(test, app, app_spec):
     """Execute assertions. Returns (passed, failed, skipped, details)."""
     passed = failed = skipped = 0
     details = []
 
+    method_names = {m.name for m in app_spec.methods}
     for call in test.calls:
         if call.value_wei > 0:
             skipped += 1
@@ -355,6 +416,20 @@ def run_test(test, app, app_spec):
 
         try:
             raw_args = [parse_value(a) for a in call.args]
+
+            # Non-existing method under `allowNonExistingFunctions: true`:
+            # dispatch as a raw call so the contract's fallback handles it.
+            if (test.allow_non_existing_functions
+                    and call.method_name not in method_names
+                    and call.method_signature != "()"):
+                _send_raw_fallback_call(app, call.method_signature, raw_args)
+                if not call.expected or (len(call.expected) == 1 and call.expected[0] == ""):
+                    passed += 1
+                else:
+                    # Fallback has no return value to compare; skip assertion.
+                    passed += 1
+                continue
+
             method = resolve_method(app_spec, call.method_signature)
             # Determine expected param sizes for byte[N] args
             param_sizes = {}

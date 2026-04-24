@@ -991,7 +991,88 @@ std::shared_ptr<awst::Expression> SolIndexRangeAccess::toAwst()
 		}
 	}
 
-	auto slice = awst::makeIntrinsicCall("substring3", m_ctx.typeMapper.map(m_rangeAccess.annotation().type), m_loc);
+	auto const* resultType = m_ctx.typeMapper.map(m_rangeAccess.annotation().type);
+
+	// For ARC4-encoded array bases (ARC4DynamicArray / ARC4StaticArray) with
+	// fixed-size elements, `start`/`end` are ELEMENT indices — a raw
+	// substring3 would yield malformed bytes. Emit an arc4-aware slice:
+	// concat(uint16 BE (end - start), substring3(base, hdr + s*elem, hdr + e*elem)).
+	// Bytes/string slices fall through to substring3 below.
+	if (hasExplicitBound)
+	{
+		awst::WType const* elemType = nullptr;
+		int64_t headerBytes = 0;
+		auto const* bt = base->wtype;
+		if (auto const* ad = dynamic_cast<awst::ARC4DynamicArray const*>(bt))
+		{
+			elemType = ad->elementType();
+			headerBytes = 2;
+		}
+		else if (auto const* as = dynamic_cast<awst::ARC4StaticArray const*>(bt))
+		{
+			elemType = as->elementType();
+			headerBytes = 0;
+		}
+
+		int elemSize = elemType ? builder::TypeCoercion::computeEncodedElementSize(elemType) : 0;
+
+		if (elemSize > 0)
+		{
+			std::string idSuffix = std::to_string(m_rangeAccess.id());
+			std::string startVarName = "__slice_start_" + idSuffix;
+			std::string endVarName = "__slice_end_" + idSuffix;
+
+			auto mkStart = [&]() {
+				return awst::makeVarExpression(startVarName, awst::WType::uint64Type(), m_loc);
+			};
+			auto mkEnd = [&]() {
+				return awst::makeVarExpression(endVarName, awst::WType::uint64Type(), m_loc);
+			};
+
+			auto scaled = [&](std::shared_ptr<awst::Expression> idx) {
+				auto scale = awst::makeUInt64BinOp(
+					std::move(idx),
+					awst::UInt64BinaryOperator::Mult,
+					awst::makeIntegerConstant(std::to_string(elemSize), m_loc),
+					m_loc);
+				if (headerBytes > 0)
+				{
+					return awst::makeUInt64BinOp(
+						std::move(scale),
+						awst::UInt64BinaryOperator::Add,
+						awst::makeIntegerConstant(std::to_string(headerBytes), m_loc),
+						m_loc);
+				}
+				return scale;
+			};
+
+			auto byteStart = scaled(mkStart());
+			auto byteEnd = scaled(mkEnd());
+
+			auto sub = awst::makeIntrinsicCall("substring3", awst::WType::bytesType(), m_loc);
+			sub->stackArgs.push_back(std::move(base));
+			sub->stackArgs.push_back(std::move(byteStart));
+			sub->stackArgs.push_back(std::move(byteEnd));
+
+			auto diff = awst::makeUInt64BinOp(
+				mkEnd(), awst::UInt64BinaryOperator::Sub, mkStart(), m_loc);
+			auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
+			itob->stackArgs.push_back(std::move(diff));
+
+			auto lenHdr = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
+			lenHdr->stackArgs.push_back(std::move(itob));
+			lenHdr->stackArgs.push_back(awst::makeIntegerConstant("6", m_loc));
+			lenHdr->stackArgs.push_back(awst::makeIntegerConstant("2", m_loc));
+
+			auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
+			cat->stackArgs.push_back(std::move(lenHdr));
+			cat->stackArgs.push_back(std::move(sub));
+
+			return awst::makeReinterpretCast(std::move(cat), resultType, m_loc);
+		}
+	}
+
+	auto slice = awst::makeIntrinsicCall("substring3", resultType, m_loc);
 	slice->stackArgs.push_back(std::move(base));
 	slice->stackArgs.push_back(std::move(start));
 	slice->stackArgs.push_back(std::move(end));

@@ -1,6 +1,9 @@
-# Semantic Test Status — v155
+# Semantic Test Status — v156
 
-**Totals**: 1032 PASS / 225 FAIL / 65 (44 compile_err + 21 deploy_err) = **1032/1322 (78.1%)**
+**Totals**: 1033 PASS / 224 FAIL / 65 (44 compile_err + 21 deploy_err) = **1033/1322 (78.1%)**
+
+vs v155 (1032): +1 (one real fix, zero regressions).
+- `array/calldata_array_as_argument_internal_function`: FAIL → PASS. Calldata array slice `c[start:end]` where `c` is `uint256[] calldata` was emitting raw byte-wise `substring3(c, start, end)` — but in Solidity, `start`/`end` are ELEMENT indices, not byte offsets. For an ARC4-encoded dynamic array `[uint16 len | N × 32B]`, a proper slice must (a) scale indices by element size, (b) skip the 2-byte length header, and (c) prepend a fresh uint16 length header to the result so the callee can decode it as a dynamic array again. Fix in `SolIndexRangeAccess::toAwst()` (src/builder/sol-ast/exprs/SolIndexAccess.cpp): when the base wtype is `ARC4DynamicArray`/`ARC4StaticArray` with a fixed-size element, emit `concat(uint16_be(end - start), substring3(base, hdr + start*elemSize, hdr + end*elemSize))` instead of the raw substring3 fallthrough. Bytes/string slices still take the old path. Result type from TypeMapper is `BytesWType` so the earlier `resDyn` guard dropped it on the floor — guard removed.
 
 vs v154 (1028): +4 (three real fixes + one flake recovery, zero regressions).
 - `storage/accessors_mapping_for_array`: FAIL → PASS. `mapping(K => T[])` `.push()` on a mapping entry failed: the base expression lowers to a `BoxValueExpression` behind a `StateGet`, but `SolArrayMethod` only recognized `Identifier→storageAlias`. Result was either a write-through-StateGet (rejected by puya) or a `box_extract` on a never-created per-entry box. Fix in `SolArrayMethod.cpp`: when the base is `IndexAccess` producing a dynamic non-byte array, unwrap `StateGet` → `BoxValueExpression` and emit `ArrayExtend`/`ArrayPop` against the writable target. Guarded by a pre-pending `if (!box_exists) box_create(key, 2)` so the per-entry box exists before the first push — idempotent, matches the pattern `SolAssignment.cpp` uses for fixed-size mapping entries.

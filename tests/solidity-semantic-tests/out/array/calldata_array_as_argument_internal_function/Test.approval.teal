@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/calldata_array_as_argument_internal_function.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 8
+    intcblock 32 1 0 2
     bytecblock 0x151f7c75
     pushint 4096
     bzero
@@ -42,7 +42,7 @@ g:
     cover 2
     intc_0 // 32
     *
-    pushint 2
+    intc_3 // 2
     +
     swap
     len
@@ -92,7 +92,7 @@ h:
     cover 2
     intc_0 // 32
     *
-    pushint 2
+    intc_3 // 2
     +
     swap
     len
@@ -120,14 +120,14 @@ h:
 h_ternary_merge@4:
     !
     assert // not payable
-    intc_3 // 8
+    pushint 8
     bzero
     dup
     dig 3
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     swap
@@ -135,7 +135,7 @@ h_ternary_merge@4:
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     dup2
@@ -145,9 +145,25 @@ h_ternary_merge@4:
     dig 5
     <=
     assert // slice: end > length
-    dig 5
+    dup
+    dig 2
+    -
+    itob
+    extract 6 2
+    uncover 2
+    intc_0 // 32
+    *
+    intc_3 // 2
+    +
+    uncover 2
+    intc_0 // 32
+    *
+    intc_3 // 2
+    +
+    dig 6
     cover 2
     substring3
+    concat
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
