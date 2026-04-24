@@ -1,6 +1,12 @@
-# Semantic Test Status — v159
+# Semantic Test Status — v160
 
-**Totals**: 1041 PASS / 217 FAIL / 64 (43 compile_err + 21 deploy_err) = **1041/1322 (78.7%)**
+**Totals**: 1044 PASS / 214 FAIL / 64 (44 compile_err + 20 deploy_err) = **1044/1322 (79.0%)**
+
+vs v159 (1041): +3 (harness widening + strict malformed-detection + one puya-sol storage fix, zero regressions).
+- Harness: widened `_regroup_args` dispatch in `run_tests.py` to recurse via `_decode_dynamic` on outer-static arrays whose inner type is dynamic (e.g. `uint256[][3]`, `uint16[][][1]`). The inline fallback was treating the first inner head-offset as the element count and returning junk. Added a `strict=True` mode to `_decode_dynamic` that raises `_MalformedCalldata` when declared lengths/offsets point past available `raw_args` — the dispatch site catches it and falls through to the inline path so contract-level validation still sees intentionally-malformed calldata in `FAILURE` tests. This unblocks `calldata_array_two_dimensional` (3p/17f → 20p/0s) and `calldata_nested_array_static_reencode` (10p/1f → 11p/0s) without regressing `calldata_nested_array_reencode` (back to 7p/7f baseline).
+- puya-sol: extended `StorageMapper::shouldUseBoxStorage` to route state variables whose type has a dynamic array anywhere in the element chain to box storage, even when the outer dimension is static (e.g. `uint[][2] public tmp_i`). Solidity's `storageSizeUpperBound()` reports 2 slots for these, so the old size check kept them in global state where the encoded payload (232 bytes for the sample `nested_calldata_storage` test) overflows the 128-byte key+value limit. `nested_calldata_storage` 0p/3f → 3p/0s.
+
+Files: +7 fully passing (`bytes_to_fixed_bytes_too_long`, `calldata_array`, `calldata_array_two_dimensional`, `calldata_length_read`, `calldata_nested_array_static_reencode`, `nested_calldata_storage`, `struct_containing_bytes_copy_and_delete`). Subtest-level: `calldata_array_dynamic_index_access` +1, `calldata_three_dimensional_dynamic_array_index_access` +1, zero regressions. One localnet-round flake (`uncalled_blockhash`) passes individually.
 
 vs v158 (1038): +3 (one test-harness fix, zero regressions).
 - `array/bytes_to_fixed_bytes_too_long` (3p/1f → 4p/0s). Root cause was in `_regroup_args` (run_tests.py): when an EVM-ABI-encoded `bytes` arg spans multiple 32-byte-padded chunks (e.g. `0x20, 33, "abcdefghabcdefghabcdefghabcdefgh", "a"` — 32+1 bytes across two chunks), the old decode only took the first chunk via `val[:length]`, silently truncating >32-byte args. The TEAL then hit `substring 0 33` on a 32-byte payload: `substring range beyond length of string`. Fix concatenates all chunks (each left-padded to 32 bytes per EVM word alignment) until the declared length is met, then truncates. Same loop rewritten in `test_semantic.py` coerce path. +2 more tests elsewhere in the suite pick up full args as a side effect.

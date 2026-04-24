@@ -967,15 +967,23 @@ def _regroup_args(raw_args, method_sig):
             total *= d
         return total
 
-    def _decode_dynamic(pt, word_idx):
+    class _MalformedCalldata(Exception):
+        """Raised when _decode_dynamic detects malformed calldata (declared
+        length or offset points past available raw_args). Callers catch it
+        to fall back to the inline path so contract-level validation still
+        sees the malformation."""
+        pass
+
+    def _decode_dynamic(pt, word_idx, strict=False):
         """Decode the value at raw_args[word_idx..] for type `pt`. `word_idx` is
         the start of the value in the flat raw_args list (i.e. the tail-region
         location that the caller's offset word pointed to). Returns the decoded
         Python value. Handles: string / bytes / <T>[] / <T>[N] (static array of
-        dynamic T)."""
+        dynamic T). If `strict`, raises `_MalformedCalldata` on OOB access."""
         if pt in dynamic_types:
             # length + data
             if word_idx >= len(raw_args):
+                if strict: raise _MalformedCalldata(f"{pt}: length word OOB")
                 return "" if pt == 'string' else b""
             length = raw_args[word_idx]
             if not isinstance(length, int):
@@ -983,8 +991,10 @@ def _regroup_args(raw_args, method_sig):
             data_start = word_idx + 1
             if length == 0:
                 return "" if pt == 'string' else b""
-            data = b""
             n_words = (length + 31) // 32
+            if strict and data_start + n_words > len(raw_args):
+                raise _MalformedCalldata(f"{pt}: data region OOB (need {n_words} words, have {len(raw_args) - data_start})")
+            data = b""
             for w in range(n_words):
                 if data_start + w >= len(raw_args):
                     break
@@ -1005,6 +1015,7 @@ def _regroup_args(raw_args, method_sig):
         is_outer_dynamic = _re.match(r'.*\[\]$', pt) is not None
         if is_outer_dynamic:
             if word_idx >= len(raw_args):
+                if strict: raise _MalformedCalldata(f"{pt}: length word OOB")
                 return []
             length = raw_args[word_idx]
             if not isinstance(length, int):
@@ -1017,21 +1028,27 @@ def _regroup_args(raw_args, method_sig):
         if _is_dynamic(inner):
             # Each element has a head-offset (relative to body_start) pointing
             # to its own tail.
+            if strict and body_start + length > len(raw_args):
+                raise _MalformedCalldata(f"{pt}: head-offset table OOB")
             arr = []
             for i in range(length):
                 if body_start + i >= len(raw_args):
+                    if strict: raise _MalformedCalldata(f"{pt}[{i}]: head word OOB")
                     arr.append(b"" if inner in dynamic_types else [])
                     continue
                 inner_offset = raw_args[body_start + i]
                 if not isinstance(inner_offset, int):
+                    if strict: raise _MalformedCalldata(f"{pt}[{i}]: head not int")
                     arr.append(b"" if inner in dynamic_types else [])
                     continue
                 inner_word_idx = body_start + (inner_offset // 32)
-                arr.append(_decode_dynamic(inner, inner_word_idx))
+                arr.append(_decode_dynamic(inner, inner_word_idx, strict=strict))
             return arr
         # Static inner element type: values are packed element-per-word
         # (or packed across multiple words for multi-slot primitives, but
         # ARC4 static primitives all fit in one word for our purposes).
+        if strict and body_start + length > len(raw_args):
+            raise _MalformedCalldata(f"{pt}: element region OOB (need {length} words, have {len(raw_args) - body_start})")
         return raw_args[body_start:body_start + length]
 
     # Two-pass ABI decode: head (one word per param) then tail (dynamic data)
@@ -1112,6 +1129,22 @@ def _regroup_args(raw_args, method_sig):
                 if inner is not None and inner in dynamic_types:
                     result.append(_decode_dynamic(pt, word_idx))
                     continue
+                # Also dispatch for static-outer arrays whose inner type is
+                # itself dynamic (e.g. `uint256[][2]`). The recursive decoder
+                # walks the head-offset table correctly; the inline fallback
+                # below treats the first inner offset as a length and produces
+                # garbage. Restricted to outer-static (trailing `[N]`) and
+                # uses strict=True so we fall through to the inline path on
+                # OOB access, preserving malformed-calldata FAILURE tests.
+                if (inner is not None
+                    and _is_dynamic(inner)
+                    and _re.match(r'.+\[\d+\]$', pt)):
+                    try:
+                        decoded = _decode_dynamic(pt, word_idx, strict=True)
+                        result.append(decoded)
+                        continue
+                    except _MalformedCalldata:
+                        pass  # fall through to inline path
             # Decode data at offset
             if isinstance(offset, int):
                 word_idx = offset // 32  # convert byte offset to word index

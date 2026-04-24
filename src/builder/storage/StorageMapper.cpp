@@ -64,6 +64,18 @@ bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration 
 	{
 		if (arrType->isDynamicallySized() && !arrType->isString())
 			return true;
+		// Static outer array whose element is dynamically encoded (e.g. `uint[][2]`):
+		// the 2-slot upper bound is misleading — the encoded payload can be arbitrary.
+		if (!arrType->isDynamicallySized())
+		{
+			auto const* baseType = arrType->baseType();
+			while (auto const* innerArr = dynamic_cast<solidity::frontend::ArrayType const*>(baseType))
+			{
+				if (innerArr->isDynamicallySized() && !innerArr->isString())
+					return true;
+				baseType = innerArr->baseType();
+			}
+		}
 	}
 
 	// Large values don't fit in AVM global state — promote to box storage.
