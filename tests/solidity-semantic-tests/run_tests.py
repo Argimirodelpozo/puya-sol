@@ -1135,25 +1135,25 @@ def _regroup_args(raw_args, method_sig):
                                 clamped = min(int(length), 0xFFFF)
                                 result.append(_MalformedArc4(clamped.to_bytes(2, 'big')))
                             elif data_start < len(raw_args) and length <= 10000:
-                                val = raw_args[data_start]
-                                if isinstance(val, bytes):
-                                    result.append(val[:length])
-                                elif isinstance(val, int):
-                                    # Data as int words
-                                    data = b""
-                                    n_words = min((length + 31) // 32, len(raw_args) - data_start)
-                                    for w in range(n_words):
-                                        if data_start + w < len(raw_args):
-                                            wv = raw_args[data_start + w]
-                                            if isinstance(wv, bytes):
-                                                data += wv
-                                            elif isinstance(wv, int):
-                                                data += wv.to_bytes(32, 'big')
-                                    result.append(data[:length])
-                                elif val is None:
-                                    result.append("" if pt == 'string' else b"")
+                                # Collect enough words to cover `length` bytes.
+                                # EVM pads to 32-byte words, so a >32-byte value
+                                # is split across multiple chunks in the test
+                                # source (each chunk parses as its own value).
+                                data = b""
+                                n_words = min((length + 31) // 32, len(raw_args) - data_start)
+                                for w in range(n_words):
+                                    wv = raw_args[data_start + w]
+                                    if isinstance(wv, bytes):
+                                        data += wv.ljust(32, b'\x00')[:32]
+                                    elif isinstance(wv, int):
+                                        data += wv.to_bytes(32, 'big', signed=(wv < 0))
+                                    elif wv is None:
+                                        break
+                                data = data[:length]
+                                if pt == 'string':
+                                    result.append(data.decode('utf-8', errors='replace'))
                                 else:
-                                    result.append(val)
+                                    result.append(data)
                             else:
                                 # Declared length > 0 but no data (or length too
                                 # large). EVM would revert on ABI decode; emit a

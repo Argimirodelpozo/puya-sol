@@ -202,20 +202,26 @@ def test_semantic(test, localnet_session):
                         break
                     atype = marg.type if isinstance(marg.type, str) else str(marg.type)
                     if atype in ("string", "byte[]") and isinstance(args[raw_idx], int):
-                        # EVM dynamic arg: 0x20, length, "data" → just the data
-                        # Skip offset (0x20), skip length, take data
+                        # EVM dynamic arg: 0x20, length, "data chunk 1", "chunk 2"...
+                        # Because EVM pads to 32-byte words, a >32-byte value is
+                        # split across multiple quoted chunks in the test file; collect
+                        # enough chunks to cover the declared length.
                         raw_idx += 1  # skip offset
-                        if raw_idx < len(args):
+                        declared_len = 0
+                        if raw_idx < len(args) and isinstance(args[raw_idx], int):
+                            declared_len = args[raw_idx]
                             raw_idx += 1  # skip length
-                        if raw_idx < len(args) and isinstance(args[raw_idx], bytes):
-                            if atype == "string":
-                                coerced.append(args[raw_idx].decode('utf-8', errors='replace'))
-                            else:
-                                coerced.append(list(args[raw_idx]))
+                        collected = bytearray()
+                        while raw_idx < len(args) and isinstance(args[raw_idx], bytes) and len(collected) < declared_len:
+                            collected.extend(args[raw_idx])
                             raw_idx += 1
-                        elif raw_idx - 1 < len(args) and parse_value(call.args[raw_idx - 1]) == 0:
-                            # Empty (length=0, no data word)
-                            coerced.append("" if atype == "string" else [])
+                        if declared_len > 0 and len(collected) > declared_len:
+                            collected = collected[:declared_len]
+                        if collected:
+                            if atype == "string":
+                                coerced.append(bytes(collected).decode('utf-8', errors='replace'))
+                            else:
+                                coerced.append(list(collected))
                         else:
                             coerced.append("" if atype == "string" else [])
                     elif atype == "bool" and isinstance(args[raw_idx], int):
