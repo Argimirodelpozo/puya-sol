@@ -736,6 +736,37 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 		}
 	}
 
+	// Mapping-entry partial write: `n[k][i].f = v` where n is
+	// `mapping(K => T[N])` lowers to box_replace on the per-entry key.
+	// The per-entry box is created lazily. Emit box_create as a pending
+	// pre-statement so the box exists before box_replace runs.
+	if (auto const* idx = dynamic_cast<awst::IndexExpression const*>(assignTarget2.get()))
+	{
+		if (auto const* bv = dynamic_cast<awst::BoxValueExpression const*>(idx->base.get()))
+		{
+			if (bv->key && dynamic_cast<awst::BoxPrefixedKeyExpression const*>(bv->key.get()))
+			{
+				uint64_t totalSize = 0;
+				if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(bv->wtype))
+				{
+					int elemSize = builder::TypeCoercion::computeEncodedElementSize(sa->elementType());
+					if (elemSize > 0 && sa->arraySize() > 0)
+						totalSize = static_cast<uint64_t>(elemSize) * static_cast<uint64_t>(sa->arraySize());
+				}
+				if (totalSize > 0 && totalSize <= 32768)
+				{
+					auto createCall = awst::makeIntrinsicCall(
+						"box_create", awst::WType::boolType(), m_loc);
+					createCall->stackArgs.push_back(bv->key);
+					createCall->stackArgs.push_back(
+						awst::makeIntegerConstant(std::to_string(totalSize), m_loc));
+					auto createStmt = awst::makeExpressionStatement(std::move(createCall), m_loc);
+					m_ctx.prePendingStatements.push_back(std::move(createStmt));
+				}
+			}
+		}
+	}
+
 	auto e = std::make_shared<awst::AssignmentExpression>();
 	e->sourceLocation = m_loc;
 	e->wtype = assignTarget2->wtype;
@@ -1279,8 +1310,35 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 	// lazily. Emit a box_create(key, total_size) as a pending pre-statement
 	// so the box exists before box_replace runs. Idempotent when the box
 	// already exists with the same size.
-	if (auto const* idx = dynamic_cast<awst::IndexExpression const*>(target.get()))
+	// Also handles nested field writes: `n[k][i].field = v` where target is a
+	// FieldExpression whose base chain resolves to IndexExpression-on-BoxValue.
+	awst::IndexExpression const* boxIdx = nullptr;
 	{
+		awst::Expression const* cur = target.get();
+		while (cur)
+		{
+			if (auto const* idx = dynamic_cast<awst::IndexExpression const*>(cur))
+			{
+				if (dynamic_cast<awst::BoxValueExpression const*>(idx->base.get()))
+				{
+					boxIdx = idx;
+					break;
+				}
+				cur = idx->base.get();
+			}
+			else if (auto const* fe = dynamic_cast<awst::FieldExpression const*>(cur))
+			{
+				cur = fe->base.get();
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+	if (boxIdx)
+	{
+		auto const* idx = boxIdx;
 		if (auto const* bv = dynamic_cast<awst::BoxValueExpression const*>(idx->base.get()))
 		{
 			if (bv->key && dynamic_cast<awst::BoxPrefixedKeyExpression const*>(bv->key.get()))

@@ -149,11 +149,32 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						return e;
 
 					auto stmt = awst::makeExpressionStatement(std::move(e), m_loc);
-					m_ctx.pendingStatements.push_back(std::move(stmt));
-					auto vc = std::make_shared<awst::VoidConstant>();
-					vc->sourceLocation = m_loc;
-					vc->wtype = awst::WType::voidType();
-					return vc;
+					// Use prePendingStatements so the extend runs BEFORE the
+					// enclosing statement. For `arr.push().field = v` the
+					// field write reads ArrayLength - 1 post-extend.
+					m_ctx.prePendingStatements.push_back(std::move(stmt));
+
+					// Solidity `arr.push()` returns a reference to the new
+					// element (so `arr.push().field = v` works). Lower it as
+					// IndexExpression(arr, ArrayLength(arr) - 1) evaluated
+					// after the extend statement above.
+					auto lenNode = std::make_shared<awst::ArrayLength>();
+					lenNode->sourceLocation = m_loc;
+					lenNode->wtype = awst::WType::uint64Type();
+					lenNode->array = baseAwst;
+
+					auto lastIndex = awst::makeUInt64BinOp(
+						std::move(lenNode),
+						awst::UInt64BinaryOperator::Sub,
+						awst::makeIntegerConstant("1", m_loc),
+						m_loc);
+
+					auto idxExpr = std::make_shared<awst::IndexExpression>();
+					idxExpr->sourceLocation = m_loc;
+					idxExpr->base = baseAwst;
+					idxExpr->index = std::move(lastIndex);
+					idxExpr->wtype = elemType;
+					return idxExpr;
 				}
 				if (memberName == "pop")
 				{

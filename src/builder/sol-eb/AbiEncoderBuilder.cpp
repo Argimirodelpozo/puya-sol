@@ -2,6 +2,7 @@
 /// Handles abi.encode*, abi.decode — extracted from FunctionCallBuilder.
 
 #include "builder/sol-eb/AbiEncoderBuilder.h"
+#include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "Logger.h"
 
@@ -901,16 +902,68 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 		lenWord->stackArgs.push_back(tailOffset);
 		lenWord->stackArgs.push_back(makeUint64("32", _loc));
 
-		auto dataLen = uint64FromAbiWord(std::move(lenWord), _loc);
+		auto elemCount = uint64FromAbiWord(std::move(lenWord), _loc);
 
 		// Data starts at tailOffset + 32
 		auto dataStart = awst::makeUInt64BinOp(std::move(tailOffset), awst::UInt64BinaryOperator::Add, makeUint64("32", _loc), _loc);
 
-		// Extract data bytes
+		// ARC4DynamicArray with fixed-size element: translate EVM-ABI layout
+		// ([32-byte length][N × 32 bytes]) to ARC4 layout
+		// ([uint16 BE length][N × elemSize bytes]). EVM pads each element to 32
+		// bytes regardless of its logical size, so we bulk-copy N*elemSize bytes.
+		// (Only correct when the element has a fixed ARC4 encoded size and the
+		// EVM encoded size also equals 32 bytes per element, which holds for
+		// uintN/intN/bool/address/bytesN but not e.g. uint256[][] or structs
+		// containing dynamic fields — those keep the fallback path.)
+		if (wtype->kind() == awst::WTypeKind::ARC4DynamicArray)
+		{
+			auto const* dynArr = static_cast<awst::ARC4DynamicArray const*>(wtype);
+			auto const* elemType = dynArr->elementType();
+			int elemSize = ::puyasol::builder::TypeCoercion::computeEncodedElementSize(elemType);
+			// Only safe when EVM encoded size (always 32 bytes per slot for
+			// value-typed elements) matches the ARC4 encoded size — i.e., 32.
+			// Covers uint256/int256/bytes32/address/contract arrays. Smaller
+			// widths (uint128[], uint8[]) fall through to the generic fallback
+			// because EVM slot-pads each element to 32 bytes while ARC4 packs.
+			if (elemSize == 32)
+			{
+				// byteCount = elemCount * elemSize
+				auto byteCount = awst::makeUInt64BinOp(
+					elemCount,
+					awst::UInt64BinaryOperator::Mult,
+					makeUint64(std::to_string(elemSize), _loc),
+					_loc);
+
+				// elemBytes = extract3(_data, dataStart, byteCount)
+				auto elemBytes = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
+				elemBytes->stackArgs.push_back(_data);
+				elemBytes->stackArgs.push_back(std::move(dataStart));
+				elemBytes->stackArgs.push_back(std::move(byteCount));
+
+				// arc4Header = extract3(itob(elemCount), 6, 2) — uint16 BE length
+				auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
+				itob->stackArgs.push_back(std::move(elemCount));
+				auto header = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
+				header->stackArgs.push_back(std::move(itob));
+				header->stackArgs.push_back(makeUint64("6", _loc));
+				header->stackArgs.push_back(makeUint64("2", _loc));
+
+				// concat(header, elemBytes)
+				auto arc4Bytes = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
+				arc4Bytes->stackArgs.push_back(std::move(header));
+				arc4Bytes->stackArgs.push_back(std::move(elemBytes));
+
+				// ReinterpretCast to ARC4DynamicArray<elem>
+				return awst::makeReinterpretCast(std::move(arc4Bytes), wtype, _loc);
+			}
+		}
+
+		// Extract data bytes (length word is interpreted as byte count — correct
+		// for bytes/string where elements are 1 byte each)
 		auto dataBytes = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 		dataBytes->stackArgs.push_back(_data);
 		dataBytes->stackArgs.push_back(std::move(dataStart));
-		dataBytes->stackArgs.push_back(std::move(dataLen));
+		dataBytes->stackArgs.push_back(std::move(elemCount));
 
 		// Cast to target type (string, bytes, etc.)
 		if (wtype == awst::WType::stringType())
@@ -918,12 +971,13 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 			auto cast = awst::makeReinterpretCast(std::move(dataBytes), awst::WType::stringType(), _loc);
 			return cast;
 		}
-		// ARC4-shaped targets (dynamic arrays, static arrays of dynamic elems,
-		// structs with dynamic fields): wrap the ABI-decoded bytes in
-		// ARC4FromBytes so the assignment target sees a properly-typed value.
-		// The resulting layout is not actually ARC4 (EVM ABI differs), so any
-		// downstream access will likely trap at runtime — which matches the
-		// semantic-test expectation of FAILURE for corrupt-input decode cases.
+		// ARC4-shaped targets (static arrays of dynamic elems, structs with
+		// dynamic fields, tuples with dynamic elems, dynamic arrays with
+		// dynamic element size): wrap the ABI-decoded bytes in ARC4FromBytes so
+		// the assignment target sees a properly-typed value. The resulting
+		// layout is not actually ARC4 (EVM ABI differs), so downstream access
+		// will likely trap at runtime — matches the semantic-test expectation
+		// of FAILURE for corrupt-input decode cases.
 		auto kind = wtype->kind();
 		if (kind == awst::WTypeKind::ARC4DynamicArray
 			|| kind == awst::WTypeKind::ARC4StaticArray
