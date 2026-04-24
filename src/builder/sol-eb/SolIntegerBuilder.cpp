@@ -452,14 +452,35 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 		if (m_isBigUInt)
 		{
 			// Two's complement: -x = ~x + 1
-			// Guard: ~0 + 1 = 2^256 overflows 256-bit biguint, so mask with % 2^256
+			// AVM `b~` inverts actual bytes; a minimal biguint encoding like 5→0x05 would
+			// invert to 0xFA (250) instead of the full 256-bit complement. Pad to 32 bytes
+			// first so `~` produces a 256-bit result.
 			auto castToBytes = awst::makeReinterpretCast(std::move(operand), awst::WType::bytesType(), _loc);
+
+			auto bzero32 = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
+			bzero32->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
+
+			auto concatPad = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
+			concatPad->stackArgs.push_back(std::move(bzero32));
+			concatPad->stackArgs.push_back(std::move(castToBytes));
+
+			auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
+			lenCall->stackArgs.push_back(concatPad);
+
+			auto startOff = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), _loc);
+			startOff->stackArgs.push_back(std::move(lenCall));
+			startOff->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
+
+			auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
+			extract->stackArgs.push_back(concatPad);
+			extract->stackArgs.push_back(std::move(startOff));
+			extract->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
 
 			auto bitInvert = std::make_shared<awst::BytesUnaryOperation>();
 			bitInvert->sourceLocation = _loc;
 			bitInvert->wtype = awst::WType::bytesType();
 			bitInvert->op = awst::BytesUnaryOperator::BitInvert;
-			bitInvert->expr = std::move(castToBytes);
+			bitInvert->expr = std::move(extract);
 
 			auto castBack = awst::makeReinterpretCast(std::move(bitInvert), awst::WType::biguintType(), _loc);
 

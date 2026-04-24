@@ -4033,20 +4033,26 @@ void ContractBuilder::inlineModifiers(
 		if (!rp->name().empty())
 			returnParamNames.insert(rp->name());
 
-	// Unnamed single-return: synthesise a return var so `return expr;` can be
+	// Unnamed returns: synthesise return vars so `return expr;` can be
 	// rewritten into `__mod_retval_N = expr;` (in placeholder) + deferred
 	// `return __mod_retval_N;` — otherwise the expr would evaluate *after*
 	// post-`_` modifier code has run (e.g. `a -= b;` in `mod(x)`), returning
-	// a stale value.
-	awst::WType const* syntheticRetType = nullptr;
-	std::string syntheticRetName;
-	if (returnParamNames.empty()
-		&& _func.returnParameters().size() == 1
-		&& _func.returnParameters()[0]->name().empty())
+	// a stale value. Covers both single-return and multi-return unnamed.
+	std::vector<std::pair<std::string, awst::WType const*>> syntheticRets;
+	bool allUnnamed = !_func.returnParameters().empty();
+	for (auto const& rp: _func.returnParameters())
+		if (!rp->name().empty()) { allUnnamed = false; break; }
+	if (returnParamNames.empty() && allUnnamed)
 	{
-		syntheticRetType = m_typeMapper.map(_func.returnParameters()[0]->type());
-		syntheticRetName = "__mod_retval_" + std::to_string(modRetvalCounter++);
-		returnParamNames.insert(syntheticRetName);
+		int baseId = modRetvalCounter++;
+		for (size_t i = 0; i < _func.returnParameters().size(); ++i)
+		{
+			auto* t = m_typeMapper.map(_func.returnParameters()[i]->type());
+			std::string n = "__mod_retval_" + std::to_string(baseId)
+				+ (_func.returnParameters().size() > 1 ? "_" + std::to_string(i) : "");
+			syntheticRets.emplace_back(n, t);
+			returnParamNames.insert(n);
+		}
 	}
 
 	std::vector<std::shared_ptr<awst::Statement>> hoistedInits;
@@ -4102,16 +4108,16 @@ void ContractBuilder::inlineModifiers(
 			break;
 		}
 	}
-	// Default-init the synthetic return var so the deferred `return` always
-	// reads a valid value, even on execution paths that don't reach the split
+	// Default-init the synthetic return vars so the deferred `return` always
+	// reads valid values, even on execution paths that don't reach the split
 	// assignment (e.g. early revert inside the modifier).
-	if (!syntheticRetName.empty())
+	for (auto const& [n, t]: syntheticRets)
 	{
 		auto synthInit = std::make_shared<awst::AssignmentStatement>();
 		synthInit->sourceLocation = makeLoc(_func.location());
-		auto target = awst::makeVarExpression(syntheticRetName, syntheticRetType, synthInit->sourceLocation);
+		auto target = awst::makeVarExpression(n, t, synthInit->sourceLocation);
 		synthInit->target = std::move(target);
-		synthInit->value = StorageMapper::makeDefaultValue(syntheticRetType, synthInit->sourceLocation);
+		synthInit->value = StorageMapper::makeDefaultValue(t, synthInit->sourceLocation);
 		hoistedInits.push_back(std::move(synthInit));
 	}
 
@@ -4256,6 +4262,57 @@ void ContractBuilder::inlineModifiers(
 
 					auto deferRet = awst::makeReturnStatement(std::move(retVar), retStmt->sourceLocation);
 					deferredReturn = std::move(deferRet);
+				}
+				else if (syntheticRets.size() > 1 && retStmt->value)
+				{
+					// Multi-return unnamed: capture each component now so post-`_`
+					// modifier code can't mutate the return value via storage writes.
+					auto const* tupleVal = dynamic_cast<awst::TupleExpression const*>(retStmt->value.get());
+					if (tupleVal && tupleVal->items.size() == syntheticRets.size())
+					{
+						for (size_t i = 0; i < syntheticRets.size(); ++i)
+						{
+							auto target = awst::makeVarExpression(
+								syntheticRets[i].first, syntheticRets[i].second, retStmt->sourceLocation);
+							auto assign = awst::makeAssignmentStatement(
+								std::move(target), tupleVal->items[i], retStmt->sourceLocation);
+							placeholderBody->body.push_back(std::move(assign));
+						}
+					}
+					else
+					{
+						// Non-tuple value returning a tuple (e.g. multi-return call):
+						// use a TupleExpression target to destructure via assignment.
+						auto tupleTarget = std::make_shared<awst::TupleExpression>();
+						tupleTarget->sourceLocation = retStmt->sourceLocation;
+						std::vector<awst::WType const*> tupleTypes;
+						for (auto const& [n, t]: syntheticRets)
+						{
+							tupleTarget->items.push_back(
+								awst::makeVarExpression(n, t, retStmt->sourceLocation));
+							tupleTypes.push_back(t);
+						}
+						tupleTarget->wtype = m_typeMapper.createType<awst::WTuple>(
+							std::move(tupleTypes), std::nullopt);
+						auto assign = awst::makeAssignmentStatement(
+							std::move(tupleTarget), retStmt->value, retStmt->sourceLocation);
+						placeholderBody->body.push_back(std::move(assign));
+					}
+
+					// Rebuild return as a tuple of the captured vars
+					auto deferTuple = std::make_shared<awst::TupleExpression>();
+					deferTuple->sourceLocation = retStmt->sourceLocation;
+					std::vector<awst::WType const*> tupleTypes;
+					for (auto const& [n, t]: syntheticRets)
+					{
+						deferTuple->items.push_back(
+							awst::makeVarExpression(n, t, retStmt->sourceLocation));
+						tupleTypes.push_back(t);
+					}
+					deferTuple->wtype = m_typeMapper.createType<awst::WTuple>(
+						std::move(tupleTypes), std::nullopt);
+					deferredReturn = awst::makeReturnStatement(
+						std::move(deferTuple), retStmt->sourceLocation);
 				}
 				else
 				{

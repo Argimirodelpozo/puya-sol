@@ -1,6 +1,10 @@
-# Semantic Test Status — v161
+# Semantic Test Status — v163
 
-**Totals**: 1044 PASS / 214 FAIL / 64 (44 compile_err + 20 deploy_err) = **1044/1322 (79.0%)**
+**Totals**: 1048 PASS / 210 FAIL / 64 (44 compile_err + 20 deploy_err) = **1048/1322 (79.3%)**
+
+vs v161 (1044): +4 (two real fixes, zero regressions).
+- `abiEncoderV2/abi_encode_v2_in_modifier_used_in_v1_contract`: FAIL → PASS. Multi-return function whose post-`_` modifier code mutated storage before the return expression evaluated produced stale values. Extended synthetic retval capture in `ContractBuilder.cpp::inlineModifiers` to cover all-unnamed multi-return signatures: for each return param a `__mod_retval_N_i` local is allocated, the return expression is split into per-component assignments (direct on TupleExpression, or via destructuring for function-call returns), and the original `return e` is rewritten as `return (__mod_retval_N_0, __mod_retval_N_1, ...)` so retvals are captured BEFORE modifier post-`_` code mutates storage. Previously only single-unnamed-return was handled; extending to the N-return case fixed the test.
+- `constantEvaluator/negative_fractional_mod`: FAIL → PASS. Runtime biguint negation `-x = ~x + 1` was inverting minimal-byte encoding (e.g. `bytes(5) = 0x05`, `~0x05 = 0xFA = 250`, `+1 = 251`) instead of full 256-bit complement. Fix in `SolIntegerBuilder.cpp`: pad operand to 32 bytes via `concat(bzero(32), bytes) + extract3(len-32, 32)` before `BytesUnaryOperation::BitInvert`, mirroring the `handleNot` fix in `assembly/ArithmeticOps.cpp`. Test expected `(11, 10)`, got `(11, 1270)` where `1270 = 254 × 5` — `254` = `-2` at 8-bit width. Now correct.
 
 vs v160 (1044): +1 real (encodeWithSignature self-call routing), offset by one localnet-throughput flake — net total unchanged.
 - puya-sol: extended `InnerCallHandlers::tryHandleAddressCall` to handle `address(this).call(abi.encodeWithSignature("fn(...)", args))` as a direct internal subroutine call. Before: the non-encodeCall self-call path dispatched to `__fallback`, and contracts without a fallback stubbed `(true, empty bytes)` — so the callee was never actually invoked. Now: when the receiver is `global CurrentApplicationAddress` and the data arg is a `FunctionCall` on `encodeWithSignature` with a string-literal signature, parse the function name before `(`, find a matching function in `currentContract` by name + arity across linearized bases, and build a `SubroutineCallExpression` (mirrors the isSelfCall branch in `handleCallWithEncodeCall`). `abiEncoderV1/abi_encode_call` 0p/1f → 1p/0s.
