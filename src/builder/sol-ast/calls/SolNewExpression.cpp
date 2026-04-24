@@ -271,6 +271,15 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 						encode->value = std::move(argVal);
 						argVal = std::move(encode);
 					}
+					else if (argVal->wtype == awst::WType::boolType())
+					{
+						auto asU64 = awst::makeReinterpretCast(
+							std::move(argVal), awst::WType::uint64Type(), m_loc);
+						auto itob = awst::makeIntrinsicCall(
+							"itob", awst::WType::bytesType(), m_loc);
+						itob->stackArgs.push_back(std::move(asU64));
+						argVal = std::move(itob);
+					}
 					out.push_back(std::move(argVal));
 				}
 				return out;

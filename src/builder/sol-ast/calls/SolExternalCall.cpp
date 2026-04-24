@@ -34,6 +34,15 @@ std::string SolExternalCall::buildMethodSelector(MemberAccess const& _memberAcce
 			if (intT->isSigned())
 				return "int" + std::to_string(intT->numBits());
 		}
+		// Fixed-size Solidity `bytesN` stays as BytesWType(length=N) on the
+		// child side, which puya names `byte[N]`. Match that here rather than
+		// routing through ARC4StaticArray (which would produce `uint8[N]`).
+		if (rawType->kind() == awst::WTypeKind::Bytes)
+		{
+			auto const* bw = static_cast<awst::BytesWType const*>(rawType);
+			if (bw->length().has_value())
+				return "byte[" + std::to_string(*bw->length()) + "]";
+		}
 		auto* arc4Type = m_ctx.typeMapper.mapToARC4Type(rawType);
 		return builder::TypeCoercion::wtypeToABIName(arc4Type);
 	};

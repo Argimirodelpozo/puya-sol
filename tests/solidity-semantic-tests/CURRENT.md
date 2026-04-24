@@ -1,6 +1,13 @@
-# Semantic Test Status — v163
+# Semantic Test Status — v164
 
-**Totals**: 1048 PASS / 210 FAIL / 64 (44 compile_err + 20 deploy_err) = **1048/1322 (79.3%)**
+**Totals**: 1050 PASS / 210 FAIL / 62 (42 compile_err + 20 deploy_err) = **1050/1322 (79.4%)**
+
+vs v163 (1048): +2 (two real fixes, zero regressions).
+- `inheritance/constructor_arguments_internal`: COMPILE_ERROR → PASS. Child-contract constructor with bool + bytes3 args. Two puya-sol fixes:
+  1. `SolNewExpression.cpp::buildEncodedCtorArgs`: bool ctor args in the child create itxn's `ApplicationArgs` tuple were passed raw (scalar_type=uint64), but puya's `CreateInnerTransaction._validate_fields` requires all tuple elements to have `scalar_type=bytes`. Added bool→itob branch (ReinterpretCast bool→uint64, then itob to 8 bytes). Matches the child-side decode in `ContractBuilder.cpp:1946` (`len-8 + extract_uint64 + btoi`).
+  2. `SolExternalCall.cpp::solTypeToARC4Name`: fixed-size `bytesN` was routed through ARC4StaticArray, producing method signature `"getName()uint8[3]"` (selector `0x28fb6575`). But puya child-side names `BytesWType(length=N)` as `"byte[N]"` (selector `0x0a5c26e3`). Added a special case for `BytesWType` with length → `"byte[N]"`, matching the callee.
+- `events/event_emit_from_other_contract`: FAIL → PASS. Unexpected win from the same byte[N] selector fix — cross-contract calls returning `bytes3` now hit the right dispatch label.
+- `inheritance/value_for_constructor`: COMPILE_ERROR → partial FAIL (2p/1f). getName/getFlag pass; getBalances still fails on wei vs microAlgo balance accounting.
 
 vs v161 (1044): +4 (two real fixes, zero regressions).
 - `abiEncoderV2/abi_encode_v2_in_modifier_used_in_v1_contract`: FAIL → PASS. Multi-return function whose post-`_` modifier code mutated storage before the return expression evaluated produced stale values. Extended synthetic retval capture in `ContractBuilder.cpp::inlineModifiers` to cover all-unnamed multi-return signatures: for each return param a `__mod_retval_N_i` local is allocated, the return expression is split into per-component assignments (direct on TupleExpression, or via destructuring for function-call returns), and the original `return e` is rewritten as `return (__mod_retval_N_0, __mod_retval_N_1, ...)` so retvals are captured BEFORE modifier post-`_` code mutates storage. Previously only single-unnamed-return was handled; extending to the N-return case fixed the test.
