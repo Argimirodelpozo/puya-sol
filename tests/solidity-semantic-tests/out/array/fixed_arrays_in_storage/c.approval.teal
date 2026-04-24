@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.approval_program() -> uint64:
 main:
-    intcblock 1 32 8 0 65536
+    intcblock 1 32 8 0
     bytecblock "data" "__ctor_pending" "ids" 0x151f7c75
     pushint 4096
     bzero
@@ -158,16 +158,9 @@ setData:
 setData_ternary_merge@4:
     !
     assert // not payable
-    intc 4 // 65536
-    bzero
-    bytec_0 // "data"
-    box_get
-    dig 2
-    cover 2
-    select
     intc_2 // 8
     bzero
-    dig 5
+    dig 3
     concat
     dup
     len
@@ -176,12 +169,12 @@ setData_ternary_merge@4:
     extract_uint64
     pushint 64
     *
-    swap
+    bytec_0 // "data"
     dig 1
     pushint 64
-    extract3 // on error: index access is out of bounds
+    box_extract // on error: index access is out of bounds
     extract 32 32
-    dig 4
+    dig 3
     swap
     concat
     bytec_0 // "data"
@@ -189,13 +182,9 @@ setData_ternary_merge@4:
     uncover 2
     box_replace // on error: index out of bounds
     bytec_0 // "data"
-    box_get
-    uncover 3
-    cover 2
-    select
     dig 1
     pushint 64
-    extract3 // on error: index access is out of bounds
+    box_extract // on error: index access is out of bounds
     extract 0 32
     dig 2
     concat
@@ -228,14 +217,9 @@ getID:
 getID_ternary_merge@4:
     !
     assert // not payable
-    pushint 32864
-    bzero
-    bytec_2 // "ids"
-    box_get
-    select
     intc_2 // 8
     bzero
-    dig 2
+    dig 1
     concat
     dup
     len
@@ -244,8 +228,10 @@ getID_ternary_merge@4:
     extract_uint64
     intc_1 // 32
     *
+    bytec_2 // "ids"
+    swap
     intc_1 // 32
-    extract3 // on error: index access is out of bounds
+    box_extract // on error: index access is out of bounds
     bytec_3 // 0x151f7c75
     swap
     concat
@@ -276,14 +262,9 @@ getData:
 getData_ternary_merge@4:
     !
     assert // not payable
-    intc 4 // 65536
-    bzero
-    bytec_0 // "data"
-    box_get
-    select
     intc_2 // 8
     bzero
-    dig 2
+    dig 1
     concat
     dup
     len
@@ -292,8 +273,10 @@ getData_ternary_merge@4:
     extract_uint64
     pushint 64
     *
+    bytec_0 // "data"
+    swap
     pushint 64
-    extract3 // on error: index access is out of bounds
+    box_extract // on error: index access is out of bounds
     dup
     extract 0 32
     swap

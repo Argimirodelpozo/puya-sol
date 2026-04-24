@@ -471,29 +471,25 @@ test_zeroed_indices_while_top@49:
     dig 1
     b<
     bz test_zeroed_indices_after_while@51
-    bytec_0 // "storageArray"
-    box_get
-    pushbytes 0x0000
-    cover 2
-    select
     pushint 8
     bzero
-    dig 5
+    dig 4
     dup
-    cover 3
+    cover 2
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    swap
-    extract 2 0
-    swap
     intc_1 // 32
     *
+    intc_0 // 2
+    +
+    bytec_0 // "storageArray"
+    swap
     intc_1 // 32
-    extract3 // on error: index access is out of bounds
+    box_extract // on error: index access is out of bounds
     bytec_1 // 0x
     b==
     dup

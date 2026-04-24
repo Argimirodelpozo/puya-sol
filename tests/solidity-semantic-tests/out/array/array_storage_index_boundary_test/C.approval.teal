@@ -202,27 +202,23 @@ test_boundary_check_ternary_merge@14:
     b test_boundary_check_while_top@11
 
 test_boundary_check_after_while@16:
-    bytec_0 // "storageArray"
-    box_get
-    pushbytes 0x0000
-    cover 2
-    select
     pushint 8
     bzero
-    dig 2
+    dig 1
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    swap
-    extract 2 0
-    swap
     intc_1 // 32
     *
+    intc_0 // 2
+    +
+    bytec_0 // "storageArray"
+    swap
     intc_1 // 32
-    extract3 // on error: index access is out of bounds
+    box_extract // on error: index access is out of bounds
     pushbytes 0x151f7c75
     swap
     concat

@@ -181,29 +181,25 @@ validate_while_top@5:
     bytec_2 // 0x03e8
     b<
     bz validate_after_while@7
-    bytec_0 // "array"
-    box_get
-    pushbytes 0x0000
-    cover 2
-    select
     pushint 8
     bzero
-    dig 2
+    dig 1
     dup
-    cover 3
+    cover 2
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    swap
-    extract 2 0
-    swap
     intc_2 // 32
     *
+    intc_3 // 2
+    +
+    bytec_0 // "array"
+    swap
     intc_2 // 32
-    extract3 // on error: index access is out of bounds
+    box_extract // on error: index access is out of bounds
     swap
     bytec_3 // 0x01
     b+

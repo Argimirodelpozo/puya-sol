@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/dynamic_out_of_bounds_array_access.sol.c.approval_program() -> uint64:
 main:
-    intcblock 32 2 1 0
+    intcblock 2 32 1 0
     bytecblock "data" "__ctor_pending" 0x151f7c75
     pushint 4096
     bzero
@@ -44,7 +44,7 @@ __postInit:
     intc_3 // 0
     app_global_put
     bytec_0 // "data"
-    intc_1 // 2
+    intc_0 // 2
     box_create
     pop
     intc_2 // 1
@@ -56,7 +56,7 @@ enlarge:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -74,7 +74,7 @@ enlarge_while_top@5:
     bytec_0 // "data"
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
     >=
     bz enlarge_ternary_false@7
     bytec_0 // "data"
@@ -82,9 +82,9 @@ enlarge_while_top@5:
     pop
 
 enlarge_ternary_merge@8:
-    intc_1 // 2
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
     dig 1
@@ -92,13 +92,13 @@ enlarge_ternary_merge@8:
     bz enlarge_after_while@10
     bytec_0 // "data"
     intc_3 // 0
-    intc_1 // 2
+    intc_0 // 2
     box_extract
     btoi
     bytec_0 // "data"
     box_len
     pop
-    intc_0 // 32
+    intc_1 // 32
     +
     bytec_0 // "data"
     swap
@@ -112,9 +112,9 @@ enlarge_ternary_merge@8:
     intc_3 // 0
     uncover 2
     box_replace
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     bytec_0 // "data"
     swap
@@ -127,7 +127,7 @@ enlarge_after_while@10:
     bytec_0 // "data"
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
     >=
     bz enlarge_ternary_false@12
     bytec_0 // "data"
@@ -135,12 +135,12 @@ enlarge_after_while@10:
     pop
 
 enlarge_ternary_merge@13:
-    intc_1 // 2
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -151,11 +151,11 @@ enlarge_ternary_merge@13:
     return
 
 enlarge_ternary_false@12:
-    intc_1 // 2
+    intc_0 // 2
     b enlarge_ternary_merge@13
 
 enlarge_ternary_false@7:
-    intc_1 // 2
+    intc_0 // 2
     b enlarge_ternary_merge@8
 
 enlarge_ternary_false@3:
@@ -168,13 +168,13 @@ set:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -196,9 +196,9 @@ set_ternary_merge@4:
     pushint 8
     -
     extract_uint64
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     bytec_0 // "data"
     swap
@@ -219,7 +219,7 @@ get:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -232,27 +232,23 @@ get:
 get_ternary_merge@4:
     !
     assert // not payable
-    bytec_0 // "data"
-    box_get
-    pushbytes 0x0000
-    cover 2
-    select
     pushint 8
     bzero
-    dig 2
+    dig 1
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    swap
-    extract 2 0
-    swap
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_0 // 32
-    extract3 // on error: index access is out of bounds
+    intc_0 // 2
+    +
+    bytec_0 // "data"
+    swap
+    intc_1 // 32
+    box_extract // on error: index access is out of bounds
     bytec_2 // 0x151f7c75
     swap
     concat
@@ -280,7 +276,7 @@ length_ternary_merge@4:
     bytec_0 // "data"
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
     >=
     bz length_ternary_false@6
     bytec_0 // "data"
@@ -288,12 +284,12 @@ length_ternary_merge@4:
     pop
 
 length_ternary_merge@7:
-    intc_1 // 2
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -304,7 +300,7 @@ length_ternary_merge@7:
     return
 
 length_ternary_false@6:
-    intc_1 // 2
+    intc_0 // 2
     b length_ternary_merge@7
 
 length_ternary_false@3:

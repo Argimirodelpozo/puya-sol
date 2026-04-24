@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_access.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 2 0 1
+    intcblock 2 32 0 1
     bytecblock "storageArray" "__ctor_pending" 0x068101 0x01
     pushint 4096
     bzero
@@ -44,7 +44,7 @@ __postInit:
     intc_2 // 0
     app_global_put
     bytec_0 // "storageArray"
-    intc_1 // 2
+    intc_0 // 2
     box_create
     pop
     intc_3 // 1
@@ -58,7 +58,7 @@ test_indices:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -95,7 +95,7 @@ test_indices_while_top@5:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
     >=
     bz test_indices_ternary_false@7
     bytec_0 // "storageArray"
@@ -103,9 +103,9 @@ test_indices_while_top@5:
     pop
 
 test_indices_ternary_merge@8:
-    intc_1 // 2
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
     dig 1
@@ -113,13 +113,13 @@ test_indices_ternary_merge@8:
     bz test_indices_while_top@11
     bytec_0 // "storageArray"
     intc_2 // 0
-    intc_1 // 2
+    intc_0 // 2
     box_extract
     btoi
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_0 // 32
+    intc_1 // 32
     +
     bytec_0 // "storageArray"
     swap
@@ -133,9 +133,9 @@ test_indices_ternary_merge@8:
     intc_2 // 0
     uncover 2
     box_replace
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     bytec_0 // "storageArray"
     swap
@@ -148,7 +148,7 @@ test_indices_while_top@11:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
     >=
     bz test_indices_ternary_false@13
     bytec_0 // "storageArray"
@@ -156,9 +156,9 @@ test_indices_while_top@11:
     pop
 
 test_indices_ternary_merge@14:
-    intc_1 // 2
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
     dig 1
@@ -166,7 +166,7 @@ test_indices_ternary_merge@14:
     bz test_indices_after_while@16
     bytec_0 // "storageArray"
     intc_2 // 0
-    intc_1 // 2
+    intc_0 // 2
     box_extract
     btoi
     intc_3 // 1
@@ -178,19 +178,19 @@ test_indices_ternary_merge@14:
     intc_2 // 0
     uncover 2
     box_replace
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     bytec_0 // "storageArray"
     swap
-    intc_0 // 32
+    intc_1 // 32
     pushbytes 0x
     box_splice
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_0 // 32
+    intc_1 // 32
     -
     bytec_0 // "storageArray"
     swap
@@ -215,10 +215,10 @@ test_indices_while_top@17:
     b+
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     dig 1
     b|
@@ -231,9 +231,9 @@ test_indices_while_top@17:
     pushint 8
     -
     extract_uint64
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     bytec_0 // "storageArray"
     swap
@@ -250,29 +250,25 @@ test_indices_while_top@20:
     dup2
     b<
     bz test_indices_after_while@22
-    bytec_0 // "storageArray"
-    box_get
-    pushbytes 0x0000
-    cover 2
-    select
     pushint 8
     bzero
-    dig 3
+    dig 2
     dup
-    cover 3
+    cover 2
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    swap
-    extract 2 0
-    swap
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_0 // 32
-    extract3 // on error: index access is out of bounds
+    intc_0 // 2
+    +
+    bytec_0 // "storageArray"
+    swap
+    intc_1 // 32
+    box_extract // on error: index access is out of bounds
     swap
     bytec_3 // 0x01
     b+
@@ -287,11 +283,11 @@ test_indices_after_while@22:
     return
 
 test_indices_ternary_false@13:
-    intc_1 // 2
+    intc_0 // 2
     b test_indices_ternary_merge@14
 
 test_indices_ternary_false@7:
-    intc_1 // 2
+    intc_0 // 2
     b test_indices_ternary_merge@8
 
 test_indices_ternary_false@3:
