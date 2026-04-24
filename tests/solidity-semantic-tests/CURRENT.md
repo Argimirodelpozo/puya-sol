@@ -1,6 +1,10 @@
-# Semantic Test Status — v160
+# Semantic Test Status — v161
 
 **Totals**: 1044 PASS / 214 FAIL / 64 (44 compile_err + 20 deploy_err) = **1044/1322 (79.0%)**
+
+vs v160 (1044): +1 real (encodeWithSignature self-call routing), offset by one localnet-throughput flake — net total unchanged.
+- puya-sol: extended `InnerCallHandlers::tryHandleAddressCall` to handle `address(this).call(abi.encodeWithSignature("fn(...)", args))` as a direct internal subroutine call. Before: the non-encodeCall self-call path dispatched to `__fallback`, and contracts without a fallback stubbed `(true, empty bytes)` — so the callee was never actually invoked. Now: when the receiver is `global CurrentApplicationAddress` and the data arg is a `FunctionCall` on `encodeWithSignature` with a string-literal signature, parse the function name before `(`, find a matching function in `currentContract` by name + arity across linearized bases, and build a `SubroutineCallExpression` (mirrors the isSelfCall branch in `handleCallWithEncodeCall`). `abiEncoderV1/abi_encode_call` 0p/1f → 1p/0s.
+- Flake: `types/mapping_enum_key_library_v1` 15p/0 → 9p/6f under full-suite load (localnet throughput box_get flake); passes individually at 15p/0s.
 
 vs v159 (1041): +3 (harness widening + strict malformed-detection + one puya-sol storage fix, zero regressions).
 - Harness: widened `_regroup_args` dispatch in `run_tests.py` to recurse via `_decode_dynamic` on outer-static arrays whose inner type is dynamic (e.g. `uint256[][3]`, `uint16[][][1]`). The inline fallback was treating the first inner head-offset as the element count and returning junk. Added a `strict=True` mode to `_decode_dynamic` that raises `_MalformedCalldata` when declared lengths/offsets point past available `raw_args` — the dispatch site catches it and falls through to the inline path so contract-level validation still sees intentionally-malformed calldata in `FAILURE` tests. This unblocks `calldata_array_two_dimensional` (3p/17f → 20p/0s) and `calldata_nested_array_static_reencode` (10p/1f → 11p/0s) without regressing `calldata_nested_array_reencode` (back to 7p/7f baseline).

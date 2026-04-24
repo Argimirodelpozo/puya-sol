@@ -823,6 +823,104 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 	if (_memberName == "call" && !_callValue && !_callNode.arguments().empty())
 	{
 		auto const& dataArg = *_callNode.arguments()[0];
+
+		// Self-call with abi.encodeWithSignature("fn(...)", args): resolve
+		// signature → local function by name+arity and emit a direct
+		// subroutine call (mirrors the isSelfCall path in
+		// handleCallWithEncodeCall). Avoids the fallback stub for contracts
+		// without a fallback, where the callee would otherwise never run.
+		{
+			bool isSelfCallEwS = false;
+			if (auto const* intrinsic = dynamic_cast<awst::IntrinsicCall const*>(_receiver.get()))
+				if (intrinsic->opCode == "global" && !intrinsic->immediates.empty())
+					if (auto const* imm = std::get_if<std::string>(&intrinsic->immediates[0]); imm && *imm == "CurrentApplicationAddress")
+						isSelfCallEwS = true;
+
+			if (isSelfCallEwS)
+			{
+				if (auto const* encCallExpr = dynamic_cast<FunctionCall const*>(&dataArg))
+				{
+					auto const* encMA = dynamic_cast<MemberAccess const*>(&encCallExpr->expression());
+					if (encMA && encMA->memberName() == "encodeWithSignature"
+						&& !encCallExpr->arguments().empty())
+					{
+						auto const* sigLit = dynamic_cast<Literal const*>(encCallExpr->arguments()[0].get());
+						if (sigLit)
+						{
+							std::string sig = sigLit->value();
+							auto parenPos = sig.find('(');
+							if (parenPos != std::string::npos)
+							{
+								std::string fnName = sig.substr(0, parenPos);
+								size_t nArgs = encCallExpr->arguments().size() - 1;
+								FunctionDefinition const* target = nullptr;
+								if (_ctx.currentContract)
+								{
+									for (auto const* base : _ctx.currentContract->annotation().linearizedBaseContracts)
+									{
+										for (auto const* func : base->definedFunctions())
+										{
+											if (func->isImplemented() && func->name() == fnName
+												&& func->parameters().size() == nArgs)
+											{
+												target = func;
+												goto foundEwSTarget;
+											}
+										}
+									}
+								}
+								foundEwSTarget:;
+								if (target)
+								{
+									auto call = std::make_shared<awst::SubroutineCallExpression>();
+									call->sourceLocation = _loc;
+									auto* retType = target->returnParameters().size() > 0
+										? _ctx.typeMapper.map(target->returnParameters()[0]->type())
+										: awst::WType::voidType();
+									if (!retType) retType = awst::WType::voidType();
+									call->wtype = retType;
+									call->target = awst::InstanceMethodTarget{target->name()};
+									for (size_t i = 1; i < encCallExpr->arguments().size(); ++i)
+									{
+										awst::CallArg ca;
+										ca.name = std::nullopt;
+										ca.value = _ctx.buildExpr(*encCallExpr->arguments()[i]);
+										call->args.push_back(std::move(ca));
+									}
+									std::shared_ptr<awst::Expression> dataBytes;
+									if (retType == awst::WType::voidType())
+									{
+										auto stmt = awst::makeExpressionStatement(call, _loc);
+										_ctx.prePendingStatements.push_back(std::move(stmt));
+										dataBytes = awst::makeBytesConstant({}, _loc);
+									}
+									else if (retType == awst::WType::biguintType())
+										dataBytes = awst::makeReinterpretCast(std::move(call), awst::WType::bytesType(), _loc);
+									else if (retType == awst::WType::uint64Type())
+									{
+										auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
+										itob->stackArgs.push_back(std::move(call));
+										dataBytes = std::move(itob);
+									}
+									else if (retType == awst::WType::bytesType()
+										|| retType->kind() == awst::WTypeKind::Bytes)
+										dataBytes = awst::makeReinterpretCast(std::move(call), awst::WType::bytesType(), _loc);
+									else
+									{
+										auto stmt = awst::makeExpressionStatement(call, _loc);
+										_ctx.prePendingStatements.push_back(std::move(stmt));
+										dataBytes = awst::makeBytesConstant({}, _loc);
+									}
+									return std::make_unique<GenericResultBuilder>(_ctx,
+										makeBoolBytesTuple(true, std::move(dataBytes), _loc));
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
 		if (auto const* encodeCallExpr = dynamic_cast<FunctionCall const*>(&dataArg))
 		{
 			auto const* encodeMA = dynamic_cast<MemberAccess const*>(&encodeCallExpr->expression());
