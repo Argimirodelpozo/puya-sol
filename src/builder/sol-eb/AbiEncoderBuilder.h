@@ -124,6 +124,42 @@ private:
 		solidity::frontend::Type const* _solType,
 		awst::SourceLocation const& _loc);
 
+	/// Convert ARC4-encoded bytes blob to EVM-ABI tail bytes for the given
+	/// Solidity type. Recursive entry point used by the nested-dynamic
+	/// encoder. Unlike `encodeDynamicTail` (which expects a typed
+	/// expression), this takes raw bytes already extracted from a parent
+	/// container so it can be called from inside a runtime loop body.
+	static std::shared_ptr<awst::Expression> encodeFromArc4Bytes(
+		BuilderContext& _ctx,
+		std::shared_ptr<awst::Expression> _bytesExpr,
+		solidity::frontend::Type const* _solType,
+		awst::SourceLocation const& _loc);
+
+	/// Encode a dynamic array of small (non-32-byte) static elements as
+	/// EVM-ABI bytes via a runtime loop. Handles uint8/uint16/.../uint128,
+	/// int8/.../int128 (zero-extended; signed isn't yet sign-extended),
+	/// bytes1..bytes31, bool, address. Emits a `while` loop into
+	/// `_ctx.prePendingStatements` and returns a fresh local var holding
+	/// the encoded bytes.
+	static std::shared_ptr<awst::Expression> encodeDynArrayPadSmallElems(
+		BuilderContext& _ctx,
+		std::shared_ptr<awst::Expression> _expr,
+		solidity::frontend::Type const* _elemSolType,
+		unsigned _elemByteSize,
+		bool _isFixedBytes,
+		awst::SourceLocation const& _loc);
+
+	/// Encode a dynamic array of dynamic elements (nested dynamic) as
+	/// EVM-ABI bytes via a runtime loop. Walks the ARC4 outer offset
+	/// table, recursively encodes each inner via `encodeFromArc4Bytes`,
+	/// builds new EVM-ABI head (uint256 offsets) + tail (re-encoded
+	/// bodies). Emits a `while` loop into `_ctx.prePendingStatements`.
+	static std::shared_ptr<awst::Expression> encodeDynArrayDynElems(
+		BuilderContext& _ctx,
+		std::shared_ptr<awst::Expression> _expr,
+		solidity::frontend::Type const* _elemSolType,
+		awst::SourceLocation const& _loc);
+
 	static std::unique_ptr<InstanceBuilder> handleEncodeCall(
 		BuilderContext& _ctx,
 		solidity::frontend::FunctionCall const& _callNode,

@@ -1,6 +1,18 @@
-# Semantic Test Status — v169
+# Semantic Test Status — v170
 
-**Totals**: 1061 PASS / 200 FAIL / 61 (42 compile_err + 19 deploy_err) = **1061/1322 (80.3%)**
+**Totals**: 1062 PASS / 199 FAIL / 61 (42 compile_err + 19 deploy_err) = **1062/1322 (80.3%)**
+
+vs v169 (1061): +1 file-level (`abiEncoderV2/calldata_array_dynamic` ✗→✓), +16 sub-tests passing across `calldata_array_multi_dynamic` (4 of 6 now pass), `dynamic_nested_arrays`, plus other partial gains within still-failing files. Zero regressions.
+
+Implementation: extended `AbiEncoderBuilder::encodeDynamicTail` in `src/builder/sol-eb/AbiEncoderBuilder.cpp` with two new branches that emit runtime `while` loops into `BuilderContext::prePendingStatements` (using the same pattern as `SolNewExpression`'s runtime-sized `new T[](N)`). Also extended the existing 32-byte fast path to handle any element whose ARC4-encoded width is a multiple of 32 (covers nested-static cases like `uint256[3][]`).
+- `encodeDynArrayPadSmallElems`: per-element pad-to-32 loop for `T[]` with T a fixed-size primitive < 32 bytes (uint8/uint16/.../uint128, bytes1..31, bool, address). Walks the ARC4 element body extracting each elem and prepending/appending zero padding (left-pad for uints/bool/address, right-pad for bytesN).
+- `encodeDynArrayDynElems`: head/tail re-encoding loop for `T[]` with T dynamic (`T[]`, `bytes`, `string`, struct-with-dynamic). Walks the ARC4 outer offset table, recursively encodes each inner via `encodeFromArc4Bytes`, builds the new EVM-ABI head (uint256 offsets) + tail (re-encoded bodies). The recursive call swaps `prePending` to a temporary buffer so child-emitted statements get spliced into the loop body rather than escaping to the outer function.
+- `encodeFromArc4Bytes`: recursive entry point. Casts raw bytes back to the appropriate ARC4 wtype via `ReinterpretCast` before re-entering `encodeDynamicTail`, so the existing struct/array branches see properly-typed expressions (without this, `FieldExpression`'s wtype-validator asserts).
+
+Remaining gaps in this cluster (not yet fixed):
+- Static array of dynamic elements (`bytes[3]`, `uint256[][3]`) — needs a `encodeStaticArrayDynElems` helper (parallel to `encodeDynArrayDynElems` but with no leading length word and a compile-time fixed `n`).
+- `calldata_array_multi_dynamic` `j(bytes[])` / `k(bytes[])` sub-tests fail because the test feeds an intentionally non-word-aligned offset (`0x63 = 99`); the harness codec rejects misaligned offsets as malformed. EVM-ABI is technically lenient on this; we'd need lazy/recovery decoding in the harness to repair.
+- `calldata_dynamic_array_to_memory` and similar fail on the harness comparison side: contract emits proper EVM-ABI bytes now but the comparison expected `b'\x00\x00'` (a literal value) and the codec converted into a structured list. Comparison helper (`_try_decode_evm_returns`) needs to reverse the conversion.
 
 vs v168 (1057): +4 (generic EVM-ABI head/tail codec replaces per-shape `_regroup_args` special cases in the test harness; zero regressions).
 - `abiEncoderV2/calldata_array_dynamic_static_short_decode` ✗→✓

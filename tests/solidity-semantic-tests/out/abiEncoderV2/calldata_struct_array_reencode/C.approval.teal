@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_struct_array_reencode.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 2 1
+    intcblock 32 2 0 1
     bytecblock 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000020 ""
     pushint 4096
     bzero
@@ -37,10 +37,10 @@ f:
     dup
     len
     dig 1
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid tuple encoding
     dup
-    intc_2 // 2
+    intc_1 // 2
     ==
     assert // invalid tail pointer at index 0 of ((len+uint256[]))
     uncover 2
@@ -49,7 +49,7 @@ f:
     substring3
     dup
     cover 2
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
@@ -73,7 +73,7 @@ f_ternary_merge@4:
     dup
     cover 2
     len
-    intc_2 // 2
+    intc_1 // 2
     -
     intc_0 // 32
     /
@@ -105,7 +105,7 @@ f_ternary_merge@4:
     return
 
 f_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b f_ternary_merge@4
 
 
@@ -113,15 +113,15 @@ f_ternary_false@3:
 g:
     txna ApplicationArgs 1
     pushint 4
-    intc_1 // 0
+    intc_2 // 0
 
 g_for_header@1:
     dup
-    intc_2 // 2
+    intc_1 // 2
     <
     bz g_after_for@4
     dupn 2
-    intc_2 // 2
+    intc_1 // 2
     *
     dig 4
     dup
@@ -139,15 +139,15 @@ g_for_header@1:
     dup
     len
     dig 1
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid tuple encoding
     dup
-    intc_2 // 2
+    intc_1 // 2
     ==
     assert // invalid tail pointer at index 0 of ((len+uint256[]))
     swap
     substring3
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
@@ -193,29 +193,30 @@ g_ternary_merge@8:
     return
 
 g_ternary_false@7:
-    intc_1 // 0
+    intc_2 // 0
     b g_ternary_merge@8
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_struct_array_reencode.sol.C.h[routing]() -> void:
 h:
-    intc_1 // 0
+    intc_2 // 0
+    dupn 6
     bytec_2 // ""
-    dupn 2
+    dupn 10
     txna ApplicationArgs 1
-    dup
-    intc_1 // 0
+    dupn 2
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
     cover 2
-    intc_2 // 2
+    intc_1 // 2
     *
     swap
     dup
     len
     swap
     extract 2 0
-    intc_1 // 0
+    intc_2 // 0
 
 h_for_header@1:
     dup
@@ -223,7 +224,7 @@ h_for_header@1:
     <
     bz h_after_for@8
     dup
-    intc_2 // 2
+    intc_1 // 2
     *
     dig 2
     dup
@@ -237,33 +238,33 @@ h_for_header@1:
     len
     substring3
     dup
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 10
-    intc_2 // 2
+    bury 11
+    intc_1 // 2
     *
-    bury 7
+    bury 8
     extract 2 0
-    bury 9
-    intc_1 // 0
-    bury 7
+    bury 18
+    intc_2 // 0
+    bury 8
 
 h_for_header@3:
-    dig 6
-    dig 8
+    dig 7
+    dig 9
     <
     bz h_after_for@6
-    dig 6
+    dig 7
     dup
-    intc_2 // 2
+    intc_1 // 2
     *
-    dig 10
+    dig 19
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 9
+    dig 10
     dup
     cover 4
     ==
@@ -274,30 +275,30 @@ h_for_header@3:
     dup
     len
     dig 1
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid tuple encoding
     dup
-    intc_2 // 2
+    intc_1 // 2
     ==
     assert // invalid tail pointer at index 0 of ((len+uint256[]))
     swap
     substring3
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
     pushint 4
     +
     +
-    bury 7
+    bury 8
     intc_3 // 1
     +
-    bury 7
+    bury 8
     b h_for_header@3
 
 h_after_for@6:
-    dig 5
-    intc_2 // 2
+    dig 6
+    intc_1 // 2
     +
     dig 4
     +
@@ -310,7 +311,7 @@ h_after_for@6:
 
 h_after_for@8:
     dig 3
-    intc_2 // 2
+    intc_1 // 2
     +
     dig 3
     ==
@@ -325,13 +326,240 @@ h_after_for@8:
 h_ternary_merge@12:
     !
     assert // not payable
+    intc_2 // 0
+    bzero
+    dup
+    bury 25
+    dig 5
+    intc_0 // 32
+    *
+    bury 13
+    intc_2 // 0
+    bury 18
+    dup
+    bury 21
+    bury 23
+
+h_while_top@13:
+    dig 16
+    dig 5
+    <
+    bz h_after_while@22
+    dig 16
+    dup
+    intc_1 // 2
+    *
+    intc_1 // 2
+    +
+    dig 7
+    swap
+    extract_uint16
+    intc_1 // 2
+    +
+    bury 16
+    intc_3 // 1
+    +
+    dup
+    bury 18
+    dig 5
+    <
+    bnz h_if_body@15
+    dig 2
+
+h_after_if_else@16:
+    dig 15
+    dup
+    cover 2
+    -
+    dig 7
+    cover 2
+    extract3
+    dup
+    bury 22
+    dup
+    intc_2 // 0
+    extract_uint16
+    dup
+    cover 2
+    bury 15
+    len
+    bury 11
+    intc_0 // 32
+    *
+    bury 11
+    intc_2 // 0
+    bury 16
+    dig 23
+    dup
+    bury 20
+    bury 22
+
+h_while_top@17:
+    dig 15
+    dig 13
+    <
+    bz h_after_while@21
+    dig 15
+    dup
+    intc_1 // 2
+    *
+    intc_1 // 2
+    +
+    dig 22
+    swap
+    extract_uint16
+    intc_1 // 2
+    +
+    bury 15
+    intc_3 // 1
+    +
+    dup
+    bury 17
+    dig 13
+    <
+    bnz h_if_body@19
+    dig 9
+
+h_after_if_else@20:
+    dig 14
+    dup
+    cover 2
+    -
+    dig 22
+    cover 2
+    extract3
     intc_0 // 32
     bzero
-    dig 3
-    intc_2 // 2
+    dig 1
+    intc_2 // 0
+    extract_uint16
+    dig 2
+    len
+    uncover 3
+    cover 2
+    substring3
+    dup
+    len
+    intc_1 // 2
     -
     intc_0 // 32
     /
+    itob
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    extract 2 0
+    concat
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    dig 12
+    dup
+    cover 3
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 24
+    swap
+    concat
+    bury 24
+    dig 20
+    dig 1
+    concat
+    bury 21
+    len
+    +
+    bury 11
+    b h_while_top@17
+
+h_if_body@19:
+    dig 15
+    intc_1 // 2
+    *
+    intc_1 // 2
+    +
+    dig 21
+    swap
+    extract_uint16
+    intc_1 // 2
+    +
+    b h_after_if_else@20
+
+h_after_while@21:
+    intc_0 // 32
+    bzero
+    dig 13
+    itob
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 23
+    dig 21
+    concat
+    concat
+    dig 13
+    dup
+    cover 3
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 25
+    swap
+    concat
+    bury 25
+    dig 21
+    dig 1
+    concat
+    bury 22
+    len
+    +
+    bury 12
+    b h_while_top@13
+
+h_if_body@15:
+    dig 16
+    intc_1 // 2
+    *
+    intc_1 // 2
+    +
+    dig 6
+    swap
+    extract_uint16
+    intc_1 // 2
+    +
+    b h_after_if_else@16
+
+h_after_while@22:
+    intc_0 // 32
+    bzero
+    dig 5
     itob
     concat
     dup
@@ -340,7 +568,9 @@ h_ternary_merge@12:
     -
     intc_0 // 32
     extract3
-    dig 2
+    dig 23
+    dig 21
+    concat
     concat
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
     swap
@@ -359,29 +589,30 @@ h_ternary_merge@12:
     return
 
 h_ternary_false@11:
-    intc_1 // 0
+    intc_2 // 0
     b h_ternary_merge@12
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_struct_array_reencode.sol.C.i[routing]() -> void:
 i:
-    intc_1 // 0
+    intc_2 // 0
+    dupn 2
     bytec_2 // ""
-    dup
+    dupn 4
     txna ApplicationArgs 1
-    dup
-    intc_1 // 0
+    dupn 2
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
     cover 2
-    intc_2 // 2
+    intc_1 // 2
     *
     swap
     dup
     len
     swap
     extract 2 0
-    intc_1 // 0
+    intc_2 // 0
 
 i_for_header@1:
     dup
@@ -389,7 +620,7 @@ i_for_header@1:
     <
     bz i_after_for@8
     dup
-    intc_2 // 2
+    intc_1 // 2
     *
     dig 2
     dup
@@ -402,27 +633,27 @@ i_for_header@1:
     dig 1
     len
     substring3
-    bury 8
+    bury 12
     pushint 4
-    bury 6
-    intc_1 // 0
     bury 7
+    intc_2 // 0
+    bury 8
 
 i_for_header@3:
-    dig 6
-    intc_2 // 2
+    dig 7
+    intc_1 // 2
     <
     bz i_after_for@6
-    dig 6
+    dig 7
     dup
-    intc_2 // 2
+    intc_1 // 2
     *
-    dig 9
+    dig 13
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 9
+    dig 10
     dup
     cover 4
     ==
@@ -433,30 +664,30 @@ i_for_header@3:
     dup
     len
     dig 1
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid tuple encoding
     dup
-    intc_2 // 2
+    intc_1 // 2
     ==
     assert // invalid tail pointer at index 0 of ((len+uint256[]))
     swap
     substring3
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
     pushint 4
     +
     +
-    bury 7
+    bury 8
     intc_3 // 1
     +
-    bury 7
+    bury 8
     b i_for_header@3
 
 i_after_for@6:
     dig 3
-    dig 6
+    dig 7
     +
     bury 4
     dup
@@ -467,7 +698,7 @@ i_after_for@6:
 
 i_after_for@8:
     dig 3
-    intc_2 // 2
+    intc_1 // 2
     +
     dig 3
     ==
@@ -482,13 +713,57 @@ i_after_for@8:
 i_ternary_merge@12:
     !
     assert // not payable
+    intc_2 // 0
+    bzero
+    dup
+    bury 15
+    dig 5
+    intc_0 // 32
+    *
+    bury 10
+    intc_2 // 0
+    bury 12
+    bury 13
+
+i_while_top@13:
+    dig 10
+    dig 5
+    <
+    bz i_after_while@17
+    dig 10
+    dup
+    intc_1 // 2
+    *
+    intc_1 // 2
+    +
+    dig 7
+    swap
+    extract_uint16
+    intc_1 // 2
+    +
+    bury 11
+    intc_3 // 1
+    +
+    dup
+    bury 12
+    dig 5
+    <
+    bnz i_if_body@15
+    dig 2
+
+i_after_if_else@16:
+    dig 10
+    dup
+    cover 2
+    -
+    dig 7
+    cover 2
+    extract3
     intc_0 // 32
     bzero
-    dig 3
-    intc_2 // 2
-    -
-    intc_0 // 32
-    /
+    dig 10
+    dup
+    cover 3
     itob
     concat
     dup
@@ -497,7 +772,47 @@ i_ternary_merge@12:
     -
     intc_0 // 32
     extract3
-    dig 2
+    dig 16
+    swap
+    concat
+    bury 16
+    dig 14
+    dig 1
+    concat
+    bury 15
+    len
+    +
+    bury 9
+    b i_while_top@13
+
+i_if_body@15:
+    dig 10
+    intc_1 // 2
+    *
+    intc_1 // 2
+    +
+    dig 6
+    swap
+    extract_uint16
+    intc_1 // 2
+    +
+    b i_after_if_else@16
+
+i_after_while@17:
+    intc_0 // 32
+    bzero
+    dig 5
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 14
+    dig 14
+    concat
     concat
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
     swap
@@ -516,7 +831,7 @@ i_ternary_merge@12:
     return
 
 i_ternary_false@11:
-    intc_1 // 0
+    intc_2 // 0
     b i_ternary_merge@12
 
 
@@ -524,11 +839,11 @@ i_ternary_false@11:
 j:
     txna ApplicationArgs 1
     dupn 2
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    intc_2 // 2
+    intc_1 // 2
     +
     swap
     len
@@ -549,7 +864,7 @@ j_ternary_merge@4:
     intc_0 // 32
     bzero
     dig 1
-    intc_2 // 2
+    intc_1 // 2
     -
     intc_0 // 32
     /
@@ -581,7 +896,7 @@ j_ternary_merge@4:
     return
 
 j_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b j_ternary_merge@4
 
 
@@ -664,26 +979,30 @@ k_ternary_merge@4:
     return
 
 k_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b k_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_struct_array_reencode.sol.C.l[routing]() -> void:
 l:
-    txna ApplicationArgs 1
+    intc_2 // 0
     dup
-    intc_1 // 0
+    bytec_2 // ""
+    dupn 2
+    txna ApplicationArgs 1
+    dupn 2
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
     cover 2
-    intc_2 // 2
+    intc_1 // 2
     *
     swap
     dup
     len
     swap
     extract 2 0
-    intc_1 // 0
+    intc_2 // 0
 
 l_for_header@1:
     dup
@@ -691,7 +1010,7 @@ l_for_header@1:
     <
     bz l_after_for@4
     dupn 2
-    intc_2 // 2
+    intc_1 // 2
     *
     dig 3
     dup
@@ -706,11 +1025,11 @@ l_for_header@1:
     dig 1
     len
     substring3
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    intc_2 // 2
+    intc_1 // 2
     +
     +
     bury 5
@@ -721,7 +1040,7 @@ l_for_header@1:
 
 l_after_for@4:
     dig 3
-    intc_2 // 2
+    intc_1 // 2
     +
     dig 3
     ==
@@ -736,13 +1055,116 @@ l_after_for@4:
 l_ternary_merge@8:
     !
     assert // not payable
+    intc_2 // 0
+    bzero
+    dup
+    bury 12
+    dig 5
+    intc_0 // 32
+    *
+    bury 8
+    intc_2 // 0
+    bury 10
+    bury 10
+
+l_while_top@9:
+    dig 8
+    dig 5
+    <
+    bz l_after_while@13
+    dig 8
+    dup
+    intc_1 // 2
+    *
+    intc_1 // 2
+    +
+    dig 7
+    swap
+    extract_uint16
+    intc_1 // 2
+    +
+    bury 9
+    intc_3 // 1
+    +
+    dup
+    bury 10
+    dig 5
+    <
+    bnz l_if_body@11
+    dig 2
+
+l_after_if_else@12:
+    dig 8
+    dup
+    cover 2
+    -
+    dig 7
+    cover 2
+    extract3
     intc_0 // 32
     bzero
-    dig 3
-    intc_2 // 2
+    dig 1
+    len
+    intc_1 // 2
     -
     intc_0 // 32
     /
+    itob
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    extract 2 0
+    concat
+    dig 8
+    dup
+    cover 3
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 13
+    swap
+    concat
+    bury 13
+    dig 11
+    dig 1
+    concat
+    bury 12
+    len
+    +
+    bury 7
+    b l_while_top@9
+
+l_if_body@11:
+    dig 8
+    intc_1 // 2
+    *
+    intc_1 // 2
+    +
+    dig 6
+    swap
+    extract_uint16
+    intc_1 // 2
+    +
+    b l_after_if_else@12
+
+l_after_while@13:
+    intc_0 // 32
+    bzero
+    dig 5
     itob
     concat
     dup
@@ -751,7 +1173,9 @@ l_ternary_merge@8:
     -
     intc_0 // 32
     extract3
-    dig 2
+    dig 11
+    dig 11
+    concat
     concat
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
     swap
@@ -770,5 +1194,5 @@ l_ternary_merge@8:
     return
 
 l_ternary_false@7:
-    intc_1 // 0
+    intc_2 // 0
     b l_ternary_merge@8

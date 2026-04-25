@@ -294,6 +294,9 @@ k_ternary_false@3:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic.sol.C.h(s: bytes) -> bytes, bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic.sol.C.h:
     proto 1 2
+    intc_1 // 0
+    pushbytes ""
+    dup
     txn GroupIndex
     bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic.sol.C.h_ternary_false@2
     txn GroupIndex
@@ -304,10 +307,60 @@ k_ternary_false@3:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic.sol.C.h_ternary_merge@3:
     !
     assert // not payable
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
     frame_dig -1
+    len
+    intc_3 // 2
+    -
+    dup
+    frame_bury 2
+    intc_2 // 32
+    bzero
+    swap
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    frame_bury 0
+    intc_1 // 0
+    frame_bury 1
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic.sol.C.h_while_top@4:
+    frame_dig 1
+    frame_dig 2
+    <
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic.sol.C.h_after_while@6
+    pushint 31
+    bzero
+    intc_3 // 2
+    frame_dig 1
+    dup
+    cover 3
+    +
+    frame_dig -1
+    swap
+    intc_0 // 1
+    extract3
+    concat
+    frame_dig 0
+    swap
+    concat
+    frame_bury 0
+    intc_0 // 1
+    +
+    frame_bury 1
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic.sol.C.h_while_top@4
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic.sol.C.h_after_while@6:
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    frame_dig 0
     concat
     frame_dig -1
+    frame_bury 1
+    frame_bury 0
     retsub
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic.sol.C.h_ternary_false@2:
