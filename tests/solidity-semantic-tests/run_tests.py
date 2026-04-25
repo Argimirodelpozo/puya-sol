@@ -932,12 +932,301 @@ class _MalformedArc4:
         self.raw_bytes = raw_bytes
 
 
+# ============================================================================
+# Generic EVM-ABI head/tail codec
+# ----------------------------------------------------------------------------
+# `_regroup_args` previously had per-shape special cases for `bytes`, `string`,
+# `T[]`, `T[N]`, `T[][N]`, `T[N][]`, etc., and incrementally grew a fallback
+# inline path that didn't always agree with the dispatched recursive path.
+# This codec replaces that with a single recursive walker keyed off a parsed
+# AbiType tree. The decoder operates on a flat list of 32-byte words (already
+# the shape `_regroup_args` receives from `parse_value`), validates every
+# offset/length against word bounds, and raises `_MalformedAbi` on OOB. The
+# top-level `_decode_abi_args` catches per-param to emit `_MalformedArc4`
+# sentinels — preserving the EVM "intentionally invalid calldata reverts"
+# semantics that the FAILURE-expecting tests rely on.
+# ============================================================================
+
+
+class _MalformedAbi(Exception):
+    """Raised internally when EVM-ABI decoding hits an OOB offset/length.
+    Caller (top-level decode loop) catches and emits an `_MalformedArc4`
+    sentinel for the offending param so the AVM-side ARC4 length assert
+    fires when the contract receives the blob."""
+    pass
+
+
+class _AbiType:
+    """Base class for parsed EVM-ABI types."""
+    def is_dynamic(self) -> bool:
+        raise NotImplementedError
+    @property
+    def head_words(self) -> int:
+        """Words this type occupies in the parent's head region. For dynamic
+        types this is always 1 (an offset slot). For static types it's the
+        full inline size."""
+        raise NotImplementedError
+
+
+class _AbiScalar(_AbiType):
+    """uintN / intN / address / bool / bytesN. Always one 32-byte word."""
+    __slots__ = ('name',)
+    def __init__(self, name: str):
+        self.name = name
+    def is_dynamic(self) -> bool: return False
+    @property
+    def head_words(self) -> int: return 1
+
+
+class _AbiBytes(_AbiType):
+    __slots__ = ()
+    def is_dynamic(self) -> bool: return True
+    @property
+    def head_words(self) -> int: return 1
+
+
+class _AbiString(_AbiType):
+    __slots__ = ()
+    def is_dynamic(self) -> bool: return True
+    @property
+    def head_words(self) -> int: return 1
+
+
+class _AbiStaticArray(_AbiType):
+    __slots__ = ('elem', 'n')
+    def __init__(self, elem: _AbiType, n: int):
+        self.elem = elem
+        self.n = n
+    def is_dynamic(self) -> bool: return self.elem.is_dynamic()
+    @property
+    def head_words(self) -> int:
+        # Dynamic-element static arrays still occupy one offset slot in the
+        # parent head; only fully-static ones are inlined.
+        if self.is_dynamic():
+            return 1
+        return self.n * self.elem.head_words
+
+
+class _AbiDynamicArray(_AbiType):
+    __slots__ = ('elem',)
+    def __init__(self, elem: _AbiType):
+        self.elem = elem
+    def is_dynamic(self) -> bool: return True
+    @property
+    def head_words(self) -> int: return 1
+
+
+def _parse_abi_type(s: str) -> _AbiType:
+    """Parse a Solidity-style ABI type string into an _AbiType tree.
+
+    Examples: 'uint256' → _AbiScalar, 'bytes' → _AbiBytes, 'uint8[3]' →
+    _AbiStaticArray(_AbiScalar, 3), 'uint256[][2]' →
+    _AbiStaticArray(_AbiDynamicArray(_AbiScalar), 2)."""
+    import re as _re
+    s = s.strip()
+    # Outer-most array suffix peeled first (Solidity reads right-to-left).
+    m = _re.match(r'^(.+?)(\[\d*\])$', s)
+    if m:
+        inner_s, suf = m.group(1), m.group(2)
+        inner = _parse_abi_type(inner_s)
+        if suf == '[]':
+            return _AbiDynamicArray(inner)
+        return _AbiStaticArray(inner, int(suf[1:-1]))
+    if s == 'bytes':
+        return _AbiBytes()
+    if s == 'string':
+        return _AbiString()
+    return _AbiScalar(s)
+
+
+def _split_top_level_params(sig_inner: str) -> list:
+    """Split 'a,b,(c,d),e' on top-level commas only (skipping nested parens)."""
+    parts = []
+    depth = 0
+    cur = ""
+    for ch in sig_inner:
+        if ch == '(':
+            depth += 1
+        elif ch == ')':
+            depth -= 1
+        if ch == ',' and depth == 0:
+            parts.append(cur.strip())
+            cur = ""
+        else:
+            cur += ch
+    if cur.strip():
+        parts.append(cur.strip())
+    return parts
+
+
+def _abi_word_to_bytes(w) -> bytes:
+    """Coerce a flat-args word to a 32-byte representation."""
+    if isinstance(w, bytes):
+        return w.ljust(32, b'\x00')[:32]
+    if isinstance(w, int):
+        return (w & ((1 << 256) - 1)).to_bytes(32, 'big')
+    if isinstance(w, bool):
+        return (b'\x00' * 31) + (b'\x01' if w else b'\x00')
+    raise _MalformedAbi(f"unexpected word type: {type(w).__name__}")
+
+
+def _abi_word_to_int(w) -> int:
+    """Coerce a flat-args word to an int (for length/offset reads)."""
+    if isinstance(w, int):
+        return w
+    if isinstance(w, bytes):
+        return int.from_bytes(w.ljust(32, b'\x00')[:32], 'big')
+    raise _MalformedAbi(f"non-integer offset/length word: {w!r}")
+
+
+def _decode_abi_at(words, ty: _AbiType, base: int):
+    """Decode a value of `ty` whose representation starts at word index
+    `base` in `words`. Raises `_MalformedAbi` on OOB. Returns the decoded
+    Python value: int/bytes/str for leaves, list for arrays."""
+    if isinstance(ty, _AbiScalar):
+        if base >= len(words):
+            raise _MalformedAbi(f"scalar OOB at word {base}")
+        # Pass through whatever shape parse_value produced — algokit ABI
+        # encoder will coerce to the declared type.
+        return words[base]
+
+    if isinstance(ty, (_AbiBytes, _AbiString)):
+        if base >= len(words):
+            raise _MalformedAbi(f"bytes/string length word OOB at {base}")
+        length = _abi_word_to_int(words[base])
+        if length == 0:
+            return "" if isinstance(ty, _AbiString) else b""
+        n_words = (length + 31) // 32
+        if base + 1 + n_words > len(words):
+            raise _MalformedAbi(
+                f"bytes/string data OOB: declared {length}B "
+                f"needs {n_words}w, have {len(words) - base - 1}w")
+        data = b""
+        for w in range(n_words):
+            data += _abi_word_to_bytes(words[base + 1 + w])
+        data = data[:length]
+        return data.decode('utf-8', errors='replace') if isinstance(ty, _AbiString) else data
+
+    if isinstance(ty, _AbiStaticArray):
+        # No length word; read N elements starting at `base`.
+        return _decode_abi_array_body(words, ty.elem, ty.n, base)
+
+    if isinstance(ty, _AbiDynamicArray):
+        if base >= len(words):
+            raise _MalformedAbi(f"dyn-array length word OOB at {base}")
+        length = _abi_word_to_int(words[base])
+        return _decode_abi_array_body(words, ty.elem, length, base + 1)
+
+    raise _MalformedAbi(f"unhandled AbiType {type(ty).__name__}")
+
+
+def _decode_abi_array_body(words, elem: _AbiType, length: int, body_start: int):
+    """Decode `length` consecutive elements of `elem` starting at word
+    `body_start`. For static elements the body is tightly packed; for
+    dynamic elements the body is a head/tail (head slots = byte offsets
+    relative to body_start)."""
+    if length < 0:
+        raise _MalformedAbi(f"negative length {length}")
+    # Sanity cap so an absurd declared length doesn't blow memory or time.
+    if length > 0xFFFF:
+        raise _MalformedAbi(f"length {length} exceeds uint16 cap")
+
+    if not elem.is_dynamic():
+        # Tight-packed: each element occupies elem.head_words words inline.
+        ew = elem.head_words
+        n_words = length * ew
+        if body_start + n_words > len(words):
+            raise _MalformedAbi(
+                f"static-elem array body OOB: need {n_words}w, "
+                f"have {len(words) - body_start}w")
+        if ew == 1:
+            # Hot path: scalar elements — return the raw word slice so it
+            # matches the legacy `_regroup_args` output shape.
+            return list(words[body_start:body_start + length])
+        # Multi-word elements (e.g. uint256[3] elements of uint256[3][]):
+        # decode each individually so nested static arrays come back as
+        # nested lists matching the type structure.
+        return [_decode_abi_at(words, elem, body_start + i * ew)
+                for i in range(length)]
+
+    # Dynamic elements: each head slot is one word containing a byte offset
+    # relative to body_start. Validate the head region first, then walk.
+    if body_start + length > len(words):
+        raise _MalformedAbi(
+            f"dyn-elem array head OOB: need {length}w, "
+            f"have {len(words) - body_start}w")
+    arr = []
+    for i in range(length):
+        raw_off = words[body_start + i]
+        offset_bytes = _abi_word_to_int(raw_off)
+        if offset_bytes % 32 != 0:
+            raise _MalformedAbi(
+                f"dyn-elem offset {offset_bytes} not word-aligned")
+        elem_base = body_start + offset_bytes // 32
+        arr.append(_decode_abi_at(words, elem, elem_base))
+    return arr
+
+
+def _build_malformed_sentinel(words, ty: _AbiType, head_idx: int) -> _MalformedArc4:
+    """Build an `_MalformedArc4` blob for a param whose decode raised
+    `_MalformedAbi`. The blob carries the param's nominal ARC4 length
+    header so that the contract-side ARC4 length assert fires when the
+    declared length exceeds the (absent or undersized) data payload."""
+    declared = 0xFFFF
+    try:
+        if ty.is_dynamic() and head_idx < len(words):
+            offset_bytes = _abi_word_to_int(words[head_idx])
+            if offset_bytes % 32 == 0:
+                target = offset_bytes // 32
+                if 0 <= target < len(words):
+                    declared = max(0, min(_abi_word_to_int(words[target]), 0xFFFF))
+    except _MalformedAbi:
+        pass
+    return _MalformedArc4(declared.to_bytes(2, 'big'))
+
+
+def _decode_abi_args(words, type_strs):
+    """Top-level: decode a tuple of ABI-encoded args from `words` according
+    to `type_strs`. Returns a list of decoded Python values (int / bytes /
+    str / list / `_MalformedArc4`). Mirrors what `_regroup_args` returned;
+    individual params that fail to decode become `_MalformedArc4` sentinels
+    so the AVM-side length assert fires."""
+    types = [_parse_abi_type(s) for s in type_strs]
+    result = []
+    head_idx = 0
+    for ty in types:
+        try:
+            if not ty.is_dynamic():
+                v = _decode_abi_at(words, ty, head_idx)
+                result.append(v)
+                head_idx += ty.head_words
+            else:
+                if head_idx >= len(words):
+                    raise _MalformedAbi("top-level head OOB")
+                offset_bytes = _abi_word_to_int(words[head_idx])
+                if offset_bytes % 32 != 0:
+                    raise _MalformedAbi(
+                        f"top-level offset {offset_bytes} not word-aligned")
+                target_idx = offset_bytes // 32
+                v = _decode_abi_at(words, ty, target_idx)
+                result.append(v)
+                head_idx += 1
+        except _MalformedAbi:
+            sentinel = _build_malformed_sentinel(words, ty, head_idx)
+            result.append(sentinel)
+            head_idx += 1 if ty.is_dynamic() else ty.head_words
+    return result
+
+
 def _regroup_args(raw_args, method_sig):
     """Regroup flat EVM ABI-encoded args into structured ARC4 args.
 
-    EVM ABI encoding places static values and offsets for dynamic types in
-    the "head" region (one word per param), then dynamic data in the "tail".
-    This function decodes that layout into individual ARC4-compatible args.
+    Tries the unified `_decode_abi_args` codec first (handles arbitrarily
+    nested static/dynamic shapes via head/tail walking). On failure or
+    indeterminate shape, falls through to the legacy ad-hoc inline
+    decoder below for backwards compatibility with the corner cases
+    that codec doesn't model yet (e.g. tests that pass extra excess
+    calldata appended after the ABI args).
     """
     import re as _re
     m = _re.match(r'\w+\(([^)]*)\)', method_sig)
@@ -970,6 +1259,20 @@ def _regroup_args(raw_args, method_sig):
     has_complex = any('[' in p or p in dynamic_types for p in param_types)
     if not has_complex:
         return raw_args
+
+    # Unified codec dispatch. Use it whenever the codec's output covers all
+    # declared params (no truncation). Excess calldata beyond the declared
+    # params is tolerated upstream by `excess_calldata` slicing — the codec
+    # walks only the declared param region of `raw_args`, so the head_idx
+    # advance and any malformed-sentinel emission line up correctly.
+    try:
+        decoded = _decode_abi_args(raw_args, param_types)
+        if len(decoded) == len(param_types):
+            return decoded
+    except Exception:
+        # Defensive: any unexpected exception falls through to legacy path
+        # so we don't regress tests on codec bugs.
+        pass
 
     def _inner_type(pt):
         """Strip the outermost array suffix: 'bytes[1]' -> 'bytes',

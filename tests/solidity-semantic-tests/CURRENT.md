@@ -1,6 +1,14 @@
-# Semantic Test Status — v168
+# Semantic Test Status — v169
 
-**Totals**: 1057 PASS / 204 FAIL / 61 (42 compile_err + 19 deploy_err) = **1057/1322 (80.0%)**
+**Totals**: 1061 PASS / 200 FAIL / 61 (42 compile_err + 19 deploy_err) = **1061/1322 (80.3%)**
+
+vs v168 (1057): +4 (generic EVM-ABI head/tail codec replaces per-shape `_regroup_args` special cases in the test harness; zero regressions).
+- `abiEncoderV2/calldata_array_dynamic_static_short_decode` ✗→✓
+- `abiEncoderV2/calldata_array_dynamic_static_short_reencode` ✗→✓
+- `calldata/calldata_array_three_dimensional` ✗→✓
+- `abiEncoderV2/calldata_three_dimensional_dynamic_array_index_access` ✗→✓
+- All four are static-outer / dynamic-inner calldata arrays (`uint256[][N]`, `bytes[N]`, `uint16[][][N]`-style nestings) where the legacy `_regroup_args` inline-fallback path treated the first inner head-offset as an element count and produced garbage. The new codec walks the head-table recursively and decodes correctly.
+- Implementation in `tests/solidity-semantic-tests/run_tests.py`: new `_decode_abi_args(words, type_strs)` plus an `_AbiType` tree (`_AbiScalar`, `_AbiBytes`, `_AbiString`, `_AbiStaticArray`, `_AbiDynamicArray`) and `_parse_abi_type` parser. Validates every offset/length against word bounds; raises internal `_MalformedAbi` on OOB so the top-level wrapper emits an `_MalformedArc4` sentinel for the offending param (preserves the EVM "intentionally invalid calldata reverts" semantics that FAILURE-expecting tests rely on). Wired into `_regroup_args` as the primary path with the legacy code retained as a defensive fallback.
 
 vs v167 (1056): +1 (diamond MRO super reference distinct dispatcher entries; zero regressions).
 - `inheritance/super_in_constructor_assignment`: DEPLOY_ERROR → PASS (1p/0s). Diamond inheritance D is B, C where both B and C take `super.f` from inside their own bodies (B/C resolve `super` to A) AND D's constructor takes `super.f` (D resolves `super` to C). Same target AST id (A.f) reached through two distinct super contexts (the bare-A case and the diamond-D case) collided in the function-pointer dispatcher's `s_targets` map, which was keyed only by AST id — so the second registration was silently dropped and the dispatcher routed both contexts through one entry, sending D's `super.f` to A directly instead of through C → B → A.
