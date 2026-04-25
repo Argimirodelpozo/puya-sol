@@ -1,6 +1,10 @@
-# Semantic Test Status — v165
+# Semantic Test Status — v167
 
-**Totals**: 1055 PASS / 205 FAIL / 62 (42 compile_err + 20 deploy_err) = **1055/1322 (79.8%)**
+**Totals**: 1056 PASS / 204 FAIL / 62 (42 compile_err + 20 deploy_err) = **1056/1322 (79.9%)**
+
+vs v165 (1055): +1 (cross-contract signed-int selector fix gained `inheritance/member_notation_ctor`; addr-fold extension recovered `functionTypes/stack_height_check_on_adding_gas_variable_to_function`).
+- `SolExternalCall.cpp::solTypeToARC4Name`: removed signed-int branch that emitted `int{N}` for `intN` Solidity types. Callee side maps signed/unsigned both to `uint{N}` (puya biguint→uint256), so caller selectors must mirror that or cross-contract dispatch misses. Fix: drop the signed branch entirely, route via `mapToARC4Type`.
+- `SolExpressionFactory.cpp::SolFunctionAddressAccess::toAwst`: extended `this.f.address` self-fold to also unwrap `FunctionCallOptions`, so `this.f{gas: G, value: V}.address` folds to `global CurrentApplicationAddress` consistently with the bare form. Prevents mismatch where the gas-modifier variant fell back to extracting bytes 0..8 of the 12-byte fn-ptr (8 zeros for self-ref) while the bare form returned a 32-byte address.
 
 vs v164 (1050): +5 (two real fixes + one flake recovery, zero regressions).
 - `inheritance/value_for_constructor`: COMPILE_ERROR/FAIL → PASS (3p/0s). `address(this).balance` was being routed through a child-contract dereference branch added previously for `Identifier→ContractType` resolution, hitting `app_params_get` on `this` itself. Fix in `SolAddressProperty.cpp::toAwst()`: extract the FunctionCall `address(arg)` argument; when the inner Identifier is `this`, set `isThis = true` and skip the contract-type dereference branch so the balance lookup falls through to the direct `global CurrentApplicationAddress` path that reads the application's own balance.
