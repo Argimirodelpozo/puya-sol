@@ -305,7 +305,10 @@ def parse_value(val_str: str) -> int | bool | bytes | str | None:
 
     # hex literal: hex"abcd"
     if val_str.startswith('hex"') and val_str.endswith('"'):
-        return bytes.fromhex(val_str[4:-1])
+        h = val_str[4:-1]
+        if len(h) % 2:
+            h += "0"  # right-pad odd-length hex (matches EVM slot padding)
+        return bytes.fromhex(h)
 
     # Quoted string literal: "ab" → bytes (ASCII encoding)
     if val_str.startswith('"') and val_str.endswith('"'):

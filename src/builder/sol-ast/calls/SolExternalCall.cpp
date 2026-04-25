@@ -29,11 +29,9 @@ std::string SolExternalCall::buildMethodSelector(MemberAccess const& _memberAcce
 		auto* rawType = m_ctx.typeMapper.map(_type);
 		if (rawType == awst::WType::accountType())
 			return "address";
-		if (auto const* intT = dynamic_cast<IntegerType const*>(_type))
-		{
-			if (intT->isSigned())
-				return "int" + std::to_string(intT->numBits());
-		}
+		// Note: signed/unsigned int types both map to biguint (or uint64) on the
+		// callee side, so puya emits a `uint{N}` selector regardless of Solidity
+		// signedness. We must mirror that here or selectors won't match.
 		// Fixed-size Solidity `bytesN` stays as BytesWType(length=N) on the
 		// child side, which puya names `byte[N]`. Match that here rather than
 		// routing through ARC4StaticArray (which would produce `uint8[N]`).
