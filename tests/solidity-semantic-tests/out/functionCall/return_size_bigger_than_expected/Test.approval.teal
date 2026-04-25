@@ -9,18 +9,17 @@ main:
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     pushbytes 0xe1fb067c // method "test()uint512"
     txna ApplicationArgs 0
     match main_test_route@4
@@ -97,7 +96,7 @@ test_ternary_merge@4:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    pushbytes 0xd9947f54 // method "f()uint8[32]"
+    pushbytes 0x4494bd16 // method "f()byte[32]"
     itxn_field ApplicationArgs
     itxn_submit
     load 0

@@ -3,24 +3,23 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_referencing.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
+    intcblock 1 88 32 24
     bytecblock 0x151f7c75
     pushint 4096
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     txn OnCompletion
     !
     assert
@@ -34,12 +33,36 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_referencing.sol.L.f() -> bytes:
 L.f:
+    load 0
+    intc_3 // 24
+    bzero
+    dig 1
+    intc_1 // 88
+    extract_uint64
+    pushint 64
+    +
+    itob
+    concat
+    replace2 64
+    store 0
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003
     retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_referencing.sol.L.g() -> bytes:
 L.g:
+    load 0
+    intc_3 // 24
+    bzero
+    dig 1
+    intc_1 // 88
+    extract_uint64
+    intc_2 // 32
+    +
+    itob
+    concat
+    replace2 64
+    store 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
     retsub
 
@@ -72,13 +95,41 @@ f:
 f_ternary_merge@4:
     !
     assert // not payable
+    load 0
+    intc_3 // 24
+    bzero
+    dig 1
+    intc_1 // 88
+    extract_uint64
+    intc_2 // 32
+    +
+    itob
+    dig 1
+    swap
+    concat
+    uncover 2
+    swap
+    replace2 64
+    store 0
+    load 0
+    dup
+    intc_1 // 88
+    extract_uint64
+    intc_2 // 32
+    +
+    itob
+    uncover 2
+    swap
+    concat
+    replace2 64
+    store 0
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     log
     intc_0 // 1
     return
 
 f_ternary_false@3:
-    intc_1 // 0
+    pushint 0
     b f_ternary_merge@4
 
 
@@ -94,13 +145,41 @@ g:
 g_ternary_merge@4:
     !
     assert // not payable
+    load 0
+    intc_3 // 24
+    bzero
+    dig 1
+    intc_1 // 88
+    extract_uint64
+    intc_2 // 32
+    +
+    itob
+    dig 1
+    swap
+    concat
+    uncover 2
+    swap
+    replace2 64
+    store 0
+    load 0
+    dup
+    intc_1 // 88
+    extract_uint64
+    intc_2 // 32
+    +
+    itob
+    uncover 2
+    swap
+    concat
+    replace2 64
+    store 0
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
     log
     intc_0 // 1
     return
 
 g_ternary_false@3:
-    intc_1 // 0
+    pushint 0
     b g_ternary_merge@4
 
 
@@ -116,13 +195,41 @@ h:
 h_ternary_merge@4:
     !
     assert // not payable
+    load 0
+    intc_3 // 24
+    bzero
+    dig 1
+    intc_1 // 88
+    extract_uint64
+    pushint 64
+    +
+    itob
+    dig 1
+    swap
+    concat
+    uncover 2
+    swap
+    replace2 64
+    store 0
+    load 0
+    dup
+    intc_1 // 88
+    extract_uint64
+    pushint 64
+    +
+    itob
+    uncover 2
+    swap
+    concat
+    replace2 64
+    store 0
     pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005
     log
     intc_0 // 1
     return
 
 h_ternary_false@3:
-    intc_1 // 0
+    pushint 0
     b h_ternary_merge@4
 
 
@@ -138,6 +245,18 @@ x:
 x_ternary_merge@4:
     !
     assert // not payable
+    load 0
+    intc_3 // 24
+    bzero
+    dig 1
+    intc_1 // 88
+    extract_uint64
+    pushint 64
+    +
+    itob
+    concat
+    replace2 64
+    store 0
     callsub L.f
     bytec_0 // 0x151f7c75
     swap
@@ -147,7 +266,7 @@ x_ternary_merge@4:
     return
 
 x_ternary_false@3:
-    intc_1 // 0
+    pushint 0
     b x_ternary_merge@4
 
 
@@ -163,6 +282,18 @@ y:
 y_ternary_merge@4:
     !
     assert // not payable
+    load 0
+    intc_3 // 24
+    bzero
+    dig 1
+    intc_1 // 88
+    extract_uint64
+    intc_2 // 32
+    +
+    itob
+    concat
+    replace2 64
+    store 0
     callsub L.g
     bytec_0 // 0x151f7c75
     swap
@@ -172,7 +303,7 @@ y_ternary_merge@4:
     return
 
 y_ternary_false@3:
-    intc_1 // 0
+    pushint 0
     b y_ternary_merge@4
 
 
@@ -188,6 +319,18 @@ a1:
 a1_ternary_merge@4:
     !
     assert // not payable
+    load 0
+    intc_3 // 24
+    bzero
+    dig 1
+    intc_1 // 88
+    extract_uint64
+    intc_2 // 32
+    +
+    itob
+    concat
+    replace2 64
+    store 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     callsub L.a
     dup
@@ -206,7 +349,7 @@ a1_ternary_merge@4:
     return
 
 a1_ternary_false@3:
-    intc_1 // 0
+    pushint 0
     b a1_ternary_merge@4
 
 
@@ -222,6 +365,18 @@ a2:
 a2_ternary_merge@4:
     !
     assert // not payable
+    load 0
+    intc_3 // 24
+    bzero
+    dig 1
+    intc_1 // 88
+    extract_uint64
+    pushint 64
+    +
+    itob
+    concat
+    replace2 64
+    store 0
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_referencing.sol.L.a(1)_1
     dup
@@ -240,5 +395,5 @@ a2_ternary_merge@4:
     return
 
 a2_ternary_false@3:
-    intc_1 // 0
+    pushint 0
     b a2_ternary_merge@4

@@ -7,18 +7,17 @@ main:
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     pushint 1
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     pushbytes 0xa17e609a // method "func()void"
     txna ApplicationArgs 0
     match main_func_route@4

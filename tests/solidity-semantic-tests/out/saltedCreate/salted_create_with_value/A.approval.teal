@@ -3,24 +3,23 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/saltedCreate/salted_create_with_value.sol.A.approval_program() -> uint64:
 main:
-    intcblock 0 6 16 1 1000000
+    intcblock 0 6 16 1 1000003
     bytecblock TMPL_APPROVAL_B TMPL_CLEAR_B 0xad7db34f
     pushint 4096
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_3 // 1
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     pushbytes 0xb34b38c7 // method "f()(uint256,uint256,uint256)"
     txna ApplicationArgs 0
     match main_f_route@4
@@ -67,7 +66,7 @@ f:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc 4 // 1000000
+    intc 4 // 1000003
     itxn_field Amount
     itxn_submit
     pushint 24
@@ -105,7 +104,7 @@ f:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc 4 // 1000000
+    intc 4 // 1000003
     itxn_field Amount
     itxn_submit
     itob
@@ -140,7 +139,7 @@ f:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc 4 // 1000000
+    intc 4 // 1000003
     itxn_field Amount
     itxn_submit
     itob

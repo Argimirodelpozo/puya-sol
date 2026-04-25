@@ -9,6 +9,11 @@ main:
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
@@ -18,12 +23,6 @@ main:
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     txn OnCompletion
     !
     assert
@@ -63,6 +62,18 @@ testInit:
 testInit_ternary_merge@4:
     !
     assert // not payable
+    load 0
+    pushint 24
+    bzero
+    dig 1
+    pushint 88
+    extract_uint64
+    intc_1 // 74
+    +
+    itob
+    concat
+    replace2 64
+    store 0
     pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080
     log
     intc_0 // 1
@@ -209,6 +220,18 @@ testAssign:
 testAssign_ternary_merge@4:
     !
     assert // not payable
+    load 0
+    pushint 24
+    bzero
+    dig 1
+    pushint 88
+    extract_uint64
+    intc_3 // 37
+    +
+    itob
+    concat
+    replace2 64
+    store 0
     pushbytes 0x151f7c750000000000000001000000000000000200000000000000000000000000000000000000000000000000000000000000030000000000000004
     log
     intc_0 // 1

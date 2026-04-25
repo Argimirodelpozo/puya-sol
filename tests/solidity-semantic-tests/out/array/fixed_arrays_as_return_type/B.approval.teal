@@ -3,24 +3,23 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_as_return_type.sol.B.approval_program() -> uint64:
 main:
-    intcblock 0 1 6 16
+    intcblock 0 1 6 24
     bytecblock 0x34d86182 TMPL_APPROVAL_A TMPL_CLEAR_A
     pushint 4096
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     pushbytes 0xb334c156 // method "f()(uint16[5],uint16[5])"
     txna ApplicationArgs 0
     match main_f_route@4
@@ -47,14 +46,42 @@ f:
 f_ternary_merge@4:
     !
     assert // not payable
+    load 0
+    intc_3 // 24
+    bzero
+    dig 1
+    pushint 88
+    extract_uint64
+    pushint 10
+    +
+    itob
+    dig 1
+    swap
+    concat
+    uncover 2
+    swap
+    replace2 64
+    store 0
+    load 0
+    dup
+    pushint 88
+    extract_uint64
+    pushint 10
+    +
+    itob
+    dig 2
+    swap
+    concat
+    replace2 64
+    store 0
     itxn_begin
     bytec_1 // TMPL_APPROVAL_A
     bytec_2 // TMPL_CLEAR_A
     intc_2 // 6
     itxn_field TypeEnum
-    intc_3 // 16
+    pushint 16
     itxn_field GlobalNumUint
-    intc_3 // 16
+    pushint 16
     itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
@@ -76,16 +103,13 @@ f_ternary_merge@4:
     pushint 1000000
     itxn_field Amount
     itxn_submit
-    pushint 24
-    bzero
-    swap
     itob
     concat
     itxn_begin
     pushint 2
     itob
     swap
-    pushint 24
+    intc_3 // 24
     extract_uint64
     intc_2 // 6
     itxn_field TypeEnum

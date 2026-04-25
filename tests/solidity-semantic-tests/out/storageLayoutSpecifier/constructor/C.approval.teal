@@ -12,6 +12,11 @@ main:
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@6
     txna ApplicationArgs 0
@@ -26,7 +31,7 @@ main:
     intc_2 // 8
     -
     extract_uint64
-    bury 6
+    bury 5
     bytec_1 // "x"
     pushbytes 0x
     app_global_put
@@ -47,14 +52,14 @@ main:
     bytec_3 // 0x0100
     b%
     dup
-    bury 5
+    bury 4
     bytec 4 // 0x80
     b<
     dup
     !
-    bury 3
+    bury 2
     bz main_bool_true@3
-    dig 3
+    dig 2
     pushbytes 0x02
     b+
     bytec_3 // 0x0100
@@ -62,7 +67,7 @@ main:
     bytec 4 // 0x80
     b<
     !
-    dig 2
+    dig 1
     ==
     bz main_bool_false@4
 
@@ -73,7 +78,7 @@ main_bool_merge@5:
     assert // signed arithmetic overflow
     intc_2 // 8
     bzero
-    dig 4
+    dig 3
     pushbytes 0x02
     b+
     bytec_3 // 0x0100
@@ -87,7 +92,7 @@ main_bool_merge@5:
     bytec_0 // "y"
     swap
     app_global_put
-    dig 2
+    dig 1
     pushint 3
     +
     dup
@@ -105,12 +110,6 @@ main_bool_false@4:
     b main_bool_merge@5
 
 main_after_if_else@6:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     txn OnCompletion
     !
     assert

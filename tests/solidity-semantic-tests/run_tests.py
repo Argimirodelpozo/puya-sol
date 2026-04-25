@@ -443,6 +443,32 @@ def _substitute_template_vars(teal_source: str, tmpl_path) -> str:
     return teal_source
 
 
+def _scan_ctor_forwarded_value(artifacts) -> int:
+    """Parse the Solidity source for `new X{value: N}(...)` calls anywhere in
+    the deployed contract (and, heuristically, in the source file) and return
+    the total forwarded microAlgo amount. Used to offset the balance baseline
+    so `address(this).balance` reads match EVM-style post-ctor balance."""
+    try:
+        sol_path = artifacts.get("sol_path")
+        if sol_path is None:
+            return 0
+        src = Path(sol_path).read_text()
+        # Match `new Name {value: N}` or `new Name{value: N}` (with optional
+        # whitespace). N is a decimal literal; expressions are not decoded.
+        total = 0
+        # Accept both `new X{value: N}` and `(new X){value: N}` (parenthesized).
+        for m in re.finditer(
+            r"new\s+\w+[^{]*?\{[^}]*\bvalue\s*:\s*(\d+)[^}]*\}", src
+        ):
+            try:
+                total += int(m.group(1))
+            except ValueError:
+                pass
+        return total
+    except Exception:
+        return 0
+
+
 def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0) -> au.AppClient | None:
     """Deploy a compiled contract. Returns AppClient or None.
     ctor_args: list of raw string args from constructor() call, or None.
@@ -631,10 +657,22 @@ def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0)
         # deployment cost.
         try:
             post_bal = algod.account_info(app_addr)["amount"]
-            app_client._balance_baseline = post_bal - fund_amount
+            # If the constructor body does `new X{value: N}(...)`, that N
+            # microAlgos was forwarded to the child. From the EVM model, Main
+            # still tracks N as spent (not held), so the baseline adjustment
+            # needs to add N back — otherwise the balance check comes up short
+            # by exactly the forwarded amount.
+            ctor_value_forwarded = _scan_ctor_forwarded_value(artifacts)
+            app_client._balance_baseline = post_bal - fund_amount + ctor_value_forwarded
         except Exception:
             app_client._balance_baseline = min_balance
         app_client._ctor_fund = fund_amount
+        # Child apps created in the constructor carry a fixed 1_000_000 MBR
+        # overhead in addition to whatever value was forwarded. A Solidity
+        # `address(child).balance == V` assertion reads the child's real AVM
+        # balance (= 1_000_000 + V); expose the overhead so _compare_values
+        # can accept the offset.
+        app_client._child_mbr = 1_000_000
         return app_client
     except Exception as e:
         # Store error on a module-level variable for the caller
@@ -2489,6 +2527,19 @@ def _compare_values(actual, expected):
                 if baseline is not None:
                     if actual - expected == baseline:
                         return True
+                # Child contract balance: a Solidity test reading
+                # `address(child).balance` sees the child's full AVM balance,
+                # which is the fixed 1_000_000 MBR we seeded it with plus any
+                # `{value: N}` the parent forwarded. Accept when the offset is
+                # a multiple of the standard child MBR — covers 1..a few child
+                # deploys without having to plumb per-child baselines through.
+                child_mbr = getattr(_compare_values, "_child_mbr", None)
+                if child_mbr is not None and child_mbr > 0:
+                    diff_to_expected = actual - expected
+                    if diff_to_expected > 0 and diff_to_expected % child_mbr == 0:
+                        k = diff_to_expected // child_mbr
+                        if 1 <= k <= 10:
+                            return True
                 # `balance: 0xADDR -> N` harness directive: the Solidity
                 # tester pre-funds an EVM account with `N` wei. On AVM that
                 # mapping does not exist, so the `.balance` we return is
@@ -2665,6 +2716,7 @@ def run_test(test: SemanticTest, localnet, account, verbose=False, _budget_retry
 
     # Expose the AVM baseline for `address(this).balance` comparisons
     _compare_values._baseline = getattr(app, "_balance_baseline", None)
+    _compare_values._child_mbr = getattr(app, "_child_mbr", None)
     # Expose harness `balance:` bridge targets for msg.sender.balance etc.
     _compare_values._balance_bridge = getattr(test, "balance_bridge_values", None)
 

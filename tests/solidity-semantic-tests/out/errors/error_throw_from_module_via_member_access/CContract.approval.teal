@@ -1,25 +1,24 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_in2dvlmk/C.sol.CContract.approval_program() -> uint64:
+// /tmp/multisource_w4c9n0cd/C.sol.CContract.approval_program() -> uint64:
 main:
     intcblock 1 0
     pushint 4096
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     txn OnCompletion
     !
     assert
@@ -31,7 +30,7 @@ main_after_if_else@2:
     err
 
 
-// /tmp/multisource_in2dvlmk/C.sol.CContract.error1[routing]() -> void:
+// /tmp/multisource_w4c9n0cd/C.sol.CContract.error1[routing]() -> void:
 error1:
     txn GroupIndex
     bz error1_ternary_false@3
@@ -50,7 +49,7 @@ error1_ternary_false@3:
     b error1_ternary_merge@4
 
 
-// /tmp/multisource_in2dvlmk/C.sol.CContract.error2[routing]() -> void:
+// /tmp/multisource_w4c9n0cd/C.sol.CContract.error2[routing]() -> void:
 error2:
     txn GroupIndex
     bz error2_ternary_false@3
@@ -69,7 +68,7 @@ error2_ternary_false@3:
     b error2_ternary_merge@4
 
 
-// /tmp/multisource_in2dvlmk/C.sol.CContract.error3[routing]() -> void:
+// /tmp/multisource_w4c9n0cd/C.sol.CContract.error3[routing]() -> void:
 error3:
     txn GroupIndex
     bz error3_ternary_false@3

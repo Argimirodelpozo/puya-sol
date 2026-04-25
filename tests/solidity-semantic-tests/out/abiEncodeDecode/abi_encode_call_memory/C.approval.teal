@@ -3,24 +3,23 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_memory.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 16
+    intcblock 1 0 24 16
     bytecblock TMPL_APPROVAL_D TMPL_CLEAR_D
     pushint 4096
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     txn OnCompletion
     !
     assert
@@ -64,14 +63,26 @@ test:
 test_ternary_merge@4:
     !
     assert // not payable
+    load 0
+    intc_2 // 24
+    bzero
+    dig 1
+    pushint 88
+    extract_uint64
+    intc_2 // 24
+    +
+    itob
+    concat
+    replace2 64
+    store 0
     itxn_begin
     bytec_0 // TMPL_APPROVAL_D
     bytec_1 // TMPL_CLEAR_D
     pushint 6
     itxn_field TypeEnum
-    intc_2 // 16
+    intc_3 // 16
     itxn_field GlobalNumUint
-    intc_2 // 16
+    intc_3 // 16
     itxn_field GlobalNumByteSlice
     intc_1 // 0
     itxn_field Fee

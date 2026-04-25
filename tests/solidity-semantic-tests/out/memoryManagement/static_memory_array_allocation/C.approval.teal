@@ -3,24 +3,23 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/static_memory_array_allocation.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 32 88 640
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     pushint 4096
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     txn OnCompletion
     !
     assert
@@ -44,6 +43,18 @@ withValue:
 withValue_ternary_merge@4:
     !
     assert // not payable
+    load 0
+    pushint 24
+    bzero
+    dig 1
+    intc_2 // 88
+    extract_uint64
+    intc_3 // 640
+    +
+    itob
+    concat
+    replace2 64
+    store 0
     load 0
     dup
     extract 64 32
@@ -80,7 +91,7 @@ withValue_ternary_merge@4:
     return
 
 withValue_ternary_false@3:
-    intc_2 // 0
+    pushint 0
     b withValue_ternary_merge@4
 
 
@@ -97,9 +108,37 @@ withoutValue_ternary_merge@4:
     !
     assert // not payable
     load 0
+    pushint 24
+    bzero
+    dig 1
+    intc_2 // 88
+    extract_uint64
+    intc_3 // 640
+    +
+    itob
+    dig 1
+    swap
+    concat
+    uncover 2
+    swap
+    replace2 64
+    store 0
+    load 0
     dup
     extract 64 32
     swap
+    store 0
+    load 0
+    dup
+    intc_2 // 88
+    extract_uint64
+    intc_3 // 640
+    +
+    itob
+    uncover 3
+    swap
+    concat
+    replace2 64
     store 0
     load 0
     dup
@@ -132,5 +171,5 @@ withoutValue_ternary_merge@4:
     return
 
 withoutValue_ternary_false@3:
-    intc_2 // 0
+    pushint 0
     b withoutValue_ternary_merge@4

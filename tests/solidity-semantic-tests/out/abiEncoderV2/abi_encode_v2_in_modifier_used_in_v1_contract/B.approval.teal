@@ -1,12 +1,17 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_ch9kx6zj/B.sol.B.approval_program() -> uint64:
+// /tmp/multisource_ycz48xko/B.sol.B.approval_program() -> uint64:
 main:
     pushint 4096
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     pushint 10
@@ -21,12 +26,6 @@ main:
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     txn NumAppArgs
     !
     assert

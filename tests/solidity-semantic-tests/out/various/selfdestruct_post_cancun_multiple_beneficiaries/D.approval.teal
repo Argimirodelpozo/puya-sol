@@ -9,6 +9,11 @@ main:
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "account1"
@@ -24,12 +29,6 @@ main:
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     txn OnCompletion
     !
     assert
@@ -190,7 +189,7 @@ c_ternary_false@3:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    pushint 1000000
+    pushint 1000000000001000000
     itxn_field Amount
     itxn_submit
     intc_2 // 24

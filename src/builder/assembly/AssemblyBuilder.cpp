@@ -343,6 +343,56 @@ std::vector<int> AssemblyBuilder::reservedScratchSlots()
 	return slots;
 }
 
+std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::emitFreeMemoryBump(
+	int _size, awst::SourceLocation const& _loc, int _uniqueId)
+{
+	std::vector<std::shared_ptr<awst::Statement>> out;
+	if (_size <= 0)
+		return out;
+
+	std::string blobTmp = "__fmp_blob_" + std::to_string(_uniqueId);
+
+	auto loadOp = awst::makeIntrinsicCall("load", awst::WType::bytesType(), _loc);
+	loadOp->immediates = {MEMORY_SLOT_FIRST};
+	auto blobTarget = awst::makeVarExpression(blobTmp, awst::WType::bytesType(), _loc);
+	out.push_back(awst::makeAssignmentStatement(blobTarget, std::move(loadOp), _loc));
+
+	auto blobRead = awst::makeVarExpression(blobTmp, awst::WType::bytesType(), _loc);
+	auto offset58 = awst::makeIntegerConstant("88", _loc);
+	auto extractFmp = awst::makeIntrinsicCall("extract_uint64", awst::WType::uint64Type(), _loc);
+	extractFmp->stackArgs.push_back(std::move(blobRead));
+	extractFmp->stackArgs.push_back(std::move(offset58));
+
+	auto sizeConst = awst::makeIntegerConstant(std::to_string(_size), _loc);
+	auto newFmp = awst::makeUInt64BinOp(
+		std::move(extractFmp), awst::UInt64BinaryOperator::Add,
+		std::move(sizeConst), _loc);
+
+	auto itobNew = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
+	itobNew->stackArgs.push_back(std::move(newFmp));
+
+	auto pad24 = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
+	pad24->stackArgs.push_back(awst::makeIntegerConstant("24", _loc));
+
+	auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
+	concat->stackArgs.push_back(std::move(pad24));
+	concat->stackArgs.push_back(std::move(itobNew));
+
+	auto blobRead2 = awst::makeVarExpression(blobTmp, awst::WType::bytesType(), _loc);
+	auto offset40 = awst::makeIntegerConstant("64", _loc);
+	auto replaceCall = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
+	replaceCall->stackArgs.push_back(std::move(blobRead2));
+	replaceCall->stackArgs.push_back(std::move(offset40));
+	replaceCall->stackArgs.push_back(std::move(concat));
+
+	auto storeOp = awst::makeIntrinsicCall("store", awst::WType::voidType(), _loc);
+	storeOp->immediates = {MEMORY_SLOT_FIRST};
+	storeOp->stackArgs.push_back(std::move(replaceCall));
+
+	out.push_back(awst::makeExpressionStatement(std::move(storeOp), _loc));
+	return out;
+}
+
 void AssemblyBuilder::initializeMemoryBlob(
 	std::vector<std::pair<std::string, awst::WType const*>> const& _params,
 	std::vector<std::shared_ptr<awst::Statement>>& _out

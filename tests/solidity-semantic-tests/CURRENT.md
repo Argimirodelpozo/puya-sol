@@ -1,6 +1,15 @@
-# Semantic Test Status — v164
+# Semantic Test Status — v165
 
-**Totals**: 1050 PASS / 210 FAIL / 62 (42 compile_err + 20 deploy_err) = **1050/1322 (79.4%)**
+**Totals**: 1055 PASS / 205 FAIL / 62 (42 compile_err + 20 deploy_err) = **1055/1322 (79.8%)**
+
+vs v164 (1050): +5 (two real fixes + one flake recovery, zero regressions).
+- `inheritance/value_for_constructor`: COMPILE_ERROR/FAIL → PASS (3p/0s). `address(this).balance` was being routed through a child-contract dereference branch added previously for `Identifier→ContractType` resolution, hitting `app_params_get` on `this` itself. Fix in `SolAddressProperty.cpp::toAwst()`: extract the FunctionCall `address(arg)` argument; when the inner Identifier is `this`, set `isThis = true` and skip the contract-type dereference branch so the balance lookup falls through to the direct `global CurrentApplicationAddress` path that reads the application's own balance.
+- memoryManagement category: 3 wins (`struct_allocation`, `static_memory_array_allocation`, `return_variable`). Solidity `T memory t;` (no initializer) and unnamed memory return params allocate memory and bump the EVM free-memory-pointer (FMP) at `mload(0x40)`. Tests that read `mload(0x40)` after such declarations expected the FMP to advance by `sizeof(T)`. Two-part fix:
+  1. `AssemblyBuilder.cpp`: new static helper `emitFreeMemoryBump(size, loc, uniqueId)` builds an AWST sequence: `load 0` → `__fmp_blob_<id>`, `extract_uint64(blob, 88)` (low 8 bytes of the 32-byte FMP at offset 0x40+24), add `size`, `bzero(24) ++ itob(...)` → padded 32 bytes, `replace3(blob, 64, ...)`, `store 0`. The unique id (declaration AST id) keeps the temp local distinct across nested scopes so the same function can declare multiple memory locals without name collisions.
+  2. `SolVariableDeclaration.cpp`: emit the FMP bump for `T memory t;` declarations without an initializer when `decl.referenceLocation() == Memory`. `ContractBuilder.cpp::emitFunctionBody`: emit the FMP bump for unnamed-or-named memory return params alongside the existing zero-init at function entry. Both gated on `TypeCoercion::computeEncodedElementSize(type) > 0` so types without a stable encoded width don't emit junk.
+- `ContractBuilder.cpp` ordering fix (regression prevention): the memory blob slot 0 init (`bzero(4096); replace3(load(0), 64, pad32(0x80)); store 0`) used to live AFTER the create/dispatch split, so the create branch's constructor body — which now can call libraries that emit FMP bumps — saw an uninitialized scratch slot 0 and crashed (`extract_uint64 wanted []byte but got uint64`). Caught by `events/event_signature_in_library` regressing in the v165a run (1051/1322); moved the slot 0 init BEFORE the `if-isCreate` block in `emitMainProgramFunction` so both branches see a fully initialized memory blob. v165b confirmed: 1055 PASS, zero regressions vs v164.
+- Flake recovery: `various/code_length` (⚠→✓).
+- Files: 4 fully passing (`value_for_constructor`, `struct_allocation`, `static_memory_array_allocation`, `return_variable`). The 5th memoryManagement test (`assembly_access`) still fails — needs pointer-as-value model for memory locals so inline assembly can read a non-zero pointer value. Deferred (architectural).
 
 vs v163 (1048): +2 (two real fixes, zero regressions).
 - `inheritance/constructor_arguments_internal`: COMPILE_ERROR → PASS. Child-contract constructor with bool + bytes3 args. Two puya-sol fixes:

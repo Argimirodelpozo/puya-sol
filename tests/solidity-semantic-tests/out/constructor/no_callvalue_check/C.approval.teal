@@ -3,24 +3,23 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/no_callvalue_check.sol.C.approval_program() -> uint64:
 main:
-    intcblock 16 0 1 6 1000000
+    intcblock 16 0 1 6 1000010
     bytecblock TMPL_APPROVAL_B1 TMPL_CLEAR_B1 TMPL_APPROVAL_B2 TMPL_CLEAR_B2 TMPL_APPROVAL_B3 TMPL_CLEAR_B3
     pushint 4096
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_2 // 1
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     pushbytes 0x4b4fb052 // method "f()bool"
     txna ApplicationArgs 0
     match main_f_route@4
@@ -62,7 +61,7 @@ f:
     itxn_field Receiver
     intc_1 // 0
     itxn_field Fee
-    intc 4 // 1000000
+    intc 4 // 1000010
     itxn_field Amount
     itxn_submit
     itxn_begin
@@ -90,7 +89,7 @@ f:
     itxn_field Receiver
     intc_1 // 0
     itxn_field Fee
-    intc 4 // 1000000
+    intc 4 // 1000010
     itxn_field Amount
     itxn_submit
     itxn_begin
@@ -118,7 +117,7 @@ f:
     itxn_field Receiver
     intc_1 // 0
     itxn_field Fee
-    intc 4 // 1000000
+    intc 4 // 1000010
     itxn_field Amount
     itxn_submit
     pushbytes 0x151f7c7580

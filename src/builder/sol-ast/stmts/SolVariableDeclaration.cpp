@@ -6,12 +6,14 @@
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/assembly/AssemblyBuilder.h"
 #include "Logger.h"
 
 namespace puyasol::builder::sol_ast
 {
 
 using namespace solidity::frontend;
+
 
 SolVariableDeclaration::SolVariableDeclaration(
 	StatementContext& _ctx,
@@ -148,6 +150,21 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			result.push_back(std::move(p));
 		for (auto& p: m_ctx.takePending())
 			result.push_back(std::move(p));
+
+		// EVM free-memory-pointer simulation: `T memory t;` (no initializer)
+		// allocates fresh memory and bumps mload(0x40) by sizeof(T). We mirror
+		// this so contracts that read mload(0x40) see the expected advance.
+		// Memory locals with initializers are pointer copies in EVM (no alloc).
+		if (!initialValue
+			&& decl.referenceLocation() == VariableDeclaration::Location::Memory)
+		{
+			int sz = builder::TypeCoercion::computeEncodedElementSize(type);
+			if (sz > 0)
+				for (auto& s: builder::AssemblyBuilder::emitFreeMemoryBump(
+						sz, m_loc, static_cast<int>(decl.id())))
+					result.push_back(std::move(s));
+		}
+
 		result.push_back(assign);
 	}
 	else if (declarations.size() > 1 && initialValue)

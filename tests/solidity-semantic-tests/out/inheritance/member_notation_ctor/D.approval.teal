@@ -1,13 +1,18 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_qa_59rdf/B.sol.D.approval_program() -> uint64:
+// /tmp/multisource_ary0lvh_/B.sol.D.approval_program() -> uint64:
 main:
     intcblock 1 0 32
     pushint 4096
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     pushbytes "x"
@@ -17,12 +22,6 @@ main:
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     pushbytes 0x43e6f972 // method "getX()uint256"
     txna ApplicationArgs 0
     match main_getX_route@4
@@ -37,7 +36,7 @@ main_getX_route@4:
     b getX
 
 
-// /tmp/multisource_qa_59rdf/B.sol.D.getX[routing]() -> void:
+// /tmp/multisource_ary0lvh_/B.sol.D.getX[routing]() -> void:
 getX:
     txn GroupIndex
     bz getX_ternary_false@3

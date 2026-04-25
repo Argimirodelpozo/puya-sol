@@ -3,12 +3,17 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/local_tuple_assignment.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 32 0 24
     bytecblock "x" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000001
     pushint 4096
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     pushint 17
@@ -20,12 +25,6 @@ main:
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     txn OnCompletion
     !
     assert
@@ -93,6 +92,18 @@ g:
 g_ternary_merge@4:
     !
     assert // not payable
+    load 0
+    intc_3 // 24
+    bzero
+    dig 1
+    pushint 88
+    extract_uint64
+    pushint 96
+    +
+    itob
+    concat
+    replace2 64
+    store 0
     intc_2 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -144,6 +155,18 @@ h:
 h_ternary_merge@4:
     !
     assert // not payable
+    load 0
+    intc_3 // 24
+    bzero
+    dig 1
+    pushint 88
+    extract_uint64
+    pushint 96
+    +
+    itob
+    concat
+    replace2 64
+    store 0
     intc_2 // 0
     bytec_0 // "x"
     app_global_get_ex

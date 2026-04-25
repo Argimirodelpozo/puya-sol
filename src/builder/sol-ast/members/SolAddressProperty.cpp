@@ -4,6 +4,7 @@
 
 #include "builder/sol-ast/members/SolAddressProperty.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 
 #include <variant>
@@ -112,6 +113,98 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 			"address.balance returns the account balance in microAlgos on AVM, "
 			"not wei. 1 microAlgo = 1e-6 ALGO. This is NOT equivalent to EVM wei "
 			"(1 wei = 1e-18 ETH). Ensure your contract logic accounts for this difference.", m_loc);
+
+		// Detect `address(contractExpr).balance` — the inner expression is a
+		// contract / applicationType, and our SolTypeConversion builds a fake
+		// `(24-zero-pad ++ itob(app_id))` address from it. `acct_params_get`
+		// on that fake address returns 0. Instead, dereference app_id to the
+		// real child-app address via `app_params_get AppAddress` first.
+		{
+			auto const* fc = dynamic_cast<solidity::frontend::FunctionCall const*>(&baseExpression());
+			if (fc && *fc->annotation().kind == solidity::frontend::FunctionCallKind::TypeConversion
+				&& fc->arguments().size() == 1)
+			{
+				auto const* innerType = fc->arguments()[0]->annotation().type;
+				bool isContractType = dynamic_cast<
+					solidity::frontend::ContractType const*>(innerType) != nullptr;
+				// Skip for `address(this)` — the existing fallback path
+				// below emits `global CurrentApplicationAddress` directly,
+				// which is the real self-account. Going through
+				// app_params_get would need CurrentApplicationID and is
+				// redundant.
+				bool isThis = false;
+				if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(
+					fc->arguments()[0].get()))
+				{
+					if (id->name() == "this")
+						isThis = true;
+				}
+				if (isContractType && !isThis)
+				{
+					auto appExpr = buildExpr(*fc->arguments()[0]);
+					// Contract-typed identifiers lower to accountType (our
+					// 24-zero-pad + itob(app_id) fake address). Reverse to get
+					// the app id. If the expression is already applicationType,
+					// reinterpret directly.
+					std::shared_ptr<awst::Expression> appIdUint;
+					if (appExpr->wtype == awst::WType::accountType())
+					{
+						auto appAsApp = TypeCoercion::coerceForAssignment(
+							std::move(appExpr), awst::WType::applicationType(), m_loc);
+						appIdUint = awst::makeReinterpretCast(
+							std::move(appAsApp), awst::WType::uint64Type(), m_loc);
+					}
+					else
+					{
+						appIdUint = awst::makeReinterpretCast(
+							std::move(appExpr), awst::WType::uint64Type(), m_loc);
+					}
+					auto* addrTupleType = m_ctx.typeMapper.createType<awst::WTuple>(
+						std::vector<awst::WType const*>{
+							awst::WType::bytesType(), awst::WType::boolType()});
+					auto appParamsGet = awst::makeIntrinsicCall(
+						"app_params_get", addrTupleType, m_loc);
+					appParamsGet->immediates = {std::string("AppAddress")};
+					appParamsGet->stackArgs.push_back(std::move(appIdUint));
+
+					std::string addrTmp = "__app_balance_addr";
+					auto addrTmpTarget = awst::makeVarExpression(addrTmp, addrTupleType, m_loc);
+					auto addrAssign = awst::makeAssignmentStatement(
+						addrTmpTarget, std::move(appParamsGet), m_loc);
+					m_ctx.prePendingStatements.push_back(std::move(addrAssign));
+
+					auto addrTupleRead = awst::makeVarExpression(addrTmp, addrTupleType, m_loc);
+					auto addrBytesItem = std::make_shared<awst::TupleItemExpression>();
+					addrBytesItem->sourceLocation = m_loc;
+					addrBytesItem->wtype = awst::WType::bytesType();
+					addrBytesItem->base = std::move(addrTupleRead);
+					addrBytesItem->index = 0;
+					auto realAddr = awst::makeReinterpretCast(
+						std::move(addrBytesItem), awst::WType::accountType(), m_loc);
+
+					auto* balTupleType = m_ctx.typeMapper.createType<awst::WTuple>(
+						std::vector<awst::WType const*>{
+							awst::WType::uint64Type(), awst::WType::boolType()});
+					auto acctParams = awst::makeIntrinsicCall(
+						"acct_params_get", balTupleType, m_loc);
+					acctParams->immediates = {std::string("AcctBalance")};
+					acctParams->stackArgs.push_back(std::move(realAddr));
+
+					auto bal = std::make_shared<awst::TupleItemExpression>();
+					bal->sourceLocation = m_loc;
+					bal->wtype = awst::WType::uint64Type();
+					bal->base = std::move(acctParams);
+					bal->index = 0;
+
+					auto itobBal = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
+					itobBal->stackArgs.push_back(std::move(bal));
+					auto biguintBal = awst::makeReinterpretCast(
+						std::move(itobBal), awst::WType::biguintType(), m_loc);
+					return biguintBal;
+				}
+			}
+		}
+
 		auto addrExpr = buildExpr(baseExpression());
 
 		// acct_params_get AcctBalance returns (uint64, bool)

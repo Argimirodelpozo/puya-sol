@@ -3,24 +3,23 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
+    intcblock 32 1 192 0
     bytecblock 0x151f7c75
     pushint 4096
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     txn OnCompletion
     !
     assert
@@ -43,7 +42,7 @@ f:
     txna ApplicationArgs 2
     dup
     len
-    pushint 192
+    intc_2 // 192
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.static_array<arc4.uint256, 3>, 2>
     txna ApplicationArgs 3
@@ -75,6 +74,18 @@ g():
 g()_ternary_merge@4:
     !
     assert // not payable
+    load 0
+    pushint 24
+    bzero
+    dig 1
+    pushint 88
+    extract_uint64
+    intc_2 // 192
+    +
+    itob
+    concat
+    replace2 64
+    store 0
     intc_0 // 32
     bzero
     pushint 4
@@ -110,7 +121,7 @@ g()_ternary_merge@4:
     return
 
 g()_ternary_false@3:
-    intc_2 // 0
+    intc_3 // 0
     b g()_ternary_merge@4
 
 
@@ -142,5 +153,5 @@ g()_ternary_false@3:
     retsub
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol.C.f_ternary_false@2:
-    intc_2 // 0
+    intc_3 // 0
     b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol.C.f_ternary_merge@3

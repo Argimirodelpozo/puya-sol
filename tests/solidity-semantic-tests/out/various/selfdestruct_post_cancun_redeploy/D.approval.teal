@@ -9,6 +9,11 @@ main:
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
@@ -18,12 +23,6 @@ main:
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     txn OnCompletion
     !
     assert
@@ -230,7 +229,7 @@ c_ternary_false@3:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    pushbytes 0x5b148acc // method "deploy(uint8[32])address"
+    pushbytes 0x5352a900 // method "deploy(byte[32])address"
     itxn_field ApplicationArgs
     pushbytes 0x1234
     itxn_field ApplicationArgs
@@ -302,6 +301,10 @@ c_ternary_false@3:
     bytec_0 // "c"
     app_global_get_ex
     assert // check c exists
+    intc_2 // 24
+    extract_uint64
+    app_params_get AppAddress
+    pop
     acct_params_get AcctBalance
     pop
     itob
@@ -338,6 +341,10 @@ c_ternary_false@3:
     bytec_0 // "c"
     app_global_get_ex
     assert // check c exists
+    intc_2 // 24
+    extract_uint64
+    app_params_get AppAddress
+    pop
     acct_params_get AcctBalance
     pop
     itob

@@ -1,25 +1,24 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_7hbolrfk/s2.sol.C.approval_program() -> uint64:
+// /tmp/multisource_rylbsbom/s2.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32
     pushint 4096
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     pushbytes 0xa46062d6 // method "f()(uint256,uint256,uint256,uint256)"
     txna ApplicationArgs 0
     match main_f_route@4
@@ -34,14 +33,14 @@ main_f_route@4:
     b f
 
 
-// /tmp/multisource_7hbolrfk/s2.sol.fre_52() -> bytes:
+// /tmp/multisource_rylbsbom/s2.sol.fre_52() -> bytes:
 fre:
     pushint 89
     itob
     retsub
 
 
-// /tmp/multisource_7hbolrfk/s2.sol.C.f[routing]() -> void:
+// /tmp/multisource_rylbsbom/s2.sol.C.f[routing]() -> void:
 f:
     txn GroupIndex
     bz f_ternary_false@3

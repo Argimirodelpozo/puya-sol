@@ -3,24 +3,23 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_assignment.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 256
+    intcblock 32 1 0 320
     bytecblock "__dyn_storage"
     pushint 4096
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     txn OnCompletion
     !
     assert
@@ -37,7 +36,7 @@ assignArray:
     txna ApplicationArgs 1
     dup
     len
-    pushint 320
+    intc_3 // 320
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 10>
     txn GroupIndex
@@ -93,7 +92,7 @@ assignArray_ternary_merge@4:
     swap
     callsub __storage_write
     dup
-    intc_3 // 256
+    pushint 256
     intc_0 // 32
     extract3 // on error: index access is out of bounds
     pushint 3
@@ -126,6 +125,18 @@ x_ternary_merge@4:
     !
     assert // not payable
     load 0
+    pushint 24
+    bzero
+    dig 1
+    pushint 88
+    extract_uint64
+    intc_3 // 320
+    +
+    itob
+    concat
+    replace2 64
+    store 0
+    load 0
     store 0
     bytec_0 // "__dyn_storage"
     pushint 8192
@@ -155,7 +166,7 @@ __storage_write:
     box_create
     pop
     frame_dig -2
-    intc_3 // 256
+    pushint 256
     %
     intc_0 // 32
     *

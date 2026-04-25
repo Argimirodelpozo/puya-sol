@@ -2650,59 +2650,57 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			body->body.push_back(std::move(exprStmt));
 		}
 
+		// Initialize EVM memory blob in scratch slot 0 BEFORE the create/dispatch
+		// split so the constructor body (which can declare `T memory t;` locals
+		// that emit FMP bumps reading slot 0) sees a properly initialized blob.
+		// Each app call gets fresh scratch space, so we must initialize on every call.
+		// store 0, bzero(4096) — pre-allocate a 4KB memory blob
+		{
+			auto blobSize = awst::makeIntegerConstant(std::to_string(AssemblyBuilder::SLOT_SIZE), method.sourceLocation);
+
+			auto bzeroCall = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), method.sourceLocation);
+			bzeroCall->stackArgs.push_back(std::move(blobSize));
+
+			auto storeOp = awst::makeIntrinsicCall("store", awst::WType::voidType(), method.sourceLocation);
+			storeOp->immediates = {AssemblyBuilder::MEMORY_SLOT_FIRST};
+			storeOp->stackArgs.push_back(std::move(bzeroCall));
+
+			auto exprStmt = awst::makeExpressionStatement(std::move(storeOp), method.sourceLocation);
+			body->body.push_back(std::move(exprStmt));
+
+			// Write the free memory pointer (FMP) at offset 0x40 = 0x80.
+			auto loadBlob = awst::makeIntrinsicCall("load", awst::WType::bytesType(), method.sourceLocation);
+			loadBlob->immediates = {AssemblyBuilder::MEMORY_SLOT_FIRST};
+
+			auto fmpOffset = std::make_shared<awst::IntegerConstant>();
+			fmpOffset->sourceLocation = method.sourceLocation;
+			fmpOffset->wtype = awst::WType::uint64Type();
+			fmpOffset->value = "64"; // 0x40
+
+			std::vector<uint8_t> fmpBytesVal(31, 0);
+			fmpBytesVal.push_back(0x80);
+			auto fmpBytes = awst::makeBytesConstant(
+				std::move(fmpBytesVal), method.sourceLocation, awst::BytesEncoding::Unknown);
+
+			auto replaceOp = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), method.sourceLocation);
+			replaceOp->stackArgs.push_back(std::move(loadBlob));
+			replaceOp->stackArgs.push_back(std::move(fmpOffset));
+			replaceOp->stackArgs.push_back(std::move(fmpBytes));
+
+			auto storeFmpOp = awst::makeIntrinsicCall("store", awst::WType::voidType(), method.sourceLocation);
+			storeFmpOp->immediates = {AssemblyBuilder::MEMORY_SLOT_FIRST};
+			storeFmpOp->stackArgs.push_back(std::move(replaceOp));
+
+			auto fmpStmt = awst::makeExpressionStatement(std::move(storeFmpOp), method.sourceLocation);
+			body->body.push_back(std::move(fmpStmt));
+		}
+
 		auto ifCreate = std::make_shared<awst::IfElse>();
 		ifCreate->sourceLocation = method.sourceLocation;
 		ifCreate->condition = isCreate;
 		ifCreate->ifBranch = createBlock;
 
 		body->body.push_back(ifCreate);
-	}
-
-	// Initialize EVM memory blob in scratch slots.
-	// Each app call gets fresh scratch space, so we must initialize on every call.
-	// store 0, bzero(4096) — pre-allocate a 4KB memory blob
-	{
-		auto blobSize = awst::makeIntegerConstant(std::to_string(AssemblyBuilder::SLOT_SIZE), method.sourceLocation);
-
-		auto bzeroCall = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), method.sourceLocation);
-		bzeroCall->stackArgs.push_back(std::move(blobSize));
-
-		auto storeOp = awst::makeIntrinsicCall("store", awst::WType::voidType(), method.sourceLocation);
-		storeOp->immediates = {AssemblyBuilder::MEMORY_SLOT_FIRST};
-		storeOp->stackArgs.push_back(std::move(bzeroCall));
-
-		auto exprStmt = awst::makeExpressionStatement(std::move(storeOp), method.sourceLocation);
-		body->body.push_back(std::move(exprStmt));
-
-		// Write the free memory pointer (FMP) at offset 0x40 = 0x80.
-		// This must be done once in the preamble, not in each assembly block,
-		// so that subsequent assembly blocks see any FMP updates from earlier blocks.
-		// Pattern: store 0, replace3(load(0), 64, pad32_0x80)
-		auto loadBlob = awst::makeIntrinsicCall("load", awst::WType::bytesType(), method.sourceLocation);
-		loadBlob->immediates = {AssemblyBuilder::MEMORY_SLOT_FIRST};
-
-		auto fmpOffset = std::make_shared<awst::IntegerConstant>();
-		fmpOffset->sourceLocation = method.sourceLocation;
-		fmpOffset->wtype = awst::WType::uint64Type();
-		fmpOffset->value = "64"; // 0x40
-
-		// 32-byte big-endian 0x80 = 0x00...0080
-		std::vector<uint8_t> fmpBytesVal(31, 0);
-		fmpBytesVal.push_back(0x80);
-		auto fmpBytes = awst::makeBytesConstant(
-			std::move(fmpBytesVal), method.sourceLocation, awst::BytesEncoding::Unknown);
-
-		auto replaceOp = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), method.sourceLocation);
-		replaceOp->stackArgs.push_back(std::move(loadBlob));
-		replaceOp->stackArgs.push_back(std::move(fmpOffset));
-		replaceOp->stackArgs.push_back(std::move(fmpBytes));
-
-		auto storeFmpOp = awst::makeIntrinsicCall("store", awst::WType::voidType(), method.sourceLocation);
-		storeFmpOp->immediates = {AssemblyBuilder::MEMORY_SLOT_FIRST};
-		storeFmpOp->stackArgs.push_back(std::move(replaceOp));
-
-		auto fmpStmt = awst::makeExpressionStatement(std::move(storeFmpOp), method.sourceLocation);
-		body->body.push_back(std::move(fmpStmt));
 	}
 
 	// Transient state vars live in scratch slot TRANSIENT_SLOT (packed blob,
@@ -3222,6 +3220,11 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// Solidity implicitly initializes named returns to their zero values.
 		// This is critical for struct types where field-by-field assignment
 		// reads other fields from the variable via copy-on-write pattern.
+		//
+		// Also: every memory-typed return parameter (named or unnamed) gets a
+		// fresh allocation in EVM, advancing mload(0x40) at function entry.
+		// We mirror this so tests that probe free-memory-pointer movement
+		// across calls see the expected bumps.
 		{
 			auto const& retParams = _func.returnParameters();
 			std::vector<std::shared_ptr<awst::Statement>> inits;
@@ -3237,6 +3240,19 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 				auto assign = awst::makeAssignmentStatement(std::move(target), std::move(zeroVal), method.sourceLocation);
 				inits.push_back(std::move(assign));
+			}
+			for (auto const& rp: retParams)
+			{
+				if (rp->referenceLocation()
+					!= solidity::frontend::VariableDeclaration::Location::Memory)
+					continue;
+				auto* rpType = m_typeMapper.map(rp->type());
+				int sz = TypeCoercion::computeEncodedElementSize(rpType);
+				if (sz <= 0)
+					continue;
+				for (auto& s: AssemblyBuilder::emitFreeMemoryBump(
+						sz, method.sourceLocation, static_cast<int>(rp->id())))
+					inits.push_back(std::move(s));
 			}
 			if (!inits.empty())
 			{

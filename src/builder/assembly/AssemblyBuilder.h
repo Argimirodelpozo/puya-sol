@@ -89,6 +89,14 @@ public:
 	/// Get the set of scratch slots to reserve on the Contract node.
 	static std::vector<int> reservedScratchSlots();
 
+	/// Emit AWST statements that advance the EVM free-memory-pointer (FMP)
+	/// stored at scratch-slot 0, offset 0x40 by `_size` bytes. Used to mirror
+	/// EVM allocation semantics for `T memory t;` locals and for memory-typed
+	/// return parameters, so contracts that read mload(0x40) see the expected
+	/// advance. `_uniqueId` namespaces a temporary local for the blob handle.
+	static std::vector<std::shared_ptr<awst::Statement>> emitFreeMemoryBump(
+		int _size, awst::SourceLocation const& _loc, int _uniqueId);
+
 private:
 	// ── Expression translation ──────────────────────────────────────────
 

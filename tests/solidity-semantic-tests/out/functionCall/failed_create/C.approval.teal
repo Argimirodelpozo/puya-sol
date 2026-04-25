@@ -9,6 +9,11 @@ main:
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
@@ -18,12 +23,6 @@ main:
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     txn OnCompletion
     !
     assert
@@ -139,12 +138,23 @@ x_ternary_false@3:
     app_params_get AppAddress
     pop
     itxn_begin
+    pushint 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    pushint 1000000
+    +
     intc_0 // 1
     itxn_field TypeEnum
+    swap
     itxn_field Receiver
     intc_1 // 0
     itxn_field Fee
-    pushint 1000000
     itxn_field Amount
     itxn_submit
     retsub

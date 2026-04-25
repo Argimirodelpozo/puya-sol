@@ -404,11 +404,29 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 
 				fundCreate->fields["Receiver"] = std::move(fundAddr);
 
-				auto fundAmount = std::make_shared<awst::IntegerConstant>();
-				fundAmount->sourceLocation = m_loc;
-				fundAmount->wtype = awst::WType::uint64Type();
-				fundAmount->value = "1000000"; // generous MBR for child + extra pages + state
-				fundCreate->fields["Amount"] = std::move(fundAmount);
+				// Base MBR (1M) + any `{value: N}` forwarded to the child ctor.
+				// Solidity `new X{value: N}(...)` funds the child with N on
+				// construction; AVM needs MBR on top. Bundling them into this
+				// single pay itxn avoids a separate pay txn in the no-postInit
+				// branch. In the postInit branch we still emit an additional
+				// pay txn just before __postInit so msg.value resolves inside
+				// the call (see below) — but the MBR + value is already live
+				// on the child at that point, so the second pay is functionally
+				// redundant w.r.t. balance and only serves to set msg.value.
+				auto baseMbr = awst::makeIntegerConstant("1000000", m_loc);
+				std::shared_ptr<awst::Expression> ctorValueForFund = extractCallValue();
+				std::shared_ptr<awst::Expression> totalFundAmount;
+				if (ctorValueForFund)
+				{
+					totalFundAmount = awst::makeUInt64BinOp(
+						std::move(baseMbr), awst::UInt64BinaryOperator::Add,
+						std::move(ctorValueForFund), m_loc);
+				}
+				else
+				{
+					totalFundAmount = std::move(baseMbr);
+				}
+				fundCreate->fields["Amount"] = std::move(totalFundAmount);
 
 				static awst::WInnerTransaction s_fundTxnType(1);
 				auto fundSubmit = std::make_shared<awst::SubmitInnerTransaction>();

@@ -1,24 +1,23 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_azt7hk9j/C.sol.CContract.approval_program() -> uint64:
+// /tmp/multisource_dmjn2zkq/C.sol.CContract.approval_program() -> uint64:
 main:
     pushint 4096
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     pushint 1
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     pushbytes 0x9d9c28c6 // method "returnAddress()void"
     txna ApplicationArgs 0
     match main_returnAddress_route@4
@@ -33,7 +32,7 @@ main_returnAddress_route@4:
     b returnAddress
 
 
-// /tmp/multisource_azt7hk9j/C.sol.CContract.returnAddress[routing]() -> void:
+// /tmp/multisource_dmjn2zkq/C.sol.CContract.returnAddress[routing]() -> void:
 returnAddress:
     txn GroupIndex
     bz returnAddress_ternary_false@3

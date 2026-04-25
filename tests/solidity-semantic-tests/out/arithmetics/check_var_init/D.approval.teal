@@ -3,24 +3,23 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/check_var_init.sol.D.approval_program() -> uint64:
 main:
-    intcblock 0 1 6 16 1000000
+    intcblock 0 1 6 16
     bytecblock TMPL_APPROVAL_C TMPL_CLEAR_C 0xbacc49e3
     pushint 4096
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     txn OnCompletion
     !
     assert
@@ -70,7 +69,7 @@ f_ternary_merge@4:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc 4 // 1000000
+    pushint 1000000
     itxn_field Amount
     itxn_submit
     dup
@@ -131,7 +130,7 @@ g:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc 4 // 1000000
+    pushint 1000011
     itxn_field Amount
     itxn_submit
     dup

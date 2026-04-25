@@ -4,11 +4,16 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_arguments_internal.sol.Main.approval_program() -> uint64:
 main:
     intcblock 0 1 6 24
-    bytecblock "__ctor_pending" "h" 0x2fe85e04 0x151f7c75 TMPL_APPROVAL_Helper TMPL_CLEAR_Helper
+    bytecblock "__ctor_pending" "h" 0x2fe85e04 0x0a5c26e3 0x151f7c75 TMPL_APPROVAL_Helper TMPL_CLEAR_Helper
     pushint 4096
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "__ctor_pending"
@@ -18,12 +23,6 @@ main:
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     txn OnCompletion
     !
     assert
@@ -31,7 +30,7 @@ main_after_if_else@2:
     assert
     pushbytes 0xbacc49e3 // method "__postInit()void"
     bytec_2 // method "getFlag()bool"
-    pushbytes 0x0a5c26e3 // method "getName()byte[3]"
+    bytec_3 // method "getName()byte[3]"
     txna ApplicationArgs 0
     match __postInit getFlag getName
     err
@@ -46,8 +45,10 @@ __postInit:
     intc_0 // 0
     app_global_put
     itxn_begin
-    bytec 4 // TMPL_APPROVAL_Helper
-    bytec 5 // TMPL_CLEAR_Helper
+    intc_1 // 1
+    itob
+    bytec 5 // TMPL_APPROVAL_Helper
+    bytec 6 // TMPL_CLEAR_Helper
     intc_2 // 6
     itxn_field TypeEnum
     pushint 16
@@ -60,6 +61,9 @@ __postInit:
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
     itxn_field ApprovalProgram
+    pushbytes 0x616263
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
     itxn_submit
     itxn CreatedApplicationID
     dup
@@ -125,7 +129,7 @@ getFlag_ternary_merge@4:
     intc_0 // 0
     uncover 2
     setbit
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -163,12 +167,12 @@ getName_ternary_merge@4:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    pushbytes 0x28fb6575 // method "getName()uint8[3]"
+    bytec_3 // method "getName()byte[3]"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     extract 4 0
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log

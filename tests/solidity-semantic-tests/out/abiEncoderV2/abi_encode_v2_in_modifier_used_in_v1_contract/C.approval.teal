@@ -1,7 +1,7 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_ch9kx6zj/B.sol.C.approval_program() -> uint64:
+// /tmp/multisource_ycz48xko/B.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 6 16
     bytecblock "y" "x" 0x290efb48 TMPL_APPROVAL_A TMPL_CLEAR_A
@@ -9,6 +9,11 @@ main:
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     pushint 10
@@ -23,12 +28,6 @@ main:
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     pushbytes 0x3cc4fb64 // method "test()(uint512,uint512)"
     txna ApplicationArgs 0
     match main_test_route@4
@@ -43,7 +42,7 @@ main_test_route@4:
     b test
 
 
-// /tmp/multisource_ch9kx6zj/B.sol.C.test[routing]() -> void:
+// /tmp/multisource_ycz48xko/B.sol.C.test[routing]() -> void:
 test:
     txn GroupIndex
     bz test_ternary_false@3

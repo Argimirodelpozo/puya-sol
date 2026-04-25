@@ -9,6 +9,11 @@ main:
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@4
     bytec_0 // "storedFn"
@@ -23,12 +28,6 @@ main:
     err // invalid function pointer
 
 main_after_if_else@4:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     pushbytes 0x2d4970c7 // method "f()void"
     txna ApplicationArgs 0
     match main_f_route@6

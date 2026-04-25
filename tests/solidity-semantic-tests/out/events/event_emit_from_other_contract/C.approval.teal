@@ -4,11 +4,16 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_emit_from_other_contract.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 6 16
-    bytecblock "__ctor_pending" "d" TMPL_APPROVAL_D TMPL_CLEAR_D
+    bytecblock "__ctor_pending" 0xc7d12872 "d" TMPL_APPROVAL_D TMPL_CLEAR_D
     pushint 4096
     bzero
     dup
     store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "__ctor_pending"
@@ -18,18 +23,13 @@ main:
     return
 
 main_after_if_else@2:
-    dup
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0xc7d12872 // method "__postInit()void", method "deposit(byte[32])void"
+    pushbytes 0xbacc49e3 // method "__postInit()void"
+    bytec_1 // method "deposit(byte[32])void"
     txna ApplicationArgs 0
     match __postInit deposit
     err
@@ -44,8 +44,8 @@ __postInit:
     intc_0 // 0
     app_global_put
     itxn_begin
-    bytec_2 // TMPL_APPROVAL_D
-    bytec_3 // TMPL_CLEAR_D
+    bytec_3 // TMPL_APPROVAL_D
+    bytec 4 // TMPL_CLEAR_D
     intc_2 // 6
     itxn_field TypeEnum
     intc_3 // 16
@@ -77,7 +77,7 @@ __postInit:
     swap
     itob
     concat
-    bytec_1 // "d"
+    bytec_2 // "d"
     swap
     app_global_put
     intc_1 // 1
@@ -94,7 +94,7 @@ deposit:
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     itxn_begin
     intc_0 // 0
-    bytec_1 // "d"
+    bytec_2 // "d"
     app_global_get_ex
     assert // check d exists
     pushint 24
@@ -106,7 +106,7 @@ deposit:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    pushbytes 0x1e0b5e0f // method "deposit(uint8[32])void"
+    bytec_1 // method "deposit(byte[32])void"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
