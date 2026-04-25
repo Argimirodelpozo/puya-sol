@@ -1,6 +1,16 @@
-# Semantic Test Status — v170
+# Semantic Test Status — v171
 
-**Totals**: 1062 PASS / 199 FAIL / 61 (42 compile_err + 19 deploy_err) = **1062/1322 (80.3%)**
+**Totals**: 1065 PASS / 196 FAIL / 61 (42 compile_err + 19 deploy_err) = **1065/1322 (80.6%)**
+
+vs v170 (1062): +3, zero regressions. Three independent contributions across the encoder + harness:
+- `array/arrays_complex_from_and_to_storage` ✗→✓ — exercised the C++ static-array-of-dynamic-elements encoder.
+- `abiEncoderV2/calldata_dynamic_array_to_memory` ✗→✓ — harness comparison-side fix; contract returns ARC4 nested-list, test directive expects EVM-ABI words; new walker compares structurally.
+- `abiEncoderV2/calldata_overlapped_nested_dynamic_arrays` ✗→✓ — same harness comparison fix.
+
+Three changes since v170, all in this commit:
+1. `AbiEncoderBuilder::encodeStaticArrayDynElems` (`src/builder/sol-eb/AbiEncoderBuilder.{cpp,h}`): static-array-of-dynamic encoder. Parallel to `encodeDynArrayDynElems` but with no leading uint256 length word and a compile-time fixed `n`. Dispatched from `encodeDynamicTail` when the type is `!isDynamicallySized && isDynamicallyEncoded` (i.e. `T[N]` with T dynamic). Walks the ARC4 offset table (which sits at byte 0, no length header to skip past), recursively encodes each inner via `encodeFromArc4Bytes`.
+2. `_compare_evm_abi_to_value` + `_evm_walk_compare` in `tests/solidity-semantic-tests/run_tests.py`: structural EVM-ABI walker that decodes a flat list of expected words against an actual nested-list value. Used as a new fallback in the comparison logic when the legacy "treat \[32, N, ...\] as bytes(length=N)" path produces wrong byte trims (e.g. `expected b'\x00\x00'` vs `[[5, 6], [7, 8]]`). Tries dynamic head/tail first, falls back to static-inline when head words don't look like aligned offsets — handles both `T[][N]` and `T[N][]`-style nestings without needing explicit type info from the test directive.
+3. Dropped the legacy `_regroup_args` ad-hoc fallback (~390 lines, lines 1277-1666 of `run_tests.py`). The codec from v169 has been at parity across two full suite runs; the fallback is now dead code. `_regroup_args` is reduced to a thin wrapper around `_decode_abi_args` that returns `raw_args` unchanged on codec exception (defensive).
 
 vs v169 (1061): +1 file-level (`abiEncoderV2/calldata_array_dynamic` ✗→✓), +16 sub-tests passing across `calldata_array_multi_dynamic` (4 of 6 now pass), `dynamic_nested_arrays`, plus other partial gains within still-failing files. Zero regressions.
 

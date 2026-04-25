@@ -1213,6 +1213,29 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 		}
 	}
 
+	// Static array of dynamic elements (e.g. bytes[3], uint256[][3]).
+	// EVM packs as `[uint256 offsets × N][bodies]` (no leading length).
+	// ARC4 packs as `[uint16 offsets × N][bodies]`. Re-encode via
+	// `encodeStaticArrayDynElems` (uses runtime loop similar to the
+	// nested-dynamic case but with no length word and a compile-time n).
+	if (auto const* arrType = dynamic_cast<ArrayType const*>(_solType))
+	{
+		if (!arrType->isDynamicallySized()
+			&& !arrType->isByteArrayOrString()
+			&& arrType->isDynamicallyEncoded())
+		{
+			auto const* elemSolType = arrType->baseType();
+			bool elemIsDyn = elemSolType
+				&& (elemSolType->isDynamicallyEncoded()
+					|| elemSolType->category() == Type::Category::StringLiteral);
+			if (elemIsDyn)
+			{
+				unsigned n = static_cast<unsigned>(arrType->length());
+				return encodeStaticArrayDynElems(_ctx, _expr, elemSolType, n, _loc);
+			}
+		}
+	}
+
 	// Struct: recursively encode fields with EVM head/tail layout.
 	// For a struct S { T1 f1; T2 f2; ... }, the EVM ABI encoding is:
 	//   head = concat(encode_field_i_static | offset_i_if_dynamic) for each i
@@ -1854,6 +1877,158 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynArrayDynElems(
 	auto outerLenWord = leftPadBytes(u64Itob(nVar, _loc), 32, _loc);
 	auto headTail = bytesConcat(headVar, tailVar, _loc);
 	return bytesConcat(std::move(outerLenWord), std::move(headTail), _loc);
+}
+
+std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeStaticArrayDynElems(
+	BuilderContext& _ctx,
+	std::shared_ptr<awst::Expression> _expr,
+	solidity::frontend::Type const* _elemSolType,
+	unsigned _n,
+	awst::SourceLocation const& _loc)
+{
+	auto const bytesT = awst::WType::bytesType();
+	auto const u64T = awst::WType::uint64Type();
+
+	int tc = s_encLoopCounter++;
+	auto suffix = std::to_string(tc);
+
+	// arr_b = ReinterpretCast(_expr, bytes)
+	std::string arrName = "__abi_sadyn_in_" + suffix;
+	auto arrVar = awst::makeVarExpression(arrName, bytesT, _loc);
+	_ctx.prePendingStatements.push_back(assignFresh(arrVar,
+		awst::makeReinterpretCast(_expr, bytesT, _loc), _loc));
+
+	// total_bytes = len(arr_b)
+	std::string totName = "__abi_sadyn_tot_" + suffix;
+	auto totVar = awst::makeVarExpression(totName, u64T, _loc);
+	_ctx.prePendingStatements.push_back(assignFresh(totVar,
+		bytesLen(arrVar, _loc), _loc));
+
+	// acc_head = bzero(0); acc_tail = bzero(0)
+	std::string headName = "__abi_sadyn_head_" + suffix;
+	auto headVar = awst::makeVarExpression(headName, bytesT, _loc);
+	_ctx.prePendingStatements.push_back(assignFresh(headVar,
+		bytesBzero(u64Const("0", _loc), _loc), _loc));
+	std::string tailName = "__abi_sadyn_tail_" + suffix;
+	auto tailVar = awst::makeVarExpression(tailName, bytesT, _loc);
+	_ctx.prePendingStatements.push_back(assignFresh(tailVar,
+		bytesBzero(u64Const("0", _loc), _loc), _loc));
+
+	// off = n * 32  (initial running EVM-ABI offset; n head slots × 32B)
+	std::string offName = "__abi_sadyn_off_" + suffix;
+	auto offVar = awst::makeVarExpression(offName, u64T, _loc);
+	_ctx.prePendingStatements.push_back(assignFresh(offVar,
+		u64Const(std::to_string(_n * 32), _loc), _loc));
+
+	// i = 0
+	std::string iName = "__abi_sadyn_i_" + suffix;
+	auto iVar = awst::makeVarExpression(iName, u64T, _loc);
+	_ctx.prePendingStatements.push_back(assignFresh(iVar, u64Const("0", _loc), _loc));
+
+	// While loop body — same structure as encodeDynArrayDynElems but the
+	// ARC4 offset table starts at byte 0 (no length header) and `n` is
+	// compile-time fixed.
+	auto loop = std::make_shared<awst::WhileLoop>();
+	loop->sourceLocation = _loc;
+	loop->condition = awst::makeNumericCompare(iVar, awst::NumericComparison::Lt,
+		u64Const(std::to_string(_n), _loc), _loc);
+	auto body = std::make_shared<awst::Block>();
+	body->sourceLocation = _loc;
+
+	// inner_arc4_off = extract_uint16(arr_b, i*2)
+	std::string innArcOffName = "__abi_sadyn_iaoff_" + suffix;
+	auto innArcOffVar = awst::makeVarExpression(innArcOffName, u64T, _loc);
+	{
+		auto iX2 = awst::makeUInt64BinOp(iVar, awst::UInt64BinaryOperator::Mult,
+			u64Const("2", _loc), _loc);
+		body->body.push_back(assignFresh(innArcOffVar,
+			bytesExtractU16(arrVar, std::move(iX2), _loc), _loc));
+	}
+
+	// inner_start = inner_arc4_off  (offsets in static-of-dyn ARC4 are
+	// relative to the start of the array, not body — there's no length
+	// header to skip past).
+	std::string innStartName = "__abi_sadyn_istart_" + suffix;
+	auto innStartVar = awst::makeVarExpression(innStartName, u64T, _loc);
+	body->body.push_back(assignFresh(innStartVar, innArcOffVar, _loc));
+
+	// inner_end = if (i+1 < n) then extract_uint16(arr_b, (i+1)*2)
+	//             else total_bytes
+	std::string innEndName = "__abi_sadyn_iend_" + suffix;
+	auto innEndVar = awst::makeVarExpression(innEndName, u64T, _loc);
+	{
+		body->body.push_back(assignFresh(innEndVar, totVar, _loc));
+		auto iPlus1 = awst::makeUInt64BinOp(iVar, awst::UInt64BinaryOperator::Add,
+			u64Const("1", _loc), _loc);
+		auto cond = awst::makeNumericCompare(iPlus1,
+			awst::NumericComparison::Lt, u64Const(std::to_string(_n), _loc), _loc);
+		auto thenBlock = std::make_shared<awst::Block>();
+		thenBlock->sourceLocation = _loc;
+		auto i1 = awst::makeUInt64BinOp(iVar, awst::UInt64BinaryOperator::Add,
+			u64Const("1", _loc), _loc);
+		auto i1X2 = awst::makeUInt64BinOp(std::move(i1),
+			awst::UInt64BinaryOperator::Mult, u64Const("2", _loc), _loc);
+		auto nxtArcOff = bytesExtractU16(arrVar, std::move(i1X2), _loc);
+		thenBlock->body.push_back(assignFresh(innEndVar, std::move(nxtArcOff), _loc));
+		auto ifStmt = std::make_shared<awst::IfElse>();
+		ifStmt->sourceLocation = _loc;
+		ifStmt->condition = std::move(cond);
+		ifStmt->ifBranch = std::move(thenBlock);
+		body->body.push_back(std::move(ifStmt));
+	}
+
+	// inner_size = inner_end - inner_start
+	std::string innSizeName = "__abi_sadyn_isz_" + suffix;
+	auto innSizeVar = awst::makeVarExpression(innSizeName, u64T, _loc);
+	body->body.push_back(assignFresh(innSizeVar,
+		awst::makeUInt64BinOp(innEndVar, awst::UInt64BinaryOperator::Sub,
+			innStartVar, _loc), _loc));
+
+	// inner_bytes = extract3(arr_b, inner_start, inner_size)
+	std::string innBytesName = "__abi_sadyn_ib_" + suffix;
+	auto innBytesVar = awst::makeVarExpression(innBytesName, bytesT, _loc);
+	body->body.push_back(assignFresh(innBytesVar,
+		bytesExtract3(arrVar, innStartVar, innSizeVar, _loc), _loc));
+
+	// inner_evm = encodeFromArc4Bytes(inner_bytes, _elemSolType)  (recursive)
+	std::string innEvmName = "__abi_sadyn_iev_" + suffix;
+	auto innEvmVar = awst::makeVarExpression(innEvmName, bytesT, _loc);
+	{
+		std::vector<std::shared_ptr<awst::Statement>> savedPre;
+		savedPre.swap(_ctx.prePendingStatements);
+		auto innEvm = encodeFromArc4Bytes(_ctx, innBytesVar, _elemSolType, _loc);
+		for (auto& s: _ctx.prePendingStatements)
+			body->body.push_back(std::move(s));
+		_ctx.prePendingStatements = std::move(savedPre);
+		body->body.push_back(assignFresh(innEvmVar, std::move(innEvm), _loc));
+	}
+
+	// acc_head = concat(acc_head, leftpad32(itob(off)))
+	{
+		auto offPadded = leftPadBytes(u64Itob(offVar, _loc), 32, _loc);
+		body->body.push_back(assignFresh(headVar,
+			bytesConcat(headVar, std::move(offPadded), _loc), _loc));
+	}
+
+	// acc_tail = concat(acc_tail, inner_evm)
+	body->body.push_back(assignFresh(tailVar,
+		bytesConcat(tailVar, innEvmVar, _loc), _loc));
+
+	// off += len(inner_evm)
+	body->body.push_back(assignFresh(offVar,
+		awst::makeUInt64BinOp(offVar, awst::UInt64BinaryOperator::Add,
+			bytesLen(innEvmVar, _loc), _loc), _loc));
+
+	// i += 1
+	body->body.push_back(assignFresh(iVar,
+		awst::makeUInt64BinOp(iVar, awst::UInt64BinaryOperator::Add,
+			u64Const("1", _loc), _loc), _loc));
+
+	loop->loopBody = std::move(body);
+	_ctx.prePendingStatements.push_back(std::move(loop));
+
+	// Result: acc_head ++ acc_tail (no length word)
+	return bytesConcat(headVar, tailVar, _loc);
 }
 
 // Recursive entry point used from inside loop bodies. The caller has

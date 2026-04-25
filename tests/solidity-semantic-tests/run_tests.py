@@ -1273,397 +1273,10 @@ def _regroup_args(raw_args, method_sig):
         # Defensive: any unexpected exception falls through to legacy path
         # so we don't regress tests on codec bugs.
         pass
-
-    def _inner_type(pt):
-        """Strip the outermost array suffix: 'bytes[1]' -> 'bytes',
-        'uint256[][3]' -> 'uint256[]', 'uint256' -> None."""
-        m = _re.match(r'(.+)\[\d*\]$', pt)
-        return m.group(1) if m else None
-
-    def _is_dynamic(pt):
-        if pt in dynamic_types:
-            return True
-        if _re.match(r'.*\[\]$', pt):
-            return True
-        # Static array whose element type is itself dynamic (e.g. `bytes[1]`,
-        # `uint256[][3]`, `string[2]`) is dynamically encoded per EVM ABI.
-        inner = _inner_type(pt)
-        if inner is not None:
-            return _is_dynamic(inner)
-        return False
-
-    def _static_array_dims(pt):
-        """Parse static array dimensions. Returns list of sizes or None.
-        e.g. 'uint256[3]' -> [3], 'uint256[3][2]' -> [3, 2], 'uint256' -> None
-        """
-        dims = _re.findall(r'\[(\d+)\]', pt)
-        return [int(d) for d in dims] if dims else None
-
-    def _static_array_size(pt):
-        dims = _static_array_dims(pt)
-        if not dims:
-            return None
-        total = 1
-        for d in dims:
-            total *= d
-        return total
-
-    class _MalformedCalldata(Exception):
-        """Raised when _decode_dynamic detects malformed calldata (declared
-        length or offset points past available raw_args). Callers catch it
-        to fall back to the inline path so contract-level validation still
-        sees the malformation."""
-        pass
-
-    def _decode_dynamic(pt, word_idx, strict=False):
-        """Decode the value at raw_args[word_idx..] for type `pt`. `word_idx` is
-        the start of the value in the flat raw_args list (i.e. the tail-region
-        location that the caller's offset word pointed to). Returns the decoded
-        Python value. Handles: string / bytes / <T>[] / <T>[N] (static array of
-        dynamic T). If `strict`, raises `_MalformedCalldata` on OOB access."""
-        if pt in dynamic_types:
-            # length + data
-            if word_idx >= len(raw_args):
-                if strict: raise _MalformedCalldata(f"{pt}: length word OOB")
-                return "" if pt == 'string' else b""
-            length = raw_args[word_idx]
-            if not isinstance(length, int):
-                return raw_args[word_idx]
-            data_start = word_idx + 1
-            if length == 0:
-                return "" if pt == 'string' else b""
-            n_words = (length + 31) // 32
-            if strict and data_start + n_words > len(raw_args):
-                raise _MalformedCalldata(f"{pt}: data region OOB (need {n_words} words, have {len(raw_args) - data_start})")
-            data = b""
-            for w in range(n_words):
-                if data_start + w >= len(raw_args):
-                    break
-                wv = raw_args[data_start + w]
-                if isinstance(wv, bytes):
-                    data += wv.ljust(32, b'\x00')[:32]
-                elif isinstance(wv, int):
-                    data += wv.to_bytes(32, 'big', signed=(wv < 0))
-            return (data[:length].decode('utf-8', errors='replace')
-                    if pt == 'string' else data[:length])
-        # Array: dynamic `<inner>[]` or static `<inner>[N]`
-        inner = _inner_type(pt)
-        if inner is None:
-            # Scalar dynamic fallback — shouldn't really happen
-            return raw_args[word_idx] if word_idx < len(raw_args) else 0
-        # Determine length: dynamic arrays have a length word, static arrays
-        # infer from the declared size.
-        is_outer_dynamic = _re.match(r'.*\[\]$', pt) is not None
-        if is_outer_dynamic:
-            if word_idx >= len(raw_args):
-                if strict: raise _MalformedCalldata(f"{pt}: length word OOB")
-                return []
-            length = raw_args[word_idx]
-            if not isinstance(length, int):
-                return []
-            body_start = word_idx + 1
-        else:
-            m = _re.match(r'.+\[(\d+)\]$', pt)
-            length = int(m.group(1)) if m else 0
-            body_start = word_idx
-        if _is_dynamic(inner):
-            # Each element has a head-offset (relative to body_start) pointing
-            # to its own tail.
-            if strict and body_start + length > len(raw_args):
-                raise _MalformedCalldata(f"{pt}: head-offset table OOB")
-            arr = []
-            for i in range(length):
-                if body_start + i >= len(raw_args):
-                    if strict: raise _MalformedCalldata(f"{pt}[{i}]: head word OOB")
-                    arr.append(b"" if inner in dynamic_types else [])
-                    continue
-                inner_offset = raw_args[body_start + i]
-                if not isinstance(inner_offset, int):
-                    if strict: raise _MalformedCalldata(f"{pt}[{i}]: head not int")
-                    arr.append(b"" if inner in dynamic_types else [])
-                    continue
-                inner_word_idx = body_start + (inner_offset // 32)
-                arr.append(_decode_dynamic(inner, inner_word_idx, strict=strict))
-            return arr
-        # Static inner element type: values are packed element-per-word
-        # (or packed across multiple words for multi-slot primitives, but
-        # ARC4 static primitives all fit in one word for our purposes).
-        if strict and body_start + length > len(raw_args):
-            raise _MalformedCalldata(f"{pt}: element region OOB (need {length} words, have {len(raw_args) - body_start})")
-        return raw_args[body_start:body_start + length]
-
-    # Two-pass ABI decode: head (one word per param) then tail (dynamic data)
-    # Head region: N words where N = number of params (each static param is
-    # its value, each dynamic param is an offset into the tail)
-    n_params = len(param_types)
-
-    def _build_nested_array(flat, offset, dims):
-        """Build nested list from flat args. Returns (nested_list, new_offset)."""
-        if len(dims) == 1:
-            arr = flat[offset:offset + dims[0]]
-            return arr, offset + dims[0]
-        outer_size = dims[-1]  # outermost dimension
-        inner_dims = dims[:-1]
-        result = []
-        for _ in range(outer_size):
-            inner, offset = _build_nested_array(flat, offset, inner_dims)
-            result.append(inner)
-        return result, offset
-
-    # If no dynamic types, use simple sequential consumption
-    if not any(_is_dynamic(pt) for pt in param_types):
-        result = []
-        idx = 0
-        for pt in param_types:
-            dims = _static_array_dims(pt)
-            if dims is not None:
-                total = _static_array_size(pt)
-                if idx + total <= len(raw_args):
-                    if len(dims) == 1:
-                        result.append(raw_args[idx:idx + total])
-                    else:
-                        nested, _ = _build_nested_array(raw_args, idx, dims)
-                        result.append(nested)
-                    idx += total
-                else:
-                    result.append(raw_args[idx] if idx < len(raw_args) else 0)
-                    idx += 1
-            else:
-                result.append(raw_args[idx] if idx < len(raw_args) else 0)
-                idx += 1
-        return result
-
-    # Has dynamic types: proper ABI head/tail decode
-    # Head: one word per param. For static types, the value is inline.
-    # For dynamic types, the word is an offset (in bytes) to the tail data.
-    result = []
-    head_idx = 0
-    for pt in param_types:
-        dims = _static_array_dims(pt)
-        sz = _static_array_size(pt)
-        if sz is not None and not _is_dynamic(pt):
-            # Static array: consumes total elements inline in the head
-            if head_idx + sz <= len(raw_args):
-                if dims and len(dims) > 1:
-                    nested, _ = _build_nested_array(raw_args, head_idx, dims)
-                    result.append(nested)
-                else:
-                    result.append(raw_args[head_idx:head_idx + sz])
-                head_idx += sz
-            else:
-                result.append(raw_args[head_idx] if head_idx < len(raw_args) else 0)
-                head_idx += 1
-        elif _is_dynamic(pt):
-            # Dynamic type: head word is offset (in bytes)
-            offset = raw_args[head_idx] if head_idx < len(raw_args) else 0
-            head_idx += 1
-            if isinstance(offset, int):
-                word_idx = offset // 32
-                # Dispatch to the recursive decoder only when the inner
-                # element type is literally `bytes` or `string`. Broader
-                # "static-array-of-dynamic" dispatching (e.g. uint16[][][1])
-                # regressed tests where the old inline code's FALLBACK
-                # path happened to hide expected-FAILURE edge cases —
-                # don't widen without a runner-side way to validate
-                # calldata bounds that the compiler doesn't yet enforce.
-                inner = _inner_type(pt)
-                if inner is not None and inner in dynamic_types:
-                    result.append(_decode_dynamic(pt, word_idx))
-                    continue
-                # Also dispatch for static-outer arrays whose inner type is
-                # itself dynamic (e.g. `uint256[][2]`). The recursive decoder
-                # walks the head-offset table correctly; the inline fallback
-                # below treats the first inner offset as a length and produces
-                # garbage. Restricted to outer-static (trailing `[N]`) and
-                # uses strict=True so we fall through to the inline path on
-                # OOB access, preserving malformed-calldata FAILURE tests.
-                if (inner is not None
-                    and _is_dynamic(inner)
-                    and _re.match(r'.+\[\d+\]$', pt)):
-                    try:
-                        decoded = _decode_dynamic(pt, word_idx, strict=True)
-                        result.append(decoded)
-                        continue
-                    except _MalformedCalldata:
-                        pass  # fall through to inline path
-            # Decode data at offset
-            if isinstance(offset, int):
-                word_idx = offset // 32  # convert byte offset to word index
-                if word_idx < len(raw_args):
-                    length = raw_args[word_idx]
-                    if isinstance(length, int):
-                        data_start = word_idx + 1
-                        if pt in dynamic_types:
-                            # string/bytes: collect data words and concatenate.
-                            # If the declared length exceeds the actually-
-                            # available calldata bytes (words after data_start),
-                            # EVM reverts on ABI decode — emit a malformed
-                            # sentinel so the compiler's length assert fires
-                            # on AVM too. This mirrors revertStrings/
-                            # invalid_abi_decoding_calldata_v1 case where the
-                            # inner length pointer is bogus.
-                            avail_bytes = max(0, len(raw_args) - data_start) * 32
-                            if length == 0:
-                                result.append("" if pt == 'string' else b"")
-                            elif isinstance(length, int) and int(length) > avail_bytes:
-                                clamped = min(int(length), 0xFFFF)
-                                result.append(_MalformedArc4(clamped.to_bytes(2, 'big')))
-                            elif data_start < len(raw_args) and length <= 10000:
-                                # Collect enough words to cover `length` bytes.
-                                # EVM pads to 32-byte words, so a >32-byte value
-                                # is split across multiple chunks in the test
-                                # source (each chunk parses as its own value).
-                                data = b""
-                                n_words = min((length + 31) // 32, len(raw_args) - data_start)
-                                for w in range(n_words):
-                                    wv = raw_args[data_start + w]
-                                    if isinstance(wv, bytes):
-                                        data += wv.ljust(32, b'\x00')[:32]
-                                    elif isinstance(wv, int):
-                                        data += wv.to_bytes(32, 'big', signed=(wv < 0))
-                                    elif wv is None:
-                                        break
-                                data = data[:length]
-                                if pt == 'string':
-                                    result.append(data.decode('utf-8', errors='replace'))
-                                else:
-                                    result.append(data)
-                            else:
-                                # Declared length > 0 but no data (or length too
-                                # large). EVM would revert on ABI decode; emit a
-                                # malformed ARC4 blob so the compiler's length
-                                # assert fires. Clamp length to uint16 max.
-                                clamped = min(int(length), 0xFFFF)
-                                result.append(_MalformedArc4(clamped.to_bytes(2, 'big')))
-                        else:
-                            # Dynamic array: collect elements
-                            # Check if it's a nested dynamic array (e.g., uint256[][])
-                            inner_type = _re.sub(r'\[\]$', '', pt)  # strip outermost []
-                            is_nested_dynamic = _is_dynamic(inner_type)
-
-                            if is_nested_dynamic and length > 0:
-                                # Nested dynamic array: each element has an offset
-                                # pointing to its own length + data. Detect EVM
-                                # "malformed calldata" patterns and emit a sentinel
-                                # blob so our length assertions fire, mirroring the
-                                # EVM revert.
-                                malformed = False
-                                # No head offsets at all (declared length > 0).
-                                if data_start >= len(raw_args):
-                                    malformed = True
-                                else:
-                                    for j in range(int(length)):
-                                        if data_start + j >= len(raw_args):
-                                            malformed = True
-                                            break
-                                        eo = raw_args[data_start + j]
-                                        if not isinstance(eo, int):
-                                            malformed = True
-                                            break
-                                        ew = word_idx + 1 + eo // 32
-                                        if ew >= len(raw_args):
-                                            malformed = True
-                                            break
-                                        el = raw_args[ew]
-                                        if not isinstance(el, int):
-                                            malformed = True
-                                            break
-                                        # Inner length absurd or exceeds remaining.
-                                        if el > 0xFFFF:
-                                            malformed = True
-                                            break
-                                        if el > (len(raw_args) - (ew + 1)):
-                                            malformed = True
-                                            break
-                                if malformed:
-                                    clamped = min(int(length), 0xFFFF)
-                                    result.append(_MalformedArc4(clamped.to_bytes(2, 'big')))
-                                    continue
-                                n_elems = min(int(length), 100)
-                                arr = []
-                                for j in range(n_elems):
-                                    # Each element's offset is relative to the
-                                    # start of this array's data
-                                    elem_offset = raw_args[data_start + j] if (data_start + j) < len(raw_args) else 0
-                                    if isinstance(elem_offset, int):
-                                        # Offset is in bytes relative to the array data start
-                                        elem_word = word_idx + 1 + elem_offset // 32
-                                        if elem_word < len(raw_args):
-                                            elem_len = raw_args[elem_word]
-                                            if isinstance(elem_len, int):
-                                                elem_data_start = elem_word + 1
-                                                inner_arr = []
-                                                for k in range(min(int(elem_len), len(raw_args) - elem_data_start)):
-                                                    if elem_data_start + k < len(raw_args):
-                                                        inner_arr.append(raw_args[elem_data_start + k])
-                                                arr.append(inner_arr)
-                                            else:
-                                                arr.append([])
-                                    else:
-                                        arr.append([])
-                                result.append(arr)
-                            else:
-                                # Check for dynamic array of static arrays (e.g., uint256[3][])
-                                inner_dims = _static_array_dims(inner_type)
-                                inner_size = _static_array_size(inner_type)
-                                if inner_size and inner_size > 1 and length > 0:
-                                    n_elems = int(length)
-                                    # Validate we have enough data
-                                    needed = n_elems * inner_size
-                                    if data_start + needed <= len(raw_args):
-                                        arr = []
-                                        for j in range(n_elems):
-                                            elem_start = data_start + j * inner_size
-                                            if inner_dims and len(inner_dims) > 1:
-                                                nested, _ = _build_nested_array(raw_args, elem_start, inner_dims)
-                                                arr.append(nested)
-                                            else:
-                                                arr.append(raw_args[elem_start:elem_start + inner_size])
-                                        result.append(arr)
-                                    else:
-                                        # Insufficient data — let flat collection handle it
-                                        n_avail = len(raw_args) - data_start
-                                        arr = []
-                                        for j in range(min(int(length), n_avail)):
-                                            arr.append(raw_args[data_start + j])
-                                        result.append(arr)
-                                else:
-                                    n_avail = len(raw_args) - data_start
-                                    # Declared length > available data (or
-                                    # length absurdly large): build malformed
-                                    # ARC4 blob so the compiler's length assert
-                                    # fires — EVM reverts on this pattern.
-                                    if length > 0 and (length > n_avail or length > 0xFFFF):
-                                        clamped = min(int(length), 0xFFFF)
-                                        blob = clamped.to_bytes(2, 'big')
-                                        # Include any available element bytes
-                                        # so we don't accidentally fail a
-                                        # different assert first.
-                                        for j in range(min(n_avail, clamped)):
-                                            wv = raw_args[data_start + j]
-                                            if isinstance(wv, int):
-                                                blob += (wv & ((1 << 256) - 1)).to_bytes(32, 'big')
-                                            elif isinstance(wv, bytes):
-                                                blob += wv.ljust(32, b'\x00')[:32]
-                                        result.append(_MalformedArc4(blob))
-                                        continue
-                                    n_elems = min(int(length), n_avail) if length <= 10000 else n_avail
-                                    arr = []
-                                    for j in range(n_elems):
-                                        arr.append(raw_args[data_start + j])
-                                    result.append(arr)
-                    else:
-                        result.append(raw_args[word_idx])
-                else:
-                    result.append("" if pt in dynamic_types else [])
-            else:
-                result.append(offset)
-        else:
-            # Simple scalar
-            result.append(raw_args[head_idx] if head_idx < len(raw_args) else 0)
-            head_idx += 1
-
-    return result
+    # Codec didn't produce expected count — return raw_args unchanged so
+    # the caller can degrade gracefully (excess calldata path handles
+    # mismatched arg counts upstream).
+    return raw_args
 
 
 # Thread-unsafe "current test" flag consumed by execute_call to avoid
@@ -2467,6 +2080,17 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                 decoded = _try_decode_evm_returns(expected_list, actual_list)
                 if decoded is not None:
                     return True, f"{actual}"
+                # Structural EVM-ABI walker: when actual is a nested-list value
+                # (the contract returned an ARC4 dynamic array of dynamic
+                # arrays which algokit decoded back to a Python list), try to
+                # walk expected_list as the EVM-ABI head/tail of the same
+                # shape. Avoids the byte-blob fallback below mis-treating
+                # `[32, 2, ...]` (offset+length of nested array) as a
+                # `bytes(length=2)` and trimming the comparison to `b'\\x00\\x00'`.
+                if (isinstance(actual, (list, tuple))
+                    and any(isinstance(e, (list, tuple)) for e in actual)
+                    and _compare_evm_abi_to_value(expected_list, actual)):
+                    return True, f"{actual}"
                 # Simple single dynamic return: [0x20, len, data...]
                 if (len(expected_list) >= 2
                     and isinstance(expected_list[0], int) and expected_list[0] == 32
@@ -2649,6 +2273,93 @@ def _try_decode_evm_returns(expected_list, actual_list):
             continue
         return None
     return True
+
+
+def _compare_evm_abi_to_value(expected_words, actual):
+    """Walk `expected_words` as EVM-ABI head/tail and verify it represents
+    the same logical value as `actual`. Used when the contract returned an
+    ARC4-encoded nested array (algokit decoded back to a Python nested
+    list) but the test expects the EVM-ABI words.
+
+    No explicit return type info is needed — the shape is inferred from
+    `actual` (nested list ⇒ array of arrays, list of ints ⇒ array of
+    scalars, single scalar ⇒ static value). This is a heuristic walker;
+    when it can't prove a match it returns False so the caller can try
+    other decode paths."""
+    # Skip the leading top-level offset word (always 32 for a single
+    # dynamic return).
+    if not expected_words: return False
+    if not (isinstance(expected_words[0], int) and expected_words[0] == 32):
+        return False
+    return _evm_walk_compare(expected_words, 1, actual)
+
+
+def _evm_walk_compare(words, base, actual):
+    """Internal helper for `_compare_evm_abi_to_value`. Walks `words`
+    starting at word `base` and compares against `actual`. For nested
+    lists, tries both the dynamic (head/tail) and static-inline element
+    layouts since Python's `list` representation doesn't preserve the
+    distinction between e.g. `uint256[]` (dynamic) and `uint256[2]`
+    (static) elements."""
+    if isinstance(actual, (list, tuple)):
+        if base >= len(words):
+            return False
+        n = words[base]
+        if not isinstance(n, int) or n < 0 or n != len(actual):
+            return False
+        body_start = base + 1
+        if n == 0:
+            return True
+        first_is_list = isinstance(actual[0], (list, tuple))
+        if first_is_list:
+            # Try dynamic head/tail interpretation first.
+            if (body_start + n <= len(words)
+                and all(isinstance(words[body_start + i], int)
+                        and words[body_start + i] % 32 == 0
+                        and body_start + words[body_start + i] // 32 < len(words)
+                        for i in range(n))):
+                ok = True
+                for i in range(n):
+                    head_w = words[body_start + i]
+                    inner_base = body_start + (head_w // 32)
+                    if not _evm_walk_compare(words, inner_base, actual[i]):
+                        ok = False
+                        break
+                if ok:
+                    return True
+            # Fall through: try static-inline (each elem occupies a fixed
+            # number of words tightly packed). Element width is inferred
+            # from actual[0]'s length, assuming uint256-flavored leaves.
+            elem_words = len(actual[0])
+            if any(len(e) != elem_words for e in actual):
+                return False
+            if body_start + n * elem_words > len(words):
+                return False
+            for i in range(n):
+                inner_base = body_start + i * elem_words
+                # The inner static array is `T[N]` with T scalar — compare
+                # words pointwise without reading a length prefix.
+                inner = actual[i]
+                ok = True
+                for j in range(elem_words):
+                    if not _compare_values(inner[j], words[inner_base + j]):
+                        ok = False
+                        break
+                if not ok:
+                    return False
+            return True
+        else:
+            # Scalar elements — one word per element.
+            if body_start + n > len(words):
+                return False
+            for i in range(n):
+                if not _compare_values(actual[i], words[body_start + i]):
+                    return False
+            return True
+    # Scalar leaf: compare directly with the word at `base`.
+    if base >= len(words):
+        return False
+    return _compare_values(actual, words[base])
 
 
 def _bytes_field_selector_bridge(actual, expected):

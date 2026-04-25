@@ -160,6 +160,17 @@ private:
 		solidity::frontend::Type const* _elemSolType,
 		awst::SourceLocation const& _loc);
 
+	/// Encode a static-size array of dynamic elements (e.g. `bytes[3]`,
+	/// `uint256[][3]`) as EVM-ABI bytes via a runtime loop. Same shape
+	/// as `encodeDynArrayDynElems` but no leading uint256 length word
+	/// and `n` is a compile-time constant.
+	static std::shared_ptr<awst::Expression> encodeStaticArrayDynElems(
+		BuilderContext& _ctx,
+		std::shared_ptr<awst::Expression> _expr,
+		solidity::frontend::Type const* _elemSolType,
+		unsigned _n,
+		awst::SourceLocation const& _loc);
+
 	static std::unique_ptr<InstanceBuilder> handleEncodeCall(
 		BuilderContext& _ctx,
 		solidity::frontend::FunctionCall const& _callNode,
