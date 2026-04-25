@@ -66,10 +66,54 @@ test_function:
 test_function_ternary_merge@4:
     !
     assert // not payable
+    global CurrentApplicationAddress
+    dup
+    ==
+    bz test_function_bool_false@8
+    global CurrentApplicationAddress
+    dup
+    ==
+    bz test_function_bool_false@8
+    intc_0 // 1
+
+test_function_bool_merge@9:
+    assert
+    global CurrentApplicationAddress
+    dup
+    ==
+    bz test_function_bool_false@13
+    global CurrentApplicationAddress
+    dup
+    ==
+    bz test_function_bool_false@13
+    intc_0 // 1
+
+test_function_bool_merge@14:
+    assert
+    global CurrentApplicationAddress
+    dup
+    ==
+    bz test_function_bool_false@17
+    intc_0 // 1
+
+test_function_bool_merge@18:
+    assert
     pushbytes 0x151f7c7580
     log
     intc_0 // 1
     return
+
+test_function_bool_false@17:
+    intc_1 // 0
+    b test_function_bool_merge@18
+
+test_function_bool_false@13:
+    intc_1 // 0
+    b test_function_bool_merge@14
+
+test_function_bool_false@8:
+    intc_1 // 0
+    b test_function_bool_merge@9
 
 test_function_ternary_false@3:
     intc_1 // 0

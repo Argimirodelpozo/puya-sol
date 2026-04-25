@@ -51,19 +51,25 @@ public:
 	std::shared_ptr<awst::Expression> toAwst() override
 	{
 		// Self-reference fold: `this.f.address` → CurrentApplicationAddress.
-		// Detect when the base is a MemberAccess on Identifier "this".
-		if (auto const* innerMA = dynamic_cast<solidity::frontend::MemberAccess const*>(
-				&m_memberAccess.expression()))
+		// Also matches `this.f{gas: G, value: V}.address` by unwrapping any
+		// FunctionCallOptions before checking for MemberAccess on `this`.
 		{
-			if (auto const* baseId = dynamic_cast<solidity::frontend::Identifier const*>(
-					&innerMA->expression()))
+			solidity::frontend::Expression const* base = &m_memberAccess.expression();
+			while (auto const* opts = dynamic_cast<
+					solidity::frontend::FunctionCallOptions const*>(base))
+				base = &opts->expression();
+			if (auto const* innerMA = dynamic_cast<solidity::frontend::MemberAccess const*>(base))
 			{
-				if (baseId->name() == "this")
+				if (auto const* baseId = dynamic_cast<solidity::frontend::Identifier const*>(
+						&innerMA->expression()))
 				{
-					auto selfAddr = awst::makeIntrinsicCall(
-						"global", awst::WType::accountType(), m_loc);
-					selfAddr->immediates = {std::string("CurrentApplicationAddress")};
-					return selfAddr;
+					if (baseId->name() == "this")
+					{
+						auto selfAddr = awst::makeIntrinsicCall(
+							"global", awst::WType::accountType(), m_loc);
+						selfAddr->immediates = {std::string("CurrentApplicationAddress")};
+						return selfAddr;
+					}
 				}
 			}
 		}
