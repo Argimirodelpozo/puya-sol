@@ -1,6 +1,10 @@
-# Semantic Test Status — v167
+# Semantic Test Status — v168
 
-**Totals**: 1056 PASS / 204 FAIL / 62 (42 compile_err + 20 deploy_err) = **1056/1322 (79.9%)**
+**Totals**: 1057 PASS / 204 FAIL / 61 (42 compile_err + 19 deploy_err) = **1057/1322 (80.0%)**
+
+vs v167 (1056): +1 (diamond MRO super reference distinct dispatcher entries; zero regressions).
+- `inheritance/super_in_constructor_assignment`: DEPLOY_ERROR → PASS (1p/0s). Diamond inheritance D is B, C where both B and C take `super.f` from inside their own bodies (B/C resolve `super` to A) AND D's constructor takes `super.f` (D resolves `super` to C). Same target AST id (A.f) reached through two distinct super contexts (the bare-A case and the diamond-D case) collided in the function-pointer dispatcher's `s_targets` map, which was keyed only by AST id — so the second registration was silently dropped and the dispatcher routed both contexts through one entry, sending D's `super.f` to A directly instead of through C → B → A.
+- Fix in `FunctionPointerBuilder.cpp` + `.h`: rekey `s_targets` from `int64_t` to `std::pair<int64_t, std::string>` where the second element is the caller-context awst name (empty for default refs, `f__super_<callerId>` for super refs). Same-target refs from different super contexts now produce distinct dispatcher entries with distinct ids; lookups thread the awst name through `buildFunctionReference`. `SolExpressionFactory::SolFunctionReference::toAwst` passes the receiver's awst name. `setSubroutineIds` now reads `key.first` (the AST id) from the pair when joining against the subroutine-id map. Also fixed a stray bug at the same site: the foreign-non-resolvable check used `entry.name.find("__super_") != 0` (true for any name not starting at offset 0); changed to `== std::string::npos` (true when the substring isn't present at all), so super entries are no longer flagged as foreign.
 
 vs v165 (1055): +1 (cross-contract signed-int selector fix gained `inheritance/member_notation_ctor`; addr-fold extension recovered `functionTypes/stack_height_check_on_adding_gas_variable_to_function`).
 - `SolExternalCall.cpp::solTypeToARC4Name`: removed signed-int branch that emitted `int{N}` for `intN` Solidity types. Callee side maps signed/unsigned both to `uint{N}` (puya biguint→uint256), so caller selectors must mirror that or cross-contract dispatch misses. Fix: drop the signed branch entirely, route via `mapToARC4Type`.

@@ -48,12 +48,17 @@ public:
 	/// @param _callerFuncType  Optional: the FunctionType from the calling
 	///                         context, which determines Internal vs External.
 	///                         When null, derived from _funcDef.
+	/// @param _awstName        Optional caller-context awst name (used for
+	///                         super references in diamond MRO so multiple
+	///                         super.f references for the same target astId
+	///                         get distinct dispatcher entries).
 	static std::shared_ptr<awst::Expression> buildFunctionReference(
 		BuilderContext& _ctx,
 		solidity::frontend::FunctionDefinition const* _funcDef,
 		awst::SourceLocation const& _loc,
 		solidity::frontend::FunctionType const* _callerFuncType = nullptr,
-		std::shared_ptr<awst::Expression> _receiverAddress = nullptr);
+		std::shared_ptr<awst::Expression> _receiverAddress = nullptr,
+		std::string const& _awstName = "");
 
 	/// Build a call through a function pointer.
 	/// For internal: calls __funcptr_dispatch(id, args...).
@@ -115,8 +120,12 @@ private:
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
 		awst::SourceLocation const& _loc);
 
-	/// All registered function pointer targets, keyed by AST ID.
-	static std::map<int64_t, FuncPtrEntry> s_targets;
+	/// All registered function pointer targets, keyed by (AST ID, awst name).
+	/// awst name is empty for default references and `f__super_<callerId>` for
+	/// super references — the (id, name) tuple lets diamond MRO produce
+	/// distinct dispatcher entries when the same target astId is reached via
+	/// different super contexts.
+	static std::map<std::pair<int64_t, std::string>, FuncPtrEntry> s_targets;
 	/// Next available function pointer ID.
 	static unsigned s_nextId;
 	/// Dispatch signatures needed (from buildFunctionPointerCall).

@@ -223,7 +223,7 @@ std::shared_ptr<awst::SubroutineCallExpression> FunctionPointerBuilder::buildDis
 }
 
 // Static members
-std::map<int64_t, FuncPtrEntry> FunctionPointerBuilder::s_targets;
+std::map<std::pair<int64_t, std::string>, FuncPtrEntry> FunctionPointerBuilder::s_targets;
 unsigned FunctionPointerBuilder::s_nextId = 1; // 0 = zero-initialized/invalid
 std::map<std::string, solidity::frontend::FunctionType const*> FunctionPointerBuilder::s_neededDispatches;
 std::string FunctionPointerBuilder::s_currentCref;
@@ -265,10 +265,11 @@ void FunctionPointerBuilder::registerTarget(
 {
 	if (!_funcDef) return;
 	int64_t id = _funcDef->id();
-	if (s_targets.count(id)) return; // already registered
+	std::pair<int64_t, std::string> key{id, _awstName};
+	if (s_targets.count(key)) return; // already registered for this caller context
 
-	std::string name = _awstName.empty() ? _funcDef->name() : std::move(_awstName);
-	s_targets[id] = FuncPtrEntry{
+	std::string name = _awstName.empty() ? _funcDef->name() : _awstName;
+	s_targets[key] = FuncPtrEntry{
 		id,
 		name,
 		s_nextId++,
@@ -281,9 +282,9 @@ void FunctionPointerBuilder::registerTarget(
 void FunctionPointerBuilder::setSubroutineIds(
 	std::unordered_map<int64_t, std::string> const& _idMap)
 {
-	for (auto& [astId, entry] : s_targets)
+	for (auto& [key, entry] : s_targets)
 	{
-		auto it = _idMap.find(astId);
+		auto it = _idMap.find(key.first);
 		if (it != _idMap.end())
 			entry.subroutineId = it->second;
 	}
@@ -296,7 +297,8 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 	FunctionDefinition const* _funcDef,
 	awst::SourceLocation const& _loc,
 	FunctionType const* _callerFuncType,
-	std::shared_ptr<awst::Expression> _receiverAddress)
+	std::shared_ptr<awst::Expression> _receiverAddress,
+	std::string const& _awstName)
 {
 	if (!_funcDef)
 	{
@@ -317,7 +319,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 	}
 
 	// Register as target
-	registerTarget(_funcDef, funcType);
+	registerTarget(_funcDef, funcType, _awstName);
 
 	bool isExternal = funcType && (funcType->kind() == FunctionType::Kind::External
 		|| funcType->kind() == FunctionType::Kind::DelegateCall);
@@ -385,8 +387,8 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 			// use internal dispatch". The selector slot holds the internal
 			// fn-ptr ID so runtime dispatch can route without an inner txn.
 			if (auto const* internalFuncType = _funcDef->functionType(true))
-				registerTarget(_funcDef, internalFuncType);
-			auto idIt = s_targets.find(_funcDef->id());
+				registerTarget(_funcDef, internalFuncType, _awstName);
+			auto idIt = s_targets.find({_funcDef->id(), _awstName});
 			unsigned funcId = (idIt != s_targets.end()) ? idIt->second.id : 0;
 
 			appIdBytes = makeItobConst("0");
@@ -404,7 +406,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 	}
 
 	// Internal: return the function's unique ID
-	auto it = s_targets.find(_funcDef->id());
+	auto it = s_targets.find({_funcDef->id(), _awstName});
 	unsigned funcId = (it != s_targets.end()) ? it->second.id : 0;
 
 	auto idConst = awst::makeIntegerConstant(std::to_string(funcId), _loc);
@@ -628,7 +630,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 
 	// Group targets by dispatch name (= signature)
 	std::map<std::string, std::vector<FuncPtrEntry const*>> groups;
-	for (auto const& [astId, entry] : s_targets)
+	for (auto const& [key, entry] : s_targets)
 	{
 		// Skip targets that are genuinely foreign (different non-library,
 		// non-base contract). Library functions are shared subroutines;
@@ -643,7 +645,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 			&& fdContract->name() != contractName
 			&& !fdContract->isLibrary()
 			&& entry.subroutineId.empty()
-			&& entry.name.find("__super_") != 0;
+			&& entry.name.find("__super_") == std::string::npos;
 		if (foreignNonResolvable)
 		{
 			// Double-check: if the function's visibility is not external/public

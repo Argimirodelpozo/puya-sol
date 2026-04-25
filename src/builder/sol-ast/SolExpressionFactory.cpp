@@ -159,7 +159,7 @@ public:
 		}
 
 		return eb::FunctionPointerBuilder::buildFunctionReference(
-			m_ctx, m_funcDef, m_loc, m_callerFuncType, receiverAddr);
+			m_ctx, m_funcDef, m_loc, m_callerFuncType, receiverAddr, awstName);
 	}
 private:
 	solidity::frontend::FunctionDefinition const* m_funcDef;
