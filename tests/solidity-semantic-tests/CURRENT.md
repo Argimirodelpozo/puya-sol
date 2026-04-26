@@ -1,6 +1,16 @@
-# Semantic Test Status — v173
+# Semantic Test Status — v174
 
-**Totals**: 1069 PASS / 192 FAIL / 61 (42 compile_err + 19 deploy_err) = **1069/1322 (80.9%)**
+**Totals**: 1068 PASS / 193 FAIL / 61 (42 compile_err + 19 deploy_err) = **1068/1322 (80.8%)**
+
+vs v173 (1069): -1 flake (`types/mapping_contract_key_getter` passes 27/27 solo, fails under full-suite throughput; recurring localnet timing class). Architectural change with zero real regressions.
+
+External fn-ptr self-call selector slot now stores the **ARC4 method selector** (sha512_256[:4]) instead of the internal dispatch id. This makes `.selector` access return a consistent ARC4 selector across both self and cross-call paths (previously self-call returned the internal id, an implementation detail leaking through `.selector` reads). We accept the AVM divergence from EVM keccak256 selectors as intentional; tests that compare against keccak256 will be surgically patched.
+
+Implementation in `src/builder/sol-eb/FunctionPointerBuilder.{cpp,h}`:
+- **Self-call encoding** (`buildFunctionReference` external branch, `_receiverAddress == nullptr` path): replaced `extract idBytes4(funcId)` with a `MethodConstant` carrying the ARC4 selector signature (`buildARC4MethodSelector(_ctx, _funcDef)`). Same shape as the cross-contract branch — the two paths now produce identical encoding shape (8-byte appId + 4-byte ARC4 selector).
+- **Self-call dispatch site** (`buildFunctionPointerCall` external branch, `isSelf` path): instead of reading the internal id directly from bytes 8..12, calls a per-signature helper `__sel_to_id_<sig>(__sel: bytes) -> uint64` that maps the ARC4 selector back to the internal dispatch id. The id then feeds the existing `__funcptr_dispatch_<sig>` infrastructure unchanged.
+- **`__sel_to_id_<sig>` helper generation** (`generateDispatchMethods`): for each signature group, emits a chain of `BytesComparisonExpression(__sel, MethodConstant("sig"))` → `return id`. MethodConstant resolves to the same 4-byte sha512_256[:4] value puya emits for cross-call ApplicationArgs[0] selectors and the contract router match table — byte equality. Always generated (even when the entries list is empty for a signature only used cross-call) so the call-site reference always resolves; an empty body just errs at runtime, matching "no self-call possible for this signature".
+- `generateDispatchMethods` signature gained a `BuilderContext& _ctx` parameter so `buildARC4MethodSelector` (which uses `_ctx.typeMapper.map`) is reachable. `ExpressionBuilder::makeBuilderContext()` exposed as public so ContractBuilder can mint a fresh context to pass through.
 
 vs v172 (1067): +1 real (`events/event_indexed_string` ✗→✓) plus a flake recovery on `mapping_contract_key` (passes solo, fails under suite throughput class). Zero regressions.
 

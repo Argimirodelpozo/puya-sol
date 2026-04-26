@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32 2
-    bytecblock 0x151f7c75 0x0003000000000000000000000001000000000000000000000002000000000000000000000003
+    bytecblock 0x151f7c75 0xf2ecd32a 0xc19647e5 0x5e403be6 0x00030000000000000000f2ecd32a0000000000000000c19647e500000000000000005e403be6
     pushint 4096
     bzero
     dup
@@ -25,7 +25,11 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x999ed5d7 0xe8445ef0 0xf2ecd32a 0xc19647e5 0x5e403be6 0x49111927 // method "f(uint8[12][])(uint256,uint256,uint256)", method "f_reenc(uint8[12][])(uint256,uint256,uint256)", method "getter1()uint256", method "getter2()uint256", method "getter3()uint256", method "g(bool)(uint256,uint256,uint256)"
+    pushbytess 0x999ed5d7 0xe8445ef0 // method "f(uint8[12][])(uint256,uint256,uint256)", method "f_reenc(uint8[12][])(uint256,uint256,uint256)"
+    bytec_1 // method "getter1()uint256"
+    bytec_2 // method "getter2()uint256"
+    bytec_3 // method "getter3()uint256"
+    pushbytes 0x49111927 // method "g(bool)(uint256,uint256,uint256)"
     txna ApplicationArgs 0
     match f f_reenc getter1 getter2 getter3 g
     err
@@ -145,7 +149,7 @@ g_ternary_merge@4:
     <=
     assert // ABI bool validation
     bz g_ternary_false@6
-    bytec_1 // 0x0003000000000000000000000001000000000000000000000002000000000000000000000003
+    bytec 4 // 0x00030000000000000000f2ecd32a0000000000000000c19647e500000000000000005e403be6
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol.C.f_reenc
     pop
 
@@ -162,7 +166,7 @@ g_ternary_merge@7:
     return
 
 g_ternary_false@6:
-    bytec_1 // 0x0003000000000000000000000001000000000000000000000002000000000000000000000003
+    bytec 4 // 0x00030000000000000000f2ecd32a0000000000000000c19647e500000000000000005e403be6
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol.C.f
     pop
     b g_ternary_merge@7
@@ -204,8 +208,8 @@ g_ternary_false@3:
     dup
     frame_bury 4
     bnz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol.C.f_else_body@5
-    pushint 8
-    extract_uint32
+    extract 8 4
+    callsub __sel_to_id___funcptr_dispatch_ret_u256
     callsub __funcptr_dispatch_ret_u256
     frame_bury 0
 
@@ -218,8 +222,8 @@ g_ternary_false@3:
     dup
     frame_bury 2
     bnz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol.C.f_else_body@9
-    pushint 8
-    extract_uint32
+    extract 8 4
+    callsub __sel_to_id___funcptr_dispatch_ret_u256
     callsub __funcptr_dispatch_ret_u256
     frame_bury 1
 
@@ -232,8 +236,8 @@ g_ternary_false@3:
     dup
     frame_bury 3
     bnz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol.C.f_else_body@13
-    pushint 8
-    extract_uint32
+    extract 8 4
+    callsub __sel_to_id___funcptr_dispatch_ret_u256
     callsub __funcptr_dispatch_ret_u256
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol.C.f_after_if_else@15:
@@ -465,4 +469,31 @@ __funcptr_dispatch_ret_u256_else_body@4:
     ==
     assert // invalid function pointer
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol.C.getter1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol.C.__sel_to_id___funcptr_dispatch_ret_u256(__sel: bytes) -> uint64:
+__sel_to_id___funcptr_dispatch_ret_u256:
+    proto 1 1
+    frame_dig -1
+    bytec_3 // method "getter3()uint256"
+    ==
+    bz __sel_to_id___funcptr_dispatch_ret_u256_else_body@2
+    pushint 3
+    retsub
+
+__sel_to_id___funcptr_dispatch_ret_u256_else_body@2:
+    frame_dig -1
+    bytec_2 // method "getter2()uint256"
+    ==
+    bz __sel_to_id___funcptr_dispatch_ret_u256_else_body@4
+    intc_3 // 2
+    retsub
+
+__sel_to_id___funcptr_dispatch_ret_u256_else_body@4:
+    frame_dig -1
+    bytec_1 // method "getter1()uint256"
+    ==
+    assert // unknown function selector in self-call dispatch
+    intc_1 // 1
     retsub

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 12 2
-    bytecblock "array" "externalCalled" "__ctor_pending"
+    intcblock 0 12 1 2
+    bytecblock "array" "externalCalled" "__ctor_pending" 0x0c88cb4e
     pushint 4096
     bzero
     dup
@@ -17,9 +17,9 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_2 // "__ctor_pending"
-    intc_1 // 1
+    intc_2 // 1
     app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -28,7 +28,9 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x0c88cb4e 0x2d4970c7 // method "__postInit()void", method "ext()void", method "f()void"
+    pushbytes 0xbacc49e3 // method "__postInit()void"
+    bytec_3 // method "ext()void"
+    pushbytes 0x2d4970c7 // method "f()void"
     txna ApplicationArgs 0
     match __postInit ext f
     err
@@ -93,14 +95,14 @@ __postInit:
     bytec_1 // "externalCalled"
     swap
     app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.ext[routing]() -> void:
 ext:
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.ext
-    intc_1 // 1
+    intc_2 // 1
     return
 
 
@@ -109,7 +111,7 @@ f:
     txn GroupIndex
     bz f_ternary_false@3
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -118,13 +120,13 @@ f_ternary_merge@4:
     assert // not payable
     bytec_0 // "array"
     intc_0 // 0
-    pushbytes 0x000000000000000000000001
-    intc_1 // 1
-    intc_2 // 12
+    pushbytes 0x00000000000000000c88cb4e
+    intc_2 // 1
+    intc_1 // 12
     callsub box_dynamic_array_concat_fixed
     bytec_0 // "array"
     intc_3 // 2
-    intc_2 // 12
+    intc_1 // 12
     box_extract // on error: index access is out of bounds
     pushbytes 0x0001
     swap
@@ -138,11 +140,11 @@ f_ternary_merge@4:
     intc_0 // 0
     uncover 3
     uncover 3
-    intc_2 // 12
+    intc_1 // 12
     callsub box_dynamic_array_concat_fixed
     bytec_0 // "array"
     intc_3 // 2
-    intc_2 // 12
+    intc_1 // 12
     box_extract // on error: index access is out of bounds
     extract 0 12
     intc_0 // 0
@@ -150,20 +152,19 @@ f_ternary_merge@4:
     bnz f_else_body@6
     bytec_0 // "array"
     intc_3 // 2
-    intc_2 // 12
+    intc_1 // 12
     box_extract // on error: index access is out of bounds
     extract 0 12
-    pushint 8
-    extract_uint32
-    intc_1 // 1
+    extract 8 4
+    bytec_3 // method "ext()void"
     ==
-    assert // invalid function pointer
+    assert // unknown function selector in self-call dispatch
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.ext
 
 f_after_if_else@8:
     bytec_0 // "array"
     pushint 14
-    intc_2 // 12
+    intc_1 // 12
     box_extract // on error: index access is out of bounds
     extract 0 12
     intc_0 // 0
@@ -171,14 +172,13 @@ f_after_if_else@8:
     bnz f_else_body@10
     bytec_0 // "array"
     pushint 14
-    intc_2 // 12
+    intc_1 // 12
     box_extract // on error: index access is out of bounds
     extract 0 12
-    pushint 8
-    extract_uint32
-    intc_1 // 1
+    extract 8 4
+    bytec_3 // method "ext()void"
     ==
-    assert // invalid function pointer
+    assert // unknown function selector in self-call dispatch
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.ext
 
 f_after_if_else@12:
@@ -189,14 +189,14 @@ f_after_if_else@12:
     pushbytes 0x02
     b==
     assert
-    intc_1 // 1
+    intc_2 // 1
     return
 
 f_else_body@10:
     itxn_begin
     bytec_0 // "array"
     pushint 14
-    intc_2 // 12
+    intc_1 // 12
     box_extract // on error: index access is out of bounds
     extract 0 12
     dup
@@ -219,7 +219,7 @@ f_else_body@6:
     itxn_begin
     bytec_0 // "array"
     intc_3 // 2
-    intc_2 // 12
+    intc_1 // 12
     box_extract // on error: index access is out of bounds
     extract 0 12
     dup
@@ -248,7 +248,7 @@ f_ternary_false@3:
     txn GroupIndex
     bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.ext_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 

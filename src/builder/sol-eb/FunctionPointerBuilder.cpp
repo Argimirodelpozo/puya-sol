@@ -384,19 +384,24 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 				"internal dispatch instead of inner transactions", _loc);
 
 			// Self-reference: appId=0 sentinel means "current application —
-			// use internal dispatch". The selector slot holds the internal
-			// fn-ptr ID so runtime dispatch can route without an inner txn.
+			// use internal dispatch". Selector slot holds the ARC4 method
+			// selector (sha512_256[:4]), same as cross-contract refs. This
+			// makes `.selector` access return a consistent value across
+			// self/cross-call (the AVM-native ARC4 selector — we accept this
+			// as an intentional EVM divergence; tests that compare against
+			// keccak256 selectors are surgically patched). At the call site,
+			// the selector is mapped to an internal fn-ptr id via a
+			// compile-time `__sel_to_id_<sig>` helper before going through
+			// the existing id-based dispatcher.
 			if (auto const* internalFuncType = _funcDef->functionType(true))
 				registerTarget(_funcDef, internalFuncType, _awstName);
-			auto idIt = s_targets.find({_funcDef->id(), _awstName});
-			unsigned funcId = (idIt != s_targets.end()) ? idIt->second.id : 0;
 
 			appIdBytes = makeItobConst("0");
-			// itob(funcId)[4:4] — take the low 4 bytes of the 8-byte itob.
-			auto idBytes4 = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-			idBytes4->immediates = {4, 4};
-			idBytes4->stackArgs.push_back(makeItobConst(std::to_string(funcId)));
-			selectorBytes = std::move(idBytes4);
+			auto selectorConst = std::make_shared<awst::MethodConstant>();
+			selectorConst->sourceLocation = _loc;
+			selectorConst->wtype = awst::WType::bytesType();
+			selectorConst->value = AbiEncoderBuilder::buildARC4MethodSelector(_ctx, _funcDef);
+			selectorBytes = std::move(selectorConst);
 		}
 
 		auto packed = awst::makeIntrinsicCall("concat", &s_bytes12, _loc);
@@ -449,13 +454,31 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		isSelf->op = awst::NumericComparison::Eq;
 		isSelf->rhs = awst::makeIntegerConstant("0", _loc);
 
-		// Self-call path: extract internal ID from selector slot (bytes 8..12).
-		auto internalId = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-		internalId->stackArgs.push_back(extractSlice(8, 4));
+		// Self-call path: selector slot now holds ARC4 selector (was internal
+		// id; changed for `.selector` accessor consistency with cross-call).
+		// Map selector → internal id via the per-signature `__sel_to_id_<sig>`
+		// helper, then dispatch through the existing id-based dispatcher.
+		// The helper is generated in `generateDispatchMethods`.
+		std::string selToIdName = "__sel_to_id_" + dispatchName(_funcType);
+		s_neededDispatches[dispatchName(_funcType)] = _funcType;
+
+		auto selToIdCall = std::make_shared<awst::SubroutineCallExpression>();
+		selToIdCall->sourceLocation = _loc;
+		selToIdCall->wtype = awst::WType::uint64Type();
+		if (inLibraryContext(_ctx, s_currentCref))
+			selToIdCall->target = awst::SubroutineID{s_currentCref + "." + selToIdName};
+		else
+			selToIdCall->target = awst::InstanceMethodTarget{selToIdName};
+		{
+			awst::CallArg selArg;
+			selArg.name = "__sel";
+			selArg.value = extractSlice(8, 4);
+			selToIdCall->args.push_back(std::move(selArg));
+		}
 
 		// Build internal dispatch call with the same args (shared with
 		// the inner-txn branch below — hence we pass _args by value)
-		auto selfCall = buildDispatchCall(_ctx, _funcType, std::move(internalId), _args, _loc);
+		auto selfCall = buildDispatchCall(_ctx, _funcType, std::move(selToIdCall), _args, _loc);
 		awst::WType const* retType = selfCall->wtype;
 
 		// ── Inner-txn (cross-contract) branch ──
@@ -607,6 +630,7 @@ std::string FunctionPointerBuilder::dispatchName(
 // ── Generate dispatch subroutines ──
 
 std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethods(
+	BuilderContext& _ctx,
 	std::string const& _cref,
 	awst::SourceLocation const& _loc,
 	std::vector<std::shared_ptr<awst::Subroutine>>* _outRootSubs)
@@ -873,6 +897,101 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		}
 
 		methods.push_back(std::move(dispatch));
+
+		// ── Companion: `__sel_to_id_<sig>(__sel: bytes) -> uint64` ──
+		// External self-call sites pass the 4-byte ARC4 selector from the
+		// fn-ptr's selector slot through this helper to recover the
+		// internal dispatch id. (Self-call encoding now stores the ARC4
+		// selector for `.selector` accessor consistency; see the encoding
+		// comment in `buildFunctionReference`.) Body is a chain of
+		// `if __sel == method("sig") then return id` over the entries
+		// registered for this signature group; default branch errs.
+		// Always generated (even when entries is empty) so the call-site
+		// reference resolves; an empty body just errs at runtime, which
+		// matches "no self-call possible for this signature".
+		{
+			awst::ContractMethod selToId;
+			selToId.sourceLocation = _loc;
+			selToId.cref = _cref;
+			selToId.memberName = "__sel_to_id_" + dname;
+			selToId.arc4MethodConfig = std::nullopt;
+			selToId.pure = false;
+			selToId.returnType = awst::WType::uint64Type();
+			{
+				awst::SubroutineArgument selArg;
+				selArg.name = "__sel";
+				selArg.wtype = awst::WType::bytesType();
+				selArg.sourceLocation = _loc;
+				selToId.args.push_back(selArg);
+			}
+
+			auto selBody = std::make_shared<awst::Block>();
+			selBody->sourceLocation = _loc;
+
+			auto selDefault = std::make_shared<awst::Block>();
+			selDefault->sourceLocation = _loc;
+			{
+				auto stmt = awst::makeExpressionStatement(awst::makeAssert(
+					awst::makeBoolConstant(false, _loc), _loc,
+					"unknown function selector in self-call dispatch"), _loc);
+				selDefault->body.push_back(std::move(stmt));
+			}
+			std::shared_ptr<awst::Block> selElse = selDefault;
+
+			for (auto const* entry : entries)
+			{
+				if (!entry->funcDef) continue;
+				// MethodConstant resolves to sha512_256(sig)[:4] at puya
+				// lowering time — same value puya's router matches in the
+				// approval program, and the same value we store in the
+				// fn-ptr's selector slot (cross-call path). Byte equality.
+				auto methodConst = std::make_shared<awst::MethodConstant>();
+				methodConst->sourceLocation = _loc;
+				methodConst->wtype = awst::WType::bytesType();
+				methodConst->value = AbiEncoderBuilder::buildARC4MethodSelector(_ctx, entry->funcDef);
+
+				auto selVar = awst::makeVarExpression("__sel", awst::WType::bytesType(), _loc);
+				auto cmp = std::make_shared<awst::BytesComparisonExpression>();
+				cmp->sourceLocation = _loc;
+				cmp->wtype = awst::WType::boolType();
+				cmp->lhs = std::move(selVar);
+				cmp->rhs = std::move(methodConst);
+				cmp->op = awst::EqualityComparison::Eq;
+
+				auto thenBlock = std::make_shared<awst::Block>();
+				thenBlock->sourceLocation = _loc;
+				thenBlock->body.push_back(awst::makeReturnStatement(
+					awst::makeIntegerConstant(std::to_string(entry->id), _loc), _loc));
+
+				auto ifElse = std::make_shared<awst::IfElse>();
+				ifElse->sourceLocation = _loc;
+				ifElse->condition = std::move(cmp);
+				ifElse->ifBranch = std::move(thenBlock);
+				ifElse->elseBranch = std::move(selElse);
+
+				auto newElse = std::make_shared<awst::Block>();
+				newElse->sourceLocation = _loc;
+				newElse->body.push_back(std::move(ifElse));
+				selElse = std::move(newElse);
+			}
+			for (auto& stmt : selElse->body)
+				selBody->body.push_back(std::move(stmt));
+			selToId.body = selBody;
+
+			if (_outRootSubs)
+			{
+				auto sub = std::make_shared<awst::Subroutine>();
+				sub->sourceLocation = selToId.sourceLocation;
+				sub->id = _cref + "." + selToId.memberName;
+				sub->name = selToId.memberName;
+				sub->returnType = selToId.returnType;
+				sub->args = selToId.args;
+				sub->body = selToId.body;
+				sub->pure = false;
+				_outRootSubs->push_back(std::move(sub));
+			}
+			methods.push_back(std::move(selToId));
+		}
 	}
 
 	return methods;

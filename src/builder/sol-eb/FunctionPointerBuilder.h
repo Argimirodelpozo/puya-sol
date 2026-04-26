@@ -87,6 +87,7 @@ public:
 	/// Also populates _outRootSubs with root-level Subroutine copies so that
 	/// library subroutines can resolve them via SubroutineID.
 	static std::vector<awst::ContractMethod> generateDispatchMethods(
+		BuilderContext& _ctx,
 		std::string const& _cref,
 		awst::SourceLocation const& _loc,
 		std::vector<std::shared_ptr<awst::Subroutine>>* _outRootSubs = nullptr);

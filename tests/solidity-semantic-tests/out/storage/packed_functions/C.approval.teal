@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_functions.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32 2
-    bytecblock "b" 0x151f7c75 "a" "x" 0x000000000000000000000000 0x000000000000000000000002
+    bytecblock "b" 0x151f7c75 "a" "x" 0x000000000000000000000000 0x4b2c0376 0xafedb2e5 0x0000000000000000afedb2e5
     pushint 4096
     bzero
     dup
@@ -40,7 +40,10 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x0f76205a 0x3a80de26 0x80ee83e3 0x46cfaea3 0x852d088d 0x4b2c0376 0xafedb2e5 0xdf01cac5 // method "set()void", method "t1()uint256", method "t2()uint256", method "t3()uint256", method "t4()uint256", method "g()uint256", method "h()uint256", method "x()uint64"
+    pushbytess 0x0f76205a 0x3a80de26 0x80ee83e3 0x46cfaea3 0x852d088d // method "set()void", method "t1()uint256", method "t2()uint256", method "t3()uint256", method "t4()uint256"
+    bytec 5 // method "g()uint256"
+    bytec 6 // method "h()uint256"
+    pushbytes 0xdf01cac5 // method "x()uint64"
     txna ApplicationArgs 0
     match set t1 t2 t3 t4 g h x
     err
@@ -65,10 +68,10 @@ set_ternary_merge@4:
     intc_1 // 1
     app_global_put
     pushbytes "c"
-    bytec 5 // 0x000000000000000000000002
+    bytec 7 // 0x0000000000000000afedb2e5
     app_global_put
     bytec_0 // "b"
-    bytec 5 // 0x000000000000000000000002
+    bytec 7 // 0x0000000000000000afedb2e5
     app_global_put
     bytec_2 // "a"
     intc_1 // 1
@@ -141,8 +144,8 @@ t2_ternary_merge@4:
     bytec_0 // "b"
     app_global_get_ex
     assert // check b exists
-    pushint 8
-    extract_uint32
+    extract 8 4
+    callsub __sel_to_id___funcptr_dispatch_ret_u256
     callsub __funcptr_dispatch_ret_u256
 
 t2_after_if_else@8:
@@ -250,8 +253,8 @@ t4_ternary_merge@4:
     bytec_0 // "b"
     app_global_get_ex
     assert // check b exists
-    pushint 8
-    extract_uint32
+    extract 8 4
+    callsub __sel_to_id___funcptr_dispatch_ret_u256
     callsub __funcptr_dispatch_ret_u256
 
 t4_after_if_else@8:
@@ -406,4 +409,23 @@ __funcptr_dispatch_ret_u256_else_body@2:
     ==
     assert // invalid function pointer
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_functions.sol.C.g
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_functions.sol.C.__sel_to_id___funcptr_dispatch_ret_u256(__sel: bytes) -> uint64:
+__sel_to_id___funcptr_dispatch_ret_u256:
+    proto 1 1
+    frame_dig -1
+    bytec 6 // method "h()uint256"
+    ==
+    bz __sel_to_id___funcptr_dispatch_ret_u256_else_body@2
+    intc_3 // 2
+    retsub
+
+__sel_to_id___funcptr_dispatch_ret_u256_else_body@2:
+    frame_dig -1
+    bytec 5 // method "g()uint256"
+    ==
+    assert // unknown function selector in self-call dispatch
+    intc_1 // 1
     retsub

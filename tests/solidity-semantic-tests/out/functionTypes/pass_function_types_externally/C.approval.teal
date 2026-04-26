@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_externally.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock 0x151f7c75 0x000000000000000000000001
+    bytecblock 0x151f7c75 0xc14ad39f 0x0000000000000000c14ad39f
     pushint 4096
     bzero
     dup
@@ -25,7 +25,8 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x1928cd24 0x8a6e0768 0x97c650d1 0xc14ad39f // method "f(uint256)uint256", method "f2(uint256)uint256", method "eval(uint8[12],uint256)uint256", method "g(uint256)uint256"
+    pushbytess 0x1928cd24 0x8a6e0768 0x97c650d1 // method "f(uint256)uint256", method "f2(uint256)uint256", method "eval(uint8[12],uint256)uint256"
+    bytec_1 // method "g(uint256)uint256"
     txna ApplicationArgs 0
     match f f2 eval g
     err
@@ -49,7 +50,7 @@ f:
 f_ternary_merge@4:
     !
     assert // not payable
-    bytec_1 // 0x000000000000000000000001
+    bytec_2 // 0x0000000000000000c14ad39f
     dig 1
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_externally.sol.C.eval
     pop
@@ -91,7 +92,7 @@ f2:
 f2_ternary_merge@4:
     !
     assert // not payable
-    bytec_1 // 0x000000000000000000000001
+    bytec_2 // 0x0000000000000000c14ad39f
     dig 1
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_externally.sol.C.eval
     pop
@@ -177,11 +178,10 @@ g:
     frame_bury 0
     bnz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_externally.sol.C.eval_else_body@5
     frame_dig -2
-    pushint 8
-    extract_uint32
-    intc_1 // 1
+    extract 8 4
+    bytec_1 // method "g(uint256)uint256"
     ==
-    assert // invalid function pointer
+    assert // unknown function selector in self-call dispatch
     frame_dig -1
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_externally.sol.C.g
 

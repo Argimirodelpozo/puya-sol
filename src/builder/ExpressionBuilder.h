@@ -158,8 +158,14 @@ public:
 	bool inConstructor() const { return m_inConstructor; }
 
 
-private:
+public:
+	/// Construct a fresh BuilderContext. Used by external code (e.g.
+	/// ContractBuilder dispatcher generation) that needs to pass a
+	/// BuilderContext to static helpers like
+	/// `FunctionPointerBuilder::generateDispatchMethods` which call into
+	/// TypeMapper, the buildExpr callback, etc.
 	eb::BuilderContext makeBuilderContext();
+private:
 
 	/// Pool of BuilderContexts for builderForInstance — avoids use-after-free.
 	/// Cleared between build() calls.

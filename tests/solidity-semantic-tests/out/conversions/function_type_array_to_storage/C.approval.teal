@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 32 8
-    bytecblock "externalDefaultArray" "externalViewArray" "internalDefaultArray" 0x151f7c75 0x000000000000000000000000 0x0000000000000000 "internalViewArray" 0x000000000000000000000003
+    intcblock 0 1 32 4
+    bytecblock "externalDefaultArray" "externalViewArray" "internalDefaultArray" 0x151f7c75 0x000000000000000000000000 0x0000000000000000 "internalViewArray" 0x6c72e23e 0x328c6da9 0x0000000000000000328c6da9
     pushint 4096
     bzero
     dup
@@ -43,7 +43,10 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xb12c4941 0x6c72e23e 0x328c6da9 0xff45d0bd 0xb88b20ee 0xb20ff76f // method "externalDefault()uint256", method "externalView()uint256", method "externalPure()uint256", method "testViewToDefault()(uint256,uint256)", method "testPureToDefault()(uint256,uint256)", method "testPureToView()(uint256,uint256)"
+    pushbytes 0xb12c4941 // method "externalDefault()uint256"
+    bytec 7 // method "externalView()uint256"
+    bytec 8 // method "externalPure()uint256"
+    pushbytess 0xff45d0bd 0xb88b20ee 0xb20ff76f // method "testViewToDefault()(uint256,uint256)", method "testPureToDefault()(uint256,uint256)", method "testPureToView()(uint256,uint256)"
     txna ApplicationArgs 0
     match externalDefault externalView externalPure testViewToDefault testPureToDefault testPureToView
     err
@@ -106,7 +109,7 @@ testViewToDefault_ternary_merge@4:
     !
     assert // not payable
     bytec_0 // "externalDefaultArray"
-    pushbytes 0x000000000000000000000001
+    pushbytes 0x00000000000000006c72e23e
     app_global_put
     pushint 2
     itob
@@ -126,8 +129,8 @@ testViewToDefault_ternary_merge@4:
     app_global_get_ex
     assert // check externalDefaultArray exists
     extract 0 12 // on error: index access is out of bounds
-    intc_3 // 8
-    extract_uint32
+    extract 8 4
+    callsub __sel_to_id___funcptr_dispatch_ret_u256
     callsub __funcptr_dispatch_ret_u256
 
 testViewToDefault_after_if_else@8:
@@ -206,9 +209,9 @@ testPureToDefault_ternary_merge@4:
     !
     assert // not payable
     bytec_0 // "externalDefaultArray"
-    bytec 7 // 0x000000000000000000000003
+    bytec 9 // 0x0000000000000000328c6da9
     app_global_put
-    pushint 4
+    intc_3 // 4
     itob
     bytec_2 // "internalDefaultArray"
     swap
@@ -226,8 +229,8 @@ testPureToDefault_ternary_merge@4:
     app_global_get_ex
     assert // check externalDefaultArray exists
     extract 0 12 // on error: index access is out of bounds
-    intc_3 // 8
-    extract_uint32
+    extract 8 4
+    callsub __sel_to_id___funcptr_dispatch_ret_u256
     callsub __funcptr_dispatch_ret_u256
 
 testPureToDefault_after_if_else@8:
@@ -306,9 +309,9 @@ testPureToView_ternary_merge@4:
     !
     assert // not payable
     bytec_1 // "externalViewArray"
-    bytec 7 // 0x000000000000000000000003
+    bytec 9 // 0x0000000000000000328c6da9
     app_global_put
-    pushint 4
+    intc_3 // 4
     itob
     bytec 6 // "internalViewArray"
     swap
@@ -326,8 +329,8 @@ testPureToView_ternary_merge@4:
     app_global_get_ex
     assert // check externalViewArray exists
     extract 0 12 // on error: index access is out of bounds
-    intc_3 // 8
-    extract_uint32
+    extract 8 4
+    callsub __sel_to_id___funcptr_dispatch_ret_u256
     callsub __funcptr_dispatch_ret_u256
 
 testPureToView_after_if_else@8:
@@ -437,7 +440,7 @@ testPureToView_ternary_false@3:
 __funcptr_dispatch_ret_u256:
     proto 1 1
     frame_dig -1
-    pushint 4
+    intc_3 // 4
     ==
     bz __funcptr_dispatch_ret_u256_else_body@2
     pushint 23
@@ -467,4 +470,39 @@ __funcptr_dispatch_ret_u256_else_body@6:
     ==
     assert // invalid function pointer
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.externalView
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.__sel_to_id___funcptr_dispatch_ret_u256(__sel: bytes) -> uint64:
+__sel_to_id___funcptr_dispatch_ret_u256:
+    proto 1 1
+    frame_dig -1
+    pushbytes 0xacd0bbfd // method "internalPure()uint256"
+    ==
+    bz __sel_to_id___funcptr_dispatch_ret_u256_else_body@2
+    intc_3 // 4
+    retsub
+
+__sel_to_id___funcptr_dispatch_ret_u256_else_body@2:
+    frame_dig -1
+    pushbytes 0xa4eceb81 // method "internalView()uint256"
+    ==
+    bz __sel_to_id___funcptr_dispatch_ret_u256_else_body@4
+    pushint 2
+    retsub
+
+__sel_to_id___funcptr_dispatch_ret_u256_else_body@4:
+    frame_dig -1
+    bytec 8 // method "externalPure()uint256"
+    ==
+    bz __sel_to_id___funcptr_dispatch_ret_u256_else_body@6
+    pushint 3
+    retsub
+
+__sel_to_id___funcptr_dispatch_ret_u256_else_body@6:
+    frame_dig -1
+    bytec 7 // method "externalView()uint256"
+    ==
+    assert // unknown function selector in self-call dispatch
+    intc_1 // 1
     retsub
