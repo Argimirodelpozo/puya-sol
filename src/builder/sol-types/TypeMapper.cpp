@@ -334,4 +334,58 @@ awst::WType const* TypeMapper::mapSolTypeToARC4(solidity::frontend::Type const* 
 	return mapToARC4Type(map(_solType));
 }
 
+// ── solc adapter helpers ──
+
+std::string TypeMapper::abiSignatureForFunction(
+	solidity::frontend::FunctionDefinition const& _fd)
+{
+	auto const* ft = _fd.functionType(false);
+	if (!ft) return {};
+	try { return ft->externalSignature(); }
+	catch (...) { return {}; }
+}
+
+std::string TypeMapper::abiSignatureForFunction(
+	solidity::frontend::FunctionType const& _ft)
+{
+	try { return _ft.externalSignature(); }
+	catch (...) { return {}; }
+}
+
+std::string TypeMapper::abiTypeName(solidity::frontend::Type const& _t)
+{
+	try { return _t.canonicalName(); }
+	catch (...) { return {}; }
+}
+
+TypeMapper::ImplicitConvert TypeMapper::canImplicitlyConvert(
+	solidity::frontend::Type const& _from,
+	solidity::frontend::Type const& _to)
+{
+	auto br = _from.isImplicitlyConvertibleTo(_to);
+	if (br) return {true, {}};
+	return {false, br.message()};
+}
+
+solidity::frontend::FunctionDefinition const* TypeMapper::resolveVirtual(
+	solidity::frontend::ContractDefinition const& _mostDerived,
+	solidity::frontend::FunctionDefinition const& _baseFn,
+	bool _superLookup)
+{
+	try
+	{
+		// _searchStart: nullptr → look from _mostDerived. Non-null →
+		// start AFTER that contract in the linearization (super lookup).
+		solidity::frontend::ContractDefinition const* searchStart = nullptr;
+		if (_superLookup)
+			searchStart = _baseFn.annotation().contract;
+		auto const& resolved = _baseFn.resolveVirtual(_mostDerived, searchStart);
+		return &resolved;
+	}
+	catch (...)
+	{
+		return nullptr;
+	}
+}
+
 } // namespace puyasol::builder
