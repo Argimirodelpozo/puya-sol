@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/functions_called_by_constructor_through_dispatch.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 8
+    intcblock 1 6 0 32
     bytecblock "name" 0x616263646566 0x151f7c75
     pushint 4096
     bzero
@@ -52,7 +52,7 @@ getName:
 getName_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 0
+    intc_2 // 0
     bytec_0 // "name"
     app_global_get_ex
     assert // check name exists
@@ -64,7 +64,7 @@ getName_ternary_merge@4:
     return
 
 getName_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b getName_ternary_merge@4
 
 
@@ -73,13 +73,13 @@ leftByteShift:
     txna ApplicationArgs 1
     dup
     len
-    pushint 6
+    intc_1 // 6
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 6>
     txna ApplicationArgs 2
     dup
     len
-    intc_2 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/functions_called_by_constructor_through_dispatch.sol.Test.leftByteShift
@@ -104,12 +104,14 @@ leftByteShift:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/functions_called_by_constructor_through_dispatch.sol.Test.leftByteShift_ternary_merge@3:
     !
     assert // not payable
+    intc_1 // 6
+    bzero
     frame_dig -2
     btoi
     itob
-    intc_2 // 32
+    intc_3 // 32
     bzero
-    intc_3 // 8
+    pushint 8
     bzero
     frame_dig -1
     pushbytes 0x08
@@ -117,7 +119,7 @@ leftByteShift:
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     pushint 255
@@ -126,8 +128,15 @@ leftByteShift:
     intc_0 // 1
     setbit
     b*
+    concat
+    dup
+    len
+    intc_1 // 6
+    -
+    intc_1 // 6
+    extract3
     retsub
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/functions_called_by_constructor_through_dispatch.sol.Test.leftByteShift_ternary_false@2:
-    intc_1 // 0
+    intc_2 // 0
     b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/functions_called_by_constructor_through_dispatch.sol.Test.leftByteShift_ternary_merge@3

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/virtual_function_usage_in_constructor_arguments.sol.Derived.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock 0x151f7c75 "m_a"
+    bytecblock "m_a" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -16,8 +16,11 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec_0 // "m_a"
+    pushbytes 0x
+    app_global_put
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/virtual_function_usage_in_constructor_arguments.sol.Derived.g
-    bytec_1 // "m_a"
+    bytec_0 // "m_a"
     swap
     app_global_put
     intc_0 // 1
@@ -48,7 +51,7 @@ getA_ternary_merge@4:
     !
     assert // not payable
     intc_1 // 0
-    bytec_1 // "m_a"
+    bytec_0 // "m_a"
     app_global_get_ex
     assert // check m_a exists
     dup
@@ -59,7 +62,7 @@ getA_ternary_merge@4:
     intc_2 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -74,7 +77,7 @@ getA_ternary_false@3:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/virtual_function_usage_in_constructor_arguments.sol.Derived.overridden[routing]() -> void:
 overridden:
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/virtual_function_usage_in_constructor_arguments.sol.Derived.overridden
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -85,7 +88,7 @@ overridden:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/virtual_function_usage_in_constructor_arguments.sol.Derived.g[routing]() -> void:
 g:
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/virtual_function_usage_in_constructor_arguments.sol.Derived.g
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log

@@ -221,8 +221,66 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::toAwst()
 		return result;
 
 	// 6. Fallback to buildBinaryOp
-	return m_ctx.buildBinaryOp(
+	auto built = m_ctx.buildBinaryOp(
 		m_binOp.getOperator(), std::move(left), std::move(right), resultType, m_loc);
+
+	// 7. bytesN shift truncation. `bytesN << k` and `bytesN >> k` lower
+	// through buildBinaryOp's biguint multiply-by-2^k / divide-by-2^k path
+	// (see ExpressionBuilder.cpp:455-489). The result is biguint with no
+	// width bound, but Solidity's bytesN shift semantics treat the value
+	// as left-aligned in a 32-byte word: `bytes6 = 0x616263646566` × 2^24
+	// must produce `0x646566000000` (low 6 bytes after shift), not the
+	// 9-byte biguint `0x616263646566000000`. Cast back to bytes and take
+	// the low N bytes (right-aligned) when the declared result type is
+	// FixedBytesType.
+	auto op = m_binOp.getOperator();
+	bool isShift = (op == Token::SHL || op == Token::AssignShl
+		|| op == Token::SHR || op == Token::AssignShr
+		|| op == Token::SAR || op == Token::AssignSar);
+	if (isShift && built)
+	{
+		if (auto const* fbType = dynamic_cast<FixedBytesType const*>(m_binOp.annotation().type))
+		{
+			unsigned n = fbType->numBytes();
+			auto bytesT = awst::WType::bytesType();
+
+			// biguint → bytes (raw BE encoding, variable length)
+			auto asBytes = awst::makeReinterpretCast(std::move(built), bytesT, m_loc);
+
+			// Pad on the left to ensure we always have at least N bytes,
+			// then take the LAST N bytes via substring3(b, len(b)-N, len(b)).
+			// concat(bzero(N), b) gives len ≥ N regardless of biguint width.
+			auto padN = awst::makeIntrinsicCall("bzero", bytesT, m_loc);
+			padN->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(n), m_loc));
+
+			auto padded = awst::makeIntrinsicCall("concat", bytesT, m_loc);
+			padded->stackArgs.push_back(std::move(padN));
+			padded->stackArgs.push_back(asBytes);
+			// Pin the padded result to a local so we can read len() once.
+			static int shCounter = 0;
+			std::string varName = "__bytes_shift_" + std::to_string(shCounter++);
+			auto var = awst::makeVarExpression(varName, bytesT, m_loc);
+			m_ctx.prePendingStatements.push_back(
+				awst::makeAssignmentStatement(var, std::move(padded), m_loc));
+
+			auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), m_loc);
+			lenCall->stackArgs.push_back(var);
+
+			auto nConst = awst::makeIntegerConstant(std::to_string(n), m_loc);
+			auto start = awst::makeUInt64BinOp(
+				std::move(lenCall), awst::UInt64BinaryOperator::Sub, std::move(nConst), m_loc);
+
+			auto extr = awst::makeIntrinsicCall("extract3", bytesT, m_loc);
+			extr->stackArgs.push_back(var);
+			extr->stackArgs.push_back(std::move(start));
+			extr->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(n), m_loc));
+
+			// Re-type to bytes[N].
+			return awst::makeReinterpretCast(std::move(extr), resultType, m_loc);
+		}
+	}
+
+	return built;
 }
 
 std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(

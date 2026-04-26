@@ -1,6 +1,11 @@
-# Semantic Test Status — v171
+# Semantic Test Status — v172
 
-**Totals**: 1065 PASS / 196 FAIL / 61 (42 compile_err + 19 deploy_err) = **1065/1322 (80.6%)**
+**Totals**: 1067 PASS / 194 FAIL / 61 (42 compile_err + 19 deploy_err) = **1067/1322 (80.7%)**
+
+vs v171 (1065): +3 file-level wins, one flake flip (mapping_contract_key passes solo, fails under suite throughput). Three independent fixes:
+- `inheritance/constructor_inheritance_init_order_3_legacy` ✗→✓ — Solidity legacy semantics: state var init runs BEFORE base ctor args evaluated. Fix in `src/builder/ContractBuilder.cpp`: in `!m_viaIR` mode, emit `emitStateVarInit` for all bases up-front (before Phase 1+2 base-ctor arg eval). Existing interleave loop further down dedups via `stateVarInitialized` set so it's a no-op the second time around. viaIR mode keeps the existing interleaved behavior (where derived state-var inits can observe base-ctor mutations).
+- `various/destructuring_assignment` ✗→✓ — Tuple `(loc, x, y, data, arrayData[3]) = (8, 4, returnsArray(), s, 2)` was evaluating `returnsArray()` 6 times (once per LHS slot via TupleItemExpression base re-eval), each call reassigning `arrayData` and clobbering the prior `arrayData[3] = 2` write. Fix in `src/builder/sol-ast/exprs/SolAssignment.cpp::handleTupleAssignment`: snapshot every RHS item to a fresh local when the RHS contains a side-effecting call (SubroutineCall/IntrinsicCall/SubmitInner/CreateInner) AND the LHS contains an IndexExpression on a state var. Snapshots emitted via `prePendingStatements` so temps are committed BEFORE any per-LHS read. The LHS-state-index guard avoids triggering on the `(y,y,y)=(set(1),set(2),set(3))` tuple-swap pattern in `viaYul/tuple_evaluation_order` where puya's optimizer + snapshot interact badly (snapshot temps inlined back, raw call returns leak stack values).
+- `constructor/functions_called_by_constructor_through_dispatch` ✗→✓ — `bytes6 << uint*8` produced a 9-byte result (biguint multiply by 2^N appends bytes) instead of the EVM-semantic 6-byte left-shifted bytes. Fix in `src/builder/sol-ast/exprs/SolBinaryOperation.cpp::toAwst`: after the buildBinaryOp shift fallback, if `m_binOp.annotation().type` is FixedBytesType(N), cast biguint result to bytes, left-pad to ≥N bytes, then take the LAST N bytes via `extract3(b, len(b)-N, N)`. Re-types to bytes[N]. Mirrors how EVM left-aligns bytesN in 32-byte words: high bytes shift out, low bytes fill with zeros.
 
 vs v170 (1062): +3, zero regressions. Three independent contributions across the encoder + harness:
 - `array/arrays_complex_from_and_to_storage` ✗→✓ — exercised the C++ static-array-of-dynamic-elements encoder.

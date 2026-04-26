@@ -123,7 +123,60 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 				|| t->kind() == awst::WTypeKind::Bytes);
 			if (!scalar) { allScalars = false; break; }
 		}
-		if (allLocalVars || allScalars)
+		// Side-effecting RHS + index-into-state-var LHS: when the tuple
+		// has BOTH a side-effecting RHS item (e.g. `returnsArray()` that
+		// reassigns a state variable) AND an LHS slot that indexes into
+		// that same state variable (e.g. `arrayData[3]`), each LHS access
+		// re-evaluates the underlying TupleItemExpression's base. The
+		// repeated `returnsArray()` invocations clobber prior writes to
+		// `arrayData[3]`. Snapshot every RHS slot to a temp once so each
+		// LHS reads the committed value.
+		//
+		// The LHS-must-index-state guard avoids triggering on the
+		// (y, y, y) = (set(1), set(2), set(3)) tuple-swap pattern, where
+		// puya's optimizer + the snapshot interact badly: snapshot temps
+		// get inlined back, the bare RHS tuple-of-reads is emitted as a
+		// statement, and the original side-effecting calls leak stack
+		// values that the redundant assignments don't consume.
+		bool hasSideEffectingRhs = false;
+		for (auto const& it : rhsTuple->items)
+		{
+			if (dynamic_cast<awst::SubroutineCallExpression const*>(it.get())
+				|| dynamic_cast<awst::IntrinsicCall const*>(it.get())
+				|| dynamic_cast<awst::SubmitInnerTransaction const*>(it.get())
+				|| dynamic_cast<awst::CreateInnerTransaction const*>(it.get()))
+			{
+				hasSideEffectingRhs = true;
+				break;
+			}
+		}
+		bool lhsHasStateIndex = false;
+		if (hasSideEffectingRhs)
+		{
+			auto const* lhsTuple = dynamic_cast<awst::TupleExpression const*>(_target.get());
+			if (lhsTuple)
+			{
+				for (auto const& it : lhsTuple->items)
+				{
+					// IndexExpression(StateGet(BoxValueExpression),...) or
+					// IndexExpression(AppStateExpression,...) — a write to
+					// a state-array element is exactly the case where
+					// re-evaluating the RHS clobbers prior writes.
+					auto const* idx = dynamic_cast<awst::IndexExpression const*>(it.get());
+					if (!idx) continue;
+					auto const* base = idx->base.get();
+					if (auto const* sg = dynamic_cast<awst::StateGet const*>(base))
+						base = sg->field.get();
+					if (dynamic_cast<awst::BoxValueExpression const*>(base)
+						|| dynamic_cast<awst::AppStateExpression const*>(base))
+					{
+						lhsHasStateIndex = true;
+						break;
+					}
+				}
+			}
+		}
+		if (allLocalVars || allScalars || (hasSideEffectingRhs && lhsHasStateIndex))
 		{
 			std::vector<awst::WType const*> tmpTypes;
 			auto newTuple = std::make_shared<awst::TupleExpression>();
@@ -143,7 +196,15 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 				tmpAssign->value = rhsItem;
 
 				auto stmt = awst::makeExpressionStatement(std::move(tmpAssign), _value->sourceLocation);
-				m_ctx.pendingStatements.push_back(std::move(stmt));
+				// Snapshot writes must run BEFORE the bare-RHS-tuple expression
+				// (which the caller wraps in an ExpressionStatement) and
+				// before any per-LHS assignment further down. `pendingStatements`
+				// inserts AFTER the current statement, which would leave the
+				// temps unassigned at the point the bare tuple reads them —
+				// puya then DCEs the assignments and incorrectly leaves the
+				// raw call return values on the stack. `prePendingStatements`
+				// inserts BEFORE, so temps are committed before any read.
+				m_ctx.prePendingStatements.push_back(std::move(stmt));
 
 				auto tmpRead = awst::makeVarExpression(tmpName, rhsItem->wtype, _value->sourceLocation);
 				newTuple->items.push_back(std::move(tmpRead));

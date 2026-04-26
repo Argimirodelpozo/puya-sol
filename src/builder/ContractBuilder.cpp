@@ -2442,6 +2442,24 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		auto const* savedReturnType = m_stmtCtx.returnType;
 		m_stmtCtx.returnType = awst::WType::boolType();
 
+		// LEGACY MODE: state var inits emitted BEFORE constructor arg eval.
+		// In Solidity legacy (compileViaYul: false) semantics, base state vars
+		// initialize before any constructor work — including before the args
+		// to base constructors are evaluated by the derived contract. Tests
+		// like inheritance/constructor_inheritance_init_order_3_legacy rely
+		// on this: A's `uint x = 2` runs first, THEN B's `A(f())` evaluates
+		// f() (which sets x=4), THEN A's body, THEN B's body — final x=4.
+		// The interleaved init+body loop further down still works in legacy
+		// mode because emitStateVarInit dedups via `stateVarInitialized` set.
+		// In viaIR mode (m_viaIR == true) we keep the interleaved behavior:
+		// derived state var inits can observe state set by base constructors.
+		if (!m_viaIR)
+		{
+			auto const& linEarly = _contract.annotation().linearizedBaseContracts;
+			for (auto itEarly = linEarly.rbegin(); itEarly != linEarly.rend(); ++itEarly)
+				emitStateVarInit(**itEarly, createBlock->body);
+		}
+
 		// Pre-evaluate constructor arguments in dependency order.
 		// In viaIR, all ctor args are evaluated before any state var init or ctor body.
 		// For transitive args (D→C→A), C's params must be assigned first so that
