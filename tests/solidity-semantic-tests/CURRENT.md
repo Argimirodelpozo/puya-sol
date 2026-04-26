@@ -1,6 +1,12 @@
-# Semantic Test Status — v172
+# Semantic Test Status — v173
 
-**Totals**: 1067 PASS / 194 FAIL / 61 (42 compile_err + 19 deploy_err) = **1067/1322 (80.7%)**
+**Totals**: 1069 PASS / 192 FAIL / 61 (42 compile_err + 19 deploy_err) = **1069/1322 (80.9%)**
+
+vs v172 (1067): +1 real (`events/event_indexed_string` ✗→✓) plus a flake recovery on `mapping_contract_key` (passes solo, fails under suite throughput class). Zero regressions.
+
+Fix in `src/builder/sol-ast/calls/SolArrayMethod.cpp::toAwst`:
+- `bytes(stringStateVar).push(byte)` previously fell through to a default route that produced broken codegen (treated as `x = x + 1`). The base AST shape is `FunctionCall(TypeConversion, [Identifier])`, not a bare Identifier, so the existing bytes/string-state-var .push branch (which handles concat-based push to box storage) didn't fire. Added a TypeConversion-unwrap shim at the top of toAwst: when baseExpr is `bytes(x)` with x a state-var Identifier of bytes/string type, set effectiveBase to the inner Identifier so the existing handlers take over.
+- Also fixed pushVal coercion in the same .push branch: `bytes.push(b)` takes a `bytes1` arg in Solidity, but our buildExpr returns a uint64 for integer-literal arguments. Added a uint64 → 1-byte conversion via `extract3(itob(v), 7, 1)` so the concat with the existing bytes value type-checks. Without this puya emits "incompatible argument types on Intrinsic(concat ): received = (bytes, uint64), expected = (AVMType.bytes, AVMType.bytes)".
 
 vs v171 (1065): +3 file-level wins, one flake flip (mapping_contract_key passes solo, fails under suite throughput). Three independent fixes:
 - `inheritance/constructor_inheritance_init_order_3_legacy` ✗→✓ — Solidity legacy semantics: state var init runs BEFORE base ctor args evaluated. Fix in `src/builder/ContractBuilder.cpp`: in `!m_viaIR` mode, emit `emitStateVarInit` for all bases up-front (before Phase 1+2 base-ctor arg eval). Existing interleave loop further down dedups via `stateVarInitialized` set so it's a no-op the second time around. viaIR mode keeps the existing interleaved behavior (where derived state-var inits can observe base-ctor mutations).

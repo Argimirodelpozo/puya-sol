@@ -306,7 +306,36 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 	}
 
 	// Check if this is a state variable array
-	if (auto const* ident = dynamic_cast<Identifier const*>(&baseExpr))
+	// `bytes(stringStateVar).push(...)` / `.pop()` — Solidity allows calling
+	// array methods on the bytes view of a string state variable, and the
+	// result modifies the underlying state. The base AST shape here is
+	// `FunctionCall(TypeConversion, [Identifier])`, not a bare Identifier,
+	// so the standard state-var paths below don't fire and the call falls
+	// through to a default route that produces broken codegen (treats it
+	// as `x = x + 1`). Detect this shape and unwrap to the underlying
+	// Identifier so the bytes/string state-var .push/.pop branches handle it.
+	Expression const* effectiveBase = &baseExpr;
+	if (auto const* castCall = dynamic_cast<FunctionCall const*>(&baseExpr))
+	{
+		if (*castCall->annotation().kind == FunctionCallKind::TypeConversion
+			&& castCall->arguments().size() == 1)
+		{
+			auto const* convArg = castCall->arguments()[0].get();
+			if (auto const* convIdent = dynamic_cast<Identifier const*>(convArg))
+			{
+				auto const* convDecl = dynamic_cast<VariableDeclaration const*>(
+					convIdent->annotation().referencedDeclaration);
+				if (convDecl && convDecl->isStateVariable())
+				{
+					auto const* convType = dynamic_cast<ArrayType const*>(convDecl->type());
+					if (convType && convType->isByteArrayOrString())
+						effectiveBase = convIdent;
+				}
+			}
+		}
+	}
+
+	if (auto const* ident = dynamic_cast<Identifier const*>(effectiveBase))
 	{
 		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
 				ident->annotation().referencedDeclaration))
@@ -400,12 +429,35 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					auto readVal = m_ctx.storageMapper.createStateRead(
 						varName, awst::WType::bytesType(), kind, loc);
 
-					// Build the push value
+					// Build the push value. `bytes.push(b)` takes a `bytes1`
+					// arg; Solidity implicitly converts uint8 / int literals
+					// to bytes1. Our buildExpr returns a uint64 for those, so
+					// itob+extract the last byte. For string types we use the
+					// existing stringToBytes path. For bytes-typed args (rare
+					// — would only arise from `bytes(x).push(b)` where b is
+					// already bytes), pass through.
 					std::shared_ptr<awst::Expression> pushVal;
 					if (!m_call.arguments().empty())
 					{
 						pushVal = buildExpr(*m_call.arguments()[0]);
-						pushVal = builder::TypeCoercion::stringToBytes(std::move(pushVal), loc);
+						auto* pvT = pushVal ? pushVal->wtype : nullptr;
+						if (pvT == awst::WType::uint64Type())
+						{
+							// uint64 → 1-byte bytes via itob (8 bytes BE) + extract last.
+							auto itob = awst::makeIntrinsicCall(
+								"itob", awst::WType::bytesType(), loc);
+							itob->stackArgs.push_back(std::move(pushVal));
+							auto extr = awst::makeIntrinsicCall(
+								"extract3", awst::WType::bytesType(), loc);
+							extr->stackArgs.push_back(std::move(itob));
+							extr->stackArgs.push_back(awst::makeIntegerConstant("7", loc));
+							extr->stackArgs.push_back(awst::makeIntegerConstant("1", loc));
+							pushVal = std::move(extr);
+						}
+						else
+						{
+							pushVal = builder::TypeCoercion::stringToBytes(std::move(pushVal), loc);
+						}
 					}
 					else
 					{
