@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_selector_assignment.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1 4294967295 0 8
     pushint 4096
     bzero
     dup
@@ -46,7 +46,7 @@ testFunction_ternary_merge@4:
     return
 
 testFunction_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b testFunction_ternary_merge@4
 
 
@@ -55,7 +55,7 @@ testYul:
     txna ApplicationArgs 1
     dup
     len
-    pushint 8
+    intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
@@ -69,17 +69,33 @@ testYul:
 testYul_ternary_merge@4:
     !
     assert // not payable
-    dup
-    pushint 4294967295
+    dupn 2
+    intc_1 // 4294967295
     <=
     assert // ABI validation
+    intc_1 // 4294967295
+    &
     load 0
+    swap
+    itob
+    extract 4 4
+    pushbytes 0x000000000000000089aac53b
+    swap
+    replace2 8
+    swap
     store 0
-    pushbytes 0x151f7c750000000089aac53b
+    intc_3 // 8
+    extract_uint32
+    intc_1 // 4294967295
+    &
+    itob
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
 testYul_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b testYul_ternary_merge@4

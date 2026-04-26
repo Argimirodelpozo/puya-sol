@@ -422,6 +422,119 @@ void AssemblyBuilder::buildAssignment(
 
 	std::string name = _assign.variableNames[0].name.str();
 
+	// fn-ptr selector/address writes: fp.selector := expr  /  fp.address := expr
+	// Update the corresponding 4-byte (selector) or 8-byte (address) slice of the
+	// 12-byte fn-ptr local via replace3. The base local is identified by looking
+	// up the dotted name in m_locals (SolInlineAssembly registers fp.selector with
+	// the underlying fn-ptr type bytes[12]).
+	{
+		auto dotIdx = name.rfind('.');
+		if (dotIdx != std::string::npos && _assign.value)
+		{
+			std::string suffix = name.substr(dotIdx + 1);
+			std::string baseName = name.substr(0, dotIdx);
+			if (suffix == "selector" || suffix == "address")
+			{
+				auto fullIt = m_locals.find(name);
+				if (fullIt != m_locals.end())
+				{
+					auto const* bwt = dynamic_cast<awst::BytesWType const*>(fullIt->second);
+					if (bwt && bwt->length().has_value() && *bwt->length() == 12)
+					{
+						auto rhs = buildExpression(*_assign.value);
+						for (auto& ps: m_pendingStatements)
+							_out.push_back(std::move(ps));
+						m_pendingStatements.clear();
+						if (!rhs)
+							return;
+
+						int sliceWidth = (suffix == "selector") ? 4 : 8;
+						int sliceOffset = (suffix == "selector") ? 8 : 0;
+
+						// Build the rhs slice as exactly `sliceWidth` bytes.
+						// - account/bytes input (e.g. fp.address := someAddress): take the
+						//   low `sliceWidth` bytes via extract3(rhs, len(rhs)-w, w). EVM
+						//   right-aligns address values inside a 32-byte word.
+						// - numeric input: itob to 8 bytes, then take the low `sliceWidth`.
+						std::shared_ptr<awst::Expression> sliceBytes;
+						bool rhsIsBytesLike =
+							rhs->wtype == awst::WType::accountType()
+							|| (rhs->wtype && rhs->wtype->kind() == awst::WTypeKind::Bytes);
+
+						if (rhsIsBytesLike)
+						{
+							std::shared_ptr<awst::Expression> rhsBytes =
+								(rhs->wtype == awst::WType::bytesType())
+								? rhs
+								: awst::makeReinterpretCast(rhs, awst::WType::bytesType(), loc);
+							auto rhsBytesForLen = rhsBytes;
+
+							auto lenCall = awst::makeIntrinsicCall(
+								"len", awst::WType::uint64Type(), loc);
+							lenCall->stackArgs.push_back(std::move(rhsBytesForLen));
+							auto offsetExpr = awst::makeUInt64BinOp(
+								std::move(lenCall), awst::UInt64BinaryOperator::Sub,
+								awst::makeIntegerConstant(std::to_string(sliceWidth), loc), loc);
+
+							auto extractCall = awst::makeIntrinsicCall(
+								"extract3", awst::WType::bytesType(), loc);
+							extractCall->stackArgs.push_back(std::move(rhsBytes));
+							extractCall->stackArgs.push_back(std::move(offsetExpr));
+							extractCall->stackArgs.push_back(awst::makeIntegerConstant(
+								std::to_string(sliceWidth), loc));
+							sliceBytes = std::move(extractCall);
+						}
+						else
+						{
+							if (rhs->wtype == awst::WType::biguintType())
+								rhs = safeBtoi(std::move(rhs), loc);
+
+							auto itobCall = awst::makeIntrinsicCall(
+								"itob", awst::WType::bytesType(), loc);
+							itobCall->stackArgs.push_back(std::move(rhs));
+
+							if (sliceWidth == 8)
+							{
+								sliceBytes = std::move(itobCall);
+							}
+							else
+							{
+								auto extractCall = awst::makeIntrinsicCall(
+									"extract3", awst::WType::bytesType(), loc);
+								extractCall->stackArgs.push_back(std::move(itobCall));
+								extractCall->stackArgs.push_back(awst::makeIntegerConstant(
+									std::to_string(8 - sliceWidth), loc));
+								extractCall->stackArgs.push_back(awst::makeIntegerConstant(
+									std::to_string(sliceWidth), loc));
+								sliceBytes = std::move(extractCall);
+							}
+						}
+
+						auto baseVar = awst::makeVarExpression(baseName, fullIt->second, loc);
+						auto baseAsBytes = awst::makeReinterpretCast(
+							std::move(baseVar), awst::WType::bytesType(), loc);
+
+						auto replaceCall = awst::makeIntrinsicCall(
+							"replace3", awst::WType::bytesType(), loc);
+						replaceCall->stackArgs.push_back(std::move(baseAsBytes));
+						replaceCall->stackArgs.push_back(awst::makeIntegerConstant(
+							std::to_string(sliceOffset), loc));
+						replaceCall->stackArgs.push_back(std::move(sliceBytes));
+
+						auto castBack = awst::makeReinterpretCast(
+							std::move(replaceCall), fullIt->second, loc);
+
+						auto target = awst::makeVarExpression(baseName, fullIt->second, loc);
+						auto assign = awst::makeAssignmentStatement(
+							std::move(target), std::move(castBack), loc);
+						_out.push_back(std::move(assign));
+						return;
+					}
+				}
+			}
+		}
+	}
+
 	// Handle storage slot assignments: _x.slot := expr
 	// Compute the slot value and assign to the base variable name.
 	// The variable holds the slot number as biguint, enabling slot-based

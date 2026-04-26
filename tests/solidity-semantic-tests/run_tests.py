@@ -1588,9 +1588,12 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
             elif isinstance(a, int) and a >= 2**64:
                 # Large two's complement value (e.g., -2 → 2^256-2) for uint64 param.
                 # Truncate to param's bit width for proper signed→unsigned conversion.
+                # Only fires for plain `uintN` — `uintN[M]` static arrays must
+                # NOT be truncated (those are bytes-shaped, used e.g. for the
+                # 12-byte external fn-ptr encoding `uint8[12]`).
                 pt = _pt_for(i)
                 import re as _re_trunc
-                uint_match = _re_trunc.match(r'uint(\d+)', pt)
+                uint_match = _re_trunc.match(r'uint(\d+)$', pt)
                 if uint_match:
                     bit_width = int(uint_match.group(1))
                     a = a % (2 ** bit_width)
@@ -1724,7 +1727,12 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                     excess_calldata = args[n_expected:]
                     args = args[:n_expected]
 
-        # Convert bytes to str for string params (algokit expects str)
+        # Convert bytes to str for string params (algokit expects str).
+        # Also coerce int → list-of-bytes for `uint8[N]` params and
+        # int → bytes for `byte[N]` params: solc test syntax `left(0x...)`
+        # parses to int, but algokit's ABI encoder needs typed bytes/lists
+        # for these slots. Used for external fn-ptr values (encoded as
+        # uint8[12] = 8-byte appId + 4-byte ARC4 selector).
         if app_spec:
             resolved_m = resolve_method(app_spec, call.method_signature)
             import re as _re
@@ -1732,8 +1740,28 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
             if pm2 and pm2.group(1):
                 rptypes = pm2.group(1).split(',')
                 for i2, pt2 in enumerate(rptypes):
-                    if pt2.strip() == 'string' and i2 < len(args) and isinstance(args[i2], bytes):
+                    pt2s = pt2.strip()
+                    if pt2s == 'string' and i2 < len(args) and isinstance(args[i2], bytes):
                         args[i2] = args[i2].decode('utf-8', errors='replace')
+                    elif i2 < len(args) and isinstance(args[i2], int):
+                        # `left(0x...)` returns int padded to 32 bytes BE; the
+                        # original hex sat in the high-order N bytes.
+                        fn_match = _re.match(r'(?:byte|uint8)\[(\d+)\]', pt2s)
+                        if fn_match:
+                            n = int(fn_match.group(1))
+                            if 0 < n <= 32:
+                                full32 = (args[i2] & ((1 << 256) - 1)).to_bytes(32, 'big')
+                                if pt2s.startswith('uint8['):
+                                    args[i2] = list(full32[:n])
+                                else:
+                                    args[i2] = full32[:n]
+                    elif i2 < len(args) and isinstance(args[i2], list) \
+                            and pt2s.startswith('byte[') \
+                            and all(isinstance(v, int) for v in args[i2]):
+                        # Codec returned list of ints (legacy ABI shape) for a
+                        # `byte[N]` slot — algokit's byte-array encoder
+                        # rejects ints. Coerce to bytes.
+                        args[i2] = bytes(args[i2])
 
         # When excess calldata exists, use a raw ApplicationCallTxn so the
         # extra bytes appear as additional ApplicationArgs (msg.data sees them).

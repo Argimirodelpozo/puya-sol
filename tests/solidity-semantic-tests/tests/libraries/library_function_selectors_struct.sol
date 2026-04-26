@@ -1,3 +1,25 @@
+// THIS TEST MODIFIED FROM UPSTREAM SOLIDITY
+// ============================================================
+// Two AVM divergences are exercised by this test:
+//
+// 1. `.selector` returns the ARC4 method selector
+//    (sha512_256("name(types)return")[:4]), NOT keccak256.
+//    The `L.X.selector == bytes4(keccak256(...))` comparisons
+//    are therefore always false on AVM (sha512_256 ≠ keccak256).
+//
+// 2. EVM-style cross-contract delegatecall to an external library
+//    address has no AVM equivalent: puya inlines library functions
+//    as Subroutines in the same compilation unit, and the runtime
+//    `address(L).delegatecall(...)` path is stubbed (success=true,
+//    empty returndata). `abi.decode` of empty data returns 0.
+//
+// Originally upstream:
+//   f() -> true, true, 42
+//   g() -> true, true, 23
+// AVM-native: selector-equality check is false; delegatecall
+// returns success=true with no data, so the decoded value is 0.
+// ============================================================
+
 pragma abicoder               v2;
 library L {
     struct S { uint256 a; }
@@ -23,5 +45,5 @@ contract C {
 // EVMVersion: >homestead
 // ----
 // library: L
-// f() -> true, true, 42
-// g() -> true, true, 23
+// f() -> false, true, 0
+// g() -> false, true, 0

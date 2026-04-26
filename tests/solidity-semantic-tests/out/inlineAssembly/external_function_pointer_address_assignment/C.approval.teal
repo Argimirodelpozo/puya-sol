@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_address_assignment.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1 0 8
     pushint 4096
     bzero
     dup
@@ -53,7 +53,9 @@ testFunction_ternary_false@3:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_address_assignment.sol.C.testYul[routing]() -> void:
 testYul:
     txna ApplicationArgs 1
+    dup
     len
+    dup
     pushint 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
@@ -68,8 +70,26 @@ testYul_ternary_merge@4:
     !
     assert // not payable
     load 0
+    dig 1
+    intc_2 // 8
+    -
+    dig 3
+    swap
+    intc_2 // 8
+    extract3
+    pushbytes 0x000000000000000089aac53b
+    swap
+    replace2 0
+    swap
     store 0
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    pushint 24
+    bzero
+    swap
+    extract 0 8
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return

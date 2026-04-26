@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_address.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
+    intcblock 1 0
+    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000001234
     pushint 4096
     bzero
     dup
@@ -52,7 +53,6 @@ testFunction_ternary_false@3:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_address.sol.C.testYul[routing]() -> void:
 testYul:
-    intc_1 // 0
     txn GroupIndex
     bz testYul_ternary_false@3
     txn GroupIndex
@@ -64,25 +64,8 @@ testYul_ternary_merge@4:
     !
     assert // not payable
     load 0
-    intc_2 // 32
-    bzero
-    pushint 20
-    bzero
-    dig 3
-    swap
-    concat
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    swap
     store 0
-    pushbytes 0x151f7c75
-    swap
-    concat
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000001234
     log
     intc_0 // 1
     return
@@ -104,7 +87,7 @@ testSol:
 testSol_ternary_merge@4:
     !
     assert // not payable
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000001234
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000001234
     log
     intc_0 // 1
     return

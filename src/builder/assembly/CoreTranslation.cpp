@@ -158,6 +158,55 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 				return lenCall;
 			}
 		}
+		else if (suffix == "selector")
+		{
+			// fn-ptr.selector in Yul: extract 4-byte selector slot from 12-byte fn-ptr.
+			// AVM external fn-ptr layout = appId(8B) ++ selector(4B). Read bytes 8..12
+			// as uint32; assignment to a uint256 stack var places it right-aligned
+			// (low 32 bits), matching EVM's convention so subsequent shifts work.
+			// SolInlineAssembly registers `fp.selector` (full dotted name) in m_locals
+			// with the underlying fn-ptr type (bytes[12]); use that entry to identify
+			// fn-ptrs, then reference the unsuffixed base local declared in outer scope.
+			auto fullIt = m_locals.find(name);
+			if (fullIt != m_locals.end())
+			{
+				auto const* bwt = dynamic_cast<awst::BytesWType const*>(fullIt->second);
+				if (bwt && bwt->length().has_value() && *bwt->length() == 12)
+				{
+					auto baseVar = awst::makeVarExpression(baseName, fullIt->second, loc);
+					auto baseAsBytes = awst::makeReinterpretCast(
+						std::move(baseVar), awst::WType::bytesType(), loc);
+
+					auto extractCall = awst::makeIntrinsicCall(
+						"extract_uint32", awst::WType::uint64Type(), loc);
+					extractCall->stackArgs.push_back(std::move(baseAsBytes));
+					extractCall->stackArgs.push_back(awst::makeIntegerConstant("8", loc));
+					return extractCall;
+				}
+			}
+		}
+		else if (suffix == "address")
+		{
+			// fn-ptr.address: 8-byte appId portion of 12-byte fn-ptr.
+			// EVM returns 20-byte address; on AVM the application id is uint64.
+			auto fullIt = m_locals.find(name);
+			if (fullIt != m_locals.end())
+			{
+				auto const* bwt = dynamic_cast<awst::BytesWType const*>(fullIt->second);
+				if (bwt && bwt->length().has_value() && *bwt->length() == 12)
+				{
+					auto baseVar = awst::makeVarExpression(baseName, fullIt->second, loc);
+					auto baseAsBytes = awst::makeReinterpretCast(
+						std::move(baseVar), awst::WType::bytesType(), loc);
+
+					auto extractCall = awst::makeIntrinsicCall(
+						"extract_uint64", awst::WType::uint64Type(), loc);
+					extractCall->stackArgs.push_back(std::move(baseAsBytes));
+					extractCall->stackArgs.push_back(awst::makeIntegerConstant("0", loc));
+					return extractCall;
+				}
+			}
+		}
 	}
 
 	// Check if this is an external constant (e.g., Solidity `uint constant M00 = ...`)
