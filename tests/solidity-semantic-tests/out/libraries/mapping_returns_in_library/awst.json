@@ -1651,9 +1651,10 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "BytesWType",
+                  "name": "bytes",
+                  "immutable": true,
+                  "length": null
                 },
                 "name": "m"
               },
@@ -1773,7 +1774,7 @@
                 "name": "oldValue"
               },
               "value": {
-                "_type": "SubroutineCallExpression",
+                "_type": "StateGet",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
                   "line": 467,
@@ -1782,19 +1783,55 @@
                   "column": null,
                   "end_column": null
                 },
-                "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
-                },
-                "target": {
-                  "_type": "InstanceMethodTarget",
-                  "member_name": "__storage_read"
-                },
-                "args": [
-                  {
-                    "name": "__slot",
-                    "value": {
+                "field": {
+                  "_type": "BoxValueExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                    "line": 467,
+                    "end_line": 473,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
+                  },
+                  "key": {
+                    "_type": "BoxPrefixedKeyExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                      "line": 467,
+                      "end_line": 473,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "box_key",
+                      "immutable": true
+                    },
+                    "prefix": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                        "line": 467,
+                        "end_line": 473,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "name": "m"
+                    },
+                    "key": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
@@ -1805,11 +1842,12 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
                       },
-                      "op_code": "btoi",
+                      "op_code": "sha256",
                       "immediates": [],
                       "stack_args": [
                         {
@@ -1832,7 +1870,7 @@
                           "immediates": [],
                           "stack_args": [
                             {
-                              "_type": "ReinterpretCast",
+                              "_type": "IntrinsicCall",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
                                 "line": 467,
@@ -1847,23 +1885,11 @@
                                 "immutable": true,
                                 "length": null
                               },
-                              "expr": {
-                                "_type": "BigUIntBinaryOperation",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
-                                  "line": 467,
-                                  "end_line": 473,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "biguint",
-                                  "immutable": true
-                                },
-                                "left": {
-                                  "_type": "VarExpression",
+                              "op_code": "concat",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntrinsicCall",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
                                     "line": 467,
@@ -1873,34 +1899,72 @@
                                     "end_column": null
                                   },
                                   "wtype": {
-                                    "_type": "WType",
-                                    "name": "biguint",
-                                    "immutable": true
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
                                   },
-                                  "name": "m"
+                                  "op_code": "bzero",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                                        "line": 467,
+                                        "end_line": 473,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 32,
+                                      "teal_alias": null
+                                    }
+                                  ]
                                 },
-                                "op": "+",
-                                "right": {
-                                  "_type": "VarExpression",
+                                {
+                                  "_type": "ReinterpretCast",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
-                                    "line": 469,
-                                    "end_line": 472,
+                                    "line": 467,
+                                    "end_line": 473,
                                     "comment_lines": 0,
                                     "column": null,
                                     "end_column": null
                                   },
                                   "wtype": {
-                                    "_type": "WType",
-                                    "name": "biguint",
-                                    "immutable": true
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
                                   },
-                                  "name": "key"
+                                  "expr": {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                                      "line": 469,
+                                      "end_line": 472,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "name": "key"
+                                  }
                                 }
-                              }
+                              ]
                             },
                             {
-                              "_type": "UInt64BinaryOperation",
+                              "_type": "IntrinsicCall",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
                                 "line": 467,
@@ -1914,42 +1978,29 @@
                                 "name": "uint64",
                                 "immutable": true
                               },
-                              "left": {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
-                                  "line": 467,
-                                  "end_line": 473,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "op_code": "len",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "ReinterpretCast",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
-                                      "line": 467,
-                                      "end_line": 473,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "expr": {
-                                      "_type": "BigUIntBinaryOperation",
+                              "op_code": "-",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                                    "line": 467,
+                                    "end_line": 473,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "op_code": "len",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntrinsicCall",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
                                         "line": 467,
@@ -1959,68 +2010,110 @@
                                         "end_column": null
                                       },
                                       "wtype": {
-                                        "_type": "WType",
-                                        "name": "biguint",
-                                        "immutable": true
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
                                       },
-                                      "left": {
-                                        "_type": "VarExpression",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
-                                          "line": 467,
-                                          "end_line": 473,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
+                                      "op_code": "concat",
+                                      "immediates": [],
+                                      "stack_args": [
+                                        {
+                                          "_type": "IntrinsicCall",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                                            "line": 467,
+                                            "end_line": 473,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "BytesWType",
+                                            "name": "bytes",
+                                            "immutable": true,
+                                            "length": null
+                                          },
+                                          "op_code": "bzero",
+                                          "immediates": [],
+                                          "stack_args": [
+                                            {
+                                              "_type": "IntegerConstant",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                                                "line": 467,
+                                                "end_line": 473,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "uint64",
+                                                "immutable": true
+                                              },
+                                              "value": 32,
+                                              "teal_alias": null
+                                            }
+                                          ]
                                         },
-                                        "wtype": {
-                                          "_type": "WType",
-                                          "name": "biguint",
-                                          "immutable": true
-                                        },
-                                        "name": "m"
-                                      },
-                                      "op": "+",
-                                      "right": {
-                                        "_type": "VarExpression",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
-                                          "line": 469,
-                                          "end_line": 472,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "WType",
-                                          "name": "biguint",
-                                          "immutable": true
-                                        },
-                                        "name": "key"
-                                      }
+                                        {
+                                          "_type": "ReinterpretCast",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                                            "line": 467,
+                                            "end_line": 473,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "BytesWType",
+                                            "name": "bytes",
+                                            "immutable": true,
+                                            "length": null
+                                          },
+                                          "expr": {
+                                            "_type": "VarExpression",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                                              "line": 469,
+                                              "end_line": 472,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "biguint",
+                                              "immutable": true
+                                            },
+                                            "name": "key"
+                                          }
+                                        }
+                                      ]
                                     }
-                                  }
-                                ]
-                              },
-                              "op": "-",
-                              "right": {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
-                                  "line": 467,
-                                  "end_line": 473,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
+                                  ]
                                 },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "value": 8,
-                                "teal_alias": null
-                              }
+                                {
+                                  "_type": "IntegerConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                                    "line": 467,
+                                    "end_line": 473,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "value": 32,
+                                  "teal_alias": null
+                                }
+                              ]
                             },
                             {
                               "_type": "IntegerConstant",
@@ -2037,15 +2130,34 @@
                                 "name": "uint64",
                                 "immutable": true
                               },
-                              "value": 8,
+                              "value": 32,
                               "teal_alias": null
                             }
                           ]
                         }
                       ]
                     }
-                  }
-                ]
+                  },
+                  "exists_assertion_message": null
+                },
+                "default": {
+                  "_type": "IntegerConstant",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                    "line": 467,
+                    "end_line": 473,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
+                  },
+                  "value": 0,
+                  "teal_alias": null
+                }
               }
             },
             {
@@ -2074,7 +2186,7 @@
                   "immutable": true
                 },
                 "target": {
-                  "_type": "SubroutineCallExpression",
+                  "_type": "BoxValueExpression",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
                     "line": 483,
@@ -2088,68 +2200,98 @@
                     "name": "biguint",
                     "immutable": true
                   },
-                  "target": {
-                    "_type": "InstanceMethodTarget",
-                    "member_name": "__storage_read"
-                  },
-                  "args": [
-                    {
-                      "name": "__slot",
-                      "value": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
-                          "line": 483,
-                          "end_line": 489,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "btoi",
-                        "immediates": [],
-                        "stack_args": [
-                          {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
-                              "line": 483,
-                              "end_line": 489,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            "op_code": "extract3",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "ReinterpretCast",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
-                                  "line": 483,
-                                  "end_line": 489,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "expr": {
-                                  "_type": "BigUIntBinaryOperation",
+                  "key": {
+                    "_type": "BoxPrefixedKeyExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                      "line": 483,
+                      "end_line": 489,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "box_key",
+                      "immutable": true
+                    },
+                    "prefix": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                        "line": 483,
+                        "end_line": 489,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "name": "m"
+                    },
+                    "key": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                        "line": 483,
+                        "end_line": 489,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "sha256",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                            "line": 483,
+                            "end_line": 489,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "op_code": "extract3",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                                "line": 483,
+                                "end_line": 489,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "concat",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntrinsicCall",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
                                     "line": 483,
@@ -2159,29 +2301,51 @@
                                     "end_column": null
                                   },
                                   "wtype": {
-                                    "_type": "WType",
-                                    "name": "biguint",
-                                    "immutable": true
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
                                   },
-                                  "left": {
-                                    "_type": "VarExpression",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
-                                      "line": 483,
-                                      "end_line": 489,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "biguint",
-                                      "immutable": true
-                                    },
-                                    "name": "m"
+                                  "op_code": "bzero",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                                        "line": 483,
+                                        "end_line": 489,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 32,
+                                      "teal_alias": null
+                                    }
+                                  ]
+                                },
+                                {
+                                  "_type": "ReinterpretCast",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                                    "line": 483,
+                                    "end_line": 489,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
                                   },
-                                  "op": "+",
-                                  "right": {
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "expr": {
                                     "_type": "VarExpression",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
@@ -2199,23 +2363,27 @@
                                     "name": "key"
                                   }
                                 }
+                              ]
+                            },
+                            {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                                "line": 483,
+                                "end_line": 489,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
                               },
-                              {
-                                "_type": "UInt64BinaryOperation",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
-                                  "line": 483,
-                                  "end_line": 489,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "left": {
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "op_code": "-",
+                              "immediates": [],
+                              "stack_args": [
+                                {
                                   "_type": "IntrinsicCall",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
@@ -2234,7 +2402,7 @@
                                   "immediates": [],
                                   "stack_args": [
                                     {
-                                      "_type": "ReinterpretCast",
+                                      "_type": "IntrinsicCall",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
                                         "line": 483,
@@ -2249,23 +2417,11 @@
                                         "immutable": true,
                                         "length": null
                                       },
-                                      "expr": {
-                                        "_type": "BigUIntBinaryOperation",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
-                                          "line": 483,
-                                          "end_line": 489,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "WType",
-                                          "name": "biguint",
-                                          "immutable": true
-                                        },
-                                        "left": {
-                                          "_type": "VarExpression",
+                                      "op_code": "concat",
+                                      "immediates": [],
+                                      "stack_args": [
+                                        {
+                                          "_type": "IntrinsicCall",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
                                             "line": 483,
@@ -2275,36 +2431,73 @@
                                             "end_column": null
                                           },
                                           "wtype": {
-                                            "_type": "WType",
-                                            "name": "biguint",
-                                            "immutable": true
+                                            "_type": "BytesWType",
+                                            "name": "bytes",
+                                            "immutable": true,
+                                            "length": null
                                           },
-                                          "name": "m"
+                                          "op_code": "bzero",
+                                          "immediates": [],
+                                          "stack_args": [
+                                            {
+                                              "_type": "IntegerConstant",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                                                "line": 483,
+                                                "end_line": 489,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "uint64",
+                                                "immutable": true
+                                              },
+                                              "value": 32,
+                                              "teal_alias": null
+                                            }
+                                          ]
                                         },
-                                        "op": "+",
-                                        "right": {
-                                          "_type": "VarExpression",
+                                        {
+                                          "_type": "ReinterpretCast",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
-                                            "line": 485,
-                                            "end_line": 488,
+                                            "line": 483,
+                                            "end_line": 489,
                                             "comment_lines": 0,
                                             "column": null,
                                             "end_column": null
                                           },
                                           "wtype": {
-                                            "_type": "WType",
-                                            "name": "biguint",
-                                            "immutable": true
+                                            "_type": "BytesWType",
+                                            "name": "bytes",
+                                            "immutable": true,
+                                            "length": null
                                           },
-                                          "name": "key"
+                                          "expr": {
+                                            "_type": "VarExpression",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                                              "line": 485,
+                                              "end_line": 488,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "biguint",
+                                              "immutable": true
+                                            },
+                                            "name": "key"
+                                          }
                                         }
-                                      }
+                                      ]
                                     }
                                   ]
                                 },
-                                "op": "-",
-                                "right": {
+                                {
                                   "_type": "IntegerConstant",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
@@ -2319,34 +2512,35 @@
                                     "name": "uint64",
                                     "immutable": true
                                   },
-                                  "value": 8,
+                                  "value": 32,
                                   "teal_alias": null
                                 }
+                              ]
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                                "line": 483,
+                                "end_line": 489,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
                               },
-                              {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
-                                  "line": 483,
-                                  "end_line": 489,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "value": 8,
-                                "teal_alias": null
-                              }
-                            ]
-                          }
-                        ]
-                      }
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 32,
+                              "teal_alias": null
+                            }
+                          ]
+                        }
+                      ]
                     }
-                  ]
+                  },
+                  "exists_assertion_message": null
                 },
                 "value": {
                   "_type": "VarExpression",
@@ -2964,22 +3158,91 @@
                         "immutable": true
                       },
                       "prefix": {
-                        "_type": "BytesConstant",
+                        "_type": "SubroutineCallExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
                           "line": 617,
-                          "end_line": 654,
+                          "end_line": 649,
                           "comment_lines": 0,
                           "column": null,
                           "end_column": null
                         },
                         "wtype": {
-                          "_type": "WType",
-                          "name": "box_key",
-                          "immutable": true
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
                         },
-                        "value": "ZDDW",
-                        "encoding": "utf8"
+                        "target": {
+                          "_type": "SubroutineID",
+                          "target": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol.Lib.choose_mapping"
+                        },
+                        "args": [
+                          {
+                            "name": null,
+                            "value": {
+                              "_type": "BytesConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                                "line": 617,
+                                "end_line": 649,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "value": "VE",
+                              "encoding": "utf8"
+                            }
+                          },
+                          {
+                            "name": null,
+                            "value": {
+                              "_type": "BytesConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                                "line": 617,
+                                "end_line": 649,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "value": "Vg",
+                              "encoding": "utf8"
+                            }
+                          },
+                          {
+                            "name": null,
+                            "value": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol",
+                                "line": 642,
+                                "end_line": 648,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "bool",
+                                "immutable": true
+                              },
+                              "name": "choice"
+                            }
+                          }
+                        ]
                       },
                       "key": {
                         "_type": "IntrinsicCall",

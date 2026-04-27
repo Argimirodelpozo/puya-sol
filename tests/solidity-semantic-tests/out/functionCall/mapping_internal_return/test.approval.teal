@@ -1,0 +1,284 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_return.sol.test.approval_program() -> uint64:
+main:
+    intcblock 0 255 1 2
+    bytecblock "__ctor_pending" 0x61cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50 0x62cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50 "b" 0xcd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70 0x61af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc 0x61cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70 0x62af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc 0x62cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70 0x151f7c75
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_2 // 1
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x54d05d97 0xbc153c76 // method "__postInit()void", method "g()(uint64,uint64,uint64,uint64,uint64,uint64)", method "h()(uint64,uint64,uint64,uint64,uint64,uint64)"
+    txna ApplicationArgs 0
+    match __postInit g h
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_return.sol.test.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    pushbytes "a"
+    intc_3 // 2
+    box_create
+    pop
+    bytec_3 // "b"
+    intc_3 // 2
+    box_create
+    pop
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_return.sol.test.g[routing]() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    callsub f
+    bytec 4 // 0xcd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
+    concat
+    pushint 21
+    itob
+    box_put
+    bytec 5 // 0x61af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 255
+    &
+    bytec_1 // 0x61cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 255
+    &
+    bytec 6 // 0x61cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 255
+    &
+    bytec 7 // 0x62af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 255
+    &
+    bytec_2 // 0x62cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 255
+    &
+    bytec 8 // 0x62cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 255
+    &
+    uncover 5
+    itob
+    uncover 5
+    itob
+    concat
+    uncover 4
+    itob
+    concat
+    uncover 3
+    itob
+    concat
+    uncover 2
+    itob
+    concat
+    swap
+    itob
+    concat
+    bytec 9 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+g_ternary_false@3:
+    intc_0 // 0
+    b g_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_return.sol.test.h[routing]() -> void:
+h:
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
+    callsub f
+    bytec 4 // 0xcd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
+    concat
+    pushint 17
+    itob
+    box_put
+    bytec 5 // 0x61af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 255
+    &
+    bytec_1 // 0x61cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 255
+    &
+    bytec 6 // 0x61cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 255
+    &
+    bytec 7 // 0x62af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 255
+    &
+    bytec_2 // 0x62cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 255
+    &
+    bytec 8 // 0x62cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 255
+    &
+    uncover 5
+    itob
+    uncover 5
+    itob
+    concat
+    uncover 4
+    itob
+    concat
+    uncover 3
+    itob
+    concat
+    uncover 2
+    itob
+    concat
+    swap
+    itob
+    concat
+    bytec 9 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+h_ternary_false@3:
+    intc_0 // 0
+    b h_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_return.sol.test.f() -> bytes:
+f:
+    pushint 42
+    itob
+    bytec_1 // 0x61cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
+    swap
+    box_put
+    pushint 84
+    itob
+    bytec_2 // 0x62cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
+    swap
+    box_put
+    bytec_3 // "b"
+    retsub

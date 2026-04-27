@@ -3233,6 +3233,20 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			if (!rp->name().empty())
 				m_exprBuilder->resolveVarName(rp->name(), rp->id());
 
+		// Register mapping-storage-ref return params as mapping-key-params:
+		// `function f() returns (mapping(K=>V) storage r)` — `r` is a local
+		// pointer; r[k] resolves to box access prefixed by `r`'s runtime
+		// bytes value (the holder name).
+		for (auto const& rp: returnParams)
+		{
+			if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
+				&& dynamic_cast<solidity::frontend::MappingType const*>(rp->type())
+				&& !rp->name().empty())
+			{
+				m_exprBuilder->addMappingKeyParam(rp->id(), rp->name());
+			}
+		}
+
 		method.body = buildBlock(_func.body());
 
 		// Insert zero-initialization for named return variables

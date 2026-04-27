@@ -489,6 +489,20 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					if (!rp->name().empty())
 						exprBuilder.resolveVarName(rp->name(), rp->id());
 
+				// Register mapping-storage-ref return params as mapping-key-params
+				// too: `function f() returns (mapping(K=>V) storage r)` — `r` is a
+				// local pointer to a mapping; r[k] resolves to box access prefixed
+				// by `r`'s runtime bytes value (the holder name).
+				for (auto const& rp: returnParams)
+				{
+					if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
+						&& dynamic_cast<solidity::frontend::MappingType const*>(rp->type())
+						&& !rp->name().empty())
+					{
+						exprBuilder.addMappingKeyParam(rp->id(), rp->name());
+					}
+				}
+
 			sub->body = sol_ast::buildBlock(stmtCtx, exprBuilder, func->body());
 
 				// Insert zero-initialization for named return variables

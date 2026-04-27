@@ -928,6 +928,31 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 				&& lhsDecl->referenceLocation() == VariableDeclaration::Location::Storage
 				&& !lhsDecl->isStateVariable())
 			{
+				// Mapping-key-param locals (`mapping(K=>V) storage r` returned
+				// from a function or declared inside one) hold the box-key
+				// prefix as a runtime bytes value. Reassigning them must do
+				// an actual bytes write; the compile-time alias path drops
+				// the side effect (returns VoidConstant) which is fine for
+				// state-var aliases but loses runtime mutations like
+				// `r = a; r[k] = v; r = b; r[k] = v;`.
+				if (m_ctx.mappingKeyParams.count(lhsDecl->id()))
+				{
+					auto rhsExpr = buildExpr(m_assignment.rightHandSide());
+					if (rhsExpr->wtype != awst::WType::bytesType())
+					{
+						rhsExpr = builder::TypeCoercion::coerceForAssignment(
+							std::move(rhsExpr), awst::WType::bytesType(), m_loc);
+					}
+					auto var = awst::makeVarExpression(
+						lhsIdent->name(), awst::WType::bytesType(), m_loc);
+					auto e = std::make_shared<awst::AssignmentExpression>();
+					e->sourceLocation = m_loc;
+					e->wtype = awst::WType::bytesType();
+					e->target = std::move(var);
+					e->value = std::move(rhsExpr);
+					return e;
+				}
+
 				auto rhsExpr = buildExpr(m_assignment.rightHandSide());
 				auto aliasExpr = rhsExpr;
 				if (dynamic_cast<awst::BoxValueExpression const*>(rhsExpr.get())

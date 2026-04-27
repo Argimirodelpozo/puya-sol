@@ -93,6 +93,22 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 		// Storage pointer alias
 		if (decl.referenceLocation() == VariableDeclaration::Location::Storage && initialValue)
 		{
+			// Mapping state-var Identifier resolves to BytesConstant (the
+			// holder name) — register as storage alias so SolIndexAccess
+			// resolves `m[k]` to the underlying state-var prefix at compile
+			// time. This is the `mapping storage m = m1;` pattern.
+			if (dynamic_cast<awst::BytesConstant const*>(value.get())
+				&& decl.type()
+				&& decl.type()->category() == solidity::frontend::Type::Category::Mapping)
+			{
+				m_exprBuilder.addStorageAlias(decl.id(), value);
+				for (auto& p: m_ctx.takePrePending())
+					result.push_back(std::move(p));
+				for (auto& p: m_ctx.takePending())
+					result.push_back(std::move(p));
+				return result;
+			}
+
 			if (dynamic_cast<awst::StateGet const*>(value.get())
 				|| dynamic_cast<awst::BoxValueExpression const*>(value.get())
 				|| dynamic_cast<awst::AppStateExpression const*>(value.get()))
@@ -129,9 +145,37 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			// Register as slot ref so IndexAccess translates to sload/sstore.
 			if (dynamic_cast<awst::SubroutineCallExpression const*>(value.get()))
 			{
+				// Distinguish two patterns:
+				// 1. `mapping(K=>V) storage m = libOrInternal()` — value is bytes
+				//    (mapping holder name). Register as mappingKeyParam so
+				//    SolIndexAccess builds box keys with `m` as runtime prefix.
+				// 2. `T storage m = ...` with a slot-int (biguint) return —
+				//    register as slotStorageRef for __storage_read/write paths.
+				bool isMappingPtr = decl.type()
+					&& decl.type()->category() == solidity::frontend::Type::Category::Mapping;
+				if (isMappingPtr && value->wtype == awst::WType::bytesType())
+				{
+					m_exprBuilder.addMappingKeyParam(decl.id(), decl.name());
+					// Emit `m = f()` as a plain bytes assignment so `m` holds the
+					// mapping holder name at runtime; subsequent reassignments
+					// (`m = otherMapping`) update which mapping `m` points to.
+					auto var = awst::makeVarExpression(decl.name(), awst::WType::bytesType(), m_loc);
+					auto assign = awst::makeAssignmentStatement(std::move(var), std::move(value), m_loc);
+					result.push_back(std::move(assign));
+
+					for (auto& p: m_ctx.takePrePending())
+						result.push_back(std::move(p));
+					for (auto& p: m_ctx.takePending())
+						result.push_back(std::move(p));
+					return result;
+				}
+
 				m_exprBuilder.addSlotStorageRef(decl.id(), value);
-				// Also emit the call as an assignment so the slot value is available
-				auto slotVar = awst::makeVarExpression(decl.name(), awst::WType::biguintType(), m_loc);
+				// Also emit the call as an assignment so the slot value is available.
+				// The slot var's wtype must match the function's return wtype to
+				// keep AssignmentStatement happy.
+				auto* slotWType = value->wtype ? value->wtype : awst::WType::biguintType();
+				auto slotVar = awst::makeVarExpression(decl.name(), slotWType, m_loc);
 
 				auto assign = awst::makeAssignmentStatement(std::move(slotVar), std::move(value), m_loc);
 				result.push_back(std::move(assign));

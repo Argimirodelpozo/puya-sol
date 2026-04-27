@@ -166,6 +166,13 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 					keyExpr = boxVal->key;
 				if (auto const* bc = dynamic_cast<awst::BytesConstant const*>(keyExpr.get()))
 					varName = std::string(bc->value.begin(), bc->value.end());
+				// SolIdentifier now returns a BytesConstant directly for
+				// mapping state-var identifiers (the holder name as runtime
+				// prefix). When that lands as a storage alias (`mapping
+				// storage m = m1;`), use the constant value as varName so
+				// `m[k]` keys land under the underlying state-var prefix.
+				else if (auto const* bc = dynamic_cast<awst::BytesConstant const*>(expr))
+					varName = std::string(bc->value.begin(), bc->value.end());
 			}
 		}
 	}
@@ -173,6 +180,12 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 	{
 		varName = ma->memberName();
 		rootMappingType = ma->annotation().type;
+	}
+	// `f()[k]` — mapping-pointer-returning call indexed directly. The call
+	// result (bytes — the holder name) is the runtime key prefix.
+	else if (dynamic_cast<solidity::frontend::FunctionCall const*>(cursor))
+	{
+		rootMappingType = cursor->annotation().type;
 	}
 
 	std::reverse(indexExprs.begin(), indexExprs.end());
@@ -227,6 +240,16 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 		// Dynamic prefix from function parameter (bytes value at runtime)
 		auto var = awst::makeVarExpression(mappingKeyParam, awst::WType::bytesType(), m_loc);
 		prefix = std::move(var);
+	}
+	else if (dynamic_cast<solidity::frontend::FunctionCall const*>(cursor))
+	{
+		// `f()[k]` — evaluate the call; its bytes return value is the prefix.
+		prefix = buildExpr(*cursor);
+		if (prefix && prefix->wtype != awst::WType::bytesType())
+		{
+			prefix = builder::TypeCoercion::coerceForAssignment(
+				std::move(prefix), awst::WType::bytesType(), m_loc);
+		}
 	}
 	else
 	{

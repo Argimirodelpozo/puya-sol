@@ -1,0 +1,331 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol.Test.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 2
+    bytecblock "a" "b" 0x 0x151f7c75 "__ctor_pending"
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 4 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x745a7a03 0x3f5fb4b8 0x98589de4 0x2d15e970 // method "__postInit()void", method "set(bool,uint256,uint256)uint256", method "get(bool,uint256)uint256", method "get_a(uint256)uint256", method "get_b(uint256)uint256"
+    txna ApplicationArgs 0
+    match __postInit set get get_a get_b
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol.Lib.choose_mapping(a: bytes, b: bytes, c: uint64) -> bytes:
+Lib.choose_mapping:
+    proto 3 1
+    frame_dig -2
+    frame_dig -3
+    frame_dig -1
+    select
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol.Test.__postInit[routing]() -> void:
+__postInit:
+    bytec 4 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 4 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_0 // "a"
+    intc_3 // 2
+    box_create
+    pop
+    bytec_1 // "b"
+    intc_3 // 2
+    box_create
+    pop
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol.Test.set[routing]() -> void:
+set:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_2 // 0
+    getbit
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz set_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+set_ternary_merge@4:
+    !
+    assert // not payable
+    dig 2
+    dup
+    intc_1 // 1
+    <=
+    assert // ABI bool validation
+    bytec_0 // "a"
+    bytec_1 // "b"
+    uncover 2
+    callsub Lib.choose_mapping
+    intc_0 // 32
+    bzero
+    dup
+    dig 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    uncover 2
+    swap
+    concat
+    dup
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dig 1
+    box_del
+    pop
+    swap
+    dig 3
+    box_put
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+set_ternary_false@3:
+    intc_2 // 0
+    b set_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol.Test.get[routing]() -> void:
+get:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_2 // 0
+    getbit
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz get_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+get_ternary_merge@4:
+    !
+    assert // not payable
+    dig 1
+    dup
+    intc_1 // 1
+    <=
+    assert // ABI bool validation
+    bytec_0 // "a"
+    bytec_1 // "b"
+    uncover 2
+    callsub Lib.choose_mapping
+    intc_0 // 32
+    bzero
+    dup
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    uncover 2
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+get_ternary_false@3:
+    intc_2 // 0
+    b get_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol.Test.get_a[routing]() -> void:
+get_a:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz get_a_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+get_a_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "a"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+get_a_ternary_false@3:
+    intc_2 // 0
+    b get_a_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol.Test.get_b[routing]() -> void:
+get_b:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz get_b_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+get_b_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_1 // "b"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+get_b_ternary_false@3:
+    intc_2 // 0
+    b get_b_ternary_merge@4

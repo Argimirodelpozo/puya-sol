@@ -1,6 +1,38 @@
-# Semantic Test Status — v176
+# Semantic Test Status — v177
 
-**Totals**: 1080 PASS / 182 FAIL / 60 (41 compile_err + 19 deploy_err) = **1080/1322 (81.7%)**
+**Totals**: 1082 PASS / 183 FAIL / 57 (38 compile_err + 19 deploy_err) = **1082/1322 (81.8%)**
+
+vs v176 (1080): +3 real PASS, +1 documented flake (`fallback/call_forward_bytes` passes 2/2 solo, fails under suite throughput — same flake class as `mapping_contract_key_getter`). All 3 wins from a 6-file mapping-storage-pointer-return cluster fix.
+
+The Solidity feature: `function f() returns (mapping(K=>V) storage r) { r = a; r[k] = v; r = b; r[k] = v; }` — and indexed access on the result like `f()[k] = v` or `mapping storage m = f(); m[k] = v;`. Five tests across `functionCall/`, `libraries/` rely on this; previously all compile_err.
+
+**Key insight:** mapping state-vars on AVM have no value-of-their-own — only per-key boxes exist with the var's name as prefix. So a "mapping storage pointer" is naturally modelled as a runtime `bytes` value holding the mapping's holder-name. Reading the var as a value yields that name; `m[k]` builds the box-key from `m`'s runtime value as the prefix.
+
+**Six surgical changes:**
+
+- `src/builder/sol-ast/exprs/SolIdentifier.cpp` — Identifier of a mapping state-var now returns `BytesConstant(varName)` (the holder name) instead of falling through to `createStateRead` (which produced empty bytes via `StateGet` default). This is what makes `r = a;` actually carry the mapping name as the runtime value of `r`.
+
+- `src/builder/sol-ast/stmts/SolVariableDeclaration.cpp` — two adjustments to the storage-local declaration paths:
+  1. New branch above the existing alias-or-slot dispatch: when the value is a `BytesConstant` and the decl type is `Mapping`, register it as a regular storage alias. This handles `mapping(K=>V) storage m = m1;` so the legacy compile-time alias path keeps working with the new identifier shape.
+  2. Function-call slot path: when the value is a `SubroutineCallExpression` returning `bytes` AND the decl type is `Mapping`, register the local as a `mappingKeyParam` (instead of the slot-storage-ref) and emit a real bytes assignment `m = f()`. Otherwise the previous behavior (slot-int storage ref) is preserved with a small wtype fix (use `value->wtype` instead of hardcoded `biguint`) so the assignment statement is well-typed.
+
+- `src/builder/sol-ast/exprs/SolAssignment.cpp` — in the storage-pointer-reassignment block (lhs is a Storage-located non-state local), check `mappingKeyParams` first: when the local is a mapping-key-param (real bytes value), emit a runtime `AssignmentExpression(VarExpression, value-coerced-to-bytes)` so subsequent reads of the local see the new mapping name. The legacy alias-only update (returns `VoidConstant`) only applies when the local is NOT a mapping-key-param.
+
+- `src/builder/sol-ast/exprs/SolIndexAccess.cpp` — three additions:
+  1. In `handleMappingAccess`'s storage-alias unwrap, also accept a top-level `BytesConstant` as the alias and pull its value as the box-key prefix (covers `mapping storage m = m1;` after the SolIdentifier change).
+  2. New cursor branch for `cursor` being a `FunctionCall`: this is the `f()[k]` case — record `rootMappingType` from the call's annotation type so key-type derivation still works.
+  3. New prefix branch when cursor is a `FunctionCall`: build the call expression and use its bytes return value as the runtime prefix (coerced to bytes if needed).
+
+- `src/builder/AWSTBuilder.cpp` (free/library function path) and `src/builder/ContractBuilder.cpp` (contract-method path) — register mapping-storage-ref *return* parameters (`function f() returns (mapping(K=>V) storage r)`) as `mappingKeyParams`, mirroring the existing parameter registration. This is what lets `r[k] = v` inside `f`'s body resolve `r` as a runtime bytes prefix instead of falling back to a static `"r"` literal.
+
+Direct wins (3):
+- `functionCall/mapping_internal_return` (compile_err → 2p/0s)
+- `libraries/mapping_returns_in_library` (compile_err → 44p/0s)
+- `libraries/mapping_returns_in_library_named` (compile_err → 2p/0s)
+
+Side-effect verified: `variables/mapping_local_assignment{,_compound,_tuple}` (3 tests using `mapping storage m = m1;` then `m[k] = v;` then `m = m2;`) keep passing — the SolIndexAccess BytesConstant-alias unwrap and the SolVariableDeclaration BytesConstant-alias registration are what carry that legacy pattern across the SolIdentifier rewrite.
+
+## v175 → v176 (1080, +3)
 
 vs v175 (1077): +3 real, zero regressions. All three wins downstream of one 7-line patch in `src/builder/sol-ast/SolExpressionFactory.cpp::createFunctionCall`: in the Case-4 fn-ptr-typed-callee branch, added a `dynamic_cast<FunctionCall>(callExpr)` arm that routes nested-call returns (`k1()()`, where the inner call's annotation type is `FunctionType`) to `SolInternalCall`. Previously these fell through to `SolExternalCall`, which then misread the inner FunctionCall as a contract-method invocation and never reached the generic fn-ptr dispatch path (~line 730 of SolInternalCall). Mirrors the existing `IndexAccess`/`MemberAccess` arms on either side of the new check.
 

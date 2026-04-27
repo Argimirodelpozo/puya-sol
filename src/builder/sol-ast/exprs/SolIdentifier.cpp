@@ -124,6 +124,18 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 		{
 			auto* type = m_ctx.typeMapper.map(varDecl->type());
 
+			// Mapping state var used as a VALUE (e.g. `r = a;` where r is a
+			// storage-pointer alias): return the mapping NAME as a bytes
+			// constant so the alias holds the box-key prefix at runtime.
+			// (Mapping has no value-of-its-own to read; only per-key boxes
+			// exist. SolIndexAccess paths for `a[k]` still build the box
+			// access from the var name directly.)
+			if (varDecl->type()
+				&& varDecl->type()->category() == solidity::frontend::Type::Category::Mapping)
+			{
+				return awst::makeUtf8BytesConstant(name, m_loc, awst::WType::bytesType());
+			}
+
 			// Transient state vars live in a packed blob in scratch slot
 			// AssemblyBuilder::TRANSIENT_SLOT (same storage that asm
 			// tload/tstore hits), so all reads share the same layout.
