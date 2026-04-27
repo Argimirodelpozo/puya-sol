@@ -388,6 +388,13 @@ std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
 			{
 				if (dynamic_cast<solidity::frontend::IndexAccess const*>(callExpr))
 					return std::make_unique<SolInternalCall>(m_ctx, _node);
+				// Nested call returning a fn-ptr: `k1()()`. The inner call
+				// evaluates to a function type; route to SolInternalCall so
+				// its generic fn-ptr dispatch path (line ~730) takes over
+				// instead of the SolExternalCall fallback (which mis-classifies
+				// it as a contract method invocation).
+				if (dynamic_cast<solidity::frontend::FunctionCall const*>(callExpr))
+					return std::make_unique<SolInternalCall>(m_ctx, _node);
 				if (auto const* ma = dynamic_cast<
 						solidity::frontend::MemberAccess const*>(callExpr))
 				{

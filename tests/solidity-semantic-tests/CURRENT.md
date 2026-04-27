@@ -1,6 +1,15 @@
-# Semantic Test Status — v175
+# Semantic Test Status — v176
 
-**Totals**: 1077 PASS / 184 FAIL / 61 (42 compile_err + 19 deploy_err) = **1077/1322 (81.5%)**
+**Totals**: 1080 PASS / 182 FAIL / 60 (41 compile_err + 19 deploy_err) = **1080/1322 (81.7%)**
+
+vs v175 (1077): +3 real, zero regressions. All three wins downstream of one 7-line patch in `src/builder/sol-ast/SolExpressionFactory.cpp::createFunctionCall`: in the Case-4 fn-ptr-typed-callee branch, added a `dynamic_cast<FunctionCall>(callExpr)` arm that routes nested-call returns (`k1()()`, where the inner call's annotation type is `FunctionType`) to `SolInternalCall`. Previously these fell through to `SolExternalCall`, which then misread the inner FunctionCall as a contract-method invocation and never reached the generic fn-ptr dispatch path (~line 730 of SolInternalCall). Mirrors the existing `IndexAccess`/`MemberAccess` arms on either side of the new check.
+
+Direct test wins:
+- `functionCall/call_internal_function_with_multislot_arguments_via_pointer` (compile_err → ✓ 1p/0s) — now compiles for the first time; the dir previously had only `awst.json`/`options.json`/`puya-sol.log` tracked.
+- `viaYul/function_pointers` (3p/1f → 4p/0s) — `k2()` (external `k1()()` case) flips ✗→✓.
+- `viaYul/function_address` (2p/1f → 3p/0s) — `h(function)` external fn-ptr arg case flips ✗→✓ as a side effect of routing external nested-call fn-ptrs through SolInternalCall consistently.
+
+## v174 → v175 (1077, +9)
 
 vs v174 (1068): +9 (8 real + 1 flake recovery), zero regressions. All 9 gains are in the function-pointer `.selector` / `.address` cluster — split between codegen fixes for the Yul read/write paths and surgical test patches for the ARC4-vs-keccak EVM divergence (previously documented as accepted).
 
