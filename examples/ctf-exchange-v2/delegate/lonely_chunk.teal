@@ -1,0 +1,209 @@
+#pragma version 10
+#pragma typetrack false
+
+// Lonely-chunk sidecar for one delegated function on the orchestrator.
+//
+// Caller submits a 2-txn group: [orch.<F>.stub, lonely_chunk.run(args)].
+// orch.stub validates the group; this contract does the install / call /
+// revert dance entirely via inner txns.
+//
+// State (`__` prefix marks compiler-internal — callers must not rely):
+//   __F_app_id    uint64  app whose approval program IS F's bytecode.
+//                         Read at runtime via app_params_get and fed to
+//                         orch's UpdateApplication.
+//   __orch_app_id uint64  the orchestrator we're updating.
+//
+// Both are seeded at create time from app_args[0]/[1] (encoded as
+// 8-byte big-endian uint64 each).
+//
+// Runtime flow:
+//   1. Read orch's current approval, slice into scratch 0..3 for revert.
+//   2. Read F's approval (from F_app_id's params), feed to orch via
+//      inner-txn UpdateApplication (4 ApprovalProgramPages).
+//   3. Inner-txn ApplicationCall(orch, NoOp, args=forwarded) — orch is
+//      now F and runs against its own storage.
+//   4. Inner-txn UpdateApplication(orch, pages from scratch) — restore.
+
+main:
+    intcblock 0 4 6 2048 4096 6144
+    bytecblock "__F_app_id" "__orch_app_id"
+
+    txn ApplicationID
+    bnz call_path
+
+    // Create path: app_args[0] / [1] are the F + orch app ids
+    // (each 8-byte big-endian).
+    bytec_0  // "__F_app_id"
+    txna ApplicationArgs 0
+    btoi
+    app_global_put
+    bytec_1  // "__orch_app_id"
+    txna ApplicationArgs 1
+    btoi
+    app_global_put
+    pushint 1
+    return
+
+call_path:
+    txn OnCompletion
+    !
+    assert  // require NoOp
+
+    // Load app ids
+    intc_0
+    bytec_1  // "__orch_app_id"
+    app_global_get_ex
+    assert
+    store 100
+    intc_0
+    bytec_0  // "__F_app_id"
+    app_global_get_ex
+    assert
+    store 101
+
+    // Step 1: cache orch's current approval into scratch 0..3
+    intc_0
+    load 100
+    app_params_get AppApprovalProgram
+    assert
+    // stack: orig_bytes (≤8KB)
+    dup
+    intc_0
+    intc_3
+    extract3
+    store 0
+    dup
+    intc_3
+    intc_3
+    extract3
+    store 1
+    dup
+    intc 4
+    intc_3
+    extract3
+    store 2
+    intc 5
+    intc_3
+    extract3
+    store 3
+
+    // Step 2: install F's bytes as orch's approval
+    intc_0
+    load 101
+    app_params_get AppApprovalProgram
+    assert
+    // stack: F_bytes (expected exactly 8192 bytes; pad F at build time)
+
+    itxn_begin
+    intc_2  // 6 = TypeEnum=Appl
+    itxn_field TypeEnum
+    intc_1  // 4 = OnCompletion=UpdateApplication
+    itxn_field OnCompletion
+    load 100
+    itxn_field ApplicationID
+    dup
+    intc_0
+    intc_3
+    extract3
+    itxn_field ApprovalProgramPages
+    dup
+    intc_3
+    intc_3
+    extract3
+    itxn_field ApprovalProgramPages
+    dup
+    intc 4
+    intc_3
+    extract3
+    itxn_field ApprovalProgramPages
+    intc 5
+    intc_3
+    extract3
+    itxn_field ApprovalProgramPages
+    intc_0
+    load 100
+    app_params_get AppClearStateProgram
+    assert
+    itxn_field ClearStateProgram
+    itxn_submit
+
+    // Step 3: call orch (now F) with forwarded args[1..N]
+    itxn_begin
+    intc_2
+    itxn_field TypeEnum
+    intc_0
+    itxn_field OnCompletion
+    load 100
+    itxn_field ApplicationID
+    txna ApplicationArgs 1
+    itxn_field ApplicationArgs
+    txn NumAppArgs
+    pushint 2
+    >=
+    bz call_args_done
+    txna ApplicationArgs 2
+    itxn_field ApplicationArgs
+    txn NumAppArgs
+    pushint 3
+    >=
+    bz call_args_done
+    txna ApplicationArgs 3
+    itxn_field ApplicationArgs
+    txn NumAppArgs
+    pushint 4
+    >=
+    bz call_args_done
+    txna ApplicationArgs 4
+    itxn_field ApplicationArgs
+    txn NumAppArgs
+    pushint 5
+    >=
+    bz call_args_done
+    txna ApplicationArgs 5
+    itxn_field ApplicationArgs
+    txn NumAppArgs
+    pushint 6
+    >=
+    bz call_args_done
+    txna ApplicationArgs 6
+    itxn_field ApplicationArgs
+    txn NumAppArgs
+    pushint 7
+    >=
+    bz call_args_done
+    txna ApplicationArgs 7
+    itxn_field ApplicationArgs
+    txn NumAppArgs
+    pushint 8
+    >=
+    bz call_args_done
+    txna ApplicationArgs 8
+    itxn_field ApplicationArgs
+call_args_done:
+    itxn_submit
+
+    // Step 4: revert orch back to original
+    itxn_begin
+    intc_2
+    itxn_field TypeEnum
+    intc_1
+    itxn_field OnCompletion
+    load 100
+    itxn_field ApplicationID
+    load 0
+    itxn_field ApprovalProgramPages
+    load 1
+    itxn_field ApprovalProgramPages
+    load 2
+    itxn_field ApprovalProgramPages
+    load 3
+    itxn_field ApprovalProgramPages
+    intc_0
+    load 100
+    app_params_get AppClearStateProgram
+    assert
+    itxn_field ClearStateProgram
+    itxn_submit
+
+    pushint 1
+    return
