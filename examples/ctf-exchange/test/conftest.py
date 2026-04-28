@@ -162,6 +162,148 @@ def erc20(localnet, admin):
     )
 
 
+# Split-CTFExchange fixtures: deploy the CTFExchange__Helper1 helper that
+# SimpleSplitter peels off. Used by both test_split_ctfexchange.py (full
+# orch+helper integration) and test_calculator_helper.py (helper-only math).
+SPLIT_DIR = OUT_DIR / "exchange" / "CTFExchange"
+HELPER_DIR = SPLIT_DIR / "CTFExchange__Helper1"
+
+
+def _compile_teal(algod, teal_text: str) -> bytes:
+    return encoding.base64.b64decode(algod.compile(teal_text)["result"])
+
+
+ORCH_DIR = SPLIT_DIR / "CTFExchange"
+TMPL_VAR = "TMPL_CTFExchange__Helper1_APP_ID"
+
+
+def _create_app(localnet, sender, approval: bytes, clear: bytes, schema,
+                app_args=None, fund_amount=5_000_000) -> int:
+    algod = localnet.client.algod
+    extra_pages = max(0, (max(len(approval), len(clear)) - 1) // 2048)
+    sp = algod.suggested_params()
+    txn = ApplicationCreateTxn(
+        sender=sender.address, sp=sp,
+        on_complete=OnComplete.NoOpOC,
+        approval_program=approval, clear_program=clear,
+        global_schema=StateSchema(num_uints=schema.ints, num_byte_slices=schema.bytes),
+        local_schema=StateSchema(num_uints=0, num_byte_slices=0),
+        extra_pages=extra_pages,
+        app_args=app_args or [],
+    )
+    txid = algod.send_transaction(txn.sign(sender.private_key))
+    result = wait_for_confirmation(algod, txid, 4)
+    app_id = result["application-index"]
+    if fund_amount > 0:
+        sp2 = algod.suggested_params()
+        pay = PaymentTxn(sender.address, sp2, algod_addr_for_app(app_id), fund_amount)
+        wait_for_confirmation(algod, algod.send_transaction(pay.sign(sender.private_key)), 4)
+    return app_id
+
+
+@pytest.fixture(scope="function")
+def split_exchange(localnet, admin):
+    """Deploy helper, substitute its app id into the orchestrator's TEAL,
+    deploy orchestrator, run __postInit. Returns (helper_client, orch_client).
+
+    The CTFExchange ctor creates 5 boxes + writes to 2 mappings + does an
+    inner-call to ERC20.approve — exceeds one txn's resource budget. We
+    pre-pad the call with 6 noop app-calls to expand the box-ref slots.
+    """
+    algod = localnet.client.algod
+
+    helper_spec = au.Arc56Contract.from_json(
+        (HELPER_DIR / "CTFExchange__Helper1.arc56.json").read_text())
+    helper_approval = _compile_teal(algod,
+        (HELPER_DIR / "CTFExchange__Helper1.approval.teal").read_text())
+    helper_clear = _compile_teal(algod,
+        (HELPER_DIR / "CTFExchange__Helper1.clear.teal").read_text())
+    helper_app_id = _create_app(localnet, admin, helper_approval, helper_clear,
+                                helper_spec.state.schema.global_state)
+
+    orch_spec = au.Arc56Contract.from_json(
+        (ORCH_DIR / "CTFExchange.arc56.json").read_text())
+    orch_approval_teal = (ORCH_DIR / "CTFExchange.approval.teal").read_text()
+    orch_clear_teal = (ORCH_DIR / "CTFExchange.clear.teal").read_text()
+    orch_approval_teal = orch_approval_teal.replace(TMPL_VAR, str(helper_app_id))
+
+    orch_approval = _compile_teal(algod, orch_approval_teal)
+    orch_clear = _compile_teal(algod, orch_clear_teal)
+
+    collateral = deploy_app(
+        localnet, admin,
+        OUT_DIR / "dev" / "mocks" / "ERC20",
+        "ERC20",
+        post_init_args=["USDC Mock", "USDC"],
+    )
+
+    orch_app_id = _create_app(localnet, admin, orch_approval, orch_clear,
+                              orch_spec.state.schema.global_state,
+                              fund_amount=10_000_000)
+
+    helper_client = au.AppClient(au.AppClientParams(
+        algorand=localnet, app_spec=helper_spec,
+        app_id=helper_app_id, default_sender=admin.address,
+    ))
+    orch_client = au.AppClient(au.AppClientParams(
+        algorand=localnet, app_spec=orch_spec,
+        app_id=orch_app_id, default_sender=admin.address,
+    ))
+
+    coll_addr = app_id_to_address(collateral.app_id)
+    composer = localnet.new_group()
+    for i in range(6):
+        composer.add_app_call_method_call(orch_client.params.call(
+            au.AppClientMethodCallParams(
+                method="isAdmin", args=[ZERO_ADDR],
+                note=f"pad-{i}".encode(),
+            )))
+    composer.add_app_call_method_call(orch_client.params.call(
+        au.AppClientMethodCallParams(
+            method="__postInit",
+            args=[coll_addr, coll_addr, ZERO_ADDR, ZERO_ADDR],
+            extra_fee=au.AlgoAmount(micro_algo=20_000),
+            app_references=[collateral.app_id],
+        )))
+    composer.send(AUTO_POPULATE)
+    return helper_client, orch_client
+
+
+@pytest.fixture(scope="function")
+def helper_only(localnet, admin):
+    """Deploy CTFExchange__Helper1 standalone — no TMPL substitution. Use
+    this for helper-direct tests (CalculatorHelper math, etc.)."""
+    algod = localnet.client.algod
+    spec = au.Arc56Contract.from_json(
+        (HELPER_DIR / "CTFExchange__Helper1.arc56.json").read_text())
+    approval = _compile_teal(algod,
+        (HELPER_DIR / "CTFExchange__Helper1.approval.teal").read_text())
+    clear = _compile_teal(algod,
+        (HELPER_DIR / "CTFExchange__Helper1.clear.teal").read_text())
+
+    extra_pages = max(0, (max(len(approval), len(clear)) - 1) // 2048)
+    sch = spec.state.schema.global_state
+    sp = algod.suggested_params()
+    txn = ApplicationCreateTxn(
+        sender=admin.address, sp=sp,
+        on_complete=OnComplete.NoOpOC,
+        approval_program=approval, clear_program=clear,
+        global_schema=StateSchema(num_uints=sch.ints, num_byte_slices=sch.bytes),
+        local_schema=StateSchema(num_uints=0, num_byte_slices=0),
+        extra_pages=extra_pages,
+    )
+    txid = algod.send_transaction(txn.sign(admin.private_key))
+    result = wait_for_confirmation(algod, txid, 4)
+    app_id = result["application-index"]
+    sp2 = algod.suggested_params()
+    pay = PaymentTxn(admin.address, sp2, algod_addr_for_app(app_id), 5_000_000)
+    wait_for_confirmation(algod, algod.send_transaction(pay.sign(admin.private_key)), 4)
+    return au.AppClient(au.AppClientParams(
+        algorand=localnet, app_spec=spec,
+        app_id=app_id, default_sender=admin.address,
+    ))
+
+
 @pytest.fixture(scope="function")
 def erc1271_mock(localnet, admin):
     """ERC1271Mock's single-statement constructor (`signer = _signer`) is
