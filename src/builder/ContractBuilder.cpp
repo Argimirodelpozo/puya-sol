@@ -2376,8 +2376,66 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					emitStateVarInit(**it2, postInitBody->body);
 			}
 
-			// Inline base constructor bodies into __postInit
+			// Inline base constructor bodies into __postInit.
+			//
+			// Two-pass: BIND all base ctor params first (forward linearization
+			// order, most-derived first), THEN inline bodies (reverse order,
+			// deepest base first). This matches Solidity semantics where args
+			// to a base constructor are evaluated at the most-derived ctor's
+			// call site, but base bodies run before derived bodies.
+			//
+			// For chained inheritance like
+			//   CTFExchange is Hashing("Polymarket", "1")
+			//   Hashing is EIP712(name, version)
+			// we need Hashing's `name` bound to "Polymarket" BEFORE EIP712's
+			// `name` arg (an Identifier referencing Hashing's name) gets
+			// evaluated. Doing both passes per-base in rbegin order would
+			// inline EIP712's body — which reads `name` — before Hashing's
+			// param assignment runs, leaving `name` unbound (stale stack
+			// value, fails the keccak256 type check at runtime).
 			auto const& linearized = _contract.annotation().linearizedBaseContracts;
+
+			// Pass 1: bind all base ctor params, in forward linearization
+			// order (most-derived first, so its bindings are visible when
+			// processing deeper bases that may reference them).
+			for (auto const* base : linearized)
+			{
+				if (base == &_contract)
+					continue;
+
+				auto const* baseCtor = base->constructor();
+				if (!baseCtor || !baseCtor->isImplemented())
+					continue;
+
+				auto argIt = explicitBaseArgs.find(base);
+				if (argIt == explicitBaseArgs.end() || !argIt->second
+					|| argIt->second->empty())
+					continue;
+
+				auto const& args = *(argIt->second);
+				auto const& params = baseCtor->parameters();
+				for (size_t i = 0; i < args.size() && i < params.size(); ++i)
+				{
+					auto argExpr = m_exprBuilder->build(*args[i]);
+					if (!argExpr)
+						continue;
+
+					auto target = awst::makeVarExpression(
+						params[i]->name(),
+						m_typeMapper.map(params[i]->type()),
+						makeLoc(args[i]->location()));
+
+					argExpr = ExpressionBuilder::implicitNumericCast(
+						std::move(argExpr), target->wtype, target->sourceLocation);
+
+					auto assignment = awst::makeAssignmentStatement(
+						target, std::move(argExpr), target->sourceLocation);
+					postInitBody->body.push_back(std::move(assignment));
+				}
+			}
+
+			// Pass 2: inline base ctor bodies in reverse linearization order
+			// (deepest base first, matching Solidity's run order).
 			for (auto it = linearized.rbegin(); it != linearized.rend(); ++it)
 			{
 				auto const* base = *it;
@@ -2389,29 +2447,6 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					continue;
 				if (baseCtor->body().statements().empty())
 					continue;
-
-				// Base constructor parameter assignments
-				auto argIt = explicitBaseArgs.find(base);
-				if (argIt != explicitBaseArgs.end() && argIt->second && !argIt->second->empty())
-				{
-					auto const& args = *(argIt->second);
-					auto const& params = baseCtor->parameters();
-					for (size_t i = 0; i < args.size() && i < params.size(); ++i)
-					{
-						auto argExpr = m_exprBuilder->build(*args[i]);
-						if (!argExpr)
-							continue;
-
-						auto target = awst::makeVarExpression(params[i]->name(), m_typeMapper.map(params[i]->type()), makeLoc(args[i]->location()));
-
-						argExpr = ExpressionBuilder::implicitNumericCast(
-							std::move(argExpr), target->wtype, target->sourceLocation
-						);
-
-						auto assignment = awst::makeAssignmentStatement(target, std::move(argExpr), target->sourceLocation);
-						postInitBody->body.push_back(std::move(assignment));
-					}
-				}
 
 				auto baseBody = buildBlock(baseCtor->body());
 				inlineModifiers(*baseCtor, baseBody);

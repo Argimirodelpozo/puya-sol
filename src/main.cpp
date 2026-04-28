@@ -820,16 +820,21 @@ int main(int _argc, char* _argv[])
 
 	std::vector<puyasol::splitter::SimpleSplitter::ContractAWST> splitContracts;
 	{
-		// Filter the static list to only names that are actually subroutines
-		// in this AWST.
-		std::set<std::string> presentSubs;
+		// Filter the static list to only names that are present in the AWST,
+		// either as a top-level Subroutine or as a primary contract's method.
+		std::set<std::string> present;
 		for (auto const& r : roots)
+		{
 			if (auto sub = std::dynamic_pointer_cast<puyasol::awst::Subroutine>(r))
-				presentSubs.insert(sub->name);
+				present.insert(sub->name);
+			else if (auto c = std::dynamic_pointer_cast<puyasol::awst::Contract>(r))
+				for (auto const& m : c->methods)
+					present.insert(m.memberName);
+		}
 
 		std::vector<std::string> toExtract;
 		for (auto const& name : kExtractedFunctions)
-			if (presentSubs.count(name))
+			if (present.count(name))
 				toExtract.push_back(name);
 
 		if (!toExtract.empty())

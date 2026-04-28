@@ -529,6 +529,15 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 	std::vector<std::shared_ptr<awst::Subroutine>> moved;
 	std::set<std::string> moveSet(_moveNames.begin(), _moveNames.end());
 
+	auto isComposite = [](awst::WType const* t) {
+		if (!t) return false;
+		auto k = t->kind();
+		return k == awst::WTypeKind::WTuple
+			|| k == awst::WTypeKind::ARC4Struct
+			|| k == awst::WTypeKind::ARC4StaticArray
+			|| k == awst::WTypeKind::ARC4DynamicArray;
+	};
+
 	for (auto const& r : _roots)
 	{
 		if (auto c = std::dynamic_pointer_cast<awst::Contract>(r))
@@ -541,14 +550,6 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 			// Skip subs with composite return types (tuple/struct/array) —
 			// the inner-call decode path doesn't handle them yet, and they're
 			// rarely worth extracting anyway. Same for arg types.
-			auto isComposite = [](awst::WType const* t) {
-				if (!t) return false;
-				auto k = t->kind();
-				return k == awst::WTypeKind::WTuple
-					|| k == awst::WTypeKind::ARC4Struct
-					|| k == awst::WTypeKind::ARC4StaticArray
-					|| k == awst::WTypeKind::ARC4DynamicArray;
-			};
 			if (isComposite(s->returnType))
 			{
 				Logger::instance().warning(
@@ -570,13 +571,42 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 		}
 	}
 
-	if (!primary || moved.empty()) return out;
+	// Match ContractMethods on the primary contract's methods table. Same
+	// composite-type filter as for subroutines.
+	std::vector<awst::ContractMethod> movedMethods;
+	std::set<std::string> movedMethodNames;
+	if (primary)
+	{
+		for (auto const& m : primary->methods)
+		{
+			if (!moveSet.count(m.memberName)) continue;
+			if (isComposite(m.returnType))
+			{
+				Logger::instance().warning(
+					"SimpleSplitter: skipping method '" + m.memberName +
+					"' — composite return type not supported yet");
+				continue;
+			}
+			bool argSkip = false;
+			for (auto const& a : m.args)
+				if (isComposite(a.wtype)) { argSkip = true; break; }
+			if (argSkip)
+			{
+				Logger::instance().warning(
+					"SimpleSplitter: skipping method '" + m.memberName +
+					"' — composite arg type not supported yet");
+				continue;
+			}
+			movedMethods.push_back(m);
+			movedMethodNames.insert(m.memberName);
+		}
+	}
 
-	// Set of names that actually got moved (after composite-type filtering).
-	// These are the ones that get ABI methods on the helper AND stubs on
-	// the orchestrator. Transitive deps come along but stay non-stubbed.
-	std::set<std::string> movedNames;
-	for (auto const& s : moved) movedNames.insert(s->name);
+	if (!primary || (moved.empty() && movedMethods.empty())) return out;
+
+	// Set of moved subroutine names (got moved + filtered).
+	std::set<std::string> movedSubNames;
+	for (auto const& s : moved) movedSubNames.insert(s->name);
 
 	// Build sub-id index so we can collect transitive deps.
 	std::map<std::string, std::shared_ptr<awst::Subroutine>> subById;
@@ -590,6 +620,22 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 	// reads its app id from a template var).
 	auto helper = buildHelperContract(*primary, moved, _helperIndex);
 
+	// Add moved ContractMethods to the helper. Re-cref to helper, mark as
+	// ARC4 ABI, and append. The helper's ARC4Router will dispatch to them
+	// alongside the subroutine wrappers.
+	for (auto m : movedMethods)
+	{
+		m.cref = helper->id;
+		awst::ARC4ABIMethodConfig abiCfg;
+		abiCfg.sourceLocation = m.sourceLocation;
+		abiCfg.allowedCompletionTypes = {0};
+		abiCfg.create = 3;
+		abiCfg.name = m.memberName;
+		abiCfg.readonly = m.pure;
+		m.arc4MethodConfig = abiCfg;
+		helper->methods.push_back(std::move(m));
+	}
+
 	ContractAWST helperOut;
 	helperOut.contractId = helper->id;
 	helperOut.contractName = helper->name;
@@ -597,24 +643,49 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 	helperOut.roots.push_back(helper);
 	out.push_back(std::move(helperOut));
 
-	// Orchestrator: deep-copy each moved subroutine and replace its body
-	// with the inner-call stub. Everything else passes through.
+	// Orchestrator: replace bodies of moved subroutines with stubs; for moved
+	// ContractMethods, deep-copy the primary Contract and rewrite its method
+	// bodies in place. Everything else passes through.
 	ContractAWST orchOut;
 	orchOut.contractId = primary->id;
 	orchOut.contractName = primary->name;
+
+	// Deep-copy the primary Contract (vector of ContractMethods is a value
+	// member, so this gives us a free copy of the methods table).
+	std::shared_ptr<awst::Contract> orchContract;
+	if (!movedMethodNames.empty())
+	{
+		orchContract = std::make_shared<awst::Contract>(*primary);
+		for (auto& m : orchContract->methods)
+		{
+			if (!movedMethodNames.count(m.memberName)) continue;
+			// Build a synthetic Subroutine view so we can reuse buildStubBody.
+			awst::Subroutine syntheticSub;
+			syntheticSub.name = m.memberName;
+			syntheticSub.args = m.args;
+			syntheticSub.returnType = m.returnType;
+			syntheticSub.sourceLocation = m.sourceLocation;
+			m.body = buildStubBody(syntheticSub, helper->name);
+		}
+	}
+
 	for (auto const& r : _roots)
 	{
 		if (auto s = std::dynamic_pointer_cast<awst::Subroutine>(r))
 		{
-			// Stub only the subs that actually got moved (post-filter), not
-			// every name in the user's request list.
-			if (movedNames.count(s->name))
+			if (movedSubNames.count(s->name))
 			{
 				auto stub = std::make_shared<awst::Subroutine>(*s);
 				stub->body = buildStubBody(*s, helper->name);
 				orchOut.roots.push_back(std::move(stub));
 				continue;
 			}
+		}
+		else if (orchContract && r.get() == primary.get())
+		{
+			// Replace the original Contract pointer with our edited copy.
+			orchOut.roots.push_back(orchContract);
+			continue;
 		}
 		orchOut.roots.push_back(r);
 	}
