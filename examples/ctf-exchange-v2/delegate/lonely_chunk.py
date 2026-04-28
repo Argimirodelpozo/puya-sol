@@ -109,6 +109,66 @@ class LonelyChunk(ARC4Contract):
         op.Box.replace(Bytes(b"__orch_orig_bytes"), offset, data)
 
     @arc4.abimethod
+    def dance_call(
+        self,
+        delegate_update_selector: Bytes,
+        target_selector: Bytes,
+    ) -> Bytes:
+        """Dance with a no-args step-2 call. Installs F onto orch, calls
+        orch with `target_selector` (no extra app_args), reverts. Used
+        for readonly probes like getCollateral() to verify the dispatch
+        + storage-read path works through the dance. Returns step-2's
+        last_log so the caller can decode the inner-call's return.
+        """
+        orch_id = self.orch_app_id
+        self_box = Bytes(b"__self_bytes")
+        orig_box = Bytes(b"__orch_orig_bytes")
+        clear = Bytes(CLEAR_PROGRAM)
+
+        self_p0 = op.Box.extract(self_box, UInt64(0), UInt64(2048))
+        self_p1 = op.Box.extract(self_box, UInt64(2048), UInt64(2048))
+        self_p2 = op.Box.extract(self_box, UInt64(4096), UInt64(2048))
+        self_p3 = op.Box.extract(
+            self_box,
+            UInt64(6144),
+            self.self_bytes_len - UInt64(6144),
+        )
+        itxn.ApplicationCall(
+            app_id=orch_id,
+            on_completion=OnCompleteAction.UpdateApplication,
+            approval_program=(self_p0, self_p1, self_p2, self_p3),
+            clear_state_program=clear,
+            app_args=(delegate_update_selector,),
+        ).submit()
+
+        # Step 2: call orch (running F-helper bytes) with the target
+        # selector. F-helper's router dispatches to the migrated method
+        # body, which reads/writes orch's storage with the same keys
+        # as orch's original program.
+        call_res = itxn.ApplicationCall(
+            app_id=orch_id,
+            on_completion=OnCompleteAction.NoOp,
+            app_args=(target_selector,),
+        ).submit()
+        ret = call_res.last_log
+
+        orig_p0 = op.Box.extract(orig_box, UInt64(0), UInt64(2048))
+        orig_p1 = op.Box.extract(orig_box, UInt64(2048), UInt64(2048))
+        orig_p2 = op.Box.extract(
+            orig_box,
+            UInt64(4096),
+            self.orch_orig_bytes_len - UInt64(4096),
+        )
+        itxn.ApplicationCall(
+            app_id=orch_id,
+            on_completion=OnCompleteAction.UpdateApplication,
+            approval_program=(orig_p0, orig_p1, orig_p2),
+            clear_state_program=clear,
+            app_args=(delegate_update_selector,),
+        ).submit()
+        return ret
+
+    @arc4.abimethod
     def delegate_dance(self, delegate_update_selector: Bytes) -> None:
         """Install F-helper bytes onto orch, call orch (now running F),
         revert. The 3 inner-txns must atomically succeed or the whole

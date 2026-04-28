@@ -54,3 +54,54 @@ def test_delegate_dance_round_trip(split_exchange_with_delegate, localnet):
     post_approval = post_info["params"]["approval-program"]
 
     assert pre_approval == post_approval, "orch approval bytes drifted across the dance"
+
+
+def test_dance_call_getCollateral(split_exchange_with_delegate, localnet, universal_mock):
+    """dance_call: install F → call orch.getCollateral() → revert.
+
+    Proves the full dispatch path through the dance:
+      - install loads helper2's bytes onto orch
+      - calling orch with getCollateral's selector hits helper2's router
+      - helper2's getCollateral reads orch's storage (collateral slot)
+      - revert puts orch back to its original program
+
+    The dance returns step-2's last_log so we can verify helper2 read
+    the same collateral address that orch's __postInit wrote (which is
+    the universal_mock app's address).
+    """
+    from algosdk.logic import get_application_address
+    _, _, orch, chunk = split_exchange_with_delegate
+    algod = localnet.client.algod
+
+    pre = algod.application_info(orch.app_id)["params"]["approval-program"]
+
+    res = chunk.send.call(au.AppClientMethodCallParams(
+        method="dance_call",
+        args=[
+            bytes.fromhex("dc5e3798"),  # __delegate_update selector
+            bytes.fromhex("dd1ce903"),  # getCollateral()address selector
+        ],
+        extra_fee=au.AlgoAmount(micro_algo=300_000),
+        app_references=[orch.app_id],
+        box_references=[
+            au.BoxReference(app_id=0, name=b"__self_bytes"),
+            au.BoxReference(app_id=0, name=b"__orch_orig_bytes"),
+        ],
+    ), send_params=AUTO_POPULATE)
+
+    post = algod.application_info(orch.app_id)["params"]["approval-program"]
+    assert pre == post, "orch approval bytes drifted across the dance"
+
+    # dance_call returns step-2's last_log. The conftest packs each
+    # "address" as 24 zero bytes + 8-byte big-endian app id (it's how
+    # the Solidity address fields are stuffed for the test mock), so
+    # the slot's 32-byte value is just the universal_mock app id at the
+    # bottom. helper2's getCollateral returns that slot.
+    ret_bytes = bytes(res.abi_return)
+    # ABI marker (0x151f7c75) + length-prefixed dynamic-bytes for the
+    # 32-byte slot. The slot's last 8 bytes carry the app id.
+    last_8 = ret_bytes[-8:]
+    got_app_id = int.from_bytes(last_8, "big")
+    assert got_app_id == universal_mock.app_id, (
+        f"getCollateral returned app id {got_app_id} (full ret = "
+        f"{ret_bytes.hex()}), expected {universal_mock.app_id}")
