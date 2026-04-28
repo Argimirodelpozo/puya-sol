@@ -339,6 +339,38 @@ def _create_app(localnet, sender, approval: bytes, clear: bytes, schema,
     return app_id
 
 
+DELEGATE_DIR = Path(__file__).parent.parent / "delegate"
+LONELY_CHUNK_OUT = DELEGATE_DIR / "out"
+
+
+def _build_lonely_chunk():
+    """Compile delegate/lonely_chunk.py via puyapy. Cached — only runs
+    if the bin is missing or the source is newer."""
+    import subprocess
+    src = DELEGATE_DIR / "lonely_chunk.py"
+    out_bin = LONELY_CHUNK_OUT / "LonelyChunk.approval.bin"
+    if out_bin.exists() and out_bin.stat().st_mtime > src.stat().st_mtime:
+        return
+    PUYA_VENV = Path(__file__).parent.parent.parent.parent / "puya" / ".venv" / "bin" / "puyapy"
+    subprocess.run(
+        [str(PUYA_VENV), str(src), "--output-bytecode",
+         "--out-dir", str(LONELY_CHUNK_OUT)],
+        check=True, capture_output=True,
+    )
+
+
+@pytest.fixture(scope="session")
+def lonely_chunk_artifacts():
+    """Compile lonely_chunk.py once per session and return its bin paths."""
+    _build_lonely_chunk()
+    return {
+        "approval_bin": (LONELY_CHUNK_OUT / "LonelyChunk.approval.bin").read_bytes(),
+        "clear_bin": (LONELY_CHUNK_OUT / "LonelyChunk.clear.bin").read_bytes(),
+        "spec": au.Arc56Contract.from_json(
+            (LONELY_CHUNK_OUT / "LonelyChunk.arc56.json").read_text()),
+    }
+
+
 @pytest.fixture(scope="function")
 def helper1(localnet, admin):
     """Deploy CTFExchange__Helper1 standalone (no orchestrator). Used for
@@ -454,3 +486,87 @@ def split_exchange(localnet, admin, universal_mock):
             app_references=[h1_app_id, h2_app_id, universal_mock.app_id])))
     composer.send(AUTO_POPULATE)
     return h1_client, h2_client, orch_client
+
+
+@pytest.fixture(scope="function")
+def split_exchange_with_delegate(localnet, admin, split_exchange, lonely_chunk_artifacts):
+    """Same as split_exchange but ALSO deploys a LonelyChunk sidecar with
+    its self-bytes + orch-orig-bytes boxes populated. The sidecar's
+    delegate_dance method, when called, swaps orch's approval to its own
+    bytes (which would dispatch to a migrated function) and reverts.
+
+    With matchOrders' actual closure not yet pulled into the lonely
+    chunk's source, the sidecar is structurally complete but doesn't
+    carry the matchOrders body — runtime calls hit the no-op dance and
+    revert orch back unchanged. Wired up so the install/call/revert
+    plumbing can be exercised end-to-end as the closure pull-in lands.
+    """
+    h1, h2, orch = split_exchange
+
+    spec = lonely_chunk_artifacts["spec"]
+    approval_bin = lonely_chunk_artifacts["approval_bin"]
+    clear_bin = lonely_chunk_artifacts["clear_bin"]
+
+    extra_pages = max(0, (max(len(approval_bin), len(clear_bin)) - 1) // 2048)
+    sp = localnet.client.algod.suggested_params()
+    # init(uint64)void selector + orch_app_id encoded as 8-byte big-endian
+    init_selector = bytes.fromhex("1bcde52d")
+    create = ApplicationCreateTxn(
+        sender=admin.address, sp=sp,
+        on_complete=OnComplete.NoOpOC,
+        approval_program=approval_bin, clear_program=clear_bin,
+        global_schema=StateSchema(num_uints=1, num_byte_slices=0),
+        local_schema=StateSchema(num_uints=0, num_byte_slices=0),
+        extra_pages=extra_pages,
+        app_args=[init_selector, orch.app_id.to_bytes(8, "big")],
+    )
+    txid = localnet.client.algod.send_transaction(create.sign(admin.private_key))
+    res = wait_for_confirmation(localnet.client.algod, txid, 4)
+    chunk_app_id = res["application-index"]
+
+    # Fund the sidecar enough to cover the two 8KB boxes' MBR (each ~3.4
+    # ALGO = base 2500 + 400 per byte * 8192) plus inner-txn fees.
+    sp2 = localnet.client.algod.suggested_params()
+    pay = PaymentTxn(admin.address, sp2, algod_addr_for_app(chunk_app_id), 8_000_000)
+    wait_for_confirmation(localnet.client.algod,
+        localnet.client.algod.send_transaction(pay.sign(admin.private_key)), 4)
+
+    chunk_client = au.AppClient(au.AppClientParams(
+        algorand=localnet, app_spec=spec, app_id=chunk_app_id,
+        default_sender=admin.address))
+
+    # Allocate boxes — funded just above.
+    chunk_client.send.call(au.AppClientMethodCallParams(
+        method="setup_boxes", args=[],
+        box_references=[
+            au.BoxReference(app_id=0, name=b"__self_bytes"),
+            au.BoxReference(app_id=0, name=b"__orch_orig_bytes"),
+        ],
+        extra_fee=au.AlgoAmount(micro_algo=10_000),
+    ), send_params=AUTO_POPULATE)
+
+    # Populate boxes. AVM caps total ApplicationArgs at 2048 bytes per
+    # call, so we use 1KB chunks (8 calls × 1024 bytes per box).
+    CHUNK = 1024
+    BOX_SIZE = 8192
+    chunk_self = approval_bin.ljust(BOX_SIZE, b"\x00")
+
+    # Pull orch's deployed approval program bytes (post-template-substitution).
+    orch_info = localnet.client.algod.application_info(orch.app_id)
+    orch_approval_b64 = orch_info["params"]["approval-program"]
+    orch_orig_bytes = encoding.base64.b64decode(orch_approval_b64)
+    orch_orig = orch_orig_bytes.ljust(BOX_SIZE, b"\x00")
+
+    def _write_chunks(method: str, box_name: bytes, payload: bytes):
+        for offset in range(0, BOX_SIZE, CHUNK):
+            chunk_client.send.call(au.AppClientMethodCallParams(
+                method=method,
+                args=[offset, payload[offset : offset + CHUNK]],
+                box_references=[au.BoxReference(app_id=0, name=box_name)],
+                extra_fee=au.AlgoAmount(micro_algo=10_000),
+            ), send_params=AUTO_POPULATE)
+
+    _write_chunks("set_self_chunk", b"__self_bytes", chunk_self)
+    _write_chunks("set_orch_orig_chunk", b"__orch_orig_bytes", orch_orig)
+
+    return h1, h2, orch, chunk_client
