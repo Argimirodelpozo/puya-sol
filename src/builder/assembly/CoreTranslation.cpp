@@ -277,6 +277,34 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 			return lengthRead;
 	}
 
+	// Solady address-cleanup peephole: `shr(96, shl(96, x))` masks the
+	// upper 96 bits of a 256-bit word. On EVM this is a no-op for
+	// `address` (which fits in 160 bits with the upper 96 always zero);
+	// on AVM addresses are full 32 bytes, so the shift pair silently
+	// truncates the high 12 bytes. Detect the exact pattern at the Yul
+	// level and emit `x` directly.
+	if (funcName == "shr" && _call.arguments.size() == 2)
+	{
+		auto outerShift = resolveConstantYulValue(_call.arguments[0]);
+		if (outerShift && *outerShift == 96)
+		{
+			if (auto const* innerCall = std::get_if<solidity::yul::FunctionCall>(&_call.arguments[1]))
+			{
+				if (getFunctionName(innerCall->functionName) == "shl"
+					&& innerCall->arguments.size() == 2)
+				{
+					auto innerShift = resolveConstantYulValue(innerCall->arguments[0]);
+					if (innerShift && *innerShift == 96)
+					{
+						Logger::instance().info(
+							"Solady address-cleanup peephole: shr(96, shl(96, x)) → x", loc);
+						return buildExpression(innerCall->arguments[1]);
+					}
+				}
+			}
+		}
+	}
+
 	// Translate all arguments (stored in source order by the Yul parser)
 	std::vector<std::shared_ptr<awst::Expression>> args;
 	for (auto const& arg: _call.arguments)

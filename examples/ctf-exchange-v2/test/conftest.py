@@ -210,14 +210,15 @@ def collateral_token(localnet, admin):
 
 @pytest.fixture(scope="function")
 def collateral_onramp(localnet, admin, mock_token):
-    """CollateralOnramp.__postInit(_collateralToken, _usdc, _usdce). Uses the
-    shared mock ERC20 for all three slots so the ctor's `approve` inner-calls
-    have a valid receiver."""
+    """CollateralOnramp constructor(_owner, _admin, _collateralToken). The
+    first two slots are an EOA-style address; the last is the collateral
+    contract whose approve() the constructor inner-calls. algokit's ARC-56
+    address arg expects a string-encoded Algorand address."""
     base = OUT_DIR / "collateral" / "CollateralOnramp"
-    tok = app_id_to_address(mock_token.app_id)
+    tok = encoding.encode_address(app_id_to_address(mock_token.app_id))
     return deploy_app(
         localnet, admin, base, "CollateralOnramp",
-        post_init_args=[tok, tok, tok],
+        post_init_args=[admin.address, admin.address, tok],
         post_init_app_refs=[mock_token.app_id],
     )
 
@@ -225,10 +226,10 @@ def collateral_onramp(localnet, admin, mock_token):
 @pytest.fixture(scope="function")
 def collateral_offramp(localnet, admin, mock_token):
     base = OUT_DIR / "collateral" / "CollateralOfframp"
-    tok = app_id_to_address(mock_token.app_id)
+    tok = encoding.encode_address(app_id_to_address(mock_token.app_id))
     return deploy_app(
         localnet, admin, base, "CollateralOfframp",
-        post_init_args=[tok, tok, tok],
+        post_init_args=[admin.address, admin.address, tok],
         post_init_app_refs=[mock_token.app_id],
     )
 
@@ -236,10 +237,10 @@ def collateral_offramp(localnet, admin, mock_token):
 @pytest.fixture(scope="function")
 def permissioned_ramp(localnet, admin, mock_token):
     base = OUT_DIR / "collateral" / "PermissionedRamp"
-    tok = app_id_to_address(mock_token.app_id)
+    tok = encoding.encode_address(app_id_to_address(mock_token.app_id))
     return deploy_app(
         localnet, admin, base, "PermissionedRamp",
-        post_init_args=[tok, tok, tok],
+        post_init_args=[admin.address, admin.address, tok],
         post_init_app_refs=[mock_token.app_id],
     )
 
