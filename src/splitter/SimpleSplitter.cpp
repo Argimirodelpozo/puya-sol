@@ -19,6 +19,13 @@ constexpr int TxnTypeAppl = 6;
 
 // puya's ABI type-name conventions for the wtypes ctf-exchange uses.
 // (uint512 == biguint, byte[N] == fixed bytes, byte[] == dynamic bytes.)
+//
+// CRITICAL: this name has to match what puya generates for the helper's
+// method signature, since the selector (sha512_256("name(args)return")[:4])
+// has to dispatch correctly across contracts. WTuple/ARC4Tuple need to be
+// expanded as "(t0,t1,...)", strings as "string", and ARC4 composite types
+// as the original Solidity-level type so we don't generate a selector that
+// targets a different overload.
 std::string abiTypeName(awst::WType const* t)
 {
 	if (!t) return "void";
@@ -27,11 +34,90 @@ std::string abiTypeName(awst::WType const* t)
 	if (t == awst::WType::uint64Type()) return "uint64";
 	if (t == awst::WType::biguintType()) return "uint512";
 	if (t == awst::WType::accountType()) return "address";
+	if (t == awst::WType::stringType()) return "string";
 	if (t->kind() == awst::WTypeKind::Bytes)
 	{
 		auto const* bw = dynamic_cast<awst::BytesWType const*>(t);
 		if (bw && bw->length()) return "byte[" + std::to_string(*bw->length()) + "]";
 		return "byte[]";
+	}
+	if (t->kind() == awst::WTypeKind::ARC4UIntN)
+	{
+		auto const* a = dynamic_cast<awst::ARC4UIntN const*>(t);
+		if (a)
+		{
+			if (a->arc4Alias() == "byte") return "byte";
+			return "uint" + std::to_string(a->n());
+		}
+	}
+	if (t->kind() == awst::WTypeKind::ARC4StaticArray)
+	{
+		auto const* a = dynamic_cast<awst::ARC4StaticArray const*>(t);
+		if (a) return abiTypeName(a->elementType()) + "[" + std::to_string(a->arraySize()) + "]";
+	}
+	if (t->kind() == awst::WTypeKind::ARC4DynamicArray)
+	{
+		auto const* a = dynamic_cast<awst::ARC4DynamicArray const*>(t);
+		if (a)
+		{
+			// puya treats "string" / "byte[]" / "address" aliases as the
+			// canonical ABI typename. Match that exactly so the selector
+			// hashes line up with the helper's emitted method signature.
+			auto const& alias = a->arc4Alias();
+			if (alias == "string" || alias == "byte[]" || alias == "address") return alias;
+			return abiTypeName(a->elementType()) + "[]";
+		}
+	}
+	if (t->kind() == awst::WTypeKind::ARC4Struct)
+	{
+		auto const* s = dynamic_cast<awst::ARC4Struct const*>(t);
+		if (s)
+		{
+			std::string out = "(";
+			bool first = true;
+			for (auto const& f : s->fields())
+			{
+				if (!first) out += ",";
+				out += abiTypeName(f.second);
+				first = false;
+			}
+			out += ")";
+			return out;
+		}
+	}
+	if (t->kind() == awst::WTypeKind::ARC4Tuple)
+	{
+		auto const* tup = dynamic_cast<awst::ARC4Tuple const*>(t);
+		if (tup)
+		{
+			std::string out = "(";
+			bool first = true;
+			for (auto const* el : tup->types())
+			{
+				if (!first) out += ",";
+				out += abiTypeName(el);
+				first = false;
+			}
+			out += ")";
+			return out;
+		}
+	}
+	if (t->kind() == awst::WTypeKind::WTuple)
+	{
+		auto const* tup = dynamic_cast<awst::WTuple const*>(t);
+		if (tup)
+		{
+			std::string out = "(";
+			bool first = true;
+			for (auto const* el : tup->types())
+			{
+				if (!first) out += ",";
+				out += abiTypeName(el);
+				first = false;
+			}
+			out += ")";
+			return out;
+		}
 	}
 	return "byte[]";  // fallthrough; puya may reject
 }
