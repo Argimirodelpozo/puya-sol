@@ -281,6 +281,40 @@ def _compile_teal(algod, teal_text: str) -> bytes:
     return encoding.base64.b64decode(algod.compile(teal_text)["result"])
 
 
+def _inject_memory_init(teal: str) -> str:
+    """puya-sol's split helpers don't get the simulated-EVM memory buffer
+    initialised in their main routine — only the orchestrator's main gets
+    that, because puya only emits the buffer-init for contracts whose
+    AWST has a constructor. Methods we extract into the helper still load
+    from scratch 0 expecting the buffer, so we prepend the init manually.
+
+    Pattern matches the orchestrator's memory-init prologue verbatim.
+    """
+    init = (
+        "    pushint 4096\n"
+        "    bzero\n"
+        "    dup\n"
+        "    store 5\n"
+        "    store 0\n"
+        "    load 0\n"
+        "    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080\n"
+        "    replace2 64\n"
+        "    store 0\n"
+    )
+    # Insert after the bytecblock and before `txn ApplicationID` (the
+    # entry to the router branch). bytecblock can be on a single very
+    # long line.
+    lines = teal.splitlines()
+    out = []
+    inserted = False
+    for ln in lines:
+        out.append(ln)
+        if not inserted and ln.lstrip().startswith("bytecblock"):
+            out.append(init.rstrip("\n"))
+            inserted = True
+    return "\n".join(out) + "\n"
+
+
 def _create_app(localnet, sender, approval: bytes, clear: bytes, schema,
                 app_args=None, fund_amount=10_000_000) -> int:
     algod = localnet.client.algod
@@ -321,15 +355,18 @@ def split_exchange(localnet, admin, universal_mock):
 
     h1_spec = au.Arc56Contract.from_json(
         (H1_DIR / "CTFExchange__Helper1.arc56.json").read_text())
+    h1_approval_teal = _inject_memory_init(
+        (H1_DIR / "CTFExchange__Helper1.approval.teal").read_text())
     h1_app_id = _create_app(
         localnet, admin,
-        _compile_teal(algod, (H1_DIR / "CTFExchange__Helper1.approval.teal").read_text()),
+        _compile_teal(algod, h1_approval_teal),
         _compile_teal(algod, (H1_DIR / "CTFExchange__Helper1.clear.teal").read_text()),
         h1_spec.state.schema.global_state)
 
     h2_spec = au.Arc56Contract.from_json(
         (H2_DIR / "CTFExchange__Helper2.arc56.json").read_text())
-    h2_approval_teal = (H2_DIR / "CTFExchange__Helper2.approval.teal").read_text()
+    h2_approval_teal = _inject_memory_init(
+        (H2_DIR / "CTFExchange__Helper2.approval.teal").read_text())
     h2_approval_teal = h2_approval_teal.replace(TMPL_H1, str(h1_app_id))
     h2_app_id = _create_app(
         localnet, admin,
