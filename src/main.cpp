@@ -889,8 +889,11 @@ int main(int _argc, char* _argv[])
 	// extraction appended to kHelperExtractions; that's enough to remove F
 	// from the orchestrator and measure the size win. The runtime mechanism
 	// (lonely-chunk + UpdateApplication dance) is still landing — until then
-	// the helper for a delegated F holds F's body and runs on the helper's
-	// own storage when called, which is wrong but compiles.
+	// the helper for a delegated F holds F's body. We DON'T compile that
+	// helper through puya (its body has unresolved InstanceMethodTarget
+	// refs to orchestrator-internal methods); the artifact will be replaced
+	// with a hand-crafted lonely chunk in a later pass.
+	std::set<std::string> delegateFunctionNames;
 	if (!opts.forceDelegate.empty())
 	{
 		std::set<std::string> presentAll;
@@ -911,6 +914,7 @@ int main(int _argc, char* _argv[])
 				continue;
 			}
 			kHelperExtractions.push_back({name});
+			delegateFunctionNames.insert(name);
 			delegateCount++;
 		}
 		if (delegateCount)
@@ -1011,6 +1015,22 @@ int main(int _argc, char* _argv[])
 			if (!isOrch) helperNames.insert(cawst.contractName);
 		}
 
+		// Delegate helpers: a sidecar contract whose name contains "__Helper"
+		// AND has a method whose memberName is in delegateFunctionNames.
+		// These are skipped through puya — their real artifact (the lonely-
+		// chunk TEAL) is hand-crafted later. The orchestrator itself, even
+		// though it carries a stub for the same memberName, is never skipped.
+		std::set<std::string> delegateHelperContractNames;
+		for (auto const& cawst : splitContracts)
+		{
+			if (cawst.contractName.find("__Helper") == std::string::npos) continue;
+			for (auto const& r : cawst.roots)
+				if (auto c = std::dynamic_pointer_cast<puyasol::awst::Contract>(r))
+					for (auto const& m : c->methods)
+						if (delegateFunctionNames.count(m.memberName))
+							delegateHelperContractNames.insert(cawst.contractName);
+		}
+
 		puyasol::runner::PuyaRunner runner;
 		runner.setPuyaPath(opts.puyaPath);
 		int aggregateExitCode = 0;
@@ -1044,6 +1064,14 @@ int main(int _argc, char* _argv[])
 
 			if (!opts.noPuya)
 			{
+				if (delegateHelperContractNames.count(cawst.contractName))
+				{
+					logger.info(
+						"Skipping puya for delegate helper '"
+						+ cawst.contractName
+						+ "' — lonely-chunk TEAL is hand-crafted in a later step");
+					continue;
+				}
 				logger.info("Invoking puya backend for '" + cawst.contractName + "'...");
 				int exitCode = runner.run(subAwstPath, subOptionsPath, opts.logLevel);
 				if (exitCode != 0)
