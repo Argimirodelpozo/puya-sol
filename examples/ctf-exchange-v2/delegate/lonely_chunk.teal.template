@@ -1,0 +1,148 @@
+#pragma version 10
+#pragma typetrack false
+
+// Lonely-chunk sidecar for one delegated function on the orchestrator.
+//
+// Outer caller submits a 2-txn group: [orch.<F>.stub, lonely_chunk.run(args)].
+// orch.stub validates the next group txn is THIS app and forwards args; this
+// program does the install/call/revert dance entirely via inner txns:
+//
+//   inner-txn 1: ApplicationCall(orch, OnCompletion=UpdateApplication=4,
+//                ApprovalProgramPages=<F bytes split into 2KB pages>,
+//                ClearStateProgram=<orch's clear program>)
+//   inner-txn 2: ApplicationCall(orch, OnCompletion=NoOp,
+//                ApplicationArgs=[<F selector>, <forwarded args>...])
+//   inner-txn 3: ApplicationCall(orch, OnCompletion=UpdateApplication=4,
+//                ApprovalProgramPages=<orch original bytes split into pages>,
+//                ClearStateProgram=<orch's clear program>)
+//
+// Orch's original approval program bytes are read at runtime via
+// `app_params_get AppApprovalProgram <orch_app_id>` and stored across 4
+// scratch slots (slots 0..3) so we can revert in inner-txn 3.
+
+main:
+    intcblock 0 4 6 2048 4096 6144
+
+    txn ApplicationID
+    bnz call_path
+    // Create path: just succeed
+    pushint 1
+    return
+
+call_path:
+    txn OnCompletion
+    !
+    assert  // require NoOp
+
+    // Orch app id is stored as global state at key "orch_app_id". Set at
+    // create time via the create txn's app args.
+    intc_0  // 0
+    pushbytes "orch_app_id"
+    app_global_get_ex
+    assert  // exists
+    store 100  // orch app id
+
+    // Read orch's current approval program (the "original" we need to
+    // restore at the end). app_params_get returns (value: bytes, exists: uint64).
+    load 100
+    app_params_get AppApprovalProgram
+    assert  // exists
+    // stack: orig_bytes (up to 8192)
+
+    // Slice into 4 × 2048-byte scratch slots.
+    dup
+    intc_0  // 0
+    intc_3  // 2048
+    extract3
+    store 0
+    dup
+    intc_3  // 2048
+    intc_3  // 2048
+    extract3
+    store 1
+    dup
+    intc 4  // 4096
+    intc_3  // 2048
+    extract3
+    store 2
+    intc 5  // 6144
+    intc_3  // 2048
+    extract3
+    store 3
+
+    // ── inner-txn 1: install F as orch's approval ─────────────────────
+    itxn_begin
+    intc_2  // 6 = TypeEnum=Appl
+    itxn_field TypeEnum
+    intc_1  // 4 = OnCompletion=UpdateApplication
+    itxn_field OnCompletion
+    load 100
+    itxn_field ApplicationID
+    pushbytes 0x%F_PAGE_0%
+    itxn_field ApprovalProgramPages
+    pushbytes 0x%F_PAGE_1%
+    itxn_field ApprovalProgramPages
+    pushbytes 0x%F_PAGE_2%
+    itxn_field ApprovalProgramPages
+    pushbytes 0x%F_PAGE_3%
+    itxn_field ApprovalProgramPages
+    pushbytes 0x%CLEAR_PROGRAM%
+    itxn_field ClearStateProgram
+    itxn_submit
+
+    // ── inner-txn 2: call orch (which is now F) with the original args ─
+    itxn_begin
+    intc_2  // 6
+    itxn_field TypeEnum
+    intc_0  // 0 = NoOp
+    itxn_field OnCompletion
+    load 100
+    itxn_field ApplicationID
+    // Forward args from caller. Caller's args[0] is the lonely-chunk's
+    // entry-method selector; args[1..N] are the F selector + F's args.
+    txna ApplicationArgs 1
+    itxn_field ApplicationArgs
+    txn NumAppArgs
+    pushint 2
+    >=
+    bz inner_call_args_done
+    txna ApplicationArgs 2
+    itxn_field ApplicationArgs
+    txn NumAppArgs
+    pushint 3
+    >=
+    bz inner_call_args_done
+    txna ApplicationArgs 3
+    itxn_field ApplicationArgs
+    txn NumAppArgs
+    pushint 4
+    >=
+    bz inner_call_args_done
+    txna ApplicationArgs 4
+    itxn_field ApplicationArgs
+    // ... add as many as F needs (matchOrders has 7 args)
+inner_call_args_done:
+    itxn_submit
+
+    // ── inner-txn 3: revert orch's approval back to original ──────────
+    itxn_begin
+    intc_2  // 6
+    itxn_field TypeEnum
+    intc_1  // 4
+    itxn_field OnCompletion
+    load 100
+    itxn_field ApplicationID
+    load 0
+    itxn_field ApprovalProgramPages
+    load 1
+    itxn_field ApprovalProgramPages
+    load 2
+    itxn_field ApprovalProgramPages
+    load 3
+    itxn_field ApprovalProgramPages
+    pushbytes 0x%CLEAR_PROGRAM%
+    itxn_field ClearStateProgram
+    itxn_submit
+
+    pushint 1
+    return
