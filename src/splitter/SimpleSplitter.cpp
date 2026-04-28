@@ -869,30 +869,124 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 			}
 	}
 
-	// (Method-deps walker for delegate-style helpers — pulling matchOrders'
-	// InstanceMethodTarget closure into movedMethods — was prototyped here
-	// but cascaded in unintended ways: methods like `_performOrderChecks`
-	// have WTuple returns and the orchestrator's stub ARC4Decode chain
-	// trips over the tuple type during puya emission. Left disabled until
-	// the closure-pull-in plays nicely with the stub generator.)
+	// Method-deps walker: matchOrders calls `this._matchOrders(...)`
+	// (InstanceMethodTarget). For the helper to compile standalone, the
+	// transitive method-call closure has to be co-located with it. We add
+	// these methods to the helper-side movedMethods (so they're emitted in
+	// the helper) but DO NOT touch movedMethodNames (which is what
+	// triggers stubbing in the orchestrator). Stubbing tuple-returning
+	// internal methods in the orch is what tripped the WTuple decode chain
+	// last time; here the orch keeps its bodies unchanged for the
+	// transitively-pulled methods, while the helper gets full copies.
+	//
+	// Internal methods routed by the helper's ARC4 router would conflict
+	// with the original orch-side dispatch; mark them inline so puya
+	// inlines them at call sites and skips the ABI shell.
+	if (primary)
+	{
+		std::map<std::string, awst::ContractMethod const*> methodByMember;
+		for (auto const& m : primary->methods)
+			methodByMember[m.memberName] = &m;
+		std::set<std::string> seenMembers;
+		for (auto const& m : movedMethods) seenMembers.insert(m.memberName);
+		std::set<std::string> seenSubIds;
+		for (auto const& s : helperRoots) seenSubIds.insert(s->id);
+
+		std::deque<std::string> work;
+		for (auto const& m : movedMethods) work.push_back(m.memberName);
+
+		while (!work.empty())
+		{
+			auto curName = std::move(work.front());
+			work.pop_front();
+			auto it = methodByMember.find(curName);
+			if (it == methodByMember.end() || !it->second->body) continue;
+
+			std::set<std::string> refs;
+			collectSubroutineIds(*it->second->body, refs);
+			for (auto const& id : refs)
+			{
+				if (id.rfind("memberName:", 0) == 0)
+				{
+					std::string member = id.substr(11);
+					if (seenMembers.count(member)) continue;
+					seenMembers.insert(member);
+					auto it2 = methodByMember.find(member);
+					if (it2 != methodByMember.end())
+					{
+						// Inlining 50+ methods at every callsite explodes program
+						// size past 8192. Leave them as plain helper-internal
+						// methods; arc4MethodConfig is also left empty below so
+						// they don't get an ABI router slot.
+						auto copy = *it2->second;
+						copy.inlineOpt = false;
+						movedMethods.push_back(std::move(copy));
+						work.push_back(member);
+					}
+				}
+				else
+				{
+					if (seenSubIds.count(id)) continue;
+					auto sit = subById.find(id);
+					if (sit == subById.end()) { seenSubIds.insert(id); continue; }
+					std::vector<std::shared_ptr<awst::Subroutine>> seeds{sit->second};
+					auto extra = collectTransitiveDeps(seeds, subById);
+					for (auto const& s : extra)
+						if (seenSubIds.insert(s->id).second)
+							helperRoots.push_back(s);
+				}
+			}
+		}
+	}
 
 	// Helper contract first (so test harness can deploy it before orchestrator
 	// reads its app id from a template var).
 	auto helper = buildHelperContract(*primary, moved, _helperIndex);
 
-	// Add moved ContractMethods to the helper. Re-cref to helper, mark as
-	// ARC4 ABI, and append. The helper's ARC4Router will dispatch to them
-	// alongside the subroutine wrappers.
+	// Inject __delegate_update on the helper too. When this helper is the F
+	// for a delegate-update dance, its bytes get loaded onto the orchestrator
+	// mid-dance — the revert step (UpdateApplication back to orch's original)
+	// hits the helper's router (since orch is running helper bytes), and that
+	// router needs to admit OnCompletion=UpdateApplication with this selector.
+	{
+		auto loc = helper->sourceLocation;
+		awst::ContractMethod hatch;
+		hatch.cref = helper->id;
+		hatch.memberName = "__delegate_update";
+		hatch.returnType = awst::WType::voidType();
+		hatch.sourceLocation = loc;
+		auto block = std::make_shared<awst::Block>();
+		block->sourceLocation = loc;
+		hatch.body = std::move(block);
+		awst::ARC4ABIMethodConfig abiCfg;
+		abiCfg.sourceLocation = loc;
+		abiCfg.allowedCompletionTypes = {4}; // UpdateApplication
+		abiCfg.create = 3;
+		abiCfg.name = "__delegate_update";
+		hatch.arc4MethodConfig = abiCfg;
+		helper->methods.push_back(std::move(hatch));
+	}
+
+	// Add moved ContractMethods to the helper. Re-cref to helper. The
+	// user-explicitly-named methods (movedMethodNames) become ABI methods
+	// on the helper's router; the transitively-pulled closure methods are
+	// internal-only (no ARC4 shell) so the helper has the same internal
+	// dispatch graph as the original contract.
 	for (auto m : movedMethods)
 	{
 		m.cref = helper->id;
-		awst::ARC4ABIMethodConfig abiCfg;
-		abiCfg.sourceLocation = m.sourceLocation;
-		abiCfg.allowedCompletionTypes = {0};
-		abiCfg.create = 3;
-		abiCfg.name = m.memberName;
-		abiCfg.readonly = m.pure;
-		m.arc4MethodConfig = abiCfg;
+		if (movedMethodNames.count(m.memberName))
+		{
+			awst::ARC4ABIMethodConfig abiCfg;
+			abiCfg.sourceLocation = m.sourceLocation;
+			abiCfg.allowedCompletionTypes = {0};
+			abiCfg.create = 3;
+			abiCfg.name = m.memberName;
+			abiCfg.readonly = m.pure;
+			m.arc4MethodConfig = abiCfg;
+		}
+		// else: transitively-pulled — leave arc4MethodConfig empty so
+		// puya emits an internal subroutine instead of an ABI route.
 		helper->methods.push_back(std::move(m));
 	}
 

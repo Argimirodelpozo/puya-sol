@@ -498,22 +498,21 @@ def split_exchange(localnet, admin, universal_mock):
 
 @pytest.fixture(scope="function")
 def split_exchange_with_delegate(localnet, admin, split_exchange, lonely_chunk_artifacts):
-    """Same as split_exchange but ALSO deploys a LonelyChunk sidecar with
-    its self-bytes + orch-orig-bytes boxes populated. The sidecar's
-    delegate_dance method, when called, swaps orch's approval to its own
-    bytes (which would dispatch to a migrated function) and reverts.
+    """Deploy a LonelyChunk sidecar that swaps orch's approval to F-helper's
+    bytes (helper2 = matchOrders + closure), invokes orch, then reverts.
 
-    With matchOrders' actual closure not yet pulled into the lonely
-    chunk's source, the sidecar is structurally complete but doesn't
-    carry the matchOrders body — runtime calls hit the no-op dance and
-    revert orch back unchanged. Wired up so the install/call/revert
-    plumbing can be exercised end-to-end as the closure pull-in lands.
+    `__self_bytes` box is populated with helper2's compiled bytes, NOT
+    the lonely chunk's own bytes. (Box name is historical — kept stable
+    so the existing dance code's `Bytes(b"__self_bytes")` keeps working.)
     """
     h1, h2, orch = split_exchange
 
     spec = lonely_chunk_artifacts["spec"]
     approval_bin = lonely_chunk_artifacts["approval_bin"]
     clear_bin = lonely_chunk_artifacts["clear_bin"]
+
+    # F-helper bytes — what gets installed onto orch mid-dance.
+    f_bytes = (H2_DIR / "CTFExchange__Helper2.approval.bin").read_bytes()
 
     extra_pages = max(0, (max(len(approval_bin), len(clear_bin)) - 1) // 2048)
     sp = localnet.client.algod.suggested_params()
@@ -533,7 +532,7 @@ def split_exchange_with_delegate(localnet, admin, split_exchange, lonely_chunk_a
         app_args=[
             init_selector,
             orch.app_id.to_bytes(8, "big"),
-            len(approval_bin).to_bytes(8, "big"),
+            len(f_bytes).to_bytes(8, "big"),
             len(orch_orig_bytes).to_bytes(8, "big"),
         ],
     )
@@ -578,7 +577,7 @@ def split_exchange_with_delegate(localnet, admin, split_exchange, lonely_chunk_a
                 extra_fee=au.AlgoAmount(micro_algo=10_000),
             ), send_params=AUTO_POPULATE)
 
-    _write_chunks("set_self_chunk", b"__self_bytes", approval_bin)
+    _write_chunks("set_self_chunk", b"__self_bytes", f_bytes)
     _write_chunks("set_orch_orig_chunk", b"__orch_orig_bytes", orch_orig_bytes)
 
     return h1, h2, orch, chunk_client

@@ -1,35 +1,37 @@
-"""Lonely-chunk sidecar for one delegated function on the orchestrator.
+"""Lonely-chunk sidecar for one delegated function F on the orchestrator.
 
-Single contract, dual-mode:
+Two contracts cooperate at runtime: this lonely chunk (orchestrates the
+ceremony), and F-helper (puya-sol-emitted helper carrying the migrated
+function body + its transitive closure). The lonely chunk is small (~500
+bytes); F-helper is whatever the closure produces (e.g. matchOrders is
+~7.7KB).
 
-  1. When called normally on its own app id, `delegate_dance` fires three
-     inner-txns: install (UpdateApplication on orch with this contract's
-     bytes — read out of __self_bytes box), call (ApplicationCall on
-     orch — orch is now running this contract's approval against orch's
-     storage and dispatches to a migrated method body), revert
-     (UpdateApplication back to original — read from __orch_orig_bytes
-     box).
+Dance:
 
-  2. When orch's approval has been swapped to this contract's bytes and
-     called, the same program runs but the dispatcher routes to the
-     migrated method body (e.g. matchOrders), which reads/writes orch's
-     storage with the same keys it used in the original orchestrator.
+  1. Install: UpdateApplication on orch with F-helper's bytes (read out
+     of __self_bytes box — name is historical; box now holds F-helper's
+     program, not this contract's). After this, orch's approval IS the
+     F-helper program; orch's storage is unchanged.
 
-The migrated bodies are appended to this contract by the splitter
-(matchOrders + its closure of internal callees). For now this file
-defines only the dance scaffolding; merging happens post-puya.
+  2. Call: ApplicationCall on orch with F's selector. orch is running
+     F-helper's approval, so its router dispatches to F's body. F reads/
+     writes orch's storage with the same keys it would use in orch's
+     original program (since both come from the same Solidity source —
+     puya-sol's storage codegen is deterministic on slot id).
+
+  3. Revert: UpdateApplication on orch with orch's original bytes. F-
+     helper has its own __delegate_update method (mirrored from orch) so
+     this UpdateApplication call lands cleanly.
+
+All three inner-txns must atomically succeed or the whole dance reverts
+and orch's program is unchanged.
 
 State + boxes (one-time populated at deploy by the test harness):
   orch_app_id          UInt64 — the orchestrator we update
-  self_bytes_len       UInt64 — actual length of this contract's program
+  self_bytes_len       UInt64 — actual length of F-helper's program
   orch_orig_bytes_len  UInt64 — actual length of orch's original program
-  __self_bytes         box, sized to fit self_bytes_len
+  __self_bytes         box, sized to fit f-helper bytes
   __orch_orig_bytes    box, sized to fit orch_orig_bytes_len
-
-Programs ≤8192 bytes each, but approval + clear combined must stay
-≤8192. The dance reads the actual lengths from state and pushes only
-the necessary pages, padding the last page with zeros to never write
-trailing junk to orch's program.
 """
 from algopy import (
     ARC4Contract,
@@ -108,47 +110,48 @@ class LonelyChunk(ARC4Contract):
 
     @arc4.abimethod
     def delegate_dance(self, delegate_update_selector: Bytes) -> None:
-        """Install self bytes onto orch, call orch (which now runs as
-        F), revert. The 3 inner-txns must atomically succeed or the
-        whole dance reverts and orch's program is unchanged.
+        """Install F-helper bytes onto orch, call orch (now running F),
+        revert. The 3 inner-txns must atomically succeed or the whole
+        dance reverts and orch's program is unchanged.
 
-        Programs are pushed page-by-page using ApprovalProgramPages.
-        We always emit 4 pages but extract the actual byte count for
-        each, so trailing pages are empty when the source program is
-        smaller than 8KB.
+        AVM stack values cap at 4096 bytes, so F-helper >4KB has to be
+        installed via a tuple of pages. We slice into 4 × 2048-byte
+        pages, with the last page sized to the tail. F-helper is
+        expected to be 4096 < len < 8192 (single program max).
         """
         orch_id = self.orch_app_id
         self_box = Bytes(b"__self_bytes")
         orig_box = Bytes(b"__orch_orig_bytes")
         clear = Bytes(CLEAR_PROGRAM)
 
-        # Read self bytes (single page, ≤8KB; we expect ≤4KB for the
-        # lonely chunk shell + injected migrated body so this fits in
-        # one ApprovalProgram field). For larger F's, splitter will
-        # need to extend to per-page extraction.
-        self_p0 = op.Box.extract(self_box, UInt64(0), self.self_bytes_len)
-
-        # 1. install self → orch. ApplicationArgs[0] must be the
-        # __delegate_update selector so the orch's router routes to its
-        # UpdateApplication-allowed branch.
+        # 1. install F-helper → orch. Read 4 pages of 2048 bytes each.
+        # The last page's slice is sized to the tail so we don't push
+        # trailing junk. ApplicationArgs[0] is __delegate_update's
+        # selector so orch's router takes the UpdateApplication branch.
+        self_p0 = op.Box.extract(self_box, UInt64(0), UInt64(2048))
+        self_p1 = op.Box.extract(self_box, UInt64(2048), UInt64(2048))
+        self_p2 = op.Box.extract(self_box, UInt64(4096), UInt64(2048))
+        self_p3 = op.Box.extract(
+            self_box,
+            UInt64(6144),
+            self.self_bytes_len - UInt64(6144),
+        )
         itxn.ApplicationCall(
             app_id=orch_id,
             on_completion=OnCompleteAction.UpdateApplication,
-            approval_program=self_p0,
+            approval_program=(self_p0, self_p1, self_p2, self_p3),
             clear_state_program=clear,
             app_args=(delegate_update_selector,),
         ).submit()
 
-        # 2. call orch (now running self's approval). Args forwarding
-        # left blank for now; once matchOrders is in this contract the
-        # caller would forward args[1..N] explicitly via app_args=(...).
+        # 2. call orch (now running F-helper). Args forwarding left
+        # blank for now — for the plumbing round-trip test we just need
+        # install/revert to succeed; matchOrders args are added in a
+        # follow-up via a per-F dance variant.
 
-        # 3. revert orch → original. orch is bigger than the 4KB
-        # ApprovalProgram cap, so split into 3 pages: two full 2KB
-        # pages plus a tail of (len - 4096) bytes. Assumes
-        # 4096 < orch_orig_bytes_len < 6144 (true for the v2 split orch
-        # at 5266B with __delegate_update). For larger F's we'd need
-        # to extend to a 4-page form.
+        # 3. revert orch → original. orch's original is 4096 < len <
+        # 6144 (v2 split orch is ~5.3KB with __delegate_update), so 3
+        # pages: two 2KB pages plus a tail.
         orig_p0 = op.Box.extract(orig_box, UInt64(0), UInt64(2048))
         orig_p1 = op.Box.extract(orig_box, UInt64(2048), UInt64(2048))
         orig_p2 = op.Box.extract(

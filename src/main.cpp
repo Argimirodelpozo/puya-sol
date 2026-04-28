@@ -1064,14 +1064,6 @@ int main(int _argc, char* _argv[])
 
 			if (!opts.noPuya)
 			{
-				if (delegateHelperContractNames.count(cawst.contractName))
-				{
-					logger.info(
-						"Skipping puya for delegate helper '"
-						+ cawst.contractName
-						+ "' — lonely-chunk TEAL is hand-crafted in a later step");
-					continue;
-				}
 				logger.info("Invoking puya backend for '" + cawst.contractName + "'...");
 				int exitCode = runner.run(subAwstPath, subOptionsPath, opts.logLevel);
 				if (exitCode != 0)
