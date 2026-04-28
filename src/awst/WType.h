@@ -154,13 +154,16 @@ private:
 class ARC4DynamicArray: public WType
 {
 public:
-	explicit ARC4DynamicArray(WType const* _elementType, std::string _arc4Alias = {})
+	explicit ARC4DynamicArray(
+		WType const* _elementType,
+		std::string _arc4Alias = {},
+		bool _immutable = false)
 		: WType(
 			  _arc4Alias.empty()
 				  ? "arc4.dynamic_array<" + _elementType->name() + ">"
 				  : _arc4Alias,
 			  WTypeKind::ARC4DynamicArray,
-			  false // ARC4 arrays are mutable (matching puya Python default)
+			  _immutable
 		  ),
 		  m_elementType(_elementType),
 		  m_arc4Alias(std::move(_arc4Alias))

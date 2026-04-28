@@ -5,7 +5,9 @@
 #include "Logger.h"
 #include "awst/WType.h"
 
+#include <memory>
 #include <set>
+#include <vector>
 
 namespace puyasol::splitter
 {
@@ -50,8 +52,7 @@ std::string buildMethodSig(std::string const& name, awst::Subroutine const& sub)
 }
 
 /// Encode a single argument expression for inclusion in ApplicationArgs.
-/// puya expects ABI-encoded bytes per arg; for fixed-size types we just
-/// reinterpret. Dynamic bytes / tuples / structs aren't handled here yet.
+/// puya expects ABI-encoded bytes per arg.
 std::shared_ptr<awst::Expression> encodeArg(
 	std::shared_ptr<awst::Expression> argExpr,
 	awst::SourceLocation const& loc)
@@ -83,7 +84,100 @@ std::shared_ptr<awst::Expression> encodeArg(
 		setbit->stackArgs.push_back(std::move(val));
 		return setbit;
 	}
+	// ARC4 composite types (Struct/Array/Tuple/UIntN): the in-memory
+	// representation IS the ARC4-encoded byte string. Reinterpret to bytes.
+	if (wt && (wt->kind() == awst::WTypeKind::ARC4Struct
+		|| wt->kind() == awst::WTypeKind::ARC4StaticArray
+		|| wt->kind() == awst::WTypeKind::ARC4DynamicArray
+		|| wt->kind() == awst::WTypeKind::ARC4Tuple
+		|| wt->kind() == awst::WTypeKind::ARC4UIntN
+		|| wt->kind() == awst::WTypeKind::ARC4UFixedNxM))
+	{
+		return awst::makeReinterpretCast(std::move(argExpr), awst::WType::bytesType(), loc);
+	}
+	// Native WTuple: needs ARC4 encoding to flatten into the ABI byte form.
+	if (wt && wt->kind() == awst::WTypeKind::WTuple)
+	{
+		auto enc = std::make_shared<awst::ARC4Encode>();
+		enc->sourceLocation = loc;
+		// Use a default ARC4 tuple wtype; puya derives the encoding from the
+		// inner expression's wtype. The result is bytes.
+		enc->wtype = awst::WType::bytesType();
+		enc->value = std::move(argExpr);
+		return awst::makeReinterpretCast(std::move(enc), awst::WType::bytesType(), loc);
+	}
 	return awst::makeReinterpretCast(std::move(argExpr), awst::WType::bytesType(), loc);
+}
+
+/// Map a WType to its ARC4 equivalent, used to build the bytes-shape that
+/// ARC4Decode consumes. Returns nullptr if the WType has no known ARC4
+/// counterpart we support. WTuple recursion mints fresh ARC4Tuples, so we
+/// stash them in a static owned arena that frees at process exit.
+awst::WType const* mapToArc4(awst::WType const* w)
+{
+	if (!w) return nullptr;
+	if (w == awst::WType::biguintType())
+	{
+		static awst::ARC4UIntN s_uint256(32);
+		return &s_uint256;
+	}
+	if (w == awst::WType::uint64Type())
+	{
+		static awst::ARC4UIntN s_uint64(8);
+		return &s_uint64;
+	}
+	if (w == awst::WType::boolType())
+	{
+		return awst::WType::arc4BoolType();
+	}
+	if (w == awst::WType::accountType())
+	{
+		static awst::ARC4UIntN s_uint256(32);
+		return &s_uint256;
+	}
+	if (w == awst::WType::stringType())
+	{
+		// arc4.string == dynamic_array<arc4.byte>, immutable=true.
+		// Match puya's `arc4_string_alias` exactly so its decode router
+		// accepts the bytes shape as a Solidity `string`.
+		static awst::ARC4UIntN s_arc4Byte(8, "byte");
+		static awst::ARC4DynamicArray s_arc4String(&s_arc4Byte, "string", /*immutable=*/true);
+		return &s_arc4String;
+	}
+	if (w->kind() == awst::WTypeKind::Bytes
+		&& dynamic_cast<awst::BytesWType const*>(w)
+		&& !dynamic_cast<awst::BytesWType const*>(w)->length())
+	{
+		static awst::ARC4UIntN s_arc4Byte(8, "byte");
+		static awst::ARC4DynamicArray s_dynBytes(&s_arc4Byte, "arc4.dynamic_bytes");
+		return &s_dynBytes;
+	}
+	auto k = w->kind();
+	if (k == awst::WTypeKind::ARC4Struct
+		|| k == awst::WTypeKind::ARC4StaticArray
+		|| k == awst::WTypeKind::ARC4DynamicArray
+		|| k == awst::WTypeKind::ARC4Tuple
+		|| k == awst::WTypeKind::ARC4UIntN
+		|| k == awst::WTypeKind::ARC4UFixedNxM)
+	{
+		return w;  // identity for ARC4 types
+	}
+	if (k == awst::WTypeKind::WTuple)
+	{
+		auto const* tup = dynamic_cast<awst::WTuple const*>(w);
+		std::vector<awst::WType const*> inner;
+		for (auto const* el : tup->types())
+		{
+			auto const* m = mapToArc4(el);
+			if (!m) return nullptr;
+			inner.push_back(m);
+		}
+		static std::vector<std::unique_ptr<awst::ARC4Tuple>> s_owned;
+		s_owned.push_back(std::make_unique<awst::ARC4Tuple>(std::move(inner)));
+		return s_owned.back().get();
+	}
+	// string / bytes / unknown — caller falls back to skipping the extraction.
+	return nullptr;
 }
 
 /// Decode the post-prefix LastLog bytes back to the original return type.
@@ -108,6 +202,20 @@ std::shared_ptr<awst::Expression> decodeReturn(
 		auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), loc);
 		btoi->stackArgs.push_back(std::move(bytesExpr));
 		return btoi;
+	}
+	if (retType && retType->kind() == awst::WTypeKind::WTuple)
+	{
+		// Reinterpret the post-prefix bytes as an ARC4 tuple, then decode to
+		// the native WTuple. Without ARC4Decode, puya would see a bytes value
+		// where it expects a WTuple at the call site.
+		auto const* arc4Form = mapToArc4(retType);
+		if (!arc4Form) return awst::makeReinterpretCast(std::move(bytesExpr), retType, loc);
+		auto cast = awst::makeReinterpretCast(std::move(bytesExpr), arc4Form, loc);
+		auto decode = std::make_shared<awst::ARC4Decode>();
+		decode->sourceLocation = loc;
+		decode->wtype = retType;
+		decode->value = std::move(cast);
+		return decode;
 	}
 	return awst::makeReinterpretCast(std::move(bytesExpr), retType, loc);
 }
@@ -139,9 +247,11 @@ std::shared_ptr<awst::Block> buildStubBody(
 		argsTuple->items.push_back(encodeArg(std::move(var), loc));
 		tupleTypes.push_back(awst::WType::bytesType());
 	}
-	// Static lifetime — splits are rare; leak one WTuple per stub.
-	auto* tupleType = new awst::WTuple(std::move(tupleTypes), std::nullopt);
-	argsTuple->wtype = tupleType;
+	// Owned arena — one WTuple per stub, freed at process exit.
+	static std::vector<std::unique_ptr<awst::WTuple>> s_ownedStubTuples;
+	s_ownedStubTuples.push_back(
+		std::make_unique<awst::WTuple>(std::move(tupleTypes), std::nullopt));
+	argsTuple->wtype = s_ownedStubTuples.back().get();
 
 	// ApplicationID = TemplateVar(`TMPL_<helperName>_APP_ID`).
 	auto tvar = std::make_shared<awst::TemplateVar>();
@@ -529,13 +639,25 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 	std::vector<std::shared_ptr<awst::Subroutine>> moved;
 	std::set<std::string> moveSet(_moveNames.begin(), _moveNames.end());
 
-	auto isComposite = [](awst::WType const* t) {
+	// Args/returns of these kinds round-trip cleanly through the inner-call
+	// stub: their puya-side runtime representation IS the ARC4-encoded byte
+	// string, so encode/decode is a reinterpret-cast. WTuple needs an extra
+	// ARC4Encode on the way out, which encodeArg handles.
+	auto isUnsupported = [](awst::WType const* t) {
 		if (!t) return false;
-		auto k = t->kind();
-		return k == awst::WTypeKind::WTuple
-			|| k == awst::WTypeKind::ARC4Struct
-			|| k == awst::WTypeKind::ARC4StaticArray
-			|| k == awst::WTypeKind::ARC4DynamicArray;
+		// Currently no kinds are unsupported as args. Returns of WTuple/
+		// ARC4Struct still need work in decodeReturn — rejected separately
+		// below.
+		(void)t;
+		return false;
+	};
+	// Return types we can decode cleanly. ARC4 composite types reinterpret
+	// directly; WTuple decodes via mapToArc4 + ARC4Decode if every element
+	// has a known ARC4 counterpart (string/bytes still bail).
+	auto unsupportedReturn = [](awst::WType const* t) {
+		if (!t) return false;
+		if (t->kind() != awst::WTypeKind::WTuple) return false;
+		return mapToArc4(t) == nullptr;
 	};
 
 	for (auto const& r : _roots)
@@ -550,21 +672,20 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 			// Skip subs with composite return types (tuple/struct/array) —
 			// the inner-call decode path doesn't handle them yet, and they're
 			// rarely worth extracting anyway. Same for arg types.
-			if (isComposite(s->returnType))
+			if (unsupportedReturn(s->returnType))
 			{
 				Logger::instance().warning(
 					"SimpleSplitter: skipping '" + s->name +
-					"' — composite return type not supported yet");
+					"' — WTuple return not supported yet (need ARC4Decode chain)");
 				continue;
 			}
 			bool argSkip = false;
 			for (auto const& a : s->args)
-				if (isComposite(a.wtype)) { argSkip = true; break; }
+				if (isUnsupported(a.wtype)) { argSkip = true; break; }
 			if (argSkip)
 			{
 				Logger::instance().warning(
-					"SimpleSplitter: skipping '" + s->name +
-					"' — composite arg type not supported yet");
+					"SimpleSplitter: skipping '" + s->name + "'");
 				continue;
 			}
 			moved.push_back(s);
@@ -580,21 +701,20 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 		for (auto const& m : primary->methods)
 		{
 			if (!moveSet.count(m.memberName)) continue;
-			if (isComposite(m.returnType))
+			if (unsupportedReturn(m.returnType))
 			{
 				Logger::instance().warning(
 					"SimpleSplitter: skipping method '" + m.memberName +
-					"' — composite return type not supported yet");
+					"' — WTuple return not supported yet");
 				continue;
 			}
 			bool argSkip = false;
 			for (auto const& a : m.args)
-				if (isComposite(a.wtype)) { argSkip = true; break; }
+				if (isUnsupported(a.wtype)) { argSkip = true; break; }
 			if (argSkip)
 			{
 				Logger::instance().warning(
-					"SimpleSplitter: skipping method '" + m.memberName +
-					"' — composite arg type not supported yet");
+					"SimpleSplitter: skipping method '" + m.memberName + "'");
 				continue;
 			}
 			movedMethods.push_back(m);
@@ -615,6 +735,30 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 			subById[sub->id] = sub;
 
 	auto helperRoots = collectTransitiveDeps(moved, subById);
+	// Methods can reference subroutines too (e.g. _verifyECDSASignature →
+	// ECDSA.recover); walk their bodies and pull in any subs the helper
+	// will need.
+	{
+		std::set<std::string> seenIds;
+		for (auto const& s : helperRoots) seenIds.insert(s->id);
+		std::set<std::string> refs;
+		for (auto const& m : movedMethods)
+			if (m.body) collectSubroutineIds(*m.body, refs);
+		std::vector<std::shared_ptr<awst::Subroutine>> seeds;
+		for (auto const& id : refs)
+		{
+			if (seenIds.count(id)) continue;
+			auto it = subById.find(id);
+			if (it != subById.end()) seeds.push_back(it->second);
+		}
+		auto extra = collectTransitiveDeps(seeds, subById);
+		for (auto const& s : extra)
+			if (!seenIds.count(s->id))
+			{
+				seenIds.insert(s->id);
+				helperRoots.push_back(s);
+			}
+	}
 
 	// Helper contract first (so test harness can deploy it before orchestrator
 	// reads its app id from a template var).

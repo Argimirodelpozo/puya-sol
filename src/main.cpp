@@ -153,6 +153,11 @@ struct Options
 	bool viaYulBehavior = false;
 	std::string upstreamTestDir; // for ExternalSource resolution
 	std::string splitConfig; // path to JSON file with subroutine names to extract
+	// Experimental: comma-separated list of function names to extract using
+	// the delegate-update mechanism (per-call temporary approval-program
+	// swap on the orchestrator). Each named function gets its own "lonely
+	// chunk" sidecar contract and is removed from the orchestrator entirely.
+	std::vector<std::string> forceDelegate;
 };
 
 void printUsage(char const* _progName)
@@ -184,6 +189,13 @@ void printUsage(char const* _progName)
 		<< "                         contract (one helper per run). Names not found in the\n"
 		<< "                         AWST are silently ignored, so one config can target\n"
 		<< "                         multiple contract families.\n"
+		<< "  --force-delegate <list>  EXPERIMENTAL: comma-separated function names to extract\n"
+		<< "                         via the delegate-update mechanism. Each function gets a\n"
+		<< "                         dedicated sidecar app that, when invoked, temporarily\n"
+		<< "                         swaps the orchestrator's approval program with F's body\n"
+		<< "                         (so F runs against the orchestrator's storage), invokes\n"
+		<< "                         the orchestrator, then reverts the swap. Caller must\n"
+		<< "                         submit a group [orch.stub, sidecar].\n"
 		<< "  --help                 Show this help message\n";
 }
 
@@ -235,6 +247,27 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.upstreamTestDir = _argv[++i];
 		else if (arg == "--split-config" && i + 1 < _argc)
 			opts.splitConfig = _argv[++i];
+		else if (arg == "--force-delegate" && i + 1 < _argc)
+		{
+			std::string raw = _argv[++i];
+			std::string token;
+			auto pushToken = [&]() {
+				if (token.empty()) return;
+				if (token == "__postInit")
+					std::cerr << "warning: --force-delegate refuses '__postInit' "
+						"(constructor; the delegate-update mechanism cannot be "
+						"used during deploy)\n";
+				else
+					opts.forceDelegate.push_back(token);
+				token.clear();
+			};
+			for (char c : raw)
+			{
+				if (c == ',') pushToken();
+				else if (!std::isspace(static_cast<unsigned char>(c))) token += c;
+			}
+			pushToken();
+		}
 		else if (arg == "--help")
 		{
 			printUsage(_argv[0]);
@@ -787,8 +820,16 @@ int main(int _argc, char* _argv[])
 		"CTHelpers.getPositionId",
 	};
 
+	// Helper-list form: each entry is one helper contract's extraction list.
+	// Single-helper config translates to one entry. The runtime peels helpers
+	// off in order, accumulating helper contracts and threading the
+	// orchestrator's roots forward as the input to the next split.
+	std::vector<std::vector<std::string>> kHelperExtractions;
+
 	// If --split-config <path> was passed, replace the fallback with the
-	// file's `extract` array.
+	// file's contents. Two accepted shapes:
+	//   { "extract": ["A", "B", ...] }                       (one helper)
+	//   { "helpers": [ {"extract": [...]}, {"extract": [...]} ] }  (N helpers)
 	if (!opts.splitConfig.empty())
 	{
 		std::ifstream cf(opts.splitConfig);
@@ -803,13 +844,33 @@ int main(int _argc, char* _argv[])
 		{
 			auto cfg = njson::parse(ss.str());
 			kExtractedFunctions.clear();
-			if (cfg.contains("extract") && cfg["extract"].is_array())
+			if (cfg.contains("helpers") && cfg["helpers"].is_array())
+			{
+				for (auto const& h : cfg["helpers"])
+				{
+					std::vector<std::string> names;
+					if (h.contains("extract") && h["extract"].is_array())
+						for (auto const& e : h["extract"])
+							if (e.is_string()) names.push_back(e.get<std::string>());
+					kHelperExtractions.push_back(std::move(names));
+				}
+				size_t total = 0;
+				for (auto const& v : kHelperExtractions) total += v.size();
+				logger.info(
+					"Loaded " + std::to_string(total) + " extraction name(s) across "
+					+ std::to_string(kHelperExtractions.size()) + " helper(s) from "
+					+ opts.splitConfig);
+			}
+			else if (cfg.contains("extract") && cfg["extract"].is_array())
+			{
 				for (auto const& e : cfg["extract"])
 					if (e.is_string())
 						kExtractedFunctions.push_back(e.get<std::string>());
-			logger.info(
-				"Loaded " + std::to_string(kExtractedFunctions.size()) +
-				" extraction name(s) from " + opts.splitConfig);
+				kHelperExtractions.push_back(kExtractedFunctions);
+				logger.info(
+					"Loaded " + std::to_string(kExtractedFunctions.size()) +
+					" extraction name(s) from " + opts.splitConfig);
+			}
 		}
 		catch (std::exception const& e)
 		{
@@ -817,36 +878,107 @@ int main(int _argc, char* _argv[])
 			return 1;
 		}
 	}
-
-	std::vector<puyasol::splitter::SimpleSplitter::ContractAWST> splitContracts;
+	else
 	{
-		// Filter the static list to only names that are present in the AWST,
-		// either as a top-level Subroutine or as a primary contract's method.
-		std::set<std::string> present;
+		// Fallback path: single helper from the hardcoded list.
+		kHelperExtractions.push_back(kExtractedFunctions);
+	}
+
+	// Resolve delegate names against the AWST. Names not present are warned
+	// and dropped. Each surviving name becomes its own one-function helper
+	// extraction appended to kHelperExtractions; that's enough to remove F
+	// from the orchestrator and measure the size win. The runtime mechanism
+	// (lonely-chunk + UpdateApplication dance) is still landing — until then
+	// the helper for a delegated F holds F's body and runs on the helper's
+	// own storage when called, which is wrong but compiles.
+	if (!opts.forceDelegate.empty())
+	{
+		std::set<std::string> presentAll;
 		for (auto const& r : roots)
 		{
 			if (auto sub = std::dynamic_pointer_cast<puyasol::awst::Subroutine>(r))
-				present.insert(sub->name);
+				presentAll.insert(sub->name);
 			else if (auto c = std::dynamic_pointer_cast<puyasol::awst::Contract>(r))
 				for (auto const& m : c->methods)
-					present.insert(m.memberName);
+					presentAll.insert(m.memberName);
 		}
-
-		std::vector<std::string> toExtract;
-		for (auto const& name : kExtractedFunctions)
-			if (present.count(name))
-				toExtract.push_back(name);
-
-		if (!toExtract.empty())
+		int delegateCount = 0;
+		for (auto const& name : opts.forceDelegate)
 		{
+			if (!presentAll.count(name))
+			{
+				logger.warning("--force-delegate: '" + name + "' not found in AWST, skipping");
+				continue;
+			}
+			kHelperExtractions.push_back({name});
+			delegateCount++;
+		}
+		if (delegateCount)
+			logger.info(
+				"--force-delegate: " + std::to_string(delegateCount)
+				+ " function(s) routed to dedicated sidecar helpers (one per F)");
+	}
+
+	std::vector<puyasol::splitter::SimpleSplitter::ContractAWST> splitContracts;
+	{
+		// Walk through each helper-spec in order. After each split() call, the
+		// resulting orchestrator becomes the input to the next split, peeling
+		// off one helper at a time.
+		std::vector<std::shared_ptr<puyasol::awst::RootNode>> currentRoots = roots;
+		int helperIdx = 1;
+		for (auto const& names : kHelperExtractions)
+		{
+			std::set<std::string> present;
+			for (auto const& r : currentRoots)
+			{
+				if (auto sub = std::dynamic_pointer_cast<puyasol::awst::Subroutine>(r))
+					present.insert(sub->name);
+				else if (auto c = std::dynamic_pointer_cast<puyasol::awst::Contract>(r))
+					for (auto const& m : c->methods)
+						present.insert(m.memberName);
+			}
+			std::vector<std::string> toExtract;
+			for (auto const& name : names)
+				if (present.count(name))
+					toExtract.push_back(name);
+			if (toExtract.empty()) continue;
+
 			logger.info("Extracting " + std::to_string(toExtract.size()) +
-				" function(s) into a helper contract");
+				" function(s) into helper #" + std::to_string(helperIdx));
 
 			puyasol::splitter::SimpleSplitter splitter;
-			splitContracts = splitter.split(roots, toExtract, /*helperIndex=*/1);
+			auto parts = splitter.split(currentRoots, toExtract, helperIdx);
+			if (parts.empty())
+			{
+				logger.warning("Splitter pass " + std::to_string(helperIdx) +
+					" returned no result; halting further splits");
+				break;
+			}
+			// parts[0] = helper, parts[1] = orchestrator.
+			splitContracts.push_back(parts.front());
+			currentRoots = parts.back().roots;
+			helperIdx++;
+		}
 
-			if (splitContracts.empty())
-				logger.warning("Splitter returned no result; falling back to single-contract path");
+		// Final orchestrator goes last in splitContracts.
+		if (!splitContracts.empty())
+		{
+			puyasol::splitter::SimpleSplitter::ContractAWST orch;
+			// Locate the primary Contract pointer to copy its id/name out.
+			for (auto const& r : currentRoots)
+			{
+				if (auto c = std::dynamic_pointer_cast<puyasol::awst::Contract>(r))
+				{
+					if (c->name.find("__Helper") == std::string::npos)
+					{
+						orch.contractId = c->id;
+						orch.contractName = c->name;
+						break;
+					}
+				}
+			}
+			orch.roots = std::move(currentRoots);
+			splitContracts.push_back(std::move(orch));
 		}
 	}
 
@@ -895,10 +1027,14 @@ int main(int _argc, char* _argv[])
 				logger.info("Wrote: " + subAwstPath);
 			}
 			std::string subOptionsPath = (subdir / "options.json").string();
-			// Orchestrator gets template-var declarations for helper app ids;
-			// helpers themselves don't need them.
-			bool isHelper = cawst.contractName.find("__Helper") != std::string::npos;
-			std::set<std::string> declareVars = isHelper ? std::set<std::string>{} : helperNames;
+			// Each contract declares template-var refs to OTHER helpers it
+			// might call into. With multi-helper splits a later helper can
+			// inherit a stub that targets an earlier helper, so we declare
+			// every helper's app id everywhere except in the helper's own
+			// options (which would self-reference).
+			std::set<std::string> declareVars;
+			for (auto const& h : helperNames)
+				if (h != cawst.contractName) declareVars.insert(h);
 			// puya keys compilation_set by the Contract's full id (file path
 			// prefixed FQN), not the short name.
 			puyasol::json::OptionsWriter::write(

@@ -1,45 +1,61 @@
 {
-  "_comment": "Subroutines to extract from CTFExchange v2. Different naming than v1: *_computeCreationCodeHash + Create2Lib + _getSalt instead of v1's *_computeCreationCode. v2 also has CTHelpers.* (Conditional Tokens math).",
+  "_comment": "Multi-helper split for v2. Helper 1: solady-ish utility libraries. Helper 2: in-source pure mixin helpers. Note: splitting INCREASES total bytecode (each stub has fixed inner-app-call overhead) — it's a workaround for the per-contract size cap, not a code-reduction technique. Big stateful functions stay in the orchestrator until the splitter learns to pass state to helpers.",
 
-  "extract": [
-    "SignatureCheckerLib.isValidSignatureNow",
-    "ECDSA.tryRecover",
-    "ECDSA.recover",
-    "ECDSA.toTypedDataHash",
-    "ECDSA._throwError",
+  "helpers": [
+    {
+      "extract": [
+        "SignatureCheckerLib.isValidSignatureNow",
+        "ECDSA.tryRecover",
+        "ECDSA.recover",
+        "ECDSA.toTypedDataHash",
+        "ECDSA._throwError",
 
-    "PolyProxyLib._computeCreationCodeHash",
-    "PolyProxyLib._computeCreate2Address",
-    "PolyProxyLib.getProxyWalletAddress",
-    "PolyProxyLib._getSalt",
-    "PolySafeLib._computeCreationCodeHash",
-    "PolySafeLib._computeCreate2Address",
-    "PolySafeLib.getSafeWalletAddress",
-    "PolySafeLib.computeBytecodeHash",
-    "PolySafeLib._getSalt",
-    "Create2Lib.computeCreate2Address",
+        "PolyProxyLib._computeCreationCodeHash",
+        "PolyProxyLib._computeCreate2Address",
+        "PolyProxyLib.getProxyWalletAddress",
+        "PolyProxyLib._getSalt",
+        "PolySafeLib._computeCreationCodeHash",
+        "PolySafeLib._computeCreate2Address",
+        "PolySafeLib.getSafeWalletAddress",
+        "PolySafeLib.computeBytecodeHash",
+        "PolySafeLib._getSalt",
+        "Create2Lib.computeCreate2Address",
 
-    "SafeTransferLib.safeTransferFrom",
-    "SafeTransferLib.safeTransfer",
-    "TransferHelper._transferFromERC1155",
-    "TransferHelper._transferFromERC20",
-    "TransferHelper._transferERC20",
+        "SafeTransferLib.safeTransferFrom",
+        "SafeTransferLib.safeTransfer",
+        "TransferHelper._transferFromERC1155",
+        "TransferHelper._transferFromERC20",
+        "TransferHelper._transferERC20",
 
-    "CalculatorHelper.calculateTakingAmount",
-    "CalculatorHelper.calculateFee",
-    "CalculatorHelper.min",
-    "CalculatorHelper.calculatePrice",
-    "CalculatorHelper._calculatePrice",
-    "CalculatorHelper.isCrossing",
-    "CalculatorHelper._isCrossing",
-    "_deriveMatchType",
+        "CalculatorHelper.calculateTakingAmount",
+        "CalculatorHelper.calculateFee",
+        "CalculatorHelper.min",
+        "CalculatorHelper.calculatePrice",
+        "CalculatorHelper._calculatePrice",
+        "CalculatorHelper.isCrossing",
+        "CalculatorHelper._isCrossing",
 
-    "CTHelpers.sqrt",
-    "CTHelpers.getCollectionId",
-    "CTHelpers.getPositionId",
-
-    "_hashTypedDataSansChainId",
-    "_hashTypedDataSansVerifyingContract",
-    "_hashTypedDataSansChainIdAndVerifyingContract"
+        "CTHelpers.sqrt",
+        "CTHelpers.getCollectionId",
+        "CTHelpers.getPositionId"
+      ]
+    },
+    {
+      "extract": [
+        "_emitOrderFilledEvent",
+        "_emitTakerFilledEvents",
+        "_validateOrdersMatch",
+        "_validateFeeWithMaxFeeRate",
+        "_deriveAssetIds",
+        "_createStructHash",
+        "_isAllComplementary",
+        "_getPartition",
+        "_domainNameAndVersion",
+        "_hashTypedDataSansChainId",
+        "_hashTypedDataSansVerifyingContract",
+        "_hashTypedDataSansChainIdAndVerifyingContract",
+        "_verifyECDSASignature"
+      ]
+    }
   ]
 }
