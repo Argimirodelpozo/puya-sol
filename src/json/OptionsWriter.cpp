@@ -20,6 +20,9 @@ static void addTemplateVarDefs(njson& opts, std::set<std::string> const& _childr
 		// Keys WITHOUT the TMPL_ prefix — puya adds it from template_vars_prefix
 		defs["APPROVAL_" + child] = "0x068101"; // stub: #pragma version 6; int 1
 		defs["CLEAR_" + child] = "0x068101";
+		// uint64 template var for the deployed helper's app id. Substituted
+		// at deploy time once the helper is on chain.
+		defs[child + "_APP_ID"] = 0;
 	}
 }
 

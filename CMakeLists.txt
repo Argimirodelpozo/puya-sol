@@ -138,6 +138,7 @@ set(SOURCES
 	src/splitter/FunctionSplitter.cpp
 	src/splitter/FunctionInliner.cpp
 	src/splitter/ConstantExternalizer.cpp
+	src/splitter/SimpleSplitter.cpp
 )
 
 add_executable(puya-sol ${SOURCES})

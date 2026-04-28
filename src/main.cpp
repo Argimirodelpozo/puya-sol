@@ -5,6 +5,7 @@
 #include "json/AWSTSerializer.h"
 #include "json/OptionsWriter.h"
 #include "runner/PuyaRunner.h"
+#include "splitter/SimpleSplitter.h"
 
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/FileReader.h>
@@ -151,6 +152,7 @@ struct Options
 	bool splitTest = false;
 	bool viaYulBehavior = false;
 	std::string upstreamTestDir; // for ExternalSource resolution
+	std::string splitConfig; // path to JSON file with subroutine names to extract
 };
 
 void printUsage(char const* _progName)
@@ -177,6 +179,11 @@ void printUsage(char const* _progName)
 		<< "  --split-test           Split a semantic test file (Source/ExternalSource directives)\n"
 		<< "                         into individual .sol files in output-dir. Prints main source path.\n"
 		<< "  --upstream-test-dir <d> Upstream Solidity semanticTests dir (for ExternalSource)\n"
+		<< "  --split-config <path>  JSON file: { \"extract\": [\"FuncName.A\", ...] } —\n"
+		<< "                         names of subroutines to peel off into a sibling helper\n"
+		<< "                         contract (one helper per run). Names not found in the\n"
+		<< "                         AWST are silently ignored, so one config can target\n"
+		<< "                         multiple contract families.\n"
 		<< "  --help                 Show this help message\n";
 }
 
@@ -226,6 +233,8 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.splitTest = true;
 		else if (arg == "--upstream-test-dir" && i + 1 < _argc)
 			opts.upstreamTestDir = _argv[++i];
+		else if (arg == "--split-config" && i + 1 < _argc)
+			opts.splitConfig = _argv[++i];
 		else if (arg == "--help")
 		{
 			printUsage(_argv[0]);
@@ -722,14 +731,190 @@ int main(int _argc, char* _argv[])
 
 	logger.info("Generated " + std::to_string(roots.size()) + " AWST root node(s)");
 
+	// ─── Helper extraction (from --split-config or hardcoded fallback) ────
+	// Subroutine names to peel off into a sibling helper contract, keeping
+	// the orchestrator under AVM's 8192-byte cap. Each named sub is moved to
+	// a sibling app the orchestrator calls via inner app-call. Names match
+	// `Subroutine.name` in the AWST (lib-prefixed where applicable).
+	//
+	// Config file format (JSON):
+	//   { "extract": ["FuncName.A", "FuncName.B", ...] }
+	//
+	// When --split-config isn't passed, the hardcoded fallback below applies
+	// (covers v1 and v2 ctf-exchange families; names not present in the
+	// current AWST are silently filtered out).
+	std::vector<std::string> kExtractedFunctions = {
+		// ── solady signature + ECDSA (v1 + v2) ────────────────────────────
+		"SignatureCheckerLib.isValidSignatureNow",
+		"ECDSA.tryRecover",            // tuple-return overloads auto-skipped
+		"ECDSA.recover",
+		"ECDSA.toTypedDataHash",
+		"ECDSA._throwError",
+		// ── Polymarket proxy/safe CREATE2 (v1 + v2) ───────────────────────
+		// v1 uses *_computeCreationCode + *_computeCreate2Address
+		"PolyProxyLib._computeCreationCode",
+		"PolyProxyLib._computeCreate2Address",
+		"PolyProxyLib.getProxyWalletAddress",
+		"PolySafeLib._computeCreate2Address",
+		"PolySafeLib.getSafeAddress",
+		"PolySafeLib.getContractBytecode",
+		// v2 uses *_computeCreationCodeHash + Create2Lib + _getSalt
+		"PolyProxyLib._computeCreationCodeHash",
+		"PolyProxyLib._getSalt",
+		"PolySafeLib._computeCreationCodeHash",
+		"PolySafeLib._getSalt",
+		"PolySafeLib.getSafeWalletAddress",
+		"PolySafeLib.computeBytecodeHash",
+		"Create2Lib.computeCreate2Address",
+		// ── solmate / solady transfer wrappers (v1 + v2) ──────────────────
+		"SafeTransferLib.safeTransferFrom",
+		"SafeTransferLib.safeTransfer",
+		"TransferHelper._transferFromERC1155",
+		"TransferHelper._transferFromERC20",
+		"TransferHelper._transferERC20",
+		// ── CalculatorHelper (v1 + v2) ────────────────────────────────────
+		"CalculatorHelper.calculateTakingAmount",
+		"CalculatorHelper.calculateFee",
+		"CalculatorHelper.min",
+		"CalculatorHelper.calculatePrice",
+		"CalculatorHelper._calculatePrice",
+		"CalculatorHelper.isCrossing",
+		"CalculatorHelper._isCrossing",
+		"_deriveMatchType",
+		// ── v2 CTF math (Conditional Tokens helpers) ──────────────────────
+		"CTHelpers.sqrt",
+		"CTHelpers.getCollectionId",
+		"CTHelpers.getPositionId",
+	};
+
+	// If --split-config <path> was passed, replace the fallback with the
+	// file's `extract` array.
+	if (!opts.splitConfig.empty())
+	{
+		std::ifstream cf(opts.splitConfig);
+		if (!cf.is_open())
+		{
+			logger.error("Cannot open --split-config file: " + opts.splitConfig);
+			return 1;
+		}
+		std::ostringstream ss;
+		ss << cf.rdbuf();
+		try
+		{
+			auto cfg = njson::parse(ss.str());
+			kExtractedFunctions.clear();
+			if (cfg.contains("extract") && cfg["extract"].is_array())
+				for (auto const& e : cfg["extract"])
+					if (e.is_string())
+						kExtractedFunctions.push_back(e.get<std::string>());
+			logger.info(
+				"Loaded " + std::to_string(kExtractedFunctions.size()) +
+				" extraction name(s) from " + opts.splitConfig);
+		}
+		catch (std::exception const& e)
+		{
+			logger.error("Failed to parse --split-config: " + std::string(e.what()));
+			return 1;
+		}
+	}
+
+	std::vector<puyasol::splitter::SimpleSplitter::ContractAWST> splitContracts;
+	{
+		// Filter the static list to only names that are actually subroutines
+		// in this AWST.
+		std::set<std::string> presentSubs;
+		for (auto const& r : roots)
+			if (auto sub = std::dynamic_pointer_cast<puyasol::awst::Subroutine>(r))
+				presentSubs.insert(sub->name);
+
+		std::vector<std::string> toExtract;
+		for (auto const& name : kExtractedFunctions)
+			if (presentSubs.count(name))
+				toExtract.push_back(name);
+
+		if (!toExtract.empty())
+		{
+			logger.info("Extracting " + std::to_string(toExtract.size()) +
+				" function(s) into a helper contract");
+
+			puyasol::splitter::SimpleSplitter splitter;
+			splitContracts = splitter.split(roots, toExtract, /*helperIndex=*/1);
+
+			if (splitContracts.empty())
+				logger.warning("Splitter returned no result; falling back to single-contract path");
+		}
+	}
+
 	// ─── Serialization and output ─────────────────────────────────────────
 
 	// Serialize to JSON
 	puyasol::json::AWSTSerializer serializer;
-	auto awstJson = serializer.serialize(roots);
 
 	// Create output directory
 	fs::create_directories(opts.outputDir);
+
+	// Multi-contract path: one subdir per split partition, each its own
+	// awst.json / options.json / puya invocation.
+	if (!splitContracts.empty())
+	{
+		// Helper contracts come first in splitContracts; collect their names
+		// so the orchestrator's options.json can declare the uint64 template
+		// vars (`TMPL_<helperName>_APP_ID`) the orchestrator's stubs reference.
+		std::set<std::string> helperNames;
+		for (auto const& cawst : splitContracts)
+		{
+			// The orchestrator's contract id matches `roots`'s primary contract
+			// id; everything else is a helper.
+			bool isOrch = false;
+			for (auto const& r : cawst.roots)
+				if (auto c = std::dynamic_pointer_cast<puyasol::awst::Contract>(r))
+					if (c->id == cawst.contractId && c->name == cawst.contractName
+						&& cawst.contractName.find("__Helper") == std::string::npos)
+						isOrch = true;
+			if (!isOrch) helperNames.insert(cawst.contractName);
+		}
+
+		puyasol::runner::PuyaRunner runner;
+		runner.setPuyaPath(opts.puyaPath);
+		int aggregateExitCode = 0;
+		for (auto const& cawst : splitContracts)
+		{
+			fs::path subdir = fs::path(opts.outputDir) / cawst.contractName;
+			fs::create_directories(subdir);
+
+			auto subJson = serializer.serialize(cawst.roots);
+			std::string subAwstPath = (subdir / "awst.json").string();
+			{
+				std::ofstream out(subAwstPath);
+				out << subJson.dump(2) << std::endl;
+				logger.info("Wrote: " + subAwstPath);
+			}
+			std::string subOptionsPath = (subdir / "options.json").string();
+			// Orchestrator gets template-var declarations for helper app ids;
+			// helpers themselves don't need them.
+			bool isHelper = cawst.contractName.find("__Helper") != std::string::npos;
+			std::set<std::string> declareVars = isHelper ? std::set<std::string>{} : helperNames;
+			// puya keys compilation_set by the Contract's full id (file path
+			// prefixed FQN), not the short name.
+			puyasol::json::OptionsWriter::write(
+				subOptionsPath, cawst.contractId, subdir.string(),
+				opts.optimizationLevel, opts.outputIr, declareVars);
+			logger.info("Wrote: " + subOptionsPath);
+
+			if (!opts.noPuya)
+			{
+				logger.info("Invoking puya backend for '" + cawst.contractName + "'...");
+				int exitCode = runner.run(subAwstPath, subOptionsPath, opts.logLevel);
+				if (exitCode != 0)
+					aggregateExitCode = exitCode;
+			}
+		}
+		if (logger.warningCount() > 0)
+			logger.info("Completed with " + std::to_string(logger.warningCount()) + " warning(s)");
+		return aggregateExitCode;
+	}
+
+	auto awstJson = serializer.serialize(roots);
 
 	// Write awst.json
 	std::string awstPath = (fs::path(opts.outputDir) / "awst.json").string();
