@@ -316,9 +316,11 @@ def _inject_memory_init(teal: str) -> str:
 
 
 def _create_app(localnet, sender, approval: bytes, clear: bytes, schema,
-                app_args=None, fund_amount=10_000_000) -> int:
+                app_args=None, fund_amount=10_000_000,
+                extra_pages: int | None = None) -> int:
     algod = localnet.client.algod
-    extra_pages = max(0, (max(len(approval), len(clear)) - 1) // 2048)
+    if extra_pages is None:
+        extra_pages = max(0, (max(len(approval), len(clear)) - 1) // 2048)
     sp = algod.suggested_params()
     txn = ApplicationCreateTxn(
         sender=sender.address, sp=sp,
@@ -354,6 +356,7 @@ def _build_lonely_chunk():
     PUYA_VENV = Path(__file__).parent.parent.parent.parent / "puya" / ".venv" / "bin" / "puyapy"
     subprocess.run(
         [str(PUYA_VENV), str(src), "--output-bytecode",
+         "--target-avm-version", "12",
          "--out-dir", str(LONELY_CHUNK_OUT)],
         check=True, capture_output=True,
     )
@@ -439,8 +442,13 @@ def split_exchange(localnet, admin, universal_mock):
     orch_approval = _compile_teal(algod, orch_approval_teal)
     orch_clear = _compile_teal(algod, (ORCH_DIR / "CTFExchange.clear.teal").read_text())
 
+    # Deploy orch with extra_pages=3 so the lonely chunk can install up to
+    # 8KB onto it via UpdateApplication later. Without 3 extra pages, the
+    # AVM rejects an UpdateApplication that grows the program past the
+    # current cap.
     orch_app_id = _create_app(localnet, admin, orch_approval, orch_clear,
-                              orch_spec.state.schema.global_state)
+                              orch_spec.state.schema.global_state,
+                              extra_pages=3)
 
     h1_client = au.AppClient(au.AppClientParams(
         algorand=localnet, app_spec=h1_spec, app_id=h1_app_id,
@@ -509,16 +517,25 @@ def split_exchange_with_delegate(localnet, admin, split_exchange, lonely_chunk_a
 
     extra_pages = max(0, (max(len(approval_bin), len(clear_bin)) - 1) // 2048)
     sp = localnet.client.algod.suggested_params()
-    # init(uint64)void selector + orch_app_id encoded as 8-byte big-endian
-    init_selector = bytes.fromhex("1bcde52d")
+    # Pull orch's deployed approval bytes early so we can size the box.
+    orch_info = localnet.client.algod.application_info(orch.app_id)
+    orch_orig_bytes = encoding.base64.b64decode(orch_info["params"]["approval-program"])
+
+    # init(uint64,uint64,uint64)void selector + 3 × uint64 args.
+    init_selector = bytes.fromhex("69443df7")
     create = ApplicationCreateTxn(
         sender=admin.address, sp=sp,
         on_complete=OnComplete.NoOpOC,
         approval_program=approval_bin, clear_program=clear_bin,
-        global_schema=StateSchema(num_uints=1, num_byte_slices=0),
+        global_schema=StateSchema(num_uints=3, num_byte_slices=0),
         local_schema=StateSchema(num_uints=0, num_byte_slices=0),
         extra_pages=extra_pages,
-        app_args=[init_selector, orch.app_id.to_bytes(8, "big")],
+        app_args=[
+            init_selector,
+            orch.app_id.to_bytes(8, "big"),
+            len(approval_bin).to_bytes(8, "big"),
+            len(orch_orig_bytes).to_bytes(8, "big"),
+        ],
     )
     txid = localnet.client.algod.send_transaction(create.sign(admin.private_key))
     res = wait_for_confirmation(localnet.client.algod, txid, 4)
@@ -546,27 +563,22 @@ def split_exchange_with_delegate(localnet, admin, split_exchange, lonely_chunk_a
     ), send_params=AUTO_POPULATE)
 
     # Populate boxes. AVM caps total ApplicationArgs at 2048 bytes per
-    # call, so we use 1KB chunks (8 calls × 1024 bytes per box).
+    # call, so we use 1KB chunks. Each box is sized exactly to the
+    # program's actual length (no zero-padding) so the dance can install
+    # the right byte count and stay under the 8192 approval+clear cap.
     CHUNK = 1024
-    BOX_SIZE = 8192
-    chunk_self = approval_bin.ljust(BOX_SIZE, b"\x00")
-
-    # Pull orch's deployed approval program bytes (post-template-substitution).
-    orch_info = localnet.client.algod.application_info(orch.app_id)
-    orch_approval_b64 = orch_info["params"]["approval-program"]
-    orch_orig_bytes = encoding.base64.b64decode(orch_approval_b64)
-    orch_orig = orch_orig_bytes.ljust(BOX_SIZE, b"\x00")
 
     def _write_chunks(method: str, box_name: bytes, payload: bytes):
-        for offset in range(0, BOX_SIZE, CHUNK):
+        for offset in range(0, len(payload), CHUNK):
+            slice_ = payload[offset : offset + CHUNK]
             chunk_client.send.call(au.AppClientMethodCallParams(
                 method=method,
-                args=[offset, payload[offset : offset + CHUNK]],
+                args=[offset, slice_],
                 box_references=[au.BoxReference(app_id=0, name=box_name)],
                 extra_fee=au.AlgoAmount(micro_algo=10_000),
             ), send_params=AUTO_POPULATE)
 
-    _write_chunks("set_self_chunk", b"__self_bytes", chunk_self)
-    _write_chunks("set_orch_orig_chunk", b"__orch_orig_bytes", orch_orig)
+    _write_chunks("set_self_chunk", b"__self_bytes", approval_bin)
+    _write_chunks("set_orch_orig_chunk", b"__orch_orig_bytes", orch_orig_bytes)
 
     return h1, h2, orch, chunk_client

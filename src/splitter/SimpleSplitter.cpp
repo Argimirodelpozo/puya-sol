@@ -929,6 +929,43 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 		}
 	}
 
+	// Inject a `__delegate_update` ABI method that admits a self-replacing
+	// UpdateApplication call from the lonely-chunk delegate sidecar. Without
+	// this, the orchestrator's auto-generated router rejects every
+	// non-NoOp completion via `txn OnCompletion; !; assert`, so the lonely
+	// chunk's `itxn ApplicationCall(orch, OC=UpdateApplication, …)` step
+	// can't land. The body here is intentionally unguarded for now —
+	// validating that the caller is the registered lonely-chunk app id is
+	// the next step.
+	if (!orchContract && !movedSubNames.empty())
+	{
+		// Even with no method moves we may still want the update branch
+		// (e.g. delegate of a free Subroutine). Deep-copy the contract so
+		// we can append a method.
+		orchContract = std::make_shared<awst::Contract>(*primary);
+	}
+	if (orchContract)
+	{
+		auto loc = orchContract->sourceLocation;
+		awst::ContractMethod hatch;
+		hatch.cref = orchContract->id;
+		hatch.memberName = "__delegate_update";
+		hatch.returnType = awst::WType::voidType();
+		hatch.sourceLocation = loc;
+		auto block = std::make_shared<awst::Block>();
+		block->sourceLocation = loc;
+		// Empty body; puya emits a stub that returns 1 and lets the AVM
+		// apply UpdateApplication after our handler completes.
+		hatch.body = std::move(block);
+		awst::ARC4ABIMethodConfig abiCfg;
+		abiCfg.sourceLocation = loc;
+		abiCfg.allowedCompletionTypes = {4}; // UpdateApplication
+		abiCfg.create = 3;                    // Disallow
+		abiCfg.name = "__delegate_update";
+		hatch.arc4MethodConfig = abiCfg;
+		orchContract->methods.push_back(std::move(hatch));
+	}
+
 	for (auto const& r : _roots)
 	{
 		if (auto s = std::dynamic_pointer_cast<awst::Subroutine>(r))
