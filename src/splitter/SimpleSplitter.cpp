@@ -152,7 +152,19 @@ std::shared_ptr<awst::Expression> encodeArg(
 	}
 	if (wt == awst::WType::biguintType())
 	{
-		return awst::makeReinterpretCast(std::move(argExpr), awst::WType::bytesType(), loc);
+		// Pad biguint to 64 bytes (uint512) before sending across the
+		// inner-call. Helpers expect uint512-sized args (puya auto-asserts
+		// `len == 64` at the helper's router); biguint at runtime can be
+		// shorter than 64 bytes (e.g. 32 after a uint256 ARC4Decode), so
+		// we OR with bzero(64) to left-pad with zeros without changing
+		// the numeric value.
+		auto bytesArg = awst::makeReinterpretCast(std::move(argExpr), awst::WType::bytesType(), loc);
+		auto bzero = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), loc);
+		bzero->stackArgs.push_back(awst::makeIntegerConstant("64", loc));
+		auto orOp = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), loc);
+		orOp->stackArgs.push_back(std::move(bzero));
+		orOp->stackArgs.push_back(std::move(bytesArg));
+		return orOp;
 	}
 	if (wt == awst::WType::uint64Type())
 	{

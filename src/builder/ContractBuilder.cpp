@@ -3185,10 +3185,13 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			// Signed integers use the same 256-bit two's complement encoding —
 			// we keep ARC4UIntN(256) and let the test runner's _abi_safe_type
 			// helper map int<N>→uint<N> so encode/decode line up.
-			// Skip when function has modifiers or inline assembly — both reference
-			// params by their original names and would break on rename.
+			// Skip when function has inline assembly — that path references
+			// params by their original names and would break on rename. We
+			// can rename around modifiers safely because the decode runs
+			// BEFORE inlineModifiers, so the modifier sees a local with the
+			// original name holding the decoded biguint.
 			if (arg.wtype == awst::WType::biguintType() && pi < solParams.size()
-				&& _func.modifiers().empty() && !funcHasInlineAssembly)
+				&& !funcHasInlineAssembly)
 			{
 				auto const* solType = solParams[pi]->annotation().type;
 				auto const* intType = solType ? dynamic_cast<solidity::frontend::IntegerType const*>(solType) : nullptr;

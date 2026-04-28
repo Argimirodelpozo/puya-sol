@@ -142,9 +142,6 @@ def test_pause(exchange, admin):
     assert _call(exchange, "paused") is False
 
 
-@pytest.mark.xfail(reason="puya-sol uint512 arg processing hits a `len <= 32` "
-                          "overflow assert in setMaxFeeRate's body — same bug "
-                          "as v1 registerToken; needs separate investigation")
 def test_set_user_pause_block_interval(exchange, admin):
     """Admin can update the user-pause block interval. setter takes
     uint512 (64-byte big-endian); getter returns uint256."""
@@ -159,8 +156,6 @@ def test_default_max_fee_rate(exchange):
     assert _call(exchange, "getMaxFeeRate") == 500
 
 
-@pytest.mark.xfail(reason="setMaxFeeRate body has the same `len <= 32` assert "
-                          "as setUserPauseBlockInterval — uint512 arg processing")
 def test_set_max_fee_rate(exchange, admin):
     _call(exchange, "setMaxFeeRate", [1000], sender=admin)
     assert _call(exchange, "getMaxFeeRate") == 1000
@@ -177,7 +172,6 @@ def test_set_max_fee_rate_revert_exceeds_ceiling(exchange, admin):
         _call(exchange, "setMaxFeeRate", [20000], sender=admin)
 
 
-@pytest.mark.xfail(reason="setMaxFeeRate uint512 bug — same as test_set_max_fee_rate")
 def test_validate_fee_zero_rate(exchange, admin):
     """validateFee with rate 0 always passes (any fee allowed)."""
     _call(exchange, "setMaxFeeRate", [0], sender=admin)

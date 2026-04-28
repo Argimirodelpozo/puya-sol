@@ -148,7 +148,6 @@ def test_auth_non_admin_cannot_renounce(exchange, brian):
 
 # ── testRegisterToken (concrete inputs, not fuzz) ─────────────────────────
 
-@pytest.mark.xfail(reason="puya-sol uint512 arg processing hits a `len <= 32` overflow assert in registerToken's body — needs separate investigation")
 @pytest.mark.parametrize("t0,t1,cond_int", [
     (1001, 1002, 0xaaaa),
     (5555, 5556, 0xdead),
