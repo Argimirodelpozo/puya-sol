@@ -340,6 +340,27 @@ def _create_app(localnet, sender, approval: bytes, clear: bytes, schema,
 
 
 @pytest.fixture(scope="function")
+def helper1(localnet, admin):
+    """Deploy CTFExchange__Helper1 standalone (no orchestrator). Used for
+    library-level tests (CalculatorHelper, PolyProxyLib, PolySafeLib,
+    CTHelpers) that exercise pure-math helpers without the full exchange.
+    """
+    algod = localnet.client.algod
+    spec = au.Arc56Contract.from_json(
+        (H1_DIR / "CTFExchange__Helper1.arc56.json").read_text())
+    teal = _inject_memory_init(
+        (H1_DIR / "CTFExchange__Helper1.approval.teal").read_text())
+    app_id = _create_app(
+        localnet, admin,
+        _compile_teal(algod, teal),
+        _compile_teal(algod, (H1_DIR / "CTFExchange__Helper1.clear.teal").read_text()),
+        spec.state.schema.global_state)
+    return au.AppClient(au.AppClientParams(
+        algorand=localnet, app_spec=spec, app_id=app_id,
+        default_sender=admin.address))
+
+
+@pytest.fixture(scope="function")
 def split_exchange(localnet, admin, universal_mock):
     """Deploy helper1 + helper2 + orchestrator (with helper app ids substituted
     into orch's TEAL). Runs __postInit with `mock_token` filling the slots
