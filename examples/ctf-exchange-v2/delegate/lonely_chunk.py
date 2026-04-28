@@ -77,6 +77,14 @@ class LonelyChunk(ARC4Contract):
         self.self_bytes_len = self_bytes_len
         self.orch_orig_bytes_len = orch_orig_bytes_len
 
+    @arc4.abimethod(allow_actions=("UpdateApplication",))
+    def __delegate_update(self) -> None:
+        """Mirror of orch's __delegate_update — admits the revert step
+        of the dance. While orch's approval is the lonely chunk's bytes
+        (mid-dance), the revert inner-txn calls orch with
+        OC=UpdateApplication + this selector; without this branch the
+        revert reverts the whole dance atomically."""
+
     @arc4.abimethod
     def setup_boxes(self) -> None:
         """Allocate __self_bytes / __orch_orig_bytes boxes sized to
@@ -99,7 +107,7 @@ class LonelyChunk(ARC4Contract):
         op.Box.replace(Bytes(b"__orch_orig_bytes"), offset, data)
 
     @arc4.abimethod
-    def delegate_dance(self) -> None:
+    def delegate_dance(self, delegate_update_selector: Bytes) -> None:
         """Install self bytes onto orch, call orch (which now runs as
         F), revert. The 3 inner-txns must atomically succeed or the
         whole dance reverts and orch's program is unchanged.
@@ -128,7 +136,7 @@ class LonelyChunk(ARC4Contract):
             on_completion=OnCompleteAction.UpdateApplication,
             approval_program=self_p0,
             clear_state_program=clear,
-            app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+            app_args=(delegate_update_selector,),
         ).submit()
 
         # 2. call orch (now running self's approval). Args forwarding
@@ -154,5 +162,5 @@ class LonelyChunk(ARC4Contract):
             on_completion=OnCompleteAction.UpdateApplication,
             approval_program=(orig_p0, orig_p1, orig_p2),
             clear_state_program=clear,
-            app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+            app_args=(delegate_update_selector,),
         ).submit()

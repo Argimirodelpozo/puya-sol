@@ -30,13 +30,6 @@ def test_lonely_chunk_deploys_with_boxes(split_exchange_with_delegate):
     assert chunk.app_id > 0
 
 
-@pytest.mark.xfail(reason="lonely chunk's __self_bytes contains the chunk's "
-                          "own approval (no migrated F yet); installing it on "
-                          "orch and calling routes to chunk's ARC4 router which "
-                          "doesn't recognise orch's selectors → orch's NoOp "
-                          "ApplicationCall in step 2 of the dance reverts. "
-                          "Will pass once matchOrders + closure are merged "
-                          "into the lonely chunk's source.")
 def test_delegate_dance_round_trip(split_exchange_with_delegate, localnet):
     """delegate_dance: install → call → revert. Verify orch's approval
     bytes are restored after."""
@@ -47,7 +40,8 @@ def test_delegate_dance_round_trip(split_exchange_with_delegate, localnet):
     pre_approval = pre_info["params"]["approval-program"]
 
     chunk.send.call(au.AppClientMethodCallParams(
-        method="delegate_dance", args=[],
+        method="delegate_dance",
+        args=[bytes.fromhex("dc5e3798")],
         extra_fee=au.AlgoAmount(micro_algo=200_000),
         app_references=[orch.app_id],
         box_references=[
