@@ -5,6 +5,7 @@
 #include "Logger.h"
 #include "awst/WType.h"
 
+#include <deque>
 #include <memory>
 #include <set>
 #include <vector>
@@ -398,6 +399,15 @@ void collectSubroutineIds(awst::Expression const& e, std::set<std::string>& out)
 	{
 		if (auto const* id = std::get_if<awst::SubroutineID>(&sce->target))
 			out.insert(id->target);
+		// Also collect InstanceMethodTarget targets — these resolve via
+		// the contract's MRO at puya-emit time but in a delegate-extracted
+		// helper we need to make sure the target method's body is present.
+		// We tag the entry with a "memberName:" prefix so callers can route
+		// it to the method-lookup path instead of the subroutine table.
+		if (auto const* m = std::get_if<awst::InstanceMethodTarget>(&sce->target))
+			out.insert(std::string("memberName:") + m->memberName);
+		if (auto const* sm = std::get_if<awst::InstanceSuperMethodTarget>(&sce->target))
+			out.insert(std::string("memberName:") + sm->memberName);
 		for (auto const& a : sce->args)
 			if (a.value) collectSubroutineIds(*a.value, out);
 		return;
@@ -833,6 +843,7 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 		std::vector<std::shared_ptr<awst::Subroutine>> seeds;
 		for (auto const& id : refs)
 		{
+			if (id.rfind("memberName:", 0) == 0) continue;  // method ref, handled below
 			if (seenIds.count(id)) continue;
 			auto it = subById.find(id);
 			if (it != subById.end()) seeds.push_back(it->second);
@@ -845,6 +856,13 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 				helperRoots.push_back(s);
 			}
 	}
+
+	// (Method-deps walker for delegate-style helpers — pulling matchOrders'
+	// InstanceMethodTarget closure into movedMethods — was prototyped here
+	// but cascaded in unintended ways: methods like `_performOrderChecks`
+	// have WTuple returns and the orchestrator's stub ARC4Decode chain
+	// trips over the tuple type during puya emission. Left disabled until
+	// the closure-pull-in plays nicely with the stub generator.)
 
 	// Helper contract first (so test harness can deploy it before orchestrator
 	// reads its app id from a template var).
