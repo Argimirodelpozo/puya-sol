@@ -269,6 +269,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		auto result = tryHandleBytesMemoryRead(_call.arguments[0], loc);
 		if (result)
 			return result;
+		// mload(bytes_var) — read the LENGTH header (first 32 bytes of the
+		// EVM-style memory layout). On AVM, bytes have no length header,
+		// so we materialise the length from len(bytes_var).
+		auto lengthRead = tryHandleBytesMemoryLength(_call.arguments[0], loc);
+		if (lengthRead)
+			return lengthRead;
 	}
 
 	// Translate all arguments (stored in source order by the Yul parser)
@@ -669,12 +675,28 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	}
 	if (funcName == "call" || funcName == "staticcall")
 	{
-		// call/staticcall in expression context (e.g., `let success := call(...)`)
-		// is handled by the variable declaration / assignment translators.
-		// In pure expression context, we can't do the full pattern match.
-		Logger::instance().warning(
-			funcName + " in pure expression context; use let/assign form for precompile support", loc
-		);
+		// In pure expression context (e.g. `mload(staticcall(...))`), we
+		// still want to dispatch known precompile calls — solady uses this
+		// pattern for ecrecover. Run the precompile handler, queue its
+		// statements onto m_pendingStatements (so they execute before the
+		// read), then return 1 so the outer expression treats the call as
+		// having succeeded.
+		auto precompileAddr = resolveConstantYulValue(_call.arguments[1]);
+		if (precompileAddr)
+		{
+			std::vector<std::shared_ptr<awst::Statement>> precompileStmts;
+			handlePrecompileCall(_call, /*_assignTarget=*/std::string(),
+				loc, precompileStmts, /*_isCall=*/funcName == "call");
+			for (auto& s : precompileStmts)
+				m_pendingStatements.push_back(std::move(s));
+		}
+		else
+		{
+			Logger::instance().warning(
+				funcName + " in pure expression context with non-constant address — stubbed as success",
+				loc
+			);
+		}
 		auto one = awst::makeIntegerConstant("1", loc, awst::WType::biguintType());
 		return one;
 	}

@@ -53,6 +53,47 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleMload(
 	return result;
 }
 
+std::shared_ptr<awst::Expression> AssemblyBuilder::tryHandleBytesMemoryLength(
+	solidity::yul::Expression const& _addrExpr,
+	awst::SourceLocation const& _loc
+)
+{
+	// Match: mload(bytes_var) — the EVM idiom for reading the 32-byte
+	// length header that precedes the bytes payload in memory layout.
+	// AVM has no length header (bytes are length-prefixed only when
+	// stored as ARC4); the runtime length is len(bytes_var).
+	auto* paramId = std::get_if<solidity::yul::Identifier>(&_addrExpr);
+	if (!paramId)
+		return nullptr;
+
+	std::string paramName = paramId->name.str();
+	auto paramIt = m_locals.find(paramName);
+	if (paramIt == m_locals.end())
+		return nullptr;
+
+	auto const* paramType = paramIt->second;
+	bool isBytesLike = paramType == awst::WType::bytesType()
+		|| paramType == awst::WType::stringType();
+	// Memory aggregates (arrays, structs) live as ARC4-encoded bytes at
+	// runtime; their `mload(var)` would also be a length read, but their
+	// length encoding is different (header at offset 0). For now only
+	// handle plain bytes/string.
+	if (!isBytesLike)
+		return nullptr;
+
+	Logger::instance().debug(
+		"mload bytes-length: len(" + paramName + ")", _loc
+	);
+
+	auto paramVar = awst::makeVarExpression(paramName, paramType, _loc);
+	auto len = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
+	len->stackArgs.push_back(std::move(paramVar));
+	// mload returns uint256 in EVM. Convert uint64 → biguint via itob.
+	auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
+	itob->stackArgs.push_back(std::move(len));
+	return awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
+}
+
 std::shared_ptr<awst::Expression> AssemblyBuilder::tryHandleBytesMemoryRead(
 	solidity::yul::Expression const& _addrExpr,
 	awst::SourceLocation const& _loc

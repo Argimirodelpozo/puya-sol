@@ -500,6 +500,15 @@ private:
 		awst::SourceLocation const& _loc
 	);
 
+	/// Try to match mload(bytes_var) pattern — Solidity's idiom for
+	/// reading the 32-byte length header that precedes a bytes memory
+	/// variable's payload in EVM memory. AVM has no length header, so
+	/// this resolves to len(bytes_var) widened to uint256.
+	std::shared_ptr<awst::Expression> tryHandleBytesMemoryLength(
+		solidity::yul::Expression const& _addrExpr,
+		awst::SourceLocation const& _loc
+	);
+
 	/// Try to match mstore(add(bytes_var, 32), value) pattern.
 	/// Detects writes to the data region of a bytes/string memory variable
 	/// and translates to a variable assignment instead of blob access.

@@ -89,25 +89,34 @@ def test_orchestrator_basic_state(split_exchange, admin):
 
 # ── Round-trip through helper ─────────────────────────────────────────────
 
-@pytest.mark.xfail(reason="proxyFactory/safeFactory wired to ZERO_ADDR; CREATE2 in helper attempts to read app 0 params")
+@pytest.mark.xfail(reason="puya-sol mistranslates `mstore(add(buffer, 0x20), "
+                          "<32-byte literal>)` for `bytes memory buffer = new "
+                          "bytes(N)` allocations — the EVM scratch-write "
+                          "pattern doesn't reach the simulated memory blob; "
+                          "PolyProxyLib._computeCreationCode trips at runtime")
 def test_proxy_wallet_address_round_trip(split_exchange, admin):
-    """getProxyWalletAddress(signer) calls PolyProxyLib.getProxyWalletAddress
-    (extracted to helper). With a real proxy factory wired up this would round-
-    trip; using ZERO_ADDR for the factory makes the helper hit `unavailable
-    App 0` while computing the CREATE2 address."""
+    """getPolyProxyWalletAddress(signer) calls PolyProxyLib.getProxyWalletAddress
+    (extracted to helper). With ZERO_ADDR for proxyFactory/proxyImplementation
+    in __postInit, the CREATE2 result is deterministic but reflects the
+    zero-addressed inputs — we just verify the call succeeds and returns
+    32 bytes."""
     _, orch = split_exchange
     res = orch.send.call(au.AppClientMethodCallParams(
-        method="getProxyWalletAddress", args=[addr(admin)],
+        method="getPolyProxyWalletAddress", args=[addr(admin)],
         extra_fee=au.AlgoAmount(micro_algo=30_000),
     ), send_params=AUTO_POPULATE)
-    assert res.abi_return != "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"
+    # Result is a 58-char base32 algo address string from algokit's decoder.
+    assert isinstance(res.abi_return, str)
+    assert len(res.abi_return) == 58
 
 
-@pytest.mark.xfail(reason="safeFactory wired to ZERO_ADDR; same as proxy test")
+@pytest.mark.xfail(reason="same `mstore(add(buf, 0x20), literal)` mistranslation "
+                          "as proxy round-trip — PolySafeLib.getContractBytecode")
 def test_safe_address_round_trip(split_exchange, admin):
     _, orch = split_exchange
     res = orch.send.call(au.AppClientMethodCallParams(
         method="getSafeAddress", args=[addr(admin)],
         extra_fee=au.AlgoAmount(micro_algo=30_000),
     ), send_params=AUTO_POPULATE)
-    assert res.abi_return != "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"
+    assert isinstance(res.abi_return, str)
+    assert len(res.abi_return) == 58

@@ -173,6 +173,36 @@ def _compile_teal(algod, teal_text: str) -> bytes:
     return encoding.base64.b64decode(algod.compile(teal_text)["result"])
 
 
+def _inject_memory_init(teal: str) -> str:
+    """puya only emits the simulated-EVM memory-buffer prologue for
+    contracts whose AWST has a constructor; split helpers don't get one.
+    Methods that load scratch slot 0 (PolyProxyLib._computeCreationCode,
+    PolySafeLib.getContractBytecode, ...) see uint64 0 instead of the
+    4KB zero buffer and panic. Inject the prologue manually right after
+    the bytecblock.
+    """
+    init = (
+        "    pushint 4096\n"
+        "    bzero\n"
+        "    dup\n"
+        "    store 5\n"
+        "    store 0\n"
+        "    load 0\n"
+        "    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080\n"
+        "    replace2 64\n"
+        "    store 0\n"
+    )
+    lines = teal.splitlines()
+    out = []
+    inserted = False
+    for ln in lines:
+        out.append(ln)
+        if not inserted and ln.lstrip().startswith("bytecblock"):
+            out.append(init.rstrip("\n"))
+            inserted = True
+    return "\n".join(out) + "\n"
+
+
 ORCH_DIR = SPLIT_DIR / "CTFExchange"
 TMPL_VAR = "TMPL_CTFExchange__Helper1_APP_ID"
 
@@ -214,8 +244,8 @@ def split_exchange(localnet, admin):
 
     helper_spec = au.Arc56Contract.from_json(
         (HELPER_DIR / "CTFExchange__Helper1.arc56.json").read_text())
-    helper_approval = _compile_teal(algod,
-        (HELPER_DIR / "CTFExchange__Helper1.approval.teal").read_text())
+    helper_approval = _compile_teal(algod, _inject_memory_init(
+        (HELPER_DIR / "CTFExchange__Helper1.approval.teal").read_text()))
     helper_clear = _compile_teal(algod,
         (HELPER_DIR / "CTFExchange__Helper1.clear.teal").read_text())
     helper_app_id = _create_app(localnet, admin, helper_approval, helper_clear,
@@ -250,7 +280,18 @@ def split_exchange(localnet, admin):
         app_id=orch_app_id, default_sender=admin.address,
     ))
 
+    # Deploy v2's UniversalMock as the proxy/safe factory stand-in. It
+    # responds to .getImplementation() / .masterCopy() / .proxyCreationCode()
+    # / .approve() / .setApprovalForAll() with safe defaults so the
+    # orchestrator's __postInit and the proxy/safe-wallet derivation paths
+    # don't blow up on inner-calls into a zero address.
+    universal_mock_dir = (
+        OUT_DIR.parent.parent / "ctf-exchange-v2" / "out" / "test" / "dev" / "mocks" / "UniversalMock"
+    )
+    universal_mock = deploy_app(localnet, admin, universal_mock_dir, "UniversalMock")
+
     coll_addr = app_id_to_address(collateral.app_id)
+    factory_addr = app_id_to_address(universal_mock.app_id)
     composer = localnet.new_group()
     for i in range(6):
         composer.add_app_call_method_call(orch_client.params.call(
@@ -261,9 +302,9 @@ def split_exchange(localnet, admin):
     composer.add_app_call_method_call(orch_client.params.call(
         au.AppClientMethodCallParams(
             method="__postInit",
-            args=[coll_addr, coll_addr, ZERO_ADDR, ZERO_ADDR],
-            extra_fee=au.AlgoAmount(micro_algo=20_000),
-            app_references=[collateral.app_id],
+            args=[coll_addr, coll_addr, factory_addr, factory_addr],
+            extra_fee=au.AlgoAmount(micro_algo=30_000),
+            app_references=[collateral.app_id, universal_mock.app_id],
         )))
     composer.send(AUTO_POPULATE)
     return helper_client, orch_client
