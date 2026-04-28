@@ -491,8 +491,15 @@ njson AWSTSerializer::serializeExpression(awst::Expression const& _expr)
 	}
 	else if (auto const* e = dynamic_cast<awst::BoxPrefixedKeyExpression const*>(&_expr))
 	{
-		j["prefix"] = serializeExpression(*e->prefix);
-		j["key"] = serializeExpression(*e->key);
+		// puya 5.x dropped BoxPrefixedKeyExpression; lower to IntrinsicCall(concat).
+		// The wtype/source_location set above are reused as-is.
+		j["_type"] = "IntrinsicCall";
+		j["op_code"] = "concat";
+		j["immediates"] = njson::array();
+		njson sargs = njson::array();
+		sargs.push_back(serializeExpression(*e->prefix));
+		sargs.push_back(serializeExpression(*e->key));
+		j["stack_args"] = std::move(sargs);
 	}
 	else if (auto const* e = dynamic_cast<awst::AppStateExpression const*>(&_expr))
 	{
@@ -795,10 +802,17 @@ njson AWSTSerializer::serializeWType(awst::WType const* _type)
 	case awst::WTypeKind::ARC4Struct:
 	{
 		auto const* at = static_cast<awst::ARC4Struct const*>(_type);
-		njson fields = njson::object();
+		// puya expects fields as an array of WTypeField {name, wtype, description}
+		njson fields = njson::array();
 		for (auto const& [k, v]: at->fields())
-			fields[k] = serializeWType(v);
-		j["fields"] = fields;
+		{
+			njson field;
+			field["name"] = k;
+			field["wtype"] = serializeWType(v);
+			field["description"] = nullptr;
+			fields.push_back(std::move(field));
+		}
+		j["fields"] = std::move(fields);
 		j["frozen"] = at->frozen();
 		j["arc4_alias"] = nullptr;
 		j["source_location"] = nullptr;

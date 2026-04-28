@@ -243,6 +243,22 @@ void AssemblyBuilder::buildStatement(
 						else
 						{
 							auto caseVal = buildLiteral(*yulCase.value);
+							// puya validates that all cases share the value's wtype.
+							// buildLiteral defaults numeric literals to biguint, so if
+							// the switch value is uint64 we re-issue the constant with
+							// uint64 wtype rather than coerce — keeps the constant
+							// foldable.
+							if (yulCase.value->kind == solidity::yul::LiteralKind::Number
+								&& switchNode->value
+								&& switchNode->value->wtype == awst::WType::uint64Type())
+							{
+								auto const& val = yulCase.value->value.value();
+								std::ostringstream oss;
+								oss << val;
+								caseVal = awst::makeIntegerConstant(
+									oss.str(), makeLoc(yulCase.value->debugData),
+									awst::WType::uint64Type());
+							}
 							switchNode->cases.emplace_back(
 								std::move(caseVal), std::move(caseBlock));
 						}

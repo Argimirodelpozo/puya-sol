@@ -235,7 +235,16 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 			if (pName == name) found = true;
 		if (!found)
 		{
-			auto* type = m_ctx.typeMapper->map(varDecl->type());
+			// `.slot` / `.offset` references resolve to a slot or byte-offset
+			// number in Yul (uint256 stack value). Use uint64 here rather than
+			// the underlying variable's value type — otherwise the param's
+			// wtype matches the storage struct (e.g. OrderStatus) and `__slot`
+			// gets the wrong type at the call site.
+			awst::WType const* type = nullptr;
+			if (extInfo.suffix == "slot" || extInfo.suffix == "offset")
+				type = awst::WType::uint64Type();
+			else
+				type = m_ctx.typeMapper->map(varDecl->type());
 			augmentedParams.emplace_back(name, type);
 		}
 

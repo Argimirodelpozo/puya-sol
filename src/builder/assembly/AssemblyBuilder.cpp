@@ -810,6 +810,24 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBool(
 		return cmp;
 	}
 
+	// Yul `if value {}` admits any uint256, including stack words that we
+	// type as fixed-size bytes (e.g., bytes32 EIP-712 hashes). Compare to a
+	// zero buffer of matching length — same semantics, satisfies puya's
+	// bool-only condition validator.
+	if (_expr->wtype && _expr->wtype->kind() == awst::WTypeKind::Bytes)
+	{
+		auto const* bw = dynamic_cast<awst::BytesWType const*>(_expr->wtype);
+		size_t len = (bw && bw->length()) ? static_cast<size_t>(*bw->length()) : 32u;
+		auto zeros = awst::makeBytesConstant(std::vector<uint8_t>(len, 0), _loc, awst::BytesEncoding::Base16, _expr->wtype);
+		auto cmp = std::make_shared<awst::BytesComparisonExpression>();
+		cmp->sourceLocation = _loc;
+		cmp->wtype = awst::WType::boolType();
+		cmp->lhs = std::move(_expr);
+		cmp->op = awst::EqualityComparison::Ne;
+		cmp->rhs = std::move(zeros);
+		return cmp;
+	}
+
 	return _expr;
 }
 

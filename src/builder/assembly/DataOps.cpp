@@ -360,8 +360,26 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 
 	if (!offset || !length)
 	{
-		Logger::instance().error("keccak256 with non-constant offset/length not supported", _loc);
-		return nullptr;
+		// Either offset or length (or both) are runtime values. AVM's keccak256
+		// opcode accepts any-length bytes, so we just read the slice from the
+		// EVM memory blob via runtime extract3 and hash it.
+		auto offsetU64 = offset
+			? std::static_pointer_cast<awst::Expression>(awst::makeIntegerConstant(std::to_string(*offset), _loc))
+			: offsetToUint64(_args[0], _loc);
+		auto lengthU64 = length
+			? std::static_pointer_cast<awst::Expression>(awst::makeIntegerConstant(std::to_string(*length), _loc))
+			: offsetToUint64(_args[1], _loc);
+
+		auto data = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
+		data->stackArgs.push_back(memoryVar(_loc));
+		data->stackArgs.push_back(std::move(offsetU64));
+		data->stackArgs.push_back(std::move(lengthU64));
+
+		auto keccak = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), _loc);
+		keccak->stackArgs.push_back(std::move(data));
+
+		auto castResult = awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
+		return castResult;
 	}
 
 	int numSlots = static_cast<int>(*length / 0x20);

@@ -478,6 +478,20 @@ private:
 		solidity::yul::Expression const& _expr
 	);
 
+	/// Lower a non-precompile Yul `call`/`staticcall` to an Algorand inner app
+	/// call. The address argument is treated as an Algorand application id
+	/// using puya-sol's address convention (\x00*24 ++ itob(app_id)). The
+	/// calldata region is materialized as raw bytes and passed in
+	/// ApplicationArgs[0]. On return, if outSize > 0, itxn LastLog is copied
+	/// into the caller's memory blob at outOffset.
+	void handleAppCall(
+		solidity::yul::FunctionCall const& _call,
+		std::string const& _assignTarget,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out,
+		bool _isCall
+	);
+
 	/// Try to match mload(add(add(bytes_param, 32), offset)) pattern.
 	/// Detects reads from bytes memory parameters with variable offset
 	/// and translates to extract3(param, offset, 32) instead of blob access.

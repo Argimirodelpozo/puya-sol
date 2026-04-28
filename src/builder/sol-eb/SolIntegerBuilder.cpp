@@ -49,7 +49,18 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::promoteToBigUInt(
 		return bigConst;
 	}
 
-	// itob → ReinterpretCast to biguint
+	// account / fixed-bytes / dynamic bytes are already big-endian byte buffers;
+	// reinterpret-cast to biguint directly (itob is uint64-only).
+	if (_expr->wtype == awst::WType::accountType()
+		|| (_expr->wtype && _expr->wtype->kind() == awst::WTypeKind::Bytes))
+	{
+		auto bytesExpr = _expr->wtype == awst::WType::accountType()
+			? awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc)
+			: std::move(_expr);
+		return awst::makeReinterpretCast(std::move(bytesExpr), awst::WType::biguintType(), _loc);
+	}
+
+	// uint64 → biguint via itob → ReinterpretCast (still the canonical path)
 	auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
 	itob->stackArgs.push_back(std::move(_expr));
 

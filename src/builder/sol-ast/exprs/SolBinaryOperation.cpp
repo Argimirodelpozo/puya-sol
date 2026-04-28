@@ -328,6 +328,16 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 		-> std::shared_ptr<awst::Expression> {
 		if (expr->wtype == awst::WType::biguintType())
 			return expr;
+		// itob is uint64-only. account / fixed-bytes / dynamic bytes are already
+		// big-endian bytes; reinterpret-cast to biguint without going through itob.
+		if (expr->wtype == awst::WType::accountType()
+			|| (expr->wtype && expr->wtype->kind() == awst::WTypeKind::Bytes))
+		{
+			auto bytesExpr = expr->wtype == awst::WType::accountType()
+				? awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), m_loc)
+				: std::move(expr);
+			return awst::makeReinterpretCast(std::move(bytesExpr), awst::WType::biguintType(), m_loc);
+		}
 		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
 		itob->stackArgs.push_back(std::move(expr));
 		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
@@ -755,6 +765,16 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 		-> std::shared_ptr<awst::Expression> {
 		if (expr->wtype == awst::WType::biguintType())
 			return expr;
+		// itob is uint64-only. account / fixed-bytes / dynamic bytes are already
+		// big-endian bytes; reinterpret-cast to biguint without going through itob.
+		if (expr->wtype == awst::WType::accountType()
+			|| (expr->wtype && expr->wtype->kind() == awst::WTypeKind::Bytes))
+		{
+			auto bytesExpr = expr->wtype == awst::WType::accountType()
+				? awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), m_loc)
+				: std::move(expr);
+			return awst::makeReinterpretCast(std::move(bytesExpr), awst::WType::biguintType(), m_loc);
+		}
 		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
 		itob->stackArgs.push_back(std::move(expr));
 		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);

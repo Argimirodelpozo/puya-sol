@@ -477,6 +477,29 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 	if (!_expr || !_targetType || _expr->wtype == _targetType)
 		return _expr;
 
+	// account ↔ biguint / fixed-bytes: account is bytes32-backed, so a
+	// reinterpret-cast is correct in both directions. This handles Solidity
+	// `address` state vars whose storage slot was mapped to biguint or
+	// bytes32 by the storage layer.
+	if (_expr->wtype == awst::WType::accountType()
+		&& (_targetType == awst::WType::biguintType()
+			|| (_targetType && _targetType->kind() == awst::WTypeKind::Bytes)))
+	{
+		auto bytesExpr = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
+		if (_targetType == awst::WType::bytesType())
+			return bytesExpr;
+		return awst::makeReinterpretCast(std::move(bytesExpr), _targetType, _loc);
+	}
+	if (_targetType == awst::WType::accountType()
+		&& (_expr->wtype == awst::WType::biguintType()
+			|| (_expr->wtype && _expr->wtype->kind() == awst::WTypeKind::Bytes)))
+	{
+		auto bytesExpr = _expr->wtype == awst::WType::bytesType()
+			? std::move(_expr)
+			: awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
+		return awst::makeReinterpretCast(std::move(bytesExpr), _targetType, _loc);
+	}
+
 	// Numeric cast (uint64 ↔ biguint)
 	_expr = implicitNumericCast(std::move(_expr), _targetType, _loc);
 	if (_expr->wtype == _targetType)
