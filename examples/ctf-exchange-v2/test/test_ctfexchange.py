@@ -239,15 +239,14 @@ def test_hash_order(exchange, admin):
 
 # ── matchOrders (currently delegated, lonely-chunk runtime not wired) ─────
 
-@pytest.mark.xfail(reason="matchOrders is --force-delegate; the lonely-chunk "
-                          "runtime that swaps orch's approval to F isn't "
-                          "wired up yet — every matchOrders call hits the "
-                          "stub which inner-calls helper3 (TMPL=0)")
 def test_match_orders_revert_no_maker_orders(exchange, admin):
-    """matchOrders with empty maker list reverts NotCrossing."""
+    """matchOrders with empty maker list reverts NoMakerOrders. The orch's
+    matchOrders stub inner-calls helper2.matchOrders (where the body lives),
+    which sees the empty array and reverts immediately — before any storage
+    or signature check runs."""
     cond_id = list((0xaaaa).to_bytes(32, "big"))
     taker = _empty_order(addr(admin), side=0)
     with pytest.raises(LogicError):
         _call(exchange, "matchOrders",
-            [cond_id, taker, [], (0).to_bytes(64, "big"), [], (0).to_bytes(64, "big"), []],
+            [cond_id, taker, [], 0, [], 0, []],
             sender=admin, extra_fee=200_000)
