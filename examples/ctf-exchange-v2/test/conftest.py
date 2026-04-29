@@ -606,10 +606,17 @@ def _build_split_exchange(localnet, admin, *, collateral_app_id, ctf_app_id,
     # orch→user transfers (MINT/MERGE distribute) `from == orch != helper1`,
     # so the approval check fires and asserts "not approved operator".
     # Explicitly grant helper1 setApprovalForAll on the CTF, post-init.
+    #
+    # Use helper1's REAL Algorand address (sha512_256("appID" || app_id))
+    # rather than puya-sol's storage-slot convention (24 zeros + itob(app_id))
+    # — when helper1 later calls CTFMock as an inner-tx, `op.Txn.sender`
+    # at the receiver is the real algorand address, so the approval box
+    # has to be keyed against that.
+    from dev.addrs import algod_addr_bytes_for_app
     composer.add_app_call_method_call(orch_client.params.call(
         au.AppClientMethodCallParams(
             method="_avmPortGrantCtfOperator",
-            args=[app_id_to_address(h1_app_id)],
+            args=[algod_addr_bytes_for_app(h1_app_id)],
             extra_fee=au.AlgoAmount(micro_algo=10_000),
             app_references=[ctf_app_id, h1_app_id])))
     composer.send(AUTO_POPULATE)
