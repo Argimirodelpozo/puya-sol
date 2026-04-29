@@ -1,5 +1,20 @@
 # puya-sol
 
+> [!CAUTION]
+> **AI-assisted proof-of-concept. Side project. NOT production-ready.**
+>
+> This is an experimental compiler being built largely through pair-programming with AI coding assistants (Claude). It is:
+>
+> - **Not audited.** No security review has been performed on any part of the toolchain — neither the compiler itself nor any TEAL it emits.
+> - **Not officially supported** by the Algorand Foundation, the puya project, or any other organization. This is a personal side project.
+> - **A research/PoC effort**, not a stable release. APIs, AWST shapes, codegen patterns, output formats, and even successful test counts can change between commits without notice.
+> - **Likely to mis-compile contracts in subtle ways.** ~18% of the upstream Solidity semantic tests still fail or compile-error, and many real-world ports rely on workarounds, in-tree test patches, or features that diverge from EVM semantics (e.g., ARC4 selectors instead of keccak256, AVM box layout instead of EVM storage slots, no try/catch).
+> - **Not production money safe.** Do not deploy compiler output to MainNet, do not handle real funds with anything emitted by this tool, and do not assume security properties of the original Solidity contracts carry over to the TEAL output.
+>
+> Use at your own risk. If you find this useful for experimentation, prototyping, or research — great. If you're considering it for anything that touches user funds, real assets, or production systems: **don't**.
+
+---
+
 Solidity → AVM (Algorand) compiler. Translates unmodified `.sol` source through Solidity's frontend to AWST (Algorand's WebAssembly-shaped IR), then hands off to [`puya`](https://github.com/algorandfoundation/puya) for AWST → TEAL lowering.
 
 The pipeline:
