@@ -4,11 +4,11 @@
 
 BASEDIR="/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol"
 PUYA_SOL="$BASEDIR/build/puya-sol"
-PUYA_PATH="/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya/.venv/bin/puya"
-CONTRACTS="$BASEDIR/examples/solady/contracts"
+PUYA_PATH="$BASEDIR/puya/.venv/bin/puya"
+CONTRACTS="$BASEDIR/WIP/examples/solady/contracts"
 WRAPPERS="$CONTRACTS/wrappers"
-OUTDIR="$BASEDIR/examples/solady/out"
-RESULTS="$BASEDIR/examples/solady/compile_results.txt"
+OUTDIR="$BASEDIR/WIP/examples/solady/out"
+RESULTS="$BASEDIR/WIP/examples/solady/compile_results.txt"
 
 echo "Solady Compilation Results - $(date)" > "$RESULTS"
 echo "========================================" >> "$RESULTS"
