@@ -28,7 +28,7 @@ The pipeline:
 
 ## Status
 
-**1083 / 1322 (82%)** Solidity semantic tests passing as of the latest version. See [`tests/solidity-semantic-tests/CURRENT.md`](tests/solidity-semantic-tests/CURRENT.md) for the running changelog.
+**1083 / 1322 (82%)** Solidity semantic tests passing as of the latest version. See [`tests/solidity-semantic-tests/`](tests/solidity-semantic-tests/).
 
 Real-world ports compiling and running on AVM localnet (under [`WIP/examples/`](WIP/examples/)):
 
