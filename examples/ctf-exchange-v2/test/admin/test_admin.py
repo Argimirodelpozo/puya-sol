@@ -1,17 +1,26 @@
 """Admin / role / pause tests for v2 contracts using Solady's OwnableRoles.
 
-KNOWN ISSUE: Solady's `_initializeOwner` and `_setOwner` use the EVM-specific
-address-cleanup pattern `shr(96, shl(96, newOwner))` to mask upper 96 bits of
-a 256-bit word holding a 20-byte address. On AVM with 32-byte addresses this
-silently truncates the owner address, leaving 12 leading bytes zero. As a
-result, `owner()` returns a corrupted value and every `onlyOwner` check
-reverts when called from a non-app account.
+KNOWN ISSUE: `initialize(address _owner)` body sees zero instead of the
+passed address. Looking at the emitted TEAL, the ABI router does
+`txna ApplicationArgs 1; len; 32; ==; assert` — the address value is
+read for the length check and consumed without a `dup`, so it never
+reaches a frame slot. By the time `_initializeOwner(_owner)` runs in
+the modifier-expanded body, `_owner` reads back zero. Solady's
+`_setOwner` then writes zero to the OWNER_SLOT, and every subsequent
+`onlyOwner` reverts.
 
-This affects every Solady-Ownable-derived contract until either puya-sol
-recognizes the shl/shr address-cleanup pattern as a no-op for 32-byte
-addresses, or the Solady source is patched. Tests that depend on a working
-owner are marked xfail with the reason; getter tests that don't go through
-ownership work fine.
+The address-cleanup `shr(96, shl(96, x))` peephole in puya-sol is fine —
+that part is handled. The actual block is that puya's optimiser drops
+the dup-and-store at the router (likely because the body's
+`VarExpression(_owner)` references are buried inside the `initializer`
+modifier's `do { ... } while (true) { break }` WhileLoop, which puya
+collapses during single-iteration analysis). Routing the arg through
+paramDecodes (no-op reinterpret cast OR an explicit `txna ApplicationArgs N`
+re-read) didn't help — puya CSE-eliminates both.
+
+The fix likely needs either (a) puya backend support for marking ABI args
+keep-alive, or (b) puya-sol detecting Solady's `initializer` modifier
+pattern and bypassing the WhileLoop wrapping. Both are bigger surgery.
 """
 import algokit_utils as au
 import pytest
@@ -20,7 +29,11 @@ from algosdk import encoding
 from conftest import AUTO_POPULATE, addr
 
 
-SOLADY_OWNERSHIP_BROKEN = "Solady's shl/shr address-cleanup truncates 32-byte AVM addresses"
+SOLADY_OWNERSHIP_BROKEN = (
+    "puya optimiser drops the address arg's dup-and-store at the ABI router "
+    "for `initialize(address)` — body reads zero instead of the passed value. "
+    "Affects every Solady-Ownable-derived contract."
+)
 
 
 def _call(client, method, args=None, sender=None, extra_fee=20_000, populate=AUTO_POPULATE):
