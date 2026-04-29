@@ -307,17 +307,6 @@ def test_match_orders_merge_fees(split_settled_with_delegate):
     pytest.fail("merge with fees")
 
 
-@pytest.mark.xfail(
-    reason="AVM-port architectural gap: taker-SELL settlement routes USDC "
-           "through `address(this)` (orch) using `token.transfer` from the "
-           "exchange to bob/feeReceiver. In Solidity msg.sender at USDC == "
-           "exchange, but in the AVM port helper1 is the immediate caller, "
-           "so USDC sees helper1 as sender — and helper1 has no balance. "
-           "Fix path: helper3's `_transferCollateral(from=this, ...)` "
-           "should emit `_transferFromERC20` with from=orch + a "
-           "pre-set orch->helper1 approval, mirroring the Solidity flow.",
-    strict=False,
-)
 def test_match_orders_complementary_fees_surplus(split_settled_with_delegate):
     """test_MatchOrders_Complementary_Fees_Surplus: taker SELLs 100 YES at
     50c (offers 100 YES for 50 USDC), maker BUYs at 60c (offers 60 USDC
@@ -1483,10 +1472,82 @@ def test_balance_deltas_multimaker_complementary_taker_buy(split_settled_with_de
     assert usdc_balance(usdc, dave_addr) == 100_000_000
 
 
-@pytest.mark.xfail(reason=SETTLEMENT_INFRA, strict=False)
 def test_balance_deltas_multimaker_complementary_taker_sell(split_settled_with_delegate):
-    """test_BalanceDeltas_MultiMaker_Complementary_TakerSell"""
-    pytest.fail("multi-maker")
+    """test_BalanceDeltas_MultiMaker_Complementary_TakerSell: bob SELLs 300
+    YES for 150 USDC matched against carla (BUY 100 YES @ 50 USDC) +
+    dave (BUY 200 YES @ 100 USDC). Routes USDC through the
+    exchange-as-intermediate; verifies the cleaned-up
+    `_transferERC20` codegen (no longer extracted to helper1) so
+    msg.sender at USDC = the exchange itself."""
+    from dev.signing import dave as dave_signer_fn
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer, carla_signer, dave_signer = bob(), carla(), dave_signer_fn()
+    bob_addr = bob_signer.eth_address_padded32
+    carla_addr = carla_signer.eth_address_padded32
+    dave_addr = dave_signer.eth_address_padded32
+
+    yes_id, no_id = _canonical_yes_no_ids(orch, h1)
+    prepare_condition(ctf, CONDITION_ID, yes_id, no_id)
+    h1_addr = algod_addr_bytes_for_app(h1.app_id)
+    orch_addr = algod_addr_bytes_for_app(orch.app_id)
+    deal_outcome_and_approve(ctf, bob_addr, h1_addr, yes_id, 300_000_000)
+    deal_usdc_and_approve(usdc, carla_addr, h1_addr, 50_000_000)
+    deal_usdc_and_approve(usdc, dave_addr, h1_addr, 100_000_000)
+
+    taker = make_order(maker=bob_addr, token_id=yes_id,
+        maker_amount=300_000_000, taker_amount=150_000_000, side=Side.SELL)
+    maker_carla = make_order(maker=carla_addr, token_id=yes_id,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
+    maker_dave = make_order(maker=dave_addr, token_id=yes_id,
+        maker_amount=100_000_000, taker_amount=200_000_000, side=Side.BUY)
+    maker_dave.salt = 2
+    t = sign_order(orch, taker, bob_signer)
+    mc = sign_order(orch, maker_carla, carla_signer)
+    md = sign_order(orch, maker_dave, dave_signer)
+
+    from hashlib import sha256
+    yes_bytes = yes_id.to_bytes(32, "big")
+    inner_boxes = [
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(bob_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(carla_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(dave_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"ap_" + sha256(bytes(bob_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id,
+                        name=b"a_" + sha256(bytes(carla_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id,
+                        name=b"a_" + sha256(bytes(dave_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(carla_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(dave_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(bob_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(orch_addr)),
+    ]
+    dance_match_orders(
+        chunk, orch,
+        condition_id=CONDITION_ID,
+        taker_order_list=t.to_abi_list(),
+        maker_orders_list=[mc.to_abi_list(), md.to_abi_list()],
+        taker_fill_amount=300_000_000,
+        maker_fill_amounts=[50_000_000, 100_000_000],
+        taker_fee_amount=0, maker_fee_amounts=[0, 0],
+        extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+        extra_box_refs=inner_boxes,
+    )
+
+    # Bob: spent 300 YES, received 150 USDC.
+    assert ctf_balance(ctf, bob_addr, yes_id) == 0
+    assert usdc_balance(usdc, bob_addr) == 150_000_000
+    # Carla: spent 50 USDC, received 100 YES.
+    assert usdc_balance(usdc, carla_addr) == 0
+    assert ctf_balance(ctf, carla_addr, yes_id) == 100_000_000
+    # Dave: spent 100 USDC, received 200 YES.
+    assert usdc_balance(usdc, dave_addr) == 0
+    assert ctf_balance(ctf, dave_addr, yes_id) == 200_000_000
+    # Exchange (orch) holds nothing after.
+    assert usdc_balance(usdc, orch_addr) == 0
 
 
 def test_balance_deltas_varied_fill_amounts_different_prices(split_settled_with_delegate):
