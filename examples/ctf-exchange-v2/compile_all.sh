@@ -65,9 +65,16 @@ compile() {
     fi
 }
 
+# Compile production sources plus the test-only mocks under
+# src/test/dev/mocks/ — the latter are needed by the python test fixtures
+# (USDC, ERC1271 mocks, UniversalMock, etc.). Other test/ paths (Foundry
+# .t.sol/.s.sol files, BaseExchangeTest helpers) are skipped: they're
+# Foundry-specific and don't survive puya-sol translation.
 while IFS= read -r f; do
     compile "$f"
-done < <(find "$SRC" -name "*.sol" -not -path "*/test/*" -not -name "*.s.sol" -not -name "*.t.sol" | sort)
+done < <(find "$SRC" -name "*.sol" \
+    -not -name "*.s.sol" -not -name "*.t.sol" \
+    \( -not -path "*/test/*" -o -path "*/test/dev/mocks/*" \) | sort)
 
 pass=$(grep -c "^PASS:" "$RESULTS" || true)
 skip=$(grep -c "^SKIP:" "$RESULTS" || true)
