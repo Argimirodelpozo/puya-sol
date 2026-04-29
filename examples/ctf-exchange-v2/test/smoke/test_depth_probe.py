@@ -245,6 +245,322 @@ def test_depth_probe_chain3_box_ref_on_sibling_txn(probe_factory, admin):
     )
 
 
+def test_match_orders_diagnostic_dump_args(split_settled_with_delegate):
+    """Run the dance via simulate (which fails the same way as send), then
+    walk the simulate_response['txn-groups'][0]['txn-results'] to find
+    the failing inner-tx and dump its ApplicationArgs. Identifies what
+    `from` helper3 is actually passing to helper1 (and helper1 to ctf)."""
+    from hashlib import sha256
+    import base64
+    from algosdk.v2client.models.simulate_request import (
+        SimulateRequest, SimulateRequestTransactionGroup, SimulateTraceConfig,
+    )
+    from algosdk.atomic_transaction_composer import (
+        EmptySigner, AtomicTransactionComposer,
+    )
+    from dev.deals import (deal_outcome, deal_outcome_and_approve,
+        deal_usdc_and_approve, prepare_condition, set_approval, ctf_balance)
+    from dev.match_dispatch import (encode_match_orders_args, DELEGATE_UPDATE_SEL,
+        MATCH_ORDERS_SEL)
+    from dev.orders import make_order, sign_order, Side
+    from dev.signing import bob as bob_signer_fn, carla as carla_signer_fn
+    from dev.addrs import algod_addr_bytes_for_app
+
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer = bob_signer_fn()
+    carla_signer = carla_signer_fn()
+    bob_addr = bob_signer.eth_address_padded32
+    carla_addr = carla_signer.eth_address_padded32
+
+    # Compute canonical YES_ID/NO_ID via helper1 (matchOrders validates
+    # tokenIds against `getPositionId(ctfCollateral, getCollectionId(0,
+    # conditionId, indexSet))`).
+    raw_coll = orch.send.call(au.AppClientMethodCallParams(
+        method="getCtfCollateral", args=[],
+        extra_fee=au.AlgoAmount(micro_algo=200_000),
+    ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return
+    if isinstance(raw_coll, str):
+        from algosdk.encoding import decode_address
+        ctf_coll = decode_address(raw_coll)
+    else:
+        ctf_coll = bytes(raw_coll)
+
+    def _pid(idx_set):
+        cid = h1.send.call(au.AppClientMethodCallParams(
+            method="CTHelpers.getCollectionId",
+            args=[list(b"\x00" * 32), list(b"\xc0" * 32), idx_set],
+            extra_fee=au.AlgoAmount(micro_algo=500_000),
+        ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return
+        cid_b = bytes(cid) if isinstance(cid, (list, tuple)) else bytes(cid)
+        pid = h1.send.call(au.AppClientMethodCallParams(
+            method="CTHelpers.getPositionId",
+            args=[bytes(ctf_coll), list(cid_b)],
+            extra_fee=au.AlgoAmount(micro_algo=500_000),
+        ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return
+        return int(pid)
+    YES_ID = _pid(1)
+    NO_ID = _pid(2)
+    prepare_condition(ctf, b"\xc0" * 32, YES_ID, NO_ID)
+    h1_addr = algod_addr_bytes_for_app(h1.app_id)
+    deal_usdc_and_approve(usdc, bob_addr, h1_addr, 50_000_000)
+    deal_outcome_and_approve(ctf, carla_addr, h1_addr, YES_ID, 100_000_000)
+
+    taker = make_order(maker=bob_addr, token_id=YES_ID,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
+    maker = make_order(maker=carla_addr, token_id=YES_ID,
+        maker_amount=100_000_000, taker_amount=50_000_000, side=Side.SELL)
+    taker_signed = sign_order(orch, taker, bob_signer)
+    maker_signed = sign_order(orch, maker, carla_signer)
+
+    a1, a2, a3, a4, a5, a6, a7 = encode_match_orders_args(
+        condition_id=b"\xc0" * 32,
+        taker_order_list=taker_signed.to_abi_list(),
+        maker_orders_list=[maker_signed.to_abi_list()],
+        taker_fill_amount=50_000_000,
+        maker_fill_amounts=[100_000_000],
+        taker_fee_amount=0,
+        maker_fee_amounts=[0],
+    )
+
+    # Build the dance group.
+    composer = chunk.algorand.new_group()
+    yes_bytes = YES_ID.to_bytes(32, "big")
+    inner_boxes = [
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(carla_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(bob_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"ap_" + sha256(bytes(carla_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id,
+                        name=b"a_" + sha256(bytes(bob_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(bob_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(carla_addr)),
+    ]
+    # Match dance_match_orders: 6 boxes on pad-0, rest empty.
+    PER_PAD = 6
+    for i in range(15):
+        slot_boxes = inner_boxes[i*PER_PAD:(i+1)*PER_PAD] if i*PER_PAD < len(inner_boxes) else []
+        slot_app_ids = sorted({b.app_index for b in slot_boxes if b.app_index != 0})
+        composer.add_app_call_method_call(orch.params.call(
+            au.AppClientMethodCallParams(
+                method="isAdmin",
+                args=[b"\x00" * 32],
+                note=f"opup-{i}".encode(),
+                box_references=slot_boxes if slot_boxes else None,
+                app_references=slot_app_ids if slot_app_ids else None,
+            )))
+    composer.add_app_call_method_call(chunk.params.call(
+        au.AppClientMethodCallParams(
+            method="dance_call_7",
+            args=[DELEGATE_UPDATE_SEL, MATCH_ORDERS_SEL,
+                  a1, a2, a3, a4, a5, a6, a7],
+            extra_fee=au.AlgoAmount(micro_algo=5_000_000),
+            app_references=[orch.app_id, usdc.app_id, ctf.app_id, h1.app_id],
+            box_references=[
+                au.BoxReference(app_id=0, name=b"__self_bytes"),
+                au.BoxReference(app_id=0, name=b"__orch_orig_bytes"),
+            ],
+        )))
+
+    # Diagnostic: read carla's CTF balance box via algod BEFORE the
+    # dance fires. If the box content here != 100M, the deal didn't
+    # actually populate it for this YES_ID. If 100M, then matchOrders
+    # truly is reading bal=0 from a non-empty box.
+    yes_id_bytes = YES_ID.to_bytes(32, "big")
+    expected_key = b"b_" + sha256(bytes(carla_addr) + yes_id_bytes).digest()
+    print(f"\nDeal expected key: {expected_key.hex()}")
+    print(f"YES_ID:            {YES_ID:#x}")
+    print(f"YES_ID hex:        {yes_id_bytes.hex()}")
+    print(f"carla_addr:        {bytes(carla_addr).hex()}")
+    box_raw = chunk.algorand.client.algod.application_box_by_name(
+        ctf.app_id, expected_key)
+    box_value_b64 = box_raw.get("value", "")
+    box_value = base64.b64decode(box_value_b64) if box_value_b64 else b""
+    print(f"Box content (algod): {box_value.hex()}")
+    print(f"Box content length: {len(box_value)}")
+    if len(box_value) >= 32:
+        as_int = int.from_bytes(box_value[24:32], "big")
+        print(f"Decoded balance (last 8 bytes BE): {as_int}")
+
+    composer.build()  # populates _atc
+    from algokit_utils._debugging import simulate_response as _sim_resp
+    algod = chunk.algorand.client.algod
+    sim_resp = _sim_resp(
+        composer._atc, algod,
+        allow_more_logs=True, allow_unnamed_resources=True,
+        exec_trace_config=SimulateTraceConfig(enable=True, stack_change=True, scratch_change=False),
+    )
+    raw = sim_resp.simulate_response
+    txn_groups = raw["txn-groups"]
+    print(f"\n=== SIMULATE FAILURE ===")
+    if txn_groups[0].get("failure-message"):
+        print(f"Failure: {txn_groups[0]['failure-message']}")
+        print(f"Failed-at: {txn_groups[0].get('failed-at')}")
+
+    # The dance fails at [15, 1, ..., 0]. Walk to the FAILING inner-tx.
+    def get_apaa(node):
+        # Try both shapes: outer wrapped in "txn-result", inner direct.
+        for path in [["txn", "txn", "apaa"], ["txn-result", "txn", "txn", "apaa"]]:
+            cur = node
+            for p in path:
+                if isinstance(cur, dict):
+                    cur = cur.get(p)
+                else:
+                    cur = None
+                    break
+            if cur:
+                return cur
+        return None
+
+    def walk_to_failure(node, path):
+        if not path:
+            return node
+        idx = path[0]
+        rest = path[1:]
+        inners = node.get("inner-txns") or []
+        if idx >= len(inners):
+            return None
+        return walk_to_failure(inners[idx], rest)
+
+    # Dump box references on every txn in the group.
+    print("\n=== Box references per txn ===")
+    for i, tr in enumerate(txn_groups[0].get("txn-results", [])):
+        txn = tr.get("txn-result", {}).get("txn", {}).get("txn", {})
+        apbx = txn.get("apbx") or []
+        if apbx:
+            box_refs = []
+            for ref in apbx:
+                idx = ref.get("i", 0)  # 0 = current app, 1+ = foreign apps
+                name_b64 = ref.get("n", "")
+                name_b = base64.b64decode(name_b64) if name_b64 else b""
+                box_refs.append(f"i={idx} name={name_b.hex()[:80]}")
+            print(f"  txn {i}: {len(apbx)} box refs: {box_refs}")
+        else:
+            print(f"  txn {i}: 0 box refs")
+
+    failed_at = txn_groups[0].get("failed-at", [])
+    print(f"\nFailed-at path: {failed_at}")
+    if failed_at and len(failed_at) >= 1:
+        outer_idx = failed_at[0]
+        outer = txn_groups[0]["txn-results"][outer_idx]
+        print(f"\n[T{outer_idx} top-level keys]: {list(outer.keys())}")
+        # Walk along the failed-at path, printing apaa at each level.
+        def dive(node, path_so_far, remaining):
+            keys_seen = list(node.keys()) if isinstance(node, dict) else []
+            ap = get_apaa(node)
+            apaa_str = [base64.b64decode(a).hex() if a else '' for a in (ap or [])]
+            print(f"  [{path_so_far}] keys={keys_seen[:8]}... apaa={apaa_str if apaa_str else 'NONE'}")
+            if not remaining:
+                return
+            # Inner-txns may be nested under "txn-result" or directly.
+            inners = node.get("inner-txns") or (
+                node.get("txn-result", {}).get("inner-txns")
+            ) or []
+            print(f"    inner-txns: {len(inners)} entries")
+            if remaining[0] < len(inners):
+                dive(inners[remaining[0]],
+                     path_so_far + f".in{remaining[0]}",
+                     remaining[1:])
+        dive(outer, f"T{outer_idx}", failed_at[1:])
+
+    # Walk to the deepest inner-tx exec trace and dump opcodes near box_get.
+    def get_trace(node, path):
+        if not path:
+            return node
+        idx = path[0]
+        rest = path[1:]
+        et = node.get("exec-trace") or node.get("txn-result", {}).get("exec-trace")
+        if not et:
+            return None
+        inners = et.get("inner-trace") or []
+        if idx < len(inners):
+            return get_trace(inners[idx], rest)
+        return None
+
+    def get_outer_trace(outer):
+        return outer.get("exec-trace")
+
+    def find_box_get_in_trace(trace, label):
+        """Walk approval-program-trace and dump LAST 30 ops to see what
+        was on stack before the failing assert."""
+        ops = trace.get("approval-program-trace") or []
+        print(f"  {label}: {len(ops)} ops in trace")
+        # Show last 30 ops (around the failure).
+        for i, op in enumerate(ops[-30:]):
+            pc = op.get("pc", 0)
+            stack_add = op.get("stack-additions") or []
+            stack_pop = op.get("stack-pop-count", 0)
+            added = []
+            for s in stack_add:
+                if "bytes" in s:
+                    added.append(("b", base64.b64decode(s["bytes"]).hex()))
+                elif "uint" in s:
+                    added.append(("u", s["uint"]))
+            print(f"    pc={pc} pop={stack_pop} push={added}")
+
+    if failed_at and len(failed_at) >= 1:
+        outer = txn_groups[0]["txn-results"][failed_at[0]]
+        outer_trace = get_outer_trace(outer)
+        if outer_trace and len(failed_at) > 1:
+            # Drill into nested inner traces.
+            cur_trace = outer_trace
+            for i, idx in enumerate(failed_at[1:]):
+                inners = cur_trace.get("inner-trace") or []
+                if idx < len(inners):
+                    cur_trace = inners[idx]
+                else:
+                    print(f"!! No inner-trace[{idx}] at depth {i}")
+                    cur_trace = None
+                    break
+            if cur_trace:
+                print(f"\n=== Approval trace of failing inner-tx ({failed_at}) ===")
+                find_box_get_in_trace(cur_trace, "FAIL_TX")
+
+        # Also dump inner-tx 155 (the one right before 156=failure) to see
+        # what matchOrders did just before. It might mutate the box.
+        if outer_trace and len(failed_at) >= 3 and failed_at[2] >= 1:
+            cur = outer_trace
+            for idx in failed_at[1:1] + [failed_at[1]]:  # just go to in1
+                inners = cur.get("inner-trace") or []
+                cur = inners[idx] if idx < len(inners) else None
+                if not cur:
+                    break
+            # Now dump prior inner txns at this level to find writes to ctf box.
+            if cur:
+                inners = cur.get("inner-trace") or []
+                target_idx = failed_at[2]  # 156
+                txn_results = txn_groups[0]["txn-results"][failed_at[0]].get("txn-result", {}).get("inner-txns", [])
+                if target_idx > 0 and target_idx <= len(txn_results[failed_at[1]].get("inner-txns", [])):
+                    matchords_inners = txn_results[failed_at[1]].get("inner-txns", [])
+                    # Find ALL inner-txns going to ctf (the failing app).
+                    fail_app = txn_groups[0].get("txn-results")[failed_at[0]].get("txn-result", {}).get("txn", {}).get("txn", {})
+                    # Find ctf app id from the inner-tx 156's app
+                    target_inner = matchords_inners[target_idx]
+                    target_inner_inner = target_inner.get("inner-txns") or []
+                    if target_inner_inner:
+                        ctf_id = target_inner_inner[0].get("txn", {}).get("txn", {}).get("apid", 0)
+                        print(f"\nctf app_id = {ctf_id}")
+                        # Walk all matchOrders inner-txns looking for ones to ctf.
+                        for n, mi in enumerate(matchords_inners):
+                            mi_apid = mi.get("txn", {}).get("txn", {}).get("apid", 0)
+                            mi_apaa = mi.get("txn", {}).get("txn", {}).get("apaa") or []
+                            if mi_apid == ctf_id:
+                                first_two = [base64.b64decode(a).hex()[:24] for a in mi_apaa[:2]]
+                                print(f"  Inner-tx {n} -> ctf({mi_apid}): {first_two}")
+                            # Also check if any inner-tx has further nested inner-tx to ctf
+                            for j, nested in enumerate(mi.get("inner-txns") or []):
+                                n_apid = nested.get("txn", {}).get("txn", {}).get("apid", 0)
+                                n_apaa = nested.get("txn", {}).get("txn", {}).get("apaa") or []
+                                if n_apid == ctf_id:
+                                    full_args = [base64.b64decode(a).hex() for a in n_apaa]
+                                    print(f"  Inner-tx {n}.{j} -> ctf({n_apid}):")
+                                    for ai, av in enumerate(full_args):
+                                        print(f"    arg[{ai}]: {av}")
+
+    pytest.skip("Diagnostic only — see captured stdout for inner-tx args")
+
+
 def test_match_orders_diagnostic_double_fund(split_settled_with_delegate):
     """Diagnostic: pre-fund BOTH carla AND bob with YES tokens, then
     run the matchOrders dance. If matchOrders has the `from` address
