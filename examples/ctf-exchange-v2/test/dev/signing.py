@@ -23,6 +23,9 @@ CARLA_PK = 0xCA414
 # Dave appears in Preapproved.t.sol::test_matchOrders_preapproved_partialFill
 # as a third-party SELL maker filling the remainder of bob's BUY.
 DAVE_PK = 0xDA7E
+# Dylan appears in MatchOrders.t.sol::test_MatchOrders_revert_MismatchedTokenIds_MintSameTokenId
+# as a third-party MINT-side BUY on a different outcome (NO).
+DYLAN_PK = 0xD14A4
 
 
 @dataclass(frozen=True)
@@ -87,3 +90,7 @@ def carla() -> EthSigner:
 
 def dave() -> EthSigner:
     return EthSigner.from_pk_int(DAVE_PK)
+
+
+def dylan() -> EthSigner:
+    return EthSigner.from_pk_int(DYLAN_PK)

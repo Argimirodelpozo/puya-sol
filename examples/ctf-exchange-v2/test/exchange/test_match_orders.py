@@ -839,6 +839,108 @@ def test_match_orders_revert_invalid_trade(split_settled_with_delegate):
         )
 
 
+def test_match_orders_revert_mismatched_token_ids_mint_same_token_id(split_settled_with_delegate):
+    """test_MatchOrders_revert_MismatchedTokenIds_MintSameTokenId:
+    `_validateTokenIds` rejects a MINT-style match where a maker buys
+    the SAME token as the taker (the makers must each pick the
+    *complementary* outcome for collateral splitting to make sense)."""
+    from dev.signing import dylan as dylan_signer_fn
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer, carla_signer, dylan_signer = bob(), carla(), dylan_signer_fn()
+    bob_addr = bob_signer.eth_address_padded32
+    carla_addr = carla_signer.eth_address_padded32
+    dylan_addr = dylan_signer.eth_address_padded32
+
+    yes_id, no_id = _canonical_yes_no_ids(orch, h1)
+    prepare_condition(ctf, CONDITION_ID, yes_id, no_id)
+    h1_addr = algod_addr_bytes_for_app(h1.app_id)
+    deal_usdc_and_approve(usdc, bob_addr, h1_addr, 50_000_000)
+    deal_usdc_and_approve(usdc, carla_addr, h1_addr, 50_000_000)
+    deal_usdc_and_approve(usdc, dylan_addr, h1_addr, 50_000_000)
+
+    taker = make_order(maker=bob_addr, token_id=yes_id,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
+    # Maker1: BUY YES (same as taker — invalid for MINT, must be NO).
+    maker1 = make_order(maker=carla_addr, token_id=yes_id,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
+    # Maker2: BUY NO — would be valid alone but the bad maker1 trips
+    # the validation first.
+    maker2 = make_order(maker=dylan_addr, token_id=no_id,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
+    t = sign_order(orch, taker, bob_signer)
+    m1 = sign_order(orch, maker1, carla_signer)
+    m2 = sign_order(orch, maker2, dylan_signer)
+
+    with pytest.raises(LogicError):
+        dance_match_orders(
+            chunk, orch,
+            condition_id=CONDITION_ID,
+            taker_order_list=t.to_abi_list(),
+            maker_orders_list=[m1.to_abi_list(), m2.to_abi_list()],
+            taker_fill_amount=50_000_000,
+            maker_fill_amounts=[50_000_000, 50_000_000],
+            taker_fee_amount=0, maker_fee_amounts=[0, 0],
+            extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+        )
+
+
+def test_match_orders_complementary_no_exchange_balance_taker_buy(split_settled_with_delegate):
+    """test_MatchOrders_Complementary_NoExchangeBalance_TakerBuy: same
+    trade as `complementary` but verifies the orch holds 0 of every
+    asset post-trade — direct transfers shouldn't leave residue on
+    the exchange."""
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer, carla_signer = bob(), carla()
+    bob_addr, carla_addr = bob_signer.eth_address_padded32, carla_signer.eth_address_padded32
+
+    yes_id, no_id = _canonical_yes_no_ids(orch, h1)
+    prepare_condition(ctf, CONDITION_ID, yes_id, no_id)
+    h1_addr = algod_addr_bytes_for_app(h1.app_id)
+    orch_addr = algod_addr_bytes_for_app(orch.app_id)
+    deal_usdc_and_approve(usdc, bob_addr, h1_addr, 50_000_000)
+    deal_outcome_and_approve(ctf, carla_addr, h1_addr, yes_id, 100_000_000)
+
+    taker = make_order(maker=bob_addr, token_id=yes_id,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
+    maker = make_order(maker=carla_addr, token_id=yes_id,
+        maker_amount=100_000_000, taker_amount=50_000_000, side=Side.SELL)
+    t = sign_order(orch, taker, bob_signer)
+    m = sign_order(orch, maker, carla_signer)
+
+    from hashlib import sha256
+    yes_bytes = yes_id.to_bytes(32, "big")
+    inner_boxes = [
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(carla_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(bob_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"ap_" + sha256(bytes(carla_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id,
+                        name=b"a_" + sha256(bytes(bob_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(bob_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(carla_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(orch_addr)),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(orch_addr) + yes_bytes).digest()),
+    ]
+    dance_match_orders(
+        chunk, orch,
+        condition_id=CONDITION_ID,
+        taker_order_list=t.to_abi_list(),
+        maker_orders_list=[m.to_abi_list()],
+        taker_fill_amount=50_000_000,
+        maker_fill_amounts=[100_000_000],
+        taker_fee_amount=0, maker_fee_amounts=[0],
+        extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+        extra_box_refs=inner_boxes,
+    )
+
+    # Direct transfers — orch (the exchange) holds no assets after.
+    assert usdc_balance(usdc, orch_addr) == 0
+    assert ctf_balance(ctf, orch_addr, yes_id) == 0
+
+
 def test_match_orders_revert_mismatched_token_ids_zero_collateral(split_settled_with_delegate):
     """test_MatchOrders_revert_MismatchedTokenIds_TokenIdZeroCollateralExtraction:
     a maker order with `tokenId == 0` is invalid — tokenId=0 represents
