@@ -50,26 +50,26 @@ SAFETRANSFERLIB_CALL_STUB = (
     "PUYA_BLOCKERS.md §3."
 )
 
-# AVM-PORT-ADAPTATION: with-callback wrap/unwrap need to chain
-# orch → router(callback) → usdc.transferFrom — three nested inner
-# tx levels, with `_callbackReceiver` selecting the router target. The
-# router's wrapCallback inner-tx that pulls `usdc.transferFrom(owner,
-# ct, amount)` decodes `owner` from `abi.decode(_data, (address))`;
-# the resulting allowance lookup fails (insufficient allowance) which
-# strongly suggests puya-sol's abi.decode for a single-tuple address
-# isn't producing the funder bytes the test set the allowance against.
-# The no-callback variants pass — they exercise the same wrap/unwrap
-# semantics minus the callback dispatch, and they confirm the IERC20Min
-# inner-tx itself works (selectors line up, balances move). Leaving the
-# with-callback variants xfail until the abi.decode path is debugged.
-WITH_CALLBACK_DECODE_STUB = (
-    "with-callback variant: orch fires `router.wrapCallback`, router "
-    "decodes funder from `_data` via abi.decode and pulls the asset; "
-    "the resulting `usdc.transferFrom` errors with insufficient allowance "
-    "even though the funder/router pair was set up explicitly. The "
-    "no-callback variant exercises the same flow minus the callback and "
-    "passes — pending debug of abi.decode lowering for a single-tuple "
-    "address argument."
+# AVM-PORT-ADAPTATION: the with-callback unwrap path is structurally
+# blocked by AVM's no-reentrancy rule. ct.unwrap fires a callback to
+# router.unwrapCallback, which tries to pull pUSD from the funder via
+# `IERC20Min(collateralToken).transferFrom(...)`. Since `collateralToken`
+# IS ct (ct is its own ERC20 surface), this is a re-entrant call into
+# ct from inside ct's own call frame. EVM permits this; AVM forbids
+# it (`attempt to re-enter X`). The wrap-with-callback variant works
+# because the callback target there is the asset (USDC), a different
+# app from ct. The no-callback unwrap variant works for the same reason
+# (no callback chain). Fixing this would require splitting ct's ERC20
+# surface into a sibling app, which is out of scope for the audited
+# port.
+UNWRAP_CALLBACK_REENTRY = (
+    "ct.unwrap → router.unwrapCallback → ct.transferFrom would re-enter "
+    "ct, which AVM forbids. Structural difference between EVM (allows "
+    "reentrancy) and AVM (forbids it). The no-callback unwrap variant "
+    "covers the same wrap/unwrap semantics; the only thing this test "
+    "specifically exercises that the no-callback can't is the callback "
+    "dispatch chain — which works for `wrap` (callback target is USDC, "
+    "a different app) but is unreachable for `unwrap`."
 )
 
 
@@ -282,12 +282,25 @@ def test_revert_CollateralToken_burn_unauthorized(collateral_token, funded_accou
 def _deploy_router(localnet, admin, collateral_token_app_id):
     """Deploy a MockCollateralTokenRouter pointed at the collateral token
     under test. Mirrors `new MockCollateralTokenRouter(address(collateral.token))`
-    from the Foundry suite."""
+    from the Foundry suite.
+
+    AVM-PORT-ADAPTATION: the router takes two views of ct's address —
+    psol-encoded for inner-tx targeting (so puya-sol's `extract_uint64`
+    at offset 24 finds the app id) and real-Algorand for recipient
+    args (so the asset receiver-mock credits the same `balances[…]`
+    key that ct's later `usdc.transfer(VAULT, …)` reads from with
+    `msg.sender = ct_real`). See router source for the AVM-PORT
+    rationale.
+    """
+    from dev.addrs import algod_addr_bytes_for_app
     out_dir = Path(__file__).parent.parent.parent / "out"
     base = out_dir / "test" / "dev" / "mocks"
     return deploy_app(
         localnet, admin, base, "MockCollateralTokenRouter",
-        create_args=[app_id_to_address(collateral_token_app_id)],
+        create_args=[
+            app_id_to_address(collateral_token_app_id),     # psol-encoded
+            algod_addr_bytes_for_app(collateral_token_app_id),  # real Algorand
+        ],
     )
 
 
@@ -367,7 +380,6 @@ def _wrap_with_callback(localnet, collateral_token_wired, asset_mock,
     assert usdc_balance(asset_mock, addr(vault)) == vault_before + amount
 
 
-@pytest.mark.xfail(reason=WITH_CALLBACK_DECODE_STUB, strict=False)
 def test_CollateralToken_wrapUSDC(
     localnet, collateral_token_wired, usdc_stateful, vault, admin, funded_account
 ):
@@ -377,7 +389,6 @@ def test_CollateralToken_wrapUSDC(
                         vault, admin, funded_account)
 
 
-@pytest.mark.xfail(reason=WITH_CALLBACK_DECODE_STUB, strict=False)
 def test_CollateralToken_wrapUSDCe(
     localnet, collateral_token_wired, usdce_stateful, vault, admin, funded_account
 ):
@@ -562,7 +573,7 @@ def _unwrap_with_callback(localnet, collateral_token_wired, asset_mock,
     assert usdc_balance(asset_mock, addr(recipient)) == recipient_before + amount
 
 
-@pytest.mark.xfail(reason=WITH_CALLBACK_DECODE_STUB, strict=False)
+@pytest.mark.xfail(reason=UNWRAP_CALLBACK_REENTRY, strict=False)
 def test_CollateralToken_unwrapUSDC(
     localnet, collateral_token_wired, usdc_stateful, vault, admin, funded_account
 ):
@@ -571,7 +582,7 @@ def test_CollateralToken_unwrapUSDC(
                           vault, admin, funded_account)
 
 
-@pytest.mark.xfail(reason=WITH_CALLBACK_DECODE_STUB, strict=False)
+@pytest.mark.xfail(reason=UNWRAP_CALLBACK_REENTRY, strict=False)
 def test_CollateralToken_unwrapUSDCe(
     localnet, collateral_token_wired, usdce_stateful, vault, admin, funded_account
 ):

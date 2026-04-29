@@ -30,11 +30,23 @@ interface IERC20Min {
 /// in `src/test/CollateralToken.t.sol` so it can be deployed standalone on
 /// AVM (Foundry tests can only declare contracts inside the .t.sol file —
 /// AVM tests need a separate compilation unit).
+///
+/// AVM-PORT-ADAPTATION: stores two views of the collateral token's address.
+/// `collateralToken` is the puya-sol storage encoding (`\x00*24 || itob(app_id)`)
+/// — used as inner-tx targets so puya-sol's `extract_uint64` at offset 24
+/// resolves to the app id. `collateralTokenAccount` is the real Algorand
+/// 32-byte address (sha512_256("appID" || app_id)) — used as the recipient
+/// arg of inner ERC20 calls so the receiver-mock credits the same storage
+/// key that ct's later `usdc.transfer(VAULT, …)` reads from
+/// (`balances[msg.sender]`, where msg.sender at the inner level is ct_real).
+/// On EVM the two collapse into the same 20-byte value; on AVM they don't.
 contract MockCollateralTokenRouter is ICollateralTokenCallbacks {
     address public immutable collateralToken;
+    address public immutable collateralTokenAccount;
 
-    constructor(address _collateralToken) {
+    constructor(address _collateralToken, address _collateralTokenAccount) {
         collateralToken = _collateralToken;
+        collateralTokenAccount = _collateralTokenAccount;
     }
 
     function wrap(address _asset, address _to, uint256 _amount) external {
@@ -49,13 +61,17 @@ contract MockCollateralTokenRouter is ICollateralTokenCallbacks {
 
     function wrapCallback(address _asset, address, uint256 _amount, bytes calldata _data) external {
         address from = abi.decode(_data, (address));
-        require(IERC20Min(_asset).transferFrom(from, collateralToken, _amount), "ERC20 transferFrom failed");
+        require(
+            IERC20Min(_asset).transferFrom(from, collateralTokenAccount, _amount),
+            "ERC20 transferFrom failed"
+        );
     }
 
     function unwrapCallback(address, address, uint256 _amount, bytes calldata _data) external {
         address from = abi.decode(_data, (address));
         require(
-            IERC20Min(collateralToken).transferFrom(from, collateralToken, _amount), "ERC20 transferFrom failed"
+            IERC20Min(collateralToken).transferFrom(from, collateralTokenAccount, _amount),
+            "ERC20 transferFrom failed"
         );
     }
 }
