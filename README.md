@@ -1,4 +1,4 @@
-# puya-sol
+# Algorand Solidity
 
 > [!CAUTION]
 > **AI-assisted proof-of-concept. Side project. NOT production-ready.**
