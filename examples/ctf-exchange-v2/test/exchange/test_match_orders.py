@@ -204,18 +204,149 @@ def test_match_orders_complementary(split_settled_with_delegate):
     assert usdc_balance(usdc, carla_addr) == 50_000_000
 
 
-@pytest.mark.xfail(reason=SETTLEMENT_INFRA, strict=False)
+@pytest.mark.xfail(
+    reason="MINT path: helper3 matchOrders body dispatches into "
+           "_matchBuyOrders → _settleMakerOrders → _validateOrdersMatch "
+           "with the wrong matchType (passes 0=COMPLEMENTARY) so "
+           "helper2's _validateOrdersMatch asserts MismatchedTokenIds at "
+           "the b== check. Likely a helper2 inner-call arg encoding issue "
+           "for the matchType uint8 — needs trace dump of `_deriveMatchType`'s "
+           "return value through to helper2's input.",
+    strict=False,
+)
 def test_match_orders_mint(split_settled_with_delegate):
-    """test_MatchOrders_Mint: both BUY against complementary tokens.
-    Exchange splits collateral into outcome tokens, distributes."""
-    pytest.fail("MINT path — splitPosition flow")
+    """test_MatchOrders_Mint: both BUYs against complementary tokens
+    (YES + NO). The exchange takes both makers' collateral, calls
+    `ctf.splitPosition` to mint matched amounts of YES + NO, and
+    distributes the outcome tokens back to each maker."""
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer, carla_signer = bob(), carla()
+    bob_addr, carla_addr = bob_signer.eth_address_padded32, carla_signer.eth_address_padded32
+
+    yes_id, no_id = _canonical_yes_no_ids(orch, h1)
+    prepare_condition(ctf, CONDITION_ID, yes_id, no_id)
+    h1_addr = algod_addr_bytes_for_app(h1.app_id)
+    orch_addr = algod_addr_bytes_for_app(orch.app_id)
+    deal_usdc_and_approve(usdc, bob_addr, h1_addr, 50_000_000)
+    deal_usdc_and_approve(usdc, carla_addr, h1_addr, 50_000_000)
+
+    taker = make_order(maker=bob_addr, token_id=yes_id,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
+    maker = make_order(maker=carla_addr, token_id=no_id,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
+    t = sign_order(orch, taker, bob_signer)
+    m = sign_order(orch, maker, carla_signer)
+
+    from hashlib import sha256
+    yes_bytes = yes_id.to_bytes(32, "big")
+    no_bytes = no_id.to_bytes(32, "big")
+    inner_boxes = [
+        au.BoxReference(app_id=usdc.app_id,
+                        name=b"a_" + sha256(bytes(bob_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id,
+                        name=b"a_" + sha256(bytes(carla_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(bob_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(carla_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(orch_addr)),
+        au.BoxReference(app_id=ctf.app_id, name=b"p_" + CONDITION_ID),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(orch_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(orch_addr) + no_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(bob_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(carla_addr) + no_bytes).digest()),
+    ]
+    dance_match_orders(
+        chunk, orch,
+        condition_id=CONDITION_ID,
+        taker_order_list=t.to_abi_list(),
+        maker_orders_list=[m.to_abi_list()],
+        taker_fill_amount=50_000_000,
+        maker_fill_amounts=[50_000_000],
+        taker_fee_amount=0, maker_fee_amounts=[0],
+        extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+        extra_box_refs=inner_boxes,
+    )
+
+    # Bob: spent 50 USDC, got 100 YES.
+    assert usdc_balance(usdc, bob_addr) == 0
+    assert ctf_balance(ctf, bob_addr, yes_id) == 100_000_000
+    # Carla: spent 50 USDC, got 100 NO.
+    assert usdc_balance(usdc, carla_addr) == 0
+    assert ctf_balance(ctf, carla_addr, no_id) == 100_000_000
 
 
-@pytest.mark.xfail(reason=SETTLEMENT_INFRA, strict=False)
+@pytest.mark.xfail(
+    reason="MERGE path: same root cause as test_match_orders_mint — "
+           "helper2's _validateOrdersMatch fires MismatchedTokenIds "
+           "because the matchType arg comes through as 0 (COMPLEMENTARY) "
+           "instead of 2 (MERGE). Needs the same investigation.",
+    strict=False,
+)
 def test_match_orders_merge(split_settled_with_delegate):
-    """test_MatchOrders_Merge: both SELL against complementary tokens.
-    Exchange merges outcome tokens back to collateral, distributes."""
-    pytest.fail("MERGE path — mergePositions flow")
+    """test_MatchOrders_Merge: both SELLs of complementary tokens
+    (YES + NO). The exchange takes both makers' outcome tokens, calls
+    `ctf.mergePositions` to burn the matched YES + NO into collateral,
+    then distributes the USDC proceeds."""
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer, carla_signer = bob(), carla()
+    bob_addr, carla_addr = bob_signer.eth_address_padded32, carla_signer.eth_address_padded32
+
+    yes_id, no_id = _canonical_yes_no_ids(orch, h1)
+    prepare_condition(ctf, CONDITION_ID, yes_id, no_id)
+    h1_addr = algod_addr_bytes_for_app(h1.app_id)
+    orch_addr = algod_addr_bytes_for_app(orch.app_id)
+    deal_outcome_and_approve(ctf, bob_addr, h1_addr, yes_id, 100_000_000)
+    deal_outcome_and_approve(ctf, carla_addr, h1_addr, no_id, 100_000_000)
+
+    taker = make_order(maker=bob_addr, token_id=yes_id,
+        maker_amount=100_000_000, taker_amount=50_000_000, side=Side.SELL)
+    maker = make_order(maker=carla_addr, token_id=no_id,
+        maker_amount=100_000_000, taker_amount=50_000_000, side=Side.SELL)
+    t = sign_order(orch, taker, bob_signer)
+    m = sign_order(orch, maker, carla_signer)
+
+    from hashlib import sha256
+    yes_bytes = yes_id.to_bytes(32, "big")
+    no_bytes = no_id.to_bytes(32, "big")
+    inner_boxes = [
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"ap_" + sha256(bytes(bob_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"ap_" + sha256(bytes(carla_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(bob_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(carla_addr) + no_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(orch_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(orch_addr) + no_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id, name=b"p_" + CONDITION_ID),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(orch_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(bob_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(carla_addr)),
+    ]
+    dance_match_orders(
+        chunk, orch,
+        condition_id=CONDITION_ID,
+        taker_order_list=t.to_abi_list(),
+        maker_orders_list=[m.to_abi_list()],
+        taker_fill_amount=100_000_000,
+        maker_fill_amounts=[100_000_000],
+        taker_fee_amount=0, maker_fee_amounts=[0],
+        extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+        extra_box_refs=inner_boxes,
+    )
+
+    # Bob: spent 100 YES, got 50 USDC.
+    assert ctf_balance(ctf, bob_addr, yes_id) == 0
+    assert usdc_balance(usdc, bob_addr) == 50_000_000
+    # Carla: spent 100 NO, got 50 USDC.
+    assert ctf_balance(ctf, carla_addr, no_id) == 0
+    assert usdc_balance(usdc, carla_addr) == 50_000_000
 
 
 def test_match_orders_complementary_fees(split_settled_with_delegate):
