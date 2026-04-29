@@ -4771,8 +4771,18 @@ void ContractBuilder::inlineModifiers(
 			};
 
 			// Replace ReturnStatement → { flag=true; break; }
-			// Inside loops: also add flag check after the loop
+			// Inside loops: also add flag check after the loop.
+			// Track ANY modifier-body return so we can skip the wrapper loop
+			// entirely when the modifier never early-exits — the wrapper exists
+			// only to give those break-equivalents a target. Modifiers like
+			// Solady's `initializer` have no returns, so wrapping them in a
+			// single-iteration `while(true){...;break;}` is pure overhead;
+			// worse, puya's optimiser collapses the loop in a way that loses
+			// dataflow into ABI args referenced inside (the documented
+			// `initialize(address)` arg-drop). Skipping the wrap when safe
+			// keeps those references in straight-line control flow.
 			bool hasReturnInLoop = false;
+			bool hasAnyReturn = false;
 			std::function<void(std::vector<std::shared_ptr<awst::Statement>>&, bool)> replaceReturns;
 			replaceReturns = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts, bool inLoop) {
 				for (size_t i = 0; i < stmts.size(); ++i)
@@ -4786,6 +4796,7 @@ void ContractBuilder::inlineModifiers(
 						block->body.push_back(makeFlagSet());
 						block->body.push_back(makeBreak());
 						s = std::move(block);
+						hasAnyReturn = true;
 						if (inLoop) hasReturnInLoop = true;
 					}
 					else if (auto* ifElse = dynamic_cast<awst::IfElse*>(s.get()))
@@ -4804,52 +4815,61 @@ void ContractBuilder::inlineModifiers(
 			};
 			replaceReturns(translatedModBody->body, false);
 
-			// After each WhileLoop that contains a return, insert flag check
-			if (hasReturnInLoop)
+			if (!hasAnyReturn)
 			{
-				std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> insertFlagChecks;
-				insertFlagChecks = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts) {
-					for (size_t i = 0; i < stmts.size(); ++i)
-					{
-						if (dynamic_cast<awst::WhileLoop*>(stmts[i].get()))
-						{
-							// Insert flag check after the loop
-							stmts.insert(stmts.begin() + i + 1, makeFlagCheck());
-							++i; // skip inserted
-						}
-						else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmts[i].get()))
-						{
-							if (ifElse->ifBranch) insertFlagChecks(ifElse->ifBranch->body);
-							if (ifElse->elseBranch) insertFlagChecks(ifElse->elseBranch->body);
-						}
-						else if (auto* block = dynamic_cast<awst::Block*>(stmts[i].get()))
-							insertFlagChecks(block->body);
-					}
-				};
-				insertFlagChecks(translatedModBody->body);
+				// Straight-line modifier — no early-exit, no wrap needed.
+				for (auto& stmt: translatedModBody->body)
+					modBody->body.push_back(std::move(stmt));
 			}
+			else
+			{
+				// After each WhileLoop that contains a return, insert flag check
+				if (hasReturnInLoop)
+				{
+					std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> insertFlagChecks;
+					insertFlagChecks = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts) {
+						for (size_t i = 0; i < stmts.size(); ++i)
+						{
+							if (dynamic_cast<awst::WhileLoop*>(stmts[i].get()))
+							{
+								// Insert flag check after the loop
+								stmts.insert(stmts.begin() + i + 1, makeFlagCheck());
+								++i; // skip inserted
+							}
+							else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmts[i].get()))
+							{
+								if (ifElse->ifBranch) insertFlagChecks(ifElse->ifBranch->body);
+								if (ifElse->elseBranch) insertFlagChecks(ifElse->elseBranch->body);
+							}
+							else if (auto* block = dynamic_cast<awst::Block*>(stmts[i].get()))
+								insertFlagChecks(block->body);
+						}
+					};
+					insertFlagChecks(translatedModBody->body);
+				}
 
-			// Initialize flag: __mod_exit_N = false
-			auto flagInit = std::make_shared<awst::AssignmentStatement>();
-			flagInit->sourceLocation = flagLoc;
-			auto flagTarget = awst::makeVarExpression(flagName, awst::WType::boolType(), flagLoc);
-			flagInit->target = std::move(flagTarget);
-			flagInit->value = awst::makeBoolConstant(false, flagLoc);
-			modBody->body.push_back(std::move(flagInit));
+				// Initialize flag: __mod_exit_N = false
+				auto flagInit = std::make_shared<awst::AssignmentStatement>();
+				flagInit->sourceLocation = flagLoc;
+				auto flagTarget = awst::makeVarExpression(flagName, awst::WType::boolType(), flagLoc);
+				flagInit->target = std::move(flagTarget);
+				flagInit->value = awst::makeBoolConstant(false, flagLoc);
+				modBody->body.push_back(std::move(flagInit));
 
-			// Wrap in while(true) { ...body...; break; }
-			auto wrapperLoop = std::make_shared<awst::WhileLoop>();
-			wrapperLoop->sourceLocation = flagLoc;
-			wrapperLoop->condition = awst::makeBoolConstant(true, flagLoc);
+				// Wrap in while(true) { ...body...; break; }
+				auto wrapperLoop = std::make_shared<awst::WhileLoop>();
+				wrapperLoop->sourceLocation = flagLoc;
+				wrapperLoop->condition = awst::makeBoolConstant(true, flagLoc);
 
-			auto loopBody = std::make_shared<awst::Block>();
-			loopBody->sourceLocation = flagLoc;
-			for (auto& stmt: translatedModBody->body)
-				loopBody->body.push_back(std::move(stmt));
-			loopBody->body.push_back(makeBreak()); // always exit after one pass
-			wrapperLoop->loopBody = std::move(loopBody);
+				auto loopBody = std::make_shared<awst::Block>();
+				loopBody->sourceLocation = flagLoc;
+				for (auto& stmt: translatedModBody->body)
+					loopBody->body.push_back(std::move(stmt));
+				loopBody->body.push_back(makeBreak()); // always exit after one pass
+				wrapperLoop->loopBody = std::move(loopBody);
 
-			modBody->body.push_back(std::move(wrapperLoop));
+				modBody->body.push_back(std::move(wrapperLoop));
+			}
 		}
 		else
 		{
