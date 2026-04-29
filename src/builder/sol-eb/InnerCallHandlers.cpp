@@ -138,7 +138,34 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 	std::shared_ptr<awst::Expression> _arg, awst::SourceLocation const& _loc)
 {
 	auto* wtype = _arg->wtype;
-	if (wtype == awst::WType::bytesType() || (wtype && wtype->kind() == awst::WTypeKind::Bytes))
+	// Dynamic-length `bytes` (no fixed length): encode as ARC-4 `byte[]`
+	// — uint16 length prefix + raw payload. Without the prefix the
+	// callee's ABI router fails to decode (`extract_uint16` on empty or
+	// under-length input). FixedBytes types (bytes32, etc.) round-trip
+	// cleanly without a header and are handled below.
+	if (wtype == awst::WType::bytesType()
+		|| wtype == awst::WType::stringType()
+		|| (wtype
+			&& wtype->kind() == awst::WTypeKind::Bytes
+			&& !static_cast<awst::BytesWType const*>(wtype)->length().has_value()))
+	{
+		auto lenExpr = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
+		lenExpr->stackArgs.push_back(_arg);
+
+		auto itobLen = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
+		itobLen->stackArgs.push_back(std::move(lenExpr));
+
+		auto header = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
+		header->immediates = {6, 2};
+		header->stackArgs.push_back(std::move(itobLen));
+
+		auto encoded = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
+		encoded->stackArgs.push_back(std::move(header));
+		encoded->stackArgs.push_back(std::move(_arg));
+		return encoded;
+	}
+	// FixedBytes (bytes1..bytes32): pass through as-is.
+	if (wtype && wtype->kind() == awst::WTypeKind::Bytes)
 		return _arg;
 
 	if (wtype == awst::WType::uint64Type())

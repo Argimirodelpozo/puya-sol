@@ -145,8 +145,37 @@ std::shared_ptr<awst::Expression> encodeArg(
 	awst::SourceLocation const& loc)
 {
 	auto const* wt = argExpr->wtype;
-	if (wt == awst::WType::accountType()
-		|| (wt && wt->kind() == awst::WTypeKind::Bytes))
+	// Dynamic `bytes` (no fixed length) is `arc4.dynamic_array<arc4.uint8>`
+	// at the ABI boundary — uint16 length-prefix followed by the data.
+	// Without this prefix the helper's ARC4 router fails its
+	// `len; ==; assert` decode check (see AVM-PORT-ADAPTATION on
+	// `_verifyECDSASignature` — the signature `bytes` arg crosses the
+	// stub→helper boundary and needs the length prefix to be readable).
+	if (wt && wt->kind() == awst::WTypeKind::Bytes)
+	{
+		auto const* bw = dynamic_cast<awst::BytesWType const*>(wt);
+		bool isDynamic = bw && !bw->length().has_value();
+		if (isDynamic)
+		{
+			auto raw = awst::makeReinterpretCast(std::move(argExpr), awst::WType::bytesType(), loc);
+			// Build uint16 length-prefix: itob(len) → extract last 2 bytes.
+			auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), loc);
+			lenCall->stackArgs.push_back(raw);
+			auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), loc);
+			itob->stackArgs.push_back(std::move(lenCall));
+			auto lenPrefix = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), loc);
+			lenPrefix->immediates.push_back(6);
+			lenPrefix->immediates.push_back(2);
+			lenPrefix->stackArgs.push_back(std::move(itob));
+			// concat: prefix ++ raw
+			auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), loc);
+			concat->stackArgs.push_back(std::move(lenPrefix));
+			concat->stackArgs.push_back(std::move(raw));
+			return concat;
+		}
+		return awst::makeReinterpretCast(std::move(argExpr), awst::WType::bytesType(), loc);
+	}
+	if (wt == awst::WType::accountType())
 	{
 		return awst::makeReinterpretCast(std::move(argExpr), awst::WType::bytesType(), loc);
 	}
@@ -622,7 +651,8 @@ std::vector<std::shared_ptr<awst::Subroutine>> collectTransitiveDeps(
 std::shared_ptr<awst::Contract> buildHelperContract(
 	awst::Contract const& original,
 	std::vector<std::shared_ptr<awst::Subroutine>> const& subs,
-	int helperIdx)
+	int helperIdx,
+	std::map<std::string, uint64_t> const& ensureBudget)
 {
 	auto helper = std::make_shared<awst::Contract>();
 	helper->id = original.id + "__Helper" + std::to_string(helperIdx);
@@ -641,6 +671,37 @@ std::shared_ptr<awst::Contract> buildHelperContract(
 
 		auto body = std::make_shared<awst::Block>();
 		body->sourceLocation = sub->sourceLocation;
+
+		// If --ensure-budget targeted this method by name, prepend a
+		// puya_lib::ensure_budget(N) call so the helper auto-pumps opcode
+		// budget when called. Mirrors `ContractBuilder.cpp`'s injection
+		// for non-splitter methods. Match by full subroutine name (e.g.
+		// "CTHelpers.getCollectionId"), with a fallback to the bare name
+		// (the part after the last '.', e.g. "getCollectionId").
+		uint64_t budgetForFunc = 0;
+		if (auto it = ensureBudget.find(sub->name); it != ensureBudget.end())
+			budgetForFunc = it->second;
+		else if (auto dot = sub->name.rfind('.'); dot != std::string::npos)
+			if (auto it2 = ensureBudget.find(sub->name.substr(dot + 1));
+				it2 != ensureBudget.end())
+				budgetForFunc = it2->second;
+
+		if (budgetForFunc > 0)
+		{
+			auto budgetVal = awst::makeIntegerConstant(
+				std::to_string(budgetForFunc), sub->sourceLocation);
+			auto feeSource = awst::makeIntegerConstant("0", sub->sourceLocation);
+			auto ebCall = std::make_shared<awst::PuyaLibCall>();
+			ebCall->sourceLocation = sub->sourceLocation;
+			ebCall->wtype = awst::WType::voidType();
+			ebCall->func = "ensure_budget";
+			ebCall->args = {
+				awst::CallArg{std::string("required_budget"), std::move(budgetVal)},
+				awst::CallArg{std::string("fee_source"), std::move(feeSource)},
+			};
+			body->body.push_back(awst::makeExpressionStatement(
+				std::move(ebCall), sub->sourceLocation));
+		}
 
 		auto callExpr = std::make_shared<awst::SubroutineCallExpression>();
 		callExpr->sourceLocation = sub->sourceLocation;
@@ -739,7 +800,8 @@ std::shared_ptr<awst::Contract> buildHelperContract(
 std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 	std::vector<std::shared_ptr<awst::RootNode>> const& _roots,
 	std::vector<std::string> const& _moveNames,
-	int _helperIndex)
+	int _helperIndex,
+	std::map<std::string, uint64_t> const& _ensureBudget)
 {
 	std::vector<ContractAWST> out;
 
@@ -941,7 +1003,7 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 
 	// Helper contract first (so test harness can deploy it before orchestrator
 	// reads its app id from a template var).
-	auto helper = buildHelperContract(*primary, moved, _helperIndex);
+	auto helper = buildHelperContract(*primary, moved, _helperIndex, _ensureBudget);
 
 	// Inject __delegate_update on the helper too. When this helper is the F
 	// for a delegate-update dance, its bytes get loaded onto the orchestrator
@@ -987,6 +1049,39 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 		}
 		// else: transitively-pulled — leave arc4MethodConfig empty so
 		// puya emits an internal subroutine instead of an ABI route.
+
+		// Mirror buildHelperContract's ensure_budget injection: ABI
+		// methods like matchOrders (force-delegated into a lonely chunk)
+		// need their budget pumped when called, since the inner-call
+		// pool is the only opcode budget the helper has access to.
+		uint64_t budgetForMethod = 0;
+		if (auto it = _ensureBudget.find(m.memberName); it != _ensureBudget.end())
+			budgetForMethod = it->second;
+		else if (auto dot = m.memberName.rfind('.'); dot != std::string::npos)
+			if (auto it2 = _ensureBudget.find(m.memberName.substr(dot + 1));
+				it2 != _ensureBudget.end())
+				budgetForMethod = it2->second;
+		if (budgetForMethod > 0 && m.body)
+		{
+			auto budgetVal = awst::makeIntegerConstant(
+				std::to_string(budgetForMethod), m.sourceLocation);
+			auto feeSource = awst::makeIntegerConstant("0", m.sourceLocation);
+			auto ebCall = std::make_shared<awst::PuyaLibCall>();
+			ebCall->sourceLocation = m.sourceLocation;
+			ebCall->wtype = awst::WType::voidType();
+			ebCall->func = "ensure_budget";
+			ebCall->args = {
+				awst::CallArg{std::string("required_budget"), std::move(budgetVal)},
+				awst::CallArg{std::string("fee_source"), std::move(feeSource)},
+			};
+			auto block = std::dynamic_pointer_cast<awst::Block>(m.body);
+			if (block)
+			{
+				block->body.insert(block->body.begin(),
+					awst::makeExpressionStatement(std::move(ebCall), m.sourceLocation));
+			}
+		}
+
 		helper->methods.push_back(std::move(m));
 	}
 

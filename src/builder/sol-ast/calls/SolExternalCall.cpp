@@ -90,6 +90,11 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 	std::shared_ptr<awst::Expression> _argExpr,
 	Type const* _paramSolType)
 {
+	// Treat a dynamic-length wtype as ARC-4 `byte[]` whether or not the
+	// solc-side type info confirms it: when the call site is a typed
+	// external call but `_paramSolType` is unavailable (e.g. function
+	// pointer / interface forwarder), we'd otherwise drop the length
+	// prefix and the callee's ABI router fails to decode.
 	bool isDynamicBytes = false;
 	if (_paramSolType)
 	{
@@ -98,13 +103,29 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 			&& dynamic_cast<ArrayType const*>(_paramSolType)
 			&& dynamic_cast<ArrayType const*>(_paramSolType)->isByteArrayOrString());
 	}
+	else
+	{
+		// No solc-side type info — infer from the AWST wtype. A bare
+		// `bytesType()` (or `BytesWType` with no fixed length) is the
+		// dynamic-bytes shape.
+		if (_argExpr->wtype == awst::WType::bytesType()
+			|| _argExpr->wtype == awst::WType::stringType())
+			isDynamicBytes = true;
+		else if (auto const* bw = dynamic_cast<awst::BytesWType const*>(_argExpr->wtype))
+			isDynamicBytes = !bw->length().has_value();
+	}
 
 	if (_argExpr->wtype == awst::WType::bytesType()
+		|| _argExpr->wtype == awst::WType::stringType()
 		|| _argExpr->wtype->kind() == awst::WTypeKind::Bytes)
 	{
 		if (isDynamicBytes)
 		{
-			// ARC4 byte[] encoding: uint16(length) ++ raw_bytes
+			// ARC4 byte[] encoding: uint16(length) ++ raw_bytes.
+			// Coerce string-typed argExpr to bytes so the concat output stays bytes-typed.
+			if (_argExpr->wtype == awst::WType::stringType())
+				_argExpr = awst::makeReinterpretCast(std::move(_argExpr), awst::WType::bytesType(), m_loc);
+
 			auto lenExpr = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), m_loc);
 			lenExpr->stackArgs.push_back(_argExpr);
 

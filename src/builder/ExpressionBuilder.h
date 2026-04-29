@@ -143,6 +143,15 @@ public:
 	void addStorageAlias(int64_t _declId, std::shared_ptr<awst::Expression> _expr);
 	/// Remove a previously registered storage pointer alias.
 	void removeStorageAlias(int64_t _declId);
+	/// Look up a previously registered storage alias. Returns nullptr if
+	/// no alias is registered for `_declId`. Used by the inline-asm
+	/// builder to resolve `<localStoragePtr>.slot` references against the
+	/// underlying box-keyed expression.
+	std::shared_ptr<awst::Expression> getStorageAlias(int64_t _declId) const
+	{
+		auto it = m_storageAliases.find(_declId);
+		return it == m_storageAliases.end() ? nullptr : it->second;
+	}
 
 	/// Mark a declaration as a mapping-storage-ref parameter whose runtime
 	/// value is the box key prefix (bytes). SolIndexAccess uses this to

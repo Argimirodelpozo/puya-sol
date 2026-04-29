@@ -169,6 +169,77 @@ class LonelyChunk(ARC4Contract):
         return ret
 
     @arc4.abimethod
+    def dance_call_7(
+        self,
+        delegate_update_selector: Bytes,
+        target_selector: Bytes,
+        a1: Bytes,
+        a2: Bytes,
+        a3: Bytes,
+        a4: Bytes,
+        a5: Bytes,
+        a6: Bytes,
+        a7: Bytes,
+    ) -> Bytes:
+        """Dance with a 7-positional-arg step-2 call. Used for matchOrders
+        (7 typed args). Each ai is raw ABI-encoded bytes for the
+        corresponding orch.matchOrders parameter.
+
+        Returns step-2's last_log so the caller can decode the inner
+        call's return — for matchOrders that's empty (void), but the
+        method shape stays consistent with `dance_call`.
+
+        ApplicationArgs cap is 16; here we use 8 (selector + 7), which
+        is comfortably under the limit. Larger app_arg payloads get
+        truncated by the composer, but the matchOrders test cases use
+        small (1-3 maker) order arrays that fit easily.
+        """
+        orch_id = self.orch_app_id
+        self_box = Bytes(b"__self_bytes")
+        orig_box = Bytes(b"__orch_orig_bytes")
+        clear = Bytes(CLEAR_PROGRAM)
+
+        self_p0 = op.Box.extract(self_box, UInt64(0), UInt64(2048))
+        self_p1 = op.Box.extract(self_box, UInt64(2048), UInt64(2048))
+        self_p2 = op.Box.extract(self_box, UInt64(4096), UInt64(2048))
+        self_p3 = op.Box.extract(
+            self_box,
+            UInt64(6144),
+            self.self_bytes_len - UInt64(6144),
+        )
+        itxn.ApplicationCall(
+            app_id=orch_id,
+            on_completion=OnCompleteAction.UpdateApplication,
+            approval_program=(self_p0, self_p1, self_p2, self_p3),
+            clear_state_program=clear,
+            app_args=(delegate_update_selector,),
+        ).submit()
+
+        call_res = itxn.ApplicationCall(
+            app_id=orch_id,
+            on_completion=OnCompleteAction.NoOp,
+            app_args=(target_selector, a1, a2, a3, a4, a5, a6, a7),
+            fee=0,
+        ).submit()
+        ret = call_res.last_log
+
+        orig_p0 = op.Box.extract(orig_box, UInt64(0), UInt64(2048))
+        orig_p1 = op.Box.extract(orig_box, UInt64(2048), UInt64(2048))
+        orig_p2 = op.Box.extract(
+            orig_box,
+            UInt64(4096),
+            self.orch_orig_bytes_len - UInt64(4096),
+        )
+        itxn.ApplicationCall(
+            app_id=orch_id,
+            on_completion=OnCompleteAction.UpdateApplication,
+            approval_program=(orig_p0, orig_p1, orig_p2),
+            clear_state_program=clear,
+            app_args=(delegate_update_selector,),
+        ).submit()
+        return ret
+
+    @arc4.abimethod
     def delegate_dance(self, delegate_update_selector: Bytes) -> None:
         """Install F-helper bytes onto orch, call orch (now running F),
         revert. The 3 inner-txns must atomically succeed or the whole

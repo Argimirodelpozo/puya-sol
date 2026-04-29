@@ -89,11 +89,6 @@ def test_orchestrator_basic_state(split_exchange, admin):
 
 # ── Round-trip through helper ─────────────────────────────────────────────
 
-@pytest.mark.xfail(reason="puya-sol mistranslates `mstore(add(buffer, 0x20), "
-                          "<32-byte literal>)` for `bytes memory buffer = new "
-                          "bytes(N)` allocations — the EVM scratch-write "
-                          "pattern doesn't reach the simulated memory blob; "
-                          "PolyProxyLib._computeCreationCode trips at runtime")
 def test_proxy_wallet_address_round_trip(split_exchange, admin):
     """getPolyProxyWalletAddress(signer) calls PolyProxyLib.getProxyWalletAddress
     (extracted to helper). With ZERO_ADDR for proxyFactory/proxyImplementation
@@ -110,8 +105,6 @@ def test_proxy_wallet_address_round_trip(split_exchange, admin):
     assert len(res.abi_return) == 58
 
 
-@pytest.mark.xfail(reason="same `mstore(add(buf, 0x20), literal)` mistranslation "
-                          "as proxy round-trip — PolySafeLib.getContractBytecode")
 def test_safe_address_round_trip(split_exchange, admin):
     _, orch = split_exchange
     res = orch.send.call(au.AppClientMethodCallParams(

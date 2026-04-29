@@ -770,7 +770,7 @@ void AssemblyBuilder::buildExpressionStatement(
 		// Before translating args, check for patterns that need raw Yul AST access.
 		if (funcName == "mstore")
 		{
-			// Try to detect mstore(add(bytes_var, 32), value) pattern
+			// Try to detect mstore(add(bytes_var, K), value) pattern (K >= 32)
 			if (tryHandleBytesMemoryWrite(*call, loc, _out))
 				return;
 		}

@@ -95,8 +95,11 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::toPackedBytes(
 		}
 		else if (cat == Type::Category::FixedBytes)
 		{
-			auto const* fbType = dynamic_cast<FixedBytesType const*>(_solType);
-			if (fbType) packedWidth = static_cast<int>(fbType->numBytes());
+			// FixedBytes (bytes1..bytes32) values are already exactly N bytes
+			// (BytesWType with matching length). No truncation/padding needed
+			// — applying the uint→bytesN extract pattern below would
+			// double-extract a value that's already the right length, and
+			// `extract 7 1` on a 1-byte value panics.
 		}
 		else if (cat == Type::Category::Bool)
 			packedWidth = 1;

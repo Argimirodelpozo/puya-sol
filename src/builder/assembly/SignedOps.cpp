@@ -452,10 +452,81 @@ void AssemblyBuilder::handleSstore(
 		return;
 	}
 
-	// Convert slot arg to uint64 for __storage_write(slot, value)
+	// Local storage-ref sentinel: when the slot expression IS a
+	// BoxValueExpression (from `Type storage p = mapping[k]; sstore(p.slot, v)`),
+	// emit a RAW `box_put` on the captured key. We deliberately do NOT
+	// route through `AssignmentStatement(BoxValueExpression, …)` —
+	// puya's codec encodes the value via the field's ARC4 layout, but
+	// EVM-style packed slot writes need raw 32-byte preservation (see
+	// `handleSload` for the symmetric reasoning).
+	if (auto const* bv = dynamic_cast<awst::BoxValueExpression const*>(_args[0].get()))
+	{
+		// Convert value to biguint, then to bytes, then pad to exactly
+		// 32 bytes (EVM slot width). biguint is a variable-length
+		// representation; pad with leading zeros so all writes produce
+		// the same fixed-size value the inline-asm caller expects.
+		auto valueArg = ensureBiguint(_args[1], _loc);
+		auto valueBytes = awst::makeReinterpretCast(
+			std::move(valueArg), awst::WType::bytesType(), _loc);
+		// Pad to 32 bytes: bzero(32) ++ value, then take last 32 bytes.
+		auto bzero32 = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
+		bzero32->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
+		auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
+		concat->stackArgs.push_back(std::move(bzero32));
+		concat->stackArgs.push_back(std::move(valueBytes));
+		auto eval = std::make_shared<awst::SingleEvaluation>();
+		eval->sourceLocation = _loc;
+		eval->source = std::move(concat);
+		eval->wtype = awst::WType::bytesType();
+		auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
+		lenCall->stackArgs.push_back(eval);
+		auto offset = awst::makeUInt64BinOp(
+			std::move(lenCall),
+			awst::UInt64BinaryOperator::Sub,
+			awst::makeIntegerConstant("32", _loc),
+			_loc);
+		auto extract32 = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
+		extract32->stackArgs.push_back(eval);
+		extract32->stackArgs.push_back(std::move(offset));
+		extract32->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
+
+		// box_del(key) before put to handle the "size differs" case if
+		// the box was written at a smaller length earlier. With our 32-
+		// byte writes that's a no-op for steady state, but it keeps the
+		// first-time path safe.
+		auto boxDel = awst::makeIntrinsicCall("box_del", awst::WType::boolType(), _loc);
+		boxDel->stackArgs.push_back(bv->key);
+		auto popDel = std::make_shared<awst::ExpressionStatement>();
+		popDel->sourceLocation = _loc;
+		popDel->expr = std::move(boxDel);
+		_out.push_back(std::move(popDel));
+
+		auto boxPut = awst::makeIntrinsicCall("box_put", awst::WType::voidType(), _loc);
+		boxPut->stackArgs.push_back(bv->key);
+		boxPut->stackArgs.push_back(std::move(extract32));
+		auto putStmt = std::make_shared<awst::ExpressionStatement>();
+		putStmt->sourceLocation = _loc;
+		putStmt->expr = std::move(boxPut);
+		_out.push_back(std::move(putStmt));
+		return;
+	}
+
+	// Convert slot arg to uint64 for __storage_write(slot, value).
+	// See BitwiseShiftOps::handleSload for the bytes[N] case (solady's
+	// `bytes32 s = ...; sstore(s, v)` pattern carries the Solidity type
+	// into Yul, so we need to truncate bytes[N] just like biguint).
 	auto slotArg = _args[0];
 	if (slotArg->wtype == awst::WType::biguintType())
+	{
 		slotArg = safeBtoi(std::move(slotArg), _loc);
+	}
+	else if (slotArg->wtype != awst::WType::uint64Type()
+		&& dynamic_cast<awst::BytesWType const*>(slotArg->wtype))
+	{
+		auto asBiguint = awst::makeReinterpretCast(
+			std::move(slotArg), awst::WType::biguintType(), _loc);
+		slotArg = safeBtoi(std::move(asBiguint), _loc);
+	}
 
 	// Ensure value is biguint
 	auto valueArg = ensureBiguint(_args[1], _loc);

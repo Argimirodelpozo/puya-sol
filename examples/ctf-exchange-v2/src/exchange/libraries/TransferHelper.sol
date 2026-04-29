@@ -2,44 +2,40 @@
 pragma solidity ^0.8.0;
 
 import { ERC1155 } from "@solady/src/tokens/ERC1155.sol";
-import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
+
+// AVM-PORT-ADAPTATION: see PUYA_BLOCKERS.md §3.
+// Original v2 used solady's SafeTransferLib for ERC20 paths. solady's
+// inline assembly `call(gas, token, 0, ptr, len, retPtr, retLen)` to a
+// non-constant `token` doesn't currently translate to AVM `itxn
+// ApplicationCall` — puya-sol's Yul `call` handler stubs the call as
+// success without firing the inner-txn, so transfers silently no-op.
+//
+// Plain Solidity-interface calls translate cleanly. Use a minimal IERC20
+// variant rather than pulling in solmate or forge-std.
+interface IERC20Min {
+    function transfer(address to, uint256 amount) external returns (bool);
+    function transferFrom(address from, address to, uint256 amount) external returns (bool);
+}
 
 /// @title TransferHelper
 /// @notice Helper method to transfer tokens
 library TransferHelper {
     /// @notice Transfers tokens from msg.sender to a recipient
-    /// @param token    - The contract address of the token which will be transferred
-    /// @param to       - The recipient of the transfer
-    /// @param amount   - The amount to be transferred
     function _transferERC20(address token, address to, uint256 amount) internal {
-        SafeTransferLib.safeTransfer(token, to, amount);
+        require(IERC20Min(token).transfer(to, amount), "ERC20 transfer failed");
     }
 
     /// @notice Transfers tokens from the targeted address to the given destination
-    /// @param token    - The contract address of the token to be transferred
-    /// @param from     - The originating address from which the tokens will be transferred
-    /// @param to       - The destination address of the transfer
-    /// @param amount   - The amount to be transferred
     function _transferFromERC20(address token, address from, address to, uint256 amount) internal {
-        SafeTransferLib.safeTransferFrom(token, from, to, amount);
+        require(IERC20Min(token).transferFrom(from, to, amount), "ERC20 transferFrom failed");
     }
 
     /// @notice Transfer an ERC1155 token
-    /// @param token    - The contract address of the token to be transferred
-    /// @param from     - The originating address from which the tokens will be transferred
-    /// @param to       - The destination address of the transfer
-    /// @param id       - The tokenId of the token to be transferred
-    /// @param amount   - The amount to be transferred
     function _transferFromERC1155(address token, address from, address to, uint256 id, uint256 amount) internal {
         ERC1155(token).safeTransferFrom(from, to, id, amount, "");
     }
 
     /// @notice Transfers a set of ERC1155 tokens
-    /// @param token    - The contract address of the token to be transferred
-    /// @param from     - The originating address from which the tokens will be transferred
-    /// @param to       - The destination address of the transfer
-    /// @param ids      - The tokenId of the token to be transferred
-    /// @param amounts  - The amount to be transferred
     function _batchTransferFromERC1155(
         address token,
         address from,

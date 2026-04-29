@@ -1,170 +1,104 @@
-"""Shared test infrastructure for ctf-exchange v2 translated tests.
+"""Top-level pytest fixtures for ctf-exchange v2.
 
-The v2 CTFExchange unsplit is ~10.5KB — over AVM's 8192-byte cap. With the
-SimpleSplitter's multi-helper mode + --force-delegate matchOrders, the
-orchestrator drops to ~5.3KB and deploys cleanly. Two normal helpers
-(__Helper1, __Helper2) carry the solady utilities and the in-source pure
-mixin helpers; __Helper3 is the delegate sidecar for matchOrders (the
-hand-crafted lonely chunk artifact lives in `delegate/CTFExchange__Helper3/`
-once the lonely-chunk pass is wired up — until then matchOrders-exercising
-tests are xfail).
+Reusable utility code lives in `test/dev/` (see `test/dev/__init__.py`).
+This file holds only fixtures + cross-category fixture composition.
 
-Fixtures:
-  * Smaller contracts (Collateral*, CtfAdapter, NegRiskAdapter): deployed
-    standalone with ZERO_ADDR placeholders for cross-contract refs.
-  * `split_exchange`: deploys helpers, substitutes their app ids into the
-    orchestrator's TEAL, deploys orch, runs __postInit. Returns
-    (helper1_client, helper2_client, orch_client).
+Sub-package layout (in progress):
+  test/conftest.py         — this file (localnet, admin, base helpers)
+  test/dev/                — utility modules (no fixtures)
+  test/collateral/         — CollateralToken, On/Offramp, PermissionedRamp tests
+  test/adapters/           — Ctf + NegRisk adapter tests
+  test/library/            — pure-math + ECDSA probe tests
+  test/exchange/           — orch-dependent tests (currently mostly errors/xfails)
+  test/smoke/              — deployment smoke tests
+
+Cross-cutting fixtures (`mock_token`, `universal_mock`, `split_exchange`)
+live here for now and migrate down to per-category conftests as the tree
+fills in.
 """
 from pathlib import Path
+import subprocess
 
 import algokit_utils as au
-from algosdk import encoding
-from algosdk.kmd import KMDClient
+import pytest
 from algosdk.transaction import (
     ApplicationCreateTxn,
     OnComplete,
+    PaymentTxn,
     StateSchema,
     wait_for_confirmation,
-    PaymentTxn,
 )
+from algosdk.kmd import KMDClient
 from algosdk.v2client.algod import AlgodClient
-import pytest
+
+from dev.addrs import addr, algod_addr_for_app, app_id_to_address
+from dev.arc56 import compile_teal, inject_memory_init, load_arc56
+from dev.deploy import AUTO_POPULATE, NO_POPULATE, create_app, deploy_app
+from dev.localnet import (
+    fund_random_account,
+    make_admin_account,
+    make_algod_client,
+    make_kmd_client,
+    make_localnet,
+    make_localnet_clients,
+)
+
+
+# Re-exported so tests written before the dev/ refactor still work.
+__all__ = [
+    "addr",
+    "algod_addr_for_app",
+    "app_id_to_address",
+    "AUTO_POPULATE",
+    "NO_POPULATE",
+    "ZERO_ADDR",
+    "OUT_DIR",
+    "deploy_app",
+]
+
 
 OUT_DIR = Path(__file__).parent.parent / "out"
-NO_POPULATE = au.SendParams(populate_app_call_resources=False)
-AUTO_POPULATE = au.SendParams(populate_app_call_resources=True)
 ZERO_ADDR = b"\x00" * 32
 
 
-# ── Localnet fixtures ─────────────────────────────────────────────────────
+# ── Localnet ──────────────────────────────────────────────────────────────
+
 
 @pytest.fixture(scope="session")
 def algod_client() -> AlgodClient:
-    return au.ClientManager.get_algod_client(au.ClientManager.get_default_localnet_config("algod"))
+    return make_algod_client()
 
 
 @pytest.fixture(scope="session")
 def kmd_client() -> KMDClient:
-    return au.ClientManager.get_kmd_client(au.ClientManager.get_default_localnet_config("kmd"))
+    return make_kmd_client()
 
 
 @pytest.fixture(scope="session")
 def localnet_clients(algod_client, kmd_client):
-    return au.AlgoSdkClients(algod=algod_client, kmd=kmd_client)
+    return make_localnet_clients(algod_client, kmd_client)
 
 
 @pytest.fixture(scope="session")
 def admin(localnet_clients):
-    return au.AlgorandClient(localnet_clients).account.localnet_dispenser()
+    return make_admin_account(localnet_clients)
 
 
 @pytest.fixture(scope="session")
 def localnet(localnet_clients, admin):
-    client = au.AlgorandClient(localnet_clients)
-    client.set_suggested_params_cache_timeout(0)
-    client.account.set_signer_from_account(admin)
-    return client
+    return make_localnet(localnet_clients, admin)
 
 
 @pytest.fixture(scope="function")
 def funded_account(localnet, admin):
-    acct = localnet.account.random()
-    algod = localnet.client.algod
-    sp = algod.suggested_params()
-    pay = PaymentTxn(admin.address, sp, acct.address, 1_000_000)
-    txid = algod.send_transaction(pay.sign(admin.private_key))
-    wait_for_confirmation(algod, txid, 4)
-    return acct
+    return fund_random_account(localnet, admin)
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────
-
-def addr(account_or_sk) -> bytes:
-    return encoding.decode_address(account_or_sk.address)
-
-
-def algod_addr_for_app(app_id: int) -> str:
-    return encoding.encode_address(
-        encoding.checksum(b"appID" + app_id.to_bytes(8, "big")))
-
-
-def app_id_to_address(app_id: int) -> bytes:
-    return b"\x00" * 24 + app_id.to_bytes(8, "big")
-
-
-def _load_arc56(p: Path) -> au.Arc56Contract:
-    return au.Arc56Contract.from_json(p.read_text())
-
-
-def deploy_app(localnet, sender, base_dir: Path, name: str,
-               post_init_args=None, post_init_app_refs=None,
-               create_args=None, create_boxes=None, create_apps=None,
-               fund_amount=10_000_000, extra_fee=0) -> au.AppClient:
-    spec = _load_arc56(base_dir / f"{name}.arc56.json")
-    algod = localnet.client.algod
-    sch = spec.state.schema.global_state
-
-    approval_bin = encoding.base64.b64decode(
-        algod.compile((base_dir / f"{name}.approval.teal").read_text())["result"])
-    clear_bin = encoding.base64.b64decode(
-        algod.compile((base_dir / f"{name}.clear.teal").read_text())["result"])
-
-    max_size = max(len(approval_bin), len(clear_bin))
-    extra_pages = max(0, (max_size - 1) // 2048)
-    if extra_pages > 3:
-        raise RuntimeError(f"{name}: {max_size}B > AVM 8192-byte cap")
-
-    sp = algod.suggested_params()
-    sp.fee = max(sp.min_fee, sp.fee) + extra_fee
-    sp.flat_fee = True
-    txn = ApplicationCreateTxn(
-        sender=sender.address, sp=sp,
-        on_complete=OnComplete.NoOpOC,
-        approval_program=approval_bin, clear_program=clear_bin,
-        global_schema=StateSchema(num_uints=sch.ints, num_byte_slices=sch.bytes),
-        local_schema=StateSchema(num_uints=0, num_byte_slices=0),
-        extra_pages=extra_pages,
-        app_args=create_args or [],
-        boxes=create_boxes or [],
-        foreign_apps=create_apps or [],
-    )
-    txid = algod.send_transaction(txn.sign(sender.private_key))
-    result = wait_for_confirmation(algod, txid, 4)
-    app_id = result["application-index"]
-
-    if fund_amount > 0:
-        sp2 = algod.suggested_params()
-        pay = PaymentTxn(sender.address, sp2, algod_addr_for_app(app_id), fund_amount)
-        wait_for_confirmation(algod, algod.send_transaction(pay.sign(sender.private_key)), 4)
-
-    client = au.AppClient(au.AppClientParams(
-        algorand=localnet, app_spec=spec,
-        app_id=app_id, default_sender=sender.address,
-    ))
-
-    if post_init_args is not None:
-        client.send.call(au.AppClientMethodCallParams(
-            method="__postInit",
-            args=post_init_args,
-            extra_fee=au.AlgoAmount(micro_algo=20_000),
-            app_references=post_init_app_refs or [],
-        ), send_params=AUTO_POPULATE)
-
-    return client
-
-
-# ── Fixtures: each v2 contract that fits, deployed standalone ─────────────
+# ── Shared mocks ──────────────────────────────────────────────────────────
 #
-# Dependencies between contracts are stubbed with ZERO_ADDR. This means
-# wrap/unwrap/match flows won't function (they'd inner-call into nothing),
-# but admin/getter tests run against real on-chain state.
-
-# ── Shared mock ERC20 for placeholder token slots ─────────────────────────
-# v2's adapters/ramps call `IERC20(token).approve(...)` in their constructors.
-# Passing ZERO_ADDR makes those inner calls hit app id 0 (invalid). We reuse
-# v1's compiled ERC20 mock as a standalone "shared token" that responds to
-# approve / balanceOf / etc.
+# v2's adapters/ramps call IERC20(token).approve(...) in their constructors.
+# We reuse v1's compiled ERC20 mock as a standalone token, and v2's
+# UniversalMock for slots that need both ERC20 and ERC1155 surface.
 
 V1_ERC20_BASE = OUT_DIR.parent.parent / "ctf-exchange" / "out" / "dev" / "mocks" / "ERC20"
 
@@ -186,35 +120,193 @@ def universal_mock(localnet, admin):
     return deploy_app(localnet, admin, base, "UniversalMock")
 
 
+# ── Stateful USDC + CTF mocks for matchOrders settlement ────────────────
+# These live under delegate/out/ (puyapy-built, not puya-sol). Real
+# balances/allowances/approvals/partition tracking — wired into the
+# split exchange in place of `universal_mock` for collateral + ctf slots.
+
+_DELEGATE_OUT = Path(__file__).parent.parent / "delegate" / "out"
+
+
+def _deploy_pyapp(localnet, admin, name: str, *, init_args=None) -> au.AppClient:
+    """Deploy a puyapy-emitted app from delegate/out/."""
+    spec = au.Arc56Contract.from_json((_DELEGATE_OUT / f"{name}.arc56.json").read_text())
+    approval = (_DELEGATE_OUT / f"{name}.approval.bin").read_bytes()
+    clear = (_DELEGATE_OUT / f"{name}.clear.bin").read_bytes()
+
+    sch = spec.state.schema.global_state
+    extra_pages = max(0, (max(len(approval), len(clear)) - 1) // 2048)
+    sp = localnet.client.algod.suggested_params()
+    txn = ApplicationCreateTxn(
+        sender=admin.address, sp=sp,
+        on_complete=OnComplete.NoOpOC,
+        approval_program=approval, clear_program=clear,
+        global_schema=StateSchema(num_uints=sch.ints, num_byte_slices=sch.bytes),
+        local_schema=StateSchema(num_uints=0, num_byte_slices=0),
+        extra_pages=extra_pages,
+        app_args=init_args or [bytes.fromhex("83f14748")],  # method "init()void" selector
+    )
+    txid = localnet.client.algod.send_transaction(txn.sign(admin.private_key))
+    res = wait_for_confirmation(localnet.client.algod, txid, 4)
+    app_id = res["application-index"]
+
+    pay = PaymentTxn(
+        admin.address,
+        localnet.client.algod.suggested_params(),
+        algod_addr_for_app(app_id),
+        50_000_000,  # MBR for boxes (balances grow with deals)
+    )
+    wait_for_confirmation(localnet.client.algod,
+        localnet.client.algod.send_transaction(pay.sign(admin.private_key)), 4)
+
+    return au.AppClient(au.AppClientParams(
+        algorand=localnet, app_spec=spec, app_id=app_id,
+        default_sender=admin.address))
+
+
+@pytest.fixture(scope="function")
+def usdc_stateful(localnet, admin):
+    """Stateful USDC mock (delegate/usdc_mock.py): real balances +
+    allowances, exposes mint/transfer/transferFrom/balanceOf/allowance/approve."""
+    return _deploy_pyapp(localnet, admin, "USDCMock")
+
+
+@pytest.fixture(scope="function")
+def ctf_stateful(localnet, admin):
+    """Stateful CTF mock (delegate/ctf_mock.py): real ERC1155 balances +
+    approvals + (yes_id, no_id) partitions. Exposes mint/balanceOf/
+    setApprovalForAll/safeTransferFrom/splitPosition/mergePositions/
+    prepare_condition."""
+    return _deploy_pyapp(localnet, admin, "CTFMock")
+
+
+# ── Standalone-contract fixtures (collateral system) ─────────────────────
+
+
+@pytest.fixture(scope="function")
+def erc1271_mock_factory(localnet, admin):
+    """Factory: `erc1271_mock_factory(signer_eth_addr_20)` deploys an
+    ERC1271Mock and returns the AppClient.
+
+    The mock holds `signer` (32-byte address slot) and exposes
+    `isValidSignature(hash, sig)` which uses the AVM-PORT-ADAPTATION
+    r/s/v + ecrecover precompile path. Pass the inner signer's 20-byte
+    eth address; we left-pad to 32 bytes for the create-arg.
+    """
+    base = OUT_DIR / "test" / "dev" / "mocks" / "ERC1271Mock"
+
+    def _deploy(signer_eth20: bytes) -> au.AppClient:
+        signer32 = b"\x00" * 12 + signer_eth20 if len(signer_eth20) == 20 else signer_eth20
+        return deploy_app(localnet, admin, base, "ERC1271Mock", create_args=[signer32])
+
+    return _deploy
+
+
+@pytest.fixture(scope="function")
+def toggleable_1271_factory(localnet, admin):
+    """Like `erc1271_mock_factory` but for ToggleableERC1271Mock — has
+    `disable()` to turn off signature validation mid-test."""
+    base = OUT_DIR / "test" / "dev" / "mocks" / "ToggleableERC1271Mock"
+
+    def _deploy(signer_eth20: bytes) -> au.AppClient:
+        signer32 = b"\x00" * 12 + signer_eth20 if len(signer_eth20) == 20 else signer_eth20
+        return deploy_app(localnet, admin, base, "ToggleableERC1271Mock", create_args=[signer32])
+
+    return _deploy
+
+
+@pytest.fixture(scope="function")
+def usdc(localnet, admin):
+    """Deploy USDC mock (solady ERC20, 6 decimals, mint/burn)."""
+    base = OUT_DIR / "test" / "dev" / "mocks"
+    return deploy_app(localnet, admin, base, "USDC", create_args=[])
+
+
+@pytest.fixture(scope="function")
+def usdce(localnet, admin):
+    """Deploy USDCe mock (solady ERC20, 6 decimals, mint/burn)."""
+    base = OUT_DIR / "test" / "dev" / "mocks"
+    return deploy_app(localnet, admin, base, "USDCe", create_args=[])
+
+
+@pytest.fixture(scope="function")
+def vault(localnet, admin):
+    """A funded account used as the vault address that holds wrapped collateral."""
+    return fund_random_account(localnet, admin)
+
+
 @pytest.fixture(scope="function")
 def collateral_token(localnet, admin):
-    """Deploy CollateralToken. Constructor takes 3 immutable addrs at create
-    time (USDC, USDCE, VAULT) via ApplicationArgs and creates the
-    `__dyn_storage` box (so we declare it on the create txn). Then
-    `initialize(owner)` sets the proxy owner."""
+    """Deploy CollateralToken (UUPS proxy).
+
+    With puya-sol's `initializer`-modifier-hoisting (option (a) from this
+    session), `__postInit` now takes 4 args — the constructor's USDC/USDCE/
+    VAULT plus `_owner` from `initialize(_owner)`. One call to __postInit
+    replaces the previous "initialize then __postInit" sequence and avoids
+    the PUYA #1 bug.
+
+    Sequence:
+      1. Deploy SafeTransferLib helper (CallContextChecker__Helper1).
+      2. Substitute helper app id into orch TEAL, create orch.
+      3. `create_app` funds the orch (covers __dyn_storage 8KB MBR).
+      4. Call `__postInit(USDC, USDCE, VAULT, owner)` — sets immutables,
+         runs the original-ctor body (incl. `_disableInitializers`), then
+         the original `initialize(owner)` body wrapped in its `initializer`
+         modifier — all in one frame so ABI args flow through correctly.
+    """
     base = OUT_DIR / "collateral" / "CollateralToken"
-    # 8192-byte box needs 8 × 1024B box references for the write budget.
-    box_refs = [(0, b"__dyn_storage")] * 8
-    client = deploy_app(
-        localnet, admin, base, "CollateralToken",
-        create_args=[ZERO_ADDR, ZERO_ADDR, ZERO_ADDR],
-        create_boxes=box_refs,
+    helper_dir = base / "CallContextChecker__Helper1"
+    orch_dir = base / "CollateralToken"
+    algod = localnet.client.algod
+
+    h_spec = load_arc56(helper_dir / "CallContextChecker__Helper1.arc56.json")
+    h_teal = inject_memory_init(
+        (helper_dir / "CallContextChecker__Helper1.approval.teal").read_text())
+    h_app_id = create_app(
+        localnet, admin,
+        compile_teal(algod, h_teal),
+        compile_teal(
+            algod, (helper_dir / "CallContextChecker__Helper1.clear.teal").read_text()),
+        h_spec.state.schema.global_state,
     )
+
+    orch_spec = load_arc56(orch_dir / "CollateralToken.arc56.json")
+    orch_teal = (orch_dir / "CollateralToken.approval.teal").read_text().replace(
+        "TMPL_CallContextChecker__Helper1_APP_ID", str(h_app_id))
+    orch_clear = (orch_dir / "CollateralToken.clear.teal").read_text().replace(
+        "TMPL_CallContextChecker__Helper1_APP_ID", str(h_app_id))
+    orch_approval_bin = compile_teal(algod, orch_teal)
+    orch_clear_bin = compile_teal(algod, orch_clear)
+
+    sch = orch_spec.state.schema.global_state
+    extra_pages = max(
+        0, (max(len(orch_approval_bin), len(orch_clear_bin)) - 1) // 2048)
+    app_id = create_app(
+        localnet, admin, orch_approval_bin, orch_clear_bin,
+        sch, extra_pages=extra_pages,
+        app_args=[ZERO_ADDR, ZERO_ADDR, ZERO_ADDR],
+    )
+
+    client = au.AppClient(au.AppClientParams(
+        algorand=localnet, app_spec=orch_spec, app_id=app_id,
+        default_sender=admin.address,
+    ))
+
     client.send.call(au.AppClientMethodCallParams(
-        method="initialize", args=[addr(admin)],
+        method="__postInit",
+        args=[ZERO_ADDR, ZERO_ADDR, ZERO_ADDR, addr(admin)],
         extra_fee=au.AlgoAmount(micro_algo=20_000),
         box_references=[au.BoxReference(app_id=0, name=b"__dyn_storage")],
-    ), send_params=NO_POPULATE)
+        app_references=[h_app_id],
+    ), send_params=AUTO_POPULATE)
+
     return client
 
 
 @pytest.fixture(scope="function")
 def collateral_onramp(localnet, admin, mock_token):
-    """CollateralOnramp constructor(_owner, _admin, _collateralToken). The
-    first two slots are an EOA-style address; the last is the collateral
-    contract whose approve() the constructor inner-calls. algokit's ARC-56
-    address arg expects a string-encoded Algorand address."""
     base = OUT_DIR / "collateral" / "CollateralOnramp"
+    from algosdk import encoding
     tok = encoding.encode_address(app_id_to_address(mock_token.app_id))
     return deploy_app(
         localnet, admin, base, "CollateralOnramp",
@@ -226,6 +318,7 @@ def collateral_onramp(localnet, admin, mock_token):
 @pytest.fixture(scope="function")
 def collateral_offramp(localnet, admin, mock_token):
     base = OUT_DIR / "collateral" / "CollateralOfframp"
+    from algosdk import encoding
     tok = encoding.encode_address(app_id_to_address(mock_token.app_id))
     return deploy_app(
         localnet, admin, base, "CollateralOfframp",
@@ -237,12 +330,16 @@ def collateral_offramp(localnet, admin, mock_token):
 @pytest.fixture(scope="function")
 def permissioned_ramp(localnet, admin, mock_token):
     base = OUT_DIR / "collateral" / "PermissionedRamp"
+    from algosdk import encoding
     tok = encoding.encode_address(app_id_to_address(mock_token.app_id))
     return deploy_app(
         localnet, admin, base, "PermissionedRamp",
         post_init_args=[admin.address, admin.address, tok],
         post_init_app_refs=[mock_token.app_id],
     )
+
+
+# ── Standalone-contract fixtures (adapters) ──────────────────────────────
 
 
 @pytest.fixture(scope="function")
@@ -277,79 +374,12 @@ TMPL_H1 = "TMPL_CTFExchange__Helper1_APP_ID"
 TMPL_H2 = "TMPL_CTFExchange__Helper2_APP_ID"
 TMPL_H3 = "TMPL_CTFExchange__Helper3_APP_ID"
 
-
-def _compile_teal(algod, teal_text: str) -> bytes:
-    return encoding.base64.b64decode(algod.compile(teal_text)["result"])
-
-
-def _inject_memory_init(teal: str) -> str:
-    """puya-sol's split helpers don't get the simulated-EVM memory buffer
-    initialised in their main routine — only the orchestrator's main gets
-    that, because puya only emits the buffer-init for contracts whose
-    AWST has a constructor. Methods we extract into the helper still load
-    from scratch 0 expecting the buffer, so we prepend the init manually.
-
-    Pattern matches the orchestrator's memory-init prologue verbatim.
-    """
-    init = (
-        "    pushint 4096\n"
-        "    bzero\n"
-        "    dup\n"
-        "    store 5\n"
-        "    store 0\n"
-        "    load 0\n"
-        "    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080\n"
-        "    replace2 64\n"
-        "    store 0\n"
-    )
-    # Insert after the bytecblock and before `txn ApplicationID` (the
-    # entry to the router branch). bytecblock can be on a single very
-    # long line.
-    lines = teal.splitlines()
-    out = []
-    inserted = False
-    for ln in lines:
-        out.append(ln)
-        if not inserted and ln.lstrip().startswith("bytecblock"):
-            out.append(init.rstrip("\n"))
-            inserted = True
-    return "\n".join(out) + "\n"
-
-
-def _create_app(localnet, sender, approval: bytes, clear: bytes, schema,
-                app_args=None, fund_amount=10_000_000,
-                extra_pages: int | None = None) -> int:
-    algod = localnet.client.algod
-    if extra_pages is None:
-        extra_pages = max(0, (max(len(approval), len(clear)) - 1) // 2048)
-    sp = algod.suggested_params()
-    txn = ApplicationCreateTxn(
-        sender=sender.address, sp=sp,
-        on_complete=OnComplete.NoOpOC,
-        approval_program=approval, clear_program=clear,
-        global_schema=StateSchema(num_uints=schema.ints, num_byte_slices=schema.bytes),
-        local_schema=StateSchema(num_uints=0, num_byte_slices=0),
-        extra_pages=extra_pages,
-        app_args=app_args or [],
-    )
-    txid = algod.send_transaction(txn.sign(sender.private_key))
-    result = wait_for_confirmation(algod, txid, 4)
-    app_id = result["application-index"]
-    if fund_amount > 0:
-        sp2 = algod.suggested_params()
-        pay = PaymentTxn(sender.address, sp2, algod_addr_for_app(app_id), fund_amount)
-        wait_for_confirmation(algod, algod.send_transaction(pay.sign(sender.private_key)), 4)
-    return app_id
-
-
 DELEGATE_DIR = Path(__file__).parent.parent / "delegate"
 LONELY_CHUNK_OUT = DELEGATE_DIR / "out"
 
 
 def _build_lonely_chunk():
-    """Compile delegate/lonely_chunk.py via puyapy. Cached — only runs
-    if the bin is missing or the source is newer."""
-    import subprocess
+    """Compile delegate/lonely_chunk.py via puyapy. Cached."""
     src = DELEGATE_DIR / "lonely_chunk.py"
     out_bin = LONELY_CHUNK_OUT / "LonelyChunk.approval.bin"
     if out_bin.exists() and out_bin.stat().st_mtime > src.stat().st_mtime:
@@ -365,7 +395,6 @@ def _build_lonely_chunk():
 
 @pytest.fixture(scope="session")
 def lonely_chunk_artifacts():
-    """Compile lonely_chunk.py once per session and return its bin paths."""
     _build_lonely_chunk()
     return {
         "approval_bin": (LONELY_CHUNK_OUT / "LonelyChunk.approval.bin").read_bytes(),
@@ -378,18 +407,15 @@ def lonely_chunk_artifacts():
 @pytest.fixture(scope="function")
 def helper1(localnet, admin):
     """Deploy CTFExchange__Helper1 standalone (no orchestrator). Used for
-    library-level tests (CalculatorHelper, PolyProxyLib, PolySafeLib,
-    CTHelpers) that exercise pure-math helpers without the full exchange.
-    """
+    library-level tests that exercise pure helpers without the full exchange."""
     algod = localnet.client.algod
-    spec = au.Arc56Contract.from_json(
-        (H1_DIR / "CTFExchange__Helper1.arc56.json").read_text())
-    teal = _inject_memory_init(
+    spec = load_arc56(H1_DIR / "CTFExchange__Helper1.arc56.json")
+    teal = inject_memory_init(
         (H1_DIR / "CTFExchange__Helper1.approval.teal").read_text())
-    app_id = _create_app(
+    app_id = create_app(
         localnet, admin,
-        _compile_teal(algod, teal),
-        _compile_teal(algod, (H1_DIR / "CTFExchange__Helper1.clear.teal").read_text()),
+        compile_teal(algod, teal),
+        compile_teal(algod, (H1_DIR / "CTFExchange__Helper1.clear.teal").read_text()),
         spec.state.schema.global_state)
     return au.AppClient(au.AppClientParams(
         algorand=localnet, app_spec=spec, app_id=app_id,
@@ -398,58 +424,48 @@ def helper1(localnet, admin):
 
 @pytest.fixture(scope="function")
 def split_exchange(localnet, admin, universal_mock):
-    """Deploy helper1 + helper2 + orchestrator (with helper app ids substituted
-    into orch's TEAL). Runs __postInit with `mock_token` filling the slots
-    that the constructor calls `approve` / `setApprovalForAll` against
-    (collateral, ctf, ctfCollateral, outcomeTokenFactory) — others stay zero.
-    Returns (helper1, helper2, orch) clients.
+    """Deploy helper1 + helper2 + orchestrator. Returns (h1, h2, orch).
 
-    matchOrders is currently delegated to a hand-crafted lonely-chunk that
-    isn't wired up yet — that path xfails until the runtime lands. Auth /
-    registration / hashOrder paths work normally on the orchestrator.
+    matchOrders is delegated to a hand-crafted lonely chunk that isn't
+    fully wired yet — that path xfails per-test until the runtime lands.
+    Auth / registration / hashOrder paths work normally.
     """
     algod = localnet.client.algod
 
-    h1_spec = au.Arc56Contract.from_json(
-        (H1_DIR / "CTFExchange__Helper1.arc56.json").read_text())
-    h1_approval_teal = _inject_memory_init(
+    h1_spec = load_arc56(H1_DIR / "CTFExchange__Helper1.arc56.json")
+    h1_teal = inject_memory_init(
         (H1_DIR / "CTFExchange__Helper1.approval.teal").read_text())
-    h1_app_id = _create_app(
+    h1_app_id = create_app(
         localnet, admin,
-        _compile_teal(algod, h1_approval_teal),
-        _compile_teal(algod, (H1_DIR / "CTFExchange__Helper1.clear.teal").read_text()),
+        compile_teal(algod, h1_teal),
+        compile_teal(algod, (H1_DIR / "CTFExchange__Helper1.clear.teal").read_text()),
         h1_spec.state.schema.global_state)
 
-    h2_spec = au.Arc56Contract.from_json(
-        (H2_DIR / "CTFExchange__Helper2.arc56.json").read_text())
-    h2_approval_teal = _inject_memory_init(
+    h2_spec = load_arc56(H2_DIR / "CTFExchange__Helper2.arc56.json")
+    h2_teal = inject_memory_init(
         (H2_DIR / "CTFExchange__Helper2.approval.teal").read_text())
-    h2_approval_teal = h2_approval_teal.replace(TMPL_H1, str(h1_app_id))
-    h2_app_id = _create_app(
+    h2_teal = h2_teal.replace(TMPL_H1, str(h1_app_id))
+    h2_app_id = create_app(
         localnet, admin,
-        _compile_teal(algod, h2_approval_teal),
-        _compile_teal(algod, (H2_DIR / "CTFExchange__Helper2.clear.teal").read_text()),
+        compile_teal(algod, h2_teal),
+        compile_teal(algod, (H2_DIR / "CTFExchange__Helper2.clear.teal").read_text()),
         h2_spec.state.schema.global_state)
 
-    orch_spec = au.Arc56Contract.from_json(
-        (ORCH_DIR / "CTFExchange.arc56.json").read_text())
-    orch_approval_teal = (ORCH_DIR / "CTFExchange.approval.teal").read_text()
-    orch_approval_teal = orch_approval_teal.replace(TMPL_H1, str(h1_app_id))
-    orch_approval_teal = orch_approval_teal.replace(TMPL_H2, str(h2_app_id))
-    # H3 (matchOrders delegate sidecar) isn't deployed yet — substitute 0
-    # so the orch's TEAL compiles. matchOrders calls fail at runtime.
-    orch_approval_teal = orch_approval_teal.replace(TMPL_H3, "0")
+    orch_spec = load_arc56(ORCH_DIR / "CTFExchange.arc56.json")
+    orch_teal = (ORCH_DIR / "CTFExchange.approval.teal").read_text()
+    orch_teal = orch_teal.replace(TMPL_H1, str(h1_app_id))
+    orch_teal = orch_teal.replace(TMPL_H2, str(h2_app_id))
+    orch_teal = orch_teal.replace(TMPL_H3, "0")
 
-    orch_approval = _compile_teal(algod, orch_approval_teal)
-    orch_clear = _compile_teal(algod, (ORCH_DIR / "CTFExchange.clear.teal").read_text())
+    orch_approval = compile_teal(algod, orch_teal)
+    orch_clear = compile_teal(
+        algod, (ORCH_DIR / "CTFExchange.clear.teal").read_text())
 
-    # Deploy orch with extra_pages=3 so the lonely chunk can install up to
-    # 8KB onto it via UpdateApplication later. Without 3 extra pages, the
-    # AVM rejects an UpdateApplication that grows the program past the
-    # current cap.
-    orch_app_id = _create_app(localnet, admin, orch_approval, orch_clear,
-                              orch_spec.state.schema.global_state,
-                              extra_pages=3)
+    # extra_pages=3 so the lonely chunk can install up to 8KB onto orch
+    # via UpdateApplication later.
+    orch_app_id = create_app(localnet, admin, orch_approval, orch_clear,
+                             orch_spec.state.schema.global_state,
+                             extra_pages=3)
 
     h1_client = au.AppClient(au.AppClientParams(
         algorand=localnet, app_spec=h1_spec, app_id=h1_app_id,
@@ -461,24 +477,16 @@ def split_exchange(localnet, admin, universal_mock):
         algorand=localnet, app_spec=orch_spec, app_id=orch_app_id,
         default_sender=admin.address))
 
-    # ExchangeInitParams: 8 addresses packed as (admin, collateral, ctf,
-    # ctfCollateral, outcomeTokenFactory, proxyFactory, safeFactory,
-    # feeReceiver). The arc56 type is uint8[32] per field; algosdk wants
-    # list[int] for that, not bytes. The constructor fires inner-app calls
-    # against `collateral` (ERC20.approve), `ctf` (ERC1155.setApprovalForAll
-    # — which our compiled ERC20 mock simply ignores), so those four slots
-    # have to be a deployed app. proxy/safe/fee receiver stay zero — the
-    # paths that read them fail at runtime, marked xfail per-test.
     tok_addr = list(app_id_to_address(universal_mock.app_id))
     init_params = [
-        list(addr(admin)),  # admin
-        tok_addr,           # collateral (ERC20.approve)
-        tok_addr,           # ctf (ERC1155.setApprovalForAll)
+        list(addr(admin)),
+        tok_addr,           # collateral
+        tok_addr,           # ctf
         tok_addr,           # ctfCollateral
         tok_addr,           # outcomeTokenFactory
-        tok_addr,           # proxyFactory (.getImplementation)
-        tok_addr,           # safeFactory (.proxyCreationCode)
-        list(addr(admin)),  # feeReceiver — any address; admin works
+        tok_addr,           # proxyFactory
+        tok_addr,           # safeFactory
+        list(addr(admin)),  # feeReceiver
     ]
 
     composer = localnet.new_group()
@@ -497,14 +505,120 @@ def split_exchange(localnet, admin, universal_mock):
     return h1_client, h2_client, orch_client
 
 
+H3_DIR = SPLIT_DIR / "CTFExchange__Helper3"
+
+
+def _build_split_exchange(localnet, admin, *, collateral_app_id, ctf_app_id,
+                          ctf_collateral_app_id, factory_app_id):
+    """Internal helper. Deploys h1+h2+orch, runs __postInit with the given
+    apps for each slot. `factory_app_id` is used for outcomeTokenFactory /
+    proxyFactory / safeFactory — typically the universal_mock since these
+    only need to respond to getImplementation()/masterCopy() during init.
+    Returns (h1, h2, orch)."""
+    algod = localnet.client.algod
+
+    h1_spec = load_arc56(H1_DIR / "CTFExchange__Helper1.arc56.json")
+    h1_teal = inject_memory_init(
+        (H1_DIR / "CTFExchange__Helper1.approval.teal").read_text())
+    h1_app_id = create_app(
+        localnet, admin,
+        compile_teal(algod, h1_teal),
+        compile_teal(algod, (H1_DIR / "CTFExchange__Helper1.clear.teal").read_text()),
+        h1_spec.state.schema.global_state)
+
+    h2_spec = load_arc56(H2_DIR / "CTFExchange__Helper2.arc56.json")
+    h2_teal = inject_memory_init(
+        (H2_DIR / "CTFExchange__Helper2.approval.teal").read_text())
+    h2_teal = h2_teal.replace(TMPL_H1, str(h1_app_id))
+    h2_app_id = create_app(
+        localnet, admin,
+        compile_teal(algod, h2_teal),
+        compile_teal(algod, (H2_DIR / "CTFExchange__Helper2.clear.teal").read_text()),
+        h2_spec.state.schema.global_state)
+
+    orch_spec = load_arc56(ORCH_DIR / "CTFExchange.arc56.json")
+    orch_teal = (ORCH_DIR / "CTFExchange.approval.teal").read_text()
+    orch_teal = orch_teal.replace(TMPL_H1, str(h1_app_id))
+    orch_teal = orch_teal.replace(TMPL_H2, str(h2_app_id))
+    orch_teal = orch_teal.replace(TMPL_H3, "0")
+
+    orch_approval = compile_teal(algod, orch_teal)
+    orch_clear = compile_teal(
+        algod, (ORCH_DIR / "CTFExchange.clear.teal").read_text())
+    orch_app_id = create_app(localnet, admin, orch_approval, orch_clear,
+                             orch_spec.state.schema.global_state,
+                             extra_pages=3)
+
+    h1_client = au.AppClient(au.AppClientParams(
+        algorand=localnet, app_spec=h1_spec, app_id=h1_app_id,
+        default_sender=admin.address))
+    h2_client = au.AppClient(au.AppClientParams(
+        algorand=localnet, app_spec=h2_spec, app_id=h2_app_id,
+        default_sender=admin.address))
+    orch_client = au.AppClient(au.AppClientParams(
+        algorand=localnet, app_spec=orch_spec, app_id=orch_app_id,
+        default_sender=admin.address))
+
+    coll_addr = list(app_id_to_address(collateral_app_id))
+    ctf_addr = list(app_id_to_address(ctf_app_id))
+    ctf_coll_addr = list(app_id_to_address(ctf_collateral_app_id))
+    factory_addr = list(app_id_to_address(factory_app_id))
+    init_params = [
+        list(addr(admin)),
+        coll_addr,           # collateral (USDC)
+        ctf_addr,            # ctf (ConditionalTokens / ERC1155)
+        ctf_coll_addr,       # ctfCollateral
+        factory_addr,        # outcomeTokenFactory
+        factory_addr,        # proxyFactory (needs getImplementation())
+        factory_addr,        # safeFactory (needs masterCopy())
+        list(addr(admin)),   # feeReceiver
+    ]
+
+    composer = localnet.new_group()
+    for i in range(6):
+        composer.add_app_call_method_call(orch_client.params.call(
+            au.AppClientMethodCallParams(
+                method="isAdmin", args=[ZERO_ADDR],
+                note=f"pad-{i}".encode())))
+    composer.add_app_call_method_call(orch_client.params.call(
+        au.AppClientMethodCallParams(
+            method="__postInit",
+            args=[init_params],
+            extra_fee=au.AlgoAmount(micro_algo=50_000),
+            app_references=[h1_app_id, h2_app_id, collateral_app_id,
+                            ctf_app_id, ctf_collateral_app_id, factory_app_id])))
+    composer.send(AUTO_POPULATE)
+    return h1_client, h2_client, orch_client
+
+
+@pytest.fixture(scope="function")
+def split_exchange_settled(localnet, admin, universal_mock, usdc_stateful, ctf_stateful):
+    """Same shape as `split_exchange` but uses real USDC + CTF mocks
+    (delegate/usdc_mock.py + delegate/ctf_mock.py) for collateral / ctf
+    slots. proxy/safe/outcome factories stay on universal_mock — those
+    slots only need getImplementation()/masterCopy() to respond during
+    init. Returns (h1, h2, orch, usdc, ctf)."""
+    h1, h2, orch = _build_split_exchange(
+        localnet, admin,
+        collateral_app_id=usdc_stateful.app_id,
+        ctf_app_id=ctf_stateful.app_id,
+        ctf_collateral_app_id=usdc_stateful.app_id,
+        factory_app_id=universal_mock.app_id,
+    )
+    return h1, h2, orch, usdc_stateful, ctf_stateful
+
+
 @pytest.fixture(scope="function")
 def split_exchange_with_delegate(localnet, admin, split_exchange, lonely_chunk_artifacts):
-    """Deploy a LonelyChunk sidecar that swaps orch's approval to F-helper's
-    bytes (helper2 = matchOrders + closure), invokes orch, then reverts.
+    """Deploy a LonelyChunk sidecar that swaps orch's approval to the F-helper
+    bytes, invokes orch, then reverts.
 
-    `__self_bytes` box is populated with helper2's compiled bytes, NOT
-    the lonely chunk's own bytes. (Box name is historical — kept stable
-    so the existing dance code's `Bytes(b"__self_bytes")` keeps working.)
+    F-helper used to be Helper2 (the manually-curated matchOrders + closure
+    bundle). After `--force-delegate matchOrders` landed in `compile_all.sh`,
+    puya-sol auto-emits Helper3 with matchOrders + every transitive helper
+    pulled in. F = Helper3 now.
+
+    `__self_bytes` box is populated with helper3's compiled bytes.
     """
     h1, h2, orch = split_exchange
 
@@ -512,16 +626,14 @@ def split_exchange_with_delegate(localnet, admin, split_exchange, lonely_chunk_a
     approval_bin = lonely_chunk_artifacts["approval_bin"]
     clear_bin = lonely_chunk_artifacts["clear_bin"]
 
-    # F-helper bytes — what gets installed onto orch mid-dance.
-    f_bytes = (H2_DIR / "CTFExchange__Helper2.approval.bin").read_bytes()
+    f_bytes = (H3_DIR / "CTFExchange__Helper3.approval.bin").read_bytes()
 
     extra_pages = max(0, (max(len(approval_bin), len(clear_bin)) - 1) // 2048)
     sp = localnet.client.algod.suggested_params()
-    # Pull orch's deployed approval bytes early so we can size the box.
     orch_info = localnet.client.algod.application_info(orch.app_id)
-    orch_orig_bytes = encoding.base64.b64decode(orch_info["params"]["approval-program"])
+    from algosdk import encoding as _enc
+    orch_orig_bytes = _enc.base64.b64decode(orch_info["params"]["approval-program"])
 
-    # init(uint64,uint64,uint64)void selector + 3 × uint64 args.
     init_selector = bytes.fromhex("69443df7")
     create = ApplicationCreateTxn(
         sender=admin.address, sp=sp,
@@ -541,8 +653,6 @@ def split_exchange_with_delegate(localnet, admin, split_exchange, lonely_chunk_a
     res = wait_for_confirmation(localnet.client.algod, txid, 4)
     chunk_app_id = res["application-index"]
 
-    # Fund the sidecar enough to cover the two 8KB boxes' MBR (each ~3.4
-    # ALGO = base 2500 + 400 per byte * 8192) plus inner-txn fees.
     sp2 = localnet.client.algod.suggested_params()
     pay = PaymentTxn(admin.address, sp2, algod_addr_for_app(chunk_app_id), 8_000_000)
     wait_for_confirmation(localnet.client.algod,
@@ -552,7 +662,6 @@ def split_exchange_with_delegate(localnet, admin, split_exchange, lonely_chunk_a
         algorand=localnet, app_spec=spec, app_id=chunk_app_id,
         default_sender=admin.address))
 
-    # Allocate boxes — funded just above.
     chunk_client.send.call(au.AppClientMethodCallParams(
         method="setup_boxes", args=[],
         box_references=[
@@ -562,10 +671,6 @@ def split_exchange_with_delegate(localnet, admin, split_exchange, lonely_chunk_a
         extra_fee=au.AlgoAmount(micro_algo=10_000),
     ), send_params=AUTO_POPULATE)
 
-    # Populate boxes. AVM caps total ApplicationArgs at 2048 bytes per
-    # call, so we use 1KB chunks. Each box is sized exactly to the
-    # program's actual length (no zero-padding) so the dance can install
-    # the right byte count and stay under the 8192 approval+clear cap.
     CHUNK = 1024
 
     def _write_chunks(method: str, box_name: bytes, payload: bytes):
@@ -582,3 +687,114 @@ def split_exchange_with_delegate(localnet, admin, split_exchange, lonely_chunk_a
     _write_chunks("set_orch_orig_chunk", b"__orch_orig_bytes", orch_orig_bytes)
 
     return h1, h2, orch, chunk_client
+
+
+def _build_chunk_for(localnet, admin, orch, lonely_chunk_artifacts,
+                     *, h1_app_id, h2_app_id):
+    """Stand up a LonelyChunk sidecar pointing at `orch`. Sets up boxes
+    with helper3's bytes (template-substituted with h1/h2 ids) + orch's
+    original bytes. Returns the chunk AppClient."""
+    spec = lonely_chunk_artifacts["spec"]
+    approval_bin = lonely_chunk_artifacts["approval_bin"]
+    clear_bin = lonely_chunk_artifacts["clear_bin"]
+    algod = localnet.client.algod
+
+    # Helper3's pre-built .bin still has TMPL_CTFExchange__Helper{1,2}_APP_ID
+    # placeholders. Substitute in the TEAL and recompile so the inner-call
+    # ApplicationID fields resolve to real app ids when helper3 runs on
+    # the orch's program.
+    h3_teal = (H3_DIR / "CTFExchange__Helper3.approval.teal").read_text()
+    h3_teal = inject_memory_init(h3_teal)
+    h3_teal = h3_teal.replace(TMPL_H1, str(h1_app_id))
+    h3_teal = h3_teal.replace(TMPL_H2, str(h2_app_id))
+    h3_teal = h3_teal.replace(TMPL_H3, "0")
+    f_bytes = compile_teal(algod, h3_teal)
+
+    extra_pages = max(0, (max(len(approval_bin), len(clear_bin)) - 1) // 2048)
+    sp = localnet.client.algod.suggested_params()
+    orch_info = localnet.client.algod.application_info(orch.app_id)
+    from algosdk import encoding as _enc
+    orch_orig_bytes = _enc.base64.b64decode(orch_info["params"]["approval-program"])
+
+    init_selector = bytes.fromhex("69443df7")
+    create = ApplicationCreateTxn(
+        sender=admin.address, sp=sp,
+        on_complete=OnComplete.NoOpOC,
+        approval_program=approval_bin, clear_program=clear_bin,
+        global_schema=StateSchema(num_uints=3, num_byte_slices=0),
+        local_schema=StateSchema(num_uints=0, num_byte_slices=0),
+        extra_pages=extra_pages,
+        app_args=[
+            init_selector,
+            orch.app_id.to_bytes(8, "big"),
+            len(f_bytes).to_bytes(8, "big"),
+            len(orch_orig_bytes).to_bytes(8, "big"),
+        ],
+    )
+    txid = localnet.client.algod.send_transaction(create.sign(admin.private_key))
+    res = wait_for_confirmation(localnet.client.algod, txid, 4)
+    chunk_app_id = res["application-index"]
+
+    sp2 = localnet.client.algod.suggested_params()
+    pay = PaymentTxn(admin.address, sp2, algod_addr_for_app(chunk_app_id), 8_000_000)
+    wait_for_confirmation(localnet.client.algod,
+        localnet.client.algod.send_transaction(pay.sign(admin.private_key)), 4)
+
+    chunk_client = au.AppClient(au.AppClientParams(
+        algorand=localnet, app_spec=spec, app_id=chunk_app_id,
+        default_sender=admin.address))
+
+    chunk_client.send.call(au.AppClientMethodCallParams(
+        method="setup_boxes", args=[],
+        box_references=[
+            au.BoxReference(app_id=0, name=b"__self_bytes"),
+            au.BoxReference(app_id=0, name=b"__orch_orig_bytes"),
+        ],
+        extra_fee=au.AlgoAmount(micro_algo=10_000),
+    ), send_params=AUTO_POPULATE)
+
+    CHUNK = 1024
+
+    def _write_chunks(method: str, box_name: bytes, payload: bytes):
+        for offset in range(0, len(payload), CHUNK):
+            slice_ = payload[offset : offset + CHUNK]
+            chunk_client.send.call(au.AppClientMethodCallParams(
+                method=method,
+                args=[offset, slice_],
+                box_references=[au.BoxReference(app_id=0, name=box_name)],
+                extra_fee=au.AlgoAmount(micro_algo=10_000),
+            ), send_params=AUTO_POPULATE)
+
+    _write_chunks("set_self_chunk", b"__self_bytes", f_bytes)
+    _write_chunks("set_orch_orig_chunk", b"__orch_orig_bytes", orch_orig_bytes)
+    return chunk_client
+
+
+@pytest.fixture(scope="function")
+def split_settled_with_delegate(
+    localnet, admin, split_exchange_settled, lonely_chunk_artifacts
+):
+    """`split_exchange_settled` + lonely-chunk delegate. Returns
+    (h1, h2, orch, usdc, ctf, chunk).
+
+    The chunk is registered as an operator on `orch` so its inner
+    matchOrders call passes the `onlyOperator` gate (the chunk's app
+    address becomes msg.sender for that inner txn)."""
+    h1, h2, orch, usdc, ctf = split_exchange_settled
+    chunk = _build_chunk_for(localnet, admin, orch, lonely_chunk_artifacts,
+                             h1_app_id=h1.app_id, h2_app_id=h2.app_id)
+
+    # Register the chunk's REAL algorand account address as the operator —
+    # that's what msg.sender resolves to inside the orch's matchOrders
+    # inner-call execution. The puya-sol address convention (24 zeros +
+    # itob(app_id)) is used for storage slot encoding, NOT for msg.sender
+    # comparisons on inner txns.
+    from dev.addrs import algod_addr_bytes_for_app
+    chunk_addr32 = algod_addr_bytes_for_app(chunk.app_id)
+    orch.send.call(au.AppClientMethodCallParams(
+        method="addOperator",
+        args=[chunk_addr32],
+        extra_fee=au.AlgoAmount(micro_algo=10_000),
+    ), send_params=AUTO_POPULATE)
+
+    return h1, h2, orch, usdc, ctf, chunk

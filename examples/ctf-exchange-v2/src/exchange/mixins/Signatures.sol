@@ -4,6 +4,10 @@ pragma solidity ^0.8.10;
 import { ECDSA } from "@solady/src/utils/ECDSA.sol";
 import { SignatureCheckerLib } from "@solady/src/utils/SignatureCheckerLib.sol";
 
+interface IERC1271 {
+    function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4);
+}
+
 import { SignatureType, Order } from "../libraries/Structs.sol";
 
 import { ISignatures } from "../interfaces/ISignatures.sol";
@@ -105,15 +109,29 @@ abstract contract Signatures is ISignatures, PolyFactoryHelper {
 
     /// @notice Verifies an ECDSA signature
     /// @dev Reverts if the signature length is invalid or the recovered signer is the zero address
-    /// @param signer      - Address of the signer
-    /// @param structHash  - The hash of the struct being verified
-    /// @param signature   - The signature to be verified
+    // AVM-PORT-ADAPTATION: see PUYA_BLOCKERS.md §2. solady's ECDSA.recover
+    // uses `for { 1 } switch case` as a single-iter loop with explicit
+    // break, which puya's optimizer collapses to `err` (unreachable).
+    // Workaround: parse the 65-byte (r||s||v) signature ourselves and
+    // call the `ecrecover` precompile via plain Solidity. puya-sol already
+    // recognizes the precompile call shape and routes it to AVM's
+    // `ecdsa_pk_recover` opcode.
     function _verifyECDSASignature(address signer, bytes32 structHash, bytes memory signature)
         internal
         view
         returns (bool)
     {
-        return ECDSA.recover(structHash, signature) == signer;
+        if (signature.length != 65) return false;
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+        assembly {
+            r := mload(add(signature, 0x20))
+            s := mload(add(signature, 0x40))
+            v := byte(0, mload(add(signature, 0x60)))
+        }
+        address recovered = ecrecover(structHash, v, r, s);
+        return recovered != address(0) && recovered == signer;
     }
 
     /// @notice Verifies a signature signed by a Polymarket proxy wallet
@@ -153,13 +171,24 @@ abstract contract Signatures is ISignatures, PolyFactoryHelper {
     /// @param maker            - Address of the 1271 smart contract
     /// @param hash             - Hash of the struct being verified
     /// @param signature        - Signature to be verified
+    // AVM-PORT-ADAPTATION: see PUYA_BLOCKERS.md §2. solady's
+    // SignatureCheckerLib.isValidSignatureNow uses inline assembly
+    // (`staticcall(gas, signer, ...)` that puya-sol can recognize, but
+    // the Yul-encoded calldata layout — magic-value selector + 0x40 offset
+    // pointer + variable-length signature payload — gets mangled in
+    // translation: the inner staticcall isn't emitted as an `itxn`, so
+    // the function always returns false. Replace with a plain Solidity
+    // interface call: puya-sol routes that through the standard
+    // application-call lowering (CoreTranslation.cpp::handleAppCall).
     function _verifyPoly1271Signature(address signer, address maker, bytes32 hash, bytes memory signature)
         internal
         view
         returns (bool)
     {
-        return (signer == maker) && maker.code.length > 0
-            && SignatureCheckerLib.isValidSignatureNow(maker, hash, signature);
+        if (signer != maker) return false;
+        if (maker.code.length == 0) return false;
+        bytes4 result = IERC1271(maker).isValidSignature(hash, signature);
+        return result == bytes4(0x1626ba7e);
     }
 
     function _isPreapproved(bytes32 orderHash) internal view returns (bool) {

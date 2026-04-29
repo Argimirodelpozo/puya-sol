@@ -8,6 +8,7 @@
 #include "Logger.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
+#include <libyul/AST.h>
 
 #include <boost/multiprecision/cpp_int.hpp>
 #include <map>
@@ -71,6 +72,94 @@ public:
 	{
 		found = true;
 		return false;
+	}
+};
+
+/// Detects whether a statement subtree contains an inline-assembly `sstore`
+/// or `sload` opcode. These map to puya-sol's `__storage_write/__storage_read`
+/// subroutines, which lazy-`box_create __dyn_storage 8192` on first call.
+/// That box_create demands ~3.4M µAlgos MBR — fatal in the constructor on
+/// AVM (the app account starts at 0 balance and we can't pre-fund). When
+/// found in a constructor (or anything reachable from one), we flip the
+/// "needs __postInit" bit so the box-touching writes get hoisted to a
+/// post-create method called after funding.
+///
+/// Solidity-level state-var refs are caught by `BoxVarRefChecker`. Yul-
+/// level `sstore(s, v)` to a raw slot like solady's `_INITIALIZABLE_SLOT`
+/// (used in `_disableInitializers()`) is invisible to that path because
+/// the slot is a `bytes32` constant, not a state variable, so the AST
+/// identifier walker doesn't trigger.
+class YulStorageOpDetector: public solidity::frontend::ASTConstVisitor
+{
+public:
+	bool found = false;
+	bool visit(solidity::frontend::InlineAssembly const& _node) override
+	{
+		if (found) return false;
+		walkYulBlock(_node.operations().root());
+		return !found;
+	}
+
+private:
+	void walkYulBlock(solidity::yul::Block const& _block)
+	{
+		for (auto const& stmt : _block.statements)
+			walkYulStatement(stmt);
+	}
+	void walkYulStatement(solidity::yul::Statement const& _stmt)
+	{
+		if (found) return;
+		if (auto const* es = std::get_if<solidity::yul::ExpressionStatement>(&_stmt))
+			walkYulExpression(es->expression);
+		else if (auto const* blk = std::get_if<solidity::yul::Block>(&_stmt))
+			walkYulBlock(*blk);
+		else if (auto const* vd = std::get_if<solidity::yul::VariableDeclaration>(&_stmt))
+		{
+			if (vd->value) walkYulExpression(*vd->value);
+		}
+		else if (auto const* asg = std::get_if<solidity::yul::Assignment>(&_stmt))
+		{
+			if (asg->value) walkYulExpression(*asg->value);
+		}
+		else if (auto const* ifS = std::get_if<solidity::yul::If>(&_stmt))
+		{
+			if (ifS->condition) walkYulExpression(*ifS->condition);
+			walkYulBlock(ifS->body);
+		}
+		else if (auto const* sw = std::get_if<solidity::yul::Switch>(&_stmt))
+		{
+			if (sw->expression) walkYulExpression(*sw->expression);
+			for (auto const& c : sw->cases) walkYulBlock(c.body);
+		}
+		else if (auto const* fl = std::get_if<solidity::yul::ForLoop>(&_stmt))
+		{
+			walkYulBlock(fl->pre);
+			if (fl->condition) walkYulExpression(*fl->condition);
+			walkYulBlock(fl->post);
+			walkYulBlock(fl->body);
+		}
+		else if (auto const* fd = std::get_if<solidity::yul::FunctionDefinition>(&_stmt))
+		{
+			walkYulBlock(fd->body);
+		}
+	}
+	void walkYulExpression(solidity::yul::Expression const& _expr)
+	{
+		if (found) return;
+		if (auto const* call = std::get_if<solidity::yul::FunctionCall>(&_expr))
+		{
+			// AssemblyBuilder::getFunctionName resolves both raw identifiers
+			// and dialect-indexed BuiltinHandle entries, so we don't have to
+			// re-implement Yul builtin name lookup here.
+			std::string name = AssemblyBuilder::getFunctionName(call->functionName);
+			if (name == "sstore" || name == "sload")
+			{
+				found = true;
+				return;
+			}
+			for (auto const& arg : call->arguments)
+				walkYulExpression(arg);
+		}
 	}
 };
 
@@ -1595,6 +1684,102 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		}
 	}
 
+	// Force __postInit if any constructor body (own or inherited) contains
+	// inline-assembly `sstore`/`sload`. Solady's `_disableInitializers()`
+	// in UUPS proxies writes `_INITIALIZABLE_SLOT` via Yul `sstore`, which
+	// routes through `__storage_write` and triggers `box_create __dyn_storage
+	// 8192` synchronously — fatal at create time because the fresh app
+	// account has 0 balance < ~3.4M MBR. Hoisting to __postInit lets the
+	// fixture do "create → fund → __postInit" the same way non-UUPS contracts
+	// already work.
+	if (!needsPostInit)
+	{
+		YulStorageOpDetector yulChecker;
+		auto const* ctor = _contract.constructor();
+		if (ctor && !ctor->body().statements().empty())
+			ctor->body().accept(yulChecker);
+		if (!yulChecker.found)
+		{
+			for (auto const* base: _contract.annotation().linearizedBaseContracts)
+			{
+				if (base == &_contract) continue;
+				auto const* baseCtor = base->constructor();
+				if (baseCtor && baseCtor->isImplemented()
+					&& !baseCtor->body().statements().empty())
+				{
+					baseCtor->body().accept(yulChecker);
+					if (yulChecker.found) break;
+				}
+			}
+		}
+		// Also walk non-constructor functions reachable from constructors —
+		// solady's `_disableInitializers()` is a regular function called
+		// from the ctor body, not inline assembly directly in the ctor.
+		if (!yulChecker.found)
+		{
+			std::set<int64_t> sstoreFuncIds;
+			for (auto const* base: _contract.annotation().linearizedBaseContracts)
+			{
+				for (auto const* func: base->definedFunctions())
+				{
+					if (func->isConstructor() || !func->isImplemented())
+						continue;
+					YulStorageOpDetector funcChecker;
+					func->body().accept(funcChecker);
+					if (funcChecker.found)
+						sstoreFuncIds.insert(func->id());
+				}
+			}
+			if (!sstoreFuncIds.empty())
+			{
+				struct CtorCallChecker: public solidity::frontend::ASTConstVisitor
+				{
+					std::set<int64_t> const& targetIds;
+					bool found = false;
+					explicit CtorCallChecker(std::set<int64_t> const& _ids): targetIds(_ids) {}
+					bool visit(solidity::frontend::FunctionCall const& _node) override
+					{
+						if (found) return false;
+						auto const* expr = &_node.expression();
+						if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(expr))
+						{
+							auto const* decl = id->annotation().referencedDeclaration;
+							if (decl && targetIds.count(decl->id()))
+								found = true;
+						}
+						return !found;
+					}
+				};
+				CtorCallChecker callChecker(sstoreFuncIds);
+				if (ctor && !ctor->body().statements().empty())
+					ctor->body().accept(callChecker);
+				if (!callChecker.found)
+				{
+					for (auto const* base: _contract.annotation().linearizedBaseContracts)
+					{
+						if (base == &_contract) continue;
+						auto const* baseCtor = base->constructor();
+						if (baseCtor && baseCtor->isImplemented()
+							&& !baseCtor->body().statements().empty())
+						{
+							baseCtor->body().accept(callChecker);
+							if (callChecker.found) break;
+						}
+					}
+				}
+				if (callChecker.found)
+					yulChecker.found = true;
+			}
+		}
+		if (yulChecker.found)
+		{
+			needsPostInit = true;
+			Logger::instance().debug(
+				"Forcing __postInit: constructor reaches inline-asm sstore/sload "
+				"(box_create needs MBR after funding)");
+		}
+	}
+
 	// Force __postInit if the constructor (or state var initializers)
 	// contains `new C()` — the inner create/fund txns need the parent
 	// to already have balance, which only happens after deployment.
@@ -2454,16 +2639,117 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					postInitBody->body.push_back(std::move(stmt));
 			}
 
-			// Main constructor body
+			// Main constructor body — note we BUILD this here but APPEND
+			// it to postInitBody AFTER the hoisted `initializer`-modifier
+			// methods. Reason: solady's UUPS pattern has the ctor call
+			// `_disableInitializers()` (writes MAX to `_INITIALIZABLE_SLOT`)
+			// while `initialize()`'s `initializer` modifier expects the slot
+			// to start empty. On EVM the impl/proxy are different addresses
+			// with separate storage so both can run; on AVM there's only one
+			// contract, so we run the initialize-modifier path FIRST (slot
+			// 0 → 2, version 1 done), then the ctor body's `_disableInitializers`
+			// (slot 2 → MAX, fully locked). Calling __postInit twice still
+			// reverts via the modifier's slot check on the second pass.
+			std::vector<std::shared_ptr<awst::Statement>> ctorTail;
 			if (constructor && constructor->body().statements().size() > 0)
 			{
 				m_exprBuilder->setInConstructor(true);
 				auto ctorBody = buildBlock(constructor->body());
 				inlineModifiers(*constructor, ctorBody);
 				m_exprBuilder->setInConstructor(false);
-				for (auto& stmt: ctorBody->body)
-					postInitBody->body.push_back(std::move(stmt));
+				ctorTail = std::move(ctorBody->body);
 			}
+
+			// Hoist `initialize`-style methods (those carrying solady's
+			// `initializer` / `reinitializer` modifier) into __postInit.
+			// Why: those modifiers expand to `bytes32 s; let i := sload(s);
+			// ...` Yul locals, which puya emits as a `intc_2; dupn 3`
+			// frame preamble at the top of the routed method. That preamble
+			// displaces the ABI arg load (PUYA_BLOCKERS.md §1) — the first
+			// arg's bytes are consumed by `len; ==; assert` without `dup`,
+			// and the body reads from the zero placeholders instead of the
+			// passed value. Inlining the modifier-expanded body into
+			// __postInit dodges the issue: __postInit's auto-generated
+			// arg-loading already emits `dup; len`, the args flow through
+			// the frame, and the modifier's slot-version-tracking still
+			// runs (so calling __postInit twice still reverts via the
+			// modifier's own `if i { revert }` check).
+			//
+			// The original `initialize`-style method stays in the contract
+			// (it's still ABI-routable for compatibility) but the puya-sol
+			// caller now points test fixtures at __postInit. If the user
+			// doesn't want the redundant call site, we could later mark
+			// these methods to be elided.
+			std::set<int64_t> hoistedInitFuncIds;
+			for (auto const* base: linearized)
+			{
+				for (auto const* func: base->definedFunctions())
+				{
+					if (func->isConstructor()) continue;
+					if (!func->isImplemented()) continue;
+
+					bool hasInitModifier = false;
+					for (auto const& modInvoke: func->modifiers())
+					{
+						auto const* modDef = dynamic_cast<solidity::frontend::ModifierDefinition const*>(
+							modInvoke->name().annotation().referencedDeclaration);
+						if (!modDef) continue;
+						std::string const& name = modDef->name();
+						if (name == "initializer" || name == "reinitializer")
+						{
+							hasInitModifier = true;
+							break;
+						}
+					}
+					if (!hasInitModifier) continue;
+					if (hoistedInitFuncIds.count(func->id())) continue;
+					hoistedInitFuncIds.insert(func->id());
+
+					// Append this method's parameters to __postInit's args.
+					int paramIdx = static_cast<int>(postInit.args.size());
+					for (auto const& param: func->parameters())
+					{
+						awst::SubroutineArgument arg;
+						arg.name = param->name().empty()
+							? "__init_arg_" + std::to_string(paramIdx)
+							: param->name();
+						arg.sourceLocation = method.sourceLocation;
+						arg.wtype = m_typeMapper.map(param->type());
+						postInit.args.push_back(std::move(arg));
+						++paramIdx;
+					}
+
+					// Build the method body, with modifier expansion. The
+					// `initializer` modifier wraps the body in `_INITIALIZABLE_SLOT`
+					// version tracking so calls after the first revert.
+					// __postInit also has `__ctor_pending` for one-shot
+					// protection, so the modifier is somewhat redundant — but
+					// keeping it preserves the original Solidity semantics
+					// (e.g., `vm.expectRevert(InvalidInitialization)` patterns).
+					//
+					// CAVEAT: even after hoisting, puya backend still drops
+					// the LAST arg's bytes (no `dup` before `len`) because
+					// the stack scheduler doesn't see the inlined-_initializeOwner
+					// reference as a "live use" of `_owner`. Result: tests
+					// that read `owner()` see the zero address. Real fix
+					// lives in puya backend Python (PUYA_BLOCKERS.md §1).
+					auto initBody = buildBlock(func->body());
+					inlineModifiers(*func, initBody);
+					for (auto& stmt: initBody->body)
+						postInitBody->body.push_back(std::move(stmt));
+
+					Logger::instance().debug(
+						"Hoisting `initializer`-modifier method `" + func->name() +
+						"` body into __postInit (works around PUYA #1).",
+						method.sourceLocation
+					);
+				}
+			}
+
+			// Now append the original ctor tail (post `_disableInitializers`-
+			// style writes) AFTER the hoisted initialize-modifier blocks.
+			for (auto& stmt: ctorTail)
+				postInitBody->body.push_back(std::move(stmt));
 
 			postInit.body = postInitBody;
 			m_postInitMethod = std::move(postInit);
@@ -4015,10 +4301,19 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				inlineModifiers(_func, method.body);
 		}
 
-		// Inject ensure_budget for opup budget padding
-		// Check per-function map first, then global opup budget
+		// Inject ensure_budget for opup budget padding.
+		// Look up by:
+		//   1. Bare Solidity function name (e.g. `getCollectionId`)
+		//   2. Library-qualified member name (e.g. `CTHelpers.getCollectionId`)
+		//      — for library functions, callers know it as `Lib.fn` even
+		//      though the source-level FunctionDefinition only carries `fn`.
+		//   3. Otherwise fall back to the global --opup-budget if set.
 		uint64_t budgetForFunc = 0;
 		if (auto it = m_ensureBudget.find(_func.name()); it != m_ensureBudget.end())
+			budgetForFunc = it->second;
+		else if (auto const& qualified = method.memberName;
+			!qualified.empty()
+			&& (it = m_ensureBudget.find(qualified)) != m_ensureBudget.end())
 			budgetForFunc = it->second;
 		else if (m_opupBudget > 0 && method.arc4MethodConfig.has_value())
 			budgetForFunc = m_opupBudget;

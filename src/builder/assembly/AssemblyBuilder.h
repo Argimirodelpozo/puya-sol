@@ -58,13 +58,19 @@ public:
 	/// @param _params        Function parameters (name, type) for memory-based access
 	/// @param _returnType    Expected return type of the enclosing function
 	/// @param _constants     External constant values (name → decimal string)
+	/// @param _localStorageBoxAliases  Local storage refs (`Type storage p =
+	///                       _mapping[k]`) → the underlying BoxValueExpression.
+	///                       Lets the asm builder resolve `p.slot` and route
+	///                       `sload(p.slot)` / `sstore(p.slot, ...)` through
+	///                       box_get/box_put on the captured key.
 	std::vector<std::shared_ptr<awst::Statement>> buildBlock(
 		solidity::yul::Block const& _block,
 		std::vector<std::pair<std::string, awst::WType const*>> const& _params,
 		awst::WType const* _returnType,
 		std::map<std::string, std::string> const& _constants = {},
 		std::map<std::string, unsigned> const& _paramBitWidths = {},
-		std::map<std::string, std::string> const& _storageSlotVars = {}
+		std::map<std::string, std::string> const& _storageSlotVars = {},
+		std::map<std::string, std::shared_ptr<awst::Expression>> const& _localStorageBoxAliases = {}
 	);
 
 	/// Extract function name string from a Yul FunctionName variant.
@@ -509,9 +515,10 @@ private:
 		awst::SourceLocation const& _loc
 	);
 
-	/// Try to match mstore(add(bytes_var, 32), value) pattern.
-	/// Detects writes to the data region of a bytes/string memory variable
-	/// and translates to a variable assignment instead of blob access.
+	/// Try to match mstore(add(bytes_var, K), value) pattern (K constant >= 32).
+	/// Detects writes into the data region of a bytes/string memory variable
+	/// and translates to a `replace3(var, K-32, extract3(pad32(value), 0, n))`
+	/// splice — clipped at `len(var)` so trailing bytes are dropped.
 	bool tryHandleBytesMemoryWrite(
 		solidity::yul::FunctionCall const& _call,
 		awst::SourceLocation const& _loc,
@@ -614,6 +621,12 @@ private:
 	/// When sstore is called with a constant whose value starts with "__slot_",
 	/// the actual storage key is the variable name after the prefix.
 	std::map<std::string, std::string> m_storageSlotVars;
+
+	/// Local storage refs (`Type storage p = _mapping[k]`) → the
+	/// underlying BoxValueExpression. Lets `.slot` resolution return a
+	/// box-keyed marker, and lets sload/sstore route through box_get/
+	/// box_put on the captured key.
+	std::map<std::string, std::shared_ptr<awst::Expression>> m_localStorageBoxAliases;
 
 	// ── Assembly function support ───────────────────────────────────────
 

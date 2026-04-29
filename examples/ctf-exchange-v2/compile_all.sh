@@ -29,8 +29,23 @@ compile() {
 
     echo -n "[$rel] "
 
+    # CTFExchange.sol gets matchOrders force-delegated into a lonely-chunk
+    # sidecar — without this the orch is 10.7KB (over 8KB cap). split.json
+    # already moves auxiliary helpers to Helper1/Helper2; the delegate is
+    # what brings the orch under the cap.
+    local extra_args=()
+    if [[ "$rel" == "exchange/CTFExchange.sol" ]]; then
+        extra_args+=(--split-config "$EXAMPLE/split.json" --force-delegate matchOrders)
+        # matchOrders + ECDSA recovers + getCollectionId/getPositionId all
+        # blow past the 700-op single-tx budget. Pump via ensure_budget so
+        # the runtime opup pool covers two ECDSA recovers (~1700 ea) + body.
+        extra_args+=(--ensure-budget matchOrders:100000)
+        extra_args+=(--ensure-budget CTHelpers.getCollectionId:30000)
+        extra_args+=(--ensure-budget CTHelpers.getPositionId:30000)
+    fi
+
     local output exit_code
-    output=$("$PUYA_SOL" --source "$sol_file" "${IMPORT_PATHS[@]}" --output-dir "$out" --puya-path "$PUYA_PATH" 2>&1)
+    output=$("$PUYA_SOL" --source "$sol_file" "${IMPORT_PATHS[@]}" --output-dir "$out" --puya-path "$PUYA_PATH" "${extra_args[@]}" 2>&1)
     exit_code=$?
 
     if echo "$output" | grep -q "puya completed successfully"; then

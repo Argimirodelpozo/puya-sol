@@ -21,10 +21,91 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSload(
 		return nullptr;
 	}
 
-	// Convert slot arg to uint64 for __storage_read(slot)
+	// Local storage-ref sentinel: when the slot expression IS a
+	// BoxValueExpression (from `Type storage p = mapping[k]; sload(p.slot)`),
+	// emit a RAW `box_get` + select-default pattern. We deliberately
+	// avoid `StateGet` / `AssignmentStatement(BoxValueExpression, …)` —
+	// those route through puya's ARC4 codec, which decodes the box value
+	// according to the field's struct layout. EVM-style packed slot ops
+	// (`shl(8, x) | iszero(x)`) write raw bytes that don't match ARC4
+	// layout (filled byte at byte 31 vs ARC4's bit 0 of byte 0 for `(bool,
+	// uint248)`), so the codec round-trip clobbers the filled bit. Going
+	// through `box_get` directly preserves the raw bytes the inline-asm
+	// caller wrote.
+	if (auto const* bv = dynamic_cast<awst::BoxValueExpression const*>(_args[0].get()))
+	{
+		// `box_get(key)` returns a (bytes, bool) tuple — value on the
+		// bottom, exists on top. We need `value if exists else bzero(32)`.
+		//
+		// Build the stack `[value, default, exists]` and emit `select`.
+		// AVM `select` semantics are `..., A, B, C => A if C != 0 else B`,
+		// so `[value (=A), default (=B), exists (=C)]` returns value when
+		// exists is non-zero (true). Put together as a single intrinsic
+		// chain so puya's tuple-tracking doesn't have to rematerialize
+		// the (value, exists) result twice (which is what trips the
+		// SingleEvaluation→broken-frame-slot codepath).
+		auto* tupleType = m_typeMapper.createType<awst::WTuple>(
+			std::vector<awst::WType const*>{
+				awst::WType::bytesType(), awst::WType::boolType()});
+
+		auto boxGet = awst::makeIntrinsicCall("box_get", tupleType, _loc);
+		boxGet->stackArgs.push_back(bv->key);
+
+		// Decompose with TupleItem against an inline tuple sentinel —
+		// puya treats "intrinsic returning tuple consumed by 2 TupleItems"
+		// as a SingleEvaluation pattern but with proper frame slot
+		// management. The trick is to feed both projections through a
+		// `tuple` literal so the source is shared.
+		auto tupleEval = std::make_shared<awst::SingleEvaluation>();
+		tupleEval->sourceLocation = _loc;
+		tupleEval->source = boxGet;
+		tupleEval->wtype = tupleType;
+
+		auto valueItem = std::make_shared<awst::TupleItemExpression>();
+		valueItem->sourceLocation = _loc;
+		valueItem->wtype = awst::WType::bytesType();
+		valueItem->base = tupleEval;
+		valueItem->index = 0;
+
+		auto existsItem = std::make_shared<awst::TupleItemExpression>();
+		existsItem->sourceLocation = _loc;
+		existsItem->wtype = awst::WType::boolType();
+		existsItem->base = tupleEval;
+		existsItem->index = 1;
+
+		auto bzero32 = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
+		bzero32->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
+
+		// `select` intrinsic — emits AVM's `select` opcode. Stack layout
+		// (top → bottom): C = exists, B = default, A = value. Returns A
+		// if C != 0 else B, i.e. value if exists else default.
+		auto sel = awst::makeIntrinsicCall("select", awst::WType::bytesType(), _loc);
+		sel->stackArgs.push_back(valueItem);    // A (deepest)
+		sel->stackArgs.push_back(std::move(bzero32));  // B
+		sel->stackArgs.push_back(existsItem);   // C (top)
+
+		return awst::makeReinterpretCast(
+			std::move(sel), awst::WType::biguintType(), _loc);
+	}
+
+	// Convert slot arg to uint64 for __storage_read(slot).
+	// In EVM Yul, sload's arg is u256. After translation it can land here
+	// as biguint (typical) or as a bytes[N] local (when Solidity's
+	// `bytes32 s = ...; sload(s)` carried the Solidity type into Yul —
+	// e.g., solady's Initializable.initializer() modifier does this).
+	// Either way we want the low 64 bits of the slot key.
 	auto slotArg = _args[0];
 	if (slotArg->wtype == awst::WType::biguintType())
+	{
 		slotArg = safeBtoi(std::move(slotArg), _loc);
+	}
+	else if (slotArg->wtype != awst::WType::uint64Type()
+		&& dynamic_cast<awst::BytesWType const*>(slotArg->wtype))
+	{
+		auto asBiguint = awst::makeReinterpretCast(
+			std::move(slotArg), awst::WType::biguintType(), _loc);
+		slotArg = safeBtoi(std::move(asBiguint), _loc);
+	}
 
 	// Call __storage_read(slot) → biguint
 	auto call = std::make_shared<awst::SubroutineCallExpression>();

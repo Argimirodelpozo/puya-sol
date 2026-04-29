@@ -257,6 +257,41 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	for (auto const& [n, bw]: m_functionParamBitWidths)
 		paramBitWidths.emplace(n, bw);
 
+	// Local storage-ref aliases: `Type storage p = _mapping[k]` registered
+	// via ExpressionBuilder::addStorageAlias. Look up each external ref
+	// that's a non-state-variable storage local and forward the alias
+	// (typically a BoxValueExpression) to the asm builder so `.slot` /
+	// sload / sstore can route through box ops on the captured key.
+	std::map<std::string, std::shared_ptr<awst::Expression>> localStorageBoxAliases;
+	if (m_ctx.exprBuilder)
+	{
+		for (auto const& [yulId, extInfo]: annotation.externalReferences)
+		{
+			if (!extInfo.declaration) continue;
+			auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
+			if (!varDecl
+				|| varDecl->isStateVariable()
+				|| varDecl->isConstant()
+				|| varDecl->referenceLocation() != VariableDeclaration::Location::Storage)
+				continue;
+			auto alias = m_ctx.exprBuilder->getStorageAlias(varDecl->id());
+			if (!alias) continue;
+			// Unwrap StateGet → BoxValueExpression so the asm-side checks
+			// see the BoxValueExpression sentinel directly.
+			std::shared_ptr<awst::Expression> boxExpr = alias;
+			if (auto const* sg = dynamic_cast<awst::StateGet const*>(alias.get()))
+				if (sg->field)
+					boxExpr = sg->field;
+			std::string yulName = yulId->name.str();
+			// `p.slot` lands here as the dotted yul name; record under
+			// the bare base.
+			auto dot = yulName.rfind('.');
+			std::string baseName = (dot == std::string::npos)
+				? yulName : yulName.substr(0, dot);
+			localStorageBoxAliases[baseName] = boxExpr;
+		}
+	}
+
 	AssemblyBuilder asmTranslator((*m_ctx.typeMapper), m_ctx.sourceFile, contextName);
 	return asmTranslator.buildBlock(
 		m_node.operations().root(),
@@ -264,7 +299,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		m_returnType,
 		constants,
 		paramBitWidths,
-		storageSlotVars);
+		storageSlotVars,
+		localStorageBoxAliases);
 }
 
 } // namespace puyasol::builder::sol_ast

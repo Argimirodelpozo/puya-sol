@@ -951,7 +951,7 @@ int main(int _argc, char* _argv[])
 				" function(s) into helper #" + std::to_string(helperIdx));
 
 			puyasol::splitter::SimpleSplitter splitter;
-			auto parts = splitter.split(currentRoots, toExtract, helperIdx);
+			auto parts = splitter.split(currentRoots, toExtract, helperIdx, opts.ensureBudget);
 			if (parts.empty())
 			{
 				logger.warning("Splitter pass " + std::to_string(helperIdx) +
@@ -969,6 +969,13 @@ int main(int _argc, char* _argv[])
 		{
 			puyasol::splitter::SimpleSplitter::ContractAWST orch;
 			// Locate the primary Contract pointer to copy its id/name out.
+			// Solidity resolves contracts from least-derived to most-derived
+			// within a compilation unit; the last non-helper contract is the
+			// concrete one declared at the top of the .sol file. Picking the
+			// first match gave us the parent (e.g., `CallContextChecker` for
+			// `contract CollateralToken is UUPSUpgradeable …`), so the emitted
+			// orch had no real surface. Walk to the END of currentRoots and
+			// keep the last match.
 			for (auto const& r : currentRoots)
 			{
 				if (auto c = std::dynamic_pointer_cast<puyasol::awst::Contract>(r))
@@ -977,7 +984,6 @@ int main(int _argc, char* _argv[])
 					{
 						orch.contractId = c->id;
 						orch.contractName = c->name;
-						break;
 					}
 				}
 			}

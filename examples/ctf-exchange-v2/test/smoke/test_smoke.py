@@ -18,7 +18,6 @@ def test_ctf_adapter_deploys(ctf_adapter):
     assert ctf_adapter.app_id > 0
 
 
-@pytest.mark.skip(reason="puya-sol bug: % opcode arg type coercion in CollateralToken ctor")
 def test_collateral_token_deploys(collateral_token):
     assert collateral_token.app_id > 0
 

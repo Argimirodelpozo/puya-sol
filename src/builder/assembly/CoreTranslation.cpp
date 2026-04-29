@@ -121,6 +121,14 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 				auto node = awst::makeIntegerConstant(cIt->second, loc, awst::WType::biguintType());
 				return node;
 			}
+			// Local storage refs (`Type storage p = mapping[k]`): the
+			// `.slot` of the alias is the underlying BoxValueExpression's
+			// key. Return the BoxValueExpression itself as a sentinel so
+			// sload/sstore can recognize it and emit box_get / box_put on
+			// `expr.key` instead of routing through __storage_read/write.
+			auto bIt = m_localStorageBoxAliases.find(baseName);
+			if (bIt != m_localStorageBoxAliases.end())
+				return bIt->second;
 			// Fallback: check storageSlotVars for __slot_ marker
 			auto it = m_storageSlotVars.find(name);
 			if (it != m_storageSlotVars.end())
@@ -703,28 +711,36 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	}
 	if (funcName == "call" || funcName == "staticcall")
 	{
-		// In pure expression context (e.g. `mload(staticcall(...))`), we
-		// still want to dispatch known precompile calls — solady uses this
-		// pattern for ecrecover. Run the precompile handler, queue its
-		// statements onto m_pendingStatements (so they execute before the
-		// read), then return 1 so the outer expression treats the call as
-		// having succeeded.
+		// In pure expression context (e.g. `mload(staticcall(...))`,
+		// `iszero(call(...))`, `let success := call(...)` later read in
+		// an expression), we still want to materialize the call. Two
+		// dispatch shapes:
+		//
+		// 1. Constant address (e.g. precompile 0x01 ecrecover): run the
+		//    precompile handler.
+		// 2. Non-constant address (e.g. solady's
+		//    `safeTransfer`/`safeTransferFrom` calling into a runtime
+		//    `token` arg): lower to `itxn ApplicationCall`, same as the
+		//    statement-context path. Without this, every solady inner
+		//    call to a non-constant target silently no-ops on AVM.
+		//
+		// In both cases queue the side-effecting statements onto
+		// m_pendingStatements so they run before the outer expression
+		// reads, then return 1 so callers see "success".
+		std::vector<std::shared_ptr<awst::Statement>> stmts;
 		auto precompileAddr = resolveConstantYulValue(_call.arguments[1]);
 		if (precompileAddr)
 		{
-			std::vector<std::shared_ptr<awst::Statement>> precompileStmts;
 			handlePrecompileCall(_call, /*_assignTarget=*/std::string(),
-				loc, precompileStmts, /*_isCall=*/funcName == "call");
-			for (auto& s : precompileStmts)
-				m_pendingStatements.push_back(std::move(s));
+				loc, stmts, /*_isCall=*/funcName == "call");
 		}
 		else
 		{
-			Logger::instance().warning(
-				funcName + " in pure expression context with non-constant address — stubbed as success",
-				loc
-			);
+			handleAppCall(_call, /*_assignTarget=*/std::string(),
+				loc, stmts, /*_isCall=*/funcName == "call");
 		}
+		for (auto& s : stmts)
+			m_pendingStatements.push_back(std::move(s));
 		auto one = awst::makeIntegerConstant("1", loc, awst::WType::biguintType());
 		return one;
 	}

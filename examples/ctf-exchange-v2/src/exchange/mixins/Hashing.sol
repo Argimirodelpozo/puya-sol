@@ -25,14 +25,29 @@ abstract contract Hashing is EIP712, IHashing {
 
     /// @notice Creates the struct hash for an order
     /// @dev This does not include the signature; the signature is downstream of this hash
+    // AVM-PORT-ADAPTATION: see PUYA_BLOCKERS.md §4. Original used solady's
+    // gas-saving inline-asm pattern `keccak256(sub(order, 0x20), 0x180)`
+    // which reads 32 bytes BEFORE the struct's memory pointer. puya-sol
+    // doesn't bind Solidity memory-struct pointers to simulated AVM memory
+    // offsets, so `sub(order, 0x20)` evaluates to 2^64-32 and the
+    // extraction reverts. Fall back to `keccak256(abi.encode(...))` which
+    // puya-sol translates cleanly.
     function _createStructHash(Order memory order) internal pure returns (bytes32) {
-        bytes32 result;
-        assembly {
-            let prev := mload(sub(order, 0x20))
-            mstore(sub(order, 0x20), ORDER_TYPEHASH)
-            result := keccak256(sub(order, 0x20), 0x180)
-            mstore(sub(order, 0x20), prev)
-        }
-        return result;
+        return keccak256(
+            abi.encode(
+                ORDER_TYPEHASH,
+                order.salt,
+                order.maker,
+                order.signer,
+                order.tokenId,
+                order.makerAmount,
+                order.takerAmount,
+                order.side,
+                order.signatureType,
+                order.timestamp,
+                order.metadata,
+                order.builder
+            )
+        );
     }
 }

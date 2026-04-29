@@ -228,9 +228,6 @@ def _empty_order(maker_addr: bytes, side: int = 0):
     ]
 
 
-@pytest.mark.xfail(reason="hashOrder reads cached EIP-712 domain set in __postInit; "
-                          "the cache write path is currently broken under puya — "
-                          "separate investigation")
 def test_hash_order(exchange, admin):
     order = _empty_order(addr(admin))
     res = _call(exchange, "hashOrder", [order], extra_fee=50_000)
@@ -250,3 +247,186 @@ def test_match_orders_revert_no_maker_orders(exchange, admin):
         _call(exchange, "matchOrders",
             [cond_id, taker, [], 0, [], 0, []],
             sender=admin, extra_fee=200_000)
+
+
+def test_match_orders_revert_mismatched_array_lengths(exchange, admin):
+    """matchOrders with `len(fillAmounts) != len(makerOrders)` reverts
+    MismatchedArrayLengths. Like the no-maker-orders revert above, this
+    fires before any signature check — the dispatcher only inspects array
+    lengths."""
+    cond_id = list((0xaaaa).to_bytes(32, "big"))
+    taker = _empty_order(addr(admin), side=0)
+    maker = _empty_order(addr(admin), side=1)
+    # 1 maker, 2 fillAmounts (mismatched) — note also 1 feeAmount to match
+    # makerOrders' length (the contract checks fillAmounts vs makerOrders
+    # first; feeAmounts mismatch would be a separate revert path).
+    with pytest.raises(LogicError):
+        _call(exchange, "matchOrders",
+            [cond_id, taker, [maker], 0, [0, 0], 0, [0]],
+            sender=admin, extra_fee=200_000)
+
+
+# ── supportsInterface (ERC165) ────────────────────────────────────────────
+
+
+def test_supports_interface(exchange):
+    """ERC1155TokenReceiver and ERC165 interface IDs return true; an
+    arbitrary 4-byte value returns false."""
+    # ERC1155TokenReceiver
+    assert _call(exchange, "supportsInterface", [b"\x4e\x23\x12\xe0"]) is True
+    # ERC165
+    assert _call(exchange, "supportsInterface", [b"\x01\xff\xc9\xa7"]) is True
+    # Unsupported
+    assert _call(exchange, "supportsInterface", [b"\xde\xad\xbe\xef"]) is False
+
+
+# ── User pause block interval (max + revert) ──────────────────────────────
+
+
+def test_set_user_pause_block_interval_max_value(exchange, admin):
+    """setUserPauseBlockInterval(302_400) is the upper bound (7 days at
+    2-second Polygon blocks). Should succeed."""
+    _call(exchange, "setUserPauseBlockInterval", [302_400], sender=admin)
+    assert _call(exchange, "userPauseBlockInterval") == 302_400
+
+
+def test_set_user_pause_block_interval_revert_exceeds_max(exchange, admin):
+    """setUserPauseBlockInterval(302_401) is one past the cap → reverts
+    ExceedsMaxPauseInterval."""
+    with pytest.raises(LogicError):
+        _call(exchange, "setUserPauseBlockInterval", [302_401], sender=admin)
+
+
+# ── User pausable: re-pause after unpause ─────────────────────────────────
+
+
+def test_user_pausable_re_pause_after_unpause(exchange, admin, henry):
+    """A user can pause → unpause → pause again. The contract only
+    rejects pauseUser when called while already-paused (storage slot
+    non-zero); unpause clears the slot, allowing a re-pause."""
+    # Set interval=0 so pause "takes effect" at the same block — without
+    # this, the contract's delayed-pause semantics
+    # (`isUserPaused` returns `block.number >= pausedBlockAt`) make the
+    # final assert flaky on localnet where we can't roll the block number.
+    _call(exchange, "setUserPauseBlockInterval", [0], sender=admin)
+    _call(exchange, "pauseUser", sender=henry)
+    _call(exchange, "unpauseUser", sender=henry)
+    _call(exchange, "pauseUser", sender=henry)
+    assert _call(exchange, "isUserPaused", [addr(henry)]) is True
+
+
+# ── User pause exact-boundary block (no signing required) ─────────────────
+
+
+def test_user_paused_exact_boundary_block(exchange, admin, henry):
+    """`isUserPaused(user)` returns
+    `pausedBlockAt > 0 && block.number >= pausedBlockAt`. So the pause
+    becomes effective AT the boundary block (>= not >) — calling at the
+    exact pausedBlockAt should still report paused. With interval=0,
+    pausedBlockAt = current block, and the next read sees
+    block.number == pausedBlockAt → boundary-inclusive true."""
+    _call(exchange, "setUserPauseBlockInterval", [0], sender=admin)
+    _call(exchange, "pauseUser", sender=henry)
+    paused_at = _call(exchange, "userPausedBlockAt", [addr(henry)])
+    assert paused_at > 0
+    assert _call(exchange, "isUserPaused", [addr(henry)]) is True
+
+
+# ── validateFee (happy + revert) ──────────────────────────────────────────
+
+
+def test_validate_fee(exchange):
+    """validateFee accepts fee/cashValue ratios up to maxFeeRateBps. The
+    default maxFeeRateBps is 500 (5%), so a 5/100 USDC fee is at the
+    boundary and passes; 4/100 USDC is comfortably below."""
+    # 5% fee
+    _call(exchange, "validateFee", [5_000_000, 100_000_000])
+    # 4% fee
+    _call(exchange, "validateFee", [4_000_000, 100_000_000])
+
+
+def test_validate_fee_revert_fee_exceeds_max_rate(exchange):
+    """6% fee exceeds the 5% default cap → reverts FeeExceedsMaxRate."""
+    with pytest.raises(LogicError):
+        _call(exchange, "validateFee", [6_000_000, 100_000_000])
+
+
+# ── validateOrder (EOA-signed flow) ───────────────────────────────────────
+#
+# These exercise the full signature-recover path via the AVM-PORT-ADAPTATION
+# in `Signatures.sol::_verifyECDSASignature` (manual r/s/v + ecrecover
+# precompile). Build orders via `dev.orders.make_order`, hash via the
+# contract's `hashOrder` view, sign with `dev.signing.EthSigner`, then
+# call `validateOrder`.
+
+
+def test_validate_order(exchange):
+    """validateOrder with a properly signed EOA order succeeds."""
+    from dev.orders import make_order, sign_order, Side
+    from dev.signing import bob
+    bob_signer = bob()
+    order = make_order(
+        maker=bob_signer.eth_address,
+        token_id=12345,
+        maker_amount=50_000_000,
+        taker_amount=100_000_000,
+        side=Side.BUY,
+    )
+    signed = sign_order(exchange, order, bob_signer)
+    _call(exchange, "validateOrder", [signed.to_abi_list()], extra_fee=80_000)
+
+
+def test_validate_order_revert_invalid_sig(exchange):
+    """validateOrder with carla's signature on bob's order reverts
+    InvalidSignature — recovered signer ≠ maker."""
+    from dev.orders import make_order, sign_order, Side
+    from dev.signing import bob, carla
+    order = make_order(
+        maker=bob().eth_address,
+        token_id=12345,
+        maker_amount=50_000_000,
+        taker_amount=100_000_000,
+        side=Side.BUY,
+    )
+    signed = sign_order(exchange, order, carla())
+    with pytest.raises(LogicError):
+        _call(exchange, "validateOrder", [signed.to_abi_list()], extra_fee=80_000)
+
+
+def test_validate_order_revert_invalid_sig_length(exchange):
+    """validateOrder with an empty signature reverts InvalidSignature.
+    The early `if (signature.length != 65) return false` short-circuit in
+    `_verifyECDSASignature` propagates up to the validateOrder check."""
+    from dev.orders import make_order, Side
+    from dev.signing import bob
+    order = make_order(
+        maker=bob().eth_address,
+        token_id=12345,
+        maker_amount=50_000_000,
+        taker_amount=100_000_000,
+        side=Side.BUY,
+    )
+    # Empty signature — sig length check fails.
+    with pytest.raises(LogicError):
+        _call(exchange, "validateOrder", [order.to_abi_list()], extra_fee=80_000)
+
+
+def test_validate_order_revert_invalid_signer_maker(exchange):
+    """For SignatureType.EOA, signer and maker MUST be the same address.
+    Order with maker=carla but signer=bob (signed by bob) reverts
+    InvalidSignature even though the signature itself is valid."""
+    from dev.orders import make_order, sign_order, Side
+    from dev.signing import bob, carla
+    bob_signer = bob()
+    # signer = bob, maker = carla — mismatch for EOA sigType.
+    order = make_order(
+        maker=carla().eth_address,
+        signer=bob_signer.eth_address,
+        token_id=12345,
+        maker_amount=50_000_000,
+        taker_amount=100_000_000,
+        side=Side.BUY,
+    )
+    signed = sign_order(exchange, order, bob_signer)
+    with pytest.raises(LogicError):
+        _call(exchange, "validateOrder", [signed.to_abi_list()], extra_fee=80_000)
