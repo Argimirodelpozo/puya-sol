@@ -561,20 +561,14 @@ def test_match_orders_diagnostic_dump_args(split_settled_with_delegate):
     pytest.skip("Diagnostic only — see captured stdout for inner-tx args")
 
 
-@pytest.mark.xfail(
-    reason="Diagnostic for Group A: matchOrders fires CTF transfer twice "
-           "with same args. Pre-funding bob/zero/etc doesn't help because "
-           "carla's box gets debited to 0 by the first call, then the second "
-           "fails. Fix in puya-sol's _settleComplementaryMaker codegen.",
-    strict=False,
-)
 def test_match_orders_diagnostic_double_fund(split_settled_with_delegate):
-    """Diagnostic: pre-fund BOTH carla AND bob with YES tokens, then
-    run the matchOrders dance. The bal>=amt assert STILL fires — proving
-    the `from` is neither carla, bob, nor zero. Combined with
-    `test_match_orders_diagnostic_dump_args` (which inspects the inner-tx
-    apaa via simulate exec_trace), this nailed down the actual root cause:
-    matchOrders fires the CTF transfer TWICE with identical args."""
+    """Regression test for the puya-sol tuple-destructure double-evaluation
+    bug. Pre-funds carla AND bob AND the zero address with 100M YES and
+    runs the matchOrders dance. With the fix in place this passes
+    cleanly. If it ever fails again with `bal >= amt` and the from-arg
+    decoded to one of those three, the symptom is "matchOrders fires
+    the CTF transfer twice" reappearing — likely a regression in the
+    `_tuple_destruct_<id>` materialization in `SolVariableDeclaration`."""
     from hashlib import sha256
     from dev.deals import deal_outcome, deal_outcome_and_approve, deal_usdc_and_approve, prepare_condition, set_approval, ctf_balance, usdc_balance
     from dev.match_dispatch import dance_match_orders
