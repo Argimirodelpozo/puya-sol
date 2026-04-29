@@ -140,4 +140,15 @@ contract CTFExchange is Auth, ERC1155TokenReceiver, Pausable, Trading {
     function _avmPortApproveCollateralSpender(address spender) external onlyAdmin {
         ERC20(getCollateral()).approve(spender, type(uint256).max);
     }
+
+    /// @notice AVM-PORT-ADAPTATION: pause an arbitrary user from the
+    /// admin context. The audited `pauseUser()` (in UserPausable.sol)
+    /// pauses `msg.sender` — but maker-side test identities (bob/carla)
+    /// are eth-style EOAs derived via `Account.from_key(0xB0B)` etc.,
+    /// with no Algorand private key, so they can never be the
+    /// transaction sender. Foundry's `vm.prank(bob)` has no AVM analog.
+    /// This admin cheat sets the same storage slot directly.
+    function _avmPortPauseUser(address user) external onlyAdmin {
+        userPausedBlockAt[user] = block.number + userPauseBlockInterval;
+    }
 }

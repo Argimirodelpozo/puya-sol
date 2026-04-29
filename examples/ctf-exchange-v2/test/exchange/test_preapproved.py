@@ -451,21 +451,44 @@ def test_match_orders_preapproved_respects_filled_status(split_settled_with_dele
         )
 
 
-@pytest.mark.xfail(
-    reason="`pauseUser()` pauses msg.sender. Bob is an eth-style identity "
-           "(via `Account.from_key(0xB0B)`) with no Algorand account, so "
-           "there's no way to send a tx as bob to pause himself. The "
-           "matchOrders pause check (`isUserPaused(order.maker)`) does fire "
-           "correctly — we just can't *trigger* the paused state. Needs "
-           "either an admin-pause cheat helper in v2 source, or a test-only "
-           "AVM key derivation for bob/carla that lets them sign txns.",
-    strict=False,
-)
 def test_match_orders_preapproved_respects_user_pause(split_settled_with_delegate):
     """test_matchOrders_preapproved_respectsUserPause: when bob (the taker
-    order's maker) is paused via `pauseUser`, the match must revert with
-    UserIsPaused even if the order is preapproved."""
-    pytest.fail("can't pause bob — eth-only identity, no AVM account")
+    order's maker) is paused, the match must revert with UserIsPaused
+    even if the order is preapproved.
+
+    AVM-PORT-ADAPTATION: bob has no Algorand key — he's an eth-style
+    EOA used as a maker identity, so we can't send `pauseUser()` as
+    bob. The orch exposes `_avmPortPauseUser(address)` (admin-only)
+    that writes the same storage slot `pauseUser()` does. Foundry's
+    `vm.prank(bob); ct.pauseUser()` is the equivalent."""
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    yes_id, _no_id, bob_addr, carla_addr, h1_addr = _setup_complementary_market(
+        orch, h1, ctf, usdc)
+    taker_signed, maker_signed = _make_complementary_pair(
+        orch, yes_id, bob_addr, carla_addr)
+
+    # Preapprove the taker order so the signature gate doesn't fire
+    # before the pause gate.
+    _call_with_pads(orch, orch, "preapproveOrder",
+                    [taker_signed.to_abi_list()], extra_fee=80_000)
+
+    # Pause bob via the admin cheat. Lower `userPauseBlockInterval` to 0
+    # first so the pause takes effect immediately (the default is 100).
+    _call_with_pads(orch, orch, "setUserPauseBlockInterval", [0])
+    _call_with_pads(orch, orch, "_avmPortPauseUser", [bytes(bob_addr)])
+
+    with pytest.raises(LogicError):
+        dance_match_orders(
+            chunk, orch,
+            condition_id=CONDITION_ID,
+            taker_order_list=taker_signed.to_abi_list(),
+            maker_orders_list=[maker_signed.to_abi_list()],
+            taker_fill_amount=50_000_000, maker_fill_amounts=[100_000_000],
+            taker_fee_amount=0, maker_fee_amounts=[0],
+            extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+            extra_box_refs=_complementary_inner_box_refs(
+                usdc, ctf, h1_addr, yes_id, bob_addr, carla_addr),
+        )
 
 
 def test_match_orders_preapproved_partial_fill(split_settled_with_delegate):
