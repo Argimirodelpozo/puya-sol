@@ -389,18 +389,51 @@ def test_mint_dump_match_type_arg(split_settled_with_delegate):
     if inner_traces and len(inner_traces) > 1:
         helper3_trace = inner_traces[1]
         ops = helper3_trace.get("approval-program-trace") or []
-        # Find PCs around _deriveMatchType return (line 2536 = extract_uint64)
-        for i, op in enumerate(ops):
-            pc = op.get("pc", 0)
-            # _deriveMatchType: pc range covering the math + return
-            # The matchType uint64 is on stack right after extract_uint64
-            # at line ~2536. Probably pc ~5000+.
-            stack_add = op.get("stack-additions") or []
-            if len(stack_add) == 1 and "uint" in stack_add[0]:
-                val = stack_add[0]["uint"]
-                if val in (0, 1, 2) and 4900 < pc < 5400:
-                    # This is likely the matchType output of _deriveMatchType
-                    print(f"  trace[{i}] pc={pc} pushed uint={val}")
+        # `_deriveMatchType` body in helper3's compiled binary lives at
+        # PC 4281-4340 in the raw asm report; the deployed binary uses
+        # `inject_memory_init`, which prepends 51 bytes of EVM-memory
+        # prologue, so on-chain PCs are shifted +51 → 4332-4391. The
+        # `_settleMakerOrders` callsite of `_deriveMatchType` is at
+        # raw PC 2846 → on-chain PC 2897. Dump every op in the union of
+        # those two ranges plus 60 ops past _deriveMatchType's retsub
+        # (which lands back in _settleMakerOrders, executes the cover/
+        # frame_bury sequence, and reaches the _prepareMakerOrder
+        # callsub at raw PC 2886 → on-chain 2937).
+        def _fmt(stack_add):
+            out = []
+            for s in stack_add:
+                if "uint" in s:
+                    out.append(f"u{s['uint']}")
+                elif "bytes" in s:
+                    b = s["bytes"]
+                    if isinstance(b, str):
+                        try:
+                            bb = base64.b64decode(b)
+                            out.append(f"b[{len(bb)}]:{bb.hex()[:24]}")
+                        except Exception:
+                            out.append(f"b?:{b[:24]}")
+                    else:
+                        out.append(f"b?:{str(b)[:24]}")
+                else:
+                    out.append("?")
+            return ",".join(out) or "-"
+
+        # Collect every trace index whose pc lands in our windows of interest.
+        # Windows are (lo, hi, label). Print each window's events.
+        windows = [
+            (1877, 1923, "_isAllComplementary helper2 stub (ret value drives the dispatch)"),
+            (2890, 3000, "_settleMakerOrders body bridging _deriveMatchType → _prepareMakerOrder"),
+            (4332, 4391, "_deriveMatchType body"),
+        ]
+        for lo, hi, label in windows:
+            print(f"\n--- {label} (pc {lo}..{hi}) ---")
+            for j, op in enumerate(ops):
+                pc = op.get("pc", 0)
+                if not (lo <= pc <= hi):
+                    continue
+                add = op.get("stack-additions") or []
+                rem = op.get("stack-pop-count") or 0
+                print(f"  [{j}] pc={pc} pop={rem} push={_fmt(add)}")
 
     pytest.skip("diagnostic")
 
