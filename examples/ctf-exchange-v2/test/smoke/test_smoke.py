@@ -22,6 +22,12 @@ def test_collateral_token_deploys(collateral_token):
     assert collateral_token.app_id > 0
 
 
-@pytest.mark.skip(reason="EVM-keccak vs ARC4 sha512_256 selector mismatch in approve() inner call")
+@pytest.mark.skip(
+    reason="NegRiskAdapter constructor calls `INegRiskAdapter(_negRiskAdapter).wcol()` "
+           "which fires an inner-tx whose ApplicationID is computed from the wrong "
+           "stack slot — same `dig N` stack-depth bug as the with-callback wrap/unwrap "
+           "path in CollateralToken. SafeTransferLib was already AVM-ported on these "
+           "adapters, but this constructor pattern hits a separate puya-sol lowering "
+           "bug for inner-tx target resolution that would need a compiler-side fix.")
 def test_negrisk_adapter_deploys(negrisk_adapter):
     assert negrisk_adapter.app_id > 0

@@ -1,20 +1,29 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.34;
 
-import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
-
 import { IConditionalTokens } from "./interfaces/IConditionalTokens.sol";
 import { CTFHelpers } from "./libraries/CTFHelpers.sol";
 import { CollateralToken } from "../collateral/CollateralToken.sol";
 import { Pausable } from "../collateral/abstract/Pausable.sol";
 import { ERC1155TokenReceiver } from "../exchange/mixins/ERC1155TokenReceiver.sol";
 
+// AVM-PORT-ADAPTATION: see PUYA_BLOCKERS.md §3 / TransferHelper.sol /
+// CollateralToken.sol. Solady's SafeTransferLib emits inline-asm `call`
+// to a non-constant token, which puya-sol stubs as success without
+// firing an itxn — transfers + approvals silently no-op. Plain
+// interface calls translate cleanly.
+interface IERC20Min {
+    function approve(address spender, uint256 amount) external returns (bool);
+    function balanceOf(address account) external view returns (uint256);
+    function transfer(address to, uint256 amount) external returns (bool);
+    function transferFrom(address from, address to, uint256 amount) external returns (bool);
+}
+
 /// @title CtfCollateralAdapter
 /// @author Polymarket
 /// @notice An adapter for interfacing with ConditionalTokens Markets
 ///         using the PolymarketCollateralToken
 contract CtfCollateralAdapter is Pausable, ERC1155TokenReceiver {
-    using SafeTransferLib for address;
 
     /*--------------------------------------------------------------
                                  STATE
@@ -47,7 +56,7 @@ contract CtfCollateralAdapter is Pausable, ERC1155TokenReceiver {
         _initializeOwner(_owner);
         _grantRoles(_admin, ADMIN_ROLE);
 
-        _usdce.safeApprove(_conditionalTokens, type(uint256).max);
+        require(IERC20Min(_usdce).approve(_conditionalTokens, type(uint256).max), "ERC20 approve failed");
     }
 
     /*--------------------------------------------------------------
@@ -62,7 +71,10 @@ contract CtfCollateralAdapter is Pausable, ERC1155TokenReceiver {
         external
         onlyUnpaused(USDCE)
     {
-        COLLATERAL_TOKEN.safeTransferFrom(msg.sender, COLLATERAL_TOKEN, _amount);
+        require(
+            IERC20Min(COLLATERAL_TOKEN).transferFrom(msg.sender, COLLATERAL_TOKEN, _amount),
+            "ERC20 transferFrom failed"
+        );
         // forgefmt: disable-next-item
         CollateralToken(COLLATERAL_TOKEN).unwrap({
             _asset: USDCE,
@@ -100,7 +112,7 @@ contract CtfCollateralAdapter is Pausable, ERC1155TokenReceiver {
 
         _mergePositions(_conditionId, _amount);
 
-        USDCE.safeTransfer(COLLATERAL_TOKEN, _amount);
+        require(IERC20Min(USDCE).transfer(COLLATERAL_TOKEN, _amount), "ERC20 transfer failed");
         // forgefmt: disable-next-item
         CollateralToken(COLLATERAL_TOKEN).wrap({
             _asset: USDCE,
@@ -125,9 +137,9 @@ contract CtfCollateralAdapter is Pausable, ERC1155TokenReceiver {
 
         _redeemPositions(_conditionId, CTFHelpers.partition());
 
-        uint256 amount = USDCE.balanceOf(address(this));
+        uint256 amount = IERC20Min(USDCE).balanceOf(address(this));
 
-        USDCE.safeTransfer(COLLATERAL_TOKEN, amount);
+        require(IERC20Min(USDCE).transfer(COLLATERAL_TOKEN, amount), "ERC20 transfer failed");
         // forgefmt: disable-next-item
         CollateralToken(COLLATERAL_TOKEN).wrap({
             _asset: USDCE,

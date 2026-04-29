@@ -56,4 +56,11 @@ contract UniversalMock {
     function masterCopy() external view returns (address) {
         return address(this);
     }
+
+    /// @notice NegRisk adapter's `wcol()` getter — returns self so the
+    /// NegRiskCtfCollateralAdapter constructor can deploy without
+    /// reaching for a real wrapped-collateral contract.
+    function wcol() external view returns (address) {
+        return address(this);
+    }
 }

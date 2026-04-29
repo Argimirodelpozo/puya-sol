@@ -1,20 +1,17 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.34;
 
-import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
-
 import { CTFHelpers } from "./libraries/CTFHelpers.sol";
 import { INegRiskAdapter } from "./interfaces/INegRiskAdapter.sol";
 import { CollateralToken } from "../collateral/CollateralToken.sol";
 
-import { CtfCollateralAdapter } from "./CtfCollateralAdapter.sol";
+import { CtfCollateralAdapter, IERC20Min } from "./CtfCollateralAdapter.sol";
 
 /// @title NegRiskCtfCollateralAdapter
 /// @author Polymarket
 /// @notice An adapter for interfacing with NegRisk-ConditionalTokens Markets
 ///         using the PolymarketCollateralToken
 contract NegRiskCtfCollateralAdapter is CtfCollateralAdapter {
-    using SafeTransferLib for address;
 
     /*--------------------------------------------------------------
                                  STATE
@@ -48,7 +45,7 @@ contract NegRiskCtfCollateralAdapter is CtfCollateralAdapter {
         NEG_RISK_ADAPTER = _negRiskAdapter;
         WRAPPED_COLLATERAL = INegRiskAdapter(_negRiskAdapter).wcol();
 
-        _usdce.safeApprove(_negRiskAdapter, type(uint256).max);
+        require(IERC20Min(_usdce).approve(_negRiskAdapter, type(uint256).max), "ERC20 approve failed");
         CONDITIONAL_TOKENS.setApprovalForAll(_negRiskAdapter, true);
     }
 
@@ -84,9 +81,9 @@ contract NegRiskCtfCollateralAdapter is CtfCollateralAdapter {
         }
 
         // Wrap any received USDC.e into CollateralToken
-        uint256 usdceAmount = USDCE.balanceOf(address(this));
+        uint256 usdceAmount = IERC20Min(USDCE).balanceOf(address(this));
         if (usdceAmount > 0) {
-            USDCE.safeTransfer(COLLATERAL_TOKEN, usdceAmount);
+            require(IERC20Min(USDCE).transfer(COLLATERAL_TOKEN, usdceAmount), "ERC20 transfer failed");
             // forgefmt: disable-next-item
             CollateralToken(COLLATERAL_TOKEN).wrap({
                 _asset: USDCE,
