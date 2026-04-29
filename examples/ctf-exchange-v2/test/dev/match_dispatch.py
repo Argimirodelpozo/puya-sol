@@ -142,19 +142,30 @@ def dance_match_orders(
         maker_fee_amounts=maker_fee_amounts,
     )
     composer = chunk.algorand.new_group()
-    box_refs = [
+    chunk_box_refs = [
         au.BoxReference(app_id=0, name=b"__self_bytes"),
         au.BoxReference(app_id=0, name=b"__orch_orig_bytes"),
-    ] + (extra_box_refs or [])
-    # Padding calls: each adds ~700 opcode budget to the pooled inner-call
-    # budget. `isAdmin(zero_addr)` is a cheap readonly view on the orch
-    # that does no state mutation.
+    ]
+    # Spread `extra_box_refs` (CTF/USDC inner-call boxes) across pad calls
+    # to stay under the 8-ref/txn cap. Each pad call already has `orch` as
+    # its target; we add the box's foreign app too so the box ref resolves.
+    # Box availability is pooled across the txn group, so a box on pad-N
+    # is reachable from the dance txn's inner calls.
+    extra_boxes_list = list(extra_box_refs or [])
+    # Per-pad cap: 6 refs (1 implicit orch + 1 foreign app + 6 boxes = 8 max)
+    per_pad_boxes = 6
+    box_idx = 0
     for i in range(budget_pad):
+        slot_boxes = extra_boxes_list[box_idx:box_idx + per_pad_boxes]
+        box_idx += per_pad_boxes
+        slot_app_ids = sorted({b.app_index for b in slot_boxes if b.app_index != 0})
         composer.add_app_call_method_call(orch.params.call(
             au.AppClientMethodCallParams(
                 method="isAdmin",
                 args=[b"\x00" * 32],
                 note=f"opup-{i}".encode(),
+                box_references=slot_boxes if slot_boxes else None,
+                app_references=slot_app_ids if slot_app_ids else None,
             )))
     composer.add_app_call_method_call(chunk.params.call(
         au.AppClientMethodCallParams(
@@ -163,7 +174,7 @@ def dance_match_orders(
                   a1, a2, a3, a4, a5, a6, a7],
             extra_fee=au.AlgoAmount(micro_algo=extra_fee),
             app_references=[orch.app_id] + (extra_app_refs or []),
-            box_references=box_refs,
+            box_references=chunk_box_refs,
         )))
     res = composer.send(au.SendParams(
         populate_app_call_resources=True,

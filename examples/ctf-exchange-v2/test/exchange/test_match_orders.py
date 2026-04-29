@@ -139,6 +139,9 @@ def test_match_orders_complementary(split_settled_with_delegate):
     h1_addr = algod_addr_bytes_for_app(h1.app_id)
     deal_usdc_and_approve(usdc, bob_addr, h1_addr, 50_000_000)
     deal_outcome_and_approve(ctf, carla_addr, h1_addr, yes_id, 100_000_000)
+    # Sanity: post-mint, before dance, the boxes that matchOrders will read.
+    assert ctf_balance(ctf, carla_addr, yes_id) == 100_000_000
+    assert usdc_balance(usdc, bob_addr) == 50_000_000
 
     taker = make_order(
         maker=bob_addr, token_id=yes_id,
@@ -153,6 +156,24 @@ def test_match_orders_complementary(split_settled_with_delegate):
     taker_signed = sign_order(orch, taker, bob_signer)
     maker_signed = sign_order(orch, maker, carla_signer)
 
+    # CTF/USDC inner-call boxes don't get auto-populated through deep itxns.
+    # Pre-list the carla/bob balance + h1-approval boxes; dance_match_orders
+    # spreads them across the pad calls.
+    import algokit_utils as au
+    from hashlib import sha256
+    yes_bytes = yes_id.to_bytes(32, "big")
+    inner_boxes = [
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(carla_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(bob_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"ap_" + sha256(bytes(carla_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id,
+                        name=b"a_" + sha256(bytes(bob_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(bob_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(carla_addr)),
+    ]
     dance_match_orders(
         chunk, orch,
         condition_id=CONDITION_ID,
@@ -163,6 +184,7 @@ def test_match_orders_complementary(split_settled_with_delegate):
         taker_fee_amount=0,
         maker_fee_amounts=[0],
         extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+        extra_box_refs=inner_boxes,
     )
 
     # Bob spent 50 USDC, received 100 YES.
