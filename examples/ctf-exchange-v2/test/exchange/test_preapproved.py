@@ -400,16 +400,72 @@ def test_match_orders_preapproved_taker_complementary(split_settled_with_delegat
     assert usdc_balance(usdc, carla_addr) == 50_000_000
 
 
-@pytest.mark.xfail(reason=SETTLEMENT_INFRA, strict=False)
 def test_match_orders_preapproved_respects_filled_status(split_settled_with_delegate):
-    """test_matchOrders_preapproved_respectsFilledStatus"""
-    pytest.fail("happy-path settlement")
+    """test_matchOrders_preapproved_respectsFilledStatus: a fully-filled
+    preapproved order can't be matched again. First dance fills both
+    sides, second dance with the same orders must revert with
+    OrderAlreadyFilled."""
+    from dev.deals import usdc_balance, ctf_balance
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    yes_id, _no_id, bob_addr, carla_addr, h1_addr = _setup_complementary_market(
+        orch, h1, ctf, usdc)
+    taker_signed, maker_signed = _make_complementary_pair(
+        orch, yes_id, bob_addr, carla_addr)
+    _call_with_pads(orch, orch, "preapproveOrder",
+                    [taker_signed.to_abi_list()], extra_fee=80_000)
+    _call_with_pads(orch, orch, "preapproveOrder",
+                    [maker_signed.to_abi_list()], extra_fee=80_000)
+    taker_signed.signature = b""
+    maker_signed.signature = b""
+
+    box_refs = _complementary_inner_box_refs(
+        usdc, ctf, h1_addr, yes_id, bob_addr, carla_addr)
+
+    # First match — fills both sides completely.
+    dance_match_orders(
+        chunk, orch,
+        condition_id=CONDITION_ID,
+        taker_order_list=taker_signed.to_abi_list(),
+        maker_orders_list=[maker_signed.to_abi_list()],
+        taker_fill_amount=50_000_000,
+        maker_fill_amounts=[100_000_000],
+        taker_fee_amount=0, maker_fee_amounts=[0],
+        extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+        extra_box_refs=box_refs,
+    )
+    assert usdc_balance(usdc, carla_addr) == 50_000_000
+    assert ctf_balance(ctf, bob_addr, yes_id) == 100_000_000
+
+    # Second match — taker's order is now filled. Should revert.
+    with pytest.raises(LogicError):
+        dance_match_orders(
+            chunk, orch,
+            condition_id=CONDITION_ID,
+            taker_order_list=taker_signed.to_abi_list(),
+            maker_orders_list=[maker_signed.to_abi_list()],
+            taker_fill_amount=50_000_000,
+            maker_fill_amounts=[100_000_000],
+            taker_fee_amount=0, maker_fee_amounts=[0],
+            extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+            extra_box_refs=box_refs,
+        )
 
 
-@pytest.mark.xfail(reason=SETTLEMENT_INFRA, strict=False)
+@pytest.mark.xfail(
+    reason="`pauseUser()` pauses msg.sender. Bob is an eth-style identity "
+           "(via `Account.from_key(0xB0B)`) with no Algorand account, so "
+           "there's no way to send a tx as bob to pause himself. The "
+           "matchOrders pause check (`isUserPaused(order.maker)`) does fire "
+           "correctly — we just can't *trigger* the paused state. Needs "
+           "either an admin-pause cheat helper in v2 source, or a test-only "
+           "AVM key derivation for bob/carla that lets them sign txns.",
+    strict=False,
+)
 def test_match_orders_preapproved_respects_user_pause(split_settled_with_delegate):
-    """test_matchOrders_preapproved_respectsUserPause"""
-    pytest.fail("happy-path settlement")
+    """test_matchOrders_preapproved_respectsUserPause: when bob (the taker
+    order's maker) is paused via `pauseUser`, the match must revert with
+    UserIsPaused even if the order is preapproved."""
+    pytest.fail("can't pause bob — eth-only identity, no AVM account")
 
 
 @pytest.mark.xfail(reason=SETTLEMENT_INFRA, strict=False)
@@ -418,10 +474,44 @@ def test_match_orders_preapproved_partial_fill(split_settled_with_delegate):
     pytest.fail("happy-path settlement")
 
 
-@pytest.mark.xfail(reason=SETTLEMENT_INFRA, strict=False)
 def test_match_orders_empty_signature_preapproved_complementary(split_settled_with_delegate):
-    """test_matchOrders_emptySignature_preapproved_complementary"""
-    pytest.fail("happy-path settlement")
+    """test_matchOrders_emptySignature_preapproved_complementary: BOTH the
+    taker and maker orders are preapproved with their full signatures,
+    then both signatures are cleared. The on-chain preapproval alone
+    must authorize the match — same balances as the unpreapproved
+    complementary case."""
+    from dev.deals import usdc_balance, ctf_balance
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    yes_id, _no_id, bob_addr, carla_addr, h1_addr = _setup_complementary_market(
+        orch, h1, ctf, usdc)
+    taker_signed, maker_signed = _make_complementary_pair(
+        orch, yes_id, bob_addr, carla_addr)
+
+    # Preapprove both with their valid signatures, then clear both.
+    _call_with_pads(orch, orch, "preapproveOrder",
+                    [taker_signed.to_abi_list()], extra_fee=80_000)
+    _call_with_pads(orch, orch, "preapproveOrder",
+                    [maker_signed.to_abi_list()], extra_fee=80_000)
+    taker_signed.signature = b""
+    maker_signed.signature = b""
+
+    dance_match_orders(
+        chunk, orch,
+        condition_id=CONDITION_ID,
+        taker_order_list=taker_signed.to_abi_list(),
+        maker_orders_list=[maker_signed.to_abi_list()],
+        taker_fill_amount=50_000_000,
+        maker_fill_amounts=[100_000_000],
+        taker_fee_amount=0, maker_fee_amounts=[0],
+        extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+        extra_box_refs=_complementary_inner_box_refs(
+            usdc, ctf, h1_addr, yes_id, bob_addr, carla_addr),
+    )
+
+    assert usdc_balance(usdc, bob_addr) == 0
+    assert ctf_balance(ctf, bob_addr, yes_id) == 100_000_000
+    assert ctf_balance(ctf, carla_addr, yes_id) == 0
+    assert usdc_balance(usdc, carla_addr) == 50_000_000
 
 
 @pytest.mark.xfail(reason="ERC1271 1271-preapproval invalidation flow needs "
