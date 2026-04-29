@@ -426,16 +426,158 @@ def test_match_orders_complementary_fees(split_settled_with_delegate):
     assert usdc_balance(usdc, fee_receiver) == 2_500_000 + 100_000
 
 
-@pytest.mark.xfail(reason=SETTLEMENT_INFRA, strict=False)
 def test_match_orders_mint_fees(split_settled_with_delegate):
-    """test_MatchOrders_Mint_Fees: MINT path with fees."""
-    pytest.fail("mint with fees")
+    """test_MatchOrders_Mint_Fees: both BUYs of complementary tokens
+    (MINT path) with maker + taker fees.
+
+    Bob BUYs 100 YES at 50c + 2.5 USDC taker fee (52.5 USDC spent).
+    Carla BUYs 100 NO at 50c + 0.1 USDC maker fee (50.1 USDC spent).
+    Exchange splits 100 USDC into 100 YES + 100 NO and distributes.
+    FeeReceiver collects 2.6 USDC."""
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer, carla_signer = bob(), carla()
+    bob_addr, carla_addr = bob_signer.eth_address_padded32, carla_signer.eth_address_padded32
+
+    yes_id, no_id = _canonical_yes_no_ids(orch, h1)
+    prepare_condition(ctf, CONDITION_ID, yes_id, no_id)
+    h1_addr = algod_addr_bytes_for_app(h1.app_id)
+    orch_addr = algod_addr_bytes_for_app(orch.app_id)
+    deal_usdc_and_approve(usdc, bob_addr, h1_addr, 52_500_000)
+    deal_usdc_and_approve(usdc, carla_addr, h1_addr, 50_100_000)
+
+    fee_receiver_raw = orch.send.call(au.AppClientMethodCallParams(
+        method="getFeeReceiver", args=[],
+        extra_fee=au.AlgoAmount(micro_algo=200_000),
+    ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return
+    if isinstance(fee_receiver_raw, str):
+        from algosdk.encoding import decode_address
+        fee_receiver = decode_address(fee_receiver_raw)
+    else:
+        fee_receiver = bytes(fee_receiver_raw)
+
+    taker = make_order(maker=bob_addr, token_id=yes_id,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
+    maker = make_order(maker=carla_addr, token_id=no_id,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
+    t = sign_order(orch, taker, bob_signer)
+    m = sign_order(orch, maker, carla_signer)
+
+    from hashlib import sha256
+    yes_bytes = yes_id.to_bytes(32, "big")
+    no_bytes = no_id.to_bytes(32, "big")
+    inner_boxes = [
+        au.BoxReference(app_id=usdc.app_id,
+                        name=b"a_" + sha256(bytes(bob_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id,
+                        name=b"a_" + sha256(bytes(carla_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(bob_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(carla_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(orch_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(fee_receiver)),
+        au.BoxReference(app_id=ctf.app_id, name=b"p_" + CONDITION_ID),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(orch_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(orch_addr) + no_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(bob_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(carla_addr) + no_bytes).digest()),
+    ]
+    dance_match_orders(
+        chunk, orch,
+        condition_id=CONDITION_ID,
+        taker_order_list=t.to_abi_list(),
+        maker_orders_list=[m.to_abi_list()],
+        taker_fill_amount=50_000_000,
+        maker_fill_amounts=[50_000_000],
+        taker_fee_amount=2_500_000, maker_fee_amounts=[100_000],
+        extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+        extra_box_refs=inner_boxes,
+    )
+
+    assert usdc_balance(usdc, bob_addr) == 0
+    assert ctf_balance(ctf, bob_addr, yes_id) == 100_000_000
+    assert usdc_balance(usdc, carla_addr) == 0
+    assert ctf_balance(ctf, carla_addr, no_id) == 100_000_000
+    assert usdc_balance(usdc, fee_receiver) == 2_500_000 + 100_000
 
 
-@pytest.mark.xfail(reason=SETTLEMENT_INFRA, strict=False)
 def test_match_orders_merge_fees(split_settled_with_delegate):
-    """test_MatchOrders_Merge_Fees: MERGE path with fees."""
-    pytest.fail("merge with fees")
+    """test_MatchOrders_Merge_Fees: both SELLs of complementary tokens
+    (MERGE path) with maker + taker fees.
+
+    Bob SELLs 100 YES at 50c, fee 0.1 (49.9 received).
+    Carla SELLs 100 NO at 50c, fee 0.1 (49.9 received).
+    Exchange merges 100 YES + 100 NO into 100 USDC, distributes minus
+    fees. FeeReceiver collects 0.2 USDC."""
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer, carla_signer = bob(), carla()
+    bob_addr, carla_addr = bob_signer.eth_address_padded32, carla_signer.eth_address_padded32
+
+    yes_id, no_id = _canonical_yes_no_ids(orch, h1)
+    prepare_condition(ctf, CONDITION_ID, yes_id, no_id)
+    h1_addr = algod_addr_bytes_for_app(h1.app_id)
+    orch_addr = algod_addr_bytes_for_app(orch.app_id)
+    deal_outcome_and_approve(ctf, bob_addr, h1_addr, yes_id, 100_000_000)
+    deal_outcome_and_approve(ctf, carla_addr, h1_addr, no_id, 100_000_000)
+
+    fee_receiver_raw = orch.send.call(au.AppClientMethodCallParams(
+        method="getFeeReceiver", args=[],
+        extra_fee=au.AlgoAmount(micro_algo=200_000),
+    ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return
+    if isinstance(fee_receiver_raw, str):
+        from algosdk.encoding import decode_address
+        fee_receiver = decode_address(fee_receiver_raw)
+    else:
+        fee_receiver = bytes(fee_receiver_raw)
+
+    taker = make_order(maker=bob_addr, token_id=yes_id,
+        maker_amount=100_000_000, taker_amount=50_000_000, side=Side.SELL)
+    maker = make_order(maker=carla_addr, token_id=no_id,
+        maker_amount=100_000_000, taker_amount=50_000_000, side=Side.SELL)
+    t = sign_order(orch, taker, bob_signer)
+    m = sign_order(orch, maker, carla_signer)
+
+    from hashlib import sha256
+    yes_bytes = yes_id.to_bytes(32, "big")
+    no_bytes = no_id.to_bytes(32, "big")
+    inner_boxes = [
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"ap_" + sha256(bytes(bob_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"ap_" + sha256(bytes(carla_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(bob_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(carla_addr) + no_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(orch_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(orch_addr) + no_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id, name=b"p_" + CONDITION_ID),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(orch_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(bob_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(carla_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(fee_receiver)),
+    ]
+    dance_match_orders(
+        chunk, orch,
+        condition_id=CONDITION_ID,
+        taker_order_list=t.to_abi_list(),
+        maker_orders_list=[m.to_abi_list()],
+        taker_fill_amount=100_000_000,
+        maker_fill_amounts=[100_000_000],
+        taker_fee_amount=100_000, maker_fee_amounts=[100_000],
+        extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+        extra_box_refs=inner_boxes,
+    )
+
+    assert ctf_balance(ctf, bob_addr, yes_id) == 0
+    assert usdc_balance(usdc, bob_addr) == 49_900_000
+    assert ctf_balance(ctf, carla_addr, no_id) == 0
+    assert usdc_balance(usdc, carla_addr) == 49_900_000
+    assert usdc_balance(usdc, fee_receiver) == 200_000
 
 
 def test_match_orders_complementary_fees_surplus(split_settled_with_delegate):
