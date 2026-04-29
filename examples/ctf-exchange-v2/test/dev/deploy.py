@@ -35,17 +35,29 @@ def deploy_app(
 ) -> au.AppClient:
     """Deploy a puya-sol-emitted app, fund it, optionally invoke __postInit.
 
-    `base_dir` is the directory holding `<name>.approval.teal`,
-    `<name>.clear.teal`, `<name>.arc56.json`. Returns an au.AppClient.
+    Resolves artifacts from either layout: the historical flat layout
+    (`base_dir/<name>.arc56.json`) or the post-split nested layout
+    (`base_dir/<name>/<name>.arc56.json`, one subdir per emitted contract).
     """
-    spec = load_arc56(base_dir / f"{name}.arc56.json")
+    direct = base_dir / f"{name}.arc56.json"
+    nested = base_dir / name / f"{name}.arc56.json"
+    if direct.exists():
+        artifact_dir = base_dir
+    elif nested.exists():
+        artifact_dir = base_dir / name
+    else:
+        raise FileNotFoundError(
+            f"deploy_app: no arc56 spec for '{name}' under {base_dir} "
+            f"(checked {direct} and {nested})")
+
+    spec = load_arc56(artifact_dir / f"{name}.arc56.json")
     algod = localnet.client.algod
     sch = spec.state.schema.global_state
 
     approval_bin = compile_teal(
-        algod, (base_dir / f"{name}.approval.teal").read_text())
+        algod, (artifact_dir / f"{name}.approval.teal").read_text())
     clear_bin = compile_teal(
-        algod, (base_dir / f"{name}.clear.teal").read_text())
+        algod, (artifact_dir / f"{name}.clear.teal").read_text())
 
     max_size = max(len(approval_bin), len(clear_bin))
     extra_pages = max(0, (max_size - 1) // 2048)

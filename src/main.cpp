@@ -969,23 +969,39 @@ int main(int _argc, char* _argv[])
 		{
 			puyasol::splitter::SimpleSplitter::ContractAWST orch;
 			// Locate the primary Contract pointer to copy its id/name out.
-			// Solidity resolves contracts from least-derived to most-derived
-			// within a compilation unit; the last non-helper contract is the
-			// concrete one declared at the top of the .sol file. Picking the
-			// first match gave us the parent (e.g., `CallContextChecker` for
-			// `contract CollateralToken is UUPSUpgradeable …`), so the emitted
-			// orch had no real surface. Walk to the END of currentRoots and
-			// keep the last match.
+			//
+			// Strategy: prefer the contract whose name matches the source
+			// file's stem (e.g. `CollateralOnramp` for `CollateralOnramp.sol`).
+			// When the entry-point source imports another file that contributes
+			// concrete contracts (e.g. `CollateralOnramp.sol` imports
+			// `CollateralToken from "./CollateralToken.sol"`), the imported
+			// contract may land later in the AWST roots than the file's own
+			// declaration, so a pure last-match heuristic ends up picking the
+			// import. Match-by-stem disambiguates without depending on root
+			// ordering.
+			//
+			// Fallback: if no name matches the stem, keep the last non-helper
+			// Contract. Solidity resolves contracts from least-derived to
+			// most-derived within a compilation unit, so the last is usually
+			// the most concrete declaration.
+			fs::path srcPath(sourceFile);
+			std::string sourceStem = srcPath.stem().string();
+			std::shared_ptr<puyasol::awst::Contract> stemMatch;
+			std::shared_ptr<puyasol::awst::Contract> lastMatch;
 			for (auto const& r : currentRoots)
 			{
 				if (auto c = std::dynamic_pointer_cast<puyasol::awst::Contract>(r))
 				{
-					if (c->name.find("__Helper") == std::string::npos)
-					{
-						orch.contractId = c->id;
-						orch.contractName = c->name;
-					}
+					if (c->name.find("__Helper") != std::string::npos) continue;
+					lastMatch = c;
+					if (c->name == sourceStem) stemMatch = c;
 				}
+			}
+			auto chosen = stemMatch ? stemMatch : lastMatch;
+			if (chosen)
+			{
+				orch.contractId = chosen->id;
+				orch.contractName = chosen->name;
 			}
 			orch.roots = std::move(currentRoots);
 			splitContracts.push_back(std::move(orch));
