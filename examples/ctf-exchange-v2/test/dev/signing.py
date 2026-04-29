@@ -20,6 +20,9 @@ from eth_account import Account
 # Foundry's bobPK / carlaPK in BaseExchangeTest.
 BOB_PK = 0xB0B
 CARLA_PK = 0xCA414
+# Dave appears in Preapproved.t.sol::test_matchOrders_preapproved_partialFill
+# as a third-party SELL maker filling the remainder of bob's BUY.
+DAVE_PK = 0xDA7E
 
 
 @dataclass(frozen=True)
@@ -80,3 +83,7 @@ def bob() -> EthSigner:
 
 def carla() -> EthSigner:
     return EthSigner.from_pk_int(CARLA_PK)
+
+
+def dave() -> EthSigner:
+    return EthSigner.from_pk_int(DAVE_PK)

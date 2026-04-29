@@ -468,10 +468,95 @@ def test_match_orders_preapproved_respects_user_pause(split_settled_with_delegat
     pytest.fail("can't pause bob — eth-only identity, no AVM account")
 
 
-@pytest.mark.xfail(reason=SETTLEMENT_INFRA, strict=False)
 def test_match_orders_preapproved_partial_fill(split_settled_with_delegate):
-    """test_matchOrders_preapproved_partialFill"""
-    pytest.fail("happy-path settlement")
+    """test_matchOrders_preapproved_partialFill: bob preapproves a BUY for
+    100 YES at 50c, then it's filled in two halves. First match: carla
+    sells 50 YES @ 25c (filling half). Second match: dave sells the
+    remaining 50 YES @ 25c. Final: bob has 100 YES, 0 USDC."""
+    from dev.deals import usdc_balance, ctf_balance, deal_outcome_and_approve
+    from dev.signing import dave as dave_signer_fn
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    yes_id, _no_id, bob_addr, carla_addr, h1_addr = _setup_complementary_market(
+        orch, h1, ctf, usdc)
+
+    # Replace the carla deal — partial fill means carla only has 50 YES
+    # (not the default 100 from `_setup_complementary_market`). The 100M
+    # mint already happened, so we just continue — carla has 100M and we
+    # fill half with her, half with dave (who needs to be set up).
+    bob_signer = bob()
+    carla_signer = carla()
+    dave_signer = dave_signer_fn()
+    dave_addr = dave_signer.eth_address_padded32
+    deal_outcome_and_approve(ctf, dave_addr, h1_addr, yes_id, 50_000_000)
+
+    # Bob's order: BUY 100 YES at 50c (the full size).
+    taker = make_order(maker=bob_addr, token_id=yes_id,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
+    taker_signed = sign_order(orch, taker, bob_signer)
+    # Preapprove bob's order, clear sig — preapproval authorizes both partial
+    # fills below.
+    _call_with_pads(orch, orch, "preapproveOrder",
+                    [taker_signed.to_abi_list()], extra_fee=80_000)
+    taker_signed.signature = b""
+
+    # Carla's order: SELL 50 YES at 25c (matches half of bob).
+    maker_carla = make_order(maker=carla_addr, token_id=yes_id,
+        maker_amount=50_000_000, taker_amount=25_000_000, side=Side.SELL)
+    maker_carla_signed = sign_order(orch, maker_carla, carla_signer)
+
+    from hashlib import sha256
+    yes_bytes = yes_id.to_bytes(32, "big")
+
+    def _box_refs(other_addr):
+        return [
+            au.BoxReference(app_id=ctf.app_id,
+                            name=b"b_" + sha256(bytes(other_addr) + yes_bytes).digest()),
+            au.BoxReference(app_id=ctf.app_id,
+                            name=b"b_" + sha256(bytes(bob_addr) + yes_bytes).digest()),
+            au.BoxReference(app_id=ctf.app_id,
+                            name=b"ap_" + sha256(bytes(other_addr) + h1_addr).digest()),
+            au.BoxReference(app_id=usdc.app_id,
+                            name=b"a_" + sha256(bytes(bob_addr) + h1_addr).digest()),
+            au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(bob_addr)),
+            au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(other_addr)),
+        ]
+
+    # First half: bob ↔ carla, 50 YES for 25 USDC.
+    dance_match_orders(
+        chunk, orch,
+        condition_id=CONDITION_ID,
+        taker_order_list=taker_signed.to_abi_list(),
+        maker_orders_list=[maker_carla_signed.to_abi_list()],
+        taker_fill_amount=25_000_000,
+        maker_fill_amounts=[50_000_000],
+        taker_fee_amount=0, maker_fee_amounts=[0],
+        extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+        extra_box_refs=_box_refs(carla_addr),
+    )
+    assert ctf_balance(ctf, bob_addr, yes_id) == 50_000_000
+    assert usdc_balance(usdc, carla_addr) == 25_000_000
+
+    # Second half: bob ↔ dave, 50 YES for 25 USDC.
+    maker_dave = make_order(maker=dave_addr, token_id=yes_id,
+        maker_amount=50_000_000, taker_amount=25_000_000, side=Side.SELL)
+    maker_dave.salt = 2  # avoid hash collision with the carla order
+    maker_dave_signed = sign_order(orch, maker_dave, dave_signer)
+
+    dance_match_orders(
+        chunk, orch,
+        condition_id=CONDITION_ID,
+        taker_order_list=taker_signed.to_abi_list(),
+        maker_orders_list=[maker_dave_signed.to_abi_list()],
+        taker_fill_amount=25_000_000,
+        maker_fill_amounts=[50_000_000],
+        taker_fee_amount=0, maker_fee_amounts=[0],
+        extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+        extra_box_refs=_box_refs(dave_addr),
+    )
+
+    # Bob's BUY order is now fully filled.
+    assert ctf_balance(ctf, bob_addr, yes_id) == 100_000_000
+    assert usdc_balance(usdc, bob_addr) == 0
 
 
 def test_match_orders_empty_signature_preapproved_complementary(split_settled_with_delegate):
