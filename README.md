@@ -36,7 +36,12 @@ Real-world ports compiling and running on AVM localnet (under [`WIP/examples/`](
 - **OpenZeppelin** v5.0.0 — ERC20/721/1155, AccessControl, Ownable, Pausable, governance, vesting, and ~140 contracts in total
 - **AAVE V4** — 32/36 contracts compile
 - **Solmate** — ERC20/721/1155/6909, RolesAuthority
-- **MakerDAO Dai**, **Compound Timelock**, **Synthetix StakingRewards**, **Tornado Cash**, **PRB-Math UD60x18**, **WETH9**, **DappHub DSToken/DSGuard**, and others
+- **Solady** — gas-optimized utility libraries (89 tests, 18 xfail)
+- **Morpho Blue** — singleton lending market (111 tests, 4 xfail)
+- **SushiSwap V2** — Uniswap V2 fork DEX (32 tests, 1 xfail)
+- **Compound V2** — money-market core (23 tests, 5 xfail)
+- **MakerDAO Dai**, **Compound Timelock**, **Synthetix StakingRewards**, **Tornado Cash**, **PRB-Math UD60x18**, **WETH9**, **DappHub DSToken/DSGuard**
+- **Custom small contracts** — Governance, Timelock, MultiSig, Vesting, Staking pools (each with their own pytest suite)
 
 ## Building
 
