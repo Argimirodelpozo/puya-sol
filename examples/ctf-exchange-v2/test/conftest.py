@@ -31,7 +31,7 @@ from algosdk.transaction import (
 from algosdk.kmd import KMDClient
 from algosdk.v2client.algod import AlgodClient
 
-from dev.addrs import addr, algod_addr_for_app, app_id_to_address
+from dev.addrs import addr, algod_addr_bytes_for_app, algod_addr_for_app, app_id_to_address
 from dev.arc56 import compile_teal, inject_memory_init, load_arc56
 from dev.deploy import AUTO_POPULATE, NO_POPULATE, create_app, deploy_app
 from dev.localnet import (
@@ -649,6 +649,18 @@ def split_exchange_settled(localnet, admin, universal_mock, usdc_stateful, ctf_s
         # universal_mock for getImplementation()/masterCopy() during init.
         outcome_factory_app_id=ctf_stateful.app_id,
     )
+    # Pre-fund the CTF mock's USDC pool so MERGE flows have collateral
+    # to hand back. Real CTF holds collateral as a side-effect of past
+    # `splitPosition` calls; here `deal_outcome_and_approve` mints
+    # outcome tokens directly without going through splitPosition, so
+    # CTFMock has no balance to draw on for `mergePositions` until we
+    # seed it. 1 BN micro-USDC dwarfs any individual test's needs.
+    ctf_real = algod_addr_bytes_for_app(ctf_stateful.app_id)
+    usdc_stateful.send.call(au.AppClientMethodCallParams(
+        method="mint",
+        args=[ctf_real, 1_000_000_000],
+        extra_fee=au.AlgoAmount(micro_algo=10_000),
+    ), send_params=AUTO_POPULATE)
     return h1, h2, orch, usdc_stateful, ctf_stateful
 
 
