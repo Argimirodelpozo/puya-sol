@@ -50,6 +50,35 @@ def _send(client, method, args=None, sender=None, extra_fee=30_000):
     ), send_params=au.SendParams(populate_app_call_resources=True))
 
 
+def _send_with_pads(orch, client, method, args=None, sender=None,
+                     extra_fee=30_000, n_pads=4):
+    """Send a method call wrapped in a group with `n_pads` no-op app calls
+    on `orch` to pump the inner-call opcode budget pool. Each pad adds
+    ~700 opcodes to the pool so AVM ops like ecdsa_pk_recover (1700 ops)
+    fit. Returns the algokit result of the last (real) call."""
+    composer = client.algorand.new_group()
+    for i in range(n_pads):
+        composer.add_app_call_method_call(orch.params.call(
+            au.AppClientMethodCallParams(
+                method="isAdmin", args=[b"\x00" * 32],
+                note=f"opup-{i}".encode(),
+            )))
+    composer.add_app_call_method_call(client.params.call(
+        au.AppClientMethodCallParams(
+            method=method, args=args or [],
+            sender=sender.address if sender else None,
+            extra_fee=au.AlgoAmount(micro_algo=extra_fee),
+        )))
+    res = composer.send(au.SendParams(populate_app_call_resources=True))
+    # The composer result has the LAST call's result at index n_pads.
+    # Build a stand-in result object exposing `confirmation` for log access.
+    class _Wrap:
+        def __init__(self, confirmation):
+            self.confirmation = confirmation
+    last_conf = res.confirmations[-1] if res.confirmations else {}
+    return _Wrap(last_conf)
+
+
 # ── Pausable ────────────────────────────────────────────────────────────
 
 
@@ -141,3 +170,50 @@ def test_set_user_pause_block_interval_emits_event(exchange, admin):
     expected = int(old_val).to_bytes(32, "big") + new_val.to_bytes(32, "big")
     assert_event_emitted(res, "UserPauseBlockIntervalUpdated",
                          ["uint256", "uint256"], expected_payload=expected)
+
+
+# ── Preapproval (Signatures.sol) ────────────────────────────────────────
+
+
+def test_preapprove_emits_OrderPreapproved(split_exchange_settled):
+    """preapproveOrder emits `OrderPreapproved(byte[32])` with the EIP-712
+    order hash. The body does ECDSA.recover (~1700 opcodes) so we wrap
+    the call in a small group with a few isAdmin pad calls to pump the
+    inner-call opcode pool."""
+    from dev.signing import bob
+    from dev.orders import make_order, sign_order, Side, hash_order_via_contract
+    h1, _, orch, _, _ = split_exchange_settled
+    bob_signer = bob()
+    order = make_order(maker=bob_signer.eth_address_padded32, token_id=42,
+                       maker_amount=1_000, taker_amount=2_000, side=Side.BUY)
+    signed = sign_order(orch, order, bob_signer)
+    order_hash = hash_order_via_contract(orch, signed)
+    res = _send_with_pads(orch, orch, "preapproveOrder", [signed.to_abi_list()],
+                          extra_fee=80_000, n_pads=4)
+    assert_event_emitted(
+        res, "OrderPreapproved", ["uint8[32]"],
+        expected_payload=order_hash,
+    )
+
+
+def test_invalidate_preapproved_emits_OrderPreapprovalInvalidated(
+    split_exchange_settled,
+):
+    """invalidatePreapprovedOrder emits `OrderPreapprovalInvalidated(byte[32])`
+    with the order hash."""
+    from dev.signing import carla
+    from dev.orders import make_order, sign_order, Side, hash_order_via_contract
+    h1, _, orch, _, _ = split_exchange_settled
+    carla_signer = carla()
+    order = make_order(maker=carla_signer.eth_address_padded32, token_id=42,
+                       maker_amount=1_000, taker_amount=2_000, side=Side.SELL)
+    signed = sign_order(orch, order, carla_signer)
+    order_hash = hash_order_via_contract(orch, signed)
+    _send_with_pads(orch, orch, "preapproveOrder", [signed.to_abi_list()],
+                    extra_fee=80_000, n_pads=4)
+    res = _send(orch, "invalidatePreapprovedOrder", [list(order_hash)],
+                extra_fee=30_000)
+    assert_event_emitted(
+        res, "OrderPreapprovalInvalidated", ["uint8[32]"],
+        expected_payload=order_hash,
+    )
