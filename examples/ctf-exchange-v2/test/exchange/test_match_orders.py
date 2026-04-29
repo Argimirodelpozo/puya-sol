@@ -839,6 +839,109 @@ def test_match_orders_revert_invalid_trade(split_settled_with_delegate):
         )
 
 
+def test_match_orders_revert_complementary_fill_exceeds_taker_fill_overspend(split_settled_with_delegate):
+    """test_MatchOrders_revert_ComplementaryFillExceedsTakerFill_Overspend:
+    operator misreports the taker-side spend — maker execution implies
+    150 USDC of taker spend but operator passes 100 USDC as taker fill."""
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer, carla_signer = bob(), carla()
+    bob_addr, carla_addr = bob_signer.eth_address_padded32, carla_signer.eth_address_padded32
+
+    yes_id, no_id = _canonical_yes_no_ids(orch, h1)
+    prepare_condition(ctf, CONDITION_ID, yes_id, no_id)
+    h1_addr = algod_addr_bytes_for_app(h1.app_id)
+    deal_usdc_and_approve(usdc, bob_addr, h1_addr, 200_000_000)
+    deal_outcome_and_approve(ctf, carla_addr, h1_addr, yes_id, 100_000_000)
+
+    taker = make_order(maker=bob_addr, token_id=yes_id,
+        maker_amount=100_000_000, taker_amount=50_000_000, side=Side.BUY)
+    maker = make_order(maker=carla_addr, token_id=yes_id,
+        maker_amount=100_000_000, taker_amount=150_000_000, side=Side.SELL)
+    t = sign_order(orch, taker, bob_signer)
+    m = sign_order(orch, maker, carla_signer)
+
+    with pytest.raises(LogicError):
+        dance_match_orders(
+            chunk, orch,
+            condition_id=CONDITION_ID,
+            taker_order_list=t.to_abi_list(),
+            maker_orders_list=[m.to_abi_list()],
+            taker_fill_amount=100_000_000,
+            maker_fill_amounts=[100_000_000],
+            taker_fee_amount=0, maker_fee_amounts=[0],
+            extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+        )
+
+
+def test_match_orders_revert_fee_exceeds_max_rate_buy(split_settled_with_delegate):
+    """test_MatchOrders_revert_FeeExceedsMaxRate_Buy: a 3 USDC fee on a
+    50 USDC BUY trade is 6% — above the orch's max fee rate. The orch's
+    `_validateFeeWithMaxFeeRate` reverts before settlement."""
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer, carla_signer = bob(), carla()
+    bob_addr, carla_addr = bob_signer.eth_address_padded32, carla_signer.eth_address_padded32
+
+    yes_id, no_id = _canonical_yes_no_ids(orch, h1)
+    prepare_condition(ctf, CONDITION_ID, yes_id, no_id)
+    h1_addr = algod_addr_bytes_for_app(h1.app_id)
+    deal_usdc_and_approve(usdc, bob_addr, h1_addr, 50_000_000)
+    deal_outcome_and_approve(ctf, carla_addr, h1_addr, yes_id, 100_000_000)
+
+    taker = make_order(maker=bob_addr, token_id=yes_id,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
+    maker = make_order(maker=carla_addr, token_id=yes_id,
+        maker_amount=100_000_000, taker_amount=50_000_000, side=Side.SELL)
+    t = sign_order(orch, taker, bob_signer)
+    m = sign_order(orch, maker, carla_signer)
+
+    with pytest.raises(LogicError):
+        dance_match_orders(
+            chunk, orch,
+            condition_id=CONDITION_ID,
+            taker_order_list=t.to_abi_list(),
+            maker_orders_list=[m.to_abi_list()],
+            taker_fill_amount=50_000_000,
+            maker_fill_amounts=[100_000_000],
+            taker_fee_amount=3_000_000,  # 6% of 50 USDC — above max rate
+            maker_fee_amounts=[0],
+            extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+        )
+
+
+def test_match_orders_revert_fee_exceeds_max_rate_sell(split_settled_with_delegate):
+    """test_MatchOrders_revert_FeeExceedsMaxRate_Sell: 6% fee on a SELL
+    side also reverts at the max-fee-rate check."""
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer, carla_signer = bob(), carla()
+    bob_addr, carla_addr = bob_signer.eth_address_padded32, carla_signer.eth_address_padded32
+
+    yes_id, no_id = _canonical_yes_no_ids(orch, h1)
+    prepare_condition(ctf, CONDITION_ID, yes_id, no_id)
+    h1_addr = algod_addr_bytes_for_app(h1.app_id)
+    deal_outcome_and_approve(ctf, bob_addr, h1_addr, yes_id, 100_000_000)
+    deal_usdc_and_approve(usdc, carla_addr, h1_addr, 50_000_000)
+
+    taker = make_order(maker=bob_addr, token_id=yes_id,
+        maker_amount=100_000_000, taker_amount=50_000_000, side=Side.SELL)
+    maker = make_order(maker=carla_addr, token_id=yes_id,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
+    t = sign_order(orch, taker, bob_signer)
+    m = sign_order(orch, maker, carla_signer)
+
+    with pytest.raises(LogicError):
+        dance_match_orders(
+            chunk, orch,
+            condition_id=CONDITION_ID,
+            taker_order_list=t.to_abi_list(),
+            maker_orders_list=[m.to_abi_list()],
+            taker_fill_amount=100_000_000,
+            maker_fill_amounts=[50_000_000],
+            taker_fee_amount=3_000_000,  # 6% of 50 USDC taking — above max
+            maker_fee_amounts=[0],
+            extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+        )
+
+
 def test_match_orders_zero_taker_amount(split_settled_with_delegate):
     """test_MatchOrders_ZeroTakerAmount: edge case — taker BUY has
     `takerAmount == 0` (accepts any price). Maker SELLs 1 YES at 50
