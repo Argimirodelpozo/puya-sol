@@ -331,6 +331,18 @@ std::shared_ptr<awst::Expression> decodeReturn(
 		btoi->stackArgs.push_back(std::move(bytesExpr));
 		return btoi;
 	}
+	if (retType == awst::WType::biguintType())
+	{
+		// Narrow the 64-byte uint512 LastLog payload to 32 bytes (uint256).
+		// Solidity caps at uint256, so the actual numeric value fits in 32
+		// bytes (the leading 32 are zeros). Without this narrowing, the
+		// caller's downstream `len <= 32 assert overflow` checks fire on the
+		// wider biguint value.
+		auto extracted = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), loc);
+		extracted->immediates = {32, 32};  // extract bytes [32, 64)
+		extracted->stackArgs.push_back(std::move(bytesExpr));
+		return awst::makeReinterpretCast(std::move(extracted), retType, loc);
+	}
 	if (retType && retType->kind() == awst::WTypeKind::WTuple)
 	{
 		// Reinterpret the post-prefix bytes as an ARC4 tuple, then decode to
