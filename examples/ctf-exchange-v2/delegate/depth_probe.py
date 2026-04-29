@@ -37,6 +37,19 @@ class DepthProbe(ARC4Contract):
     def init(self) -> None:
         pass
 
+    @arc4.abimethod(allow_actions=("UpdateApplication",))
+    def __delegate_update(self) -> None:
+        """No-op admit handler for the program-swap step. Mirrors the
+        orch's `__delegate_update` in the lonely-chunk dance, so the
+        UpdateApplication inner-call lands cleanly on the OLD program
+        (still DepthProbe at that point)."""
+
+    @arc4.abimethod
+    def noop(self) -> None:
+        """True no-op — touches no state, reads no boxes. Used as a pad
+        txn target when we want to attach foreign-app box refs to a
+        sibling txn without that txn doing any box access of its own."""
+
     @arc4.abimethod
     def setBalance(self, key: arc4.DynamicBytes, value: arc4.DynamicBytes) -> None:
         """Write `value` to `balances[key]`. Test harness pre-populates
@@ -107,6 +120,51 @@ class DepthProbe(ARC4Contract):
             app_id=mid1_app,
             on_completion=OnCompleteAction.NoOp,
             app_args=(sel, op.itob(mid2_app), op.itob(final_app), key.bytes),
+            fee=0,
+        ).submit()
+        return arc4.DynamicBytes.from_bytes(result.last_log[4:])
+
+    @arc4.abimethod
+    def relayUpdateThenChain3(
+        self,
+        intermediary: UInt64,
+        new_p0: Bytes,
+        helper: UInt64,
+        leaf: UInt64,
+        key: arc4.DynamicBytes,
+    ) -> arc4.DynamicBytes:
+        """Replicates the matchOrders dance shape exactly.
+
+          user → this → intermediary[UpdateApp]   (depth 2)
+               → this → intermediary.relayChain2(helper, leaf, key)
+                            → helper.relayGet(leaf, key)
+                                → leaf.getBalance  (depth 4)
+
+        UpdateApplication is on the *intermediary*, two hops above the
+        leaf whose box is read. If `test_depth_probe_chain3` passes
+        (no UpdateApp, depth 4 reads cleanly) but THIS test fails, then
+        UpdateApp on an intermediary is the matchOrders Group A breaker.
+        """
+        # 1. UpdateApp on intermediary — a no-op program swap (we pass
+        #    DepthProbe's own program back in, so the contract identity
+        #    is preserved).
+        clear = Bytes(b"\x0c\x81\x01\x43")  # `pragma 12; pushint 1; return`
+        delegate_sel = arc4.arc4_signature("__delegate_update()void")
+        itxn.ApplicationCall(
+            app_id=intermediary,
+            on_completion=OnCompleteAction.UpdateApplication,
+            approval_program=new_p0,
+            clear_state_program=clear,
+            app_args=(delegate_sel,),
+            fee=0,
+        ).submit()
+
+        # 2. Chain through the freshly-updated intermediary down to leaf.
+        chain2_sel = arc4.arc4_signature("relayChain2(uint64,uint64,byte[])byte[]")
+        result = itxn.ApplicationCall(
+            app_id=intermediary,
+            on_completion=OnCompleteAction.NoOp,
+            app_args=(chain2_sel, op.itob(helper), op.itob(leaf), key.bytes),
             fee=0,
         ).submit()
         return arc4.DynamicBytes.from_bytes(result.last_log[4:])
