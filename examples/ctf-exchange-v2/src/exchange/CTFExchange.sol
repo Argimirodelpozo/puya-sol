@@ -9,6 +9,7 @@ import { Pausable } from "./mixins/Pausable.sol";
 import { Signatures } from "./mixins/Signatures.sol";
 import { ERC1155TokenReceiver } from "./mixins/ERC1155TokenReceiver.sol";
 import { ERC1155 } from "@solady/src/tokens/ERC1155.sol";
+import { ERC20 } from "@solady/src/tokens/ERC20.sol";
 
 import { ExchangeInitParams, Order } from "./libraries/Structs.sol";
 
@@ -126,5 +127,17 @@ contract CTFExchange is Auth, ERC1155TokenReceiver, Pausable, Trading {
     /// outcomeTokenFactory already has. Idempotent on the receiver.
     function _avmPortGrantCtfOperator(address operator) external onlyAdmin {
         ERC1155(getCtf()).setApprovalForAll(operator, true);
+    }
+
+    /// @notice AVM-PORT-ADAPTATION: grant ERC20 `approve` on the collateral
+    /// to a helper-contract spender. Same shape as the CTF grant above —
+    /// the Assets ctor approves `outcomeTokenFactory` (storing allowance
+    /// keyed against the puya-sol storage-slot encoding of that address),
+    /// but when CTFMock later calls `usdc.transferFrom` the receiver
+    /// checks allowance against the REAL Algorand address of the caller.
+    /// The deploy harness calls this with the receiver-side real address
+    /// so the keys line up.
+    function _avmPortApproveCollateralSpender(address spender) external onlyAdmin {
+        ERC20(getCollateral()).approve(spender, type(uint256).max);
     }
 }

@@ -599,19 +599,20 @@ def _build_split_exchange(localnet, admin, *, collateral_app_id, ctf_app_id,
             app_references=[h1_app_id, h2_app_id, collateral_app_id,
                             ctf_app_id, ctf_collateral_app_id, factory_app_id,
                             otf_app_id])))
-    # AVM-PORT-ADAPTATION: helper1 holds the extracted TransferHelper —
-    # its CTF inner-calls reach the CTF receiver with `msg.sender ==
-    # helper1`, not `address(this)` (the orch). CTFMock's
-    # `safeTransferFrom` early-outs when `msg.sender == from`; for
-    # orch→user transfers (MINT/MERGE distribute) `from == orch != helper1`,
-    # so the approval check fires and asserts "not approved operator".
-    # Explicitly grant helper1 setApprovalForAll on the CTF, post-init.
+    # AVM-PORT-ADAPTATION: storage-slot puya-sol addresses (24 zeros +
+    # itob(app_id)) DON'T match `op.Txn.sender` / approval-key bytes that
+    # token mocks see at the receiver — `op.Txn.sender` is the real
+    # algorand address (sha512_256("appID" || app_id)). The Assets ctor's
+    # `setApprovalForAll(otf, true)` and `approve(otf, max)` therefore
+    # write boxes keyed against `otf_psol`, but later inner-calls from
+    # helper1/CTFMock land at the receiver with their REAL addresses,
+    # missing those boxes. Re-do both grants here using real addresses.
     #
-    # Use helper1's REAL Algorand address (sha512_256("appID" || app_id))
-    # rather than puya-sol's storage-slot convention (24 zeros + itob(app_id))
-    # — when helper1 later calls CTFMock as an inner-tx, `op.Txn.sender`
-    # at the receiver is the real algorand address, so the approval box
-    # has to be keyed against that.
+    # CTF setApprovalForAll: needed when helper1 forwards orch's CTF
+    #   transfers (MINT/MERGE distribute path).
+    # USDC approve: needed when CTFMock pulls collateral during
+    #   splitPosition/mergePositions (matches real CTF's
+    #   `IERC20.transferFrom(msg.sender, this, amount)`).
     from dev.addrs import algod_addr_bytes_for_app
     composer.add_app_call_method_call(orch_client.params.call(
         au.AppClientMethodCallParams(
@@ -619,6 +620,12 @@ def _build_split_exchange(localnet, admin, *, collateral_app_id, ctf_app_id,
             args=[algod_addr_bytes_for_app(h1_app_id)],
             extra_fee=au.AlgoAmount(micro_algo=10_000),
             app_references=[ctf_app_id, h1_app_id])))
+    composer.add_app_call_method_call(orch_client.params.call(
+        au.AppClientMethodCallParams(
+            method="_avmPortApproveCollateralSpender",
+            args=[algod_addr_bytes_for_app(otf_app_id)],
+            extra_fee=au.AlgoAmount(micro_algo=10_000),
+            app_references=[collateral_app_id, otf_app_id])))
     composer.send(AUTO_POPULATE)
     return h1_client, h2_client, orch_client
 

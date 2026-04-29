@@ -19,8 +19,10 @@ from algopy import (
     ARC4Contract,
     BoxMap,
     Bytes,
+    OnCompleteAction,
     UInt64,
     arc4,
+    itxn,
     op,
     subroutine,
 )
@@ -160,9 +162,14 @@ class CTFMock(ARC4Contract):
     # `mergePositions` is the reverse: msg.sender's YES + NO are burned,
     # they get back `amount` of collateral.
     #
-    # The `collateralToken` arg is ignored here. The mock just mints the
-    # outcome tokens (split) or burns them (merge); collateral movement
-    # is verified by the test on the USDC mock side.
+    # `collateralToken` is the puya-sol storage-slot encoding of the
+    # USDC mock's address (24 zero bytes + itob(usdc_app_id)) — the same
+    # bytes the orch's `Assets.collateral` slot holds. We decode the app
+    # id off the tail and `itxn` into USDC to actually move the
+    # collateral, mirroring real-CTF semantics. orch must have approved
+    # this app on USDC (Assets ctor does
+    # `ERC20(_collateral).approve(_outcomeTokenFactory, max)`, and our
+    # test fixture wires `outcomeTokenFactory = ctf` for settlement).
 
     @arc4.abimethod
     def splitPosition(
@@ -184,6 +191,16 @@ class CTFMock(ARC4Contract):
             key = _bal_key(sender, tid)
             cur = _amount_to_u64(self.balances.get(key, default=_empty_balance()))
             self.balances[key] = _u64_to_amount(cur + amt)
+        # Pull collateral from sender. usdc.transferFrom(sender, this, amt).
+        coll_app_id = op.btoi(op.extract(collateralToken.bytes, UInt64(24), UInt64(8)))
+        self_addr_bytes = op.Global.current_application_address.bytes
+        sel = arc4.arc4_signature("transferFrom(address,address,uint256)bool")
+        itxn.ApplicationCall(
+            app_id=coll_app_id,
+            on_completion=OnCompleteAction.NoOp,
+            app_args=(sel, sender, self_addr_bytes, amount.bytes),
+            fee=0,
+        ).submit()
 
     @arc4.abimethod
     def mergePositions(
@@ -204,3 +221,12 @@ class CTFMock(ARC4Contract):
             bal = _amount_to_u64(self.balances.get(key, default=_empty_balance()))
             assert bal >= amt, "insufficient outcome token to merge"
             self.balances[key] = _u64_to_amount(bal - amt)
+        # Hand collateral back to sender. usdc.transfer(sender, amt).
+        coll_app_id = op.btoi(op.extract(collateralToken.bytes, UInt64(24), UInt64(8)))
+        sel = arc4.arc4_signature("transfer(address,uint256)bool")
+        itxn.ApplicationCall(
+            app_id=coll_app_id,
+            on_completion=OnCompleteAction.NoOp,
+            app_args=(sel, sender, amount.bytes),
+            fee=0,
+        ).submit()
