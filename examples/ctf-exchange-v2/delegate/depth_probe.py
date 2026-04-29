@@ -125,6 +125,37 @@ class DepthProbe(ARC4Contract):
         return arc4.DynamicBytes.from_bytes(result.last_log[4:])
 
     @arc4.abimethod
+    def relayH1TransferFromERC1155(
+        self,
+        h1_app: UInt64,
+        token_addr: arc4.Address,
+        from_addr: arc4.Address,
+        to_addr: arc4.Address,
+        id_u256: arc4.UInt256,
+        amount_u256: arc4.UInt256,
+    ) -> None:
+        """Inner-call `helper1.TransferHelper._transferFromERC1155`, putting
+        helper1 at depth 2 and CTFMock at depth 3 — same depth as the
+        matchOrders dance's CTFMock call. Bypasses `matchOrders` body
+        entirely so the only difference vs matchOrders' failing path is
+        WHO is constructing the `from`/`to`/`id`/`amount` bytes."""
+        sel = arc4.arc4_signature(
+            "TransferHelper._transferFromERC1155("
+            "address,address,address,uint512,uint512)void"
+        )
+        zeros32 = Bytes(b"\x00" * 32)
+        # uint512 = 64 bytes; left-pad uint256 with 32 zero bytes.
+        id_512 = zeros32 + id_u256.bytes
+        amount_512 = zeros32 + amount_u256.bytes
+        itxn.ApplicationCall(
+            app_id=h1_app,
+            on_completion=OnCompleteAction.NoOp,
+            app_args=(sel, token_addr.bytes, from_addr.bytes, to_addr.bytes,
+                      id_512, amount_512),
+            fee=0,
+        ).submit()
+
+    @arc4.abimethod
     def relayUpdateThenChain3(
         self,
         intermediary: UInt64,

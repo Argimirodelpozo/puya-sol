@@ -245,6 +245,75 @@ def test_depth_probe_chain3_box_ref_on_sibling_txn(probe_factory, admin):
     )
 
 
+def test_depth_probe_h1_transfer_at_depth_3(probe_factory, split_settled_with_delegate):
+    """Calls `helper1.TransferHelper._transferFromERC1155` *through one
+    relay hop*, putting CTFMock at depth 3 — same depth at which
+    matchOrders' settlement reads CTFMock and fails.
+
+    Setup matches `test_match_orders_complementary` (deal 100M YES to
+    carla, approve helper1 as operator). The ONLY difference vs the
+    matchOrders dance's failing CTF transfer is who's constructing the
+    `from`/`to`/`id`/`amount` ApplicationArgs going into helper1: the
+    DepthProbe stub (this test) vs helper3's `_settleComplementaryMaker`
+    (matchOrders).
+
+    If this test PASSES while `test_match_orders_complementary` FAILS,
+    helper3's matchOrders body is mishandling some part of the args
+    (most likely the `from` address derivation in
+    `_settleComplementaryMaker`/`_settleTakerOrder`)."""
+    h1, _, _, _, ctf, _ = split_settled_with_delegate
+    relay = probe_factory()
+
+    from hashlib import sha256
+    from dev.deals import deal_outcome, set_approval, ctf_balance, prepare_condition
+    from dev.signing import bob as bob_signer_fn, carla as carla_signer_fn
+    from dev.addrs import algod_addr_bytes_for_app
+
+    bob_addr = bob_signer_fn().eth_address_padded32
+    carla_addr = carla_signer_fn().eth_address_padded32
+
+    # Use a fixed YES id (no need to compute canonical — CTFMock just
+    # uses whatever id we pass for keying; the dance's `_validateTokenIds`
+    # check doesn't fire since we're skipping matchOrders).
+    YES = 0xA1A1A1A1A1A1A1A1
+    h1_addr = algod_addr_bytes_for_app(h1.app_id)
+
+    # Pre-populate carla's balance + carla→h1 approval. We're hitting
+    # CTFMock.safeTransferFrom(carla, bob, YES, 100M) where the sender
+    # at depth 3 is helper1, so we need approvals[carla, h1] = true.
+    deal_outcome(ctf, carla_addr, YES, 100_000_000)
+    set_approval(ctf, carla_addr, h1_addr, True)
+    assert ctf_balance(ctf, carla_addr, YES) == 100_000_000
+
+    # puya-sol's address convention for app contracts: 24 zero bytes +
+    # 8-byte big-endian app_id. helper1's TEAL extracts the app_id via
+    # `extract_uint64` at offset 24 of this 32-byte address.
+    ctf_addr32 = b"\x00" * 24 + ctf.app_id.to_bytes(8, "big")
+
+    yes_bytes = YES.to_bytes(32, "big")
+    carla_bal_box = b"b_" + sha256(bytes(carla_addr) + yes_bytes).digest()
+    bob_bal_box = b"b_" + sha256(bytes(bob_addr) + yes_bytes).digest()
+    carla_ap_box = b"ap_" + sha256(bytes(carla_addr) + h1_addr).digest()
+
+    relay.send.call(au.AppClientMethodCallParams(
+        method="relayH1TransferFromERC1155",
+        args=[h1.app_id, ctf_addr32, carla_addr, bob_addr, YES, 100_000_000],
+        extra_fee=au.AlgoAmount(micro_algo=500_000),
+        app_references=[h1.app_id, ctf.app_id],
+        box_references=[
+            au.BoxReference(app_id=ctf.app_id, name=carla_bal_box),
+            au.BoxReference(app_id=ctf.app_id, name=bob_bal_box),
+            au.BoxReference(app_id=ctf.app_id, name=carla_ap_box),
+        ],
+    ), send_params=AUTO_POPULATE)
+
+    assert ctf_balance(ctf, carla_addr, YES) == 0, (
+        "carla's YES wasn't debited — depth-3 helper1.TransferHelper path "
+        "is broken even when bypassing matchOrders"
+    )
+    assert ctf_balance(ctf, bob_addr, YES) == 100_000_000
+
+
 def test_depth_probe_full_dance_shape(probe_factory, admin):
     """Complete dance-shape replication: outer group has pad txns
     (target: r0.noop) carrying the leaf box ref + the dance txn calling
