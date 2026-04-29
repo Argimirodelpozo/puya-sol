@@ -307,12 +307,28 @@ def test_match_orders_diagnostic_double_fund(split_settled_with_delegate):
     h1_addr = algod_addr_bytes_for_app(h1.app_id)
     deal_usdc_and_approve(usdc, bob_addr, h1_addr, 50_000_000)
     deal_outcome_and_approve(ctf, carla_addr, h1_addr, yes_id, 100_000_000)
-    # Diagnostic: pre-fund bob AND the zero address with 100M YES too.
-    # If matchOrders reads bal=0 despite both real participants funded,
-    # `from` resolves to a third address — most likely the zero
-    # address (e.g. uninitialized memory, address-mask gone wrong).
+    # Diagnostic: pre-fund every plausible "wrong from" address.
+    # If matchOrders reads bal=0 despite all of them funded, the
+    # actual `from` is something we can't predict statically.
     deal_outcome(ctf, bob_addr, yes_id, 100_000_000)
     deal_outcome(ctf, b"\x00" * 32, yes_id, 100_000_000)
+    # If `extract 32 32` on makerOrder accidentally reads offset 0, the
+    # bytes would be `salt` (= 1, encoded as 31 zeros + 0x01).
+    deal_outcome(ctf, b"\x00" * 31 + b"\x01", yes_id, 100_000_000)
+    # signer == carla for EOA orders, but check anyway.
+    # signer of taker == bob.
+    # If the offset is 64 (signer field), that's `00...00 + bob_eth`.
+    # That equals bob_addr already (already funded above).
+    # If `extract 32 32` accidentally reads offset 96 (tokenId), bytes
+    # would be yes_id-as-32-bytes-BE.
+    yes_id_as_addr = yes_id.to_bytes(32, "big")
+    deal_outcome(ctf, yes_id_as_addr, yes_id, 100_000_000)
+    # If offset 128 (makerAmount), that's 100_000_000 as 32 BE bytes.
+    maker_amount_as_addr = (100_000_000).to_bytes(32, "big")
+    deal_outcome(ctf, maker_amount_as_addr, yes_id, 100_000_000)
+    # If offset 160 (takerAmount), that's 50_000_000 as 32 BE bytes.
+    taker_amount_as_addr = (50_000_000).to_bytes(32, "big")
+    deal_outcome(ctf, taker_amount_as_addr, yes_id, 100_000_000)
 
     taker = make_order(maker=bob_addr, token_id=yes_id,
         maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
@@ -330,6 +346,14 @@ def test_match_orders_diagnostic_double_fund(split_settled_with_delegate):
                         name=b"b_" + sha256(bytes(bob_addr) + yes_bytes).digest()),
         au.BoxReference(app_id=ctf.app_id,
                         name=b"b_" + sha256(zero_addr + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256((b"\x00" * 31 + b"\x01") + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(yes_id_as_addr + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(maker_amount_as_addr + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(taker_amount_as_addr + yes_bytes).digest()),
         au.BoxReference(app_id=ctf.app_id,
                         name=b"ap_" + sha256(bytes(carla_addr) + h1_addr).digest()),
         au.BoxReference(app_id=usdc.app_id,
