@@ -6,19 +6,44 @@ import { Side } from "../libraries/Structs.sol";
 /// @title Events
 abstract contract Events {
     /*//////////////////////////////////////////////////////////////
-                        EVENT TOPIC CONSTANTS
+                            EVENTS
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev keccak256("OrderFilled(bytes32,address,address,uint8,uint256,uint256,uint256,uint256,bytes32,bytes32)")
-    bytes32 private constant _ORDER_FILLED_TOPIC =
-        keccak256("OrderFilled(bytes32,address,address,uint8,uint256,uint256,uint256,uint256,bytes32,bytes32)");
+    /// @notice Emitted whenever a maker order's fill is recorded.
+    /// AVM-PORT-ADAPTATION: declared without `indexed` topics — AVM's
+    /// `op.log` is data-only (no topic concept). puya-sol lowers
+    /// Solidity-level `emit` to a single `op.log` payload of
+    /// `selector(4) ++ arc4_encode(args)` per ARC-28. The original
+    /// audited Solidity used inline-asm `log4` so it could split fields
+    /// across topics and data; on AVM the per-app-call log byte budget
+    /// is the same in both forms (everything's data) and `emit` is the
+    /// shape puya-sol can lower.
+    event OrderFilled(
+        bytes32 orderHash,
+        address maker,
+        address taker,
+        uint8 side,
+        uint256 tokenId,
+        uint256 makerAmountFilled,
+        uint256 takerAmountFilled,
+        uint256 fee,
+        bytes32 builder,
+        bytes32 metadata
+    );
 
-    /// @dev keccak256("OrdersMatched(bytes32,address,uint8,uint256,uint256,uint256)")
-    bytes32 private constant _ORDERS_MATCHED_TOPIC =
-        keccak256("OrdersMatched(bytes32,address,uint8,uint256,uint256,uint256)");
+    /// @notice Emitted once per `matchOrders` call, summarizing the
+    /// taker side of the trade.
+    event OrdersMatched(
+        bytes32 takerOrderHash,
+        address takerOrderMaker,
+        uint8 side,
+        uint256 tokenId,
+        uint256 makerAmountFilled,
+        uint256 takerAmountFilled
+    );
 
-    /// @dev keccak256("FeeCharged(address,uint256)")
-    bytes32 private constant _FEE_CHARGED_TOPIC = keccak256("FeeCharged(address,uint256)");
+    /// @notice Emitted whenever an order's fee is paid to the fee receiver.
+    event FeeCharged(address receiver, uint256 amount);
 
     /*//////////////////////////////////////////////////////////////
                             STRUCTS
@@ -42,46 +67,38 @@ abstract contract Events {
                         EMIT FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Emits the OrderFilled event
-    /// @dev OrderFilled(orderHash, maker, taker, side, tokenId, makerAmountFilled, takerAmountFilled, fee, builder,
-    /// metadata)
+    /// @dev Emits the OrderFilled event.
     function _emitOrderFilledEvent(OrderFilledParams memory p) internal {
-        bytes32 t = _ORDER_FILLED_TOPIC;
-        assembly ("memory-safe") {
-            let m := mload(0x40)
-            mstore(m, mload(add(p, 0x60))) // side
-            mstore(add(m, 0x20), mload(add(p, 0x80))) // tokenId
-            mstore(add(m, 0x40), mload(add(p, 0xa0))) // makerAmountFilled
-            mstore(add(m, 0x60), mload(add(p, 0xc0))) // takerAmountFilled
-            mstore(add(m, 0x80), mload(add(p, 0xe0))) // fee
-            mstore(add(m, 0xa0), mload(add(p, 0x100))) // builder
-            mstore(add(m, 0xc0), mload(add(p, 0x120))) // metadata
-            log4(m, 0xe0, t, mload(p), mload(add(p, 0x20)), mload(add(p, 0x40)))
-        }
+        emit OrderFilled(
+            p.orderHash,
+            p.maker,
+            p.taker,
+            uint8(p.side),
+            p.tokenId,
+            p.makerAmountFilled,
+            p.takerAmountFilled,
+            p.fee,
+            p.builder,
+            p.metadata
+        );
     }
 
-    /// @dev Emits OrdersMatched event
-    /// @dev OrdersMatched(takerOrderHash, takerOrderMaker, side, tokenId, makerAmountFilled, takerAmountFilled)
+    /// @dev Emits the OrderFilled event for the taker side, then the
+    /// summary OrdersMatched event.
     function _emitTakerFilledEvents(OrderFilledParams memory p) internal {
         _emitOrderFilledEvent(p);
-        bytes32 t = _ORDERS_MATCHED_TOPIC;
-        assembly ("memory-safe") {
-            let m := mload(0x40)
-            mstore(m, mload(add(p, 0x60))) // side
-            mstore(add(m, 0x20), mload(add(p, 0x80))) // tokenId
-            mstore(add(m, 0x40), mload(add(p, 0xa0))) // makerAmountFilled
-            mstore(add(m, 0x60), mload(add(p, 0xc0))) // takerAmountFilled
-            log3(m, 0x80, t, mload(p), mload(add(p, 0x20)))
-        }
+        emit OrdersMatched(
+            p.orderHash,
+            p.maker,
+            uint8(p.side),
+            p.tokenId,
+            p.makerAmountFilled,
+            p.takerAmountFilled
+        );
     }
 
-    /// @dev Emits the FeeCharged event
-    /// @dev FeeCharged(receiver, amount)
+    /// @dev Emits the FeeCharged event.
     function _emitFeeCharged(address receiver, uint256 amount) internal {
-        bytes32 t = _FEE_CHARGED_TOPIC;
-        assembly ("memory-safe") {
-            mstore(0x00, amount)
-            log2(0x00, 0x20, t, receiver)
-        }
+        emit FeeCharged(receiver, amount);
     }
 }

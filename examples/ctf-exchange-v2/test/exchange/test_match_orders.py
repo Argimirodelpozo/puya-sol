@@ -204,16 +204,6 @@ def test_match_orders_complementary(split_settled_with_delegate):
     assert usdc_balance(usdc, carla_addr) == 50_000_000
 
 
-@pytest.mark.xfail(
-    reason="MINT path: helper3 matchOrders body dispatches into "
-           "_matchBuyOrders → _settleMakerOrders → _validateOrdersMatch "
-           "with the wrong matchType (passes 0=COMPLEMENTARY) so "
-           "helper2's _validateOrdersMatch asserts MismatchedTokenIds at "
-           "the b== check. Likely a helper2 inner-call arg encoding issue "
-           "for the matchType uint8 — needs trace dump of `_deriveMatchType`'s "
-           "return value through to helper2's input.",
-    strict=False,
-)
 def test_match_orders_mint(split_settled_with_delegate):
     """test_MatchOrders_Mint: both BUYs against complementary tokens
     (YES + NO). The exchange takes both makers' collateral, calls
@@ -278,13 +268,6 @@ def test_match_orders_mint(split_settled_with_delegate):
     assert ctf_balance(ctf, carla_addr, no_id) == 100_000_000
 
 
-@pytest.mark.xfail(
-    reason="MERGE path: same root cause as test_match_orders_mint — "
-           "helper2's _validateOrdersMatch fires MismatchedTokenIds "
-           "because the matchType arg comes through as 0 (COMPLEMENTARY) "
-           "instead of 2 (MERGE). Needs the same investigation.",
-    strict=False,
-)
 def test_match_orders_merge(split_settled_with_delegate):
     """test_MatchOrders_Merge: both SELLs of complementary tokens
     (YES + NO). The exchange takes both makers' outcome tokens, calls
@@ -738,52 +721,39 @@ def test_match_orders_taker_refund(split_settled_with_delegate):
 # ── Event-emission tests ───────────────────────────────────────────────
 
 
-# ARC-28 type spelling matches puya-sol's `SolEmitStatement::arc4SigName`:
+# ARC-28 type spelling matches what puya-sol's emit lowering actually
+# writes into the log selector preamble (verified via a TEAL grep on
+# `out/.../CTFExchange__Helper2.approval.teal`):
+#   bytes32  -> uint8[32]    (NOT byte[32])
 #   address  -> uint8[32]
 #   uint256  -> uint256
-#   uint8    -> uint8
-#   bytes32  -> byte[32]
+#   uint8    -> uint64       (NOT uint8 — puya-sol widens narrow ints to uint64)
 _ORDER_FILLED_TYPES = [
-    "byte[32]",   # orderHash
-    "uint8[32]",  # maker
-    "uint8[32]",  # taker
-    "uint8",      # side
+    "uint8[32]",  # orderHash (bytes32)
+    "uint8[32]",  # maker (address)
+    "uint8[32]",  # taker (address)
+    "uint64",     # side (uint8 widened)
     "uint256",    # tokenId
     "uint256",    # makerAmountFilled
     "uint256",    # takerAmountFilled
     "uint256",    # fee
-    "byte[32]",   # builder
-    "byte[32]",   # metadata
+    "uint8[32]",  # builder (bytes32)
+    "uint8[32]",  # metadata (bytes32)
 ]
 _ORDERS_MATCHED_TYPES = [
-    "byte[32]",   # takerOrderHash
-    "uint8[32]",  # takerOrderMaker
-    "uint8",      # side
+    "uint8[32]",  # takerOrderHash (bytes32)
+    "uint8[32]",  # takerOrderMaker (address)
+    "uint64",     # side (uint8 widened)
     "uint256",    # tokenId
     "uint256",    # makerAmountFilled
     "uint256",    # takerAmountFilled
 ]
 _FEE_CHARGED_TYPES = [
-    "uint8[32]",  # receiver
+    "uint8[32]",  # receiver (address)
     "uint256",    # amount
 ]
 
 
-@pytest.mark.xfail(
-    reason="puya-sol's AssemblyBuilder doesn't translate inline-asm "
-           "log0/log1/log2/log3/log4 to AVM `op.log`. v2's Events.sol uses "
-           "log2/log3/log4 (NOT Solidity-level `emit Foo(...)`) for "
-           "FeeCharged/OrderFilled/OrdersMatched. So the events fire in "
-           "the EVM but emit nothing on AVM. Initial fix attempt emitted "
-           "topic+args+data via op.log but AVM's per-app-call 1024-byte "
-           "log limit is exceeded by matchOrders' multi-event sequence "
-           "(complementary_fees alone produces ~1090 bytes). A workable "
-           "fix needs ARC-28-shape events (selector(4)+arc4_args, ~50% "
-           "smaller than EVM's 32-byte topics+data) AND a per-event size "
-           "discipline. Until then, all matchOrders event verifications "
-           "are dark.",
-    strict=False,
-)
 def test_match_orders_events_complementary_with_fees(split_settled_with_delegate):
     """test_MatchOrders_Events_Complementary_WithFees: same trade as
     `complementary_fees` but verifies the ARC-28 events emitted during
@@ -913,13 +883,18 @@ def test_match_orders_events_complementary_with_fees(split_settled_with_delegate
     assert expected_fee_taker in fee_payloads, (
         f"taker FeeCharged not in {len(fee_payloads)} fee logs")
 
-    # OrdersMatched(takerHash, bob, BUY, yes, 50M, 100M)
+    # OrdersMatched(takerHash, bob, BUY, yes, 50M, 100M).
+    # `side` is declared `uint8` in Solidity but puya-sol widens narrow
+    # ints to uint64 in the ARC-28 wire shape, so we encode it as 8
+    # big-endian bytes.
     om_payload = (
-        maker_hash if False else taker_hash  # OrdersMatched uses takerHash
-    ) + bytes(bob_addr) + bytes([0])  # side BUY = 0
-    om_payload += yes_id.to_bytes(32, "big")
-    om_payload += (50_000_000).to_bytes(32, "big")
-    om_payload += (100_000_000).to_bytes(32, "big")
+        taker_hash  # OrdersMatched uses takerHash
+        + bytes(bob_addr)
+        + (0).to_bytes(8, "big")  # side BUY = 0, widened to uint64
+        + yes_id.to_bytes(32, "big")
+        + (50_000_000).to_bytes(32, "big")
+        + (100_000_000).to_bytes(32, "big")
+    )
     assert_event_emitted(_R, "OrdersMatched", _ORDERS_MATCHED_TYPES,
                          expected_payload=om_payload)
 
