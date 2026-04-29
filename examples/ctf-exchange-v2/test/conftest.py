@@ -509,11 +509,20 @@ H3_DIR = SPLIT_DIR / "CTFExchange__Helper3"
 
 
 def _build_split_exchange(localnet, admin, *, collateral_app_id, ctf_app_id,
-                          ctf_collateral_app_id, factory_app_id):
+                          ctf_collateral_app_id, factory_app_id,
+                          outcome_factory_app_id=None):
     """Internal helper. Deploys h1+h2+orch, runs __postInit with the given
-    apps for each slot. `factory_app_id` is used for outcomeTokenFactory /
-    proxyFactory / safeFactory — typically the universal_mock since these
-    only need to respond to getImplementation()/masterCopy() during init.
+    apps for each slot. `factory_app_id` is used for proxyFactory /
+    safeFactory (which need getImplementation()/masterCopy() during init)
+    AND, by default, for outcomeTokenFactory. For settlement tests that
+    drive MINT/MERGE through `_mint`/`_merge` (which inner-call
+    `outcomeTokenFactory.splitPosition` / `.mergePositions`), pass the
+    real CTF mock app id as `outcome_factory_app_id` so that path can
+    actually find the method. The init-time call chain doesn't touch
+    outcomeTokenFactory — `Assets`'s ctor only does
+    `collateral.approve(otf, max)` and `ctf.setApprovalForAll(otf, true)`,
+    both addressed at collateral/ctf, not at otf — so any valid app id
+    works for the outcome-factory slot.
     Returns (h1, h2, orch)."""
     algod = localnet.client.algod
 
@@ -563,12 +572,14 @@ def _build_split_exchange(localnet, admin, *, collateral_app_id, ctf_app_id,
     ctf_addr = list(app_id_to_address(ctf_app_id))
     ctf_coll_addr = list(app_id_to_address(ctf_collateral_app_id))
     factory_addr = list(app_id_to_address(factory_app_id))
+    otf_app_id = outcome_factory_app_id if outcome_factory_app_id else factory_app_id
+    otf_addr = list(app_id_to_address(otf_app_id))
     init_params = [
         list(addr(admin)),
         coll_addr,           # collateral (USDC)
         ctf_addr,            # ctf (ConditionalTokens / ERC1155)
         ctf_coll_addr,       # ctfCollateral
-        factory_addr,        # outcomeTokenFactory
+        otf_addr,            # outcomeTokenFactory (CTF for settlement, mock otherwise)
         factory_addr,        # proxyFactory (needs getImplementation())
         factory_addr,        # safeFactory (needs masterCopy())
         list(addr(admin)),   # feeReceiver
@@ -586,7 +597,8 @@ def _build_split_exchange(localnet, admin, *, collateral_app_id, ctf_app_id,
             args=[init_params],
             extra_fee=au.AlgoAmount(micro_algo=50_000),
             app_references=[h1_app_id, h2_app_id, collateral_app_id,
-                            ctf_app_id, ctf_collateral_app_id, factory_app_id])))
+                            ctf_app_id, ctf_collateral_app_id, factory_app_id,
+                            otf_app_id])))
     composer.send(AUTO_POPULATE)
     return h1_client, h2_client, orch_client
 
@@ -604,6 +616,11 @@ def split_exchange_settled(localnet, admin, universal_mock, usdc_stateful, ctf_s
         ctf_app_id=ctf_stateful.app_id,
         ctf_collateral_app_id=usdc_stateful.app_id,
         factory_app_id=universal_mock.app_id,
+        # MINT/MERGE settle through outcomeTokenFactory.{splitPosition,
+        # mergePositions}. Point that slot at the real CTF mock so those
+        # calls reach an implementation; proxy/safe factories stay on
+        # universal_mock for getImplementation()/masterCopy() during init.
+        outcome_factory_app_id=ctf_stateful.app_id,
     )
     return h1, h2, orch, usdc_stateful, ctf_stateful
 

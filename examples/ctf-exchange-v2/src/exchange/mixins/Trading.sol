@@ -591,18 +591,21 @@ abstract contract Trading is Hashing, AssetOperations, Events, Fees, UserPausabl
     }
 
     function _isAllComplementary(Side takerSide, Order[] memory makerOrders) internal pure returns (bool result) {
-        assembly {
-            result := 1
-            let length := mload(makerOrders)
-            let ptr := add(makerOrders, 0x20)
-            for { let i := 0 } lt(i, length) { i := add(i, 1) } {
-                let orderPtr := mload(add(ptr, shl(5, i)))
-                // side is at offset 0xC0 in Order struct
-                let side := mload(add(orderPtr, 0xC0))
-                if eq(side, takerSide) {
-                    result := 0
-                    break
-                }
+        // AVM-PORT-ADAPTATION: original Yul iterated over EVM memory pointers
+        // (`mload(add(makerOrders, 0x20)) + i*0x20` for the i-th element ptr,
+        // then `mload(add(orderPtr, 0xC0))` for the side field). On AVM,
+        // memory aggregates live as ARC4-encoded bytes — there's no flat
+        // memory model — so puya-sol's mload of a memory array param
+        // collapses through `ensureBiguint(non-scalar) → 0` and the loop
+        // never executes. The high-level Solidity below uses puya-sol's
+        // ARC4 element decoder for `makerOrders[i].side` and is functionally
+        // identical at the EVM level.
+        result = true;
+        uint256 length = makerOrders.length;
+        for (uint256 i = 0; i < length; ++i) {
+            if (makerOrders[i].side == takerSide) {
+                result = false;
+                break;
             }
         }
     }

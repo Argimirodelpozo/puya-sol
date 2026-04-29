@@ -51,13 +51,12 @@ abstract contract AssetOperations is Assets, IAssetOperations {
 
     /// @dev Returns the binary partition [1, 2] for CTF operations
     function _getPartition() internal pure returns (uint256[] memory partition) {
-        assembly ("memory-safe") {
-            // Allocate memory for array: 32 bytes for length + 64 bytes for 2 elements
-            partition := mload(0x40)
-            mstore(partition, 2) // length = 2
-            mstore(add(partition, 0x20), 1) // partition[0] = 1
-            mstore(add(partition, 0x40), 2) // partition[1] = 2
-            mstore(0x40, add(partition, 0x60)) // Update free memory pointer
-        }
+        // AVM-PORT-ADAPTATION: original Yul allocated the array via the EVM
+        // free-memory-pointer pattern. The high-level Solidity below maps
+        // cleanly onto puya-sol's NewArray AWST node, which puya lowers to
+        // an ARC4 dynamic_array<uint256> (length-prefix + items).
+        partition = new uint256[](2);
+        partition[0] = 1;
+        partition[1] = 2;
     }
 }
