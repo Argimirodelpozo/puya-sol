@@ -473,7 +473,200 @@ def test_match_orders_taker_refund(split_settled_with_delegate):
     assert usdc_balance(usdc, carla_addr) == 40_000_000
 
 
-# ── Revert tests ────────────────────────────────────────────────────────
+# ── Event-emission tests ───────────────────────────────────────────────
+
+
+# ARC-28 type spelling matches puya-sol's `SolEmitStatement::arc4SigName`:
+#   address  -> uint8[32]
+#   uint256  -> uint256
+#   uint8    -> uint8
+#   bytes32  -> byte[32]
+_ORDER_FILLED_TYPES = [
+    "byte[32]",   # orderHash
+    "uint8[32]",  # maker
+    "uint8[32]",  # taker
+    "uint8",      # side
+    "uint256",    # tokenId
+    "uint256",    # makerAmountFilled
+    "uint256",    # takerAmountFilled
+    "uint256",    # fee
+    "byte[32]",   # builder
+    "byte[32]",   # metadata
+]
+_ORDERS_MATCHED_TYPES = [
+    "byte[32]",   # takerOrderHash
+    "uint8[32]",  # takerOrderMaker
+    "uint8",      # side
+    "uint256",    # tokenId
+    "uint256",    # makerAmountFilled
+    "uint256",    # takerAmountFilled
+]
+_FEE_CHARGED_TYPES = [
+    "uint8[32]",  # receiver
+    "uint256",    # amount
+]
+
+
+@pytest.mark.xfail(
+    reason="puya-sol's AssemblyBuilder doesn't translate inline-asm "
+           "log0/log1/log2/log3/log4 to AVM `op.log`. v2's Events.sol uses "
+           "log2/log3/log4 (NOT Solidity-level `emit Foo(...)`) for "
+           "FeeCharged/OrderFilled/OrdersMatched. So the events fire in "
+           "the EVM but emit nothing on AVM. Initial fix attempt emitted "
+           "topic+args+data via op.log but AVM's per-app-call 1024-byte "
+           "log limit is exceeded by matchOrders' multi-event sequence "
+           "(complementary_fees alone produces ~1090 bytes). A workable "
+           "fix needs ARC-28-shape events (selector(4)+arc4_args, ~50% "
+           "smaller than EVM's 32-byte topics+data) AND a per-event size "
+           "discipline. Until then, all matchOrders event verifications "
+           "are dark.",
+    strict=False,
+)
+def test_match_orders_events_complementary_with_fees(split_settled_with_delegate):
+    """test_MatchOrders_Events_Complementary_WithFees: same trade as
+    `complementary_fees` but verifies the ARC-28 events emitted during
+    settlement: two FeeCharged (maker fee + taker fee), two OrderFilled
+    (maker side + taker side), and one OrdersMatched."""
+    from dev.events import assert_event_emitted, decode_logs, event_selector, find_event
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer = bob()
+    carla_signer = carla()
+    bob_addr = bob_signer.eth_address_padded32
+    carla_addr = carla_signer.eth_address_padded32
+
+    yes_id, no_id = _canonical_yes_no_ids(orch, h1)
+    prepare_condition(ctf, CONDITION_ID, yes_id, no_id)
+    h1_addr = algod_addr_bytes_for_app(h1.app_id)
+    deal_usdc_and_approve(usdc, bob_addr, h1_addr, 52_500_000)
+    deal_outcome_and_approve(ctf, carla_addr, h1_addr, yes_id, 100_000_000)
+
+    fee_receiver_raw = orch.send.call(au.AppClientMethodCallParams(
+        method="getFeeReceiver", args=[],
+        extra_fee=au.AlgoAmount(micro_algo=200_000),
+    ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return
+    if isinstance(fee_receiver_raw, str):
+        from algosdk.encoding import decode_address
+        fee_receiver = decode_address(fee_receiver_raw)
+    else:
+        fee_receiver = bytes(fee_receiver_raw)
+
+    taker = make_order(maker=bob_addr, token_id=yes_id,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
+    maker = make_order(maker=carla_addr, token_id=yes_id,
+        maker_amount=100_000_000, taker_amount=50_000_000, side=Side.SELL)
+    taker_signed = sign_order(orch, taker, bob_signer)
+    maker_signed = sign_order(orch, maker, carla_signer)
+
+    # Resolve order hashes via the orch's `hashOrder` getter so the
+    # event-payload `orderHash` field can be matched byte-exact.
+    taker_hash = bytes(orch.send.call(au.AppClientMethodCallParams(
+        method="hashOrder", args=[taker_signed.to_abi_list()],
+        extra_fee=au.AlgoAmount(micro_algo=300_000),
+    ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return)
+    maker_hash = bytes(orch.send.call(au.AppClientMethodCallParams(
+        method="hashOrder", args=[maker_signed.to_abi_list()],
+        extra_fee=au.AlgoAmount(micro_algo=300_000),
+    ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return)
+
+    from hashlib import sha256
+    yes_bytes = yes_id.to_bytes(32, "big")
+    inner_boxes = [
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(carla_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(bob_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"ap_" + sha256(bytes(carla_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id,
+                        name=b"a_" + sha256(bytes(bob_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(bob_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(carla_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(fee_receiver)),
+    ]
+    # `dance_match_orders` returns the dance txn's `last_log` (matchOrders
+    # is `void` so it's empty). To inspect the events emitted *during* the
+    # dance we send the same group ourselves and walk the inner-txn logs.
+    composer = chunk.algorand.new_group()
+    from dev.match_dispatch import (DELEGATE_UPDATE_SEL, MATCH_ORDERS_SEL,
+                                    encode_match_orders_args)
+    a1, a2, a3, a4, a5, a6, a7 = encode_match_orders_args(
+        condition_id=CONDITION_ID,
+        taker_order_list=taker_signed.to_abi_list(),
+        maker_orders_list=[maker_signed.to_abi_list()],
+        taker_fill_amount=50_000_000,
+        maker_fill_amounts=[100_000_000],
+        taker_fee_amount=2_500_000,
+        maker_fee_amounts=[100_000],
+    )
+    PER_PAD = 6
+    box_idx = 0
+    for i in range(15):
+        slot_boxes = inner_boxes[box_idx:box_idx + PER_PAD]
+        box_idx += PER_PAD
+        slot_app_ids = sorted({b.app_index for b in slot_boxes if b.app_index != 0})
+        composer.add_app_call_method_call(orch.params.call(
+            au.AppClientMethodCallParams(
+                method="isAdmin",
+                args=[b"\x00" * 32],
+                note=f"opup-{i}".encode(),
+                box_references=slot_boxes if slot_boxes else None,
+                app_references=slot_app_ids if slot_app_ids else None,
+            )))
+    composer.add_app_call_method_call(chunk.params.call(
+        au.AppClientMethodCallParams(
+            method="dance_call_7",
+            args=[DELEGATE_UPDATE_SEL, MATCH_ORDERS_SEL,
+                  a1, a2, a3, a4, a5, a6, a7],
+            extra_fee=au.AlgoAmount(micro_algo=5_000_000),
+            app_references=[orch.app_id, usdc.app_id, ctf.app_id, h1.app_id],
+            box_references=[
+                au.BoxReference(app_id=0, name=b"__self_bytes"),
+                au.BoxReference(app_id=0, name=b"__orch_orig_bytes"),
+            ],
+        )))
+    res = composer.send(au.SendParams(populate_app_call_resources=True))
+
+    # Assemble a synthetic confirmation that includes the dance txn's
+    # inner-txn logs so `decode_logs` can find them recursively.
+    dance_conf = res.confirmations[-1] if res.confirmations else {}
+
+    class _R:
+        confirmation = dance_conf
+    logs = decode_logs(_R)
+
+    # FeeCharged(carla maker fee = 100k)
+    expected_fee_maker = bytes(fee_receiver) + (100_000).to_bytes(32, "big")
+    assert_event_emitted(_R, "FeeCharged", _FEE_CHARGED_TYPES,
+                         expected_payload=expected_fee_maker)
+
+    # FeeCharged(taker fee = 2.5M) — both fee events have the same name +
+    # types but different payloads. `assert_event_emitted` returns on the
+    # first match, so to verify *both* we walk logs by selector and check
+    # both payloads appear.
+    fee_sel = event_selector("FeeCharged", _FEE_CHARGED_TYPES)
+    fee_payloads = [raw[4:] for raw in logs if raw[:4] == fee_sel]
+    expected_fee_taker = bytes(fee_receiver) + (2_500_000).to_bytes(32, "big")
+    assert expected_fee_maker in fee_payloads, (
+        f"maker FeeCharged not in {len(fee_payloads)} fee logs")
+    assert expected_fee_taker in fee_payloads, (
+        f"taker FeeCharged not in {len(fee_payloads)} fee logs")
+
+    # OrdersMatched(takerHash, bob, BUY, yes, 50M, 100M)
+    om_payload = (
+        maker_hash if False else taker_hash  # OrdersMatched uses takerHash
+    ) + bytes(bob_addr) + bytes([0])  # side BUY = 0
+    om_payload += yes_id.to_bytes(32, "big")
+    om_payload += (50_000_000).to_bytes(32, "big")
+    om_payload += (100_000_000).to_bytes(32, "big")
+    assert_event_emitted(_R, "OrdersMatched", _ORDERS_MATCHED_TYPES,
+                         expected_payload=om_payload)
+
+    # Two OrderFilled — one for maker (carla), one for taker (bob).
+    # The exchange's algod address (`address(this)` in Solidity → orch's
+    # account) appears as the taker in the taker-side OrderFilled.
+    of_sel = event_selector("OrderFilled", _ORDER_FILLED_TYPES)
+    of_payloads = [raw[4:] for raw in logs if raw[:4] == of_sel]
+    assert len(of_payloads) == 2, f"expected 2 OrderFilled, got {len(of_payloads)}"
 
 
 def test_match_orders_revert_fee_exceeds_proceeds(split_settled_with_delegate):
