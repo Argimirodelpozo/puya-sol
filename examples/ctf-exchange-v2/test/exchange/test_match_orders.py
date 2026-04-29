@@ -307,10 +307,107 @@ def test_match_orders_merge_fees(split_settled_with_delegate):
     pytest.fail("merge with fees")
 
 
-@pytest.mark.xfail(reason=SETTLEMENT_INFRA, strict=False)
+@pytest.mark.xfail(
+    reason="AVM-port architectural gap: taker-SELL settlement routes USDC "
+           "through `address(this)` (orch) using `token.transfer` from the "
+           "exchange to bob/feeReceiver. In Solidity msg.sender at USDC == "
+           "exchange, but in the AVM port helper1 is the immediate caller, "
+           "so USDC sees helper1 as sender — and helper1 has no balance. "
+           "Fix path: helper3's `_transferCollateral(from=this, ...)` "
+           "should emit `_transferFromERC20` with from=orch + a "
+           "pre-set orch->helper1 approval, mirroring the Solidity flow.",
+    strict=False,
+)
 def test_match_orders_complementary_fees_surplus(split_settled_with_delegate):
-    """test_MatchOrders_Complementary_Fees_Surplus."""
-    pytest.fail("fees surplus")
+    """test_MatchOrders_Complementary_Fees_Surplus: taker SELLs 100 YES at
+    50c (offers 100 YES for 50 USDC), maker BUYs at 60c (offers 60 USDC
+    for 100 YES + 0.1 maker fee). Maker's price (60c) is *above* taker's
+    (50c) so the cross is profitable for the taker — they receive the
+    full 60 USDC (less their 2.5 taker fee) and the protocol routes
+    carla's collateral through the exchange (`address(this)` in the
+    contract) before paying out the taker proceeds and batched fees."""
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer = bob()
+    carla_signer = carla()
+    bob_addr = bob_signer.eth_address_padded32
+    carla_addr = carla_signer.eth_address_padded32
+
+    yes_id, no_id = _canonical_yes_no_ids(orch, h1)
+    prepare_condition(ctf, CONDITION_ID, yes_id, no_id)
+
+    h1_addr = algod_addr_bytes_for_app(h1.app_id)
+    # Roles flip vs complementary: bob holds YES (he's the seller), carla
+    # holds USDC (she's the buyer with the 0.1 fee buffer).
+    deal_outcome_and_approve(ctf, bob_addr, h1_addr, yes_id, 100_000_000)
+    deal_usdc_and_approve(usdc, carla_addr, h1_addr, 60_100_000)
+
+    fee_receiver_raw = orch.send.call(au.AppClientMethodCallParams(
+        method="getFeeReceiver", args=[],
+        extra_fee=au.AlgoAmount(micro_algo=200_000),
+    ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return
+    if isinstance(fee_receiver_raw, str):
+        from algosdk.encoding import decode_address
+        fee_receiver = decode_address(fee_receiver_raw)
+    else:
+        fee_receiver = bytes(fee_receiver_raw)
+
+    # The orch's algod account holds USDC briefly between maker→exchange
+    # and exchange→{taker,feeReceiver} legs of `_settleComplementaryMaker`'s
+    # taker-SELL else-branch. Pre-list its balance box so the inner
+    # USDC.transferFrom reaches it.
+    orch_addr = algod_addr_bytes_for_app(orch.app_id)
+
+    # bob SELL 100 YES with 2.5 USDC taker fee.
+    taker = make_order(maker=bob_addr, token_id=yes_id,
+        maker_amount=100_000_000, taker_amount=50_000_000, side=Side.SELL)
+    # carla BUY 100 YES at 60c (overpay) with 0.1 USDC maker fee.
+    maker = make_order(maker=carla_addr, token_id=yes_id,
+        maker_amount=60_000_000, taker_amount=100_000_000, side=Side.BUY)
+    taker_signed = sign_order(orch, taker, bob_signer)
+    maker_signed = sign_order(orch, maker, carla_signer)
+
+    from hashlib import sha256
+    yes_bytes = yes_id.to_bytes(32, "big")
+    inner_boxes = [
+        # CTF transfer bob -> carla
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(bob_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(carla_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"ap_" + sha256(bytes(bob_addr) + h1_addr).digest()),
+        # USDC transferFrom carla -> exchange (orch's account), then
+        # exchange -> bob and exchange -> feeReceiver.
+        au.BoxReference(app_id=usdc.app_id,
+                        name=b"a_" + sha256(bytes(carla_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(carla_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(orch_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(bob_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(fee_receiver)),
+    ]
+    dance_match_orders(
+        chunk, orch,
+        condition_id=CONDITION_ID,
+        taker_order_list=taker_signed.to_abi_list(),
+        maker_orders_list=[maker_signed.to_abi_list()],
+        taker_fill_amount=100_000_000,
+        maker_fill_amounts=[60_000_000],
+        taker_fee_amount=2_500_000,
+        maker_fee_amounts=[100_000],
+        extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+        extra_box_refs=inner_boxes,
+    )
+
+    # Taker: spent 100 YES, received 57.5 USDC (60 from carla - 2.5 fee).
+    assert ctf_balance(ctf, bob_addr, yes_id) == 0
+    assert usdc_balance(usdc, bob_addr) == 57_500_000
+    # Maker: spent 60.1 USDC, received 100 YES.
+    assert usdc_balance(usdc, carla_addr) == 0
+    assert ctf_balance(ctf, carla_addr, yes_id) == 100_000_000
+    # Fees: 2.5 + 0.1 = 2.6 USDC.
+    assert usdc_balance(usdc, fee_receiver) == 2_500_000 + 100_000
+    # Exchange's intermediate USDC balance ends at 0.
+    assert usdc_balance(usdc, orch_addr) == 0
 
 
 def test_match_orders_taker_refund(split_settled_with_delegate):
