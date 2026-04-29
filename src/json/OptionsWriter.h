@@ -19,7 +19,8 @@ public:
 		std::string const& _outputDir,
 		int _optimizationLevel = 1,
 		bool _outputIr = false,
-		std::set<std::string> const& _templateVarChildren = {}
+		std::set<std::string> const& _templateVarChildren = {},
+		bool _outputAsmReport = false
 	);
 
 	/// Write options.json for multiple contracts (split contract mode).
@@ -29,7 +30,8 @@ public:
 		std::string const& _outputDir,
 		int _optimizationLevel = 1,
 		bool _outputIr = false,
-		std::set<std::string> const& _templateVarChildren = {}
+		std::set<std::string> const& _templateVarChildren = {},
+		bool _outputAsmReport = false
 	);
 };
 

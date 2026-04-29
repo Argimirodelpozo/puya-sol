@@ -148,6 +148,7 @@ struct Options
 	std::map<std::string, uint64_t> ensureBudget; // func_name → budget
 	int optimizationLevel = 1;
 	bool outputIr = false;
+	bool outputAsmReport = false;
 	bool outputLogs = true;
 	bool splitTest = false;
 	bool viaYulBehavior = false;
@@ -178,6 +179,9 @@ void printUsage(char const* _progName)
 		<< "  --ensure-budget <f:N>  Inject ensure_budget(N) into function f (repeatable)\n"
 		<< "  --optimization-level <N>   Puya optimization level: 0, 1, 2 (default: 1)\n"
 		<< "  --output-ir            Output all intermediate representations (SSA IR, MIR, TEAL)\n"
+		<< "  --asm-report           Emit per-PC assembly report and source map for puya output\n"
+		<< "                         (PC ↔ TEAL line ↔ Solidity location, plus a `<bin>.puya.map`\n"
+		<< "                         file consumable by AlgoKit's debugger and simulate trace)\n"
 		<< "  --no-output-logs       Disable writing compilation logs to output directory\n"
 		<< "  --via-yul-behavior     Emulate Solidity's viaIR/compileViaYul codegen semantics\n"
 		<< "                         (separate subroutines per modifier, fresh vars per _ invocation)\n"
@@ -237,6 +241,8 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.optimizationLevel = std::stoi(_argv[++i]);
 		else if (arg == "--output-ir")
 			opts.outputIr = true;
+		else if (arg == "--asm-report")
+			opts.outputAsmReport = true;
 		else if (arg == "--no-output-logs")
 			opts.outputLogs = false;
 		else if (arg == "--via-yul-behavior")
@@ -1091,7 +1097,8 @@ int main(int _argc, char* _argv[])
 			// prefixed FQN), not the short name.
 			puyasol::json::OptionsWriter::write(
 				subOptionsPath, cawst.contractId, subdir.string(),
-				opts.optimizationLevel, opts.outputIr, declareVars);
+				opts.optimizationLevel, opts.outputIr, declareVars,
+				opts.outputAsmReport);
 			logger.info("Wrote: " + subOptionsPath);
 
 			if (!opts.noPuya)
@@ -1135,11 +1142,11 @@ int main(int _argc, char* _argv[])
 	if (contractNames.size() <= 1)
 	{
 		std::string contractName = contractNames.empty() ? "" : contractNames[0];
-		puyasol::json::OptionsWriter::write(optionsPath, contractName, opts.outputDir, opts.optimizationLevel, opts.outputIr, childContracts);
+		puyasol::json::OptionsWriter::write(optionsPath, contractName, opts.outputDir, opts.optimizationLevel, opts.outputIr, childContracts, opts.outputAsmReport);
 	}
 	else
 	{
-		puyasol::json::OptionsWriter::writeMultiple(optionsPath, contractNames, opts.outputDir, opts.optimizationLevel, opts.outputIr, childContracts);
+		puyasol::json::OptionsWriter::writeMultiple(optionsPath, contractNames, opts.outputDir, opts.optimizationLevel, opts.outputIr, childContracts, opts.outputAsmReport);
 	}
 	logger.info("Wrote: " + optionsPath);
 

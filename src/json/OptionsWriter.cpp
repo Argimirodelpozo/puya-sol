@@ -26,13 +26,27 @@ static void addTemplateVarDefs(njson& opts, std::set<std::string> const& _childr
 	}
 }
 
+// `output_assembly_report` and `output_source_map` are useful when debugging
+// a TEAL ↔ source mismatch: the assembly report gives a per-PC TEAL listing
+// (PC | bytes | mnemonic | source location), and the source map gives a
+// `<bin>.puya.map` file consumable by AlgoKit's debugger and the algod
+// simulate trace. Both are off by default since they roughly double the
+// build artifact size.
+static void applyDebugOutputs(njson& opts, bool _outputAsmReport)
+{
+	if (!_outputAsmReport) return;
+	opts["output_assembly_report"] = true;
+	opts["output_source_map"] = true;
+}
+
 void OptionsWriter::write(
 	std::string const& _path,
 	std::string const& _contractName,
 	std::string const& _outputDir,
 	int _optimizationLevel,
 	bool _outputIr,
-	std::set<std::string> const& _templateVarChildren
+	std::set<std::string> const& _templateVarChildren,
+	bool _outputAsmReport
 )
 {
 	njson opts;
@@ -56,6 +70,7 @@ void OptionsWriter::write(
 		opts["output_destructured_ir"] = true;
 		opts["output_memory_ir"] = true;
 	}
+	applyDebugOutputs(opts, _outputAsmReport);
 
 	std::ofstream out(_path);
 	if (!out.is_open())
@@ -72,7 +87,8 @@ void OptionsWriter::writeMultiple(
 	std::string const& _outputDir,
 	int _optimizationLevel,
 	bool _outputIr,
-	std::set<std::string> const& _templateVarChildren
+	std::set<std::string> const& _templateVarChildren,
+	bool _outputAsmReport
 )
 {
 	njson opts;
@@ -97,6 +113,7 @@ void OptionsWriter::writeMultiple(
 		opts["output_destructured_ir"] = true;
 		opts["output_memory_ir"] = true;
 	}
+	applyDebugOutputs(opts, _outputAsmReport);
 
 	std::ofstream out(_path);
 	if (!out.is_open())
