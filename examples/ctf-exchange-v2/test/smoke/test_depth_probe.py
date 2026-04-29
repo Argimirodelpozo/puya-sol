@@ -561,16 +561,20 @@ def test_match_orders_diagnostic_dump_args(split_settled_with_delegate):
     pytest.skip("Diagnostic only — see captured stdout for inner-tx args")
 
 
+@pytest.mark.xfail(
+    reason="Diagnostic for Group A: matchOrders fires CTF transfer twice "
+           "with same args. Pre-funding bob/zero/etc doesn't help because "
+           "carla's box gets debited to 0 by the first call, then the second "
+           "fails. Fix in puya-sol's _settleComplementaryMaker codegen.",
+    strict=False,
+)
 def test_match_orders_diagnostic_double_fund(split_settled_with_delegate):
     """Diagnostic: pre-fund BOTH carla AND bob with YES tokens, then
-    run the matchOrders dance. If matchOrders has the `from` address
-    wrong (reads bob's empty box instead of carla's funded one), the
-    bal>=amt assert fires because bob's box is 0. If we ALSO fund bob
-    to 100M, the assert passes regardless of which box matchOrders
-    reads — so a passing run = `from` is wrong.
-
-    Mirrors `test_match_orders_complementary` setup exactly except for
-    the extra deal_outcome to bob."""
+    run the matchOrders dance. The bal>=amt assert STILL fires — proving
+    the `from` is neither carla, bob, nor zero. Combined with
+    `test_match_orders_diagnostic_dump_args` (which inspects the inner-tx
+    apaa via simulate exec_trace), this nailed down the actual root cause:
+    matchOrders fires the CTF transfer TWICE with identical args."""
     from hashlib import sha256
     from dev.deals import deal_outcome, deal_outcome_and_approve, deal_usdc_and_approve, prepare_condition, set_approval, ctf_balance, usdc_balance
     from dev.match_dispatch import dance_match_orders

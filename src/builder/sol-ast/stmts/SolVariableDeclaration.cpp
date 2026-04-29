@@ -213,19 +213,28 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 	}
 	else if (declarations.size() > 1 && initialValue)
 	{
-		// Tuple destructuring
+		// Tuple destructuring `(a, b) = expr;` — bind each component to a
+		// separate local. The RHS must be evaluated EXACTLY ONCE, otherwise
+		// a tuple-returning function call gets re-emitted per destructured
+		// component (manifesting as duplicate `callsub`s in the generated
+		// TEAL with all the call's side-effects repeated). `SingleEvaluation`
+		// is the in-memory hint for that, but the AWST JSON serialization
+		// inlines its `source` per consumer and the puya backend then
+		// re-emits the call for each `TupleItemExpression`. We spell out
+		// the temp explicitly: assign the RHS to a synthetic variable, then
+		// extract each tuple item from that variable by name.
 		auto rhsExpr = m_ctx.buildExpr(*initialValue);
 		for (auto& p: m_ctx.takePrePending())
 			result.push_back(std::move(p));
 		for (auto& p: m_ctx.takePending())
 			result.push_back(std::move(p));
 
-		auto singleRhs = std::make_shared<awst::SingleEvaluation>();
-		singleRhs->sourceLocation = m_loc;
-		singleRhs->wtype = rhsExpr->wtype;
-		singleRhs->source = std::move(rhsExpr);
-		singleRhs->id = static_cast<int>(m_node.id());
-		rhsExpr = std::move(singleRhs);
+		std::string tempName = "__tuple_destruct_" + std::to_string(m_node.id());
+		auto* tupleType = rhsExpr->wtype;
+		auto tempTarget = awst::makeVarExpression(tempName, tupleType, m_loc);
+		auto tempAssign = awst::makeAssignmentStatement(
+			std::move(tempTarget), std::move(rhsExpr), m_loc);
+		result.push_back(std::move(tempAssign));
 
 		for (size_t i = 0; i < declarations.size(); ++i)
 		{
@@ -238,7 +247,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			auto itemExpr = std::make_shared<awst::TupleItemExpression>();
 			itemExpr->sourceLocation = m_loc;
 			itemExpr->wtype = type;
-			itemExpr->base = rhsExpr;
+			itemExpr->base = awst::makeVarExpression(tempName, tupleType, m_loc);
 			itemExpr->index = static_cast<int>(i);
 
 			auto assign = awst::makeAssignmentStatement(std::move(target), std::move(itemExpr), m_loc);
