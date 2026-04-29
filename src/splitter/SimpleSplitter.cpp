@@ -357,9 +357,68 @@ std::shared_ptr<awst::Expression> decodeReturn(
 	}
 	if (retType && retType->kind() == awst::WTypeKind::WTuple)
 	{
-		// Reinterpret the post-prefix bytes as an ARC4 tuple, then decode to
-		// the native WTuple. Without ARC4Decode, puya would see a bytes value
-		// where it expects a WTuple at the call site.
+		// Build a `TupleExpression` directly from per-slot byte extracts so
+		// each biguint slot can be narrowed from the wire's uint512 width
+		// (64 bytes) to native uint256 (32 bytes) — the same narrowing the
+		// single-biguint case above does. Going through `ARC4Decode` instead
+		// would yield a tuple of 64-byte-wide biguints; downstream code
+		// that does `len <= 32 assert overflow` (puya's standard ARC4
+		// uint256 width validation, e.g. in `_prepareMakerOrder`'s
+		// `extract3 ... <= 32 assert`) then asserts.
+		//
+		// This path requires every element to be a fixed-byte-width type
+		// recognised by `mapToArc4` — all biguint/uint64/account/bool here.
+		// Mixed tuples with dynamic elements (e.g. `bytes`/`string`) fall
+		// back to ARC4Decode below, which keeps existing behavior intact.
+		auto const* tup = dynamic_cast<awst::WTuple const*>(retType);
+		if (tup)
+		{
+			auto isFixedScalar = [](awst::WType const* el) {
+				return el == awst::WType::biguintType()
+					|| el == awst::WType::uint64Type()
+					|| el == awst::WType::accountType()
+					|| el == awst::WType::boolType();
+			};
+			bool allFixedScalar = !tup->types().empty();
+			for (auto const* el : tup->types())
+				if (!isFixedScalar(el)) { allFixedScalar = false; break; }
+			if (allFixedScalar)
+			{
+				auto fixedSlotBytes = [](awst::WType const* el) -> int {
+					if (el == awst::WType::biguintType()) return 64;  // uint512 wire
+					if (el == awst::WType::uint64Type()) return 8;    // uint64
+					if (el == awst::WType::accountType()) return 32;  // uint256
+					if (el == awst::WType::boolType()) return 1;      // arc4.bool
+					return 0;
+				};
+				auto tupleExpr = std::make_shared<awst::TupleExpression>();
+				tupleExpr->sourceLocation = loc;
+				tupleExpr->wtype = retType;
+				int offset = 0;
+				for (auto const* el : tup->types())
+				{
+					int slotLen = fixedSlotBytes(el);
+					int readOffset = offset;
+					int readLen = slotLen;
+					// biguint slot is 64-byte uint512; narrow to low-32 uint256.
+					if (el == awst::WType::biguintType())
+					{
+						readOffset = offset + 32;
+						readLen = 32;
+					}
+					auto slice = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), loc);
+					slice->immediates = {readOffset, readLen};
+					slice->stackArgs.push_back(bytesExpr);
+					tupleExpr->items.push_back(awst::makeReinterpretCast(std::move(slice), el, loc));
+					offset += slotLen;
+				}
+				return tupleExpr;
+			}
+		}
+
+		// Fallback: reinterpret bytes as an ARC4 tuple, then ARC4Decode to
+		// the native WTuple. Without ARC4Decode, puya would see a bytes
+		// value where it expects a WTuple at the call site.
 		auto const* arc4Form = mapToArc4(retType);
 		if (!arc4Form) return awst::makeReinterpretCast(std::move(bytesExpr), retType, loc);
 		auto cast = awst::makeReinterpretCast(std::move(bytesExpr), arc4Form, loc);
