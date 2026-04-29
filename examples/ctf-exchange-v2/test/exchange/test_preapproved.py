@@ -50,6 +50,30 @@ def _call(client, method, args=None, sender=None, extra_fee=30_000):
     ), send_params=AUTO_POPULATE).abi_return
 
 
+def _call_with_pads(orch, client, method, args=None, sender=None,
+                    extra_fee=80_000, n_pads=4):
+    """Wrap a single app-call in a small group with `n_pads` no-op orch
+    `isAdmin` calls so AVM's per-app opcode budget pools across the group
+    (each pad adds ~700 opcodes). Required for methods that internally
+    do ECDSA recover (~1700 ops) like preapproveOrder/validateOrderSignature.
+    """
+    composer = client.algorand.new_group()
+    for i in range(n_pads):
+        composer.add_app_call_method_call(orch.params.call(
+            au.AppClientMethodCallParams(
+                method="isAdmin", args=[b"\x00" * 32],
+                note=f"opup-{i}".encode(),
+            )))
+    composer.add_app_call_method_call(client.params.call(
+        au.AppClientMethodCallParams(
+            method=method, args=args or [],
+            sender=sender.address if sender else None,
+            extra_fee=au.AlgoAmount(micro_algo=extra_fee),
+        )))
+    res = composer.send(au.SendParams(populate_app_call_resources=True))
+    return res.returns[-1].value if res.returns else None
+
+
 @pytest.fixture
 def exchange(split_exchange):
     """Tuple unpacker — auth tests don't need the helpers."""
@@ -133,13 +157,6 @@ SETTLEMENT_INFRA = (
 )
 
 
-@pytest.mark.xfail(reason="opcode-budget exhaustion: this test does an "
-    "extra preapprove + invalidate before the dance, on top of the dance "
-    "itself doing two ecdsa_pk_recover (1700 ops each) + matchOrders "
-    "body. Each preapprove also does an ecrecover. We hit the per-group "
-    "pool limit. Adding more outer padding past 14 hits the 16-tx group "
-    "cap. The other 4 revert variants pass; happy paths are xfailed for "
-    "different reasons.", strict=False)
 def test_match_orders_invalidated_preapproval_reverts(split_settled_with_delegate, admin):
     """test_matchOrders_invalidatedPreapproval_reverts: preapprove maker
     order, clear sig, invalidate preapproval, then matchOrders →
@@ -149,7 +166,8 @@ def test_match_orders_invalidated_preapproval_reverts(split_settled_with_delegat
     taker_signed, maker_signed = _make_pair(orch)
     maker_hash = hash_order_via_contract(orch, maker_signed)
 
-    _call(orch, "preapproveOrder", [maker_signed.to_abi_list()], extra_fee=80_000)
+    _call_with_pads(orch, orch, "preapproveOrder",
+                    [maker_signed.to_abi_list()], extra_fee=80_000)
     _call(orch, "invalidatePreapprovedOrder", [list(maker_hash)], extra_fee=20_000)
 
     # Strip the maker's signature — only preapproval could authorize.
@@ -214,8 +232,6 @@ def test_match_orders_empty_signature_not_preapproved_reverts(split_settled_with
         )
 
 
-@pytest.mark.xfail(reason="opcode-budget exhaustion (same as above)",
-    strict=False)
 def test_match_orders_empty_signature_invalidated_preapproval_reverts(
     split_settled_with_delegate
 ):
@@ -227,7 +243,8 @@ def test_match_orders_empty_signature_invalidated_preapproval_reverts(
     taker_signed, maker_signed = _make_pair(orch)
     taker_hash = hash_order_via_contract(orch, taker_signed)
 
-    _call(orch, "preapproveOrder", [taker_signed.to_abi_list()], extra_fee=80_000)
+    _call_with_pads(orch, orch, "preapproveOrder",
+                    [taker_signed.to_abi_list()], extra_fee=80_000)
     _call(orch, "invalidatePreapprovedOrder", [list(taker_hash)], extra_fee=20_000)
     taker_signed.signature = b""
 
