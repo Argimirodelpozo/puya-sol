@@ -245,6 +245,163 @@ def test_depth_probe_chain3_box_ref_on_sibling_txn(probe_factory, admin):
     )
 
 
+def test_mint_dump_match_type_arg(split_settled_with_delegate):
+    """Diagnostic: run a MINT match and dump the matchType arg helper3
+    passes to helper2's `_validateOrdersMatch` inner-call. The xfail on
+    `test_match_orders_mint` claims helper3 passes 0 (COMPLEMENTARY)
+    instead of 1 (MINT). This proves it byte-exact via the simulate
+    exec_trace's apaa for the relevant inner-tx."""
+    import base64
+    from algosdk.v2client.models.simulate_request import (
+        SimulateRequest, SimulateRequestTransactionGroup, SimulateTraceConfig,
+    )
+    from dev.deals import (deal_outcome_and_approve, deal_usdc_and_approve,
+                            prepare_condition)
+    from dev.match_dispatch import (DELEGATE_UPDATE_SEL, MATCH_ORDERS_SEL,
+                                     encode_match_orders_args)
+    from dev.orders import make_order, sign_order, Side
+    from dev.signing import bob as bob_signer_fn, carla as carla_signer_fn
+    from dev.addrs import algod_addr_bytes_for_app
+
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer, carla_signer = bob_signer_fn(), carla_signer_fn()
+    bob_addr = bob_signer.eth_address_padded32
+    carla_addr = carla_signer.eth_address_padded32
+
+    raw = orch.send.call(au.AppClientMethodCallParams(
+        method="getCtfCollateral", args=[],
+        extra_fee=au.AlgoAmount(micro_algo=200_000),
+    ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return
+    if isinstance(raw, str):
+        from algosdk.encoding import decode_address
+        ctf_coll = decode_address(raw)
+    else:
+        ctf_coll = bytes(raw)
+
+    def _pid(idx_set):
+        cid = h1.send.call(au.AppClientMethodCallParams(
+            method="CTHelpers.getCollectionId",
+            args=[list(b"\x00" * 32), list(b"\xc0" * 32), idx_set],
+            extra_fee=au.AlgoAmount(micro_algo=500_000),
+        ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return
+        cid_b = bytes(cid) if isinstance(cid, (list, tuple)) else bytes(cid)
+        pid = h1.send.call(au.AppClientMethodCallParams(
+            method="CTHelpers.getPositionId",
+            args=[bytes(ctf_coll), list(cid_b)],
+            extra_fee=au.AlgoAmount(micro_algo=500_000),
+        ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return
+        return int(pid)
+
+    yes_id, no_id = _pid(1), _pid(2)
+    prepare_condition(ctf, b"\xc0" * 32, yes_id, no_id)
+    h1_addr = algod_addr_bytes_for_app(h1.app_id)
+    deal_usdc_and_approve(usdc, bob_addr, h1_addr, 50_000_000)
+    deal_usdc_and_approve(usdc, carla_addr, h1_addr, 50_000_000)
+
+    # MINT: both BUY against complementary tokens.
+    taker = make_order(maker=bob_addr, token_id=yes_id,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
+    maker = make_order(maker=carla_addr, token_id=no_id,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
+    t = sign_order(orch, taker, bob_signer)
+    m = sign_order(orch, maker, carla_signer)
+
+    a1, a2, a3, a4, a5, a6, a7 = encode_match_orders_args(
+        condition_id=b"\xc0" * 32,
+        taker_order_list=t.to_abi_list(),
+        maker_orders_list=[m.to_abi_list()],
+        taker_fill_amount=50_000_000,
+        maker_fill_amounts=[50_000_000],
+        taker_fee_amount=0, maker_fee_amounts=[0],
+    )
+
+    composer = chunk.algorand.new_group()
+    for i in range(15):
+        composer.add_app_call_method_call(orch.params.call(
+            au.AppClientMethodCallParams(
+                method="isAdmin",
+                args=[b"\x00" * 32],
+                note=f"opup-{i}".encode(),
+            )))
+    composer.add_app_call_method_call(chunk.params.call(
+        au.AppClientMethodCallParams(
+            method="dance_call_7",
+            args=[DELEGATE_UPDATE_SEL, MATCH_ORDERS_SEL,
+                  a1, a2, a3, a4, a5, a6, a7],
+            extra_fee=au.AlgoAmount(micro_algo=5_000_000),
+            app_references=[orch.app_id, usdc.app_id, ctf.app_id, h1.app_id],
+            box_references=[
+                au.BoxReference(app_id=0, name=b"__self_bytes"),
+                au.BoxReference(app_id=0, name=b"__orch_orig_bytes"),
+            ],
+        )))
+    composer.build()
+    from algokit_utils._debugging import simulate_response as _sim_resp
+    algod = chunk.algorand.client.algod
+    sim_resp = _sim_resp(
+        composer._atc, algod,
+        allow_more_logs=True, allow_unnamed_resources=True,
+        exec_trace_config=SimulateTraceConfig(enable=True, stack_change=True, scratch_change=False),
+    )
+    raw = sim_resp.simulate_response
+
+    # Walk inner-txns of dance txn, looking for app calls to helper2 with
+    # the _validateOrdersMatch selector (0xd427eb5d).
+    def walk(node, path):
+        for i, inner in enumerate(node.get("inner-txns") or
+                                   node.get("txn-result", {}).get("inner-txns") or []):
+            tx = inner.get("txn", {}).get("txn", {})
+            apaa = tx.get("apaa") or []
+            if apaa and base64.b64decode(apaa[0])[:4].hex() == "d427eb5d":
+                # apaa[3] is matchType (uint64, 8 BE bytes)
+                if len(apaa) >= 4:
+                    mt = int.from_bytes(base64.b64decode(apaa[3]), "big")
+                else:
+                    mt = "?"
+                # Decode the side bytes from each order (offset 192)
+                taker_b = base64.b64decode(apaa[1])
+                maker_b = base64.b64decode(apaa[2])
+                # Each order's bytes start with: salt(32) + maker(32) + signer(32) + tokenId(32) + makerAmt(32) + takerAmt(32) + side(1)
+                taker_side = taker_b[192] if len(taker_b) > 192 else "?"
+                maker_side = maker_b[192] if len(maker_b) > 192 else "?"
+                taker_token = taker_b[96:128].hex()[:16] if len(taker_b) >= 128 else "?"
+                maker_token = maker_b[96:128].hex()[:16] if len(maker_b) >= 128 else "?"
+                print(f"  _validateOrdersMatch at {path}.in{i}: matchType={mt}")
+                print(f"    taker side={taker_side} token={taker_token}...")
+                print(f"    maker side={maker_side} token={maker_token}...")
+            walk(inner, path + f".in{i}")
+
+    failed_at = raw["txn-groups"][0].get("failed-at", [])
+    print(f"Failed-at: {failed_at}")
+    failure = raw["txn-groups"][0].get("failure-message", "")
+    print(f"Failure: {failure[:200]}")
+    walk(raw["txn-groups"][0]["txn-results"][15], "T15")
+
+    # Dig into helper3's exec_trace at the inner-tx-1 level (the matchOrders
+    # dispatch) and find where _deriveMatchType returns. Look for stack
+    # values around the callsub return.
+    outer = raw["txn-groups"][0]["txn-results"][15]
+    et = outer.get("exec-trace") or outer.get("txn-result", {}).get("exec-trace")
+    inner_traces = et.get("inner-trace") if et else None
+    if inner_traces and len(inner_traces) > 1:
+        helper3_trace = inner_traces[1]
+        ops = helper3_trace.get("approval-program-trace") or []
+        # Find PCs around _deriveMatchType return (line 2536 = extract_uint64)
+        for i, op in enumerate(ops):
+            pc = op.get("pc", 0)
+            # _deriveMatchType: pc range covering the math + return
+            # The matchType uint64 is on stack right after extract_uint64
+            # at line ~2536. Probably pc ~5000+.
+            stack_add = op.get("stack-additions") or []
+            if len(stack_add) == 1 and "uint" in stack_add[0]:
+                val = stack_add[0]["uint"]
+                if val in (0, 1, 2) and 4900 < pc < 5400:
+                    # This is likely the matchType output of _deriveMatchType
+                    print(f"  trace[{i}] pc={pc} pushed uint={val}")
+
+    pytest.skip("diagnostic")
+
+
 def test_match_orders_diagnostic_dump_args(split_settled_with_delegate):
     """Run the dance via simulate (which fails the same way as send), then
     walk the simulate_response['txn-groups'][0]['txn-results'] to find
