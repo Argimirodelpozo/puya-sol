@@ -1489,6 +1489,79 @@ def test_balance_deltas_multimaker_complementary_taker_sell(split_settled_with_d
     pytest.fail("multi-maker")
 
 
+def test_balance_deltas_varied_fill_amounts_different_prices(split_settled_with_delegate):
+    """test_BalanceDeltas_VariedFillAmounts_DifferentPrices: bob's BUY at
+    0.60 limit matches against carla's SELL @ 0.40 (better) + dave's
+    SELL @ 0.50 (still crosses). Taker pays maker prices, not taker
+    limit — only 140 of 180 USDC budget consumed; 40 stays in bob's
+    wallet."""
+    from dev.signing import dave as dave_signer_fn
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer, carla_signer, dave_signer = bob(), carla(), dave_signer_fn()
+    bob_addr = bob_signer.eth_address_padded32
+    carla_addr = carla_signer.eth_address_padded32
+    dave_addr = dave_signer.eth_address_padded32
+
+    yes_id, no_id = _canonical_yes_no_ids(orch, h1)
+    prepare_condition(ctf, CONDITION_ID, yes_id, no_id)
+    h1_addr = algod_addr_bytes_for_app(h1.app_id)
+    deal_usdc_and_approve(usdc, bob_addr, h1_addr, 180_000_000)
+    deal_outcome_and_approve(ctf, carla_addr, h1_addr, yes_id, 100_000_000)
+    deal_outcome_and_approve(ctf, dave_addr, h1_addr, yes_id, 200_000_000)
+
+    taker = make_order(maker=bob_addr, token_id=yes_id,
+        maker_amount=180_000_000, taker_amount=300_000_000, side=Side.BUY)
+    maker_carla = make_order(maker=carla_addr, token_id=yes_id,
+        maker_amount=100_000_000, taker_amount=40_000_000, side=Side.SELL)
+    maker_dave = make_order(maker=dave_addr, token_id=yes_id,
+        maker_amount=200_000_000, taker_amount=100_000_000, side=Side.SELL)
+    maker_dave.salt = 2
+    t = sign_order(orch, taker, bob_signer)
+    mc = sign_order(orch, maker_carla, carla_signer)
+    md = sign_order(orch, maker_dave, dave_signer)
+
+    from hashlib import sha256
+    yes_bytes = yes_id.to_bytes(32, "big")
+    inner_boxes = [
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(carla_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(dave_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(bob_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"ap_" + sha256(bytes(carla_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"ap_" + sha256(bytes(dave_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id,
+                        name=b"a_" + sha256(bytes(bob_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(bob_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(carla_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(dave_addr)),
+    ]
+    dance_match_orders(
+        chunk, orch,
+        condition_id=CONDITION_ID,
+        taker_order_list=t.to_abi_list(),
+        maker_orders_list=[mc.to_abi_list(), md.to_abi_list()],
+        taker_fill_amount=180_000_000,
+        maker_fill_amounts=[100_000_000, 200_000_000],
+        taker_fee_amount=0, maker_fee_amounts=[0, 0],
+        extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+        extra_box_refs=inner_boxes,
+    )
+
+    # Bob: paid only 140 USDC (40+100 at maker prices), got 300 YES.
+    # 40 USDC of his 180 budget stays unspent in his wallet.
+    assert usdc_balance(usdc, bob_addr) == 40_000_000
+    assert ctf_balance(ctf, bob_addr, yes_id) == 300_000_000
+    # Carla & dave got their respective taker amounts.
+    assert ctf_balance(ctf, carla_addr, yes_id) == 0
+    assert usdc_balance(usdc, carla_addr) == 40_000_000
+    assert ctf_balance(ctf, dave_addr, yes_id) == 0
+    assert usdc_balance(usdc, dave_addr) == 100_000_000
+
+
 def test_balance_deltas_multimaker_complementary_with_fees(split_settled_with_delegate):
     """test_BalanceDeltas_MultiMaker_Complementary_WithFees: multi-maker
     BUY with per-maker fees + taker fee. Bob pays 157.5 USDC (150 +
