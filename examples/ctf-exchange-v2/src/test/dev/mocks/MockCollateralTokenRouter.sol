@@ -48,19 +48,14 @@ contract MockCollateralTokenRouter is ICollateralTokenCallbacks {
     }
 
     function wrapCallback(address _asset, address, uint256 _amount, bytes calldata _data) external {
-        // AVM-PORT-ADAPTATION: hoist `_asset` and the collateralToken read
-        // into locals so the generated TEAL inner-tx clearly resolves the
-        // call target from `_asset` (not from the storage read for `to`),
-        // mirroring how Trading.sol structures _transferFromERC20 calls.
-        address asset = _asset;
-        address ct = collateralToken;
         address from = abi.decode(_data, (address));
-        require(IERC20Min(asset).transferFrom(from, ct, _amount), "ERC20 transferFrom failed");
+        require(IERC20Min(_asset).transferFrom(from, collateralToken, _amount), "ERC20 transferFrom failed");
     }
 
     function unwrapCallback(address, address, uint256 _amount, bytes calldata _data) external {
-        address ct = collateralToken;
         address from = abi.decode(_data, (address));
-        require(IERC20Min(ct).transferFrom(from, ct, _amount), "ERC20 transferFrom failed");
+        require(
+            IERC20Min(collateralToken).transferFrom(from, collateralToken, _amount), "ERC20 transferFrom failed"
+        );
     }
 }
