@@ -15,7 +15,7 @@ from parser import parse_test_file
 
 ROOT = Path(__file__).parent.parent.parent
 COMPILER = ROOT / "build" / "puya-sol"
-PUYA = ROOT.parent / "puya" / ".venv" / "bin" / "puya"
+PUYA = ROOT / "puya" / ".venv" / "bin" / "puya"
 TESTS_DIR = Path(__file__).parent / "tests"
 OUT_DIR = Path(__file__).parent / "out"
 

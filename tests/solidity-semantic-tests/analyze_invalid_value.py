@@ -7,7 +7,7 @@ from collections import Counter
 
 TESTS_DIR = Path(__file__).parent / "tests"
 OUT_DIR = Path(__file__).parent / "out"
-PUYA = Path(__file__).parent.parent.parent.parent / "puya" / ".venv" / "bin" / "puya"
+PUYA = Path(__file__).parent.parent.parent / "puya" / ".venv" / "bin" / "puya"
 
 
 def main():
