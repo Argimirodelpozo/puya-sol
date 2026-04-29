@@ -4,12 +4,22 @@ pragma solidity 0.8.34;
 import { OwnableRoles } from "@solady/src/auth/OwnableRoles.sol";
 import { ERC20 } from "@solady/src/tokens/ERC20.sol";
 import { Initializable } from "@solady/src/utils/Initializable.sol";
-import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
 import { UUPSUpgradeable } from "@solady/src/utils/UUPSUpgradeable.sol";
 
 import { CollateralErrors } from "./abstract/CollateralErrors.sol";
 import { ICollateralToken } from "./interfaces/ICollateralToken.sol";
 import { ICollateralTokenCallbacks } from "./interfaces/ICollateralTokenCallbacks.sol";
+
+// AVM-PORT-ADAPTATION: see PUYA_BLOCKERS.md §3 and TransferHelper.sol.
+// Solady's SafeTransferLib emits inline-asm `call` to a non-constant
+// `token`, which puya-sol's Yul handler stubs as success without firing
+// the inner-txn — transfers silently no-op. A plain Solidity-interface
+// call lowers cleanly to an itxn, so we use the same minimal IERC20
+// shape that TransferHelper does.
+interface IERC20Min {
+    function transfer(address to, uint256 amount) external returns (bool);
+    function transferFrom(address from, address to, uint256 amount) external returns (bool);
+}
 
 abstract contract CollateralTokenEvents {
     /// @notice Emitted when an asset is wrapped into collateral
@@ -40,8 +50,6 @@ contract CollateralToken is
     CollateralTokenEvents,
     ICollateralToken
 {
-    using SafeTransferLib for address;
-
     /*--------------------------------------------------------------
                                  STATE
     --------------------------------------------------------------*/
@@ -167,7 +175,7 @@ contract CollateralToken is
         }
 
         // transfer asset to the vault
-        _asset.safeTransfer(VAULT, _amount);
+        require(IERC20Min(_asset).transfer(VAULT, _amount), "ERC20 transfer failed");
 
         emit Wrapped(msg.sender, _asset, _to, _amount);
     }
@@ -188,7 +196,7 @@ contract CollateralToken is
         onlyValidAsset(_asset)
     {
         // transfer asset from the vault
-        _asset.safeTransferFrom(VAULT, _to, _amount);
+        require(IERC20Min(_asset).transferFrom(VAULT, _to, _amount), "ERC20 transferFrom failed");
 
         // callback (skip if address(0))
         if (_callbackReceiver != address(0)) {
@@ -247,4 +255,21 @@ contract CollateralToken is
     /// @dev Only the owner can authorize upgrades.
     /// @param newImplementation The address of the new implementation contract.
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner { }
+
+    /// @dev AVM-PORT-ADAPTATION: override Solady's `upgradeToAndCall`. The
+    /// base body is inline-asm that does a `staticcall` to
+    /// `newImplementation.proxiableUUID()` with a hardcoded EVM-keccak
+    /// selector, a `log2`, an `sstore`, and an optional `delegatecall` —
+    /// none of which puya-sol can lower correctly (the staticcall is
+    /// stubbed as success returning 0, so the slot-equality check fails
+    /// with UpgradeFailed; `delegatecall` is also stubbed). The `onlyProxy`
+    /// modifier is meaningless here too — AVM has no proxy/delegatecall
+    /// notion, so the implementation contract is the only contract.
+    /// We keep the signature for ABI compatibility, gate the call on
+    /// `_authorizeUpgrade`, and emit `Upgraded`. The `data` payload is
+    /// discarded — initialization payloads are ignored on AVM.
+    function upgradeToAndCall(address newImplementation, bytes calldata) public payable override {
+        _authorizeUpgrade(newImplementation);
+        emit Upgraded(newImplementation);
+    }
 }

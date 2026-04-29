@@ -172,6 +172,19 @@ def usdc_stateful(localnet, admin):
 
 
 @pytest.fixture(scope="function")
+def usdce_stateful(localnet, admin):
+    """Second stateful USDC mock instance to stand in for USDCe in
+    CollateralToken wrap/unwrap tests. The Python delegate USDCMock
+    speaks `transfer(address,uint256)bool` (selector 0x198c9820), which
+    matches the AVM-port IERC20Min in CollateralToken; the Solidity
+    `usdce` mock inherits Solady ERC20 and speaks
+    `transfer(address,uint512)bool` (selector 0x42820278), which would
+    not. Same delegate code, second instance — different app id, same
+    selectors."""
+    return _deploy_pyapp(localnet, admin, "USDCMock")
+
+
+@pytest.fixture(scope="function")
 def ctf_stateful(localnet, admin):
     """Stateful CTF mock (delegate/ctf_mock.py): real ERC1155 balances +
     approvals + (yes_id, no_id) partitions. Exposes mint/balanceOf/
@@ -246,35 +259,28 @@ def collateral_token(localnet, admin):
     the PUYA #1 bug.
 
     Sequence:
-      1. Deploy SafeTransferLib helper (CallContextChecker__Helper1).
-      2. Substitute helper app id into orch TEAL, create orch.
-      3. `create_app` funds the orch (covers __dyn_storage 8KB MBR).
-      4. Call `__postInit(USDC, USDCE, VAULT, owner)` — sets immutables,
+      1. Substitute helper app id into orch TEAL, create orch.
+      2. `create_app` funds the orch (covers __dyn_storage 8KB MBR).
+      3. Call `__postInit(USDC, USDCE, VAULT, owner)` — sets immutables,
          runs the original-ctor body (incl. `_disableInitializers`), then
          the original `initialize(owner)` body wrapped in its `initializer`
          modifier — all in one frame so ABI args flow through correctly.
+
+    AVM-PORT-ADAPTATION: when CollateralToken used Solady SafeTransferLib,
+    the splitter peeled `SafeTransferLib.safeTransfer{From}` into a
+    `CallContextChecker__Helper1` helper, so the artifact path was
+    `out/collateral/CollateralToken/{Helper1, CollateralToken}/`. After
+    swapping SafeTransferLib for IERC20Min (see CollateralToken.sol's
+    AVM-port note), there's no longer a name in the splitter's fallback
+    list that's present in the AWST — extraction is skipped and the
+    output goes flat. This fixture now reads from the flat layout.
     """
     base = OUT_DIR / "collateral" / "CollateralToken"
-    helper_dir = base / "CallContextChecker__Helper1"
-    orch_dir = base / "CollateralToken"
     algod = localnet.client.algod
 
-    h_spec = load_arc56(helper_dir / "CallContextChecker__Helper1.arc56.json")
-    h_teal = inject_memory_init(
-        (helper_dir / "CallContextChecker__Helper1.approval.teal").read_text())
-    h_app_id = create_app(
-        localnet, admin,
-        compile_teal(algod, h_teal),
-        compile_teal(
-            algod, (helper_dir / "CallContextChecker__Helper1.clear.teal").read_text()),
-        h_spec.state.schema.global_state,
-    )
-
-    orch_spec = load_arc56(orch_dir / "CollateralToken.arc56.json")
-    orch_teal = (orch_dir / "CollateralToken.approval.teal").read_text().replace(
-        "TMPL_CallContextChecker__Helper1_APP_ID", str(h_app_id))
-    orch_clear = (orch_dir / "CollateralToken.clear.teal").read_text().replace(
-        "TMPL_CallContextChecker__Helper1_APP_ID", str(h_app_id))
+    orch_spec = load_arc56(base / "CollateralToken.arc56.json")
+    orch_teal = (base / "CollateralToken.approval.teal").read_text()
+    orch_clear = (base / "CollateralToken.clear.teal").read_text()
     orch_approval_bin = compile_teal(algod, orch_teal)
     orch_clear_bin = compile_teal(algod, orch_clear)
 
@@ -297,7 +303,6 @@ def collateral_token(localnet, admin):
         args=[ZERO_ADDR, ZERO_ADDR, ZERO_ADDR, addr(admin)],
         extra_fee=au.AlgoAmount(micro_algo=20_000),
         box_references=[au.BoxReference(app_id=0, name=b"__dyn_storage")],
-        app_references=[h_app_id],
     ), send_params=AUTO_POPULATE)
 
     return client

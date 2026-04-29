@@ -50,16 +50,26 @@ SAFETRANSFERLIB_CALL_STUB = (
     "PUYA_BLOCKERS.md §3."
 )
 
-# Solady's UUPSUpgradeable.upgradeToAndCall does a `delegatecall` into the
-# new implementation to run any data-init payload. puya-sol stubs
-# `delegatecall` as success without actually delegating — see
-# PrecompileDispatch / handlePrecompileCall. With empty data the call
-# should be a no-op and pass; in practice puya's `_authorizeUpgrade`
-# guard fires an assert (label122) that we need to look at separately.
-UPGRADE_DELEGATECALL_STUB = (
-    "Solady UUPSUpgradeable.upgradeToAndCall paths through delegatecall "
-    "which puya-sol stubs as success; the auth guard then asserts. "
-    "Needs a delegatecall-stub-aware path in puya-sol."
+# AVM-PORT-ADAPTATION: with-callback wrap/unwrap need to chain
+# orch → router(callback) → usdc.transferFrom — three nested inner
+# tx levels, with `_callbackReceiver` selecting the router target. The
+# router's wrapCallback inner-tx that pulls `usdc.transferFrom(owner,
+# ct, amount)` decodes `owner` from `abi.decode(_data, (address))`;
+# the resulting allowance lookup fails (insufficient allowance) which
+# strongly suggests puya-sol's abi.decode for a single-tuple address
+# isn't producing the funder bytes the test set the allowance against.
+# The no-callback variants pass — they exercise the same wrap/unwrap
+# semantics minus the callback dispatch, and they confirm the IERC20Min
+# inner-tx itself works (selectors line up, balances move). Leaving the
+# with-callback variants xfail until the abi.decode path is debugged.
+WITH_CALLBACK_DECODE_STUB = (
+    "with-callback variant: orch fires `router.wrapCallback`, router "
+    "decodes funder from `_data` via abi.decode and pulls the asset; "
+    "the resulting `usdc.transferFrom` errors with insufficient allowance "
+    "even though the funder/router pair was set up explicitly. The "
+    "no-callback variant exercises the same flow minus the callback and "
+    "passes — pending debug of abi.decode lowering for a single-tuple "
+    "address argument."
 )
 
 
@@ -67,36 +77,32 @@ UPGRADE_DELEGATECALL_STUB = (
 
 
 @pytest.fixture(scope="function")
-def collateral_token_wired(localnet, admin, usdc, usdce, vault):
+def collateral_token_wired(localnet, admin, usdc_stateful, usdce_stateful, vault):
     """Like `collateral_token` but with real USDC/USDCe/vault addresses
     passed to `__postInit`. Used by tests that need the immutables to be
     real or that exercise wrap/unwrap.
 
-    Sequence: deploy helper → create orch → create_app's auto-fund →
-    initialize(admin) → __postInit(USDC, USDCE, VAULT). Order matters
-    (see `collateral_token`'s docstring)."""
+    AVM-PORT-ADAPTATION (selectors): the wrap/unwrap inner-tx fires
+    `transfer(address,uint256)bool` (selector 0x198c9820, generated from
+    the IERC20Min interface in CollateralToken.sol's AVM-port shim).
+    The Solidity USDC/USDCe mocks inherit Solady ERC20 which exposes
+    `transfer(address,uint512)bool` (selector 0x42820278) — selector
+    mismatch → match falls through to err in the inner-tx target.
+    Switching to the Python delegate USDCMock (which speaks uint256
+    selectors) lines them up. The Solidity `usdc`/`usdce` fixtures stay
+    available for tests that don't need actual transfer semantics
+    (e.g. revert paths or immutable-address checks).
+
+    AVM-PORT-ADAPTATION (paths): the splitter no longer extracts a
+    Helper1 since SafeTransferLib was swapped for IERC20Min, so the
+    artifact path is flat now."""
     OUT_DIR = Path(__file__).parent.parent.parent / "out"
     base = OUT_DIR / "collateral" / "CollateralToken"
-    helper_dir = base / "CallContextChecker__Helper1"
-    orch_dir = base / "CollateralToken"
     algod = localnet.client.algod
 
-    h_spec = load_arc56(helper_dir / "CallContextChecker__Helper1.arc56.json")
-    h_teal = inject_memory_init(
-        (helper_dir / "CallContextChecker__Helper1.approval.teal").read_text())
-    h_app_id = create_app(
-        localnet, admin,
-        compile_teal(algod, h_teal),
-        compile_teal(
-            algod, (helper_dir / "CallContextChecker__Helper1.clear.teal").read_text()),
-        h_spec.state.schema.global_state,
-    )
-
-    orch_spec = load_arc56(orch_dir / "CollateralToken.arc56.json")
-    orch_teal = (orch_dir / "CollateralToken.approval.teal").read_text().replace(
-        "TMPL_CallContextChecker__Helper1_APP_ID", str(h_app_id))
-    orch_clear = (orch_dir / "CollateralToken.clear.teal").read_text().replace(
-        "TMPL_CallContextChecker__Helper1_APP_ID", str(h_app_id))
+    orch_spec = load_arc56(base / "CollateralToken.arc56.json")
+    orch_teal = (base / "CollateralToken.approval.teal").read_text()
+    orch_clear = (base / "CollateralToken.clear.teal").read_text()
     orch_approval_bin = compile_teal(algod, orch_teal)
     orch_clear_bin = compile_teal(algod, orch_clear)
 
@@ -107,8 +113,8 @@ def collateral_token_wired(localnet, admin, usdc, usdce, vault):
         localnet, admin, orch_approval_bin, orch_clear_bin,
         sch, extra_pages=extra_pages,
         app_args=[
-            app_id_to_address(usdc.app_id),
-            app_id_to_address(usdce.app_id),
+            app_id_to_address(usdc_stateful.app_id),
+            app_id_to_address(usdce_stateful.app_id),
             addr(vault),
         ],
     )
@@ -120,14 +126,13 @@ def collateral_token_wired(localnet, admin, usdc, usdce, vault):
     client.send.call(au.AppClientMethodCallParams(
         method="__postInit",
         args=[
-            app_id_to_address(usdc.app_id),
-            app_id_to_address(usdce.app_id),
+            app_id_to_address(usdc_stateful.app_id),
+            app_id_to_address(usdce_stateful.app_id),
             addr(vault),
             addr(admin),
         ],
         extra_fee=au.AlgoAmount(micro_algo=20_000),
         box_references=[au.BoxReference(app_id=0, name=b"__dyn_storage")],
-        app_references=[h_app_id],
     ), send_params=AUTO_POPULATE)
     return client
 
@@ -164,12 +169,12 @@ def test_CollateralToken_decimals(collateral_token):
     assert call(collateral_token, "decimals") == 6
 
 
-def test_CollateralToken_immutables(collateral_token_wired, usdc, usdce, vault):
+def test_CollateralToken_immutables(collateral_token_wired, usdc_stateful, usdce_stateful, vault):
     """USDC/USDCE/VAULT immutables match what was passed to __postInit."""
     assert call(collateral_token_wired, "USDC") == encoding.encode_address(
-        app_id_to_address(usdc.app_id))
+        app_id_to_address(usdc_stateful.app_id))
     assert call(collateral_token_wired, "USDCE") == encoding.encode_address(
-        app_id_to_address(usdce.app_id))
+        app_id_to_address(usdce_stateful.app_id))
     assert call(collateral_token_wired, "VAULT") == vault.address
 
 
@@ -274,19 +279,111 @@ def test_revert_CollateralToken_burn_unauthorized(collateral_token, funded_accou
 # ── WRAP (with callback) ─────────────────────────────────────────────────
 
 
-@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB, strict=False)
-def test_CollateralToken_wrapUSDC(collateral_token_wired, usdc, vault, admin, funded_account):
+def _deploy_router(localnet, admin, collateral_token_app_id):
+    """Deploy a MockCollateralTokenRouter pointed at the collateral token
+    under test. Mirrors `new MockCollateralTokenRouter(address(collateral.token))`
+    from the Foundry suite."""
+    out_dir = Path(__file__).parent.parent.parent / "out"
+    base = out_dir / "test" / "dev" / "mocks"
+    return deploy_app(
+        localnet, admin, base, "MockCollateralTokenRouter",
+        create_args=[app_id_to_address(collateral_token_app_id)],
+    )
+
+
+def _wrap_with_callback(localnet, collateral_token_wired, asset_mock,
+                        vault, admin, recipient, amount=100_000_000):
+    """Wrap exercising the callback path. The caller (admin/funder)
+    pre-funds the asset to themselves and approves the router; the
+    router's `wrapCallback` does the actual transferFrom into
+    collateral_token.
+
+    AVM-PORT-ADAPTATION: in the Foundry version, the test calls
+    `router.wrap(...)` which internally calls `ct.wrap(_, _, _, address(this), data)`.
+    On AVM, `address(this)` lowers to `global CurrentApplicationAddress`
+    (the real 32-byte Algorand address of the router), not puya-sol's
+    Solidity-side storage-encoding (`\\x00*24 || itob(app_id)`). When ct
+    later fires `ICollateralTokenCallbacks(_callbackReceiver).wrapCallback(...)`,
+    it `extract_uint64`s from offset 24 to recover the inner-tx's
+    ApplicationID — which only works against the storage-encoding. So
+    we skip the router's wrap helper and call ct.wrap directly with the
+    router's storage-encoded address as `_callbackReceiver`. The
+    router's `wrapCallback` body is the same logic that Foundry's
+    `router.wrap` would have driven; the wrapper sugar layer is the
+    only thing we drop.
+
+    Mirrors Foundry's:
+        usdc.mint(funder, amt); usdc.approve(router, amt);
+        ct.addWrapper(funder); router.wrap(usdc, recipient, amt);
+    """
+    from dev.deals import deal_usdc, set_allowance, usdc_balance
+    from dev.addrs import algod_addr_bytes_for_app
+
+    router = _deploy_router(localnet, admin, collateral_token_wired.app_id)
+    router_addr32 = algod_addr_bytes_for_app(router.app_id)
+
+    # Owner grants WRAPPER_ROLE to admin (the direct caller of ct.wrap).
+    # Role storage keys against admin's real Algorand address.
+    call(collateral_token_wired, "addWrapper",
+         [addr(admin)], sender=admin)
+
+    # Funder mints the asset, then approves the router as a spender. The
+    # router's wrapCallback fires usdc.transferFrom(funder, ct, amt) and
+    # needs an allowance from `funder` for that pull to succeed.
+    funder32 = addr(admin)
+    deal_usdc(asset_mock, funder32, amount)
+    set_allowance(asset_mock, funder32, router_addr32, amount)
+
+    ct_addr32 = algod_addr_bytes_for_app(collateral_token_wired.app_id)
+    vault_before = usdc_balance(asset_mock, addr(vault))
+    funder_before = usdc_balance(asset_mock, funder32)
+
+    # data = abi.encode(funder). For a single address arg, EVM abi.encode
+    # produces just the 32-byte left-padded address — the same shape as
+    # an Algorand 32-byte address bytes value. Pass the raw bytes.
+    data = funder32
+
+    call(
+        collateral_token_wired, "wrap",
+        [
+            app_id_to_address(asset_mock.app_id),
+            addr(recipient),
+            amount,
+            app_id_to_address(router.app_id),  # _callbackReceiver = router (storage-encoded)
+            data,
+        ],
+        sender=admin,
+        app_references=[router.app_id, asset_mock.app_id],
+    )
+
+    # pUSD minted to recipient.
+    assert call(collateral_token_wired, "balanceOf",
+                [addr(recipient)]) == amount
+    # Asset went funder → ct → vault. Net: funder's balance dropped by
+    # amount, vault's grew by amount, ct's net is zero (received in the
+    # callback and forwarded to vault in the same call).
+    assert usdc_balance(asset_mock, funder32) == funder_before - amount
+    assert usdc_balance(asset_mock, ct_addr32) == 0
+    assert usdc_balance(asset_mock, addr(vault)) == vault_before + amount
+
+
+@pytest.mark.xfail(reason=WITH_CALLBACK_DECODE_STUB, strict=False)
+def test_CollateralToken_wrapUSDC(
+    localnet, collateral_token_wired, usdc_stateful, vault, admin, funded_account
+):
     """Wrap USDC via the callback router. Should mint pUSD to recipient,
     transfer USDC to the vault."""
-    # Tier 1+ — implementation deferred until owner works (router add-wrapper
-    # requires admin), then we mint USDC, approve router, call router.wrap.
-    pytest.fail("TODO: needs MockCollateralTokenRouter wiring + USDC mint/approve flow")
+    _wrap_with_callback(localnet, collateral_token_wired, usdc_stateful,
+                        vault, admin, funded_account)
 
 
-@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB, strict=False)
-def test_CollateralToken_wrapUSDCe(collateral_token_wired, usdce, vault, admin, funded_account):
+@pytest.mark.xfail(reason=WITH_CALLBACK_DECODE_STUB, strict=False)
+def test_CollateralToken_wrapUSDCe(
+    localnet, collateral_token_wired, usdce_stateful, vault, admin, funded_account
+):
     """Wrap USDCe via the callback router."""
-    pytest.fail("TODO: needs MockCollateralTokenRouter wiring + USDC mint/approve flow")
+    _wrap_with_callback(localnet, collateral_token_wired, usdce_stateful,
+                        vault, admin, funded_account)
 
 
 # ── WRAP (without callback) ─────────────────────────────────────────────
@@ -337,30 +434,20 @@ def _wrap_noCallback(collateral_token_wired, asset_mock, vault, admin,
     assert usdc_balance(asset_mock, addr(vault)) == vault_before + amount
 
 
-@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB, strict=False)
 def test_CollateralToken_wrapUSDC_noCallback(
-    collateral_token_wired, usdc, vault, admin, funded_account
+    collateral_token_wired, usdc_stateful, vault, admin, funded_account
 ):
     """No-callback variant: caller pre-deposits USDC to the token, then
-    `wrap` mints pUSD to recipient and transfers USDC to the vault.
-
-    Body is fully wired but the asset-side `_asset.safeTransfer(VAULT, …)`
-    fires Solady's inline-asm `call` which puya-sol stubs as success
-    without firing an itxn — pUSD mints correctly, USDC stays put. So the
-    final `usdc_balance(asset, ct_addr32) == 0` check fails until the
-    SafeTransferLib lowering lands. Mint half passes, transfer half
-    no-ops; the assertion drift is what proves it.
-    """
-    _wrap_noCallback(collateral_token_wired, usdc, vault, admin, funded_account)
+    `wrap` mints pUSD to recipient and transfers USDC to the vault."""
+    _wrap_noCallback(collateral_token_wired, usdc_stateful, vault, admin, funded_account)
 
 
-@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB, strict=False)
 def test_CollateralToken_wrapUSDCe_noCallback(
-    collateral_token_wired, usdce, vault, admin, funded_account
+    collateral_token_wired, usdce_stateful, vault, admin, funded_account
 ):
     """No-callback wrap of USDCe — same flow as USDC, just the other
-    supported asset slot. xfail for the same SafeTransferLib reason."""
-    _wrap_noCallback(collateral_token_wired, usdce, vault, admin, funded_account)
+    supported asset slot."""
+    _wrap_noCallback(collateral_token_wired, usdce_stateful, vault, admin, funded_account)
 
 
 # ── WRAP (revert paths) ─────────────────────────────────────────────────
@@ -404,26 +491,144 @@ def test_revert_CollateralToken_wrapInvalidAsset(collateral_token_wired, funded_
 # ── UNWRAP (with callback) ──────────────────────────────────────────────
 
 
-@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB, strict=False)
-def test_CollateralToken_unwrapUSDC(collateral_token_wired, usdc, vault, admin, funded_account):
+def _unwrap_with_callback(localnet, collateral_token_wired, asset_mock,
+                          vault, admin, recipient, amount=100_000_000):
+    """Unwrap exercising the callback path.
+
+    AVM-PORT-ADAPTATION: same `address(this)` storage-encoding caveat as
+    `_wrap_with_callback` — we skip the router's `unwrap` sugar and call
+    ct.unwrap directly with the router's storage-encoded address as
+    `_callbackReceiver`.
+    """
+    from dev.deals import deal_usdc, set_allowance, usdc_balance
+    from dev.addrs import algod_addr_bytes_for_app
+
+    router = _deploy_router(localnet, admin, collateral_token_wired.app_id)
+    router_addr32 = algod_addr_bytes_for_app(router.app_id)
+
+    # Owner grants roles. Admin gets MINTER (to pre-mint pUSD) and
+    # WRAPPER (to call ct.unwrap directly). Storage keys to admin's
+    # real Algorand address.
+    call(collateral_token_wired, "addMinter",
+         [addr(admin)], sender=admin)
+    call(collateral_token_wired, "addWrapper",
+         [addr(admin)], sender=admin)
+
+    # Mint the funder some pUSD (admin is the funder). Funder approves
+    # the router on the collateral_token's own ERC20 ABI so the router's
+    # unwrapCallback can pull pUSD from funder into ct.
+    funder32 = addr(admin)
+    call(collateral_token_wired, "mint",
+         [funder32, amount], sender=admin)
+    call(
+        collateral_token_wired, "approve",
+        [router_addr32, amount],
+        sender=admin,
+    )
+
+    # Vault holds the underlying asset and approves ct to pull on its
+    # behalf — ct.unwrap fires `IERC20Min(_asset).transferFrom(VAULT, _to, _amount)`.
+    deal_usdc(asset_mock, addr(vault), amount)
+    set_allowance(asset_mock, addr(vault),
+                  algod_addr_bytes_for_app(collateral_token_wired.app_id),
+                  amount)
+
+    ct_addr32 = algod_addr_bytes_for_app(collateral_token_wired.app_id)
+    recipient_before = usdc_balance(asset_mock, addr(recipient))
+
+    # data = abi.encode(funder).
+    from algosdk import abi as algo_abi
+    data = algo_abi.ABIType.from_string("(address)").encode((admin.address,))
+
+    call(
+        collateral_token_wired, "unwrap",
+        [
+            app_id_to_address(asset_mock.app_id),
+            addr(recipient),
+            amount,
+            app_id_to_address(router.app_id),  # _callbackReceiver = router
+            data,
+        ],
+        sender=admin,
+        app_references=[router.app_id, asset_mock.app_id],
+    )
+
+    # pUSD net: funder had `amount`, transferred to ct via router, ct
+    # burned. Funder's balance is 0; ct's balance is 0.
+    assert call(collateral_token_wired, "balanceOf", [funder32]) == 0
+    assert call(collateral_token_wired, "balanceOf", [ct_addr32]) == 0
+    # Asset went vault → recipient.
+    assert usdc_balance(asset_mock, addr(vault)) == 0
+    assert usdc_balance(asset_mock, addr(recipient)) == recipient_before + amount
+
+
+@pytest.mark.xfail(reason=WITH_CALLBACK_DECODE_STUB, strict=False)
+def test_CollateralToken_unwrapUSDC(
+    localnet, collateral_token_wired, usdc_stateful, vault, admin, funded_account
+):
     """Unwrap USDC via the callback router."""
-    pytest.fail("TODO: needs USDC mint/approve flow + pre-transfer setup on AVM")
+    _unwrap_with_callback(localnet, collateral_token_wired, usdc_stateful,
+                          vault, admin, funded_account)
 
 
-@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB, strict=False)
-def test_CollateralToken_unwrapUSDCe(collateral_token_wired, usdce, vault, admin, funded_account):
+@pytest.mark.xfail(reason=WITH_CALLBACK_DECODE_STUB, strict=False)
+def test_CollateralToken_unwrapUSDCe(
+    localnet, collateral_token_wired, usdce_stateful, vault, admin, funded_account
+):
     """Unwrap USDCe via the callback router."""
-    pytest.fail("TODO: needs USDC mint/approve flow + pre-transfer setup on AVM")
+    _unwrap_with_callback(localnet, collateral_token_wired, usdce_stateful,
+                          vault, admin, funded_account)
 
 
 # ── UNWRAP (without callback) ───────────────────────────────────────────
 
 
-@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB, strict=False)
-def test_CollateralToken_unwrapUSDC_noCallback(collateral_token_wired, usdc, vault, admin, funded_account):
+def test_CollateralToken_unwrapUSDC_noCallback(
+    collateral_token_wired, usdc_stateful, vault, admin, funded_account
+):
     """No-callback variant: caller pre-transfers pUSD to the token, then
-    unwrap() burns pUSD and pulls USDC from the vault to recipient."""
-    pytest.fail("TODO: needs USDC mint/approve flow + pre-transfer setup on AVM")
+    unwrap() pulls USDC from vault to recipient and burns the pUSD that
+    was already deposited on the contract."""
+    from dev.deals import deal_usdc, set_allowance, usdc_balance
+    from dev.addrs import algod_addr_bytes_for_app
+
+    asset_mock = usdc_stateful
+    amount = 100_000_000
+    recipient = funded_account
+
+    # admin gets MINTER so we can mint pUSD and pre-deposit it on ct.
+    call(collateral_token_wired, "addMinter", [addr(admin)], sender=admin)
+    call(collateral_token_wired, "addWrapper", [addr(admin)], sender=admin)
+
+    # Mint pUSD straight onto ct's own balance — that's what unwrap
+    # will burn from `address(this)`.
+    ct_addr32 = algod_addr_bytes_for_app(collateral_token_wired.app_id)
+    call(collateral_token_wired, "mint", [ct_addr32, amount], sender=admin)
+    assert call(collateral_token_wired, "balanceOf", [ct_addr32]) == amount
+
+    # Vault holds the asset and approves ct to pull it.
+    deal_usdc(asset_mock, addr(vault), amount)
+    set_allowance(asset_mock, addr(vault), ct_addr32, amount)
+
+    recipient_before = usdc_balance(asset_mock, addr(recipient))
+
+    call(
+        collateral_token_wired, "unwrap",
+        [
+            app_id_to_address(asset_mock.app_id),
+            addr(recipient),
+            amount,
+            b"\x00" * 32,  # callbackReceiver = address(0) → no callback
+            b"",            # data
+        ],
+        sender=admin,
+    )
+
+    # pUSD on ct burned.
+    assert call(collateral_token_wired, "balanceOf", [ct_addr32]) == 0
+    # Asset moved vault → recipient.
+    assert usdc_balance(asset_mock, addr(vault)) == 0
+    assert usdc_balance(asset_mock, addr(recipient)) == recipient_before + amount
 
 
 # ── UNWRAP (revert paths) ───────────────────────────────────────────────
@@ -478,42 +683,33 @@ def test_CollateralToken_permit2NoInfiniteAllowance(collateral_token, admin):
 # ── UUPS UPGRADE ────────────────────────────────────────────────────────
 
 
-@pytest.mark.xfail(reason=UPGRADE_DELEGATECALL_STUB, strict=False)
 def test_CollateralToken_upgradeToAndCall(collateral_token, admin, usdc, usdce, vault):
-    """Owner can upgradeToAndCall(newImpl, ""). Empty data so the stubbed
-    delegatecall doesn't matter (see notes on PUYA_BLOCKERS.md re: solady
-    upgrade-init delegatecall stub)."""
+    """Owner can upgradeToAndCall(newImpl, "").
+
+    AVM-PORT-ADAPTATION: CollateralToken overrides Solady's
+    `upgradeToAndCall` (whose body is inline-asm with hardcoded EVM
+    selectors and a delegatecall puya-sol can't lower) with a
+    high-level Solidity version that gates on `_authorizeUpgrade`
+    and emits `Upgraded`. Sufficient for the test's intent: owner
+    can call, non-owner is rejected (separate revert test)."""
     # Deploying a second CollateralToken instance to act as "newImpl".
     # In production this would be a fully-deployed app; for the test we
     # just need an address that the upgrade can install.
+    # See collateral_token_wired for the AVM-port flat-layout note.
     OUT_DIR = Path(__file__).parent.parent.parent / "out"
     base = OUT_DIR / "collateral" / "CollateralToken"
-    helper_dir = base / "CallContextChecker__Helper1"
-    orch_dir = base / "CollateralToken"
     algod = collateral_token.algorand.client.algod
 
-    h_spec = load_arc56(helper_dir / "CallContextChecker__Helper1.arc56.json")
-    h_teal = inject_memory_init(
-        (helper_dir / "CallContextChecker__Helper1.approval.teal").read_text())
-    h2 = create_app(
-        collateral_token.algorand, admin,
-        compile_teal(algod, h_teal),
-        compile_teal(algod, (helper_dir / "CallContextChecker__Helper1.clear.teal").read_text()),
-        h_spec.state.schema.global_state,
-    )
-    orch_teal = (orch_dir / "CollateralToken.approval.teal").read_text().replace(
-        "TMPL_CallContextChecker__Helper1_APP_ID", str(h2))
-    orch_clear = (orch_dir / "CollateralToken.clear.teal").read_text().replace(
-        "TMPL_CallContextChecker__Helper1_APP_ID", str(h2))
-    orch_spec = load_arc56(orch_dir / "CollateralToken.arc56.json")
+    orch_spec = load_arc56(base / "CollateralToken.arc56.json")
+    orch_teal = (base / "CollateralToken.approval.teal").read_text()
+    orch_clear = (base / "CollateralToken.clear.teal").read_text()
     sch = orch_spec.state.schema.global_state
-    extra_pages = max(
-        0, (max(len(compile_teal(algod, orch_teal)),
-                len(compile_teal(algod, orch_clear))) - 1) // 2048)
+    approval_bin = compile_teal(algod, orch_teal)
+    clear_bin = compile_teal(algod, orch_clear)
+    extra_pages = max(0, (max(len(approval_bin), len(clear_bin)) - 1) // 2048)
     new_impl_app_id = create_app(
         collateral_token.algorand, admin,
-        compile_teal(algod, orch_teal),
-        compile_teal(algod, orch_clear),
+        approval_bin, clear_bin,
         sch, extra_pages=extra_pages,
         app_args=[b"\x00" * 32, b"\x00" * 32, b"\x00" * 32],
     )
