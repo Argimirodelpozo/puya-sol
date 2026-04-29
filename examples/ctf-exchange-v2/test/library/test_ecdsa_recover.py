@@ -1,79 +1,83 @@
-"""Probe: can we sign with eth_account and have helper1's ECDSA.recover
-recover the matching eth address on AVM?
+"""Verify the puya-sol ECDSA-recover lowering works on real orders.
 
-If this works, the EOA signing path is unlocked for all signature tests
-that don't depend on the orchestrator's hashOrder (since we can compute
-the hash off-chain in Python).
+solc inlines `ECDSA.recover` and `SignatureCheckerLib.isValidSignatureNow`
+into their internal callers, so neither survives as a standalone subroutine
+that we could call directly via ABI. We exercise the same code path via
+the orch's `validateOrderSignature(orderHash, order)` ABI method —
+internally it goes through `_verifyECDSASignature` which then uses
+solady's ECDSA.recover, all of which puya-sol lowers to AVM's
+`ecdsa_pk_recover Secp256k1` opcode (see PrecompileDispatch.cpp::handleEcRecover).
+
+A correctly-signed order should pass; flipping a byte of the signature
+should revert with the InvalidSignature-class error. Both halves
+prove the recover→address-equality→assert path is wired end-to-end.
 """
 import algokit_utils as au
 import pytest
+from algokit_utils.errors.logic_error import LogicError
 
 from conftest import AUTO_POPULATE
+from dev.orders import make_order, sign_order, hash_order_via_contract, Side
+from dev.signing import bob
 
 
-@pytest.mark.xfail(reason="puya-sol can't translate solady ECDSA's "
-                          "staticcall(gas, 1, ...) ecrecover precompile call "
-                          "to AVM's ecdsa_pk_recover opcode")
-def test_ecdsa_recover_matches_eth_account(helper1):
-    """ECDSA.recover(hash, sig) should return the eth address that signed.
+def _send_with_pads(orch, *, target_method, target_args, n_pads=4,
+                    extra_fee=80_000):
+    """Wrap a single orch ABI call in a small group with `n_pads`
+    `isAdmin` no-op pads on the orch so the inner-call opcode pool covers
+    the ECDSA recover (~1700 ops)."""
+    composer = orch.algorand.new_group()
+    for i in range(n_pads):
+        composer.add_app_call_method_call(orch.params.call(
+            au.AppClientMethodCallParams(
+                method="isAdmin", args=[b"\x00" * 32],
+                note=f"opup-{i}".encode(),
+            )))
+    composer.add_app_call_method_call(orch.params.call(
+        au.AppClientMethodCallParams(
+            method=target_method, args=target_args,
+            extra_fee=au.AlgoAmount(micro_algo=extra_fee),
+        )))
+    return composer.send(au.SendParams(populate_app_call_resources=True))
 
-    eth_account signs via secp256k1, AVM has ecdsa_pk_recover for the same
-    curve, so the recovered pubkey → keccak256 → last-20-bytes should equal
-    the signer's eth address.
-    """
-    try:
-        from eth_account import Account
-        from eth_keys import keys
-    except ImportError:
-        pytest.skip("eth_account / eth_keys not installed")
 
-    acct = Account.create()
-    eth_addr = bytes.fromhex(acct.address[2:].lower())  # 20 bytes
-    assert len(eth_addr) == 20
+def test_validateOrderSignature_passes_on_valid_signature(split_exchange_settled):
+    """A correctly-signed order's signature validates without revert.
+    Exercises the full ECDSA recover path: hash → sig.r/s/v → recover →
+    keccak256(pubkey) → low-20-byte address → equality with order.signer."""
+    h1, _, orch, _, _ = split_exchange_settled
+    bob_signer = bob()
+    order = make_order(
+        maker=bob_signer.eth_address_padded32, token_id=42,
+        maker_amount=1_000, taker_amount=2_000, side=Side.BUY,
+    )
+    signed = sign_order(orch, order, bob_signer)
+    order_hash = hash_order_via_contract(orch, signed)
 
-    # Arbitrary 32-byte hash to sign.
-    msg_hash = b"\x42" * 32
+    _send_with_pads(orch,
+        target_method="validateOrderSignature",
+        target_args=[list(order_hash), signed.to_abi_list()])
 
-    # eth_account signs the prefixed hash by default. ECDSA.recover in
-    # Solidity expects a raw signature over the (already-hashed) message.
-    # Use Account.signHash / unsafe_sign_hash for raw signature.
-    signed = Account._sign_hash(msg_hash, acct.key)
-    # signed.r, signed.s, signed.v
-    r = signed.r.to_bytes(32, "big")
-    s = signed.s.to_bytes(32, "big")
-    v = signed.v.to_bytes(1, "big")
-    sig_65 = r + s + v
-    assert len(sig_65) == 65
 
-    # Call helper1 ECDSA.recover(byte[32] hash, byte[] signature) -> address.
-    # algokit decodes byte[32] from list[int] and byte[] from bytes.
-    res = helper1.send.call(au.AppClientMethodCallParams(
-        method="ECDSA.recover",
-        args=[list(msg_hash), list(sig_65)],
-        extra_fee=au.AlgoAmount(micro_algo=20_000),
-    ), send_params=AUTO_POPULATE)
-    recovered = res.abi_return  # Solidity-side address; expect 32-byte form.
+def test_validateOrderSignature_reverts_on_tampered_signature(split_exchange_settled):
+    """Flipping one byte of the signature breaks the recover→address-eq
+    check; the inner-call should revert with InvalidSignature (or
+    similarly-classified error from the signature dispatcher)."""
+    h1, _, orch, _, _ = split_exchange_settled
+    bob_signer = bob()
+    order = make_order(
+        maker=bob_signer.eth_address_padded32, token_id=42,
+        maker_amount=1_000, taker_amount=2_000, side=Side.BUY,
+    )
+    signed = sign_order(orch, order, bob_signer)
+    order_hash = hash_order_via_contract(orch, signed)
 
-    # Algokit decodes `address` to a 58-char base32 algo address. Convert
-    # to raw 32 bytes to compare against eth_addr (in lower 20).
-    from algosdk import encoding as algosdk_encoding
-    recovered_bytes = algosdk_encoding.decode_address(recovered)
-    assert len(recovered_bytes) == 32
+    # Flip a byte in the middle of the 65-byte signature.
+    sig = bytearray(signed.signature)
+    sig[20] ^= 0xff
+    signed.signature = bytes(sig)
 
-    # Solidity's address is 20 bytes; puya-sol emits it as 32 bytes
-    # zero-padded on the LEFT (high bytes zero, low 20 bytes = eth addr).
-    # Or zero-padded on the RIGHT? Let's print and assert based on observed
-    # layout.
-    print(f"eth addr     = {eth_addr.hex()}")
-    print(f"recovered    = {recovered_bytes.hex()}")
-
-    # Try both layouts
-    if recovered_bytes[:20] == eth_addr:
-        print("layout: eth_addr in low 20 bytes")
-    elif recovered_bytes[12:] == eth_addr:
-        print("layout: eth_addr in high 20 bytes (left-padded)")
-    elif recovered_bytes[-20:] == eth_addr:
-        print("layout: eth_addr in last 20 bytes")
-    else:
-        pytest.fail(f"recovered {recovered_bytes.hex()} doesn't match "
-                    f"eth_addr {eth_addr.hex()} in any expected layout")
+    with pytest.raises(LogicError):
+        _send_with_pads(orch,
+            target_method="validateOrderSignature",
+            target_args=[list(order_hash), signed.to_abi_list()])
