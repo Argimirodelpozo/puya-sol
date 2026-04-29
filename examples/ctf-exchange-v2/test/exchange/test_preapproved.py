@@ -265,16 +265,139 @@ def test_match_orders_empty_signature_invalidated_preapproval_reverts(
 #    test_match_orders_complementary; see that file for details) ──────────
 
 
-@pytest.mark.xfail(reason=SETTLEMENT_INFRA, strict=False)
+def _setup_complementary_market(orch, h1, ctf, usdc):
+    """Common matchOrders complementary setup with canonical YES/NO IDs.
+    Returns (yes_id, no_id, bob_addr, carla_addr, h1_addr)."""
+    from dev.addrs import algod_addr_bytes_for_app
+    raw = orch.send.call(au.AppClientMethodCallParams(
+        method="getCtfCollateral", args=[],
+        extra_fee=au.AlgoAmount(micro_algo=200_000),
+    ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return
+    if isinstance(raw, str):
+        from algosdk.encoding import decode_address
+        ctf_collateral = decode_address(raw)
+    else:
+        ctf_collateral = bytes(raw)
+
+    def _pid(idx_set):
+        cid = h1.send.call(au.AppClientMethodCallParams(
+            method="CTHelpers.getCollectionId",
+            args=[list(b"\x00" * 32), list(CONDITION_ID), idx_set],
+            extra_fee=au.AlgoAmount(micro_algo=500_000),
+        ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return
+        cid_b = bytes(cid) if isinstance(cid, (list, tuple)) else bytes(cid)
+        pid = h1.send.call(au.AppClientMethodCallParams(
+            method="CTHelpers.getPositionId",
+            args=[bytes(ctf_collateral), list(cid_b)],
+            extra_fee=au.AlgoAmount(micro_algo=500_000),
+        ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return
+        return int(pid)
+
+    yes_id, no_id = _pid(1), _pid(2)
+    prepare_condition(ctf, CONDITION_ID, yes_id, no_id)
+    h1_addr = algod_addr_bytes_for_app(h1.app_id)
+    bob_addr = bob().eth_address_padded32
+    carla_addr = carla().eth_address_padded32
+    deal_usdc_and_approve(usdc, bob_addr, h1_addr, 50_000_000)
+    deal_outcome_and_approve(ctf, carla_addr, h1_addr, yes_id, 100_000_000)
+    return yes_id, no_id, bob_addr, carla_addr, h1_addr
+
+
+def _make_complementary_pair(orch, yes_id, bob_addr, carla_addr):
+    """bob BUY 100 YES @ 50c vs carla SELL 100 YES @ 50c."""
+    taker = make_order(maker=bob_addr, token_id=yes_id,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
+    maker = make_order(maker=carla_addr, token_id=yes_id,
+        maker_amount=100_000_000, taker_amount=50_000_000, side=Side.SELL)
+    return (sign_order(orch, taker, bob()),
+            sign_order(orch, maker, carla()))
+
+
+def _complementary_inner_box_refs(usdc, ctf, h1_addr, yes_id, bob_addr, carla_addr):
+    from hashlib import sha256
+    yes_bytes = yes_id.to_bytes(32, "big")
+    return [
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(carla_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(bob_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"ap_" + sha256(bytes(carla_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id,
+                        name=b"a_" + sha256(bytes(bob_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(bob_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(carla_addr)),
+    ]
+
+
 def test_match_orders_preapproved_maker_complementary(split_settled_with_delegate):
-    """test_matchOrders_preapprovedMaker_complementary"""
-    pytest.fail("happy-path settlement — see test_match_orders_complementary")
+    """test_matchOrders_preapprovedMaker_complementary: same complementary
+    settlement as `test_match_orders_complementary`, but the maker order
+    is preapproved on-chain via `preapproveOrder` and its signature is
+    cleared — only the on-chain preapproval authorizes the match."""
+    from dev.deals import usdc_balance, ctf_balance
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    yes_id, _no_id, bob_addr, carla_addr, h1_addr = _setup_complementary_market(
+        orch, h1, ctf, usdc)
+    taker_signed, maker_signed = _make_complementary_pair(
+        orch, yes_id, bob_addr, carla_addr)
+    # Preapprove the maker, then clear its signature so only preapproval
+    # authorizes its half of the match.
+    _call_with_pads(orch, orch, "preapproveOrder",
+                    [maker_signed.to_abi_list()], extra_fee=80_000)
+    maker_signed.signature = b""
+
+    dance_match_orders(
+        chunk, orch,
+        condition_id=CONDITION_ID,
+        taker_order_list=taker_signed.to_abi_list(),
+        maker_orders_list=[maker_signed.to_abi_list()],
+        taker_fill_amount=50_000_000,
+        maker_fill_amounts=[100_000_000],
+        taker_fee_amount=0,
+        maker_fee_amounts=[0],
+        extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+        extra_box_refs=_complementary_inner_box_refs(
+            usdc, ctf, h1_addr, yes_id, bob_addr, carla_addr),
+    )
+
+    assert usdc_balance(usdc, bob_addr) == 0
+    assert ctf_balance(ctf, bob_addr, yes_id) == 100_000_000
+    assert ctf_balance(ctf, carla_addr, yes_id) == 0
+    assert usdc_balance(usdc, carla_addr) == 50_000_000
 
 
-@pytest.mark.xfail(reason=SETTLEMENT_INFRA, strict=False)
 def test_match_orders_preapproved_taker_complementary(split_settled_with_delegate):
-    """test_matchOrders_preapprovedTaker_complementary"""
-    pytest.fail("happy-path settlement")
+    """test_matchOrders_preapprovedTaker_complementary: same complementary
+    settlement, but the *taker* order is preapproved (signature cleared)."""
+    from dev.deals import usdc_balance, ctf_balance
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    yes_id, _no_id, bob_addr, carla_addr, h1_addr = _setup_complementary_market(
+        orch, h1, ctf, usdc)
+    taker_signed, maker_signed = _make_complementary_pair(
+        orch, yes_id, bob_addr, carla_addr)
+    _call_with_pads(orch, orch, "preapproveOrder",
+                    [taker_signed.to_abi_list()], extra_fee=80_000)
+    taker_signed.signature = b""
+
+    dance_match_orders(
+        chunk, orch,
+        condition_id=CONDITION_ID,
+        taker_order_list=taker_signed.to_abi_list(),
+        maker_orders_list=[maker_signed.to_abi_list()],
+        taker_fill_amount=50_000_000,
+        maker_fill_amounts=[100_000_000],
+        taker_fee_amount=0,
+        maker_fee_amounts=[0],
+        extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+        extra_box_refs=_complementary_inner_box_refs(
+            usdc, ctf, h1_addr, yes_id, bob_addr, carla_addr),
+    )
+
+    assert usdc_balance(usdc, bob_addr) == 0
+    assert ctf_balance(ctf, bob_addr, yes_id) == 100_000_000
+    assert ctf_balance(ctf, carla_addr, yes_id) == 0
+    assert usdc_balance(usdc, carla_addr) == 50_000_000
 
 
 @pytest.mark.xfail(reason=SETTLEMENT_INFRA, strict=False)
