@@ -116,8 +116,17 @@ def _setup(orch, usdc, ctf, chunk, *, deal_table):
 
 
 SETTLEMENT_INFRA = (
-    "happy-path settlement through dance_call_7. Some tests still xfail "
-    "while we iterate on the pattern."
+    "matchOrders happy-path settlement through `dance_call_7`. The dance "
+    "(test → chunk → orch[+chunk-bytes via UpdateApplication] → matchOrders "
+    "→ helper1.transferFromERC1155 → CTFMock.safeTransferFrom) reaches "
+    "CTFMock's `bal >= amt` assert at depth 4 and reads the carla balance "
+    "box as 32 zero bytes — even though direct algod query of that exact "
+    "box returns 100M and the depth-2 helper1.transferFromERC1155 path "
+    "works correctly. Same failure on simulate AND real algod (TransactionPool.Remember). "
+    "Diagnostics ruled out: wrong key, wrong inner-call args, simulate snapshots, "
+    "populate iteration, app escrow funding, AVM `select` semantics, opcode-budget "
+    "exhaustion, OpUp txn count. The actual mechanism that makes the box read return "
+    "zero at depth 4 (post-UpdateApplication) is still undetermined."
 )
 
 
