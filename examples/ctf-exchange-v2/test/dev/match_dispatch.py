@@ -106,6 +106,59 @@ def encode_match_orders_args(
     return a1, a2, a3, a4, a5, a6, a7
 
 
+def complementary_inner_box_refs(
+    *,
+    usdc, ctf, h1_addr, yes_id, maker_addrs, taker_addr,
+    fee_receiver=None, exchange_addr=None,
+):
+    """Build the inner-tx box references the matchOrders dance needs for
+    a complementary (BUY/SELL) settlement: each maker's CTF balance
+    box, the taker's CTF balance box, each maker's CTF approval to
+    helper1, the taker's USDC allowance to helper1, and each party's
+    USDC balance box.
+
+    `maker_addrs` is a list of 32-byte addresses (one per maker order).
+    `fee_receiver` is the orch's fee receiver address; if provided, its
+    USDC balance box is included.
+    `exchange_addr` is the orch's algod address; if provided, the orch's
+    USDC + CTF balance boxes are included (for taker-SELL paths that
+    route through the exchange-as-intermediate)."""
+    import algokit_utils as au
+    from hashlib import sha256
+
+    yes_bytes = yes_id.to_bytes(32, "big")
+    refs = []
+    for maker_addr in maker_addrs:
+        refs.append(au.BoxReference(
+            app_id=ctf.app_id,
+            name=b"b_" + sha256(bytes(maker_addr) + yes_bytes).digest()))
+    refs.append(au.BoxReference(
+        app_id=ctf.app_id,
+        name=b"b_" + sha256(bytes(taker_addr) + yes_bytes).digest()))
+    for maker_addr in maker_addrs:
+        refs.append(au.BoxReference(
+            app_id=ctf.app_id,
+            name=b"ap_" + sha256(bytes(maker_addr) + h1_addr).digest()))
+    refs.append(au.BoxReference(
+        app_id=usdc.app_id,
+        name=b"a_" + sha256(bytes(taker_addr) + h1_addr).digest()))
+    refs.append(au.BoxReference(app_id=usdc.app_id,
+                                name=b"b_" + bytes(taker_addr)))
+    for maker_addr in maker_addrs:
+        refs.append(au.BoxReference(app_id=usdc.app_id,
+                                    name=b"b_" + bytes(maker_addr)))
+    if fee_receiver is not None:
+        refs.append(au.BoxReference(app_id=usdc.app_id,
+                                    name=b"b_" + bytes(fee_receiver)))
+    if exchange_addr is not None:
+        refs.append(au.BoxReference(app_id=usdc.app_id,
+                                    name=b"b_" + bytes(exchange_addr)))
+        refs.append(au.BoxReference(
+            app_id=ctf.app_id,
+            name=b"b_" + sha256(bytes(exchange_addr) + yes_bytes).digest()))
+    return refs
+
+
 def dance_match_orders(
     chunk,
     orch,
