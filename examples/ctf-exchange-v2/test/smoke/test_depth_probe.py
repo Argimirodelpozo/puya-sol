@@ -245,6 +245,127 @@ def test_depth_probe_chain3_box_ref_on_sibling_txn(probe_factory, admin):
     )
 
 
+def test_match_orders_diagnostic_double_fund(split_settled_with_delegate):
+    """Diagnostic: pre-fund BOTH carla AND bob with YES tokens, then
+    run the matchOrders dance. If matchOrders has the `from` address
+    wrong (reads bob's empty box instead of carla's funded one), the
+    bal>=amt assert fires because bob's box is 0. If we ALSO fund bob
+    to 100M, the assert passes regardless of which box matchOrders
+    reads — so a passing run = `from` is wrong.
+
+    Mirrors `test_match_orders_complementary` setup exactly except for
+    the extra deal_outcome to bob."""
+    from hashlib import sha256
+    from dev.deals import deal_outcome, deal_outcome_and_approve, deal_usdc_and_approve, prepare_condition, set_approval, ctf_balance, usdc_balance
+    from dev.match_dispatch import dance_match_orders
+    from dev.orders import make_order, sign_order, Side
+    from dev.signing import bob as bob_signer_fn, carla as carla_signer_fn
+    from dev.addrs import algod_addr_bytes_for_app
+
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer = bob_signer_fn()
+    carla_signer = carla_signer_fn()
+    bob_addr = bob_signer.eth_address_padded32
+    carla_addr = carla_signer.eth_address_padded32
+
+    # Compute canonical YES/NO ids the same way test_match_orders does.
+    raw = orch.send.call(au.AppClientMethodCallParams(
+        method="getCtfCollateral", args=[],
+        extra_fee=au.AlgoAmount(micro_algo=200_000),
+    ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return
+    if isinstance(raw, str):
+        from algosdk.encoding import decode_address
+        ctf_collateral = decode_address(raw)
+    else:
+        ctf_collateral = bytes(raw)
+
+    coll_id = h1.send.call(au.AppClientMethodCallParams(
+        method="CTHelpers.getCollectionId",
+        args=[list(b"\x00" * 32), list(b"\xc0" * 32), 1],
+        extra_fee=au.AlgoAmount(micro_algo=500_000),
+    ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return
+    coll_b = bytes(coll_id) if isinstance(coll_id, (list, tuple)) else (
+        bytes(coll_id) if not isinstance(coll_id, bytes) else coll_id)
+    yes_id = int(h1.send.call(au.AppClientMethodCallParams(
+        method="CTHelpers.getPositionId",
+        args=[bytes(ctf_collateral), list(coll_b)],
+        extra_fee=au.AlgoAmount(micro_algo=500_000),
+    ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return)
+    coll_no = h1.send.call(au.AppClientMethodCallParams(
+        method="CTHelpers.getCollectionId",
+        args=[list(b"\x00" * 32), list(b"\xc0" * 32), 2],
+        extra_fee=au.AlgoAmount(micro_algo=500_000),
+    ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return
+    coll_no_b = bytes(coll_no) if isinstance(coll_no, (list, tuple)) else bytes(coll_no)
+    no_id = int(h1.send.call(au.AppClientMethodCallParams(
+        method="CTHelpers.getPositionId",
+        args=[bytes(ctf_collateral), list(coll_no_b)],
+        extra_fee=au.AlgoAmount(micro_algo=500_000),
+    ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return)
+
+    prepare_condition(ctf, b"\xc0" * 32, yes_id, no_id)
+    h1_addr = algod_addr_bytes_for_app(h1.app_id)
+    deal_usdc_and_approve(usdc, bob_addr, h1_addr, 50_000_000)
+    deal_outcome_and_approve(ctf, carla_addr, h1_addr, yes_id, 100_000_000)
+    # Diagnostic: pre-fund bob AND the zero address with 100M YES too.
+    # If matchOrders reads bal=0 despite both real participants funded,
+    # `from` resolves to a third address — most likely the zero
+    # address (e.g. uninitialized memory, address-mask gone wrong).
+    deal_outcome(ctf, bob_addr, yes_id, 100_000_000)
+    deal_outcome(ctf, b"\x00" * 32, yes_id, 100_000_000)
+
+    taker = make_order(maker=bob_addr, token_id=yes_id,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
+    maker = make_order(maker=carla_addr, token_id=yes_id,
+        maker_amount=100_000_000, taker_amount=50_000_000, side=Side.SELL)
+    taker_signed = sign_order(orch, taker, bob_signer)
+    maker_signed = sign_order(orch, maker, carla_signer)
+
+    yes_bytes = yes_id.to_bytes(32, "big")
+    zero_addr = b"\x00" * 32
+    inner_boxes = [
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(carla_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(bob_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(zero_addr + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"ap_" + sha256(bytes(carla_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id,
+                        name=b"a_" + sha256(bytes(bob_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(bob_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(carla_addr)),
+    ]
+    try:
+        dance_match_orders(
+            chunk, orch,
+            condition_id=b"\xc0" * 32,
+            taker_order_list=taker_signed.to_abi_list(),
+            maker_orders_list=[maker_signed.to_abi_list()],
+            taker_fill_amount=50_000_000,
+            maker_fill_amounts=[100_000_000],
+            taker_fee_amount=0,
+            maker_fee_amounts=[0],
+            extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+            extra_box_refs=inner_boxes,
+        )
+    except Exception as e:
+        msg = str(e)
+        if "insufficient ERC1155 balance" in msg:
+            # The bal>=amt check fired. Means matchOrders read a box with
+            # bal=0 even though BOTH carla and bob have 100M. Either the
+            # `from` address derivation is producing a third (unfunded)
+            # address, or the read truly returns zero from a populated box.
+            pytest.fail(
+                "matchOrders still hit bal>=amt assert despite both "
+                "carla AND bob being pre-funded with 100M YES. The `from` "
+                "address must resolve to neither carla nor bob — likely "
+                "an encoding or zero-padding mismatch."
+            )
+        raise
+
+
 def test_depth_probe_h1_transfer_at_depth_3(probe_factory, split_settled_with_delegate):
     """Calls `helper1.TransferHelper._transferFromERC1155` *through one
     relay hop*, putting CTFMock at depth 3 — same depth at which
