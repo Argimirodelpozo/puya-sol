@@ -244,14 +244,23 @@ std::shared_ptr<awst::Expression> encodeArg(
 awst::WType const* mapToArc4(awst::WType const* w)
 {
 	if (!w) return nullptr;
+	// `ARC4UIntN(N)` takes the bit-width N, not the byte count. Solidity
+	// `uint256` (32 bytes) is `ARC4UIntN(256)`; we send biguints as uint512
+	// across helpers (matching `abiTypeName`'s "uint512" — see line ~36),
+	// so the corresponding ARC4 form for the bytes-shape that ARC4Decode
+	// consumes on the *return* side has to be uint512 too. Earlier this
+	// passed `32` (which puya then interprets as a 32-bit / 4-byte
+	// uint32!) — `extract 4 4` instead of `extract 4 64` in the helper-
+	// stub return decoder, which silently truncated every multi-return
+	// biguint helper call.
 	if (w == awst::WType::biguintType())
 	{
-		static awst::ARC4UIntN s_uint256(32);
-		return &s_uint256;
+		static awst::ARC4UIntN s_uint512(512);
+		return &s_uint512;
 	}
 	if (w == awst::WType::uint64Type())
 	{
-		static awst::ARC4UIntN s_uint64(8);
+		static awst::ARC4UIntN s_uint64(64);
 		return &s_uint64;
 	}
 	if (w == awst::WType::boolType())
@@ -260,7 +269,10 @@ awst::WType const* mapToArc4(awst::WType const* w)
 	}
 	if (w == awst::WType::accountType())
 	{
-		static awst::ARC4UIntN s_uint256(32);
+		// AVM addresses are 32 raw bytes — ARC4 representation is uint256
+		// (256-bit, 32 bytes). The cross-helper wire shape can stay uint256
+		// because we never need to span 33 bytes for an account.
+		static awst::ARC4UIntN s_uint256(256);
 		return &s_uint256;
 	}
 	if (w == awst::WType::stringType())
