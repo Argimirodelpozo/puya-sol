@@ -42,6 +42,14 @@ compile() {
         extra_args+=(--ensure-budget matchOrders:100000)
         extra_args+=(--ensure-budget CTHelpers.getCollectionId:30000)
         extra_args+=(--ensure-budget CTHelpers.getPositionId:30000)
+    elif [[ "$rel" == "collateral/PermissionedRamp.sol" ]]; then
+        # PermissionedRamp.__postInit runs the inherited Solady EIP712
+        # constructor (computeDomainSeparator: keccak256 of the typed-data
+        # name/version + chainID + verifyingContract + salt). That's ~3 K
+        # opcodes of bytes-mashing + a sha512_256, well past the 700-op
+        # per-tx budget. Pump via ensure_budget; matches the matchOrders
+        # pattern.
+        extra_args+=(--ensure-budget __postInit:100000)
     fi
 
     local output exit_code
