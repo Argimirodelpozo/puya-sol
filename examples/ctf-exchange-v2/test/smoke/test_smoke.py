@@ -22,14 +22,5 @@ def test_collateral_token_deploys(collateral_token):
     assert collateral_token.app_id > 0
 
 
-@pytest.mark.skip(
-    reason="NegRiskAdapter constructor calls `INegRiskAdapter(_negRiskAdapter).wcol()` "
-           "via inner-tx, but the inner-tx is reaching the wrong app — error message "
-           "implicates an app with 14 methods (USDC-shaped) rather than the mock "
-           "(UniversalMock, 11 methods). Likely cause is similar to the wrap-with-"
-           "callback path's psol/real address-encoding mismatch, but the constructor's "
-           "stack layout differs from the callback's. Needs more investigation — "
-           "fixing the wrap-with-callback path with a two-slot router was the primary "
-           "win this cycle.")
 def test_negrisk_adapter_deploys(negrisk_adapter):
     assert negrisk_adapter.app_id > 0

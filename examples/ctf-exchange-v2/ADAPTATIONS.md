@@ -307,25 +307,22 @@ with-callback variants only). The no-callback variants pass.
 ERC20 surface into a sibling app so the unwrap callback doesn't
 re-enter ct.
 
-### B. NegRiskAdapter constructor wcol() inner-tx mistargeted
-
-**Symptom:** `NegRiskCtfCollateralAdapter`'s constructor calls
-`INegRiskAdapter(_negRiskAdapter).wcol()` via inner-tx. The inner-tx
-reaches a different app than the intended mock (UniversalMock has
-11 methods; the failing target has 14, USDC-shaped). Likely related
-to the same psol/algod-real address-encoding split that blocked the
-with-callback wrap path before §6 fixed it — but the constructor's
-stack layout is different, so the same fix shape may not apply
-directly.
-
-**Test affected:** `test_negrisk_adapter_deploys` (currently
-`@pytest.mark.skip`).
-
-### C. ToggleableERC1271Mock fixture wiring (1271 happy path)
+### B. ToggleableERC1271Mock fixture wiring (1271 happy path)
 
 (Resolved.) Translated as
 `test_match_orders_preapproved_1271_signer_invalidated`. See test
 file for the full flow.
+
+### C. NegRiskAdapter wcol() target
+
+(Resolved.) Was a fixture-level mismatch — the test used
+`mock_token` (a v1 ERC20 mock with 14 methods, no `wcol()`) for the
+`_negRiskAdapter` slot, so the constructor's
+`INegRiskAdapter(_negRiskAdapter).wcol()` inner-tx reached an app
+whose method table didn't match the selector. Switched the
+`negrisk_adapter` fixture to `universal_mock` (which exposes a
+no-op `wcol()` returning `address(this)`), and the deploy succeeds.
+Not a compiler issue at all.
 
 ---
 

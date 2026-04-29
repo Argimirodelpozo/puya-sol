@@ -359,13 +359,23 @@ def ctf_adapter(localnet, admin, mock_token):
 
 
 @pytest.fixture(scope="function")
-def negrisk_adapter(localnet, admin, mock_token):
+def negrisk_adapter(localnet, admin, universal_mock):
+    """Deploy NegRiskCtfCollateralAdapter wired to UniversalMock for all
+    6 constructor address slots.
+
+    Uses `universal_mock` (not `mock_token`) because the constructor
+    calls `INegRiskAdapter(_negRiskAdapter).wcol()` via inner-tx, which
+    needs a target with the `wcol()` method. UniversalMock exposes a
+    no-op `wcol()` returning `address(this)`; the v1 ERC20 mock
+    (`mock_token`) does not, and the inner-tx's match dispatch falls
+    through to err.
+    """
     base = OUT_DIR / "adapters" / "NegRiskCtfCollateralAdapter"
-    tok = app_id_to_address(mock_token.app_id)
+    tok = app_id_to_address(universal_mock.app_id)
     return deploy_app(
         localnet, admin, base, "NegRiskCtfCollateralAdapter",
         post_init_args=[tok, tok, tok, tok, tok, tok],
-        post_init_app_refs=[mock_token.app_id],
+        post_init_app_refs=[universal_mock.app_id],
     )
 
 
