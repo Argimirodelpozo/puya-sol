@@ -839,6 +839,212 @@ def test_match_orders_revert_invalid_trade(split_settled_with_delegate):
         )
 
 
+def test_match_orders_zero_taker_amount(split_settled_with_delegate):
+    """test_MatchOrders_ZeroTakerAmount: edge case — taker BUY has
+    `takerAmount == 0` (accepts any price). Maker SELLs 1 YES at 50
+    USDC (an absurd price); the cross-check still treats this as
+    valid and bob ends up with 1 YES, having paid 50 USDC."""
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer, carla_signer = bob(), carla()
+    bob_addr, carla_addr = bob_signer.eth_address_padded32, carla_signer.eth_address_padded32
+
+    yes_id, no_id = _canonical_yes_no_ids(orch, h1)
+    prepare_condition(ctf, CONDITION_ID, yes_id, no_id)
+    h1_addr = algod_addr_bytes_for_app(h1.app_id)
+    deal_usdc_and_approve(usdc, bob_addr, h1_addr, 50_000_000)
+    deal_outcome_and_approve(ctf, carla_addr, h1_addr, yes_id, 1)
+
+    taker = make_order(maker=bob_addr, token_id=yes_id,
+        maker_amount=50_000_000, taker_amount=0, side=Side.BUY)
+    maker = make_order(maker=carla_addr, token_id=yes_id,
+        maker_amount=1, taker_amount=50_000_000, side=Side.SELL)
+    taker_signed = sign_order(orch, taker, bob_signer)
+    maker_signed = sign_order(orch, maker, carla_signer)
+
+    from hashlib import sha256
+    yes_bytes = yes_id.to_bytes(32, "big")
+    inner_boxes = [
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(carla_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(bob_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"ap_" + sha256(bytes(carla_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id,
+                        name=b"a_" + sha256(bytes(bob_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(bob_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(carla_addr)),
+    ]
+    dance_match_orders(
+        chunk, orch,
+        condition_id=CONDITION_ID,
+        taker_order_list=taker_signed.to_abi_list(),
+        maker_orders_list=[maker_signed.to_abi_list()],
+        taker_fill_amount=50_000_000,
+        maker_fill_amounts=[1],
+        taker_fee_amount=0, maker_fee_amounts=[0],
+        extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+        extra_box_refs=inner_boxes,
+    )
+
+    assert usdc_balance(usdc, bob_addr) == 0
+    assert ctf_balance(ctf, bob_addr, yes_id) == 1
+    assert ctf_balance(ctf, carla_addr, yes_id) == 0
+    assert usdc_balance(usdc, carla_addr) == 50_000_000
+
+
+def test_match_orders_revert_invalid_fill_amount(split_settled_with_delegate):
+    """test_MatchOrders_revert_InvalidFillAmount: a maker fill that
+    exceeds the maker order's `makerAmount` reverts with MakingGtRemaining
+    inside `_updateOrderStatus`."""
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer, carla_signer = bob(), carla()
+    bob_addr, carla_addr = bob_signer.eth_address_padded32, carla_signer.eth_address_padded32
+
+    yes_id, no_id = _canonical_yes_no_ids(orch, h1)
+    prepare_condition(ctf, CONDITION_ID, yes_id, no_id)
+    h1_addr = algod_addr_bytes_for_app(h1.app_id)
+    deal_usdc_and_approve(usdc, bob_addr, h1_addr, 500_000_000)
+    deal_outcome_and_approve(ctf, carla_addr, h1_addr, yes_id, 1_000_000_000)
+
+    buy = make_order(maker=bob_addr, token_id=yes_id,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
+    sell = make_order(maker=carla_addr, token_id=yes_id,
+        maker_amount=1_000_000_000, taker_amount=500_000_000, side=Side.SELL)
+    t = sign_order(orch, buy, bob_signer)
+    m = sign_order(orch, sell, carla_signer)
+
+    with pytest.raises(LogicError):
+        dance_match_orders(
+            chunk, orch,
+            condition_id=CONDITION_ID,
+            taker_order_list=t.to_abi_list(),
+            maker_orders_list=[m.to_abi_list()],
+            # fillAmount (1B) is the SELL maker's makerAmount — ok in
+            # isolation, but the taker BUY only allows 50M maker side.
+            # MakingGtRemaining fires when maker side exceeds remaining.
+            taker_fill_amount=500_000_000,
+            maker_fill_amounts=[1_000_000_000],
+            taker_fee_amount=0, maker_fee_amounts=[0],
+            extra_app_refs=[usdc.app_id, ctf.app_id],
+        )
+
+
+def test_match_orders_revert_no_maker_orders_buy(split_settled_with_delegate):
+    """test_MatchOrders_revert_NoMakerOrders_Buy: BUY taker with empty
+    makerOrders array reverts before any settlement work."""
+    _, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer = bob()
+    bob_addr = bob_signer.eth_address_padded32
+
+    _setup(orch, usdc, ctf, chunk, deal_table=[
+        {"account": bob_addr, "usdc": 50_000_000},
+    ])
+
+    taker = make_order(maker=bob_addr, token_id=YES_ID,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
+    taker_signed = sign_order(orch, taker, bob_signer)
+
+    with pytest.raises(LogicError):
+        dance_match_orders(
+            chunk, orch,
+            condition_id=CONDITION_ID,
+            taker_order_list=taker_signed.to_abi_list(),
+            maker_orders_list=[],
+            taker_fill_amount=50_000_000,
+            maker_fill_amounts=[],
+            taker_fee_amount=0, maker_fee_amounts=[],
+            extra_app_refs=[usdc.app_id, ctf.app_id],
+        )
+
+
+def test_match_orders_revert_no_maker_orders_sell(split_settled_with_delegate):
+    """test_MatchOrders_revert_NoMakerOrders_Sell: SELL taker with empty
+    makerOrders also reverts."""
+    _, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer = bob()
+    bob_addr = bob_signer.eth_address_padded32
+
+    _setup(orch, usdc, ctf, chunk, deal_table=[
+        {"account": bob_addr, "outcome": (YES_ID, 100_000_000)},
+    ])
+
+    taker = make_order(maker=bob_addr, token_id=YES_ID,
+        maker_amount=100_000_000, taker_amount=50_000_000, side=Side.SELL)
+    taker_signed = sign_order(orch, taker, bob_signer)
+
+    with pytest.raises(LogicError):
+        dance_match_orders(
+            chunk, orch,
+            condition_id=CONDITION_ID,
+            taker_order_list=taker_signed.to_abi_list(),
+            maker_orders_list=[],
+            taker_fill_amount=100_000_000,
+            maker_fill_amounts=[],
+            taker_fee_amount=0, maker_fee_amounts=[],
+            extra_app_refs=[usdc.app_id, ctf.app_id],
+        )
+
+
+def test_match_orders_revert_zero_maker_amount(split_settled_with_delegate):
+    """test_MatchOrders_revert_ZeroMakerAmount: an order with
+    `makerAmount == 0` is invalid — `_validateOrder` reverts before any
+    transfer."""
+    _, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer, carla_signer = bob(), carla()
+    bob_addr, carla_addr = bob_signer.eth_address_padded32, carla_signer.eth_address_padded32
+
+    taker = make_order(maker=bob_addr, token_id=YES_ID,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
+    zero_maker = make_order(maker=carla_addr, token_id=YES_ID,
+        maker_amount=0, taker_amount=0, side=Side.SELL)
+    t = sign_order(orch, taker, bob_signer)
+    m = sign_order(orch, zero_maker, carla_signer)
+
+    with pytest.raises(LogicError):
+        dance_match_orders(
+            chunk, orch,
+            condition_id=CONDITION_ID,
+            taker_order_list=t.to_abi_list(),
+            maker_orders_list=[m.to_abi_list()],
+            taker_fill_amount=50_000_000,
+            maker_fill_amounts=[0],
+            taker_fee_amount=0, maker_fee_amounts=[0],
+            extra_app_refs=[usdc.app_id, ctf.app_id],
+        )
+
+
+def test_match_orders_revert_zero_maker_amount_taker(split_settled_with_delegate):
+    """test_MatchOrders_revert_ZeroMakerAmount_Taker: same check applied
+    to the *taker* order — reverts at takerOrder validation."""
+    _, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer, carla_signer = bob(), carla()
+    bob_addr, carla_addr = bob_signer.eth_address_padded32, carla_signer.eth_address_padded32
+
+    _setup(orch, usdc, ctf, chunk, deal_table=[
+        {"account": carla_addr, "outcome": (YES_ID, 100_000_000)},
+    ])
+
+    zero_taker = make_order(maker=bob_addr, token_id=YES_ID,
+        maker_amount=0, taker_amount=0, side=Side.BUY)
+    maker = make_order(maker=carla_addr, token_id=YES_ID,
+        maker_amount=100_000_000, taker_amount=50_000_000, side=Side.SELL)
+    t = sign_order(orch, zero_taker, bob_signer)
+    m = sign_order(orch, maker, carla_signer)
+
+    with pytest.raises(LogicError):
+        dance_match_orders(
+            chunk, orch,
+            condition_id=CONDITION_ID,
+            taker_order_list=t.to_abi_list(),
+            maker_orders_list=[m.to_abi_list()],
+            taker_fill_amount=0,
+            maker_fill_amounts=[100_000_000],
+            taker_fee_amount=0, maker_fee_amounts=[0],
+            extra_app_refs=[usdc.app_id, ctf.app_id],
+        )
+
+
 # ── BalanceDeltas.t.sol — multi-maker variants ─────────────────────────
 
 
