@@ -16,6 +16,8 @@
 
 ---
 
+This is an evolution of a small Solidity-to-Algorand proof-of-concept I sketched out last year — a few hand-translated contracts and a thin script wrapping the Solidity AST + a couple of TEAL templates, mostly to see whether the round-trip was even worth trying. The current codebase is a much wider rewrite: a real C++ frontend that walks the full Solidity AST (via the `solidity` submodule), an explicit AWST builder that emits the same IR `puya` produces from native Algorand-Python, a contract splitter for the 8 KB program-size limit, and a regression harness that runs the upstream Solidity semantic-test corpus end-to-end on AVM localnet. So while the PoC answered "is this _possible_?", this iteration is trying to answer "how far can it actually go?".
+
 Solidity → AVM (Algorand) compiler. Translates `.sol` source through Solidity's frontend to AWST (Puya compiler's tree-shaped entry IR), then hands off to [`puya`](https://github.com/algorandfoundation/puya) for AWST → TEAL lowering.
 
 The pipeline:
