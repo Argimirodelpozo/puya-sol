@@ -599,6 +599,19 @@ def _build_split_exchange(localnet, admin, *, collateral_app_id, ctf_app_id,
             app_references=[h1_app_id, h2_app_id, collateral_app_id,
                             ctf_app_id, ctf_collateral_app_id, factory_app_id,
                             otf_app_id])))
+    # AVM-PORT-ADAPTATION: helper1 holds the extracted TransferHelper —
+    # its CTF inner-calls reach the CTF receiver with `msg.sender ==
+    # helper1`, not `address(this)` (the orch). CTFMock's
+    # `safeTransferFrom` early-outs when `msg.sender == from`; for
+    # orch→user transfers (MINT/MERGE distribute) `from == orch != helper1`,
+    # so the approval check fires and asserts "not approved operator".
+    # Explicitly grant helper1 setApprovalForAll on the CTF, post-init.
+    composer.add_app_call_method_call(orch_client.params.call(
+        au.AppClientMethodCallParams(
+            method="_avmPortGrantCtfOperator",
+            args=[app_id_to_address(h1_app_id)],
+            extra_fee=au.AlgoAmount(micro_algo=10_000),
+            app_references=[ctf_app_id, h1_app_id])))
     composer.send(AUTO_POPULATE)
     return h1_client, h2_client, orch_client
 

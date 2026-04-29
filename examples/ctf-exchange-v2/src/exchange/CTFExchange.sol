@@ -8,6 +8,7 @@ import { Trading } from "./mixins/Trading.sol";
 import { Pausable } from "./mixins/Pausable.sol";
 import { Signatures } from "./mixins/Signatures.sol";
 import { ERC1155TokenReceiver } from "./mixins/ERC1155TokenReceiver.sol";
+import { ERC1155 } from "@solady/src/tokens/ERC1155.sol";
 
 import { ExchangeInitParams, Order } from "./libraries/Structs.sol";
 
@@ -109,5 +110,21 @@ contract CTFExchange is Auth, ERC1155TokenReceiver, Pausable, Trading {
     /// @param rate - The new max fee rate in basis points
     function setMaxFeeRate(uint256 rate) external onlyAdmin {
         _setMaxFeeRate(rate);
+    }
+
+    /// @notice AVM-PORT-ADAPTATION: grant `setApprovalForAll` on CTF to a
+    /// helper-contract operator. On EVM the exchange is a single contract
+    /// and `address(this)` is always the immediate caller of CTF — Assets's
+    /// constructor `setApprovalForAll(outcomeTokenFactory, true)` is enough
+    /// because the only non-self caller is the outcome-token-factory.
+    /// On AVM the splitter peels TransferHelper out into a sibling helper
+    /// app whose address is unknown at deploy time; helper1's CTF inner
+    /// calls then have `msg.sender == helper1`, which fails CTFMock's
+    /// approval check on every orch→user CTF transfer (MINT/MERGE
+    /// distribute path). The deploy harness calls this admin method post-
+    /// init to grant helper1 the same blanket approval the
+    /// outcomeTokenFactory already has. Idempotent on the receiver.
+    function _avmPortGrantCtfOperator(address operator) external onlyAdmin {
+        ERC1155(getCtf()).setApprovalForAll(operator, true);
     }
 }
