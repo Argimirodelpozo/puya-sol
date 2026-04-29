@@ -7,16 +7,16 @@
 >
 > - **Not audited.** No security review has been performed on any part of the toolchain — neither the compiler itself nor any TEAL it emits.
 > - **Not officially supported** by the Algorand Foundation or any other organization. This is a personal side project.
-> - **Maintained on a best-effort basis.** No SLA, no guaranteed release cadence, no commitment to triage issues, review PRs, or respond to questions. Bugs may sit unfixed indefinitely; the project may go dormant without notice. Pull requests are welcome but not promised a review.
+> - **Maintained on a best-effort basis.** No guaranteed release cadence. Identified bugs may sit unfixed for long periods of time. That said, Pull requests, issue reports, feature requests, questions, etc. are welcome and encouraged!
 > - **A research/PoC effort**, not a stable release. APIs, AWST shapes, codegen patterns, output formats, and even successful test counts can change between commits without notice.
-> - **Likely to mis-compile contracts in subtle ways.** ~18% of the upstream Solidity semantic tests still fail or compile-error, and many real-world ports rely on workarounds, in-tree test patches, or features that diverge from EVM semantics (e.g., ARC4 selectors instead of keccak256, AVM box layout instead of EVM storage slots, no try/catch).
+> - **Likely to mis-compile contracts in subtle ways.** ~18% of the upstream Solidity semantic tests still fail or compile-error, and some real-world ports rely on workarounds, in-tree test patches, or features that diverge from EVM semantics (e.g., ARC4 selectors instead of keccak256, AVM box layout instead of EVM storage slots, no try/catch).
 > - **Not production money safe.** Do not deploy compiler output to MainNet, do not handle real funds with anything emitted by this tool, and do not assume security properties of the original Solidity contracts carry over to the TEAL output.
 >
 > Use at your own risk. Use this for experimentation, prototyping, or research. Do not use it for anything that touches user funds, real assets, or production systems.
 
 ---
 
-Solidity → AVM (Algorand) compiler. Translates unmodified `.sol` source through Solidity's frontend to AWST (Algorand's WebAssembly-shaped IR), then hands off to [`puya`](https://github.com/algorandfoundation/puya) for AWST → TEAL lowering.
+Solidity → AVM (Algorand) compiler. Translates `.sol` source through Solidity's frontend to AWST (Puya compiler's tree-shaped entry IR), then hands off to [`puya`](https://github.com/algorandfoundation/puya) for AWST → TEAL lowering.
 
 The pipeline:
 
@@ -125,4 +125,4 @@ The `WIP/` prefix marks code that's exercised but still iterating — examples t
 
 ## Related docs
 
-- [`tests/solidity-semantic-tests/CURRENT.md`](tests/solidity-semantic-tests/CURRENT.md) — living per-version progress log
+- [`tests/solidity-semantic-tests/CURRENT.md`](tests/solidity-semantic-tests/CURRENT.md): living per-version progress log of the semantic testsuite.
