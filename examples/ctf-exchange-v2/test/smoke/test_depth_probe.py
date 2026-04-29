@@ -355,9 +355,12 @@ def test_mint_dump_match_type_arg(split_settled_with_delegate):
             if apaa and base64.b64decode(apaa[0])[:4].hex() == "d427eb5d":
                 # apaa[3] is matchType (uint64, 8 BE bytes)
                 if len(apaa) >= 4:
-                    mt = int.from_bytes(base64.b64decode(apaa[3]), "big")
+                    mt_bytes = base64.b64decode(apaa[3])
+                    mt = int.from_bytes(mt_bytes, "big")
+                    mt_hex = mt_bytes.hex()
                 else:
                     mt = "?"
+                    mt_hex = "?"
                 # Decode the side bytes from each order (offset 192)
                 taker_b = base64.b64decode(apaa[1])
                 maker_b = base64.b64decode(apaa[2])
@@ -366,7 +369,7 @@ def test_mint_dump_match_type_arg(split_settled_with_delegate):
                 maker_side = maker_b[192] if len(maker_b) > 192 else "?"
                 taker_token = taker_b[96:128].hex()[:16] if len(taker_b) >= 128 else "?"
                 maker_token = maker_b[96:128].hex()[:16] if len(maker_b) >= 128 else "?"
-                print(f"  _validateOrdersMatch at {path}.in{i}: matchType={mt}")
+                print(f"  _validateOrdersMatch at {path}.in{i}: matchType={mt} bytes={mt_hex}")
                 print(f"    taker side={taker_side} token={taker_token}...")
                 print(f"    maker side={maker_side} token={maker_token}...")
             walk(inner, path + f".in{i}")
