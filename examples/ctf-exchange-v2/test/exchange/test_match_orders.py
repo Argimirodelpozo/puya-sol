@@ -839,6 +839,162 @@ def test_match_orders_revert_invalid_trade(split_settled_with_delegate):
         )
 
 
+def test_match_orders_revert_mismatched_token_ids_zero_collateral(split_settled_with_delegate):
+    """test_MatchOrders_revert_MismatchedTokenIds_TokenIdZeroCollateralExtraction:
+    a maker order with `tokenId == 0` is invalid — tokenId=0 represents
+    collateral, never a CTF outcome position. Reverts at
+    `_validateTokenIds`."""
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer, carla_signer = bob(), carla()
+    bob_addr, carla_addr = bob_signer.eth_address_padded32, carla_signer.eth_address_padded32
+
+    yes_id, no_id = _canonical_yes_no_ids(orch, h1)
+    prepare_condition(ctf, CONDITION_ID, yes_id, no_id)
+    h1_addr = algod_addr_bytes_for_app(h1.app_id)
+    deal_usdc_and_approve(usdc, bob_addr, h1_addr, 150_000_000)
+    deal_usdc_and_approve(usdc, carla_addr, h1_addr, 50_000_000)
+
+    taker = make_order(maker=bob_addr, token_id=yes_id,
+        maker_amount=150_000_000, taker_amount=100_000_000, side=Side.BUY)
+    maker = make_order(maker=carla_addr, token_id=0,  # collateral!
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
+    t = sign_order(orch, taker, bob_signer)
+    m = sign_order(orch, maker, carla_signer)
+
+    with pytest.raises(LogicError):
+        dance_match_orders(
+            chunk, orch,
+            condition_id=CONDITION_ID,
+            taker_order_list=t.to_abi_list(),
+            maker_orders_list=[m.to_abi_list()],
+            taker_fill_amount=150_000_000,
+            maker_fill_amounts=[50_000_000],
+            taker_fee_amount=0, maker_fee_amounts=[0],
+            extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+        )
+
+
+def test_match_orders_with_max_fee_rate_buy(split_settled_with_delegate):
+    """test_MatchOrders_WithMaxFeeRate_Buy: taker fee at exactly the
+    orch's max rate (5% of 50 USDC = 2.5 USDC) is accepted; same trade
+    as `complementary_fees` but maker fee = 0, taker fee = 2.5M."""
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer, carla_signer = bob(), carla()
+    bob_addr, carla_addr = bob_signer.eth_address_padded32, carla_signer.eth_address_padded32
+
+    yes_id, no_id = _canonical_yes_no_ids(orch, h1)
+    prepare_condition(ctf, CONDITION_ID, yes_id, no_id)
+    h1_addr = algod_addr_bytes_for_app(h1.app_id)
+    deal_usdc_and_approve(usdc, bob_addr, h1_addr, 52_500_000)
+    deal_outcome_and_approve(ctf, carla_addr, h1_addr, yes_id, 100_000_000)
+
+    fee_receiver_raw = orch.send.call(au.AppClientMethodCallParams(
+        method="getFeeReceiver", args=[],
+        extra_fee=au.AlgoAmount(micro_algo=200_000),
+    ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return
+    if isinstance(fee_receiver_raw, str):
+        from algosdk.encoding import decode_address
+        fee_receiver = decode_address(fee_receiver_raw)
+    else:
+        fee_receiver = bytes(fee_receiver_raw)
+
+    taker = make_order(maker=bob_addr, token_id=yes_id,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY)
+    maker = make_order(maker=carla_addr, token_id=yes_id,
+        maker_amount=100_000_000, taker_amount=50_000_000, side=Side.SELL)
+    t = sign_order(orch, taker, bob_signer)
+    m = sign_order(orch, maker, carla_signer)
+
+    from hashlib import sha256
+    yes_bytes = yes_id.to_bytes(32, "big")
+    inner_boxes = [
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(carla_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(bob_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"ap_" + sha256(bytes(carla_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id,
+                        name=b"a_" + sha256(bytes(bob_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(bob_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(carla_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(fee_receiver)),
+    ]
+    dance_match_orders(
+        chunk, orch,
+        condition_id=CONDITION_ID,
+        taker_order_list=t.to_abi_list(),
+        maker_orders_list=[m.to_abi_list()],
+        taker_fill_amount=50_000_000,
+        maker_fill_amounts=[100_000_000],
+        taker_fee_amount=2_500_000,
+        maker_fee_amounts=[0],
+        extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+        extra_box_refs=inner_boxes,
+    )
+
+    assert usdc_balance(usdc, bob_addr) == 0
+    assert ctf_balance(ctf, bob_addr, yes_id) == 100_000_000
+    assert ctf_balance(ctf, carla_addr, yes_id) == 0
+    assert usdc_balance(usdc, carla_addr) == 50_000_000
+    assert usdc_balance(usdc, fee_receiver) == 2_500_000
+
+
+def test_match_orders_complementary_consumes_actual_taker_fill_when_price_improves(
+    split_settled_with_delegate
+):
+    """test_MatchOrders_Complementary_ConsumesActualTakerFill_WhenPriceImproves:
+    bob's BUY allows up to 100 YES for 100 USDC (at 1.00). Maker only
+    sells 10 YES at 1.00 — bob ends up with 10 YES and 90 USDC. Order
+    state's `remaining` reflects that only 10 USDC was consumed."""
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer, carla_signer = bob(), carla()
+    bob_addr, carla_addr = bob_signer.eth_address_padded32, carla_signer.eth_address_padded32
+
+    yes_id, no_id = _canonical_yes_no_ids(orch, h1)
+    prepare_condition(ctf, CONDITION_ID, yes_id, no_id)
+    h1_addr = algod_addr_bytes_for_app(h1.app_id)
+    deal_usdc_and_approve(usdc, bob_addr, h1_addr, 100_000_000)
+    deal_outcome_and_approve(ctf, carla_addr, h1_addr, yes_id, 10_000_000)
+
+    taker = make_order(maker=bob_addr, token_id=yes_id,
+        maker_amount=100_000_000, taker_amount=100_000_000, side=Side.BUY)
+    maker = make_order(maker=carla_addr, token_id=yes_id,
+        maker_amount=10_000_000, taker_amount=10_000_000, side=Side.SELL)
+    t = sign_order(orch, taker, bob_signer)
+    m = sign_order(orch, maker, carla_signer)
+
+    from hashlib import sha256
+    yes_bytes = yes_id.to_bytes(32, "big")
+    inner_boxes = [
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(carla_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(bob_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"ap_" + sha256(bytes(carla_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id,
+                        name=b"a_" + sha256(bytes(bob_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(bob_addr)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(carla_addr)),
+    ]
+    dance_match_orders(
+        chunk, orch,
+        condition_id=CONDITION_ID,
+        taker_order_list=t.to_abi_list(),
+        maker_orders_list=[m.to_abi_list()],
+        taker_fill_amount=100_000_000,
+        maker_fill_amounts=[10_000_000],
+        taker_fee_amount=0, maker_fee_amounts=[0],
+        extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id],
+        extra_box_refs=inner_boxes,
+    )
+
+    # Bob spent 10 USDC, got 10 YES. 90 USDC remains in his wallet.
+    assert usdc_balance(usdc, bob_addr) == 90_000_000
+    assert ctf_balance(ctf, bob_addr, yes_id) == 10_000_000
+
+
 def test_match_orders_revert_complementary_fill_exceeds_taker_fill_overspend(split_settled_with_delegate):
     """test_MatchOrders_revert_ComplementaryFillExceedsTakerFill_Overspend:
     operator misreports the taker-side spend — maker execution implies
