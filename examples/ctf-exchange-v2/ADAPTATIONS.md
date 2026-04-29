@@ -257,41 +257,75 @@ don't exercise actual transfer semantics.
 
 ---
 
+## Address-encoding split: psol vs algod-real
+
+The two views of an app's address are at the heart of several
+adaptations:
+- **psol-encoded** (`\x00*24 || itob(app_id)`): how puya-sol stores
+  Solidity-typed `address` values in slots and how it expects to
+  resolve inner-tx ApplicationIDs (it does `extract_uint64` at
+  offset 24 to recover the app id).
+- **algod-real** (`sha512_256("appID" || app_id)`): the actual on-
+  chain account address. This is what `op.Txn.sender` resolves to
+  inside an inner-call (the immediately-calling app's account),
+  what `usdc.balances[…]` and `usdc.allowances[…]` are keyed on,
+  and what `global CurrentApplicationAddress` returns (i.e. what
+  `address(this)` lowers to).
+
+EVM collapses both into a single 20-byte address. AVM doesn't —
+they're two different 32-byte values. Most of the AVM-port-
+adaptation friction is reconciling which one is needed where.
+
+Pattern: a contract that wants to act both as
+- an inner-tx target (needs psol so puya-sol can extract the app id)
+  and
+- a recipient/owner of asset state in another contract (needs algod-
+  real so the receiver mock's `balances[<key>]` lookup matches what
+  later inner calls use)
+
+…must store **both** addresses. See §6/§9 below for two examples
+where this came up.
+
 ## Known-bad / xfailed AVM-port issues
 
 These are tracked as `pytest.mark.xfail` or `pytest.mark.skip` because
-the root cause is in puya-sol's lowering, not in the source. Each entry
-points at the smallest concrete repro.
+the root cause is structural (AVM vs EVM semantics) or remains
+under investigation. Each entry points at the smallest concrete repro.
 
-### A. Inner-tx ApplicationID computed from wrong stack slot
+### A. Re-entrant unwrap callback
 
-**Symptom:** an inner-tx's `ApplicationID` field is set by
-`extract_uint64` of a stack value at depth `dig N` — and `N` is
-miscomputed in some lowerings, so the target ends up being a value
-like `_amount` or another nearby parameter rather than the intended
-`_asset` / contract reference.
+**Symptom:** `ct.unwrap` fires `router.unwrapCallback`, which itself
+fires `IERC20Min(collateralToken).transferFrom(...)` — a re-entrant
+call into ct, since `collateralToken` *is* ct (ct is its own pUSD
+ERC20 surface). EVM permits this; AVM forbids it (`attempt to
+re-enter X`).
 
-**Where:**
-- `MockCollateralTokenRouter.wrapCallback`'s
-  `IERC20Min(_asset).transferFrom(...)` — fires usdc.transferFrom but
-  with `_amount` interpreted as an app id, so the inner-tx target is
-  `100_000_000` (or some random value), not the usdc app.
-- `NegRiskCtfCollateralAdapter.constructor`'s
-  `INegRiskAdapter(_negRiskAdapter).wcol()` — same shape.
+**Tests affected:** `test_CollateralToken_unwrap{USDC,USDCe}` (the
+with-callback variants only). The no-callback variants pass.
 
-**Tests affected:** the four with-callback wrap/unwrap variants
-(`test_CollateralToken_wrap{USDC,USDCe}`,
-`test_CollateralToken_unwrap{USDC,USDCe}`); the
-`test_negrisk_adapter_deploys` smoke test.
+**Possible fix (out of scope for the audited port):** split ct's
+ERC20 surface into a sibling app so the unwrap callback doesn't
+re-enter ct.
 
-### B. ToggleableERC1271Mock fixture wiring (1271 happy path)
+### B. NegRiskAdapter constructor wcol() inner-tx mistargeted
 
-**Symptom:** the test exists as a `pytest.fail` placeholder because
-the supporting fixture chain (deploy 1271 wallet, fund + approve via
-the wallet, sign POLY_1271 orders, disable wallet, run dance) hasn't
-been written yet. Not a compiler issue; a translation gap.
+**Symptom:** `NegRiskCtfCollateralAdapter`'s constructor calls
+`INegRiskAdapter(_negRiskAdapter).wcol()` via inner-tx. The inner-tx
+reaches a different app than the intended mock (UniversalMock has
+11 methods; the failing target has 14, USDC-shaped). Likely related
+to the same psol/algod-real address-encoding split that blocked the
+with-callback wrap path before §6 fixed it — but the constructor's
+stack layout is different, so the same fix shape may not apply
+directly.
 
-**Test affected:** `test_match_orders_preapproved_1271_signer_invalidated`.
+**Test affected:** `test_negrisk_adapter_deploys` (currently
+`@pytest.mark.skip`).
+
+### C. ToggleableERC1271Mock fixture wiring (1271 happy path)
+
+(Resolved.) Translated as
+`test_match_orders_preapproved_1271_signer_invalidated`. See test
+file for the full flow.
 
 ---
 
