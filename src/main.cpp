@@ -804,7 +804,17 @@ int main(int _argc, char* _argv[])
 		"SafeTransferLib.safeTransfer",
 		"TransferHelper._transferFromERC1155",
 		"TransferHelper._transferFromERC20",
-		"TransferHelper._transferERC20",
+		// `_transferERC20(token, to, value)` lowers to `IERC20.transfer(to, value)`,
+		// whose msg.sender at the receiver IS the caller. In the EVM that's
+		// `address(this)` (the exchange — libraries inline at the call site).
+		// Extracting this stub to helper1 puts msg.sender at usdc = helper1,
+		// which has no balance — so the from==this branch of
+		// `_transferCollateral` (used by mint/merge/exchange-intermediate
+		// settlement paths) silently breaks. Keep `_transferERC20` inline
+		// in the orch so msg.sender resolves to the exchange itself; the
+		// non-self path uses `_transferFromERC20` which is allowance-based
+		// and works regardless of msg.sender.
+		// "TransferHelper._transferERC20",
 		// ── CalculatorHelper (v1 + v2) ────────────────────────────────────
 		"CalculatorHelper.calculateTakingAmount",
 		"CalculatorHelper.calculateFee",
