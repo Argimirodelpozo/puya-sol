@@ -25,12 +25,12 @@ The pipeline:
 
 ## Status
 
-**1083 / 1322 (82%)** Solidity semantic tests passing as of v177. See [`tests/solidity-semantic-tests/CURRENT.md`](tests/solidity-semantic-tests/CURRENT.md) for the running changelog.
+**1083 / 1322 (82%)** Solidity semantic tests passing as of the latest version. See [`tests/solidity-semantic-tests/CURRENT.md`](tests/solidity-semantic-tests/CURRENT.md) for the running changelog.
 
 Real-world ports compiling and running on AVM localnet (under [`WIP/examples/`](WIP/examples/)):
 
 - **Uniswap V2** (full AMM) and **V4** (361/411 tests passing)
-- **OpenZeppelin** v5.0.0 — ERC20/721/1155, AccessControl, Ownable, Pausable, ReentrancyGuard, governance, vesting, and ~140 contracts in total
+- **OpenZeppelin** v5.0.0 — ERC20/721/1155, AccessControl, Ownable, Pausable, governance, vesting, and ~140 contracts in total
 - **AAVE V4** — 32/36 contracts compile
 - **Solmate** — ERC20/721/1155/6909, RolesAuthority
 - **MakerDAO Dai**, **Compound Timelock**, **Synthetix StakingRewards**, **Tornado Cash**, **PRB-Math UD60x18**, **WETH9**, **DappHub DSToken/DSGuard**, and others
@@ -112,7 +112,7 @@ The `WIP/` prefix marks code that's exercised but still iterating — examples t
 
 ## Architecture notes
 
-> Not exhaustive — these are a handful of the load-bearing decisions that shape the codebase. Plenty of other compiler-level conventions (ARC4 selector encoding, modifier inlining, fn-ptr dispatch tables, free-memory-pointer simulation, transient storage layout, the contract splitter's bin-packing heuristic, …) live only in the source. Skim `src/builder/` and the per-version commit log for the rest.
+> Not exhaustive! these are a handful of the load-bearing decisions that shape the codebase. Plenty of other compiler-level conventions (ARC4 selector encoding, modifier inlining, fn-ptr dispatch tables, free-memory-pointer simulation, transient storage layout, contract splitter's decisions, etc.) live only in the source. Documenting these is a WIP.
 
 - **AWST is the contract** — puya-sol's job is to emit a well-typed AWST JSON that puya accepts. Test failures often come down to the wrong AWST shape rather than wrong semantics; the AWST round-trip is the primary debugging surface.
 - **Storage maps to box state** — Solidity mappings/arrays/structs live in AVM **boxes** (one box per top-level state var, with sha256-derived keys for mapping entries). See `src/builder/storage/StorageMapper.cpp`.
@@ -120,6 +120,7 @@ The `WIP/` prefix marks code that's exercised but still iterating — examples t
 - **Contract size limit** — AVM programs cap at 8 KB. Contracts that exceed this are split into helper subroutines via `--split-contracts`; see `src/splitter/`.
 - **Inheritance is flattened** — Solidity's C3 linearization is collapsed at compile time so the emitted contract has all base methods inlined under their MRO names; no runtime delegatecall.
 - **No try/catch** — AVM has no analogue for EVM revert-bubbling, so the entire `tryCatch/` semantic-test cluster (20 tests) is currently unsupported.
+- **Tokens compile to apps, not ASAs (for now)** — ERC20/721/1155 contracts are translated faithfully into AVM smart-contract apps with their own balance maps and transfer logic, the same way they live on EVM. This makes the upstream tests round-trip cleanly but ignores Algorand's biggest token-related feature: **ASAs** (Algorand Standard Assets) are first-class tokens at the protocol level, so things like balance lookups, transfers, freeze/clawback, and opt-in flows are all single opcodes / inner-txn fields rather than app calls. A future version will detect ERC20/721/1155-shaped contracts and lower them onto an ASA created by the constructor — `transfer`/`balanceOf`/etc. become inner asset transfers and `acct_params_get AcctAssetBalance` reads, which is dramatically cheaper, composes natively with wallets and DEXes, and gets the security/UX properties of native assets for free. The smart-contract path stays as the fallback for tokens that need behavior ASAs don't expose (e.g. arbitrary `_beforeTokenTransfer` hooks, custom voting/snapshot logic).
 
 ## Related docs
 
