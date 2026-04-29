@@ -7,21 +7,12 @@ permissioned-ramp). On AVM we wire the same set up via fixtures:
 `usdc`, `usdce`, `vault`, `collateral_token`, plus a
 `MockCollateralTokenRouter` deployment for the wrap/unwrap callback paths.
 
-Status (2026-04-28):
-  * Pure views, init revert, role-revert (sender-not-owner), and
-    upgrade-not-owner all pass — they don't depend on `owner()` reading
-    back the address that was passed to `initialize`.
-  * Tests that DO read the address back (initialize result, role grants,
-    mint/burn happy paths, wrap/unwrap happy paths, immutables, upgrade
-    happy path) currently fail because the puya backend's ABI router
-    drops the first arg's bytes during validation: `txna ApplicationArgs 1;
-    len; ==; assert` consumes the bytes without `dup`, and the function
-    body reads from `intc_2; dupn 3` zero placeholders instead of the
-    real arg. So `initialize(admin)` writes the zero address to
-    `_OWNER_SLOT`, every `onlyOwner`/`onlyRoles` check then fails, and
-    the entire role-gated state-mutating surface is unreachable. Marked
-    xfail with a shared `PUYA_ABI_ARG_DROP` reason. Expect them to flip
-    to passing the moment that bug lands in puya backend Python.
+The original blocker (`PUYA_ABI_ARG_DROP` — apparent ABI-router
+missing-`dup` for `initialize(address)`) was fixed in
+`puya-sol: fix account ensureBiguint + __postInit ensure_budget hook`
+[55fd3e233]. Real cause was upstream: `AssemblyBuilder::ensureBiguint`
+silently coerced `account` values to `IntegerConstant(0)`, so Solady's
+`or(newOwner, shl(255, iszero(newOwner)))` compiled to a constant.
 """
 from pathlib import Path
 
@@ -40,12 +31,25 @@ from dev.deploy import AUTO_POPULATE, NO_POPULATE, create_app, deploy_app
 from dev.invoke import call
 
 
-# Shared xfail reason — flip to "" or remove once PUYA #1 lands upstream.
-PUYA_ABI_ARG_DROP = (
-    "PUYA_BLOCKERS.md §1: puya ABI router drops first-arg bytes during "
-    "len-check; `initialize(_owner)` body sees zero instead of the passed "
-    "address, so `owner()` reads back zero and every `onlyOwner`/role check "
-    "reverts."
+# Wrap/unwrap tests that drive the callback or pre-transfer flow still
+# need their bodies fleshed out — `MockCollateralTokenRouter` deployment
+# + USDC mint/approve plumbing on the AVM side. Independent of the
+# compiler fix; tracked separately.
+WRAP_UNWRAP_BODY_TODO = (
+    "wrap/unwrap test body needs MockCollateralTokenRouter deployment + "
+    "USDC mint/approve flow on AVM mocks; orthogonal to the compiler fix."
+)
+
+# Solady's UUPSUpgradeable.upgradeToAndCall does a `delegatecall` into the
+# new implementation to run any data-init payload. puya-sol stubs
+# `delegatecall` as success without actually delegating — see
+# PrecompileDispatch / handlePrecompileCall. With empty data the call
+# should be a no-op and pass; in practice puya's `_authorizeUpgrade`
+# guard fires an assert (label122) that we need to look at separately.
+UPGRADE_DELEGATECALL_STUB = (
+    "Solady UUPSUpgradeable.upgradeToAndCall paths through delegatecall "
+    "which puya-sol stubs as success; the auth guard then asserts. "
+    "Needs a delegatecall-stub-aware path in puya-sol."
 )
 
 
@@ -121,7 +125,6 @@ def collateral_token_wired(localnet, admin, usdc, usdce, vault):
 # ── INITIALIZE ────────────────────────────────────────────────────────────
 
 
-@pytest.mark.xfail(reason=PUYA_ABI_ARG_DROP, strict=False)
 def test_CollateralToken_initialize(collateral_token, admin):
     """initialize(admin) sets owner() == admin."""
     assert call(collateral_token, "owner") == admin.address
@@ -152,12 +155,7 @@ def test_CollateralToken_decimals(collateral_token):
 
 
 def test_CollateralToken_immutables(collateral_token_wired, usdc, usdce, vault):
-    """USDC/USDCE/VAULT immutables match what was passed to __postInit.
-
-    Passes because __postInit's auto-generated TEAL emits `dup; len` for
-    each ABI arg's length-check, preserving the bytes for the body to use.
-    `initialize(_owner)` has the inverse problem (PUYA #1) — see other tests.
-    """
+    """USDC/USDCE/VAULT immutables match what was passed to __postInit."""
     assert call(collateral_token_wired, "USDC") == encoding.encode_address(
         app_id_to_address(usdc.app_id))
     assert call(collateral_token_wired, "USDCE") == encoding.encode_address(
@@ -171,7 +169,6 @@ MINTER_ROLE = 1 << 0
 WRAPPER_ROLE = 1 << 1
 
 
-@pytest.mark.xfail(reason=PUYA_ABI_ARG_DROP, strict=False)
 def test_CollateralToken_addMinter(collateral_token, admin, funded_account):
     """addMinter as owner grants MINTER_ROLE."""
     call(collateral_token, "addMinter", [addr(funded_account)], sender=admin)
@@ -179,7 +176,6 @@ def test_CollateralToken_addMinter(collateral_token, admin, funded_account):
                 [addr(funded_account), MINTER_ROLE]) is True
 
 
-@pytest.mark.xfail(reason=PUYA_ABI_ARG_DROP, strict=False)
 def test_CollateralToken_removeMinter(collateral_token, admin, funded_account):
     """removeMinter as owner revokes MINTER_ROLE."""
     call(collateral_token, "addMinter", [addr(funded_account)], sender=admin)
@@ -190,7 +186,6 @@ def test_CollateralToken_removeMinter(collateral_token, admin, funded_account):
                 [addr(funded_account), MINTER_ROLE]) is False
 
 
-@pytest.mark.xfail(reason=PUYA_ABI_ARG_DROP, strict=False)
 def test_CollateralToken_addWrapper(collateral_token, admin, funded_account):
     """addWrapper as owner grants WRAPPER_ROLE."""
     call(collateral_token, "addWrapper", [addr(funded_account)], sender=admin)
@@ -198,7 +193,6 @@ def test_CollateralToken_addWrapper(collateral_token, admin, funded_account):
                 [addr(funded_account), WRAPPER_ROLE]) is True
 
 
-@pytest.mark.xfail(reason=PUYA_ABI_ARG_DROP, strict=False)
 def test_CollateralToken_removeWrapper(collateral_token, admin, funded_account):
     """removeWrapper as owner revokes WRAPPER_ROLE."""
     call(collateral_token, "addWrapper", [addr(funded_account)], sender=admin)
@@ -237,7 +231,6 @@ def test_revert_CollateralToken_removeWrapper_unauthorized(collateral_token, fun
 # ── MINT / BURN ──────────────────────────────────────────────────────────
 
 
-@pytest.mark.xfail(reason=PUYA_ABI_ARG_DROP, strict=False)
 def test_CollateralToken_mint(collateral_token, admin, funded_account):
     """A minter can mint pUSD to a recipient."""
     call(collateral_token, "addMinter", [addr(admin)], sender=admin)
@@ -253,7 +246,6 @@ def test_revert_CollateralToken_mint_unauthorized(collateral_token, funded_accou
              sender=funded_account)
 
 
-@pytest.mark.xfail(reason=PUYA_ABI_ARG_DROP, strict=False)
 def test_CollateralToken_burn(collateral_token, admin):
     """A minter can burn its own pUSD."""
     call(collateral_token, "addMinter", [addr(admin)], sender=admin)
@@ -272,32 +264,32 @@ def test_revert_CollateralToken_burn_unauthorized(collateral_token, funded_accou
 # ── WRAP (with callback) ─────────────────────────────────────────────────
 
 
-@pytest.mark.xfail(reason=PUYA_ABI_ARG_DROP, strict=False)
+@pytest.mark.xfail(reason=WRAP_UNWRAP_BODY_TODO, strict=False)
 def test_CollateralToken_wrapUSDC(collateral_token_wired, usdc, vault, admin, funded_account):
     """Wrap USDC via the callback router. Should mint pUSD to recipient,
     transfer USDC to the vault."""
     # Tier 1+ — implementation deferred until owner works (router add-wrapper
     # requires admin), then we mint USDC, approve router, call router.wrap.
-    pytest.fail("router setup blocked by owner role grant — see PUYA_ABI_ARG_DROP")
+    pytest.fail("TODO: needs MockCollateralTokenRouter wiring + USDC mint/approve flow")
 
 
-@pytest.mark.xfail(reason=PUYA_ABI_ARG_DROP, strict=False)
+@pytest.mark.xfail(reason=WRAP_UNWRAP_BODY_TODO, strict=False)
 def test_CollateralToken_wrapUSDCe(collateral_token_wired, usdce, vault, admin, funded_account):
     """Wrap USDCe via the callback router."""
-    pytest.fail("router setup blocked by owner role grant — see PUYA_ABI_ARG_DROP")
+    pytest.fail("TODO: needs MockCollateralTokenRouter wiring + USDC mint/approve flow")
 
 
 # ── WRAP (without callback) ─────────────────────────────────────────────
 
 
-@pytest.mark.xfail(reason=PUYA_ABI_ARG_DROP, strict=False)
+@pytest.mark.xfail(reason=WRAP_UNWRAP_BODY_TODO, strict=False)
 def test_CollateralToken_wrapUSDC_noCallback(collateral_token_wired, usdc, vault, funded_account):
     """No-callback variant: caller pre-mints USDC to the token, then wrap()
     transfers it to the vault and mints pUSD to recipient."""
     pytest.fail("blocked: caller must hold WRAPPER_ROLE which depends on owner")
 
 
-@pytest.mark.xfail(reason=PUYA_ABI_ARG_DROP, strict=False)
+@pytest.mark.xfail(reason=WRAP_UNWRAP_BODY_TODO, strict=False)
 def test_CollateralToken_wrapUSDCe_noCallback(collateral_token_wired, usdce, vault, funded_account):
     """No-callback wrap of USDCe."""
     pytest.fail("blocked: caller must hold WRAPPER_ROLE which depends on owner")
@@ -344,26 +336,26 @@ def test_revert_CollateralToken_wrapInvalidAsset(collateral_token_wired, funded_
 # ── UNWRAP (with callback) ──────────────────────────────────────────────
 
 
-@pytest.mark.xfail(reason=PUYA_ABI_ARG_DROP, strict=False)
+@pytest.mark.xfail(reason=WRAP_UNWRAP_BODY_TODO, strict=False)
 def test_CollateralToken_unwrapUSDC(collateral_token_wired, usdc, vault, admin, funded_account):
     """Unwrap USDC via the callback router."""
-    pytest.fail("blocked by owner role grant — see PUYA_ABI_ARG_DROP")
+    pytest.fail("TODO: needs USDC mint/approve flow + pre-transfer setup on AVM")
 
 
-@pytest.mark.xfail(reason=PUYA_ABI_ARG_DROP, strict=False)
+@pytest.mark.xfail(reason=WRAP_UNWRAP_BODY_TODO, strict=False)
 def test_CollateralToken_unwrapUSDCe(collateral_token_wired, usdce, vault, admin, funded_account):
     """Unwrap USDCe via the callback router."""
-    pytest.fail("blocked by owner role grant — see PUYA_ABI_ARG_DROP")
+    pytest.fail("TODO: needs USDC mint/approve flow + pre-transfer setup on AVM")
 
 
 # ── UNWRAP (without callback) ───────────────────────────────────────────
 
 
-@pytest.mark.xfail(reason=PUYA_ABI_ARG_DROP, strict=False)
+@pytest.mark.xfail(reason=WRAP_UNWRAP_BODY_TODO, strict=False)
 def test_CollateralToken_unwrapUSDC_noCallback(collateral_token_wired, usdc, vault, admin, funded_account):
     """No-callback variant: caller pre-transfers pUSD to the token, then
     unwrap() burns pUSD and pulls USDC from the vault to recipient."""
-    pytest.fail("blocked by owner role grant — see PUYA_ABI_ARG_DROP")
+    pytest.fail("TODO: needs USDC mint/approve flow + pre-transfer setup on AVM")
 
 
 # ── UNWRAP (revert paths) ───────────────────────────────────────────────
@@ -418,7 +410,7 @@ def test_CollateralToken_permit2NoInfiniteAllowance(collateral_token, admin):
 # ── UUPS UPGRADE ────────────────────────────────────────────────────────
 
 
-@pytest.mark.xfail(reason=PUYA_ABI_ARG_DROP, strict=False)
+@pytest.mark.xfail(reason=UPGRADE_DELEGATECALL_STUB, strict=False)
 def test_CollateralToken_upgradeToAndCall(collateral_token, admin, usdc, usdce, vault):
     """Owner can upgradeToAndCall(newImpl, ""). Empty data so the stubbed
     delegatecall doesn't matter (see notes on PUYA_BLOCKERS.md re: solady

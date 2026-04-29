@@ -1,39 +1,21 @@
 """Admin / role / pause tests for v2 contracts using Solady's OwnableRoles.
 
-KNOWN ISSUE: `initialize(address _owner)` body sees zero instead of the
-passed address. Looking at the emitted TEAL, the ABI router does
-`txna ApplicationArgs 1; len; 32; ==; assert` — the address value is
-read for the length check and consumed without a `dup`, so it never
-reaches a frame slot. By the time `_initializeOwner(_owner)` runs in
-the modifier-expanded body, `_owner` reads back zero. Solady's
-`_setOwner` then writes zero to the OWNER_SLOT, and every subsequent
-`onlyOwner` reverts.
-
-The address-cleanup `shr(96, shl(96, x))` peephole in puya-sol is fine —
-that part is handled. The actual block is that puya's optimiser drops
-the dup-and-store at the router (likely because the body's
-`VarExpression(_owner)` references are buried inside the `initializer`
-modifier's `do { ... } while (true) { break }` WhileLoop, which puya
-collapses during single-iteration analysis). Routing the arg through
-paramDecodes (no-op reinterpret cast OR an explicit `txna ApplicationArgs N`
-re-read) didn't help — puya CSE-eliminates both.
-
-The fix likely needs either (a) puya backend support for marking ABI args
-keep-alive, or (b) puya-sol detecting Solady's `initializer` modifier
-pattern and bypassing the WhileLoop wrapping. Both are bigger surgery.
+The previously-blocking `initialize(address)` arg-drop (the apparent
+ABI-router missing-`dup` in `__postInit`'s first arg) was fixed in
+`puya-sol: fix account ensureBiguint + __postInit ensure_budget hook`
+[55fd3e233]. Root cause was actually upstream: `AssemblyBuilder::ensureBiguint`
+silently coerced `account` values to `IntegerConstant(0)` in its non-scalar
+fallback, so Solady's `or(newOwner, shl(255, iszero(newOwner)))` compiled to
+a constant and the OWNER_SLOT got that constant rather than the caller's
+address. puya was correctly identifying the parameter as dead because
+puya-sol had already eliminated every reference to it. Fix routes `account`
+through `ReinterpretCast(account → bytes → biguint)` (a runtime no-op).
 """
 import algokit_utils as au
 import pytest
 from algokit_utils.errors.logic_error import LogicError
 from algosdk import encoding
 from conftest import AUTO_POPULATE, addr
-
-
-SOLADY_OWNERSHIP_BROKEN = (
-    "puya optimiser drops the address arg's dup-and-store at the ABI router "
-    "for `initialize(address)` — body reads zero instead of the passed value. "
-    "Affects every Solady-Ownable-derived contract."
-)
 
 
 def _call(client, method, args=None, sender=None, extra_fee=20_000, populate=AUTO_POPULATE):
@@ -91,26 +73,22 @@ def test_ctf_adapter_does_not_support_random_interface(ctf_adapter):
     assert _call(ctf_adapter, "supportsInterface", [b"\xde\xad\xbe\xef"]) is False
 
 
-# ── Owner-dependent operations (xfail until address-cleanup fix) ──────────
+# ── Owner-dependent operations ────────────────────────────────────────────
 
-@pytest.mark.xfail(reason=SOLADY_OWNERSHIP_BROKEN)
 def test_initial_owner_is_admin(collateral_onramp, admin):
     assert _call(collateral_onramp, "owner") == admin.address
 
 
-@pytest.mark.xfail(reason=SOLADY_OWNERSHIP_BROKEN)
 def test_transfer_ownership(collateral_onramp, admin, funded_account):
     _call(collateral_onramp, "transferOwnership", [addr(funded_account)], sender=admin)
     assert _call(collateral_onramp, "owner") == funded_account.address
 
 
-@pytest.mark.xfail(reason=SOLADY_OWNERSHIP_BROKEN)
 def test_add_admin_grants_role(collateral_onramp, admin, funded_account):
     _call(collateral_onramp, "addAdmin", [addr(funded_account)], sender=admin)
     assert _call(collateral_onramp, "rolesOf", [addr(funded_account)]) != 0
 
 
-@pytest.mark.xfail(reason=SOLADY_OWNERSHIP_BROKEN)
 def test_pause_unpause_flow(collateral_onramp, admin, funded_account):
     _call(collateral_onramp, "pause", [addr(funded_account)], sender=admin)
     assert _call(collateral_onramp, "paused", [addr(funded_account)]) is True
@@ -118,7 +96,6 @@ def test_pause_unpause_flow(collateral_onramp, admin, funded_account):
     assert _call(collateral_onramp, "paused", [addr(funded_account)]) is False
 
 
-@pytest.mark.xfail(reason=SOLADY_OWNERSHIP_BROKEN)
 def test_permissioned_ramp_witness(permissioned_ramp, admin, funded_account):
     _call(permissioned_ramp, "addWitness", [addr(funded_account)], sender=admin)
     assert _call(permissioned_ramp, "rolesOf", [addr(funded_account)]) != 0
