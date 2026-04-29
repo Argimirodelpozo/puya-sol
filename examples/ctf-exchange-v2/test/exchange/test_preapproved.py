@@ -622,9 +622,139 @@ def test_match_orders_empty_signature_preapproved_complementary(split_settled_wi
     assert usdc_balance(usdc, carla_addr) == 50_000_000
 
 
-@pytest.mark.xfail(reason="ERC1271 1271-preapproval invalidation flow needs "
-    "ToggleableERC1271Mock fixture wiring + signed-by-1271 happy path",
-    strict=False)
-def test_match_orders_preapproved_1271_signer_invalidated(split_settled_with_delegate):
-    """test_matchOrders_preapproved1271_signerInvalidated"""
-    pytest.fail("ToggleableERC1271 + dance happy-path")
+def test_match_orders_preapproved_1271_signer_invalidated(
+    split_settled_with_delegate, toggleable_1271_factory
+):
+    """test_matchOrders_preapproved1271_signerInvalidated:
+    a preapproved POLY_1271 order remains matchable even after the
+    wallet's 1271 validation is `disable()`d, while a different order
+    from the same disabled wallet (not preapproved) reverts on the
+    1271 path.
+
+    AVM-PORT-ADAPTATION: maker is the wallet's puya-sol storage
+    encoding (`\\x00*24 || itob(app_id)`) so the 1271 inner-call's
+    `extract_uint64` at offset 24 resolves to the wallet's app id;
+    USDC allowance and balance keys are stored against that same
+    encoding so the orch's `transferFrom(wallet, exchange, …)` lookup
+    lines up.
+    """
+    from dev.deals import (
+        deal_usdc_and_approve, deal_outcome_and_approve, set_allowance,
+        usdc_balance, ctf_balance,
+    )
+    from dev.addrs import algod_addr_bytes_for_app
+    from hashlib import sha256
+
+    h1, _, orch, usdc, ctf, chunk = split_settled_with_delegate
+    bob_signer, carla_signer = bob(), carla()
+    bob_addr = bob_signer.eth_address_padded32
+    carla_addr = carla_signer.eth_address_padded32
+
+    # Deploy the toggleable wallet with carla as the inner signer.
+    wallet = toggleable_1271_factory(carla_signer.eth_address)
+    wallet_addr32 = app_id_to_address(wallet.app_id)  # psol storage encoding
+    wallet_real = algod_addr_bytes_for_app(wallet.app_id)
+
+    # Same yes/no derivation as `_setup_complementary_market`, inlined
+    # because we want different deal targets (the wallet, not bob/carla
+    # for the buy side).
+    yes_id, no_id, _, _, h1_addr = _setup_complementary_market(orch, h1, ctf, usdc)
+
+    # Wallet has 100M USDC and approves the exchange (h1 is the
+    # `address(this)` of matchOrders' inner-call frame).
+    deal_usdc_and_approve(usdc, wallet_addr32, h1_addr, 100_000_000)
+
+    # Build two BUY orders from the same wallet, signed by carla via
+    # POLY_1271. Different salts.
+    preapproved = make_order(
+        salt=1, maker=wallet_addr32, signer=wallet_addr32, token_id=yes_id,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY,
+        signature_type=SignatureType.POLY_1271,
+    )
+    preapproved_signed = sign_order(orch, preapproved, carla_signer)
+
+    not_preapproved = make_order(
+        salt=2, maker=wallet_addr32, signer=wallet_addr32, token_id=yes_id,
+        maker_amount=50_000_000, taker_amount=100_000_000, side=Side.BUY,
+        signature_type=SignatureType.POLY_1271,
+    )
+    not_preapproved_signed = sign_order(orch, not_preapproved, carla_signer)
+
+    # Preapprove only the first one while the wallet is still active.
+    _call_with_pads(orch, orch, "preapproveOrder",
+                    [preapproved_signed.to_abi_list()], extra_fee=80_000)
+
+    # Disable the wallet — 1271 returns 0 from now on.
+    wallet.send.call(au.AppClientMethodCallParams(
+        method="disable", args=[],
+        extra_fee=au.AlgoAmount(micro_algo=10_000),
+    ), send_params=AUTO_POPULATE)
+
+    # ── Scenario 1: notPreapproved order from disabled wallet → revert ──
+    # bob is the SELL-side maker (already has yes_id from
+    # `_setup_complementary_market`).
+    maker_for_fail = make_order(
+        maker=bob_addr, token_id=yes_id,
+        maker_amount=100_000_000, taker_amount=50_000_000, side=Side.SELL,
+    )
+    maker_for_fail_signed = sign_order(orch, maker_for_fail, bob_signer)
+    yes_bytes = yes_id.to_bytes(32, "big")
+    box_refs_fail = [
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(bob_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(wallet_addr32) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"ap_" + sha256(bytes(bob_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id,
+                        name=b"a_" + sha256(bytes(wallet_addr32) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(wallet_addr32)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(bob_addr)),
+    ]
+    with pytest.raises(LogicError):
+        dance_match_orders(
+            chunk, orch,
+            condition_id=CONDITION_ID,
+            taker_order_list=not_preapproved_signed.to_abi_list(),
+            maker_orders_list=[maker_for_fail_signed.to_abi_list()],
+            taker_fill_amount=50_000_000, maker_fill_amounts=[100_000_000],
+            taker_fee_amount=0, maker_fee_amounts=[0],
+            extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id, wallet.app_id],
+            extra_box_refs=box_refs_fail,
+        )
+
+    # ── Scenario 2: preapproved order with empty signature → succeeds ──
+    preapproved_signed.signature = b""
+    # carla is the SELL-side maker (already has yes_id from
+    # `_setup_complementary_market`).
+    maker_for_success = make_order(
+        maker=carla_addr, token_id=yes_id,
+        maker_amount=100_000_000, taker_amount=50_000_000, side=Side.SELL,
+    )
+    maker_for_success_signed = sign_order(orch, maker_for_success, carla_signer)
+    box_refs_success = [
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(carla_addr) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"b_" + sha256(bytes(wallet_addr32) + yes_bytes).digest()),
+        au.BoxReference(app_id=ctf.app_id,
+                        name=b"ap_" + sha256(bytes(carla_addr) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id,
+                        name=b"a_" + sha256(bytes(wallet_addr32) + h1_addr).digest()),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(wallet_addr32)),
+        au.BoxReference(app_id=usdc.app_id, name=b"b_" + bytes(carla_addr)),
+    ]
+    dance_match_orders(
+        chunk, orch,
+        condition_id=CONDITION_ID,
+        taker_order_list=preapproved_signed.to_abi_list(),
+        maker_orders_list=[maker_for_success_signed.to_abi_list()],
+        taker_fill_amount=50_000_000, maker_fill_amounts=[100_000_000],
+        taker_fee_amount=0, maker_fee_amounts=[0],
+        extra_app_refs=[usdc.app_id, ctf.app_id, h1.app_id, wallet.app_id],
+        extra_box_refs=box_refs_success,
+    )
+
+    # Wallet now holds 100M YES and 50M USDC remains.
+    assert ctf_balance(ctf, wallet_addr32, yes_id) == 100_000_000
+    assert usdc_balance(usdc, wallet_addr32) == 50_000_000
