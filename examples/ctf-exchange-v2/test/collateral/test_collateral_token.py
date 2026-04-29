@@ -31,13 +31,23 @@ from dev.deploy import AUTO_POPULATE, NO_POPULATE, create_app, deploy_app
 from dev.invoke import call
 
 
-# Wrap/unwrap tests that drive the callback or pre-transfer flow still
-# need their bodies fleshed out — `MockCollateralTokenRouter` deployment
-# + USDC mint/approve plumbing on the AVM side. Independent of the
-# compiler fix; tracked separately.
-WRAP_UNWRAP_BODY_TODO = (
-    "wrap/unwrap test body needs MockCollateralTokenRouter deployment + "
-    "USDC mint/approve flow on AVM mocks; orthogonal to the compiler fix."
+# wrap / unwrap go through Solady's `SafeTransferLib.safeTransfer` (and
+# `safeTransferFrom`) on the asset address. Solady writes those as inline
+# assembly that does `call(gas, token, 0, ptr, len, retPtr, retLen)` on a
+# non-constant `token`. puya-sol's Yul `call` handler currently stubs the
+# call as success without firing the corresponding `itxn ApplicationCall`,
+# so the transfer silently no-ops on AVM (see TransferHelper.sol's
+# AVM-PORT-ADAPTATION note + PUYA_BLOCKERS.md §3). The pUSD mint/burn half
+# of wrap/unwrap fires correctly; the asset side does not move. Until
+# puya-sol learns to lower SafeTransferLib's call-with-non-constant-target,
+# these flows can only be exercised end-to-end if the source switches to
+# the IERC20Min wrapper (which TransferHelper already uses for its own
+# ERC20 paths).
+SAFETRANSFERLIB_CALL_STUB = (
+    "Solady SafeTransferLib emits inline-assembly `call(gas, token, …)` "
+    "on a non-constant token; puya-sol stubs that call as success without "
+    "firing an inner txn, so the asset transfer silently no-ops. "
+    "PUYA_BLOCKERS.md §3."
 )
 
 # Solady's UUPSUpgradeable.upgradeToAndCall does a `delegatecall` into the
@@ -264,7 +274,7 @@ def test_revert_CollateralToken_burn_unauthorized(collateral_token, funded_accou
 # ── WRAP (with callback) ─────────────────────────────────────────────────
 
 
-@pytest.mark.xfail(reason=WRAP_UNWRAP_BODY_TODO, strict=False)
+@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB, strict=False)
 def test_CollateralToken_wrapUSDC(collateral_token_wired, usdc, vault, admin, funded_account):
     """Wrap USDC via the callback router. Should mint pUSD to recipient,
     transfer USDC to the vault."""
@@ -273,7 +283,7 @@ def test_CollateralToken_wrapUSDC(collateral_token_wired, usdc, vault, admin, fu
     pytest.fail("TODO: needs MockCollateralTokenRouter wiring + USDC mint/approve flow")
 
 
-@pytest.mark.xfail(reason=WRAP_UNWRAP_BODY_TODO, strict=False)
+@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB, strict=False)
 def test_CollateralToken_wrapUSDCe(collateral_token_wired, usdce, vault, admin, funded_account):
     """Wrap USDCe via the callback router."""
     pytest.fail("TODO: needs MockCollateralTokenRouter wiring + USDC mint/approve flow")
@@ -282,17 +292,75 @@ def test_CollateralToken_wrapUSDCe(collateral_token_wired, usdce, vault, admin, 
 # ── WRAP (without callback) ─────────────────────────────────────────────
 
 
-@pytest.mark.xfail(reason=WRAP_UNWRAP_BODY_TODO, strict=False)
-def test_CollateralToken_wrapUSDC_noCallback(collateral_token_wired, usdc, vault, funded_account):
-    """No-callback variant: caller pre-mints USDC to the token, then wrap()
-    transfers it to the vault and mints pUSD to recipient."""
-    pytest.fail("blocked: caller must hold WRAPPER_ROLE which depends on owner")
+def _wrap_noCallback(collateral_token_wired, asset_mock, vault, admin,
+                     recipient, amount=100_000_000):
+    """Common no-callback wrap fixture body. The caller deposits the asset
+    into the collateral token's app account ahead of time; `wrap` then
+    mints pUSD to `recipient` and transfers the asset to `vault`."""
+    from dev.deals import deal_usdc, usdc_balance
+    from dev.addrs import algod_addr_bytes_for_app
+
+    # Owner grants WRAPPER_ROLE to admin so admin can call wrap.
+    call(collateral_token_wired, "addWrapper", [addr(admin)], sender=admin)
+
+    # Pre-deposit the asset into collateral_token's app account. When
+    # collateral_token inner-calls usdc.transfer(VAULT, …), the mock sees
+    # `op.Txn.sender == collateral_token's account`, so the balance must
+    # exist under THAT key — algod_addr_bytes_for_app gives us those raw
+    # 32 bytes. (`app_id_to_address` returns puya-sol's Solidity-side
+    # convention `\x00*24 + itob(appid)`, which is what gets stored in
+    # the contract's `address` slots — different value, different table.)
+    ct_addr32 = algod_addr_bytes_for_app(collateral_token_wired.app_id)
+    deal_usdc(asset_mock, ct_addr32, amount)
+    assert usdc_balance(asset_mock, ct_addr32) == amount
+
+    # Snapshot vault balance before — it might be non-zero from earlier
+    # fund_random_account top-up (vault is just a funded account).
+    vault_before = usdc_balance(asset_mock, addr(vault))
+
+    call(
+        collateral_token_wired, "wrap",
+        [
+            app_id_to_address(asset_mock.app_id),
+            addr(recipient),
+            amount,
+            b"\x00" * 32,  # callbackReceiver = address(0) → no callback
+            b"",            # data
+        ],
+        sender=admin,
+    )
+
+    # pUSD minted to recipient.
+    assert call(collateral_token_wired, "balanceOf", [addr(recipient)]) == amount
+    # Asset moved out of collateral_token, into vault.
+    assert usdc_balance(asset_mock, ct_addr32) == 0
+    assert usdc_balance(asset_mock, addr(vault)) == vault_before + amount
 
 
-@pytest.mark.xfail(reason=WRAP_UNWRAP_BODY_TODO, strict=False)
-def test_CollateralToken_wrapUSDCe_noCallback(collateral_token_wired, usdce, vault, funded_account):
-    """No-callback wrap of USDCe."""
-    pytest.fail("blocked: caller must hold WRAPPER_ROLE which depends on owner")
+@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB, strict=False)
+def test_CollateralToken_wrapUSDC_noCallback(
+    collateral_token_wired, usdc, vault, admin, funded_account
+):
+    """No-callback variant: caller pre-deposits USDC to the token, then
+    `wrap` mints pUSD to recipient and transfers USDC to the vault.
+
+    Body is fully wired but the asset-side `_asset.safeTransfer(VAULT, …)`
+    fires Solady's inline-asm `call` which puya-sol stubs as success
+    without firing an itxn — pUSD mints correctly, USDC stays put. So the
+    final `usdc_balance(asset, ct_addr32) == 0` check fails until the
+    SafeTransferLib lowering lands. Mint half passes, transfer half
+    no-ops; the assertion drift is what proves it.
+    """
+    _wrap_noCallback(collateral_token_wired, usdc, vault, admin, funded_account)
+
+
+@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB, strict=False)
+def test_CollateralToken_wrapUSDCe_noCallback(
+    collateral_token_wired, usdce, vault, admin, funded_account
+):
+    """No-callback wrap of USDCe — same flow as USDC, just the other
+    supported asset slot. xfail for the same SafeTransferLib reason."""
+    _wrap_noCallback(collateral_token_wired, usdce, vault, admin, funded_account)
 
 
 # ── WRAP (revert paths) ─────────────────────────────────────────────────
@@ -336,13 +404,13 @@ def test_revert_CollateralToken_wrapInvalidAsset(collateral_token_wired, funded_
 # ── UNWRAP (with callback) ──────────────────────────────────────────────
 
 
-@pytest.mark.xfail(reason=WRAP_UNWRAP_BODY_TODO, strict=False)
+@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB, strict=False)
 def test_CollateralToken_unwrapUSDC(collateral_token_wired, usdc, vault, admin, funded_account):
     """Unwrap USDC via the callback router."""
     pytest.fail("TODO: needs USDC mint/approve flow + pre-transfer setup on AVM")
 
 
-@pytest.mark.xfail(reason=WRAP_UNWRAP_BODY_TODO, strict=False)
+@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB, strict=False)
 def test_CollateralToken_unwrapUSDCe(collateral_token_wired, usdce, vault, admin, funded_account):
     """Unwrap USDCe via the callback router."""
     pytest.fail("TODO: needs USDC mint/approve flow + pre-transfer setup on AVM")
@@ -351,7 +419,7 @@ def test_CollateralToken_unwrapUSDCe(collateral_token_wired, usdce, vault, admin
 # ── UNWRAP (without callback) ───────────────────────────────────────────
 
 
-@pytest.mark.xfail(reason=WRAP_UNWRAP_BODY_TODO, strict=False)
+@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB, strict=False)
 def test_CollateralToken_unwrapUSDC_noCallback(collateral_token_wired, usdc, vault, admin, funded_account):
     """No-callback variant: caller pre-transfers pUSD to the token, then
     unwrap() burns pUSD and pulls USDC from the vault to recipient."""
