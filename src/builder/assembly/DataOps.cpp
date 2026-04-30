@@ -383,6 +383,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 	}
 
 	int numSlots = static_cast<int>(*length / 0x20);
+	int tailBytes = static_cast<int>(*length % 0x20);
 	if (*length == 0)
 	{
 		// keccak256("") = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
@@ -525,7 +526,29 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 	}
 
 	// Concatenate all memory slots using extracted helper
-	auto data = concatSlots(*offset, 0, numSlots, _loc);
+	std::shared_ptr<awst::Expression> data = concatSlots(*offset, 0, numSlots, _loc);
+
+	if (tailBytes > 0)
+	{
+		// Length isn't a multiple of 32 — append the partial trailing slice
+		// from EVM memory so the keccak input matches what Solidity asked for.
+		// Without this, Solady's `keccak256(0x18, 0x42)` (66 bytes) and
+		// `keccak256(0x0c, 0x34)` (52 bytes) idioms get truncated to a multiple
+		// of 32, producing wrong digests / wrong storage-slot keys.
+		uint64_t tailOffset = *offset + static_cast<uint64_t>(numSlots) * 0x20;
+		auto tailOffsetConst = awst::makeIntegerConstant(std::to_string(tailOffset), _loc);
+		auto tailLenConst = awst::makeIntegerConstant(std::to_string(tailBytes), _loc);
+
+		auto tail = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
+		tail->stackArgs.push_back(memoryVar(_loc));
+		tail->stackArgs.push_back(std::move(tailOffsetConst));
+		tail->stackArgs.push_back(std::move(tailLenConst));
+
+		auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
+		concat->stackArgs.push_back(std::move(data));
+		concat->stackArgs.push_back(std::move(tail));
+		data = std::move(concat);
+	}
 
 	// Apply keccak256
 	auto keccak = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), _loc);
