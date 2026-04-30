@@ -553,25 +553,98 @@ def test_PermissionedRamp_wrap_incrementsNonce(
     assert n == 1
 
 
-# ── POSITIVE UNWRAP — uses CT.transferFrom (broken Solady slot). xfail. ─
+# ── POSITIVE UNWRAP ─────────────────────────────────────────────────────
 
 
-_OFFRAMP_SOLADY = (
-    "PermissionedRamp.unwrap pulls pUSD from sender via CT.transferFrom "
-    "(Solady ERC20). Same Solady-on-AVM storage-slot mismatch as "
-    "test_collateral_offramp.py's unwrap-positive paths — see "
-    "OFFRAMP_ADDR_CONVENTION_MISMATCH there."
-)
+def _do_positive_unwrap(
+    permissioned_ramp_wired, collateral_token_wired, usdc_app,
+    vault, funded_account
+):
+    """Helper: wrap then unwrap, asserting the sender ends up with the
+    underlying back."""
+    from dev.deals import deal_usdc, set_allowance
+    from dev.eip712 import sign_unwrap
+    alice32 = decode_address(funded_account.address)
+    asset32 = app_id_to_address(usdc_app.app_id)
+    amount = 100_000_000
+    deadline = 2 ** 64 - 1
+
+    # Wrap leg first to give alice pUSD.
+    _do_positive_wrap(permissioned_ramp_wired, collateral_token_wired,
+                      usdc_app, vault, funded_account)
+
+    # Vault approves CT to pull underlying during the unwrap leg.
+    vault32 = decode_address(vault.address)
+    ct32 = algod_addr_bytes_for_app(collateral_token_wired.app_id)
+    set_allowance(usdc_app, vault32, ct32, amount)
+
+    # alice approves the ramp's algod-derived address for her pUSD.
+    call(collateral_token_wired, "approve",
+         [algod_addr_bytes_for_app(permissioned_ramp_wired.app_id), amount],
+         sender=funded_account)
+
+    # Sign Unwrap. Nonce is now 1 (post-wrap).
+    nonce = 1
+    sig = sign_unwrap(
+        permissioned_ramp_wired,
+        alice32, asset32, alice32, amount, nonce, deadline,
+        WITNESS_PK,
+    )
+
+    # Same group-padding pattern as the wrap helper.
+    import algokit_utils as au
+    composer = (
+        permissioned_ramp_wired.algorand.new_group()
+        .add_app_call_method_call(
+            permissioned_ramp_wired.params.call(
+                au.AppClientMethodCallParams(
+                    method="nonces", args=[b"\x00" * 31 + b"\x05"],
+                    sender=funded_account.address,
+                )))
+        .add_app_call_method_call(
+            permissioned_ramp_wired.params.call(
+                au.AppClientMethodCallParams(
+                    method="nonces", args=[b"\x00" * 31 + b"\x06"],
+                    sender=funded_account.address,
+                )))
+        .add_app_call_method_call(
+            permissioned_ramp_wired.params.call(
+                au.AppClientMethodCallParams(
+                    method="unwrap",
+                    args=[asset32, alice32, amount, nonce, deadline, sig],
+                    sender=funded_account.address,
+                    extra_fee=au.AlgoAmount(micro_algo=200_000),
+                    app_references=[usdc_app.app_id, collateral_token_wired.app_id],
+                )))
+    )
+    composer.send(au.SendParams(populate_app_call_resources=True))
+    return alice32, amount
 
 
-@pytest.mark.xfail(reason=_OFFRAMP_SOLADY, strict=True)
-def test_PermissionedRamp_unwrapUSDC(permissioned_ramp_wired):
-    raise NotImplementedError(_OFFRAMP_SOLADY)
+def test_PermissionedRamp_unwrapUSDC(
+    permissioned_ramp_wired, collateral_token_wired, usdc_stateful, vault, funded_account
+):
+    from dev.deals import usdc_balance
+    alice32, amount = _do_positive_unwrap(
+        permissioned_ramp_wired, collateral_token_wired,
+        usdc_stateful, vault, funded_account)
+    assert usdc_balance(usdc_stateful, alice32) == amount
+    assert usdc_balance(usdc_stateful, decode_address(vault.address)) == 0
+    assert call(collateral_token_wired, "balanceOf",
+                [addr(funded_account)]) == 0
 
 
-@pytest.mark.xfail(reason=_OFFRAMP_SOLADY, strict=True)
-def test_PermissionedRamp_unwrapUSDCe(permissioned_ramp_wired):
-    raise NotImplementedError(_OFFRAMP_SOLADY)
+def test_PermissionedRamp_unwrapUSDCe(
+    permissioned_ramp_wired, collateral_token_wired, usdce_stateful, vault, funded_account
+):
+    from dev.deals import usdc_balance
+    alice32, amount = _do_positive_unwrap(
+        permissioned_ramp_wired, collateral_token_wired,
+        usdce_stateful, vault, funded_account)
+    assert usdc_balance(usdce_stateful, alice32) == amount
+    assert usdc_balance(usdce_stateful, decode_address(vault.address)) == 0
+    assert call(collateral_token_wired, "balanceOf",
+                [addr(funded_account)]) == 0
 
 
 # Note: test_revert_PermissionedRamp_pause_unauthorized lives in

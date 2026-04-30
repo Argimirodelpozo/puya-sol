@@ -255,94 +255,17 @@ abstract contract ERC20 {
     ///
     /// Emits a {Transfer} event.
     function transferFrom(address from, address to, uint256 amount) public virtual returns (bool) {
-        _beforeTokenTransfer(from, to, amount);
-        // Code duplication is for zero-cost abstraction if possible.
-        if (_givePermit2InfiniteAllowance()) {
-            /// @solidity memory-safe-assembly
-            assembly {
-                let from_ := shl(96, from)
-                if iszero(eq(caller(), _PERMIT2)) {
-                    // Compute the allowance slot and load its value.
-                    mstore(0x20, caller())
-                    mstore(0x0c, or(from_, _ALLOWANCE_SLOT_SEED))
-                    let allowanceSlot := keccak256(0x0c, 0x34)
-                    let allowance_ := sload(allowanceSlot)
-                    // If the allowance is not the maximum uint256 value.
-                    if not(allowance_) {
-                        // Revert if the amount to be transferred exceeds the allowance.
-                        if gt(amount, allowance_) {
-                            mstore(0x00, 0x13be252b) // `InsufficientAllowance()`.
-                            revert(0x1c, 0x04)
-                        }
-                        // Subtract and store the updated allowance.
-                        sstore(allowanceSlot, sub(allowance_, amount))
-                    }
-                }
-                // Compute the balance slot and load its value.
-                mstore(0x0c, or(from_, _BALANCE_SLOT_SEED))
-                let fromBalanceSlot := keccak256(0x0c, 0x20)
-                let fromBalance := sload(fromBalanceSlot)
-                // Revert if insufficient balance.
-                if gt(amount, fromBalance) {
-                    mstore(0x00, 0xf4d678b8) // `InsufficientBalance()`.
-                    revert(0x1c, 0x04)
-                }
-                // Subtract and store the updated balance.
-                sstore(fromBalanceSlot, sub(fromBalance, amount))
-                // Compute the balance slot of `to`.
-                mstore(0x00, to)
-                let toBalanceSlot := keccak256(0x0c, 0x20)
-                // Add and store the updated balance of `to`.
-                // Will not overflow because the sum of all user balances
-                // cannot exceed the maximum uint256 value.
-                sstore(toBalanceSlot, add(sload(toBalanceSlot), amount))
-                // Emit the {Transfer} event.
-                mstore(0x20, amount)
-                log3(0x20, 0x20, _TRANSFER_EVENT_SIGNATURE, shr(96, from_), shr(96, mload(0x0c)))
-            }
-        } else {
-            /// @solidity memory-safe-assembly
-            assembly {
-                let from_ := shl(96, from)
-                // Compute the allowance slot and load its value.
-                mstore(0x20, caller())
-                mstore(0x0c, or(from_, _ALLOWANCE_SLOT_SEED))
-                let allowanceSlot := keccak256(0x0c, 0x34)
-                let allowance_ := sload(allowanceSlot)
-                // If the allowance is not the maximum uint256 value.
-                if not(allowance_) {
-                    // Revert if the amount to be transferred exceeds the allowance.
-                    if gt(amount, allowance_) {
-                        mstore(0x00, 0x13be252b) // `InsufficientAllowance()`.
-                        revert(0x1c, 0x04)
-                    }
-                    // Subtract and store the updated allowance.
-                    sstore(allowanceSlot, sub(allowance_, amount))
-                }
-                // Compute the balance slot and load its value.
-                mstore(0x0c, or(from_, _BALANCE_SLOT_SEED))
-                let fromBalanceSlot := keccak256(0x0c, 0x20)
-                let fromBalance := sload(fromBalanceSlot)
-                // Revert if insufficient balance.
-                if gt(amount, fromBalance) {
-                    mstore(0x00, 0xf4d678b8) // `InsufficientBalance()`.
-                    revert(0x1c, 0x04)
-                }
-                // Subtract and store the updated balance.
-                sstore(fromBalanceSlot, sub(fromBalance, amount))
-                // Compute the balance slot of `to`.
-                mstore(0x00, to)
-                let toBalanceSlot := keccak256(0x0c, 0x20)
-                // Add and store the updated balance of `to`.
-                // Will not overflow because the sum of all user balances
-                // cannot exceed the maximum uint256 value.
-                sstore(toBalanceSlot, add(sload(toBalanceSlot), amount))
-                // Emit the {Transfer} event.
-                mstore(0x20, amount)
-                log3(0x20, 0x20, _TRANSFER_EVENT_SIGNATURE, shr(96, from_), shr(96, mload(0x0c)))
-            }
-        }
-        _afterTokenTransfer(from, to, amount);
+        // AVM-PORT-ADAPTATION: replaced the inline-assembly fast path with
+        // an `_spendAllowance` + `_transfer` call. The original Yul
+        // open-coded the allowance/balance slot derivations alongside
+        // `_transfer`'s, which puya-sol lowers to two slot keys that
+        // disagree — `_transfer` writes to slot K1 (matching `_mint` /
+        // `balanceOf`), the inline `transferFrom` writes to a different
+        // slot K2, so balances drift after every transferFrom. Routing
+        // through `_transfer` keeps every balance write going through
+        // the one verified-correct lowering.
+        _spendAllowance(from, msg.sender, amount);
+        _transfer(from, to, amount);
         return true;
     }
 
