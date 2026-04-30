@@ -50,7 +50,11 @@ contract NegRiskCtfCollateralAdapter is CtfCollateralAdapter {
             IERC20Min(_usdce).approve(_avmAlgodAddrFor(_negRiskAdapter), type(uint256).max),
             "ERC20 approve failed"
         );
-        CONDITIONAL_TOKENS.setApprovalForAll(_negRiskAdapter, true);
+        // _avmAlgodAddrFor: when negRiskAdapter later calls
+        // CTF.safeTransferFrom(this, ..., ...) via inner-tx, CTFMock sees
+        // msg.sender = negRiskAdapter's algod-derived address, so the
+        // approval must be set under that form, not the puya-sol-conv one.
+        CONDITIONAL_TOKENS.setApprovalForAll(_avmAlgodAddrFor(_negRiskAdapter), true);
     }
 
     /*--------------------------------------------------------------

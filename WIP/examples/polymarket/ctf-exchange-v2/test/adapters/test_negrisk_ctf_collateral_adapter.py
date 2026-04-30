@@ -193,33 +193,52 @@ def _do_negrisk_split(
          [algod_addr_bytes_for_app(negrisk_adapter_wired.app_id), amount],
          sender=funded_account)
 
-    # The split chain in NegRisk is deeper than CtfAdapter (adapter →
-    # NegRiskAdapter mock → USDCe + 2× CTFMock.mint), so we add 5 pads
-    # to the group to give auto-populate enough ref budget. Pads use
-    # CONDITIONAL_TOKENS() / COLLATERAL_TOKEN() / USDCE() global-state
-    # reads which carry zero box refs.
-    composer = negrisk_adapter_wired.algorand.new_group()
-    pad_methods = ["USDCE", "COLLATERAL_TOKEN", "CONDITIONAL_TOKENS",
-                   "USDCE", "COLLATERAL_TOKEN"]
-    for i, m in enumerate(pad_methods):
-        composer = composer.add_app_call_method_call(
-            negrisk_adapter_wired.params.call(au.AppClientMethodCallParams(
-                method=m, args=[],
-                sender=funded_account.address, note=f"pad-{i}".encode())))
-    composer = composer.add_app_call_method_call(
-        negrisk_adapter_wired.params.call(au.AppClientMethodCallParams(
-            method="splitPosition",
-            args=[b"\x00" * 32, b"\x00" * 32, CONDITION_ID, [1, 2], amount],
-            sender=funded_account.address,
-            extra_fee=au.AlgoAmount(micro_algo=400_000),
-            app_references=[
-                collateral_token_wired.app_id,
-                ctf_stateful.app_id,
-                usdce_stateful.app_id,
-                negrisk_adapter_mock.app_id,
-            ])))
+    composer = _negrisk_heavy_group(
+        negrisk_adapter_wired, funded_account,
+        collateral_token_wired.app_id, ctf_stateful.app_id,
+        usdce_stateful.app_id, negrisk_adapter_mock.app_id,
+        main_method="splitPosition",
+        main_args=[b"\x00" * 32, b"\x00" * 32, CONDITION_ID, [1, 2], amount],
+    )
     composer.send(au.SendParams(populate_app_call_resources=True))
     return alice32, yes_id, no_id, amount
+
+
+def _negrisk_heavy_group(
+    client, sender_account, ct_id, ctf_id, usdce_id, nrm_id,
+    *, main_method, main_args,
+):
+    """Build a group for a NegRisk heavy main call (split/merge/redeem).
+
+    Each pad pins a single foreign app via `app_references` so algokit's
+    auto-populate has a pre-existing "carrier" txn for each app's boxes.
+    Without this, auto-populate piles all 4 apps + their boxes onto the
+    first pad and exceeds MaxAppTotalTxnReferences=8.
+
+    Why this works: `populate_group_resource` adds box refs to whichever
+    txn already references the box's app (lenient < 8 check). By pinning
+    one app per pad, USDCe boxes go to pad-USDCe, CT boxes to pad-CT, etc.
+    The main call carries all 4 apps; auto-populate fills its remaining
+    slots with the few main-only resources.
+    """
+    composer = client.algorand.new_group()
+    # Each pad reads global state only, but pre-references one foreign
+    # app so auto-populate routes that app's boxes here.
+    for i, app_id in enumerate([usdce_id, ct_id, ctf_id, nrm_id]):
+        composer = composer.add_app_call_method_call(
+            client.params.call(au.AppClientMethodCallParams(
+                method="USDCE", args=[],
+                sender=sender_account.address,
+                note=f"pad-{i}".encode(),
+                app_references=[app_id])))
+    composer = composer.add_app_call_method_call(
+        client.params.call(au.AppClientMethodCallParams(
+            method=main_method,
+            args=main_args,
+            sender=sender_account.address,
+            extra_fee=au.AlgoAmount(micro_algo=400_000),
+            app_references=[ct_id, ctf_id, usdce_id, nrm_id])))
+    return composer
 
 
 def test_NegRiskCtfCollateralAdapter_splitPosition(
@@ -241,22 +260,25 @@ def test_NegRiskCtfCollateralAdapter_mergePositions(
     collateral_token_wired, ctf_stateful, usdce_stateful,
     collateral_onramp_wired, vault, funded_account, helper1
 ):
+    """alice splits to YES+NO via NegRisk adapter, then merges back to pUSD."""
     from dev.deals import set_approval
     alice32, yes_id, no_id, amount = _do_negrisk_split(
         negrisk_adapter_wired, negrisk_adapter_mock,
         collateral_token_wired, ctf_stateful, usdce_stateful,
         collateral_onramp_wired, vault, funded_account, helper1)
 
+    # alice approves the wired adapter to pull her YES+NO via the outer
+    # CTF.safeBatchTransferFrom in mergePositions.
     set_approval(ctf_stateful, alice32,
                  algod_addr_bytes_for_app(negrisk_adapter_wired.app_id), True)
 
-    composer = _pad_group(negrisk_adapter_wired, funded_account, 7)
-    composer = composer.add_app_call_method_call(
-        negrisk_adapter_wired.params.call(au.AppClientMethodCallParams(
-            method="mergePositions",
-            args=[b"\x00" * 32, b"\x00" * 32, CONDITION_ID, [1, 2], amount],
-            sender=funded_account.address,
-            extra_fee=au.AlgoAmount(micro_algo=400_000))))
+    composer = _negrisk_heavy_group(
+        negrisk_adapter_wired, funded_account,
+        collateral_token_wired.app_id, ctf_stateful.app_id,
+        usdce_stateful.app_id, negrisk_adapter_mock.app_id,
+        main_method="mergePositions",
+        main_args=[b"\x00" * 32, b"\x00" * 32, CONDITION_ID, [1, 2], amount],
+    )
     composer.send(au.SendParams(populate_app_call_resources=True))
 
     assert call(ctf_stateful, "balanceOf", [alice32, yes_id]) == 0
@@ -270,6 +292,7 @@ def test_NegRiskCtfCollateralAdapter_redeemPositions(
     collateral_token_wired, ctf_stateful, usdce_stateful,
     collateral_onramp_wired, vault, funded_account, helper1, outcome
 ):
+    """alice splits, NegRisk reports payouts, alice redeems → gets pUSD back."""
     from dev.deals import set_approval
     alice32, yes_id, no_id, amount = _do_negrisk_split(
         negrisk_adapter_wired, negrisk_adapter_mock,
@@ -286,13 +309,13 @@ def test_NegRiskCtfCollateralAdapter_redeemPositions(
     set_approval(ctf_stateful, alice32,
                  algod_addr_bytes_for_app(negrisk_adapter_wired.app_id), True)
 
-    composer = _pad_group(negrisk_adapter_wired, funded_account, 7)
-    composer = composer.add_app_call_method_call(
-        negrisk_adapter_wired.params.call(au.AppClientMethodCallParams(
-            method="redeemPositions",
-            args=[b"\x00" * 32, b"\x00" * 32, CONDITION_ID, [1, 2]],
-            sender=funded_account.address,
-            extra_fee=au.AlgoAmount(micro_algo=400_000))))
+    composer = _negrisk_heavy_group(
+        negrisk_adapter_wired, funded_account,
+        collateral_token_wired.app_id, ctf_stateful.app_id,
+        usdce_stateful.app_id, negrisk_adapter_mock.app_id,
+        main_method="redeemPositions",
+        main_args=[b"\x00" * 32, b"\x00" * 32, CONDITION_ID, [1, 2]],
+    )
     composer.send(au.SendParams(populate_app_call_resources=True))
 
     assert call(ctf_stateful, "balanceOf", [alice32, yes_id]) == 0

@@ -55,6 +55,12 @@ compile() {
         extra_args+=(--ensure-budget mergePositions:80000)
         extra_args+=(--ensure-budget redeemPositions:80000)
         extra_args+=(--ensure-budget convertPositions:80000)
+        # Helper1 carries CTHelpers.{sqrt,getCollectionId,getPositionId},
+        # all keccak/EC-heavy. The NegRisk override of redeemPositions
+        # invokes Helper1.getCollectionId+getPositionId twice, so pump
+        # those subroutines' budgets too.
+        extra_args+=(--ensure-budget CTHelpers.getCollectionId:30000)
+        extra_args+=(--ensure-budget CTHelpers.getPositionId:30000)
     elif [[ "$rel" == "collateral/PermissionedRamp.sol" ]]; then
         # PermissionedRamp.__postInit runs the inherited Solady EIP712
         # constructor (computeDomainSeparator: keccak256 of the typed-data

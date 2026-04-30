@@ -82,30 +82,41 @@ def _do_split(
          [algod_addr_bytes_for_app(ctf_adapter_wired.app_id), amount],
          sender=funded_account)
 
-    composer = (
-        ctf_adapter_wired.algorand.new_group()
-        .add_app_call_method_call(
-            ctf_adapter_wired.params.call(au.AppClientMethodCallParams(
-                method="paused", args=[b"\x05" * 32],
-                sender=funded_account.address, note=b"pad-1")))
-        .add_app_call_method_call(
-            ctf_adapter_wired.params.call(au.AppClientMethodCallParams(
-                method="paused", args=[b"\x06" * 32],
-                sender=funded_account.address, note=b"pad-2")))
-        .add_app_call_method_call(
-            ctf_adapter_wired.params.call(au.AppClientMethodCallParams(
-                method="splitPosition",
-                args=[b"\x00" * 32, b"\x00" * 32, CONDITION_ID, [1, 2], amount],
-                sender=funded_account.address,
-                extra_fee=au.AlgoAmount(micro_algo=300_000),
-                app_references=[
-                    collateral_token_wired.app_id,
-                    ctf_stateful.app_id,
-                    usdce_stateful.app_id,
-                ])))
+    composer = _ctf_heavy_group(
+        ctf_adapter_wired, funded_account,
+        collateral_token_wired.app_id, ctf_stateful.app_id, usdce_stateful.app_id,
+        main_method="splitPosition",
+        main_args=[b"\x00" * 32, b"\x00" * 32, CONDITION_ID, [1, 2], amount],
     )
     composer.send(au.SendParams(populate_app_call_resources=True))
     return alice32, yes_id, no_id, amount
+
+
+def _ctf_heavy_group(client, sender_account, ct_id, ctf_id, usdce_id,
+                     *, main_method, main_args):
+    """Build a group for a CTF adapter heavy main call (split/merge/redeem).
+
+    Each pad pre-pins one foreign app via `app_references` so algokit's
+    auto-populate has a per-app "carrier" txn for that app's box refs.
+    Without pre-pinning, auto-populate piles all 3 apps + their boxes
+    onto one pad (~9 refs) and exceeds MaxAppTotalTxnReferences=8 — flaky
+    depending on simulate's enumeration order.
+    """
+    composer = client.algorand.new_group()
+    for i, app_id in enumerate([usdce_id, ct_id, ctf_id]):
+        composer = composer.add_app_call_method_call(
+            client.params.call(au.AppClientMethodCallParams(
+                method="paused", args=[bytes([i + 5]) * 32],
+                sender=sender_account.address,
+                note=f"pad-{i+1}".encode(),
+                app_references=[app_id])))
+    composer = composer.add_app_call_method_call(
+        client.params.call(au.AppClientMethodCallParams(
+            method=main_method, args=main_args,
+            sender=sender_account.address,
+            extra_fee=au.AlgoAmount(micro_algo=300_000),
+            app_references=[ct_id, ctf_id, usdce_id])))
+    return composer
 
 
 def test_CtfCollateralAdapter_splitPosition(
@@ -182,36 +193,11 @@ def test_CtfCollateralAdapter_mergePositions(
     set_approval(ctf_stateful, alice32,
                  algod_addr_bytes_for_app(ctf_adapter_wired.app_id), True)
 
-    # mergePositions touches many boxes (alice's CTF YES + NO + adapter
-    # USDCe + CT balance/storage). Pad the group with global-state-only
-    # reads (USDCE() / COLLATERAL_TOKEN() / CONDITIONAL_TOKENS()) which
-    # don't add box refs but each give us a fresh foreign-app/box ref
-    # budget for auto-populate's simulate pass.
-    composer = (
-        ctf_adapter_wired.algorand.new_group()
-        .add_app_call_method_call(
-            ctf_adapter_wired.params.call(au.AppClientMethodCallParams(
-                method="USDCE", args=[],
-                sender=funded_account.address, note=b"pad-1")))
-        .add_app_call_method_call(
-            ctf_adapter_wired.params.call(au.AppClientMethodCallParams(
-                method="COLLATERAL_TOKEN", args=[],
-                sender=funded_account.address, note=b"pad-2")))
-        .add_app_call_method_call(
-            ctf_adapter_wired.params.call(au.AppClientMethodCallParams(
-                method="CONDITIONAL_TOKENS", args=[],
-                sender=funded_account.address, note=b"pad-3")))
-        .add_app_call_method_call(
-            ctf_adapter_wired.params.call(au.AppClientMethodCallParams(
-                method="mergePositions",
-                args=[b"\x00" * 32, b"\x00" * 32, CONDITION_ID, [1, 2], amount],
-                sender=funded_account.address,
-                extra_fee=au.AlgoAmount(micro_algo=300_000),
-                app_references=[
-                    collateral_token_wired.app_id,
-                    ctf_stateful.app_id,
-                    usdce_stateful.app_id,
-                ])))
+    composer = _ctf_heavy_group(
+        ctf_adapter_wired, funded_account,
+        collateral_token_wired.app_id, ctf_stateful.app_id, usdce_stateful.app_id,
+        main_method="mergePositions",
+        main_args=[b"\x00" * 32, b"\x00" * 32, CONDITION_ID, [1, 2], amount],
     )
     composer.send(au.SendParams(populate_app_call_resources=True))
 
@@ -287,35 +273,11 @@ def test_CtfCollateralAdapter_redeemPositions(
     set_approval(ctf_stateful, alice32,
                  algod_addr_bytes_for_app(ctf_adapter_wired.app_id), True)
 
-    composer = (
-        ctf_adapter_wired.algorand.new_group()
-        .add_app_call_method_call(
-            ctf_adapter_wired.params.call(au.AppClientMethodCallParams(
-                method="USDCE", args=[],
-                sender=funded_account.address, note=b"pad-1")))
-        .add_app_call_method_call(
-            ctf_adapter_wired.params.call(au.AppClientMethodCallParams(
-                method="COLLATERAL_TOKEN", args=[],
-                sender=funded_account.address, note=b"pad-2")))
-        .add_app_call_method_call(
-            ctf_adapter_wired.params.call(au.AppClientMethodCallParams(
-                method="CONDITIONAL_TOKENS", args=[],
-                sender=funded_account.address, note=b"pad-3")))
-        .add_app_call_method_call(
-            ctf_adapter_wired.params.call(au.AppClientMethodCallParams(
-                method="USDCE", args=[],
-                sender=funded_account.address, note=b"pad-4")))
-        .add_app_call_method_call(
-            ctf_adapter_wired.params.call(au.AppClientMethodCallParams(
-                method="redeemPositions",
-                args=[b"\x00" * 32, b"\x00" * 32, CONDITION_ID, [1, 2]],
-                sender=funded_account.address,
-                extra_fee=au.AlgoAmount(micro_algo=300_000),
-                app_references=[
-                    collateral_token_wired.app_id,
-                    ctf_stateful.app_id,
-                    usdce_stateful.app_id,
-                ])))
+    composer = _ctf_heavy_group(
+        ctf_adapter_wired, funded_account,
+        collateral_token_wired.app_id, ctf_stateful.app_id, usdce_stateful.app_id,
+        main_method="redeemPositions",
+        main_args=[b"\x00" * 32, b"\x00" * 32, CONDITION_ID, [1, 2]],
     )
     composer.send(au.SendParams(populate_app_call_resources=True))
 
