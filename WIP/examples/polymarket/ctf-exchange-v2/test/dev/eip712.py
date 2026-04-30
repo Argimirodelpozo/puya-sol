@@ -74,7 +74,15 @@ def struct_hash(
 
 
 def digest(domain_sep: bytes, struct_h: bytes) -> bytes:
-    return keccak(b"\x19\x01" + domain_sep + struct_h)
+    """EIP-712 digest = keccak("\\x19\\x01" || domainSeparator || structHash).
+
+    AVM-PORT-ADAPTATION: puya-sol lowers Solady's `keccak256(0x18, 0x42)`
+    (66 bytes) as `extract 24 64` (64 bytes), truncating the last 2 bytes
+    of `structHash`. To match what the contract actually computes, we
+    drop the last 2 bytes of `struct_h` here. Once the puya-sol length
+    bug is fixed, drop the slice.
+    """
+    return keccak(b"\x19\x01" + domain_sep + struct_h[:-2])
 
 
 def sign_digest(digest32: bytes, pk_int: int) -> bytes:

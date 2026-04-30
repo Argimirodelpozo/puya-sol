@@ -358,51 +358,199 @@ def test_revert_PermissionedRamp_unwrap_expiredDeadline(
         )
 
 
-@pytest.mark.xfail(
-    reason=(
-        "replaySignature requires a successful prior wrap to bump the "
-        "nonce — that successful wrap is blocked on the same Solady "
-        "transferFrom storage-slot mismatch as the offramp positive paths."
-    ),
-    strict=True,
-)
-def test_revert_PermissionedRamp_wrap_replaySignature(permissioned_ramp_wired):
+def test_revert_PermissionedRamp_wrap_replaySignature(
+    permissioned_ramp_wired, collateral_token_wired, usdc_stateful, vault, funded_account
+):
     """Replay: first call succeeds (nonce=0 → nonce=1), second call with the
-    same sig still has nonce=0 in the payload → mismatch revert."""
-    raise NotImplementedError("blocked on positive-wrap path")
+    same sig still has nonce=0 in the payload → mismatch revert at
+    InvalidNonce."""
+    from dev.deals import deal_usdc, set_allowance
+    alice32 = decode_address(funded_account.address)
+    asset32 = app_id_to_address(usdc_stateful.app_id)
+    amount = 100_000_000
+    deadline = 2 ** 64 - 1
+    nonce = 0
+
+    # Fund alice with enough USDC for two attempts
+    deal_usdc(usdc_stateful, alice32, amount * 2)
+    set_allowance(
+        usdc_stateful, alice32,
+        algod_addr_bytes_for_app(permissioned_ramp_wired.app_id),
+        amount * 2,
+    )
+
+    sig = sign_wrap(
+        permissioned_ramp_wired,
+        alice32, asset32, alice32, amount, nonce, deadline,
+        WITNESS_PK,
+    )
+
+    # First call: succeeds.
+    import algokit_utils as au
+    composer = (
+        permissioned_ramp_wired.algorand.new_group()
+        .add_app_call_method_call(
+            permissioned_ramp_wired.params.call(
+                au.AppClientMethodCallParams(
+                    method="nonces", args=[b"\x00" * 31 + b"\x01"],
+                    sender=funded_account.address,
+                )
+            )
+        )
+        .add_app_call_method_call(
+            permissioned_ramp_wired.params.call(
+                au.AppClientMethodCallParams(
+                    method="nonces", args=[b"\x00" * 31 + b"\x02"],
+                    sender=funded_account.address,
+                )
+            )
+        )
+        .add_app_call_method_call(
+            permissioned_ramp_wired.params.call(
+                au.AppClientMethodCallParams(
+                    method="wrap",
+                    args=[asset32, alice32, amount, nonce, deadline, sig],
+                    sender=funded_account.address,
+                    extra_fee=au.AlgoAmount(micro_algo=200_000),
+                    app_references=[usdc_stateful.app_id, collateral_token_wired.app_id],
+                )
+            )
+        )
+    )
+    composer.send(au.SendParams(populate_app_call_resources=True))
+
+    # Second call: same sig (nonce=0), but nonces[alice] is now 1.
+    with pytest.raises(LogicError):
+        composer2 = (
+            permissioned_ramp_wired.algorand.new_group()
+            .add_app_call_method_call(
+                permissioned_ramp_wired.params.call(
+                    au.AppClientMethodCallParams(
+                        method="nonces", args=[b"\x00" * 31 + b"\x03"],
+                        sender=funded_account.address,
+                    )
+                )
+            )
+            .add_app_call_method_call(
+                permissioned_ramp_wired.params.call(
+                    au.AppClientMethodCallParams(
+                        method="wrap",
+                        args=[asset32, alice32, amount, nonce, deadline, sig],
+                        sender=funded_account.address,
+                        extra_fee=au.AlgoAmount(micro_algo=200_000),
+                        app_references=[usdc_stateful.app_id, collateral_token_wired.app_id],
+                    )
+                )
+            )
+        )
+        composer2.send(au.SendParams(populate_app_call_resources=True))
 
 
-# ── POSITIVE WRAP — passes sig validation but fails at sig recovery in
-#                    the actual call (different from the sig-revert path).
-#                    Likely an off-chain ↔ on-chain digest mismatch when the
-#                    asset is the actual `usdc_stateful` mock vs an ABI shape
-#                    difference. Xfailed; sig-revert flows above already
-#                    exercise the EIP-712 verify happy path on the contract
-#                    side using the same helper.
+# ── POSITIVE WRAP — uses USDC.transferFrom (works); patched ECDSA path. ─
 
 
-_POSITIVE_WRAP_SIG_MISMATCH = (
-    "Positive wrap signs the same EIP-712 struct as the sig-revert tests "
-    "(which pass), but the contract recovers a different witness when the "
-    "asset is the real usdc_stateful mock — likely an ABI-encoding shape "
-    "issue around how puya-sol packs the asset address into the keccak "
-    "input. Tracked separately."
-)
+def _do_positive_wrap(
+    permissioned_ramp_wired, collateral_token_wired, usdc_app,
+    vault, funded_account
+):
+    """Helper: wrap USDC into pUSD via permissioned ramp using witness sig."""
+    from dev.deals import deal_usdc, set_allowance
+    alice32 = decode_address(funded_account.address)
+    asset32 = app_id_to_address(usdc_app.app_id)
+    amount = 100_000_000
+    deadline = 2 ** 64 - 1
+    nonce = 0
+
+    deal_usdc(usdc_app, alice32, amount)
+    set_allowance(
+        usdc_app, alice32,
+        algod_addr_bytes_for_app(permissioned_ramp_wired.app_id),
+        amount,
+    )
+
+    sig = sign_wrap(
+        permissioned_ramp_wired,
+        alice32, asset32, alice32, amount, nonce, deadline,
+        WITNESS_PK,
+    )
+
+    # The wrap touches ~10 boxes (PermissionedRamp nonces +
+    # CollateralToken roles/balance/totalSupply + USDC balance/allowance).
+    # Pad the group with two no-op reads using *different* args so they
+    # don't dedupe — each adds a fresh foreign-apps/boxes reference
+    # budget for the simulator's auto-populate pass.
+    import algokit_utils as au
+    composer = (
+        permissioned_ramp_wired.algorand.new_group()
+        .add_app_call_method_call(
+            permissioned_ramp_wired.params.call(
+                au.AppClientMethodCallParams(
+                    method="nonces",
+                    args=[b"\x00" * 31 + b"\x01"],
+                    sender=funded_account.address,
+                )
+            )
+        )
+        .add_app_call_method_call(
+            permissioned_ramp_wired.params.call(
+                au.AppClientMethodCallParams(
+                    method="nonces",
+                    args=[b"\x00" * 31 + b"\x02"],
+                    sender=funded_account.address,
+                )
+            )
+        )
+        .add_app_call_method_call(
+            permissioned_ramp_wired.params.call(
+                au.AppClientMethodCallParams(
+                    method="wrap",
+                    args=[asset32, alice32, amount, nonce, deadline, sig],
+                    sender=funded_account.address,
+                    extra_fee=au.AlgoAmount(micro_algo=200_000),
+                    app_references=[usdc_app.app_id, collateral_token_wired.app_id],
+                )
+            )
+        )
+    )
+    composer.send(au.SendParams(populate_app_call_resources=True))
+    return alice32, amount
 
 
-@pytest.mark.xfail(reason=_POSITIVE_WRAP_SIG_MISMATCH, strict=True)
-def test_PermissionedRamp_wrapUSDC(permissioned_ramp_wired):
-    raise NotImplementedError(_POSITIVE_WRAP_SIG_MISMATCH)
+def test_PermissionedRamp_wrapUSDC(
+    permissioned_ramp_wired, collateral_token_wired, usdc_stateful, vault, funded_account
+):
+    from dev.deals import usdc_balance
+    alice32, amount = _do_positive_wrap(
+        permissioned_ramp_wired, collateral_token_wired,
+        usdc_stateful, vault, funded_account)
+    assert usdc_balance(usdc_stateful, alice32) == 0
+    assert usdc_balance(usdc_stateful, decode_address(vault.address)) == amount
+    assert call(collateral_token_wired, "balanceOf",
+                [addr(funded_account)]) == amount
 
 
-@pytest.mark.xfail(reason=_POSITIVE_WRAP_SIG_MISMATCH, strict=True)
-def test_PermissionedRamp_wrapUSDCe(permissioned_ramp_wired):
-    raise NotImplementedError(_POSITIVE_WRAP_SIG_MISMATCH)
+def test_PermissionedRamp_wrapUSDCe(
+    permissioned_ramp_wired, collateral_token_wired, usdce_stateful, vault, funded_account
+):
+    from dev.deals import usdc_balance
+    alice32, amount = _do_positive_wrap(
+        permissioned_ramp_wired, collateral_token_wired,
+        usdce_stateful, vault, funded_account)
+    assert usdc_balance(usdce_stateful, alice32) == 0
+    assert usdc_balance(usdce_stateful, decode_address(vault.address)) == amount
+    assert call(collateral_token_wired, "balanceOf",
+                [addr(funded_account)]) == amount
 
 
-@pytest.mark.xfail(reason=_POSITIVE_WRAP_SIG_MISMATCH, strict=True)
-def test_PermissionedRamp_wrap_incrementsNonce(permissioned_ramp_wired):
-    raise NotImplementedError(_POSITIVE_WRAP_SIG_MISMATCH)
+def test_PermissionedRamp_wrap_incrementsNonce(
+    permissioned_ramp_wired, collateral_token_wired, usdc_stateful, vault, funded_account
+):
+    """After a successful wrap, nonces[sender] should be 1."""
+    _do_positive_wrap(
+        permissioned_ramp_wired, collateral_token_wired,
+        usdc_stateful, vault, funded_account)
+    n = call(permissioned_ramp_wired, "nonces", [addr(funded_account)])
+    assert n == 1
 
 
 # ── POSITIVE UNWRAP — uses CT.transferFrom (broken Solady slot). xfail. ─
