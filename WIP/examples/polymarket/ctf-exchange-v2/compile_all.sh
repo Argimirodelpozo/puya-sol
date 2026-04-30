@@ -48,8 +48,11 @@ compile() {
         # name/version + chainID + verifyingContract + salt). That's ~3 K
         # opcodes of bytes-mashing + a sha512_256, well past the 700-op
         # per-tx budget. Pump via ensure_budget; matches the matchOrders
-        # pattern.
+        # pattern. wrap/unwrap also do EIP-712 typed-data hashing +
+        # ECDSA recover + role check + 2 inner txns; pump those too.
         extra_args+=(--ensure-budget __postInit:100000)
+        extra_args+=(--ensure-budget wrap:50000)
+        extra_args+=(--ensure-budget unwrap:50000)
     fi
 
     local output exit_code

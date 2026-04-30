@@ -219,8 +219,24 @@ contract PermissionedRamp is OwnableRoles, CollateralErrors, Pausable, EIP712 {
         bytes32 structHash = keccak256(abi.encode(_typehash, msg.sender, _asset, _to, _amount, _nonce, _deadline));
         bytes32 digest = _hashTypedData(structHash);
 
-        address witness = ECDSA.recoverCalldata(digest, _signature);
-        require(hasAnyRole(witness, WITNESS_ROLE), InvalidSignature());
+        // AVM-PORT-ADAPTATION: see PUYA_BLOCKERS.md §2 / Signatures.sol's
+        // _verifyECDSASignature note. Solady ECDSA.recoverCalldata uses
+        // `for { 1 } switch case` that puya's optimizer collapses to `err`
+        // (unreachable). Workaround: parse r/s/v ourselves and call the
+        // `ecrecover` precompile via plain Solidity. puya-sol routes the
+        // precompile call to AVM's `ecdsa_pk_recover` opcode.
+        require(_signature.length == 65, InvalidSignature());
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+        bytes memory signature = _signature;
+        assembly {
+            r := mload(add(signature, 0x20))
+            s := mload(add(signature, 0x40))
+            v := byte(0, mload(add(signature, 0x60)))
+        }
+        address witness = ecrecover(digest, v, r, s);
+        require(witness != address(0) && hasAnyRole(witness, WITNESS_ROLE), InvalidSignature());
     }
 
     /// @dev AVM-PORT-ADAPTATION: puya-sol intercepts this call.

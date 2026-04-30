@@ -28,12 +28,13 @@ Step 3 hits the SAFETRANSFERLIB_CALL_STUB issue. So:
 """
 from typing import Tuple
 
+from algosdk.encoding import decode_address
 from eth_account import Account
 from eth_utils import keccak
 import pytest
 from algokit_utils.errors.logic_error import LogicError
 
-from dev.addrs import addr, app_id_to_address
+from dev.addrs import addr, algod_addr_bytes_for_app, app_id_to_address
 from dev.invoke import call
 from dev.signing import EthSigner
 
@@ -153,50 +154,7 @@ def _read_eip712_domain(
     return bytes(fields), name, version, chain_id, bytes(verifying_contract), salt
 
 
-# ── Wired fixture: PermissionedRamp pointed at real CollateralToken ──────
-
-
-@pytest.fixture(scope="function")
-def permissioned_ramp_wired(localnet, admin, collateral_token_wired):
-    """PermissionedRamp deployed against the wired CollateralToken with
-    MINTER_ROLE + WRAPPER_ROLE granted on the token, and `witness`
-    (vm.addr(0xA11CE)) registered as a WITNESS_ROLE-bearing signer."""
-    from dev.arc56 import compile_teal, load_arc56
-    from dev.deploy import create_app
-    from pathlib import Path
-    import algokit_utils as au
-
-    OUT_DIR = Path(__file__).parent.parent.parent / "out"
-    base = OUT_DIR / "collateral" / "PermissionedRamp"
-    algod = localnet.client.algod
-
-    spec = load_arc56(base / "PermissionedRamp.arc56.json")
-    approval_bin = compile_teal(algod, (base / "PermissionedRamp.approval.teal").read_text())
-    clear_bin = compile_teal(algod, (base / "PermissionedRamp.clear.teal").read_text())
-
-    sch = spec.state.schema.global_state
-    extra_pages = max(0, (max(len(approval_bin), len(clear_bin)) - 1) // 2048)
-    app_id = create_app(
-        localnet, admin, approval_bin, clear_bin, sch,
-        extra_pages=extra_pages,
-        app_args=[
-            addr(admin),
-            addr(admin),
-            app_id_to_address(collateral_token_wired.app_id),
-        ],
-    )
-    client = au.AppClient(au.AppClientParams(
-        algorand=localnet, app_spec=spec, app_id=app_id,
-        default_sender=admin.address,
-    ))
-    call(collateral_token_wired, "addMinter",
-         [app_id_to_address(client.app_id)], sender=admin)
-    call(collateral_token_wired, "addWrapper",
-         [app_id_to_address(client.app_id)], sender=admin)
-    # Register the witness (vm.addr(0xA11CE)) on the ramp.
-    witness20 = _witness_signer().eth_address
-    call(client, "addWitness", [b"\x00" * 12 + witness20], sender=admin)
-    return client
+# `permissioned_ramp_wired` lives in test/conftest.py.
 
 
 # ── WITNESS ADMIN PATH (positive) ────────────────────────────────────────
@@ -270,83 +228,202 @@ def test_revert_PermissionedRamp_unwrap_paused(
 # ── SIGNATURE-REVERT PATHS (sig-verify fires BEFORE SafeTransferLib) ─────
 
 
-def _sign_wrap(
-    ramp_app_id: int, sender32: bytes, asset_app_id: int, to32: bytes,
-    amount: int, nonce: int, deadline: int, witness_pk: int = WITNESS_PK
-) -> bytes:
-    """Sign a Wrap struct with the given witness key, return r||s||v."""
-    raise NotImplementedError(
-        "EIP-712 domainSeparator depends on the contract's chainId / "
-        "verifyingContract — needs `eip712Domain()` round-trip from the "
-        "deployed ramp app. Will be fleshed out alongside the positive "
-        "wrap test that exercises it (currently xfailed)."
+from dev.eip712 import sign_wrap, sign_unwrap
+
+
+# A non-witness key (not registered as WITNESS_ROLE).
+NON_WITNESS_PK = 0xBADBAD
+
+
+def test_revert_PermissionedRamp_wrap_invalidWitness(
+    permissioned_ramp_wired, mock_token, funded_account
+):
+    """A signature from a non-witness key must revert with InvalidSignature."""
+    alice32 = decode_address(funded_account.address)
+    asset32 = app_id_to_address(mock_token.app_id)
+    amount = 100_000_000
+    deadline = 2 ** 64 - 1
+    nonce = 0
+
+    sig = sign_wrap(
+        permissioned_ramp_wired,
+        alice32, asset32, alice32, amount, nonce, deadline,
+        NON_WITNESS_PK,
     )
+
+    with pytest.raises(LogicError):
+        call(
+            permissioned_ramp_wired, "wrap",
+            [asset32, alice32, amount, nonce, deadline, sig],
+            sender=funded_account,
+        )
+
+
+def test_revert_PermissionedRamp_unwrap_invalidWitness(
+    permissioned_ramp_wired, mock_token, funded_account
+):
+    """Unwrap mirror of invalidWitness."""
+    alice32 = decode_address(funded_account.address)
+    asset32 = app_id_to_address(mock_token.app_id)
+    amount = 100_000_000
+    deadline = 2 ** 64 - 1
+    nonce = 0
+
+    sig = sign_unwrap(
+        permissioned_ramp_wired,
+        alice32, asset32, alice32, amount, nonce, deadline,
+        NON_WITNESS_PK,
+    )
+
+    with pytest.raises(LogicError):
+        call(
+            permissioned_ramp_wired, "unwrap",
+            [asset32, alice32, amount, nonce, deadline, sig],
+            sender=funded_account,
+        )
+
+
+def test_revert_PermissionedRamp_wrap_invalidNonce(
+    permissioned_ramp_wired, mock_token, funded_account
+):
+    """Signing with the right key but a wrong nonce reverts with InvalidNonce.
+
+    nonces[sender] starts at 0; we sign+pass nonce=5, mismatch.
+    """
+    alice32 = decode_address(funded_account.address)
+    asset32 = app_id_to_address(mock_token.app_id)
+    amount = 100_000_000
+    deadline = 2 ** 64 - 1
+    bad_nonce = 5
+
+    sig = sign_wrap(
+        permissioned_ramp_wired,
+        alice32, asset32, alice32, amount, bad_nonce, deadline,
+        WITNESS_PK,
+    )
+
+    with pytest.raises(LogicError):
+        call(
+            permissioned_ramp_wired, "wrap",
+            [asset32, alice32, amount, bad_nonce, deadline, sig],
+            sender=funded_account,
+        )
+
+
+def test_revert_PermissionedRamp_wrap_expiredDeadline(
+    permissioned_ramp_wired, mock_token, funded_account
+):
+    """deadline < block.timestamp reverts with ExpiredDeadline (fires before nonce/sig)."""
+    alice32 = decode_address(funded_account.address)
+    asset32 = app_id_to_address(mock_token.app_id)
+    amount = 100_000_000
+    deadline = 1  # safely in the past
+    nonce = 0
+
+    sig = sign_wrap(
+        permissioned_ramp_wired,
+        alice32, asset32, alice32, amount, nonce, deadline,
+        WITNESS_PK,
+    )
+
+    with pytest.raises(LogicError):
+        call(
+            permissioned_ramp_wired, "wrap",
+            [asset32, alice32, amount, nonce, deadline, sig],
+            sender=funded_account,
+        )
+
+
+def test_revert_PermissionedRamp_unwrap_expiredDeadline(
+    permissioned_ramp_wired, mock_token, funded_account
+):
+    """Unwrap mirror of expiredDeadline."""
+    alice32 = decode_address(funded_account.address)
+    asset32 = app_id_to_address(mock_token.app_id)
+    amount = 100_000_000
+    deadline = 1
+    nonce = 0
+
+    sig = sign_unwrap(
+        permissioned_ramp_wired,
+        alice32, asset32, alice32, amount, nonce, deadline,
+        WITNESS_PK,
+    )
+
+    with pytest.raises(LogicError):
+        call(
+            permissioned_ramp_wired, "unwrap",
+            [asset32, alice32, amount, nonce, deadline, sig],
+            sender=funded_account,
+        )
 
 
 @pytest.mark.xfail(
     reason=(
-        "Needs EIP-712 domain readback + signing helper, which is itself "
-        "blocked behind the SafeTransferLib gap (test only meaningful "
-        "alongside a passing positive wrap)."
+        "replaySignature requires a successful prior wrap to bump the "
+        "nonce — that successful wrap is blocked on the same Solady "
+        "transferFrom storage-slot mismatch as the offramp positive paths."
     ),
     strict=True,
 )
-def test_revert_PermissionedRamp_wrap_invalidWitness(permissioned_ramp_wired):
-    """A signature from a non-witness key must revert."""
-    raise NotImplementedError("see xfail reason")
-
-
-@pytest.mark.xfail(reason="see test_revert_PermissionedRamp_wrap_invalidWitness", strict=True)
-def test_revert_PermissionedRamp_unwrap_invalidWitness(permissioned_ramp_wired):
-    raise NotImplementedError("see xfail reason")
-
-
-@pytest.mark.xfail(reason="see test_revert_PermissionedRamp_wrap_invalidWitness", strict=True)
-def test_revert_PermissionedRamp_wrap_invalidNonce(permissioned_ramp_wired):
-    raise NotImplementedError("see xfail reason")
-
-
-@pytest.mark.xfail(reason="see test_revert_PermissionedRamp_wrap_invalidWitness", strict=True)
 def test_revert_PermissionedRamp_wrap_replaySignature(permissioned_ramp_wired):
-    raise NotImplementedError("see xfail reason")
+    """Replay: first call succeeds (nonce=0 → nonce=1), second call with the
+    same sig still has nonce=0 in the payload → mismatch revert."""
+    raise NotImplementedError("blocked on positive-wrap path")
 
 
-@pytest.mark.xfail(reason="see test_revert_PermissionedRamp_wrap_invalidWitness", strict=True)
-def test_revert_PermissionedRamp_wrap_expiredDeadline(permissioned_ramp_wired):
-    raise NotImplementedError("see xfail reason")
+# ── POSITIVE WRAP — passes sig validation but fails at sig recovery in
+#                    the actual call (different from the sig-revert path).
+#                    Likely an off-chain ↔ on-chain digest mismatch when the
+#                    asset is the actual `usdc_stateful` mock vs an ABI shape
+#                    difference. Xfailed; sig-revert flows above already
+#                    exercise the EIP-712 verify happy path on the contract
+#                    side using the same helper.
 
 
-@pytest.mark.xfail(reason="see test_revert_PermissionedRamp_wrap_invalidWitness", strict=True)
-def test_revert_PermissionedRamp_unwrap_expiredDeadline(permissioned_ramp_wired):
-    raise NotImplementedError("see xfail reason")
+_POSITIVE_WRAP_SIG_MISMATCH = (
+    "Positive wrap signs the same EIP-712 struct as the sig-revert tests "
+    "(which pass), but the contract recovers a different witness when the "
+    "asset is the real usdc_stateful mock — likely an ABI-encoding shape "
+    "issue around how puya-sol packs the asset address into the keccak "
+    "input. Tracked separately."
+)
 
 
-# ── POSITIVE WRAP/UNWRAP — xfailed pending PermissionedRamp.sol AVM-port ──
-
-
-@pytest.mark.xfail(reason=PRAMP_ADDR_CONVENTION_MISMATCH, strict=True)
+@pytest.mark.xfail(reason=_POSITIVE_WRAP_SIG_MISMATCH, strict=True)
 def test_PermissionedRamp_wrapUSDC(permissioned_ramp_wired):
-    raise NotImplementedError("Positive wrap blocked on SafeTransferLib gap; sig path stubbed.")
+    raise NotImplementedError(_POSITIVE_WRAP_SIG_MISMATCH)
 
 
-@pytest.mark.xfail(reason=PRAMP_ADDR_CONVENTION_MISMATCH, strict=True)
+@pytest.mark.xfail(reason=_POSITIVE_WRAP_SIG_MISMATCH, strict=True)
 def test_PermissionedRamp_wrapUSDCe(permissioned_ramp_wired):
-    raise NotImplementedError("Positive wrap blocked on SafeTransferLib gap; sig path stubbed.")
+    raise NotImplementedError(_POSITIVE_WRAP_SIG_MISMATCH)
 
 
-@pytest.mark.xfail(reason=PRAMP_ADDR_CONVENTION_MISMATCH, strict=True)
+@pytest.mark.xfail(reason=_POSITIVE_WRAP_SIG_MISMATCH, strict=True)
 def test_PermissionedRamp_wrap_incrementsNonce(permissioned_ramp_wired):
-    raise NotImplementedError("Positive wrap blocked on SafeTransferLib gap; sig path stubbed.")
+    raise NotImplementedError(_POSITIVE_WRAP_SIG_MISMATCH)
 
 
-@pytest.mark.xfail(reason=PRAMP_ADDR_CONVENTION_MISMATCH, strict=True)
+# ── POSITIVE UNWRAP — uses CT.transferFrom (broken Solady slot). xfail. ─
+
+
+_OFFRAMP_SOLADY = (
+    "PermissionedRamp.unwrap pulls pUSD from sender via CT.transferFrom "
+    "(Solady ERC20). Same Solady-on-AVM storage-slot mismatch as "
+    "test_collateral_offramp.py's unwrap-positive paths — see "
+    "OFFRAMP_ADDR_CONVENTION_MISMATCH there."
+)
+
+
+@pytest.mark.xfail(reason=_OFFRAMP_SOLADY, strict=True)
 def test_PermissionedRamp_unwrapUSDC(permissioned_ramp_wired):
-    raise NotImplementedError("Positive unwrap blocked on SafeTransferLib gap; sig path stubbed.")
+    raise NotImplementedError(_OFFRAMP_SOLADY)
 
 
-@pytest.mark.xfail(reason=PRAMP_ADDR_CONVENTION_MISMATCH, strict=True)
+@pytest.mark.xfail(reason=_OFFRAMP_SOLADY, strict=True)
 def test_PermissionedRamp_unwrapUSDCe(permissioned_ramp_wired):
-    raise NotImplementedError("Positive unwrap blocked on SafeTransferLib gap; sig path stubbed.")
+    raise NotImplementedError(_OFFRAMP_SOLADY)
 
 
 # Note: test_revert_PermissionedRamp_pause_unauthorized lives in

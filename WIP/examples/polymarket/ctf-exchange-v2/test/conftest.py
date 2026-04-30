@@ -446,6 +446,32 @@ def permissioned_ramp(localnet, admin, mock_token):
     )
 
 
+@pytest.fixture(scope="function")
+def permissioned_ramp_wired(localnet, admin, collateral_token_wired):
+    """PermissionedRamp wired against the real CollateralToken with
+    MINTER_ROLE + WRAPPER_ROLE granted, and witness PK 0xA11CE registered
+    as a WITNESS_ROLE-bearing signer.
+    """
+    from algosdk import encoding
+    from dev.invoke import call as _call
+    from dev.signing import EthSigner
+    base = OUT_DIR / "collateral" / "PermissionedRamp"
+    ct_addr = encoding.encode_address(app_id_to_address(collateral_token_wired.app_id))
+    client = deploy_app(
+        localnet, admin, base, "PermissionedRamp",
+        post_init_args=[admin.address, admin.address, ct_addr],
+        post_init_app_refs=[collateral_token_wired.app_id],
+    )
+    _call(collateral_token_wired, "addMinter",
+          [algod_addr_bytes_for_app(client.app_id)], sender=admin)
+    _call(collateral_token_wired, "addWrapper",
+          [algod_addr_bytes_for_app(client.app_id)], sender=admin)
+    # Register the witness (vm.addr(0xA11CE)) as a 32-byte left-padded address.
+    witness20 = EthSigner.from_pk_int(0xA11CE).eth_address
+    _call(client, "addWitness", [b"\x00" * 12 + witness20], sender=admin)
+    return client
+
+
 # ── Standalone-contract fixtures (adapters) ──────────────────────────────
 
 
