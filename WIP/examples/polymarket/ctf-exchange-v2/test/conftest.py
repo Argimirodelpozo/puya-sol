@@ -309,6 +309,64 @@ def collateral_token(localnet, admin):
 
 
 @pytest.fixture(scope="function")
+def collateral_token_wired(localnet, admin, usdc_stateful, usdce_stateful, vault):
+    """Like `collateral_token` but with real USDC/USDCe/vault addresses
+    passed to `__postInit`. Used by tests that need the immutables to be
+    real or that exercise wrap/unwrap.
+
+    AVM-PORT-ADAPTATION (selectors): the wrap/unwrap inner-tx fires
+    `transfer(address,uint256)bool` (selector 0x198c9820, generated from
+    the IERC20Min interface in CollateralToken.sol's AVM-port shim).
+    The Solidity USDC/USDCe mocks inherit Solady ERC20 which exposes
+    `transfer(address,uint512)bool` (selector 0x42820278) — selector
+    mismatch → match falls through to err in the inner-tx target.
+    Switching to the Python delegate USDCMock (which speaks uint256
+    selectors) lines them up.
+
+    AVM-PORT-ADAPTATION (paths): the splitter no longer extracts a
+    Helper1 since SafeTransferLib was swapped for IERC20Min, so the
+    artifact path is flat now."""
+    base = OUT_DIR / "collateral" / "CollateralToken"
+    algod = localnet.client.algod
+
+    orch_spec = load_arc56(base / "CollateralToken.arc56.json")
+    orch_teal = (base / "CollateralToken.approval.teal").read_text()
+    orch_clear = (base / "CollateralToken.clear.teal").read_text()
+    orch_approval_bin = compile_teal(algod, orch_teal)
+    orch_clear_bin = compile_teal(algod, orch_clear)
+
+    sch = orch_spec.state.schema.global_state
+    extra_pages = max(
+        0, (max(len(orch_approval_bin), len(orch_clear_bin)) - 1) // 2048)
+    app_id = create_app(
+        localnet, admin, orch_approval_bin, orch_clear_bin,
+        sch, extra_pages=extra_pages,
+        app_args=[
+            app_id_to_address(usdc_stateful.app_id),
+            app_id_to_address(usdce_stateful.app_id),
+            addr(vault),
+        ],
+    )
+
+    client = au.AppClient(au.AppClientParams(
+        algorand=localnet, app_spec=orch_spec, app_id=app_id,
+        default_sender=admin.address,
+    ))
+    client.send.call(au.AppClientMethodCallParams(
+        method="__postInit",
+        args=[
+            app_id_to_address(usdc_stateful.app_id),
+            app_id_to_address(usdce_stateful.app_id),
+            addr(vault),
+            addr(admin),
+        ],
+        extra_fee=au.AlgoAmount(micro_algo=20_000),
+        box_references=[au.BoxReference(app_id=0, name=b"__dyn_storage")],
+    ), send_params=AUTO_POPULATE)
+    return client
+
+
+@pytest.fixture(scope="function")
 def collateral_onramp(localnet, admin, mock_token):
     base = OUT_DIR / "collateral" / "CollateralOnramp"
     from algosdk import encoding
@@ -321,6 +379,40 @@ def collateral_onramp(localnet, admin, mock_token):
 
 
 @pytest.fixture(scope="function")
+def collateral_onramp_wired(localnet, admin, collateral_token_wired):
+    """Onramp pointed at a real CollateralToken (USDC/USDCe/vault wired),
+    with WRAPPER_ROLE granted so it can call the token's `wrap` method."""
+    from dev.arc56 import compile_teal, load_arc56
+    from dev.deploy import create_app
+    from dev.invoke import call as _call
+    base = OUT_DIR / "collateral" / "CollateralOnramp"
+    algod = localnet.client.algod
+
+    spec = load_arc56(base / "CollateralOnramp.arc56.json")
+    approval_bin = compile_teal(algod, (base / "CollateralOnramp.approval.teal").read_text())
+    clear_bin = compile_teal(algod, (base / "CollateralOnramp.clear.teal").read_text())
+
+    sch = spec.state.schema.global_state
+    extra_pages = max(0, (max(len(approval_bin), len(clear_bin)) - 1) // 2048)
+    app_id = create_app(
+        localnet, admin, approval_bin, clear_bin, sch,
+        extra_pages=extra_pages,
+        app_args=[
+            addr(admin),
+            addr(admin),
+            app_id_to_address(collateral_token_wired.app_id),
+        ],
+    )
+    client = au.AppClient(au.AppClientParams(
+        algorand=localnet, app_spec=spec, app_id=app_id,
+        default_sender=admin.address,
+    ))
+    _call(collateral_token_wired, "addWrapper",
+          [app_id_to_address(client.app_id)], sender=admin)
+    return client
+
+
+@pytest.fixture(scope="function")
 def collateral_offramp(localnet, admin, mock_token):
     base = OUT_DIR / "collateral" / "CollateralOfframp"
     from algosdk import encoding
@@ -330,6 +422,43 @@ def collateral_offramp(localnet, admin, mock_token):
         post_init_args=[admin.address, admin.address, tok],
         post_init_app_refs=[mock_token.app_id],
     )
+
+
+@pytest.fixture(scope="function")
+def collateral_offramp_wired(localnet, admin, collateral_token_wired):
+    """Offramp pointed at a real CollateralToken, with MINTER_ROLE +
+    WRAPPER_ROLE granted so it can burn pUSD and call the token's
+    `unwrap` method."""
+    from dev.arc56 import compile_teal, load_arc56
+    from dev.deploy import create_app
+    from dev.invoke import call as _call
+    base = OUT_DIR / "collateral" / "CollateralOfframp"
+    algod = localnet.client.algod
+
+    spec = load_arc56(base / "CollateralOfframp.arc56.json")
+    approval_bin = compile_teal(algod, (base / "CollateralOfframp.approval.teal").read_text())
+    clear_bin = compile_teal(algod, (base / "CollateralOfframp.clear.teal").read_text())
+
+    sch = spec.state.schema.global_state
+    extra_pages = max(0, (max(len(approval_bin), len(clear_bin)) - 1) // 2048)
+    app_id = create_app(
+        localnet, admin, approval_bin, clear_bin, sch,
+        extra_pages=extra_pages,
+        app_args=[
+            addr(admin),
+            addr(admin),
+            app_id_to_address(collateral_token_wired.app_id),
+        ],
+    )
+    client = au.AppClient(au.AppClientParams(
+        algorand=localnet, app_spec=spec, app_id=app_id,
+        default_sender=admin.address,
+    ))
+    _call(collateral_token_wired, "addMinter",
+          [app_id_to_address(client.app_id)], sender=admin)
+    _call(collateral_token_wired, "addWrapper",
+          [app_id_to_address(client.app_id)], sender=admin)
+    return client
 
 
 @pytest.fixture(scope="function")

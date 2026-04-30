@@ -73,68 +73,8 @@ UNWRAP_CALLBACK_REENTRY = (
 )
 
 
-# ── Wider fixture: collateral_token wired to real USDC/USDCe/vault ───────
-
-
-@pytest.fixture(scope="function")
-def collateral_token_wired(localnet, admin, usdc_stateful, usdce_stateful, vault):
-    """Like `collateral_token` but with real USDC/USDCe/vault addresses
-    passed to `__postInit`. Used by tests that need the immutables to be
-    real or that exercise wrap/unwrap.
-
-    AVM-PORT-ADAPTATION (selectors): the wrap/unwrap inner-tx fires
-    `transfer(address,uint256)bool` (selector 0x198c9820, generated from
-    the IERC20Min interface in CollateralToken.sol's AVM-port shim).
-    The Solidity USDC/USDCe mocks inherit Solady ERC20 which exposes
-    `transfer(address,uint512)bool` (selector 0x42820278) — selector
-    mismatch → match falls through to err in the inner-tx target.
-    Switching to the Python delegate USDCMock (which speaks uint256
-    selectors) lines them up. The Solidity `usdc`/`usdce` fixtures stay
-    available for tests that don't need actual transfer semantics
-    (e.g. revert paths or immutable-address checks).
-
-    AVM-PORT-ADAPTATION (paths): the splitter no longer extracts a
-    Helper1 since SafeTransferLib was swapped for IERC20Min, so the
-    artifact path is flat now."""
-    OUT_DIR = Path(__file__).parent.parent.parent / "out"
-    base = OUT_DIR / "collateral" / "CollateralToken"
-    algod = localnet.client.algod
-
-    orch_spec = load_arc56(base / "CollateralToken.arc56.json")
-    orch_teal = (base / "CollateralToken.approval.teal").read_text()
-    orch_clear = (base / "CollateralToken.clear.teal").read_text()
-    orch_approval_bin = compile_teal(algod, orch_teal)
-    orch_clear_bin = compile_teal(algod, orch_clear)
-
-    sch = orch_spec.state.schema.global_state
-    extra_pages = max(
-        0, (max(len(orch_approval_bin), len(orch_clear_bin)) - 1) // 2048)
-    app_id = create_app(
-        localnet, admin, orch_approval_bin, orch_clear_bin,
-        sch, extra_pages=extra_pages,
-        app_args=[
-            app_id_to_address(usdc_stateful.app_id),
-            app_id_to_address(usdce_stateful.app_id),
-            addr(vault),
-        ],
-    )
-
-    client = au.AppClient(au.AppClientParams(
-        algorand=localnet, app_spec=orch_spec, app_id=app_id,
-        default_sender=admin.address,
-    ))
-    client.send.call(au.AppClientMethodCallParams(
-        method="__postInit",
-        args=[
-            app_id_to_address(usdc_stateful.app_id),
-            app_id_to_address(usdce_stateful.app_id),
-            addr(vault),
-            addr(admin),
-        ],
-        extra_fee=au.AlgoAmount(micro_algo=20_000),
-        box_references=[au.BoxReference(app_id=0, name=b"__dyn_storage")],
-    ), send_params=AUTO_POPULATE)
-    return client
+# `collateral_token_wired` (real USDC/USDCe/vault) is defined in
+# test/conftest.py so it's reachable from sibling onramp/offramp tests.
 
 
 # ── INITIALIZE ────────────────────────────────────────────────────────────
