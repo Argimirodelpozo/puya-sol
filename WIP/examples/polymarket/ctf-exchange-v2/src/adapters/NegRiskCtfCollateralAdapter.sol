@@ -45,7 +45,11 @@ contract NegRiskCtfCollateralAdapter is CtfCollateralAdapter {
         NEG_RISK_ADAPTER = _negRiskAdapter;
         WRAPPED_COLLATERAL = INegRiskAdapter(_negRiskAdapter).wcol();
 
-        require(IERC20Min(_usdce).approve(_negRiskAdapter, type(uint256).max), "ERC20 approve failed");
+        // _avmAlgodAddrFor: see CtfCollateralAdapter constructor.
+        require(
+            IERC20Min(_usdce).approve(_avmAlgodAddrFor(_negRiskAdapter), type(uint256).max),
+            "ERC20 approve failed"
+        );
         CONDITIONAL_TOKENS.setApprovalForAll(_negRiskAdapter, true);
     }
 

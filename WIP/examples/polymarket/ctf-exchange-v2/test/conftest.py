@@ -536,6 +536,53 @@ def ctf_adapter_wired(
 
 
 @pytest.fixture(scope="function")
+def negrisk_adapter_wired(
+    localnet, admin, collateral_token_wired, ctf_stateful, usdce_stateful,
+    universal_mock,
+):
+    """NegRiskCtfCollateralAdapter wired against the wired CT, real CTFMock,
+    and USDCe mock (and universal_mock for the NegRiskAdapter slot — fine
+    for the inherited split/merge/redeem methods; convertPositions needs
+    a real NegRiskAdapter mock and stays xfailed).
+    """
+    from algosdk import encoding
+    from dev.invoke import call as _call
+    base = OUT_DIR / "adapters" / "NegRiskCtfCollateralAdapter"
+    adapter = deploy_app(localnet, admin, base, "NegRiskCtfCollateralAdapter")
+
+    ctf_addr = encoding.encode_address(app_id_to_address(ctf_stateful.app_id))
+    ct_addr = encoding.encode_address(app_id_to_address(collateral_token_wired.app_id))
+    usdce_addr = encoding.encode_address(app_id_to_address(usdce_stateful.app_id))
+    negrisk_addr = encoding.encode_address(app_id_to_address(universal_mock.app_id))
+
+    composer = localnet.new_group()
+    for i in range(3):
+        composer.add_app_call_method_call(adapter.params.call(
+            au.AppClientMethodCallParams(
+                method="paused",
+                args=[bytes([i + 1]) * 32],
+                note=f"pad-negrisk-postinit-{i}".encode(),
+            )))
+    composer.add_app_call_method_call(adapter.params.call(
+        au.AppClientMethodCallParams(
+            method="__postInit",
+            args=[admin.address, admin.address, ctf_addr, ct_addr, usdce_addr, negrisk_addr],
+            extra_fee=au.AlgoAmount(micro_algo=50_000),
+            app_references=[
+                ctf_stateful.app_id,
+                collateral_token_wired.app_id,
+                usdce_stateful.app_id,
+                universal_mock.app_id,
+            ],
+        )))
+    composer.send(AUTO_POPULATE)
+
+    _call(collateral_token_wired, "addWrapper",
+          [algod_addr_bytes_for_app(adapter.app_id)], sender=admin)
+    return adapter
+
+
+@pytest.fixture(scope="function")
 def negrisk_adapter(localnet, admin, universal_mock):
     """Deploy NegRiskCtfCollateralAdapter wired to UniversalMock for all
     6 constructor address slots.
