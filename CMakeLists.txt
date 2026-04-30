@@ -71,6 +71,7 @@ set(SOURCES
 	src/builder/sol-eb/BuilderContext.cpp
 	src/builder/sol-eb/BuiltinCallables.cpp
 	src/builder/sol-eb/InnerCallHandlers.cpp
+	src/builder/sol-eb/InnerCallShapes.cpp
 	src/builder/sol-eb/NodeBuilder.cpp
 	src/builder/sol-eb/SolArrayBuilder.cpp
 	src/builder/sol-eb/SolBoolBuilder.cpp
