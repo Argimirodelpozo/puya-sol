@@ -61,7 +61,6 @@ ONRAMP_ADDR_CONVENTION_MISMATCH = (
 # ── WRAP (positive) — xfailed pending Onramp.sol AVM-port adaptation ─────
 
 
-@pytest.mark.xfail(reason=ONRAMP_ADDR_CONVENTION_MISMATCH, strict=True)
 def test_CollateralOnramp_wrapUSDC(
     collateral_onramp_wired, collateral_token_wired,
     usdc_stateful, vault, funded_account
@@ -93,7 +92,6 @@ def test_CollateralOnramp_wrapUSDC(
                 [addr(funded_account)]) == amount
 
 
-@pytest.mark.xfail(reason=ONRAMP_ADDR_CONVENTION_MISMATCH, strict=True)
 def test_CollateralOnramp_wrapUSDCe(
     collateral_onramp_wired, collateral_token_wired,
     usdce_stateful, vault, funded_account
@@ -171,14 +169,13 @@ def test_revert_CollateralOnramp_wrapUSDCe_paused(
 # ── Pausable unpause — positive flow, gated on the same SafeTransferLib gap ──
 
 
-@pytest.mark.xfail(reason=ONRAMP_ADDR_CONVENTION_MISMATCH, strict=True)
 def test_Pausable_unpause(
     collateral_onramp_wired, collateral_token_wired,
     usdc_stateful, vault, admin, funded_account
 ):
-    """Pause → wrap reverts → unpause → wrap succeeds. After the
-    AVM-port adaptation switched Onramp from SafeTransferLib to
-    IERC20Min, the post-unpause wrap actually transfers."""
+    """Pause → wrap reverts → unpause → wrap succeeds. The pause-revert
+    sequence works; the post-unpause wrap is blocked on the addr-
+    convention issue."""
     from algosdk.encoding import decode_address
     alice32 = decode_address(funded_account.address)
     amount = 100_000_000

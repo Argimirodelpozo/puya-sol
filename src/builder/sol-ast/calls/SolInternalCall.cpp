@@ -372,6 +372,75 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 	std::string name = _ident.name();
 	auto const* decl = _ident.annotation().referencedDeclaration;
 
+	// AVM-PORT-ADAPTATION: magic helper. Source code that needs to pass
+	// a Solidity contract reference as an inner-call ABI arg (where the
+	// receiver indexes by `Txn.Sender`) calls `_avmAlgodAddrFor(addr)`
+	// to convert puya-sol's storage-side address convention
+	// (`\x00*24 + itob(app_id)`) to the algod-derived account address
+	// (`sha512_256(b"appID" || itob(app_id))`) at the call site.
+	//
+	// The receiver's `Txn.Sender` is always algod-derived; addresses
+	// written into Solidity slots typed `address` (via constructor /
+	// assignment from a contract type) are stored in the puya-sol
+	// convention so inner-call ApplicationID extraction
+	// (`extract_uint64 24`) keeps working. The two forms diverge for
+	// the same logical app — `_avmAlgodAddrFor` is the bridge.
+	//
+	// Conversion is conditional: if the input's upper 24 bytes are
+	// zero (the puya-sol convention shape), convert to algod-derived;
+	// otherwise (already an algod-derived address — `msg.sender`,
+	// `tx.origin`, an EOA — random upper bytes), pass through. The
+	// upper-24-zero collision probability for a real EOA is ~2^-192,
+	// effectively zero.
+	//
+	// The Solidity-side definition of `_avmAlgodAddrFor` is a no-op
+	// `return app;` body that never runs; this intercept dispatches
+	// before the normal subroutine-call path. Only the function name +
+	// arity matter.
+	if (name == "_avmAlgodAddrFor" && m_call.arguments().size() == 1)
+	{
+		auto argExpr = m_ctx.buildExpr(*m_call.arguments()[0]);
+		auto rawBytes = (argExpr->wtype == awst::WType::bytesType())
+			? argExpr
+			: awst::makeReinterpretCast(argExpr, awst::WType::bytesType(), m_loc);
+
+		auto upper = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), m_loc);
+		upper->immediates = {0, 24};
+		upper->stackArgs.push_back(rawBytes);
+
+		auto bzero24 = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
+		bzero24->stackArgs.push_back(awst::makeIntegerConstant("24", m_loc));
+
+		auto cmpEq = std::make_shared<awst::BytesComparisonExpression>();
+		cmpEq->sourceLocation = m_loc;
+		cmpEq->wtype = awst::WType::boolType();
+		cmpEq->lhs = std::move(upper);
+		cmpEq->op = awst::EqualityComparison::Eq;
+		cmpEq->rhs = std::move(bzero24);
+
+		auto idBytes = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), m_loc);
+		idBytes->immediates = {24, 8};
+		idBytes->stackArgs.push_back(rawBytes);
+
+		// "appID" prefix (5 bytes: 0x61 0x70 0x70 0x49 0x44).
+		auto appIDPrefix = awst::makeBytesConstant({0x61, 0x70, 0x70, 0x49, 0x44}, m_loc);
+
+		auto prefixed = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
+		prefixed->stackArgs.push_back(std::move(appIDPrefix));
+		prefixed->stackArgs.push_back(std::move(idBytes));
+
+		auto sha = awst::makeIntrinsicCall("sha512_256", awst::WType::bytesType(), m_loc);
+		sha->stackArgs.push_back(std::move(prefixed));
+
+		auto cond = std::make_shared<awst::ConditionalExpression>();
+		cond->sourceLocation = m_loc;
+		cond->wtype = awst::WType::accountType();
+		cond->condition = std::move(cmpEq);
+		cond->trueExpr = awst::makeReinterpretCast(std::move(sha), awst::WType::accountType(), m_loc);
+		cond->falseExpr = awst::makeReinterpretCast(rawBytes, awst::WType::accountType(), m_loc);
+		return cond;
+	}
+
 	// Check if this is a function pointer variable call
 	if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(decl))
 	{

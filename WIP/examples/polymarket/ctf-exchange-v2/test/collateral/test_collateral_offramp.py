@@ -27,13 +27,19 @@ from dev.invoke import call
 
 
 OFFRAMP_ADDR_CONVENTION_MISMATCH = (
-    "AVM-port-adapted CollateralOfframp.unwrap (now IERC20Min) lowers to "
-    "a real itxn but hits the same address-convention mismatch as "
-    "CollateralOnramp — see test_collateral_onramp.py "
-    "ONRAMP_ADDR_CONVENTION_MISMATCH. The pUSD `transferFrom(msg.sender, "
-    "COLLATERAL_TOKEN, amt)` credits `\\x00*24+itob(ct_app_id)` but CT's "
-    "downstream `transfer(_to, asset_amt)` from VAULT debits CT's "
-    "algod-derived address — different keys."
+    "Offramp.unwrap routes alice's pUSD through CT.transferFrom (Solady "
+    "ERC20). The Solady balance/allowance slot-key construction packs the "
+    "address into 20 bytes via shl(96, addr) on the read side but "
+    "mstore-overlap-truncates to 20 bytes on the write side (_mint). With "
+    "the Onramp `_avmAlgodAddrFor` adaptation in place — which fixes the "
+    "balance-LEDGER side of the chain — the storage-key-derivation side "
+    "still fails because Solady's `_mint` and `transferFrom` use "
+    "*different* memory layouts that only align when the address fits "
+    "in 20 bytes (EVM). On AVM with 32-byte addresses, _mint hashes "
+    "low-20 of `to` ++ seed, transferFrom hashes high-20 of `shl(96, "
+    "from)` ++ seed — same pre-shl, different post-shl. Fixing this "
+    "needs either matching layouts in puya-sol C++ for both methods or "
+    "a deeper Solady ERC20 source replacement (out of scope here)."
 )
 
 
@@ -55,6 +61,8 @@ def test_CollateralOfframp_unwrapUSDC(
     from algosdk.encoding import decode_address
     from dev.deals import deal_usdc, set_allowance, usdc_balance
     alice32 = decode_address(funded_account.address)
+    vault32 = decode_address(vault.address)
+    ct32 = algod_addr_bytes_for_app(collateral_token_wired.app_id)
     amount = 100_000_000
 
     # Wrap leg
@@ -67,9 +75,16 @@ def test_CollateralOfframp_unwrapUSDC(
           addr(funded_account), amount],
          sender=funded_account)
 
-    # Unwrap leg
+    # Vault approves CT to pull the underlying USDC during the unwrap leg.
+    # CT.unwrap fires `IERC20(asset).transferFrom(VAULT, _to, _amount)`,
+    # so VAULT must have an allowance for CT's algod-derived sender.
+    set_allowance(usdc_stateful, vault32, ct32, amount)
+
+    # Unwrap leg: alice approves Offramp for her pUSD.
+    # Approve Offramp by its algod-derived address — that's what CT
+    # sees as `Txn.Sender` when Offramp later calls CT.transferFrom.
     call(collateral_token_wired, "approve",
-         [app_id_to_address(collateral_offramp_wired.app_id), amount],
+         [algod_addr_bytes_for_app(collateral_offramp_wired.app_id), amount],
          sender=funded_account)
     call(collateral_offramp_wired, "unwrap",
          [app_id_to_address(usdc_stateful.app_id),
@@ -77,7 +92,7 @@ def test_CollateralOfframp_unwrapUSDC(
          sender=funded_account)
 
     assert usdc_balance(usdc_stateful, alice32) == amount
-    assert usdc_balance(usdc_stateful, decode_address(vault.address)) == 0
+    assert usdc_balance(usdc_stateful, vault32) == 0
     assert call(collateral_token_wired, "balanceOf",
                 [addr(funded_account)]) == 0
 
@@ -91,6 +106,8 @@ def test_CollateralOfframp_unwrapUSDCe(
     from algosdk.encoding import decode_address
     from dev.deals import deal_usdc, set_allowance, usdc_balance
     alice32 = decode_address(funded_account.address)
+    vault32 = decode_address(vault.address)
+    ct32 = algod_addr_bytes_for_app(collateral_token_wired.app_id)
     amount = 100_000_000
 
     deal_usdc(usdce_stateful, alice32, amount)
@@ -102,8 +119,11 @@ def test_CollateralOfframp_unwrapUSDCe(
           addr(funded_account), amount],
          sender=funded_account)
 
+    set_allowance(usdce_stateful, vault32, ct32, amount)
+    # Approve Offramp by its algod-derived address — that's what CT
+    # sees as `Txn.Sender` when Offramp later calls CT.transferFrom.
     call(collateral_token_wired, "approve",
-         [app_id_to_address(collateral_offramp_wired.app_id), amount],
+         [algod_addr_bytes_for_app(collateral_offramp_wired.app_id), amount],
          sender=funded_account)
     call(collateral_offramp_wired, "unwrap",
          [app_id_to_address(usdce_stateful.app_id),
@@ -111,7 +131,7 @@ def test_CollateralOfframp_unwrapUSDCe(
          sender=funded_account)
 
     assert usdc_balance(usdce_stateful, alice32) == amount
-    assert usdc_balance(usdce_stateful, decode_address(vault.address)) == 0
+    assert usdc_balance(usdce_stateful, vault32) == 0
     assert call(collateral_token_wired, "balanceOf",
                 [addr(funded_account)]) == 0
 
@@ -170,12 +190,12 @@ def test_Pausable_unpause(
     collateral_onramp_wired, collateral_offramp_wired,
     collateral_token_wired, usdc_stateful, vault, admin, funded_account
 ):
-    """Wrap → pause → unwrap reverts → unpause → unwrap succeeds. The
-    pause/revert/unpause sequence works; the final unwrap is blocked on
-    the same Offramp SafeTransferLib gap as the positive unwrap tests."""
+    """Wrap → pause → unwrap reverts → unpause → unwrap succeeds."""
     from algosdk.encoding import decode_address
     from dev.deals import deal_usdc, set_allowance, usdc_balance
     alice32 = decode_address(funded_account.address)
+    vault32 = decode_address(vault.address)
+    ct32 = algod_addr_bytes_for_app(collateral_token_wired.app_id)
     amount = 100_000_000
 
     deal_usdc(usdc_stateful, alice32, amount)
@@ -190,8 +210,11 @@ def test_Pausable_unpause(
     call(collateral_offramp_wired, "pause",
          [app_id_to_address(usdc_stateful.app_id)], sender=admin)
 
+    set_allowance(usdc_stateful, vault32, ct32, amount)
+    # Approve Offramp by its algod-derived address — that's what CT
+    # sees as `Txn.Sender` when Offramp later calls CT.transferFrom.
     call(collateral_token_wired, "approve",
-         [app_id_to_address(collateral_offramp_wired.app_id), amount],
+         [algod_addr_bytes_for_app(collateral_offramp_wired.app_id), amount],
          sender=funded_account)
     with pytest.raises(LogicError):
         call(collateral_offramp_wired, "unwrap",
@@ -208,7 +231,7 @@ def test_Pausable_unpause(
          sender=funded_account)
 
     assert usdc_balance(usdc_stateful, alice32) == amount
-    assert usdc_balance(usdc_stateful, decode_address(vault.address)) == 0
+    assert usdc_balance(usdc_stateful, vault32) == 0
     assert call(collateral_token_wired, "balanceOf",
                 [addr(funded_account)]) == 0
 

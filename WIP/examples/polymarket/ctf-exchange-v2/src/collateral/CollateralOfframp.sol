@@ -56,8 +56,9 @@ contract CollateralOfframp is OwnableRoles, CollateralErrors, Pausable {
     function unwrap(address _asset, address _to, uint256 _amount) external onlyUnpaused(_asset) {
         // AVM-PORT-ADAPTATION: see the IERC20Min note above; was
         // `COLLATERAL_TOKEN.safeTransferFrom(msg.sender, COLLATERAL_TOKEN, _amount);`.
+        // _avmAlgodAddrFor: see CollateralOnramp.sol for the rationale.
         require(
-            IERC20Min(COLLATERAL_TOKEN).transferFrom(msg.sender, COLLATERAL_TOKEN, _amount),
+            IERC20Min(COLLATERAL_TOKEN).transferFrom(msg.sender, _avmAlgodAddrFor(COLLATERAL_TOKEN), _amount),
             "ERC20 transferFrom failed"
         );
         // forgefmt: disable-next-item
@@ -84,5 +85,15 @@ contract CollateralOfframp is OwnableRoles, CollateralErrors, Pausable {
     /// @param _admin The address of the admin to remove
     function removeAdmin(address _admin) external onlyRoles(ADMIN_ROLE) {
         _removeRoles(_admin, ADMIN_ROLE);
+    }
+
+    /*--------------------------------------------------------------
+                              AVM-PORT-ADAPTATION
+    --------------------------------------------------------------*/
+
+    /// @dev AVM-PORT-ADAPTATION: puya-sol intercepts this call.
+    /// See CollateralOnramp.sol for the full rationale.
+    function _avmAlgodAddrFor(address app) internal pure returns (address) {
+        return app;
     }
 }

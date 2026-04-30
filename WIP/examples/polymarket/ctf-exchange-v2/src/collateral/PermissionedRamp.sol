@@ -98,8 +98,9 @@ contract PermissionedRamp is OwnableRoles, CollateralErrors, Pausable, EIP712 {
         });
         // AVM-PORT-ADAPTATION: see the IERC20Min note above; was
         // `_asset.safeTransferFrom(msg.sender, COLLATERAL_TOKEN, _amount);`.
+        // _avmAlgodAddrFor: see CollateralOnramp.sol for the rationale.
         require(
-            IERC20Min(_asset).transferFrom(msg.sender, COLLATERAL_TOKEN, _amount),
+            IERC20Min(_asset).transferFrom(msg.sender, _avmAlgodAddrFor(COLLATERAL_TOKEN), _amount),
             "ERC20 transferFrom failed"
         );
         // forgefmt: disable-next-item
@@ -140,8 +141,9 @@ contract PermissionedRamp is OwnableRoles, CollateralErrors, Pausable, EIP712 {
         });
         // AVM-PORT-ADAPTATION: see the IERC20Min note above; was
         // `COLLATERAL_TOKEN.safeTransferFrom(msg.sender, COLLATERAL_TOKEN, _amount);`.
+        // _avmAlgodAddrFor: see CollateralOnramp.sol for the rationale.
         require(
-            IERC20Min(COLLATERAL_TOKEN).transferFrom(msg.sender, COLLATERAL_TOKEN, _amount),
+            IERC20Min(COLLATERAL_TOKEN).transferFrom(msg.sender, _avmAlgodAddrFor(COLLATERAL_TOKEN), _amount),
             "ERC20 transferFrom failed"
         );
         // forgefmt: disable-next-item
@@ -219,5 +221,11 @@ contract PermissionedRamp is OwnableRoles, CollateralErrors, Pausable, EIP712 {
 
         address witness = ECDSA.recoverCalldata(digest, _signature);
         require(hasAnyRole(witness, WITNESS_ROLE), InvalidSignature());
+    }
+
+    /// @dev AVM-PORT-ADAPTATION: puya-sol intercepts this call.
+    /// See CollateralOnramp.sol for the full rationale.
+    function _avmAlgodAddrFor(address app) internal pure returns (address) {
+        return app;
     }
 }

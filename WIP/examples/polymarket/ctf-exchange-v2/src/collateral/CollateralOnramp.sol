@@ -58,8 +58,12 @@ contract CollateralOnramp is OwnableRoles, CollateralErrors, Pausable {
     function wrap(address _asset, address _to, uint256 _amount) external onlyUnpaused(_asset) {
         // AVM-PORT-ADAPTATION: see the IERC20Min note above; was
         // `_asset.safeTransferFrom(msg.sender, COLLATERAL_TOKEN, _amount);`.
+        // _avmAlgodAddrFor wraps COLLATERAL_TOKEN so the receiver
+        // indexes by CT's algod-derived address (the form Txn.Sender
+        // resolves to), keeping the credit consistent with CT's later
+        // debit when it does `IERC20.transfer(VAULT, _amount)`.
         require(
-            IERC20Min(_asset).transferFrom(msg.sender, COLLATERAL_TOKEN, _amount),
+            IERC20Min(_asset).transferFrom(msg.sender, _avmAlgodAddrFor(COLLATERAL_TOKEN), _amount),
             "ERC20 transferFrom failed"
         );
         // forgefmt: disable-next-item
@@ -86,5 +90,21 @@ contract CollateralOnramp is OwnableRoles, CollateralErrors, Pausable {
     /// @param _admin The address of the admin to remove
     function removeAdmin(address _admin) external onlyRoles(ADMIN_ROLE) {
         _removeRoles(_admin, ADMIN_ROLE);
+    }
+
+    /*--------------------------------------------------------------
+                              AVM-PORT-ADAPTATION
+    --------------------------------------------------------------*/
+
+    /// @dev AVM-PORT-ADAPTATION: puya-sol intercepts this call and
+    /// lowers it to a runtime conditional that converts a Solidity
+    /// contract reference (puya-sol storage convention,
+    /// `\x00*24 + itob(app_id)`) to the algod-derived account address
+    /// (`sha512_256(b"appID" || itob(app_id))`). Pass-through for
+    /// already-algod-derived inputs (`msg.sender`, `tx.origin`, EOAs).
+    /// The Solidity body is a no-op that never executes — only the
+    /// signature matters; the C++ short-circuits the dispatcher.
+    function _avmAlgodAddrFor(address app) internal pure returns (address) {
+        return app;
     }
 }
