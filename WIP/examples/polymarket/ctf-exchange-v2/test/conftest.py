@@ -536,14 +536,27 @@ def ctf_adapter_wired(
 
 
 @pytest.fixture(scope="function")
+def negrisk_adapter_mock(localnet, admin, usdce_stateful, ctf_stateful):
+    """Stateful NegRiskAdapter mock (delegate/negrisk_adapter_mock.py)
+    wired against the same USDCe + CTFMock that the rest of the negrisk
+    fixture chain uses. splitPosition / mergePositions / redeemPositions
+    delegate USDCe transfers + CTFMock token mints/burns through inner
+    txns.
+    """
+    from dev.invoke import call as _call
+    mock = _deploy_pyapp(localnet, admin, "NegRiskAdapterMock")
+    _call(mock, "configure",
+          [usdce_stateful.app_id, ctf_stateful.app_id], sender=admin)
+    return mock
+
+
+@pytest.fixture(scope="function")
 def negrisk_adapter_wired(
     localnet, admin, collateral_token_wired, ctf_stateful, usdce_stateful,
-    universal_mock,
+    negrisk_adapter_mock,
 ):
     """NegRiskCtfCollateralAdapter wired against the wired CT, real CTFMock,
-    and USDCe mock (and universal_mock for the NegRiskAdapter slot — fine
-    for the inherited split/merge/redeem methods; convertPositions needs
-    a real NegRiskAdapter mock and stays xfailed).
+    USDCe mock, and the stateful NegRiskAdapter mock.
     """
     from algosdk import encoding
     from dev.invoke import call as _call
@@ -553,7 +566,7 @@ def negrisk_adapter_wired(
     ctf_addr = encoding.encode_address(app_id_to_address(ctf_stateful.app_id))
     ct_addr = encoding.encode_address(app_id_to_address(collateral_token_wired.app_id))
     usdce_addr = encoding.encode_address(app_id_to_address(usdce_stateful.app_id))
-    negrisk_addr = encoding.encode_address(app_id_to_address(universal_mock.app_id))
+    negrisk_addr = encoding.encode_address(app_id_to_address(negrisk_adapter_mock.app_id))
 
     composer = localnet.new_group()
     for i in range(3):
@@ -572,7 +585,7 @@ def negrisk_adapter_wired(
                 ctf_stateful.app_id,
                 collateral_token_wired.app_id,
                 usdce_stateful.app_id,
-                universal_mock.app_id,
+                negrisk_adapter_mock.app_id,
             ],
         )))
     composer.send(AUTO_POPULATE)
