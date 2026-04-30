@@ -196,48 +196,6 @@ private:
 
 	/// Get the disambiguated method name for a function.
 	std::string resolveMethodName(solidity::frontend::FunctionDefinition const& _func);
-
-	/// Build a copy-on-write tuple with one field updated.
-	std::shared_ptr<awst::Expression> buildTupleWithUpdatedField(
-		std::shared_ptr<awst::Expression> _base,
-		std::string const& _fieldName,
-		std::shared_ptr<awst::Expression> _newValue,
-		awst::SourceLocation const& _loc
-	);
-
-	/// State variable info for identifier resolution.
-	struct StateVarInfo
-	{
-		awst::WType const* type;
-		awst::AppStorageKind kind;
-	};
-
-	/// Try to resolve an identifier as a state variable.
-	std::optional<StateVarInfo> resolveStateVar(std::string const& _name);
-
-	/// Transaction type constants for inner transactions.
-	static constexpr int TxnTypePay = 1;
-	static constexpr int TxnTypeAxfer = 4;
-	static constexpr int TxnTypeAppl = 6;
-
-	/// Build a CreateInnerTransaction expression with the given fields.
-	std::shared_ptr<awst::Expression> buildCreateInnerTransaction(
-		int _txnType,
-		std::map<std::string, std::shared_ptr<awst::Expression>> _fields,
-		awst::SourceLocation const& _loc
-	);
-
-	/// Build a SubmitInnerTransaction and handle the return value.
-	std::shared_ptr<awst::Expression> buildSubmitAndReturn(
-		std::shared_ptr<awst::Expression> _createExpr,
-		awst::WType const* _solidityReturnType,
-		awst::SourceLocation const& _loc
-	);
-
-	/// Create a uint64 IntegerConstant.
-	static std::shared_ptr<awst::IntegerConstant> makeUint64(
-		std::string _value, awst::SourceLocation const& _loc
-	);
 };
 
 } // namespace puyasol::builder
