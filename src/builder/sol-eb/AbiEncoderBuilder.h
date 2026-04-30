@@ -190,9 +190,6 @@ private:
 		BuilderContext& _ctx,
 		solidity::frontend::FunctionCall const& _callNode,
 		awst::SourceLocation const& _loc);
-
-	static std::shared_ptr<awst::Expression> makeUint64(
-		std::string _value, awst::SourceLocation const& _loc);
 };
 
 } // namespace puyasol::builder::eb

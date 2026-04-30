@@ -24,12 +24,6 @@ static constexpr int TxnTypeAppl = 6;
 
 // ── Small helpers ──
 
-std::shared_ptr<awst::Expression> InnerCallHandlers::makeUint64(
-	std::string _value, awst::SourceLocation const& _loc)
-{
-	auto e = awst::makeIntegerConstant(std::move(_value), _loc);
-	return e;
-}
 
 static awst::WTuple s_boolBytesType(
 	std::vector<awst::WType const*>{awst::WType::boolType(), awst::WType::bytesType()});
@@ -59,8 +53,8 @@ std::shared_ptr<awst::IntrinsicCall> InnerCallHandlers::makeExtract(
 {
 	auto call = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 	call->stackArgs.push_back(std::move(_source));
-	call->stackArgs.push_back(makeUint64(std::to_string(_offset), _loc));
-	call->stackArgs.push_back(makeUint64(std::to_string(_length), _loc));
+	call->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(_offset), _loc));
+	call->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(_length), _loc));
 	return call;
 }
 
@@ -78,14 +72,14 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::leftPadToN(
 	std::shared_ptr<awst::Expression> _expr, int _n, awst::SourceLocation const& _loc)
 {
 	auto padding = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-	padding->stackArgs.push_back(makeUint64(std::to_string(_n), _loc));
+	padding->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(_n), _loc));
 
 	auto padded = makeConcat(std::move(padding), std::move(_expr), _loc);
 
 	auto paddedLen = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
 	paddedLen->stackArgs.push_back(padded);
 
-	auto offset = awst::makeUInt64BinOp(std::move(paddedLen), awst::UInt64BinaryOperator::Sub, makeUint64(std::to_string(_n), _loc), _loc);
+	auto offset = awst::makeUInt64BinOp(std::move(paddedLen), awst::UInt64BinaryOperator::Sub, awst::makeIntegerConstant(std::to_string(_n), _loc), _loc);
 
 	return makeExtract(std::move(padded), 0, _n, _loc);
 	// FIXME: should use dynamic extract3(padded, offset, N) — but for now
@@ -153,7 +147,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 		auto cast = awst::makeReinterpretCast(std::move(_arg), awst::WType::bytesType(), _loc);
 
 		auto zeros = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-		zeros->stackArgs.push_back(makeUint64("32", _loc));
+		zeros->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
 
 		auto padded = makeConcat(std::move(zeros), std::move(cast), _loc);
 
@@ -162,7 +156,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 
 		auto offset = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), _loc);
 		offset->stackArgs.push_back(std::move(paddedLen));
-		offset->stackArgs.push_back(makeUint64("32", _loc));
+		offset->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
 
 		return makeExtract(std::move(padded), 0, 0, _loc);
 		// FIXME: should be extract3(padded, offset, 32) with dynamic offset
@@ -173,7 +167,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 	{
 		auto setbit = awst::makeIntrinsicCall("setbit", awst::WType::bytesType(), _loc);
 		setbit->stackArgs.push_back(awst::makeBytesConstant({0x00}, _loc));
-		setbit->stackArgs.push_back(makeUint64("0", _loc));
+		setbit->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
 		setbit->stackArgs.push_back(std::move(_arg));
 		return setbit;
 	}
@@ -268,8 +262,8 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::buildPaymentTransaction(
 	auto create = std::make_shared<awst::CreateInnerTransaction>();
 	create->sourceLocation = _loc;
 	create->wtype = &s_payFieldsType;
-	create->fields["TypeEnum"] = makeUint64(std::to_string(TxnTypePay), _loc);
-	create->fields["Fee"] = makeUint64("0", _loc);
+	create->fields["TypeEnum"] = awst::makeIntegerConstant(std::to_string(TxnTypePay), _loc);
+	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
 	create->fields["Receiver"] = std::move(_receiver);
 	create->fields["Amount"] = std::move(_amount);
 	return create;
@@ -489,10 +483,10 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 	auto create = std::make_shared<awst::CreateInnerTransaction>();
 	create->sourceLocation = _loc;
 	create->wtype = &s_applFieldsType;
-	create->fields["TypeEnum"] = makeUint64(std::to_string(TxnTypeAppl), _loc);
-	create->fields["Fee"] = makeUint64("0", _loc);
+	create->fields["TypeEnum"] = awst::makeIntegerConstant(std::to_string(TxnTypeAppl), _loc);
+	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
 	create->fields["ApplicationID"] = std::move(appId);
-	create->fields["OnCompletion"] = makeUint64("0", _loc);
+	create->fields["OnCompletion"] = awst::makeIntegerConstant("0", _loc);
 	create->fields["ApplicationArgs"] = std::move(argsTuple);
 
 	// Submit
@@ -605,10 +599,10 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	auto create = std::make_shared<awst::CreateInnerTransaction>();
 	create->sourceLocation = _loc;
 	create->wtype = &s_applFieldsType;
-	create->fields["TypeEnum"] = makeUint64(std::to_string(TxnTypeAppl), _loc);
-	create->fields["Fee"] = makeUint64("0", _loc);
+	create->fields["TypeEnum"] = awst::makeIntegerConstant(std::to_string(TxnTypeAppl), _loc);
+	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
 	create->fields["ApplicationID"] = std::move(appId);
-	create->fields["OnCompletion"] = makeUint64("0", _loc);
+	create->fields["OnCompletion"] = awst::makeIntegerConstant("0", _loc);
 	create->fields["ApplicationArgs"] = std::move(argsTuple);
 
 	static awst::WInnerTransaction s_applTxnType(TxnTypeAppl);
@@ -651,7 +645,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 		vInt->stackArgs.push_back(std::move(vByte));
 		auto recoveryId = awst::makeUInt64BinOp(
 			std::move(vInt), awst::UInt64BinaryOperator::Sub,
-			makeUint64("27", _loc), _loc);
+			awst::makeIntegerConstant("27", _loc), _loc);
 		auto r = makeExtract(_inputData, 64, 32, _loc);
 		auto s = makeExtract(_inputData, 96, 32, _loc);
 
@@ -692,7 +686,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 		auto addr20 = makeExtract(std::move(hash), 12, 20, _loc);
 		// Left-pad to 32 bytes: concat(bzero(12), addr20)
 		auto pad12 = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-		pad12->stackArgs.push_back(makeUint64("12", _loc));
+		pad12->stackArgs.push_back(awst::makeIntegerConstant("12", _loc));
 		resultBytes = makeConcat(std::move(pad12), std::move(addr20), _loc);
 		break;
 	}
@@ -749,15 +743,15 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 
 		// Bool → ABI-encoded 32-byte result
 		auto boolToInt = awst::makeIntrinsicCall("select", awst::WType::uint64Type(), _loc);
-		boolToInt->stackArgs.push_back(makeUint64("0", _loc));
-		boolToInt->stackArgs.push_back(makeUint64("1", _loc));
+		boolToInt->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
+		boolToInt->stackArgs.push_back(awst::makeIntegerConstant("1", _loc));
 		boolToInt->stackArgs.push_back(std::move(ecCall));
 
 		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
 		itob->stackArgs.push_back(std::move(boolToInt));
 
 		auto padding = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-		padding->stackArgs.push_back(makeUint64("24", _loc));
+		padding->stackArgs.push_back(awst::makeIntegerConstant("24", _loc));
 
 		resultBytes = makeConcat(std::move(padding), std::move(itob), _loc);
 		break;

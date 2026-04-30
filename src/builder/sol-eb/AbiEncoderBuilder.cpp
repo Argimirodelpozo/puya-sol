@@ -19,18 +19,12 @@ public:
 	solidity::frontend::Type const* solType() const override { return nullptr; }
 };
 
-std::shared_ptr<awst::Expression> AbiEncoderBuilder::makeUint64(
-	std::string _value, awst::SourceLocation const& _loc)
-{
-	auto e = awst::makeIntegerConstant(std::move(_value), _loc);
-	return e;
-}
 
 std::shared_ptr<awst::Expression> AbiEncoderBuilder::leftPadBytes(
 	std::shared_ptr<awst::Expression> _expr, int _n, awst::SourceLocation const& _loc)
 {
 	auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-	pad->stackArgs.push_back(makeUint64(std::to_string(_n), _loc));
+	pad->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(_n), _loc));
 
 	auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
 	cat->stackArgs.push_back(std::move(pad));
@@ -41,12 +35,12 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::leftPadBytes(
 
 	auto offset = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), _loc);
 	offset->stackArgs.push_back(std::move(lenCall));
-	offset->stackArgs.push_back(makeUint64(std::to_string(_n), _loc));
+	offset->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(_n), _loc));
 
 	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 	extract->stackArgs.push_back(std::move(cat));
 	extract->stackArgs.push_back(std::move(offset));
-	extract->stackArgs.push_back(makeUint64(std::to_string(_n), _loc));
+	extract->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(_n), _loc));
 	return extract;
 }
 
@@ -133,8 +127,8 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::toPackedBytes(
 	else if (_expr->wtype == awst::WType::boolType())
 	{
 		auto boolToInt = awst::makeIntrinsicCall("select", awst::WType::uint64Type(), _loc);
-		boolToInt->stackArgs.push_back(makeUint64("0", _loc));
-		boolToInt->stackArgs.push_back(makeUint64("1", _loc));
+		boolToInt->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
+		boolToInt->stackArgs.push_back(awst::makeIntegerConstant("1", _loc));
 		boolToInt->stackArgs.push_back(std::move(_expr));
 
 		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
@@ -215,7 +209,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgAsARC4Bytes(
 		// Solidity ABI: bool is 32-byte right-aligned (0x00...00 or 0x00...01)
 		auto setbit = awst::makeIntrinsicCall("setbit", awst::WType::bytesType(), _loc);
 		setbit->stackArgs.push_back(awst::makeBytesConstant({0x00}, _loc));
-		setbit->stackArgs.push_back(makeUint64("0", _loc));
+		setbit->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
 		setbit->stackArgs.push_back(std::move(_argExpr));
 		return leftPadBytes(std::move(setbit), 32, _loc);
 	}
@@ -581,7 +575,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgsHeadTail(
 	size_t headSize = numTrailing * 32;
 	std::vector<std::shared_ptr<awst::Expression>> headParts;
 	std::vector<std::shared_ptr<awst::Expression>> tailParts;
-	auto currentOffset = makeUint64(std::to_string(headSize), _loc);
+	std::shared_ptr<awst::Expression> currentOffset = awst::makeIntegerConstant(std::to_string(headSize), _loc);
 
 	for (size_t i = _startIdx; i < args.size(); ++i)
 	{
@@ -751,7 +745,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 		auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
 		btoi->stackArgs.push_back(std::move(bytesExpr));
 
-		auto zero = makeUint64("0", _loc);
+		auto zero = awst::makeIntegerConstant("0", _loc);
 		auto cmp = awst::makeNumericCompare(std::move(btoi), awst::NumericComparison::Ne, std::move(zero), _loc);
 		return std::make_unique<GenericAbiResult>(_ctx, std::move(cmp));
 	}
@@ -772,8 +766,8 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 		// extracts the low 8 bytes.
 		auto head = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 		head->stackArgs.push_back(std::move(bytesExpr));
-		head->stackArgs.push_back(makeUint64("0", _loc));
-		head->stackArgs.push_back(makeUint64("32", _loc));
+		head->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
+		head->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
 		return std::make_unique<GenericAbiResult>(_ctx, uint64FromAbiWord(std::move(head), _loc));
 	}
 
@@ -798,7 +792,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 		std::vector<std::shared_ptr<awst::Expression>> items;
 		for (size_t i = 0; i < components.size(); ++i)
 		{
-			auto offset = makeUint64(std::to_string(i * 32), _loc);
+			auto offset = awst::makeIntegerConstant(std::to_string(i * 32), _loc);
 			items.push_back(decodeAbiValue(_ctx, dataExpr, std::move(offset), components[i], _loc));
 		}
 		auto tuple = std::make_shared<awst::TupleExpression>();
@@ -809,7 +803,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 	}
 
 	// Single value decode at offset 0
-	auto offset = makeUint64("0", _loc);
+	auto offset = awst::makeIntegerConstant("0", _loc);
 	auto result = decodeAbiValue(_ctx, dataExpr, std::move(offset), callType, _loc);
 	return std::make_unique<GenericAbiResult>(_ctx, std::move(result));
 }
@@ -845,7 +839,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 	auto headWord = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 	headWord->stackArgs.push_back(_data);
 	headWord->stackArgs.push_back(_offset);
-	headWord->stackArgs.push_back(makeUint64("32", _loc));
+	headWord->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
 
 	auto* wtype = _ctx.typeMapper.map(_solType);
 
@@ -866,7 +860,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 	if (wtype == awst::WType::boolType())
 	{
 		auto val = uint64FromAbiWord(std::move(headWord), _loc);
-		auto zero = makeUint64("0", _loc);
+		auto zero = awst::makeIntegerConstant("0", _loc);
 		auto cmp = awst::makeNumericCompare(std::move(val), awst::NumericComparison::Ne, std::move(zero), _loc);
 		return cmp;
 	}
@@ -900,12 +894,12 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 		auto lenWord = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 		lenWord->stackArgs.push_back(_data);
 		lenWord->stackArgs.push_back(tailOffset);
-		lenWord->stackArgs.push_back(makeUint64("32", _loc));
+		lenWord->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
 
 		auto elemCount = uint64FromAbiWord(std::move(lenWord), _loc);
 
 		// Data starts at tailOffset + 32
-		auto dataStart = awst::makeUInt64BinOp(std::move(tailOffset), awst::UInt64BinaryOperator::Add, makeUint64("32", _loc), _loc);
+		auto dataStart = awst::makeUInt64BinOp(std::move(tailOffset), awst::UInt64BinaryOperator::Add, awst::makeIntegerConstant("32", _loc), _loc);
 
 		// ARC4DynamicArray with fixed-size element: translate EVM-ABI layout
 		// ([32-byte length][N × 32 bytes]) to ARC4 layout
@@ -931,7 +925,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 				auto byteCount = awst::makeUInt64BinOp(
 					elemCount,
 					awst::UInt64BinaryOperator::Mult,
-					makeUint64(std::to_string(elemSize), _loc),
+					awst::makeIntegerConstant(std::to_string(elemSize), _loc),
 					_loc);
 
 				// elemBytes = extract3(_data, dataStart, byteCount)
@@ -945,8 +939,8 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 				itob->stackArgs.push_back(std::move(elemCount));
 				auto header = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 				header->stackArgs.push_back(std::move(itob));
-				header->stackArgs.push_back(makeUint64("6", _loc));
-				header->stackArgs.push_back(makeUint64("2", _loc));
+				header->stackArgs.push_back(awst::makeIntegerConstant("6", _loc));
+				header->stackArgs.push_back(awst::makeIntegerConstant("2", _loc));
 
 				// concat(header, elemBytes)
 				auto arc4Bytes = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
@@ -1020,25 +1014,25 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::rightPadTo32(
 	len31->wtype = awst::WType::uint64Type();
 	len31->op = awst::UInt64BinaryOperator::Add;
 	len31->left = std::move(lenCall);
-	len31->right = makeUint64("31", _loc);
+	len31->right = awst::makeIntegerConstant("31", _loc);
 
 	auto div32 = std::make_shared<awst::UInt64BinaryOperation>();
 	div32->sourceLocation = _loc;
 	div32->wtype = awst::WType::uint64Type();
 	div32->op = awst::UInt64BinaryOperator::FloorDiv;
 	div32->left = std::move(len31);
-	div32->right = makeUint64("32", _loc);
+	div32->right = awst::makeIntegerConstant("32", _loc);
 
 	auto paddedLen = std::make_shared<awst::UInt64BinaryOperation>();
 	paddedLen->sourceLocation = _loc;
 	paddedLen->wtype = awst::WType::uint64Type();
 	paddedLen->op = awst::UInt64BinaryOperator::Mult;
 	paddedLen->left = std::move(div32);
-	paddedLen->right = makeUint64("32", _loc);
+	paddedLen->right = awst::makeIntegerConstant("32", _loc);
 
 	// concat(expr, bzero(31)) — ensure enough zeros for any padding
 	auto zeros = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-	zeros->stackArgs.push_back(makeUint64("31", _loc));
+	zeros->stackArgs.push_back(awst::makeIntegerConstant("31", _loc));
 
 	auto padded = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
 	padded->stackArgs.push_back(std::move(_expr));
@@ -1047,7 +1041,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::rightPadTo32(
 	// extract3(padded, 0, paddedLen)
 	auto result = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 	result->stackArgs.push_back(std::move(padded));
-	result->stackArgs.push_back(makeUint64("0", _loc));
+	result->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
 	result->stackArgs.push_back(std::move(paddedLen));
 	return result;
 }
@@ -1250,7 +1244,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 
 			std::vector<std::shared_ptr<awst::Expression>> headParts;
 			std::vector<std::shared_ptr<awst::Expression>> tailParts;
-			std::shared_ptr<awst::Expression> currentOffset = makeUint64(std::to_string(headSize), _loc);
+			std::shared_ptr<awst::Expression> currentOffset = awst::makeIntegerConstant(std::to_string(headSize), _loc);
 
 			for (auto const& memberDecl : structDef.members())
 			{
@@ -1432,7 +1426,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncode(
 	std::vector<std::shared_ptr<awst::Expression>> tailConcatParts;
 
 	// Running tail offset as AWST expression (starts at headSize)
-	std::shared_ptr<awst::Expression> currentTailOffset = makeUint64(std::to_string(headSize), _loc);
+	std::shared_ptr<awst::Expression> currentTailOffset = awst::makeIntegerConstant(std::to_string(headSize), _loc);
 
 	for (size_t i = 0; i < numArgs; ++i)
 	{

@@ -90,9 +90,6 @@ private:
 		std::shared_ptr<awst::Expression> _amount,
 		awst::SourceLocation const& _loc);
 
-	static std::shared_ptr<awst::Expression> makeUint64(
-		std::string _value, awst::SourceLocation const& _loc);
-
 	static std::shared_ptr<awst::Expression> makeBoolBytesTuple(
 		bool _success,
 		std::shared_ptr<awst::Expression> _data,

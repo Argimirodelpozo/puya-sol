@@ -16,12 +16,6 @@ using namespace solidity::frontend;
 
 static constexpr int TxnTypeAppl = 6;
 
-std::shared_ptr<awst::Expression> SolExternalCall::makeUint64(
-	std::string _value, awst::SourceLocation const& _loc)
-{
-	auto c = awst::makeIntegerConstant(std::move(_value), _loc);
-	return c;
-}
 
 std::string SolExternalCall::buildMethodSelector(MemberAccess const& _memberAccess)
 {
@@ -141,7 +135,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 			return itob;
 		// pad = bzero(widthBytes - 8)  ++  itob(value)
 		auto zeros = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
-		zeros->stackArgs.push_back(makeUint64(std::to_string(widthBytes - 8), m_loc));
+		zeros->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(widthBytes - 8), m_loc));
 		auto padded = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
 		padded->stackArgs.push_back(std::move(zeros));
 		padded->stackArgs.push_back(std::move(itob));
@@ -153,7 +147,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 		auto cast = awst::makeReinterpretCast(std::move(_argExpr), awst::WType::bytesType(), m_loc);
 
 		auto zeros = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
-		zeros->stackArgs.push_back(makeUint64("32", m_loc));
+		zeros->stackArgs.push_back(awst::makeIntegerConstant("32", m_loc));
 
 		auto padded = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
 		padded->stackArgs.push_back(std::move(zeros));
@@ -164,12 +158,12 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 
 		auto offset = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), m_loc);
 		offset->stackArgs.push_back(std::move(lenCall));
-		offset->stackArgs.push_back(makeUint64("32", m_loc));
+		offset->stackArgs.push_back(awst::makeIntegerConstant("32", m_loc));
 
 		auto extracted = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 		extracted->stackArgs.push_back(std::move(padded));
 		extracted->stackArgs.push_back(std::move(offset));
-		extracted->stackArgs.push_back(makeUint64("32", m_loc));
+		extracted->stackArgs.push_back(awst::makeIntegerConstant("32", m_loc));
 		return extracted;
 	}
 	else if (_argExpr->wtype == awst::WType::boolType())
@@ -179,7 +173,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 
 		auto setbit = awst::makeIntrinsicCall("setbit", awst::WType::bytesType(), m_loc);
 		setbit->stackArgs.push_back(std::move(zeroByte));
-		setbit->stackArgs.push_back(makeUint64("0", m_loc));
+		setbit->stackArgs.push_back(awst::makeIntegerConstant("0", m_loc));
 		setbit->stackArgs.push_back(std::move(_argExpr));
 		return setbit;
 	}
@@ -310,9 +304,9 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 	{
 		auto getbit = awst::makeIntrinsicCall("getbit", awst::WType::uint64Type(), m_loc);
 		getbit->stackArgs.push_back(std::move(stripPrefix));
-		getbit->stackArgs.push_back(makeUint64("0", m_loc));
+		getbit->stackArgs.push_back(awst::makeIntegerConstant("0", m_loc));
 
-		auto cmp = awst::makeNumericCompare(std::move(getbit), awst::NumericComparison::Ne, makeUint64("0", m_loc), m_loc);
+		auto cmp = awst::makeNumericCompare(std::move(getbit), awst::NumericComparison::Ne, awst::makeIntegerConstant("0", m_loc), m_loc);
 		return cmp;
 	}
 	else if (_returnType == awst::WType::accountType())
@@ -362,8 +356,8 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 
 			auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 			extract->stackArgs.push_back(singleBytes);
-			extract->stackArgs.push_back(makeUint64(std::to_string(offset), m_loc));
-			extract->stackArgs.push_back(makeUint64(std::to_string(fieldSize), m_loc));
+			extract->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(offset), m_loc));
+			extract->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(fieldSize), m_loc));
 
 			std::shared_ptr<awst::Expression> decoded;
 			if (fieldType == awst::WType::biguintType())
@@ -381,9 +375,9 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 			{
 				auto getbit = awst::makeIntrinsicCall("getbit", awst::WType::uint64Type(), m_loc);
 				getbit->stackArgs.push_back(std::move(extract));
-				getbit->stackArgs.push_back(makeUint64("0", m_loc));
+				getbit->stackArgs.push_back(awst::makeIntegerConstant("0", m_loc));
 
-				auto cmp = awst::makeNumericCompare(std::move(getbit), awst::NumericComparison::Ne, makeUint64("0", m_loc), m_loc);
+				auto cmp = awst::makeNumericCompare(std::move(getbit), awst::NumericComparison::Ne, awst::makeIntegerConstant("0", m_loc), m_loc);
 				decoded = std::move(cmp);
 			}
 			else if (fieldType == awst::WType::accountType())
@@ -553,7 +547,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 				auto cast = awst::makeReinterpretCast(std::move(elem), awst::WType::bytesType(), m_loc);
 
 				auto zeros = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
-				zeros->stackArgs.push_back(makeUint64("32", m_loc));
+				zeros->stackArgs.push_back(awst::makeIntegerConstant("32", m_loc));
 
 				auto padded = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
 				padded->stackArgs.push_back(std::move(zeros));
@@ -564,12 +558,12 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 
 				auto off = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), m_loc);
 				off->stackArgs.push_back(std::move(lenCall));
-				off->stackArgs.push_back(makeUint64("32", m_loc));
+				off->stackArgs.push_back(awst::makeIntegerConstant("32", m_loc));
 
 				auto extracted = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 				extracted->stackArgs.push_back(std::move(padded));
 				extracted->stackArgs.push_back(std::move(off));
-				extracted->stackArgs.push_back(makeUint64("32", m_loc));
+				extracted->stackArgs.push_back(awst::makeIntegerConstant("32", m_loc));
 
 				if (!acc)
 					acc = std::move(extracted);
@@ -604,10 +598,10 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 	auto create = std::make_shared<awst::CreateInnerTransaction>();
 	create->sourceLocation = m_loc;
 	create->wtype = &s_applFieldsType;
-	create->fields["TypeEnum"] = makeUint64(std::to_string(TxnTypeAppl), m_loc);
-	create->fields["Fee"] = makeUint64("0", m_loc);
+	create->fields["TypeEnum"] = awst::makeIntegerConstant(std::to_string(TxnTypeAppl), m_loc);
+	create->fields["Fee"] = awst::makeIntegerConstant("0", m_loc);
 	create->fields["ApplicationID"] = std::move(appId);
-	create->fields["OnCompletion"] = makeUint64("0", m_loc);
+	create->fields["OnCompletion"] = awst::makeIntegerConstant("0", m_loc);
 	create->fields["ApplicationArgs"] = std::move(argsTuple);
 
 	auto* retType = m_ctx.typeMapper.map(m_call.annotation().type);

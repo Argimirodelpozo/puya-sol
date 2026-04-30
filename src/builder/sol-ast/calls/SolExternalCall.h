@@ -31,10 +31,6 @@ private:
 	std::shared_ptr<awst::Expression> submitAndReturn(
 		std::shared_ptr<awst::Expression> _create,
 		awst::WType const* _returnType);
-
-	/// Helper: create uint64 constant.
-	static std::shared_ptr<awst::Expression> makeUint64(
-		std::string _value, awst::SourceLocation const& _loc);
 };
 
 } // namespace puyasol::builder::sol_ast
