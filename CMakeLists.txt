@@ -139,6 +139,7 @@ set(SOURCES
 	src/splitter/ContractSplitter.cpp
 	src/splitter/FunctionSplitter.cpp
 	src/splitter/FunctionInliner.cpp
+	src/splitter/FunctionInlinerTransforms.cpp
 	src/splitter/ConstantExternalizer.cpp
 )
 
