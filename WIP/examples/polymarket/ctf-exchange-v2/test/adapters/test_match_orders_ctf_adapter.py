@@ -32,13 +32,12 @@ import pytest
 
 
 XFAIL_NEEDS_ADAPTER_FIXTURES = (
-    "Needs (1) split_exchange wired through CtfCollateralAdapter for "
-    "collateral/CTF slots, and (2) the Onramp wrap chain to fund makers "
-    "with pUSD. The latter is blocked on the Solady SafeTransferLib gap "
-    "(see test_collateral_onramp.py SAFETRANSFERLIB_CALL_STUB_ONRAMP). "
-    "Until both land, the matchOrders-via-adapter dimension stays as "
-    "stub xfails on top of the matchOrders core (which passes today in "
-    "test_match_orders.py)."
+    "Needs (1) `split_exchange_with_adapter` fixture: orch + Helper1/2 "
+    "wired so the collateral slot points at a CtfCollateralAdapter app "
+    "and the ctf slot is the deployed CTFMock, with adapter granted "
+    "WRAPPER_ROLE on the underlying CollateralToken. And (2) maker "
+    "funding via the Onramp.wrap chain — itself blocked on the same "
+    "Solady CT.transferFrom storage-slot bug as test_collateral_offramp.py."
 )
 
 

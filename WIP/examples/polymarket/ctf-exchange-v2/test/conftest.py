@@ -477,11 +477,14 @@ def permissioned_ramp_wired(localnet, admin, collateral_token_wired):
 
 @pytest.fixture(scope="function")
 def ctf_adapter(localnet, admin, mock_token):
+    """Deploy CtfCollateralAdapter with admin as owner+admin and
+    mock_token as the (CTF, CT, USDCE) address slots — enough for
+    pause/role tests; positive flows require a real CT/CTF setup."""
     base = OUT_DIR / "adapters" / "CtfCollateralAdapter"
     tok = app_id_to_address(mock_token.app_id)
     return deploy_app(
         localnet, admin, base, "CtfCollateralAdapter",
-        post_init_args=[tok, tok, tok, tok, tok],
+        post_init_args=[admin.address, admin.address, tok, tok, tok],
         post_init_app_refs=[mock_token.app_id],
     )
 
@@ -502,7 +505,7 @@ def negrisk_adapter(localnet, admin, universal_mock):
     tok = app_id_to_address(universal_mock.app_id)
     return deploy_app(
         localnet, admin, base, "NegRiskCtfCollateralAdapter",
-        post_init_args=[tok, tok, tok, tok, tok, tok],
+        post_init_args=[admin.address, admin.address, tok, tok, tok, tok],
         post_init_app_refs=[universal_mock.app_id],
     )
 

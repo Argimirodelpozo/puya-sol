@@ -12,11 +12,11 @@ import pytest
 
 
 XFAIL_NEEDS_NEGRISK_ADAPTER_FIXTURES = (
-    "Needs (1) split_exchange wired through NegRiskCtfCollateralAdapter, "
-    "(2) the Onramp wrap chain to fund makers with pUSD (blocked on the "
-    "Solady SafeTransferLib gap), and (3) NegRiskAdapter inner-call "
-    "wiring (`getPositionId` / `convertPositions`) on the CTFMock. Stub "
-    "xfails until the upstream pieces land."
+    "Needs (1) `split_exchange_with_adapter` fixture wired through "
+    "NegRiskCtfCollateralAdapter, (2) maker funding via Onramp.wrap (which "
+    "in turn needs the Solady CT.transferFrom storage-slot bug fixed — see "
+    "test_collateral_offramp.py), and (3) NegRiskAdapter inner-call "
+    "wiring (`getPositionId` / `convertPositions`) on the CTFMock."
 )
 
 
