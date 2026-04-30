@@ -76,22 +76,15 @@ public:
 	std::vector<std::shared_ptr<awst::Statement>> takePrePendingStatements();
 
 private:
-	/// The owned builder context: holds all mutable per-translation state.
+	/// The owned builder context: holds all mutable per-translation state and
+	/// the type-builder registry. EB is now a thin wrapper that exists only to
+	/// preserve the legacy construction signature used by AWSTBuilder /
+	/// ContractBuilder.
 	eb::BuilderContext m_ctx;
-
-	eb::BuilderRegistry m_registry;
-	eb::BuiltinCallableRegistry m_builtinCallables;
-	eb::TypeConversionRegistry m_typeConversions;
-	std::unique_ptr<sol_ast::SolExpressionFactory> m_factory;
 
 	LibraryFunctionIdMap const& m_libraryFunctionIds;
 	OverloadedNamesSet const& m_overloadedNames;
 	FreeFunctionIdMap const& m_freeFunctionById;
-
-	awst::SourceLocation makeLoc(solidity::langutil::SourceLocation const& _solLoc);
-
-	/// Get the disambiguated method name for a function.
-	std::string resolveMethodName(solidity::frontend::FunctionDefinition const& _func);
 };
 
 } // namespace puyasol::builder

@@ -68,6 +68,7 @@ set(SOURCES
 
 	# Expression builder helpers (sol-eb/)
 	src/builder/sol-eb/BinaryOpBuilder.cpp
+	src/builder/sol-eb/BuilderContext.cpp
 	src/builder/sol-eb/BuiltinCallables.cpp
 	src/builder/sol-eb/InnerCallHandlers.cpp
 	src/builder/sol-eb/NodeBuilder.cpp

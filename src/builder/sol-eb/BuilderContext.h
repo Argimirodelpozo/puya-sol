@@ -34,6 +34,7 @@ namespace puyasol::builder::eb
 {
 
 class InstanceBuilder;
+class BuilderRegistry;
 
 /// Parameter remap entry: redirects an AST declaration to a unique variable name.
 struct ParamRemap
@@ -64,20 +65,26 @@ public:
 		std::unordered_map<std::string, std::string> const& _libraryFunctionIds,
 		std::unordered_set<std::string> const& _overloadedNames,
 		std::unordered_map<int64_t, std::string> const& _freeFunctionById
-	)
-		: typeMapper(_typeMapper),
-		  storageMapper(_storageMapper),
-		  sourceFile(_sourceFile),
-		  contractName(_contractName),
-		  libraryFunctionIds(_libraryFunctionIds),
-		  overloadedNames(_overloadedNames),
-		  freeFunctionById(_freeFunctionById)
-	{}
+	);
+
+	~BuilderContext();
 
 	BuilderContext(BuilderContext const&) = delete;
 	BuilderContext& operator=(BuilderContext const&) = delete;
 	BuilderContext(BuilderContext&&) = delete;
 	BuilderContext& operator=(BuilderContext&&) = delete;
+
+	/// Build an AWST expression from a Solidity expression. Primary entry point.
+	std::shared_ptr<awst::Expression> build(solidity::frontend::Expression const& _expr);
+
+	/// Consume any pending statements generated during expression translation.
+	std::vector<std::shared_ptr<awst::Statement>> takePending();
+
+	/// Consume any pre-pending statements (must execute before the expression).
+	std::vector<std::shared_ptr<awst::Statement>> takePrePending();
+
+	/// Owned type-builder registry — populated on construction.
+	std::unique_ptr<BuilderRegistry> registry;
 
 	// ── Compiler services (external, by reference) ──
 	TypeMapper& typeMapper;

@@ -50,52 +50,9 @@ ExpressionBuilder::ExpressionBuilder(
 	  m_overloadedNames(_overloadedNames.empty() ? s_emptyOverloads : _overloadedNames),
 	  m_freeFunctionById(_freeFunctionById.empty() ? s_emptyFreeFunctionIds : _freeFunctionById)
 {
-	Logger::instance().debug("[TRACE] ExpressionBuilder m_freeFunctionById.size()=" + std::to_string(m_freeFunctionById.size()) + " paramSize=" + std::to_string(_freeFunctionById.size()) + " addr=" + std::to_string((uintptr_t)&m_freeFunctionById));
-
-	// Wire the BuilderContext callbacks back into ExpressionBuilder.
-	m_ctx.buildExpr = [this](solidity::frontend::Expression const& _expr) {
-		return this->build(_expr);
-	};
-	m_ctx.buildBinaryOp = [this](solidity::frontend::Token _op,
-		std::shared_ptr<awst::Expression> _left,
-		std::shared_ptr<awst::Expression> _right,
-		awst::WType const* _resultType,
-		awst::SourceLocation const& _loc) {
-		return eb::buildBinaryOp(m_ctx, _op, std::move(_left), std::move(_right), _resultType, _loc);
-	};
-	m_ctx.builderForInstance = [this](solidity::frontend::Type const* _solType, std::shared_ptr<awst::Expression> _expr) {
-		return m_registry.tryBuildInstance(m_ctx, _solType, std::move(_expr));
-	};
-}
-
-std::string ExpressionBuilder::resolveMethodName(
-	solidity::frontend::FunctionDefinition const& _func
-)
-{
-	std::string name = _func.name();
-	if (m_overloadedNames.count(name))
-	{
-		name += "(";
-		bool first = true;
-		for (auto const& p: _func.parameters())
-		{
-			if (!first) name += ",";
-			auto const* solType = p->type();
-			if (dynamic_cast<solidity::frontend::BoolType const*>(solType))
-				name += "b";
-			else if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(solType))
-				name += (intType->isSigned() ? "i" : "u") + std::to_string(intType->numBits());
-			else if (dynamic_cast<solidity::frontend::AddressType const*>(solType))
-				name += "addr";
-			else if (auto const* fixedBytes = dynamic_cast<solidity::frontend::FixedBytesType const*>(solType))
-				name += "b" + std::to_string(fixedBytes->numBytes());
-			else
-				name += std::to_string(p->id());
-			first = false;
-		}
-		name += ")";
-	}
-	return name;
+	// BuilderContext self-wires its callbacks (buildExpr, buildBinaryOp,
+	// builderForInstance) and constructs its own type-builder registry in its
+	// constructor — nothing more for ExpressionBuilder to do.
 }
 
 std::shared_ptr<awst::Expression> ExpressionBuilder::build(
@@ -117,17 +74,6 @@ std::vector<std::shared_ptr<awst::Statement>> ExpressionBuilder::takePrePendingS
 	std::vector<std::shared_ptr<awst::Statement>> result;
 	result.swap(m_ctx.prePendingStatements);
 	return result;
-}
-
-awst::SourceLocation ExpressionBuilder::makeLoc(
-	solidity::langutil::SourceLocation const& _solLoc
-)
-{
-	awst::SourceLocation loc;
-	loc.file = m_ctx.sourceFile;
-	loc.line = _solLoc.start >= 0 ? _solLoc.start : 0;
-	loc.endLine = _solLoc.end >= 0 ? _solLoc.end : 0;
-	return loc;
 }
 
 } // namespace puyasol::builder
