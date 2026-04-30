@@ -174,6 +174,7 @@ def dance_match_orders(
     extra_box_refs=None,
     extra_fee: int = 5_000_000,
     budget_pad: int = 15,
+    per_pad_boxes: int = 6,
 ):
     """Run the matchOrders dance through `chunk` against `orch`.
 
@@ -205,8 +206,10 @@ def dance_match_orders(
     # Box availability is pooled across the txn group, so a box on pad-N
     # is reachable from the dance txn's inner calls.
     extra_boxes_list = list(extra_box_refs or [])
-    # Per-pad cap: 6 refs (1 implicit orch + 1 foreign app + 6 boxes = 8 max)
-    per_pad_boxes = 6
+    # Per-pad cap: caller-controlled. With heavy multi-app box mixes
+    # (e.g., 1271 wallet tests with 5+ unique apps), reduce to 4 so
+    # auto-populate has room to add inner-call resources without
+    # tripping MaxAppTotalTxnReferences=8 on any single pad.
     box_idx = 0
     for i in range(budget_pad):
         slot_boxes = extra_boxes_list[box_idx:box_idx + per_pad_boxes]

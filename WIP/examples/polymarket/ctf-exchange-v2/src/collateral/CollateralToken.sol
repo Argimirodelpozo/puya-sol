@@ -151,6 +151,23 @@ contract CollateralToken is
         _burn(msg.sender, _amount);
     }
 
+    /// @notice AVM-PORT-TEST-ONLY: writes `_amount` to the (`_owner` →
+    /// `_spender`) allowance slot directly. Used by 1271-wallet test
+    /// fixtures where the wallet's puya-sol-conv form (the maker field
+    /// in matchOrders) and its algod-derived form (the implicit caller
+    /// of CT.approve) live in different address spaces — there's no
+    /// other way to populate `allowance[wallet_psol][h1_algod]` without
+    /// adding a permit path.
+    /// @dev Gated to `onlyOwner` since the AVM port still needs the test
+    /// shim wired through deployment. Production owners should not call
+    /// this; in a real deployment it would be removed or restricted.
+    function avmPortForceApprove(address _owner, address _spender, uint256 _amount)
+        external
+        onlyOwner
+    {
+        _approve(_owner, _spender, _amount);
+    }
+
     /// @notice Wraps a supported asset into the collateral token
     /// @param _asset The asset to wrap
     /// @param _to The address to wrap the asset to
