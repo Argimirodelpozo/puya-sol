@@ -23,7 +23,7 @@ namespace puyasol::builder::sol_ast
 {
 
 /// Context passed to statement wrappers — provides access to expression building,
-/// type mapping, and recursive statement/block building via the calling StatementBuilder.
+/// type mapping, and recursive statement/block building back through the caller.
 struct StatementContext
 {
 	eb::BuilderContext* exprBuilder;
@@ -34,11 +34,11 @@ struct StatementContext
 	std::function<std::shared_ptr<awst::Expression>(
 		solidity::frontend::Expression const&)> buildExpr;
 
-	/// Build a child statement (delegates to the SAME StatementBuilder).
+	/// Build a child statement (delegates to the same dispatcher).
 	std::function<std::shared_ptr<awst::Statement>(
 		solidity::frontend::Statement const&)> buildStmt;
 
-	/// Build a child block (delegates to the SAME StatementBuilder).
+	/// Build a child block (delegates to the same dispatcher).
 	std::function<std::shared_ptr<awst::Block>(
 		solidity::frontend::Block const&)> buildBlock;
 

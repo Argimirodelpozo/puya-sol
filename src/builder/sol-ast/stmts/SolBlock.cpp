@@ -1,6 +1,6 @@
 /// @file SolBlock.cpp
 /// Block statement — the central statement dispatcher.
-/// Replaces StatementBuilder as the primary way to build AWST from Solidity statements.
+/// Central statement dispatcher: builds AWST statements from Solidity AST nodes.
 
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-ast/stmts/SolExpressionStatement.h"
