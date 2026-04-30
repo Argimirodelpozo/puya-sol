@@ -3761,11 +3761,12 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			}
 		}
 
-		// For ARC4 methods returning biguint, wrap return values in ARC4Encode
-		// with the correct bit width (e.g., uint256 not uint512).
-		// Skip signed returns, functions with modifiers, and functions with inline assembly.
+		// For ARC4 methods returning biguint, normalize the public selector to
+		// the smallest fitting bit width (e.g., uint256 instead of the AVM
+		// default uint512) so EVM-canonical callers dispatch correctly.
+		// Skip signed returns and functions with modifiers.
 		if (method.arc4MethodConfig.has_value() && method.returnType == awst::WType::biguintType()
-			&& signedReturns.empty() && _func.modifiers().empty() && !funcHasInlineAssembly)
+			&& signedReturns.empty() && _func.modifiers().empty())
 		{
 			// Get original Solidity bit width for the return type
 			unsigned retBits = 256;
@@ -3783,6 +3784,14 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			}
 			auto const* arc4RetType = m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(retBits));
 
+			// Only wrap return-statement values when the body is NOT inline
+			// assembly. Inline-asm bodies (e.g. Solady's `result := sload(...)`
+			// named-return read pattern) write raw bytes32 to the named
+			// return; for retBits==256 the biguint encoding is byte-compatible
+			// with ARC4UIntN<256> so the runtime value flows through unchanged
+			// — adding the ARC4Encode wrap there inflates the local opcode
+			// cost and trips the per-call inner-tx budget on long chains
+			// (NegRisk redeem).
 			std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> wrapBiguintReturns;
 			wrapBiguintReturns = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
 			{
@@ -3810,7 +3819,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 						if (loop->loopBody) wrapBiguintReturns(loop->loopBody->body);
 				}
 			};
-			wrapBiguintReturns(method.body->body);
+			if (!funcHasInlineAssembly)
+				wrapBiguintReturns(method.body->body);
 			method.returnType = arc4RetType;
 		}
 

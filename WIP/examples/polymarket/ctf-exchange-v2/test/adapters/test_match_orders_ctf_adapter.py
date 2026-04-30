@@ -97,19 +97,6 @@ def _fund_wallet_pusd(
          sender=admin)
 
 
-XFAIL_MINT_DEEP = (
-    "Wallet/CT.avmPortForceApprove/CT.balanceOf-uint256-override all wired. "
-    "Mint dance gets through fixture init, validateOrderSignature, h1.transferFrom "
-    "of pUSD from both 1271 wallets, adapter.splitPosition, CT.unwrap, USDCe "
-    "transferFrom from VAULT, CTF.split, batch transfers — then hits a `b>; !; "
-    "assert` in helper3's settlement flow (TooLittleTokensReceived or "
-    "ComplementaryFillExceedsTakerFill). Pricing/fill-amount calculation "
-    "edge case, possibly tied to how 1271 wallet maker addresses round-trip "
-    "through arc4 encoding vs the takingAmount math."
-)
-
-
-@pytest.mark.xfail(reason=XFAIL_MINT_DEEP, strict=True)
 def test_MatchOrdersCtfCollateralAdapter_Mint(
     split_adapter_with_delegate, admin, localnet,
     collateral_onramp_wired, vault,
@@ -236,8 +223,8 @@ def test_MatchOrdersCtfCollateralAdapter_Mint(
         extra_app_refs=[ct.app_id, ctf.app_id, usdce.app_id,
                         adapter.app_id, h1.app_id],
         extra_box_refs=inner_boxes,
-        budget_pad=14,
-        per_pad_boxes=3,
+        budget_pad=15,
+        per_pad_boxes=1,
     )
 
     # Bob's wallet: spent 50 pUSD, received 100 YES (on CTFMock).
