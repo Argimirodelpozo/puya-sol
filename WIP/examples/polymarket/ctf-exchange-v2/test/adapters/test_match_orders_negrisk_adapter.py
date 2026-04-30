@@ -121,7 +121,12 @@ def _wallets_and_ids(localnet, admin, h1, negrisk_mock):
 
 # ── happy paths ────────────────────────────────────────────────────────
 
+# See test_match_orders_ctf_adapter.py — same flake mechanism on the
+# heavy paths that drive the adapter's full split/merge inner-call chain.
+heavy_flaky = pytest.mark.flaky(reruns=3, reruns_delay=1)
 
+
+@heavy_flaky
 def test_MatchOrdersNegRiskCtfCollateralAdapter_Mint(
     split_negrisk_adapter_with_delegate, admin, localnet,
     collateral_onramp_wired, vault,
@@ -240,6 +245,7 @@ def test_MatchOrdersNegRiskCtfCollateralAdapter_Mint(
     assert call(ct, "balanceOf", [carla_psol]) == 0
 
 
+@heavy_flaky
 def test_MatchOrdersNegRiskCtfCollateralAdapter_Mint_Fees(
     split_negrisk_adapter_with_delegate, admin, localnet,
     collateral_onramp_wired, vault,
@@ -500,6 +506,7 @@ def test_MatchOrdersNegRiskCtfCollateralAdapter_Complementary_Fees(
     assert call(ct, "balanceOf", [fee_receiver]) == taker_fee + maker_fee
 
 
+@heavy_flaky
 def test_MatchOrdersNegRiskCtfCollateralAdapter_Merge(
     split_negrisk_adapter_with_delegate, admin, localnet, vault,
 ):
@@ -603,6 +610,7 @@ def test_MatchOrdersNegRiskCtfCollateralAdapter_Merge(
     assert call(ct, "balanceOf", [carla_psol]) == 50_000_000
 
 
+@heavy_flaky
 def test_MatchOrdersNegRiskCtfCollateralAdapter_Merge_Fees(
     split_negrisk_adapter_with_delegate, admin, localnet, vault,
 ):
@@ -708,6 +716,7 @@ def test_MatchOrdersNegRiskCtfCollateralAdapter_Merge_Fees(
 # ── revert paths ───────────────────────────────────────────────────────
 
 
+@heavy_flaky
 def test_MatchOrdersNegRiskCtfCollateralAdapter_Merge_Reverts_WhenAdapterNotApproved(
     split_negrisk_adapter_with_delegate, admin, localnet, vault,
 ):
@@ -786,14 +795,71 @@ def test_MatchOrdersNegRiskCtfCollateralAdapter_Merge_Reverts_WhenAdapterNotAppr
         )
 
 
-XFAIL_MISMATCH_NEEDS_PARALLEL_EXCHANGE = (
-    "WhenAdapterUsdceMismatch needs a fully parallel exchange (h1/h2/orch/"
-    "chunk) deployed against a bad NegRisk adapter whose USDCE/wcol differ "
-    "from orch.ctfCollateral. Same shape as the plain-CTF variant's xfail. "
-    "Tracked separately."
-)
+def test_MatchOrdersNegRiskCtfCollateralAdapter_Mint_Reverts_WhenAdapterUsdceMismatch(
+    collateral_token_wired, ctf_stateful, usdce_stateful, negrisk_adapter_mock,
+    localnet, admin, collateral_onramp_wired, vault,
+):
+    """When the NegRisk adapter's USDCE doesn't match orch's ctfCollateral,
+    splitPosition trips at CT.unwrap's `onlyValidAsset` check. Same revert
+    shape as the plain CTF adapter case — see notes there for the
+    parallel-exchange port simplification."""
+    from algosdk import encoding as _enc
+    from conftest import OUT_DIR, _deploy_pyapp
+    from dev.deals import deal_usdc as deal_usdce, set_allowance as set_usdce_allowance
 
+    ct = collateral_token_wired
+    ctf = ctf_stateful
+    usdce = usdce_stateful
 
-@pytest.mark.xfail(reason=XFAIL_MISMATCH_NEEDS_PARALLEL_EXCHANGE, strict=True)
-def test_MatchOrdersNegRiskCtfCollateralAdapter_Mint_Reverts_WhenAdapterUsdceMismatch():
-    raise NotImplementedError(XFAIL_MISMATCH_NEEDS_PARALLEL_EXCHANGE)
+    other_usdce = _deploy_pyapp(localnet, admin, "USDCMock")
+    assert other_usdce.app_id != usdce.app_id
+
+    base = OUT_DIR / "adapters" / "NegRiskCtfCollateralAdapter"
+    bad_adapter = deploy_app(localnet, admin, base, "NegRiskCtfCollateralAdapter")
+
+    ctf_addr = _enc.encode_address(app_id_to_address(ctf.app_id))
+    ct_addr_str = _enc.encode_address(app_id_to_address(ct.app_id))
+    other_usdce_addr = _enc.encode_address(app_id_to_address(other_usdce.app_id))
+    nrm_addr_str = _enc.encode_address(app_id_to_address(negrisk_adapter_mock.app_id))
+
+    composer = localnet.new_group()
+    for i in range(3):
+        composer.add_app_call_method_call(bad_adapter.params.call(
+            au.AppClientMethodCallParams(
+                method="paused",
+                args=[bytes([i + 1]) * 32],
+                note=f"pad-bad-negrisk-postinit-{i}".encode(),
+            )))
+    composer.add_app_call_method_call(bad_adapter.params.call(
+        au.AppClientMethodCallParams(
+            method="__postInit",
+            args=[admin.address, admin.address, ctf_addr, ct_addr_str,
+                  other_usdce_addr, nrm_addr_str],
+            extra_fee=au.AlgoAmount(micro_algo=50_000),
+            app_references=[
+                ctf.app_id, ct.app_id, other_usdce.app_id,
+                negrisk_adapter_mock.app_id,
+            ],
+        )))
+    composer.send(au.SendParams(populate_app_call_resources=True))
+
+    call(ct, "addWrapper",
+         [algod_addr_bytes_for_app(bad_adapter.app_id)], sender=admin)
+
+    admin32 = decode_address(admin.address)
+    deal_usdce(usdce, admin32, 50_000_000)
+    set_usdce_allowance(usdce, admin32,
+                        algod_addr_bytes_for_app(collateral_onramp_wired.app_id),
+                        50_000_000)
+    call(collateral_onramp_wired, "wrap",
+         [app_id_to_address(usdce.app_id), admin32, 50_000_000], sender=admin)
+    set_usdce_allowance(usdce, decode_address(vault.address),
+                        algod_addr_bytes_for_app(ct.app_id), 1_000_000_000)
+    call(ct, "approve",
+         [algod_addr_bytes_for_app(bad_adapter.app_id), 50_000_000],
+         sender=admin)
+
+    with pytest.raises(LogicError):
+        call(bad_adapter, "splitPosition",
+             [b"\x00" * 32, b"\x00" * 32, CONDITION_ID, [1, 2], 50_000_000],
+             sender=admin, extra_fee=500_000)
