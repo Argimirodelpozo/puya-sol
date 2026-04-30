@@ -25,6 +25,7 @@ from algopy import (
     itxn,
     op,
     subroutine,
+    urange,
 )
 
 
@@ -151,6 +152,35 @@ class CTFMock(ARC4Contract):
         to_key = _bal_key(to.bytes, id.bytes)
         cur_to = _amount_to_u64(self.balances.get(to_key, default=_empty_balance()))
         self.balances[to_key] = _u64_to_amount(cur_to + amt)
+
+    @arc4.abimethod
+    def safeBatchTransferFrom(
+        self,
+        from_: arc4.Address,
+        to: arc4.Address,
+        ids: UInt256Array,
+        amounts: UInt256Array,
+        data: arc4.DynamicBytes,
+    ) -> None:
+        """Batch ERC1155 transfer. CtfCollateralAdapter uses this to move
+        the [yes_id, no_id] pair after a split or before a merge."""
+        sender = op.Txn.sender.bytes
+        if sender != from_.bytes:
+            ap_raw = self.approvals.get(_approval_key(from_.bytes, sender),
+                                        default=Bytes(b"\x00"))
+            assert ap_raw[:1] == Bytes(b"\x01"), "not approved operator"
+        n = ids.length
+        assert n == amounts.length, "ids/amounts length mismatch"
+        for i in urange(n):
+            tid = ids[i].bytes
+            amt = _amount_to_u64(amounts[i].bytes)
+            from_key = _bal_key(from_.bytes, tid)
+            bal = _amount_to_u64(self.balances.get(from_key, default=_empty_balance()))
+            assert bal >= amt, "insufficient ERC1155 balance"
+            self.balances[from_key] = _u64_to_amount(bal - amt)
+            to_key = _bal_key(to.bytes, tid)
+            cur_to = _amount_to_u64(self.balances.get(to_key, default=_empty_balance()))
+            self.balances[to_key] = _u64_to_amount(cur_to + amt)
 
     # ── ConditionalTokens MINT/MERGE ───────────────────────────────────
     #

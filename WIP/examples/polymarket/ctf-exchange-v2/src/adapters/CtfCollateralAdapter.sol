@@ -56,7 +56,15 @@ contract CtfCollateralAdapter is Pausable, ERC1155TokenReceiver {
         _initializeOwner(_owner);
         _grantRoles(_admin, ADMIN_ROLE);
 
-        require(IERC20Min(_usdce).approve(_conditionalTokens, type(uint256).max), "ERC20 approve failed");
+        // _avmAlgodAddrFor: see CollateralOnramp.sol. The approve target
+        // must be the algod-derived addr that USDCe will see as `Txn.Sender`
+        // when CTF later calls USDCe.transferFrom from this adapter's
+        // splitPosition inner-call chain — not the puya-sol-conv form
+        // stored in CONDITIONAL_TOKENS for inner-tx ApplicationID extraction.
+        require(
+            IERC20Min(_usdce).approve(_avmAlgodAddrFor(_conditionalTokens), type(uint256).max),
+            "ERC20 approve failed"
+        );
     }
 
     /*--------------------------------------------------------------
@@ -71,8 +79,15 @@ contract CtfCollateralAdapter is Pausable, ERC1155TokenReceiver {
         external
         onlyUnpaused(USDCE)
     {
+        // _avmAlgodAddrFor: see CollateralOnramp.sol for the rationale —
+        // the puya-sol-conv `COLLATERAL_TOKEN` address has to be bridged
+        // to its algod-derived form before being passed as the `to` of
+        // transferFrom, otherwise CT.unwrap's `_burn(address(this), ...)`
+        // hits a different slot than where the credit landed.
         require(
-            IERC20Min(COLLATERAL_TOKEN).transferFrom(msg.sender, COLLATERAL_TOKEN, _amount),
+            IERC20Min(COLLATERAL_TOKEN).transferFrom(
+                msg.sender, _avmAlgodAddrFor(COLLATERAL_TOKEN), _amount
+            ),
             "ERC20 transferFrom failed"
         );
         // forgefmt: disable-next-item
@@ -208,5 +223,11 @@ contract CtfCollateralAdapter is Pausable, ERC1155TokenReceiver {
             conditionId: _conditionId,
             indexSets: indexSets
         });
+    }
+
+    /// @dev AVM-PORT-ADAPTATION: puya-sol intercepts this call.
+    /// See CollateralOnramp.sol for the full rationale.
+    function _avmAlgodAddrFor(address app) internal pure returns (address) {
+        return app;
     }
 }

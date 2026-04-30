@@ -42,6 +42,19 @@ compile() {
         extra_args+=(--ensure-budget matchOrders:100000)
         extra_args+=(--ensure-budget CTHelpers.getCollectionId:30000)
         extra_args+=(--ensure-budget CTHelpers.getPositionId:30000)
+    elif [[ "$rel" == "adapters/CtfCollateralAdapter.sol" ]]; then
+        # CtfCollateralAdapter.{splitPosition,mergePositions,redeemPositions}
+        # chain through CT.transferFrom + CT.unwrap + CTHelpers (getCollectionId,
+        # getPositionId — keccak-heavy) + CTF.splitPosition/etc. The inner-call
+        # cascade blows past the 700-op single-tx budget.
+        extra_args+=(--ensure-budget splitPosition:80000)
+        extra_args+=(--ensure-budget mergePositions:80000)
+        extra_args+=(--ensure-budget redeemPositions:80000)
+    elif [[ "$rel" == "adapters/NegRiskCtfCollateralAdapter.sol" ]]; then
+        extra_args+=(--ensure-budget splitPosition:80000)
+        extra_args+=(--ensure-budget mergePositions:80000)
+        extra_args+=(--ensure-budget redeemPositions:80000)
+        extra_args+=(--ensure-budget convertPositions:80000)
     elif [[ "$rel" == "collateral/PermissionedRamp.sol" ]]; then
         # PermissionedRamp.__postInit runs the inherited Solady EIP712
         # constructor (computeDomainSeparator: keccak256 of the typed-data

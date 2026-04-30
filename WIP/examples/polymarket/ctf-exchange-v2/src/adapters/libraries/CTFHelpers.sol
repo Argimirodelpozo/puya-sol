@@ -25,12 +25,13 @@ library CTFHelpers {
     /// @notice returns the partition for a binary conditional token
     /// @return partition_ - the partition [1,2] = [0b01, 0b10]
     function partition() internal pure returns (uint256[] memory partition_) {
-        assembly ("memory-safe") {
-            partition_ := mload(0x40)
-            mstore(partition_, 2)
-            mstore(add(partition_, 0x20), 1)
-            mstore(add(partition_, 0x40), 2)
-            mstore(0x40, add(partition_, 0x60))
-        }
+        // AVM-PORT-ADAPTATION: the original assembly version returns a
+        // memory pointer that puya-sol can't reify into ARC4-encoded
+        // bytes when the array is then passed to an inner-call's
+        // ApplicationArgs. Allocating via Solidity's standard new+index
+        // path lets puya-sol track it as a proper arc4 dynamic array.
+        partition_ = new uint256[](2);
+        partition_[0] = 1;
+        partition_[1] = 2;
     }
 }
