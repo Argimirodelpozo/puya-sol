@@ -920,6 +920,58 @@ def split_exchange_settled(localnet, admin, universal_mock, usdc_stateful, ctf_s
 
 
 @pytest.fixture(scope="function")
+def split_exchange_with_adapter(
+    localnet, admin, universal_mock, collateral_token_wired,
+    ctf_adapter_wired, ctf_stateful, usdce_stateful,
+):
+    """Same shape as `split_exchange_settled` but with the adapter dimension:
+      - collateral slot   = CollateralToken (pUSD)
+      - ctf slot          = CTFMock
+      - ctfCollateral     = USDCe
+      - outcomeTokenFactory = CtfCollateralAdapter (split/merge route through it)
+      - proxy/safe        = universal_mock (just need getImplementation/masterCopy)
+
+    The adapter has WRAPPER_ROLE on CT (from ctf_adapter_wired fixture).
+    Orch's __postInit grants the adapter approval to spend orch's pUSD
+    (via _avmPortApproveCollateralSpender) and h1 operator-status on CTF.
+
+    Returns (h1, h2, orch, ct, ctf, usdce, adapter)."""
+    h1, h2, orch = _build_split_exchange(
+        localnet, admin,
+        collateral_app_id=collateral_token_wired.app_id,
+        ctf_app_id=ctf_stateful.app_id,
+        ctf_collateral_app_id=usdce_stateful.app_id,
+        factory_app_id=universal_mock.app_id,
+        outcome_factory_app_id=ctf_adapter_wired.app_id,
+    )
+    return (h1, h2, orch, collateral_token_wired, ctf_stateful,
+            usdce_stateful, ctf_adapter_wired)
+
+
+@pytest.fixture(scope="function")
+def split_adapter_with_delegate(
+    localnet, admin, split_exchange_with_adapter, lonely_chunk_artifacts,
+):
+    """`split_exchange_with_adapter` + lonely-chunk delegate. Returns
+    (h1, h2, orch, ct, ctf, usdce, adapter, chunk).
+
+    The chunk is registered as an operator on `orch` so its inner
+    matchOrders call passes the `onlyOperator` gate."""
+    h1, h2, orch, ct, ctf, usdce, adapter = split_exchange_with_adapter
+    chunk = _build_chunk_for(localnet, admin, orch, lonely_chunk_artifacts,
+                             h1_app_id=h1.app_id, h2_app_id=h2.app_id)
+
+    chunk_addr32 = algod_addr_bytes_for_app(chunk.app_id)
+    orch.send.call(au.AppClientMethodCallParams(
+        method="addOperator",
+        args=[chunk_addr32],
+        extra_fee=au.AlgoAmount(micro_algo=10_000),
+    ), send_params=AUTO_POPULATE)
+
+    return h1, h2, orch, ct, ctf, usdce, adapter, chunk
+
+
+@pytest.fixture(scope="function")
 def split_exchange_with_delegate(localnet, admin, split_exchange, lonely_chunk_artifacts):
     """Deploy a LonelyChunk sidecar that swaps orch's approval to the F-helper
     bytes, invokes orch, then reverts.
