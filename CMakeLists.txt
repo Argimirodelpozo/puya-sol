@@ -83,6 +83,7 @@ set(SOURCES
 	src/builder/sol-eb/BuilderRegistry.cpp
 	src/builder/sol-eb/CallResolver.cpp
 	src/builder/sol-eb/AbiEncoderBuilder.cpp
+	src/builder/sol-eb/AbiCodecImpl.cpp
 	src/builder/sol-eb/FunctionPointerBuilder.cpp
 	src/builder/sol-eb/AssignmentHelper.cpp
 	src/builder/sol-eb/TypeConversions.cpp
