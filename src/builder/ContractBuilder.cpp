@@ -2931,7 +2931,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 )
 {
 	// Scope guard for per-method state (varNameToId, funcPtrTargets, etc.)
-	auto methodScope = m_exprBuilder->pushScope();
+	auto methodScope = m_exprBuilder->builderContext().pushScope();
 
 	awst::ContractMethod method;
 	method.sourceLocation = makeLoc(_func.location());

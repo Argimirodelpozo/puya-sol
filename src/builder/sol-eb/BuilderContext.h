@@ -148,6 +148,72 @@ public:
 		loc.endLine = _end >= 0 ? _end : 0;
 		return loc;
 	}
+
+	// ── Variable-name resolution (handles shadowing) ──
+	/// Get the AWST variable name for a declaration, handling shadowing.
+	/// If the name is already taken by a different declaration in an outer scope,
+	/// appends "__<id>" to make it unique.
+	std::string resolveVarName(std::string const& _name, int64_t _declId)
+	{
+		// Honour explicit remaps (used by modifier inliner when the same
+		// modifier — with its own local vars — is applied multiple times).
+		auto remapIt = paramRemaps.find(_declId);
+		if (remapIt != paramRemaps.end())
+			return remapIt->second.name;
+
+		auto it = varNameToId.find(_name);
+		if (it != varNameToId.end() && it->second != _declId)
+		{
+			// Name is shadowed — use unique name
+			std::string unique = _name + "__" + std::to_string(_declId);
+			varNameToId[unique] = _declId;
+			return unique;
+		}
+		varNameToId[_name] = _declId;
+		return _name;
+	}
+
+	/// Look up the AWST variable name for a referenced declaration.
+	std::string lookupVarName(std::string const& _name, int64_t _declId) const
+	{
+		std::string unique = _name + "__" + std::to_string(_declId);
+		auto it = varNameToId.find(unique);
+		if (it != varNameToId.end() && it->second == _declId)
+			return unique;
+		return _name;
+	}
+
+	// ── Scope guard (RAII) ──
+	/// Snapshots and restores mutable scope state at scope boundaries
+	/// (if/else branches, for/while bodies, blocks).
+	class ScopeGuard
+	{
+	public:
+		explicit ScopeGuard(BuilderContext& _ctx)
+			: m_ctx(_ctx),
+			  m_savedFuncPtrTargets(_ctx.funcPtrTargets),
+			  m_savedStorageAliases(_ctx.storageAliases),
+			  m_savedConstantLocals(_ctx.constantLocals),
+			  m_savedVarNames(_ctx.varNameToId)
+		{}
+		~ScopeGuard()
+		{
+			m_ctx.funcPtrTargets = std::move(m_savedFuncPtrTargets);
+			m_ctx.storageAliases = std::move(m_savedStorageAliases);
+			m_ctx.constantLocals = std::move(m_savedConstantLocals);
+			m_ctx.varNameToId = std::move(m_savedVarNames);
+		}
+		ScopeGuard(ScopeGuard const&) = delete;
+		ScopeGuard& operator=(ScopeGuard const&) = delete;
+	private:
+		BuilderContext& m_ctx;
+		std::map<int64_t, solidity::frontend::FunctionDefinition const*> m_savedFuncPtrTargets;
+		std::map<int64_t, std::shared_ptr<awst::Expression>> m_savedStorageAliases;
+		std::unordered_map<int64_t, unsigned long long> m_savedConstantLocals;
+		std::map<std::string, int64_t> m_savedVarNames;
+	};
+
+	ScopeGuard pushScope() { return ScopeGuard(*this); }
 };
 
 } // namespace puyasol::builder::eb

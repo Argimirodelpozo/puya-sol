@@ -148,37 +148,6 @@ public:
 	void trackFuncPtrTarget(int64_t _declId, solidity::frontend::FunctionDefinition const* _func);
 	solidity::frontend::FunctionDefinition const* getFuncPtrTarget(int64_t _declId) const;
 
-	/// RAII scope guard that snapshots mutable context state on construction
-	/// and restores it on destruction.
-	class ScopeGuard
-	{
-	public:
-		explicit ScopeGuard(ExpressionBuilder& _eb)
-			: m_ctx(_eb.m_ctx),
-			  m_savedFuncPtrTargets(_eb.m_ctx.funcPtrTargets),
-			  m_savedStorageAliases(_eb.m_ctx.storageAliases),
-			  m_savedConstantLocals(_eb.m_ctx.constantLocals),
-			  m_savedVarNames(_eb.m_ctx.varNameToId)
-		{}
-		~ScopeGuard()
-		{
-			m_ctx.funcPtrTargets = std::move(m_savedFuncPtrTargets);
-			m_ctx.storageAliases = std::move(m_savedStorageAliases);
-			m_ctx.constantLocals = std::move(m_savedConstantLocals);
-			m_ctx.varNameToId = std::move(m_savedVarNames);
-		}
-		ScopeGuard(ScopeGuard const&) = delete;
-		ScopeGuard& operator=(ScopeGuard const&) = delete;
-	private:
-		eb::BuilderContext& m_ctx;
-		std::map<int64_t, solidity::frontend::FunctionDefinition const*> m_savedFuncPtrTargets;
-		std::map<int64_t, std::shared_ptr<awst::Expression>> m_savedStorageAliases;
-		std::unordered_map<int64_t, unsigned long long> m_savedConstantLocals;
-		std::map<std::string, int64_t> m_savedVarNames;
-	};
-
-	ScopeGuard pushScope() { return ScopeGuard(*this); }
-
 private:
 	/// The owned builder context: holds all mutable per-translation state.
 	eb::BuilderContext m_ctx;

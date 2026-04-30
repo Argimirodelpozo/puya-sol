@@ -211,11 +211,12 @@ std::shared_ptr<awst::Block> SolBlock::toAwstBlock()
 
 	// Every block creates a scope — mutable context state (funcPtrTargets,
 	// storageAliases, constantLocals) is snapshotted and restored on exit.
-	auto scope = m_exprBuilder.pushScope();
+	auto& bc = m_exprBuilder.builderContext();
+	auto scope = bc.pushScope();
 
-	bool const wasUnchecked = m_exprBuilder.inUncheckedBlock();
+	bool const wasUnchecked = bc.inUncheckedBlock;
 	if (m_block.unchecked())
-		m_exprBuilder.setInUncheckedBlock(true);
+		bc.inUncheckedBlock = true;
 
 	for (auto const& stmt: m_block.statements())
 	{
@@ -235,7 +236,7 @@ std::shared_ptr<awst::Block> SolBlock::toAwstBlock()
 		}
 	}
 
-	m_exprBuilder.setInUncheckedBlock(wasUnchecked);
+	bc.inUncheckedBlock = wasUnchecked;
 	return awstBlock;
 }
 
