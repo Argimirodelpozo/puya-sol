@@ -38,6 +38,10 @@ set(SOURCES
 	# Builder core
 	src/builder/AWSTBuilder.cpp
 	src/builder/ContractBuilder.cpp
+	src/builder/contract/StorageDispatch.cpp
+	src/builder/contract/ModifierInliner.cpp
+	src/builder/contract/FunctionBuilder.cpp
+	src/builder/contract/ApprovalProgramBuilder.cpp
 
 	# Assembly builder (split by operation type)
 	src/builder/assembly/AssemblyBuilder.cpp
