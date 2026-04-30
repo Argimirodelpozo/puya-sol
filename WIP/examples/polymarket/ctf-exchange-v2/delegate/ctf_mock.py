@@ -71,6 +71,8 @@ class CTFMock(ARC4Contract):
         self.approvals = BoxMap(Bytes, Bytes, key_prefix=b"ap_")
         # condId → (yesId || noId), 64 bytes total
         self.partition = BoxMap(Bytes, Bytes, key_prefix=b"p_")
+        # condId → (yes_payout (8B) || no_payout (8B)), 16 bytes total
+        self.payouts = BoxMap(Bytes, Bytes, key_prefix=b"po_")
 
     @arc4.abimethod(create="require")
     def init(self) -> None:
@@ -258,5 +260,59 @@ class CTFMock(ARC4Contract):
             app_id=coll_app_id,
             on_completion=OnCompleteAction.NoOp,
             app_args=(sel, sender, amount.bytes),
+            fee=0,
+        ).submit()
+
+    # ── ConditionalTokens REDEEM ───────────────────────────────────────
+    #
+    # `payouts[conditionId]` (registered via `report_payouts`) maps
+    # YES/NO → 1/0. `redeemPositions` burns msg.sender's YES + NO
+    # balances and pays out collateral = sum(balance[i] * payout[i]).
+    # For binary markets that's just `bal_winning_side` (the loser side
+    # is worth 0).
+
+    @arc4.abimethod
+    def report_payouts(
+        self,
+        condition_id: Bytes32,
+        yes_payout: arc4.UInt64,
+        no_payout: arc4.UInt64,
+    ) -> None:
+        """Test-only: register the payouts (yes, no) for a condition.
+        Real CTF would have an oracle role — bypass for tests."""
+        self.payouts[condition_id.bytes] = (
+            op.itob(yes_payout.native) + op.itob(no_payout.native))
+
+    @arc4.abimethod
+    def redeemPositions(
+        self,
+        collateralToken: arc4.Address,
+        parent: Bytes32,
+        condition_id: Bytes32,
+        index_sets: UInt256Array,
+    ) -> None:
+        """Burn msg.sender's YES+NO and pay out
+        `bal_yes * yes_payout + bal_no * no_payout` collateral."""
+        sender = op.Txn.sender.bytes
+        part = self.partition[condition_id.bytes]
+        yes_id = part[:32]
+        no_id = part[32:]
+        pay = self.payouts[condition_id.bytes]
+        yes_pay = op.btoi(pay[:8])
+        no_pay = op.btoi(pay[8:16])
+        # Burn YES + NO, accumulate payout.
+        total = UInt64(0)
+        for tid, payout in ((yes_id, yes_pay), (no_id, no_pay)):
+            key = _bal_key(sender, tid)
+            bal = _amount_to_u64(self.balances.get(key, default=_empty_balance()))
+            total += bal * payout
+            self.balances[key] = _u64_to_amount(UInt64(0))
+        # Hand collateral back. usdc.transfer(sender, total).
+        coll_app_id = op.btoi(op.extract(collateralToken.bytes, UInt64(24), UInt64(8)))
+        sel = arc4.arc4_signature("transfer(address,uint256)bool")
+        itxn.ApplicationCall(
+            app_id=coll_app_id,
+            on_completion=OnCompleteAction.NoOp,
+            app_args=(sel, sender, _u64_to_amount(total)),
             fee=0,
         ).submit()

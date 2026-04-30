@@ -127,7 +127,14 @@ contract CtfCollateralAdapter is Pausable, ERC1155TokenReceiver {
 
         _mergePositions(_conditionId, _amount);
 
-        require(IERC20Min(USDCE).transfer(COLLATERAL_TOKEN, _amount), "ERC20 transfer failed");
+        // _avmAlgodAddrFor: see splitPosition. CT.wrap later does
+        // USDCE.transfer(VAULT, _amount) from CT_algod's account, so
+        // the USDCE we deposit here must be credited to CT_algod
+        // (algod-derived), not the puya-sol-conv form.
+        require(
+            IERC20Min(USDCE).transfer(_avmAlgodAddrFor(COLLATERAL_TOKEN), _amount),
+            "ERC20 transfer failed"
+        );
         // forgefmt: disable-next-item
         CollateralToken(COLLATERAL_TOKEN).wrap({
             _asset: USDCE,
@@ -154,7 +161,11 @@ contract CtfCollateralAdapter is Pausable, ERC1155TokenReceiver {
 
         uint256 amount = IERC20Min(USDCE).balanceOf(address(this));
 
-        require(IERC20Min(USDCE).transfer(COLLATERAL_TOKEN, amount), "ERC20 transfer failed");
+        // _avmAlgodAddrFor: see mergePositions / splitPosition.
+        require(
+            IERC20Min(USDCE).transfer(_avmAlgodAddrFor(COLLATERAL_TOKEN), amount),
+            "ERC20 transfer failed"
+        );
         // forgefmt: disable-next-item
         CollateralToken(COLLATERAL_TOKEN).wrap({
             _asset: USDCE,
