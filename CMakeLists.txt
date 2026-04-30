@@ -124,6 +124,7 @@ set(SOURCES
 	src/builder/sol-ast/exprs/SolBinaryOperation.cpp
 	src/builder/sol-ast/exprs/SolUnaryOperation.cpp
 	src/builder/sol-ast/exprs/SolIndexAccess.cpp
+	src/builder/sol-ast/exprs/SolIndexAccessHandlers.cpp
 	src/builder/sol-ast/exprs/SolAssignment.cpp
 	src/builder/sol-ast/exprs/SolAssignmentHandlers.cpp
 	src/builder/sol-ast/SolStatement.cpp
