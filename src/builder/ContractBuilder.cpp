@@ -315,7 +315,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		m_typeMapper, m_storageMapper, m_sourceFile, contractName,
 		m_libraryFunctionIds, m_overloadedNames, m_freeFunctionById
 	);
-	m_exprBuilder->setCurrentContract(&_contract);
+	m_exprBuilder->builderContext().currentContract = &_contract;
 	// Initialize statement context
 	m_stmtCtx = sol_ast::StatementContext{
 		&*m_exprBuilder, &m_typeMapper, m_sourceFile,
@@ -331,8 +331,8 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		{}, nullptr, {}, nullptr, nullptr, nullptr,
 	};
 
-	m_exprBuilder->setTransientStorage(
-		m_transientStorage.hasTransientVars() ? &m_transientStorage : nullptr);
+	m_exprBuilder->builderContext().transientStorage =
+		m_transientStorage.hasTransientVars() ? &m_transientStorage : nullptr;
 
 	// Set the contract cref for function pointer dispatch resolution.
 	// Library subroutines need this to construct SubroutineIDs.
@@ -450,7 +450,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 					std::string superName = name + "__super_" + std::to_string(callerId);
 					m_perFuncSuperOverrides[callerId].push_back({superCallTargetId, superName});
 					m_superTargetFuncs[callerId] = target;
-					m_exprBuilder->addSuperTarget(superCallTargetId, superName);
+					m_exprBuilder->builderContext().superTargetNames[superCallTargetId] = superName;
 				}
 			}
 		}
@@ -489,7 +489,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 						if (m_overloadedNames.count(name))
 							name += "_" + std::to_string(func->parameters().size());
 						std::string superName = name + "__super_" + std::to_string(id);
-						m_exprBuilder->addSuperTarget(id, superName);
+						m_exprBuilder->builderContext().superTargetNames[id] = superName;
 					}
 				}
 			}
@@ -521,7 +521,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 							name += "(" + std::to_string(func->parameters().size()) + ")";
 						std::string superName = name + "__super_" + std::to_string(id);
 						// Register globally — explicit base calls don't need per-function context
-						m_exprBuilder->addSuperTarget(id, superName);
+						m_exprBuilder->builderContext().superTargetNames[id] = superName;
 					}
 				}
 			}
@@ -535,14 +535,14 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		auto it = m_perFuncSuperOverrides.find(funcAstId);
 		if (it != m_perFuncSuperOverrides.end())
 			for (auto const& [targetId, superName]: it->second)
-				m_exprBuilder->addSuperTarget(targetId, superName);
+				m_exprBuilder->builderContext().superTargetNames[targetId] = superName;
 		// Re-register fallback super targets (cross-function super calls)
 		for (auto const& [id, func]: m_fallbackSuperFuncs)
 		{
 			std::string name = func->name();
 			if (m_overloadedNames.count(name))
 				name += "_" + std::to_string(func->parameters().size());
-			m_exprBuilder->addSuperTarget(id, name + "__super_" + std::to_string(id));
+			m_exprBuilder->builderContext().superTargetNames[id] = name + "__super_" + std::to_string(id);
 		}
 		// Re-register explicit base targets (they're fixed, not MRO-dependent)
 		for (auto const& [id, func]: m_explicitBaseTargetFuncs)
@@ -550,20 +550,20 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 			std::string name = func->name();
 			if (m_overloadedNames.count(name))
 				name += "(" + std::to_string(func->parameters().size()) + ")";
-			m_exprBuilder->addSuperTarget(id, name + "__super_" + std::to_string(id));
+			m_exprBuilder->builderContext().superTargetNames[id] = name + "__super_" + std::to_string(id);
 		}
 	};
 
 	// Helper: clear super targets (to avoid cross-contamination between functions)
 	auto clearSuperOverrides = [&]() {
-		m_exprBuilder->clearSuperTargets();
+		m_exprBuilder->builderContext().superTargetNames.clear();
 	};
 
 	// Snapshot super target registrations so the constructor body —
 	// translated inside buildApprovalProgram below — can resolve `super.f()`
 	// to the eventually-emitted `f__super_N` subroutine instead of falling
 	// back to the current contract's own `f`.
-	m_allSuperTargetNames = m_exprBuilder->superTargetNames();
+	m_allSuperTargetNames = m_exprBuilder->builderContext().superTargetNames;
 
 	// Approval and clear programs
 	m_postInitMethod.reset();
@@ -2422,10 +2422,10 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			// Main constructor body
 			if (constructor && constructor->body().statements().size() > 0)
 			{
-				m_exprBuilder->setInConstructor(true);
+				m_exprBuilder->builderContext().inConstructor = true;
 				auto ctorBody = buildBlock(constructor->body());
 				inlineModifiers(*constructor, ctorBody);
-				m_exprBuilder->setInConstructor(false);
+				m_exprBuilder->builderContext().inConstructor = false;
 				for (auto& stmt: ctorBody->body)
 					postInitBody->body.push_back(std::move(stmt));
 			}
@@ -2619,20 +2619,20 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		{
 			// Restore super targets for constructor body (needed for super.f() calls).
 			for (auto const& [id, name]: m_allSuperTargetNames)
-				m_exprBuilder->addSuperTarget(id, name);
+				m_exprBuilder->builderContext().superTargetNames[id] = name;
 			// Also set up MRO overrides for the constructor specifically
 			if (constructor)
 			{
 				auto pfit = m_perFuncSuperOverrides.find(constructor->id());
 				if (pfit != m_perFuncSuperOverrides.end())
 					for (auto const& [targetId, superName]: pfit->second)
-						m_exprBuilder->addSuperTarget(targetId, superName);
+						m_exprBuilder->builderContext().superTargetNames[targetId] = superName;
 			}
-			m_exprBuilder->setInConstructor(true);
+			m_exprBuilder->builderContext().inConstructor = true;
 			auto ctorBody = buildBlock(constructor->body());
 			inlineModifiers(*constructor, ctorBody);
-			m_exprBuilder->setInConstructor(false);
-			m_exprBuilder->clearSuperTargets();
+			m_exprBuilder->builderContext().inConstructor = false;
+			m_exprBuilder->builderContext().superTargetNames.clear();
 			for (auto& stmt: ctorBody->body)
 				createBlock->body.push_back(std::move(stmt));
 		}
@@ -3231,7 +3231,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// Register named return variable names so inner scoping detects shadowing
 		for (auto const& rp: returnParams)
 			if (!rp->name().empty())
-				m_exprBuilder->resolveVarName(rp->name(), rp->id());
+				m_exprBuilder->builderContext().resolveVarName(rp->name(), rp->id());
 
 		// Register mapping-storage-ref return params as mapping-key-params:
 		// `function f() returns (mapping(K=>V) storage r)` — `r` is a local
@@ -3243,7 +3243,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				&& dynamic_cast<solidity::frontend::MappingType const*>(rp->type())
 				&& !rp->name().empty())
 			{
-				m_exprBuilder->addMappingKeyParam(rp->id(), rp->name());
+				m_exprBuilder->builderContext().mappingKeyParams[rp->id()] = rp->name();
 			}
 		}
 
@@ -4232,7 +4232,7 @@ void ContractBuilder::inlineModifiers(
 				modBody->body.push_back(std::move(assignment));
 
 				// Register remap so modifier body references resolve to the unique name
-				m_exprBuilder->addParamRemap(param->id(), uniqueName, paramType);
+				m_exprBuilder->builderContext().paramRemaps[param->id()] = puyasol::builder::eb::ParamRemap{uniqueName, paramType};
 				remappedDeclIds.push_back(param->id());
 			}
 		}
@@ -4258,7 +4258,7 @@ void ContractBuilder::inlineModifiers(
 					std::string uniqueName
 						= "__mod_local_" + localDecl->name() + "_" + std::to_string(modCounter++);
 					auto* localType = m_typeMapper.map(localDecl->type());
-					m_exprBuilder->addParamRemap(localDecl->id(), uniqueName, localType);
+					m_exprBuilder->builderContext().paramRemaps[localDecl->id()] = puyasol::builder::eb::ParamRemap{uniqueName, localType};
 					remappedDeclIds.push_back(localDecl->id());
 				}
 			}
@@ -4531,7 +4531,7 @@ void ContractBuilder::inlineModifiers(
 
 		// Unregister remaps so they don't affect subsequent code
 		for (auto declId: remappedDeclIds)
-			m_exprBuilder->removeParamRemap(declId);
+			m_exprBuilder->builderContext().paramRemaps.erase(declId);
 
 		_body = modBody;
 	}
@@ -4654,7 +4654,7 @@ void ContractBuilder::buildModifierChain(
 				auto assignment = awst::makeAssignmentStatement(target, std::move(argExpr), modLoc);
 				modBody->body.push_back(std::move(assignment));
 
-				m_exprBuilder->addParamRemap(param->id(), uniqueName, paramType);
+				m_exprBuilder->builderContext().paramRemaps[param->id()] = puyasol::builder::eb::ParamRemap{uniqueName, paramType};
 				remappedDeclIds.push_back(param->id());
 			}
 		}
@@ -4769,7 +4769,7 @@ void ContractBuilder::buildModifierChain(
 
 		// Unregister remaps
 		for (auto declId: remappedDeclIds)
-			m_exprBuilder->removeParamRemap(declId);
+			m_exprBuilder->builderContext().paramRemaps.erase(declId);
 
 		modSub.body = modBody;
 		m_modifierSubroutines.push_back(std::move(modSub));

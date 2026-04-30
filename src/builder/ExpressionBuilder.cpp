@@ -28,30 +28,6 @@ static OverloadedNamesSet const s_emptyOverloads;
 
 FreeFunctionIdMap const ExpressionBuilder::s_emptyFreeFunctionIds;
 
-void ExpressionBuilder::trackConstantLocal(int64_t _declId, unsigned long long _value)
-{
-	m_ctx.constantLocals[_declId] = _value;
-}
-
-unsigned long long ExpressionBuilder::getConstantLocal(solidity::frontend::Declaration const* _decl) const
-{
-	if (!_decl)
-		return 0;
-	auto it = m_ctx.constantLocals.find(_decl->id());
-	return it != m_ctx.constantLocals.end() ? it->second : 0;
-}
-
-void ExpressionBuilder::trackFuncPtrTarget(int64_t _declId, solidity::frontend::FunctionDefinition const* _func)
-{
-	m_ctx.funcPtrTargets[_declId] = _func;
-}
-
-solidity::frontend::FunctionDefinition const* ExpressionBuilder::getFuncPtrTarget(int64_t _declId) const
-{
-	auto it = m_ctx.funcPtrTargets.find(_declId);
-	return it != m_ctx.funcPtrTargets.end() ? it->second : nullptr;
-}
-
 ExpressionBuilder::ExpressionBuilder(
 	TypeMapper& _typeMapper,
 	StorageMapper& _storageMapper,
@@ -141,47 +117,6 @@ std::vector<std::shared_ptr<awst::Statement>> ExpressionBuilder::takePrePendingS
 	std::vector<std::shared_ptr<awst::Statement>> result;
 	result.swap(m_ctx.prePendingStatements);
 	return result;
-}
-
-void ExpressionBuilder::addParamRemap(int64_t _declId, std::string const& _uniqueName, awst::WType const* _type)
-{
-	m_ctx.paramRemaps[_declId] = {_uniqueName, _type};
-}
-
-void ExpressionBuilder::removeParamRemap(int64_t _declId)
-{
-	m_ctx.paramRemaps.erase(_declId);
-}
-
-void ExpressionBuilder::addSuperTarget(int64_t _funcId, std::string const& _name)
-{
-	m_ctx.superTargetNames[_funcId] = _name;
-}
-
-void ExpressionBuilder::clearSuperTargets()
-{
-	m_ctx.superTargetNames.clear();
-}
-
-void ExpressionBuilder::addStorageAlias(int64_t _declId, std::shared_ptr<awst::Expression> _expr)
-{
-	m_ctx.storageAliases[_declId] = std::move(_expr);
-}
-
-void ExpressionBuilder::removeStorageAlias(int64_t _declId)
-{
-	m_ctx.storageAliases.erase(_declId);
-}
-
-void ExpressionBuilder::addMappingKeyParam(int64_t _declId, std::string const& _paramName)
-{
-	m_ctx.mappingKeyParams[_declId] = _paramName;
-}
-
-std::string ExpressionBuilder::getMappingKeyParam(int64_t _declId) const
-{
-	auto it = m_ctx.mappingKeyParams.find(_declId);
-	return it != m_ctx.mappingKeyParams.end() ? it->second : std::string{};
 }
 
 awst::SourceLocation ExpressionBuilder::makeLoc(

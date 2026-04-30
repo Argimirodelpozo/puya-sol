@@ -185,7 +185,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				bool resolved = false;
 				if (isTransient)
 				{
-					auto* ts = m_ctx.exprBuilder ? m_ctx.exprBuilder->transientStorage() : nullptr;
+					auto* ts = m_ctx.exprBuilder ? m_ctx.exprBuilder->builderContext().transientStorage : nullptr;
 					if (ts)
 					{
 						if (auto const* tv = ts->getVarInfo(varDecl->name()))

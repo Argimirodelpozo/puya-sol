@@ -435,7 +435,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				for (size_t idx: mappingStorageParams)
 				{
 					auto const& param = func->parameters()[idx];
-					exprBuilder.addMappingKeyParam(param->id(), param->name());
+					exprBuilder.builderContext().mappingKeyParams[param->id()] = param->name();
 				}
 
 				sol_ast::StatementContext stmtCtx{
@@ -487,7 +487,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				// Register named return variable names so inner scoping detects shadowing
 				for (auto const& rp: returnParams)
 					if (!rp->name().empty())
-						exprBuilder.resolveVarName(rp->name(), rp->id());
+						exprBuilder.builderContext().resolveVarName(rp->name(), rp->id());
 
 				// Register mapping-storage-ref return params as mapping-key-params
 				// too: `function f() returns (mapping(K=>V) storage r)` — `r` is a
@@ -499,7 +499,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 						&& dynamic_cast<solidity::frontend::MappingType const*>(rp->type())
 						&& !rp->name().empty())
 					{
-						exprBuilder.addMappingKeyParam(rp->id(), rp->name());
+						exprBuilder.builderContext().mappingKeyParams[rp->id()] = rp->name();
 					}
 				}
 
@@ -813,7 +813,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 			// Register named return variable names so inner scoping detects shadowing
 			for (auto const& rp: returnParams)
 				if (!rp->name().empty())
-					exprBuilder.resolveVarName(rp->name(), rp->id());
+					exprBuilder.builderContext().resolveVarName(rp->name(), rp->id());
 
 			sub->body = sol_ast::buildBlock(stmtCtx, exprBuilder, func->body());
 
