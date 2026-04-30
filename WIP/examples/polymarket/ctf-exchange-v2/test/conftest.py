@@ -382,33 +382,20 @@ def collateral_onramp(localnet, admin, mock_token):
 def collateral_onramp_wired(localnet, admin, collateral_token_wired):
     """Onramp pointed at a real CollateralToken (USDC/USDCe/vault wired),
     with WRAPPER_ROLE granted so it can call the token's `wrap` method."""
-    from dev.arc56 import compile_teal, load_arc56
-    from dev.deploy import create_app
+    from algosdk import encoding
     from dev.invoke import call as _call
     base = OUT_DIR / "collateral" / "CollateralOnramp"
-    algod = localnet.client.algod
-
-    spec = load_arc56(base / "CollateralOnramp.arc56.json")
-    approval_bin = compile_teal(algod, (base / "CollateralOnramp.approval.teal").read_text())
-    clear_bin = compile_teal(algod, (base / "CollateralOnramp.clear.teal").read_text())
-
-    sch = spec.state.schema.global_state
-    extra_pages = max(0, (max(len(approval_bin), len(clear_bin)) - 1) // 2048)
-    app_id = create_app(
-        localnet, admin, approval_bin, clear_bin, sch,
-        extra_pages=extra_pages,
-        app_args=[
-            addr(admin),
-            addr(admin),
-            app_id_to_address(collateral_token_wired.app_id),
-        ],
+    ct_addr = encoding.encode_address(app_id_to_address(collateral_token_wired.app_id))
+    client = deploy_app(
+        localnet, admin, base, "CollateralOnramp",
+        post_init_args=[admin.address, admin.address, ct_addr],
+        post_init_app_refs=[collateral_token_wired.app_id],
     )
-    client = au.AppClient(au.AppClientParams(
-        algorand=localnet, app_spec=spec, app_id=app_id,
-        default_sender=admin.address,
-    ))
+    # Grant WRAPPER_ROLE to the onramp's algorand-account address (the
+    # one CT sees as msg.sender during inner calls), not the puya-sol
+    # `app_id_to_address` storage convention.
     _call(collateral_token_wired, "addWrapper",
-          [app_id_to_address(client.app_id)], sender=admin)
+          [algod_addr_bytes_for_app(client.app_id)], sender=admin)
     return client
 
 
@@ -429,35 +416,21 @@ def collateral_offramp_wired(localnet, admin, collateral_token_wired):
     """Offramp pointed at a real CollateralToken, with MINTER_ROLE +
     WRAPPER_ROLE granted so it can burn pUSD and call the token's
     `unwrap` method."""
-    from dev.arc56 import compile_teal, load_arc56
-    from dev.deploy import create_app
+    from algosdk import encoding
     from dev.invoke import call as _call
     base = OUT_DIR / "collateral" / "CollateralOfframp"
-    algod = localnet.client.algod
-
-    spec = load_arc56(base / "CollateralOfframp.arc56.json")
-    approval_bin = compile_teal(algod, (base / "CollateralOfframp.approval.teal").read_text())
-    clear_bin = compile_teal(algod, (base / "CollateralOfframp.clear.teal").read_text())
-
-    sch = spec.state.schema.global_state
-    extra_pages = max(0, (max(len(approval_bin), len(clear_bin)) - 1) // 2048)
-    app_id = create_app(
-        localnet, admin, approval_bin, clear_bin, sch,
-        extra_pages=extra_pages,
-        app_args=[
-            addr(admin),
-            addr(admin),
-            app_id_to_address(collateral_token_wired.app_id),
-        ],
+    ct_addr = encoding.encode_address(app_id_to_address(collateral_token_wired.app_id))
+    client = deploy_app(
+        localnet, admin, base, "CollateralOfframp",
+        post_init_args=[admin.address, admin.address, ct_addr],
+        post_init_app_refs=[collateral_token_wired.app_id],
     )
-    client = au.AppClient(au.AppClientParams(
-        algorand=localnet, app_spec=spec, app_id=app_id,
-        default_sender=admin.address,
-    ))
+    # See collateral_onramp_wired note — grant against the offramp's
+    # algorand-account address.
     _call(collateral_token_wired, "addMinter",
-          [app_id_to_address(client.app_id)], sender=admin)
+          [algod_addr_bytes_for_app(client.app_id)], sender=admin)
     _call(collateral_token_wired, "addWrapper",
-          [app_id_to_address(client.app_id)], sender=admin)
+          [algod_addr_bytes_for_app(client.app_id)], sender=admin)
     return client
 
 

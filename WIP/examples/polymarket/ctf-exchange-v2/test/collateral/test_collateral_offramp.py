@@ -26,14 +26,14 @@ from dev.addrs import addr, algod_addr_bytes_for_app, app_id_to_address
 from dev.invoke import call
 
 
-SAFETRANSFERLIB_CALL_STUB_OFFRAMP = (
-    "CollateralOfframp.unwrap calls Solady SafeTransferLib.safeTransferFrom "
-    "on COLLATERAL_TOKEN; puya-sol's Yul call handler stubs that as "
-    "success without firing an inner txn, so the pUSD never reaches the "
-    "CollateralToken's account and the downstream unwrap errors. Same "
-    "shape as the Onramp gap. Resolves once CollateralOfframp.sol "
-    "switches from SafeTransferLib to IERC20Min (mirroring "
-    "CollateralToken.sol's existing AVM-port adaptation)."
+OFFRAMP_ADDR_CONVENTION_MISMATCH = (
+    "AVM-port-adapted CollateralOfframp.unwrap (now IERC20Min) lowers to "
+    "a real itxn but hits the same address-convention mismatch as "
+    "CollateralOnramp — see test_collateral_onramp.py "
+    "ONRAMP_ADDR_CONVENTION_MISMATCH. The pUSD `transferFrom(msg.sender, "
+    "COLLATERAL_TOKEN, amt)` credits `\\x00*24+itob(ct_app_id)` but CT's "
+    "downstream `transfer(_to, asset_amt)` from VAULT debits CT's "
+    "algod-derived address — different keys."
 )
 
 
@@ -44,7 +44,7 @@ SAFETRANSFERLIB_CALL_STUB_OFFRAMP = (
 # ── UNWRAP (positive) — xfailed pending Offramp.sol AVM-port adaptation ──
 
 
-@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB_OFFRAMP, strict=True)
+@pytest.mark.xfail(reason=OFFRAMP_ADDR_CONVENTION_MISMATCH, strict=True)
 def test_CollateralOfframp_unwrapUSDC(
     collateral_onramp_wired, collateral_offramp_wired,
     collateral_token_wired, usdc_stateful, vault, funded_account
@@ -82,7 +82,7 @@ def test_CollateralOfframp_unwrapUSDC(
                 [addr(funded_account)]) == 0
 
 
-@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB_OFFRAMP, strict=True)
+@pytest.mark.xfail(reason=OFFRAMP_ADDR_CONVENTION_MISMATCH, strict=True)
 def test_CollateralOfframp_unwrapUSDCe(
     collateral_onramp_wired, collateral_offramp_wired,
     collateral_token_wired, usdce_stateful, vault, funded_account
@@ -165,7 +165,7 @@ def test_revert_CollateralOfframp_unwrapUSDCe_paused(
 # ── Pausable unpause — positive flow, gated on the same SafeTransferLib gap ──
 
 
-@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB_OFFRAMP, strict=True)
+@pytest.mark.xfail(reason=OFFRAMP_ADDR_CONVENTION_MISMATCH, strict=True)
 def test_Pausable_unpause(
     collateral_onramp_wired, collateral_offramp_wired,
     collateral_token_wired, usdc_stateful, vault, admin, funded_account

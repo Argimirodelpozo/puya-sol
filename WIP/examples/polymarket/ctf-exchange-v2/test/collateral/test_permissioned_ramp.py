@@ -38,14 +38,11 @@ from dev.invoke import call
 from dev.signing import EthSigner
 
 
-SAFETRANSFERLIB_CALL_STUB_PRAMP = (
-    "PermissionedRamp.{wrap,unwrap} pulls the asset/pUSD via Solady "
-    "SafeTransferLib.safeTransferFrom on a non-constant token; puya-sol "
-    "stubs that call as success without firing the inner txn, so the "
-    "downstream CollateralToken transfer leg fails. Same shape as the "
-    "Onramp/Offramp gap (test_collateral_onramp.py + "
-    "test_collateral_offramp.py). Resolves once PermissionedRamp.sol "
-    "switches from SafeTransferLib to IERC20Min."
+PRAMP_ADDR_CONVENTION_MISMATCH = (
+    "AVM-port-adapted PermissionedRamp.{wrap,unwrap} (now IERC20Min) "
+    "lowers to real itxns but hits the same address-convention mismatch "
+    "as CollateralOnramp — see test_collateral_onramp.py "
+    "ONRAMP_ADDR_CONVENTION_MISMATCH for the full diagnosis."
 )
 
 
@@ -327,27 +324,27 @@ def test_revert_PermissionedRamp_unwrap_expiredDeadline(permissioned_ramp_wired)
 # ── POSITIVE WRAP/UNWRAP — xfailed pending PermissionedRamp.sol AVM-port ──
 
 
-@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB_PRAMP, strict=True)
+@pytest.mark.xfail(reason=PRAMP_ADDR_CONVENTION_MISMATCH, strict=True)
 def test_PermissionedRamp_wrapUSDC(permissioned_ramp_wired):
     raise NotImplementedError("Positive wrap blocked on SafeTransferLib gap; sig path stubbed.")
 
 
-@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB_PRAMP, strict=True)
+@pytest.mark.xfail(reason=PRAMP_ADDR_CONVENTION_MISMATCH, strict=True)
 def test_PermissionedRamp_wrapUSDCe(permissioned_ramp_wired):
     raise NotImplementedError("Positive wrap blocked on SafeTransferLib gap; sig path stubbed.")
 
 
-@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB_PRAMP, strict=True)
+@pytest.mark.xfail(reason=PRAMP_ADDR_CONVENTION_MISMATCH, strict=True)
 def test_PermissionedRamp_wrap_incrementsNonce(permissioned_ramp_wired):
     raise NotImplementedError("Positive wrap blocked on SafeTransferLib gap; sig path stubbed.")
 
 
-@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB_PRAMP, strict=True)
+@pytest.mark.xfail(reason=PRAMP_ADDR_CONVENTION_MISMATCH, strict=True)
 def test_PermissionedRamp_unwrapUSDC(permissioned_ramp_wired):
     raise NotImplementedError("Positive unwrap blocked on SafeTransferLib gap; sig path stubbed.")
 
 
-@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB_PRAMP, strict=True)
+@pytest.mark.xfail(reason=PRAMP_ADDR_CONVENTION_MISMATCH, strict=True)
 def test_PermissionedRamp_unwrapUSDCe(permissioned_ramp_wired):
     raise NotImplementedError("Positive unwrap blocked on SafeTransferLib gap; sig path stubbed.")
 

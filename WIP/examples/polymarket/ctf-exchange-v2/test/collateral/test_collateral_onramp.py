@@ -34,15 +34,23 @@ from dev.deals import deal_usdc, set_allowance, usdc_balance
 from dev.invoke import call
 
 
-SAFETRANSFERLIB_CALL_STUB_ONRAMP = (
-    "CollateralOnramp.wrap calls Solady SafeTransferLib.safeTransferFrom "
-    "on a non-constant token; puya-sol's Yul call handler stubs that as "
-    "success without firing an inner txn, so the asset never reaches "
-    "CollateralToken's account and the downstream IERC20Min.transfer to "
-    "the vault errors. Same shape as PUYA_BLOCKERS.md §3 / "
-    "test_collateral_token.py's SAFETRANSFERLIB_CALL_STUB. Resolves once "
-    "CollateralOnramp.sol switches from SafeTransferLib to IERC20Min "
-    "(mirroring CollateralToken.sol's existing AVM-port adaptation)."
+ONRAMP_ADDR_CONVENTION_MISMATCH = (
+    "AVM-port-adapted CollateralOnramp.wrap (now using IERC20Min instead "
+    "of Solady SafeTransferLib) lowers to a real itxn, but the no-callback "
+    "wrap chain has a deeper representation issue: Solidity stores "
+    "`address(COLLATERAL_TOKEN)` as the puya-sol convention bytes "
+    "(`\\x00*24 + itob(app_id)`), so Onramp's "
+    "`IERC20Min(asset).transferFrom(msg.sender, COLLATERAL_TOKEN, amt)` "
+    "credits the asset under the puya-sol-convention key. Then CT's "
+    "downstream `IERC20Min(asset).transfer(VAULT, amt)` runs as an inner "
+    "txn whose `Txn.Sender` is CT's algod-derived address "
+    "(`sha512_256(\"appID\"||app_id)`), so USDCMock debits a *different* "
+    "balance key — and CT has zero in the algod-addr ledger entry. "
+    "Resolving this needs a coherent address-of-other-app representation "
+    "across (a) inner-tx ApplicationID extraction and (b) arg-passing — "
+    "today puya-sol picks the puya-sol convention for both, which works "
+    "for ApplicationID (low-8-byte extraction) but not for arg-passing "
+    "(`Txn.Sender` resolves to algod-derived). Tracked separately."
 )
 
 
@@ -53,17 +61,15 @@ SAFETRANSFERLIB_CALL_STUB_ONRAMP = (
 # ── WRAP (positive) — xfailed pending Onramp.sol AVM-port adaptation ─────
 
 
-@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB_ONRAMP, strict=True)
+@pytest.mark.xfail(reason=ONRAMP_ADDR_CONVENTION_MISMATCH, strict=True)
 def test_CollateralOnramp_wrapUSDC(
     collateral_onramp_wired, collateral_token_wired,
     usdc_stateful, vault, funded_account
 ):
     """Onramp.wrap(USDC, alice, amt) should pull USDC from alice into the
     token, then mint pUSD to alice and transfer USDC to the vault."""
-    amount = 100_000_000
-    alice32 = bytes(addr(funded_account), "ascii")  # placeholder; rewritten below
-    # Use the funded_account's raw 32-byte algod address consistently.
     from algosdk.encoding import decode_address
+    amount = 100_000_000
     alice32 = decode_address(funded_account.address)
 
     deal_usdc(usdc_stateful, alice32, amount)
@@ -87,14 +93,14 @@ def test_CollateralOnramp_wrapUSDC(
                 [addr(funded_account)]) == amount
 
 
-@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB_ONRAMP, strict=True)
+@pytest.mark.xfail(reason=ONRAMP_ADDR_CONVENTION_MISMATCH, strict=True)
 def test_CollateralOnramp_wrapUSDCe(
     collateral_onramp_wired, collateral_token_wired,
     usdce_stateful, vault, funded_account
 ):
     """Same as wrapUSDC but for the USDCe asset slot."""
-    amount = 100_000_000
     from algosdk.encoding import decode_address
+    amount = 100_000_000
     alice32 = decode_address(funded_account.address)
 
     deal_usdc(usdce_stateful, alice32, amount)
@@ -165,14 +171,14 @@ def test_revert_CollateralOnramp_wrapUSDCe_paused(
 # ── Pausable unpause — positive flow, gated on the same SafeTransferLib gap ──
 
 
-@pytest.mark.xfail(reason=SAFETRANSFERLIB_CALL_STUB_ONRAMP, strict=True)
+@pytest.mark.xfail(reason=ONRAMP_ADDR_CONVENTION_MISMATCH, strict=True)
 def test_Pausable_unpause(
     collateral_onramp_wired, collateral_token_wired,
     usdc_stateful, vault, admin, funded_account
 ):
-    """Pause → wrap reverts → unpause → wrap succeeds. The first half of
-    the flow (pause + revert) works; the post-unpause wrap is blocked on
-    the same Onramp SafeTransferLib gap as the positive wrap tests."""
+    """Pause → wrap reverts → unpause → wrap succeeds. After the
+    AVM-port adaptation switched Onramp from SafeTransferLib to
+    IERC20Min, the post-unpause wrap actually transfers."""
     from algosdk.encoding import decode_address
     alice32 = decode_address(funded_account.address)
     amount = 100_000_000
