@@ -399,7 +399,10 @@ def _build_lonely_chunk():
     out_bin = LONELY_CHUNK_OUT / "LonelyChunk.approval.bin"
     if out_bin.exists() and out_bin.stat().st_mtime > src.stat().st_mtime:
         return
-    PUYA_VENV = Path(__file__).parent.parent.parent.parent / "puya" / ".venv" / "bin" / "puyapy"
+    PUYA_VENV = (
+        Path(__file__).parent.parent.parent.parent.parent.parent
+        / "puya" / ".venv" / "bin" / "puyapy"
+    )
     subprocess.run(
         [str(PUYA_VENV), str(src), "--output-bytecode",
          "--target-avm-version", "12",

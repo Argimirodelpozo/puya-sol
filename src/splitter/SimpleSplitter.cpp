@@ -409,7 +409,31 @@ std::shared_ptr<awst::Expression> decodeReturn(
 					auto slice = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), loc);
 					slice->immediates = {readOffset, readLen};
 					slice->stackArgs.push_back(bytesExpr);
-					tupleExpr->items.push_back(awst::makeReinterpretCast(std::move(slice), el, loc));
+					std::shared_ptr<awst::Expression> decoded;
+					if (el == awst::WType::uint64Type())
+					{
+						// bytes → uint64 needs btoi; ReinterpretCast rejects
+						// it because the underlying scalar types differ
+						// (bytes vs uint64).
+						auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), loc);
+						btoi->stackArgs.push_back(std::move(slice));
+						decoded = std::move(btoi);
+					}
+					else if (el == awst::WType::boolType())
+					{
+						// arc4.bool is 1 byte; the high bit carries the value.
+						auto getbit = awst::makeIntrinsicCall("getbit", awst::WType::uint64Type(), loc);
+						getbit->stackArgs.push_back(std::move(slice));
+						getbit->stackArgs.push_back(awst::makeIntegerConstant("0", loc));
+						decoded = awst::makeNumericCompare(
+							std::move(getbit), awst::NumericComparison::Ne,
+							awst::makeIntegerConstant("0", loc), loc);
+					}
+					else
+					{
+						decoded = awst::makeReinterpretCast(std::move(slice), el, loc);
+					}
+					tupleExpr->items.push_back(std::move(decoded));
 					offset += slotLen;
 				}
 				return tupleExpr;

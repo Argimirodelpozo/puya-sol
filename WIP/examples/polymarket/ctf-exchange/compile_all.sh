@@ -29,8 +29,17 @@ compile() {
 
     echo -n "[$rel] "
 
+    # Small mocks (ERC1271Mock, ERC20) fit comfortably under the 8KB cap;
+    # the default extraction list would force-split them and break tests
+    # that deploy them via the simple `deploy_app` helper (which doesn't
+    # know how to substitute helper-app-id template vars).
+    local extra_args=()
+    if [[ "$rel" == "dev/mocks/ERC1271Mock.sol" || "$rel" == "dev/mocks/ERC20.sol" ]]; then
+        extra_args+=(--split-config "$EXAMPLE/nosplit.json")
+    fi
+
     local output exit_code
-    output=$("$PUYA_SOL" --source "$sol_file" "${IMPORT_PATHS[@]}" --output-dir "$out" --puya-path "$PUYA_PATH" 2>&1)
+    output=$("$PUYA_SOL" --source "$sol_file" "${IMPORT_PATHS[@]}" --output-dir "$out" --puya-path "$PUYA_PATH" "${extra_args[@]}" 2>&1)
     exit_code=$?
 
     if echo "$output" | grep -q "puya completed successfully"; then
