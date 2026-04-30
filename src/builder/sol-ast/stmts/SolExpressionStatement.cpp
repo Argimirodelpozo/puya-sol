@@ -2,7 +2,8 @@
 /// ExpressionStatement, RevertStatement, ReturnStatement.
 
 #include "builder/sol-ast/stmts/SolExpressionStatement.h"
-#include "builder/ExpressionBuilder.h"
+#include "builder/sol-eb/BuilderContext.h"
+#include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
@@ -126,7 +127,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 			if (retParams.size() == 1)
 			{
 				auto* expectedType = m_ctx.typeMapper->map(retParams[0]->type());
-				stmt->value = ExpressionBuilder::implicitNumericCast(
+				stmt->value = TypeCoercion::implicitNumericCast(
 					std::move(stmt->value), expectedType, m_loc);
 
 				// Sign-extend if returning a narrow signed integer as a wider signed type.
@@ -270,7 +271,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 					for (size_t i = 0; i < retParams.size(); ++i)
 					{
 						auto* expectedElemType = m_ctx.typeMapper->map(retParams[i]->type());
-						tupleExpr->items[i] = ExpressionBuilder::implicitNumericCast(
+						tupleExpr->items[i] = TypeCoercion::implicitNumericCast(
 							std::move(tupleExpr->items[i]), expectedElemType, m_loc);
 						// Bytes type widening/narrowing: e.g. bytes2 → bytes32.
 						// Solidity right-pads on widening and truncates on
@@ -342,7 +343,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 						if (trueTuple && trueTuple->items.size() == retParams.size())
 						{
 							for (size_t i = 0; i < retParams.size(); ++i)
-								trueTuple->items[i] = ExpressionBuilder::implicitNumericCast(
+								trueTuple->items[i] = TypeCoercion::implicitNumericCast(
 									std::move(trueTuple->items[i]), expectedTypes[i], m_loc);
 							trueTuple->wtype = expectedTupleType;
 						}
@@ -351,7 +352,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 						if (falseTuple && falseTuple->items.size() == retParams.size())
 						{
 							for (size_t i = 0; i < retParams.size(); ++i)
-								falseTuple->items[i] = ExpressionBuilder::implicitNumericCast(
+								falseTuple->items[i] = TypeCoercion::implicitNumericCast(
 									std::move(falseTuple->items[i]), expectedTypes[i], m_loc);
 							falseTuple->wtype = expectedTupleType;
 						}

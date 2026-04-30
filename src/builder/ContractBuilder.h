@@ -1,7 +1,7 @@
 #pragma once
 
 #include "awst/Node.h"
-#include "builder/ExpressionBuilder.h"
+#include "builder/sol-eb/BuilderContext.h"
 #include "builder/sol-ast/SolStatement.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
@@ -12,9 +12,20 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace puyasol::builder
 {
+
+/// Maps "LibraryName.functionName" → subroutine ID string.
+using LibraryFunctionIdMap = std::unordered_map<std::string, std::string>;
+
+/// Maps AST node ID → subroutine ID for free functions (used by operator overloading).
+using FreeFunctionIdMap = std::unordered_map<int64_t, std::string>;
+
+/// Set of function names that have overloads (multiple definitions with same name).
+using OverloadedNamesSet = std::unordered_set<std::string>;
 
 /// Builds an AWST Contract node from a Solidity ContractDefinition.
 ///
@@ -63,7 +74,7 @@ private:
 	std::map<std::string, uint64_t> m_ensureBudget;
 	bool m_viaIR = false;
 
-	std::unique_ptr<ExpressionBuilder> m_exprBuilder;
+	std::unique_ptr<eb::BuilderContext> m_exprBuilder;
 
 	/// Shared statement context for block building.
 	sol_ast::StatementContext m_stmtCtx;

@@ -39,10 +39,6 @@ set(SOURCES
 	src/builder/AWSTBuilder.cpp
 	src/builder/ContractBuilder.cpp
 
-	# Expression state container + helpers
-	src/builder/ExpressionBuilder.cpp
-
-
 	# Assembly builder (split by operation type)
 	src/builder/assembly/AssemblyBuilder.cpp
 	src/builder/assembly/CoreTranslation.cpp

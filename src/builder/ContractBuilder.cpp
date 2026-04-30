@@ -311,11 +311,11 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	}
 
 	// Create translators for this contract (with overload info)
-	m_exprBuilder = std::make_unique<ExpressionBuilder>(
+	m_exprBuilder = std::make_unique<eb::BuilderContext>(
 		m_typeMapper, m_storageMapper, m_sourceFile, contractName,
 		m_libraryFunctionIds, m_overloadedNames, m_freeFunctionById
 	);
-	m_exprBuilder->builderContext().currentContract = &_contract;
+	m_exprBuilder->currentContract = &_contract;
 	// Initialize statement context
 	m_stmtCtx = sol_ast::StatementContext{
 		&*m_exprBuilder, &m_typeMapper, m_sourceFile,
@@ -326,12 +326,12 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		[this](solidity::frontend::Block const& b) {
 			return sol_ast::buildBlock(m_stmtCtx, *m_exprBuilder, b);
 		},
-		[this]() { return m_exprBuilder->takePrePendingStatements(); },
-		[this]() { return m_exprBuilder->takePendingStatements(); },
+		[this]() { return m_exprBuilder->takePrePending(); },
+		[this]() { return m_exprBuilder->takePending(); },
 		{}, nullptr, {}, nullptr, nullptr, nullptr,
 	};
 
-	m_exprBuilder->builderContext().transientStorage =
+	m_exprBuilder->transientStorage =
 		m_transientStorage.hasTransientVars() ? &m_transientStorage : nullptr;
 
 	// Set the contract cref for function pointer dispatch resolution.
@@ -450,7 +450,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 					std::string superName = name + "__super_" + std::to_string(callerId);
 					m_perFuncSuperOverrides[callerId].push_back({superCallTargetId, superName});
 					m_superTargetFuncs[callerId] = target;
-					m_exprBuilder->builderContext().superTargetNames[superCallTargetId] = superName;
+					m_exprBuilder->superTargetNames[superCallTargetId] = superName;
 				}
 			}
 		}
@@ -489,7 +489,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 						if (m_overloadedNames.count(name))
 							name += "_" + std::to_string(func->parameters().size());
 						std::string superName = name + "__super_" + std::to_string(id);
-						m_exprBuilder->builderContext().superTargetNames[id] = superName;
+						m_exprBuilder->superTargetNames[id] = superName;
 					}
 				}
 			}
@@ -521,7 +521,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 							name += "(" + std::to_string(func->parameters().size()) + ")";
 						std::string superName = name + "__super_" + std::to_string(id);
 						// Register globally — explicit base calls don't need per-function context
-						m_exprBuilder->builderContext().superTargetNames[id] = superName;
+						m_exprBuilder->superTargetNames[id] = superName;
 					}
 				}
 			}
@@ -535,14 +535,14 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		auto it = m_perFuncSuperOverrides.find(funcAstId);
 		if (it != m_perFuncSuperOverrides.end())
 			for (auto const& [targetId, superName]: it->second)
-				m_exprBuilder->builderContext().superTargetNames[targetId] = superName;
+				m_exprBuilder->superTargetNames[targetId] = superName;
 		// Re-register fallback super targets (cross-function super calls)
 		for (auto const& [id, func]: m_fallbackSuperFuncs)
 		{
 			std::string name = func->name();
 			if (m_overloadedNames.count(name))
 				name += "_" + std::to_string(func->parameters().size());
-			m_exprBuilder->builderContext().superTargetNames[id] = name + "__super_" + std::to_string(id);
+			m_exprBuilder->superTargetNames[id] = name + "__super_" + std::to_string(id);
 		}
 		// Re-register explicit base targets (they're fixed, not MRO-dependent)
 		for (auto const& [id, func]: m_explicitBaseTargetFuncs)
@@ -550,20 +550,20 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 			std::string name = func->name();
 			if (m_overloadedNames.count(name))
 				name += "(" + std::to_string(func->parameters().size()) + ")";
-			m_exprBuilder->builderContext().superTargetNames[id] = name + "__super_" + std::to_string(id);
+			m_exprBuilder->superTargetNames[id] = name + "__super_" + std::to_string(id);
 		}
 	};
 
 	// Helper: clear super targets (to avoid cross-contamination between functions)
 	auto clearSuperOverrides = [&]() {
-		m_exprBuilder->builderContext().superTargetNames.clear();
+		m_exprBuilder->superTargetNames.clear();
 	};
 
 	// Snapshot super target registrations so the constructor body —
 	// translated inside buildApprovalProgram below — can resolve `super.f()`
 	// to the eventually-emitted `f__super_N` subroutine instead of falling
 	// back to the current contract's own `f`.
-	m_allSuperTargetNames = m_exprBuilder->builderContext().superTargetNames;
+	m_allSuperTargetNames = m_exprBuilder->superTargetNames;
 
 	// Approval and clear programs
 	m_postInitMethod.reset();
@@ -736,7 +736,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				if (!readExpr)
 					readExpr = StorageMapper::makeDefaultValue(getter.returnType, loc);
 				if (readExpr && readExpr->wtype != getter.returnType)
-					readExpr = ExpressionBuilder::implicitNumericCast(
+					readExpr = TypeCoercion::implicitNumericCast(
 						std::move(readExpr), getter.returnType, loc
 					);
 				// String literal → bytes[N]: right-pad to N bytes
@@ -863,7 +863,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				);
 
 				auto idxRef = awst::makeVarExpression(getter.args[0].name, getter.args[0].wtype, loc);
-				auto idx = ExpressionBuilder::implicitNumericCast(
+				auto idx = TypeCoercion::implicitNumericCast(
 					idxRef, awst::WType::uint64Type(), loc);
 
 				auto indexExpr = std::make_shared<awst::IndexExpression>();
@@ -1112,7 +1112,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 						auto idxRef = awst::makeVarExpression(
 							getter.args[keyArgCount + i].name,
 							getter.args[keyArgCount + i].wtype, loc);
-						auto idx = ExpressionBuilder::implicitNumericCast(
+						auto idx = TypeCoercion::implicitNumericCast(
 							idxRef, awst::WType::uint64Type(), loc);
 
 						auto indexExpr = std::make_shared<awst::IndexExpression>();
@@ -1443,7 +1443,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		std::string cref = m_sourceFile + "." + contractName;
 		awst::SourceLocation loc;
 		loc.file = m_sourceFile;
-		auto& dispCtx = m_exprBuilder->builderContext();
+		auto& dispCtx = *m_exprBuilder;
 		auto dispatchMethods = eb::FunctionPointerBuilder::generateDispatchMethods(
 			dispCtx, cref, loc, &m_dispatchSubroutines);
 		for (auto& m : dispatchMethods)
@@ -1719,9 +1719,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 						continue;
 					initVal = TypeCoercion::coerceForAssignment(
 						std::move(initVal), wtype, method.sourceLocation);
-					for (auto& preStmt: m_exprBuilder->takePrePendingStatements())
+					for (auto& preStmt: m_exprBuilder->takePrePending())
 						targetBody.push_back(std::move(preStmt));
-					for (auto& postStmt: m_exprBuilder->takePendingStatements())
+					for (auto& postStmt: m_exprBuilder->takePending())
 						targetBody.push_back(std::move(postStmt));
 					auto boxKey = awst::makeUtf8BytesConstant(
 						var->name(), method.sourceLocation);
@@ -1755,9 +1755,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					// inner-txn create + fund before referencing __new_app_id_N)
 					// into the target body so the referenced vars are bound
 					// before the state-var assignment.
-					for (auto& preStmt: m_exprBuilder->takePrePendingStatements())
+					for (auto& preStmt: m_exprBuilder->takePrePending())
 						targetBody.push_back(std::move(preStmt));
-					for (auto& postStmt: m_exprBuilder->takePendingStatements())
+					for (auto& postStmt: m_exprBuilder->takePending())
 						targetBody.push_back(std::move(postStmt));
 				}
 				if (!defaultVal)
@@ -2404,7 +2404,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 						auto target = awst::makeVarExpression(params[i]->name(), m_typeMapper.map(params[i]->type()), makeLoc(args[i]->location()));
 
-						argExpr = ExpressionBuilder::implicitNumericCast(
+						argExpr = TypeCoercion::implicitNumericCast(
 							std::move(argExpr), target->wtype, target->sourceLocation
 						);
 
@@ -2422,10 +2422,10 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			// Main constructor body
 			if (constructor && constructor->body().statements().size() > 0)
 			{
-				m_exprBuilder->builderContext().inConstructor = true;
+				m_exprBuilder->inConstructor = true;
 				auto ctorBody = buildBlock(constructor->body());
 				inlineModifiers(*constructor, ctorBody);
-				m_exprBuilder->builderContext().inConstructor = false;
+				m_exprBuilder->inConstructor = false;
 				for (auto& stmt: ctorBody->body)
 					postInitBody->body.push_back(std::move(stmt));
 			}
@@ -2508,7 +2508,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					if (!argExpr)
 						continue;
 					auto* targetType = m_typeMapper.map(params[i]->type());
-					argExpr = ExpressionBuilder::implicitNumericCast(
+					argExpr = TypeCoercion::implicitNumericCast(
 						std::move(argExpr), targetType, makeLoc(args[i]->location()));
 
 					auto target = awst::makeVarExpression(params[i]->name(), targetType, makeLoc(args[i]->location()));
@@ -2549,7 +2549,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					if (!argExpr)
 						continue;
 					auto* targetType = m_typeMapper.map(params[i]->type());
-					argExpr = ExpressionBuilder::implicitNumericCast(
+					argExpr = TypeCoercion::implicitNumericCast(
 						std::move(argExpr), targetType, makeLoc(args[i]->location()));
 
 					auto target = awst::makeVarExpression(params[i]->name(), targetType, makeLoc(args[i]->location()));
@@ -2619,20 +2619,20 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		{
 			// Restore super targets for constructor body (needed for super.f() calls).
 			for (auto const& [id, name]: m_allSuperTargetNames)
-				m_exprBuilder->builderContext().superTargetNames[id] = name;
+				m_exprBuilder->superTargetNames[id] = name;
 			// Also set up MRO overrides for the constructor specifically
 			if (constructor)
 			{
 				auto pfit = m_perFuncSuperOverrides.find(constructor->id());
 				if (pfit != m_perFuncSuperOverrides.end())
 					for (auto const& [targetId, superName]: pfit->second)
-						m_exprBuilder->builderContext().superTargetNames[targetId] = superName;
+						m_exprBuilder->superTargetNames[targetId] = superName;
 			}
-			m_exprBuilder->builderContext().inConstructor = true;
+			m_exprBuilder->inConstructor = true;
 			auto ctorBody = buildBlock(constructor->body());
 			inlineModifiers(*constructor, ctorBody);
-			m_exprBuilder->builderContext().inConstructor = false;
-			m_exprBuilder->builderContext().superTargetNames.clear();
+			m_exprBuilder->inConstructor = false;
+			m_exprBuilder->superTargetNames.clear();
 			for (auto& stmt: ctorBody->body)
 				createBlock->body.push_back(std::move(stmt));
 		}
@@ -2931,7 +2931,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 )
 {
 	// Scope guard for per-method state (varNameToId, funcPtrTargets, etc.)
-	auto methodScope = m_exprBuilder->builderContext().pushScope();
+	auto methodScope = m_exprBuilder->pushScope();
 
 	awst::ContractMethod method;
 	method.sourceLocation = makeLoc(_func.location());
@@ -3231,7 +3231,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// Register named return variable names so inner scoping detects shadowing
 		for (auto const& rp: returnParams)
 			if (!rp->name().empty())
-				m_exprBuilder->builderContext().resolveVarName(rp->name(), rp->id());
+				m_exprBuilder->resolveVarName(rp->name(), rp->id());
 
 		// Register mapping-storage-ref return params as mapping-key-params:
 		// `function f() returns (mapping(K=>V) storage r)` — `r` is a local
@@ -3243,7 +3243,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				&& dynamic_cast<solidity::frontend::MappingType const*>(rp->type())
 				&& !rp->name().empty())
 			{
-				m_exprBuilder->builderContext().mappingKeyParams[rp->id()] = rp->name();
+				m_exprBuilder->mappingKeyParams[rp->id()] = rp->name();
 			}
 		}
 
@@ -4221,7 +4221,7 @@ void ContractBuilder::inlineModifiers(
 					continue;
 
 				// Cast to parameter type if needed
-				argExpr = ExpressionBuilder::implicitNumericCast(
+				argExpr = TypeCoercion::implicitNumericCast(
 					std::move(argExpr), paramType, modLoc
 				);
 
@@ -4232,7 +4232,7 @@ void ContractBuilder::inlineModifiers(
 				modBody->body.push_back(std::move(assignment));
 
 				// Register remap so modifier body references resolve to the unique name
-				m_exprBuilder->builderContext().paramRemaps[param->id()] = puyasol::builder::eb::ParamRemap{uniqueName, paramType};
+				m_exprBuilder->paramRemaps[param->id()] = puyasol::builder::eb::ParamRemap{uniqueName, paramType};
 				remappedDeclIds.push_back(param->id());
 			}
 		}
@@ -4258,7 +4258,7 @@ void ContractBuilder::inlineModifiers(
 					std::string uniqueName
 						= "__mod_local_" + localDecl->name() + "_" + std::to_string(modCounter++);
 					auto* localType = m_typeMapper.map(localDecl->type());
-					m_exprBuilder->builderContext().paramRemaps[localDecl->id()] = puyasol::builder::eb::ParamRemap{uniqueName, localType};
+					m_exprBuilder->paramRemaps[localDecl->id()] = puyasol::builder::eb::ParamRemap{uniqueName, localType};
 					remappedDeclIds.push_back(localDecl->id());
 				}
 			}
@@ -4531,7 +4531,7 @@ void ContractBuilder::inlineModifiers(
 
 		// Unregister remaps so they don't affect subsequent code
 		for (auto declId: remappedDeclIds)
-			m_exprBuilder->builderContext().paramRemaps.erase(declId);
+			m_exprBuilder->paramRemaps.erase(declId);
 
 		_body = modBody;
 	}
@@ -4647,14 +4647,14 @@ void ContractBuilder::buildModifierChain(
 
 				auto argExpr = m_exprBuilder->build(*(*args)[pi]);
 				if (!argExpr) continue;
-				argExpr = ExpressionBuilder::implicitNumericCast(std::move(argExpr), paramType, modLoc);
+				argExpr = TypeCoercion::implicitNumericCast(std::move(argExpr), paramType, modLoc);
 
 				auto target = awst::makeVarExpression(uniqueName, paramType, modLoc);
 
 				auto assignment = awst::makeAssignmentStatement(target, std::move(argExpr), modLoc);
 				modBody->body.push_back(std::move(assignment));
 
-				m_exprBuilder->builderContext().paramRemaps[param->id()] = puyasol::builder::eb::ParamRemap{uniqueName, paramType};
+				m_exprBuilder->paramRemaps[param->id()] = puyasol::builder::eb::ParamRemap{uniqueName, paramType};
 				remappedDeclIds.push_back(param->id());
 			}
 		}
@@ -4769,7 +4769,7 @@ void ContractBuilder::buildModifierChain(
 
 		// Unregister remaps
 		for (auto declId: remappedDeclIds)
-			m_exprBuilder->builderContext().paramRemaps.erase(declId);
+			m_exprBuilder->paramRemaps.erase(declId);
 
 		modSub.body = modBody;
 		m_modifierSubroutines.push_back(std::move(modSub));

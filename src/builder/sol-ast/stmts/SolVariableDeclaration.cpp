@@ -2,7 +2,7 @@
 /// Migrated from VariableDeclarationBuilder.cpp.
 
 #include "builder/sol-ast/stmts/SolVariableDeclaration.h"
-#include "builder/ExpressionBuilder.h"
+#include "builder/sol-eb/BuilderContext.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -19,7 +19,7 @@ SolVariableDeclaration::SolVariableDeclaration(
 	StatementContext& _ctx,
 	VariableDeclarationStatement const& _node,
 	awst::SourceLocation _loc,
-	ExpressionBuilder& _exprBuilder)
+	eb::BuilderContext& _exprBuilder)
 	: SolStatement(_ctx, std::move(_loc)), m_node(_node), m_exprBuilder(_exprBuilder)
 {
 }
@@ -35,7 +35,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 		auto const& decl = *declarations[0];
 		auto* type = m_ctx.typeMapper->map(decl.type());
 
-		auto target = awst::makeVarExpression(m_exprBuilder.builderContext().resolveVarName(decl.name(), decl.id()), type, m_ctx.makeLoc(decl.location()));
+		auto target = awst::makeVarExpression(m_exprBuilder.resolveVarName(decl.name(), decl.id()), type, m_ctx.makeLoc(decl.location()));
 
 		std::shared_ptr<awst::Expression> value;
 		if (initialValue)
@@ -47,7 +47,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				{
 					if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(
 							initId->annotation().referencedDeclaration))
-						m_exprBuilder.builderContext().funcPtrTargets[decl.id()] = funcDef;
+						m_exprBuilder.funcPtrTargets[decl.id()] = funcDef;
 				}
 			}
 
@@ -59,7 +59,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			{
 				auto val = ratType->literalValue(nullptr);
 				if (val > 0 && val <= std::numeric_limits<unsigned long long>::max())
-					m_exprBuilder.builderContext().constantLocals[decl.id()] = static_cast<unsigned long long>(val);
+					m_exprBuilder.constantLocals[decl.id()] = static_cast<unsigned long long>(val);
 			}
 
 			// Upgrade dynamic array to fixed-size when N is known
@@ -101,7 +101,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				&& decl.type()
 				&& decl.type()->category() == solidity::frontend::Type::Category::Mapping)
 			{
-				m_exprBuilder.builderContext().storageAliases[decl.id()] = value;
+				m_exprBuilder.storageAliases[decl.id()] = value;
 				for (auto& p: m_ctx.takePrePending())
 					result.push_back(std::move(p));
 				for (auto& p: m_ctx.takePending())
@@ -132,7 +132,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 					stateGet->defaultValue = StorageMapper::makeDefaultValue(appState->wtype, m_loc);
 					aliasExpr = stateGet;
 				}
-				m_exprBuilder.builderContext().storageAliases[decl.id()] = aliasExpr;
+				m_exprBuilder.storageAliases[decl.id()] = aliasExpr;
 				for (auto& p: m_ctx.takePrePending())
 					result.push_back(std::move(p));
 				for (auto& p: m_ctx.takePending())
@@ -155,7 +155,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 					&& decl.type()->category() == solidity::frontend::Type::Category::Mapping;
 				if (isMappingPtr && value->wtype == awst::WType::bytesType())
 				{
-					m_exprBuilder.builderContext().mappingKeyParams[decl.id()] = decl.name();
+					m_exprBuilder.mappingKeyParams[decl.id()] = decl.name();
 					// Emit `m = f()` as a plain bytes assignment so `m` holds the
 					// mapping holder name at runtime; subsequent reassignments
 					// (`m = otherMapping`) update which mapping `m` points to.
@@ -170,7 +170,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 					return result;
 				}
 
-				m_exprBuilder.builderContext().slotStorageRefs[decl.id()] = value;
+				m_exprBuilder.slotStorageRefs[decl.id()] = value;
 				// Also emit the call as an assignment so the slot value is available.
 				// The slot var's wtype must match the function's return wtype to
 				// keep AssignmentStatement happy.

@@ -4,7 +4,7 @@
 /// Centralised type coercion / conversion utilities for AWST expressions.
 ///
 /// All WType→WType transforms live here so that callers (ContractBuilder,
-/// ExpressionBuilder, StatementBuilder, AssemblyBuilder) share one
+/// sol-ast wrappers, sol-eb builders, AssemblyBuilder) share one
 /// implementation instead of copy-pasting padding / casting / sign-extension
 /// logic in every visitor.
 

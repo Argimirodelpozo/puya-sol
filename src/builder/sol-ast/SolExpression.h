@@ -48,7 +48,7 @@ protected:
 	awst::WType const* m_wtype;
 	awst::SourceLocation m_loc;
 
-	/// Build a child expression (routes through ExpressionBuilder).
+	/// Build a child expression (routes through BuilderContext).
 	std::shared_ptr<awst::Expression> buildExpr(
 		solidity::frontend::Expression const& _expr)
 	{

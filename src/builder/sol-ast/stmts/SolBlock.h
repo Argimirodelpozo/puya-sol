@@ -2,9 +2,9 @@
 
 #include "builder/sol-ast/SolStatement.h"
 
-namespace puyasol::builder
+namespace puyasol::builder::eb
 {
-class ExpressionBuilder;
+class BuilderContext;
 }
 
 namespace puyasol::builder::sol_ast
@@ -20,7 +20,7 @@ public:
 	SolBlock(StatementContext& _ctx,
 		solidity::frontend::Block const& _node,
 		awst::SourceLocation _loc,
-		ExpressionBuilder& _exprBuilder);
+		eb::BuilderContext& _exprBuilder);
 
 	std::vector<std::shared_ptr<awst::Statement>> toAwst() override;
 
@@ -29,20 +29,20 @@ public:
 
 private:
 	solidity::frontend::Block const& m_block;
-	ExpressionBuilder& m_exprBuilder;
+	eb::BuilderContext& m_exprBuilder;
 };
 
 /// Build a single Solidity statement into AWST (convenience free function).
 /// Dispatches to the right sol-ast wrapper and wraps multiple results in a Block.
 std::shared_ptr<awst::Statement> buildStatement(
 	StatementContext& _ctx,
-	ExpressionBuilder& _exprBuilder,
+	eb::BuilderContext& _exprBuilder,
 	solidity::frontend::Statement const& _stmt);
 
 /// Build a Solidity Block into an AWST Block (convenience free function).
 std::shared_ptr<awst::Block> buildBlock(
 	StatementContext& _ctx,
-	ExpressionBuilder& _exprBuilder,
+	eb::BuilderContext& _exprBuilder,
 	solidity::frontend::Block const& _block);
 
 } // namespace puyasol::builder::sol_ast

@@ -2,7 +2,7 @@
 /// Migrated from InlineAssemblyBuilder.cpp.
 
 #include "builder/sol-ast/stmts/SolInlineAssembly.h"
-#include "builder/ExpressionBuilder.h"
+#include "builder/sol-eb/BuilderContext.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/storage/StorageLayout.h"
@@ -185,7 +185,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				bool resolved = false;
 				if (isTransient)
 				{
-					auto* ts = m_ctx.exprBuilder ? m_ctx.exprBuilder->builderContext().transientStorage : nullptr;
+					auto* ts = m_ctx.exprBuilder ? m_ctx.exprBuilder->transientStorage : nullptr;
 					if (ts)
 					{
 						if (auto const* tv = ts->getVarInfo(varDecl->name()))

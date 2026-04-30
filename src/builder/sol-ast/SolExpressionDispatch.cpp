@@ -1,5 +1,5 @@
 /// @file SolExpressionDispatch.cpp
-/// Central expression dispatcher — replaces ExpressionBuilder's visitor pattern.
+/// Central expression dispatcher — replaces the legacy visitor pattern.
 
 #include "builder/sol-ast/SolExpressionDispatch.h"
 #include "builder/sol-ast/SolExpressionFactory.h"

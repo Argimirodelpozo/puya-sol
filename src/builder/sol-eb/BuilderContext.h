@@ -49,11 +49,12 @@ struct ParamRemap
 /// builders. It owns the per-translation mutable state (scope tables, pending
 /// statement buffers, parameter remaps, etc.) and holds references to the
 /// long-lived compiler services (TypeMapper, StorageMapper, function tables).
+/// It also owns the type-builder registry used by sol-eb dispatch.
 ///
-/// Built-instance dispatch and recursive expression building are exposed via
-/// std::function callbacks — these are filled in by ExpressionBuilder while the
-/// migration is in progress; once `ExpressionBuilder` is removed these will
-/// become direct methods on this class.
+/// Recursive expression building, fallback binary-op construction, and
+/// type-builder dispatch are exposed via std::function callbacks wired up in
+/// the constructor; the field-and-callback layout is preserved as the public
+/// surface that sol-ast wrappers consume.
 class BuilderContext
 {
 public:
@@ -127,12 +128,12 @@ public:
 	/// default value, returning the ArrayExtend expression directly.
 	std::shared_ptr<awst::Expression> pendingArrayPushValue;
 
-	// ── Recursive build callback (delegates back to ExpressionBuilder) ──
+	// ── Recursive build callback (delegates to BuilderContext::build) ──
 	/// Build a child Solidity expression into an AWST Expression.
 	std::function<std::shared_ptr<awst::Expression>(
 		solidity::frontend::Expression const&)> buildExpr;
 
-	// ── Binary/unary operation callbacks (delegates back to ExpressionBuilder) ──
+	// ── Binary/unary operation callbacks (delegates to BuilderContext::build) ──
 	/// Build a binary operation from already-resolved operands (fallback when sol-eb builders don't handle it).
 	std::function<std::shared_ptr<awst::Expression>(
 		solidity::frontend::Token, std::shared_ptr<awst::Expression>,

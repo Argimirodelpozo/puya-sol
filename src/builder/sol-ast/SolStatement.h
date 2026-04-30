@@ -11,8 +11,12 @@
 
 namespace puyasol::builder
 {
-class ExpressionBuilder;
 class TypeMapper;
+}
+
+namespace puyasol::builder::eb
+{
+class BuilderContext;
 }
 
 namespace puyasol::builder::sol_ast
@@ -22,11 +26,11 @@ namespace puyasol::builder::sol_ast
 /// type mapping, and recursive statement/block building via the calling StatementBuilder.
 struct StatementContext
 {
-	ExpressionBuilder* exprBuilder;
+	eb::BuilderContext* exprBuilder;
 	TypeMapper* typeMapper;
 	std::string sourceFile;
 
-	/// Build a child expression (delegates to ExpressionBuilder).
+	/// Build a child expression (delegates to BuilderContext).
 	std::function<std::shared_ptr<awst::Expression>(
 		solidity::frontend::Expression const&)> buildExpr;
 
@@ -38,7 +42,7 @@ struct StatementContext
 	std::function<std::shared_ptr<awst::Block>(
 		solidity::frontend::Block const&)> buildBlock;
 
-	/// Flush pre-pending and post-pending statements from ExpressionBuilder.
+	/// Flush pre-pending and post-pending statements from BuilderContext.
 	std::function<std::vector<std::shared_ptr<awst::Statement>>()> takePrePending;
 	std::function<std::vector<std::shared_ptr<awst::Statement>>()> takePending;
 

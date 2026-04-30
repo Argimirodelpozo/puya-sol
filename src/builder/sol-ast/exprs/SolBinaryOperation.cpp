@@ -226,7 +226,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::toAwst()
 
 	// 7. bytesN shift truncation. `bytesN << k` and `bytesN >> k` lower
 	// through buildBinaryOp's biguint multiply-by-2^k / divide-by-2^k path
-	// (see ExpressionBuilder.cpp:455-489). The result is biguint with no
+	// (see sol-eb/BinaryOpBuilder.cpp). The result is biguint with no
 	// width bound, but Solidity's bytesN shift semantics treat the value
 	// as left-aligned in a 32-byte word: `bytes6 = 0x616263646566` × 2^24
 	// must produce `0x646566000000` (low 6 bytes after shift), not the

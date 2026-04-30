@@ -19,7 +19,7 @@ namespace puyasol::builder::eb
 /// element types, struct fields, etc.) to construct the appropriate builder.
 ///
 /// During migration, tryBuildInstance() returns nullptr for unregistered
-/// categories, allowing the old ExpressionBuilder code path to handle them.
+/// categories, allowing the legacy fallback path to handle them.
 class BuilderRegistry
 {
 public:

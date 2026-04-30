@@ -9,7 +9,7 @@ namespace puyasol::builder::sol_ast
 
 /// Binary operations: arithmetic, comparison, bitwise, boolean.
 /// Handles user-defined operator overloading, constant folding, sol-eb builder
-/// dispatch, and falls back to ExpressionBuilder::buildBinaryOp for the rest.
+/// dispatch, and falls back to eb::buildBinaryOp for the rest.
 class SolBinaryOperation: public SolExpression
 {
 public:

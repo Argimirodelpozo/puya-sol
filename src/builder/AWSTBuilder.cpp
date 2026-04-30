@@ -425,7 +425,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				sub->pure = func->stateMutability() == solidity::frontend::StateMutability::Pure;
 
 				// Translate body
-				ExpressionBuilder exprBuilder(
+				eb::BuilderContext exprBuilder(
 					m_typeMapper, *m_storageMapper, _sourceFile, libraryName, m_libraryFunctionIds,
 					{}, m_freeFunctionById
 				);
@@ -435,7 +435,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				for (size_t idx: mappingStorageParams)
 				{
 					auto const& param = func->parameters()[idx];
-					exprBuilder.builderContext().mappingKeyParams[param->id()] = param->name();
+					exprBuilder.mappingKeyParams[param->id()] = param->name();
 				}
 
 				sol_ast::StatementContext stmtCtx{
@@ -443,8 +443,8 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					[&](solidity::frontend::Expression const& e) { return exprBuilder.build(e); },
 					[&](solidity::frontend::Statement const& s) { return sol_ast::buildStatement(stmtCtx, exprBuilder, s); },
 					[&](solidity::frontend::Block const& b) { return sol_ast::buildBlock(stmtCtx, exprBuilder, b); },
-					[&]() { return exprBuilder.takePrePendingStatements(); },
-					[&]() { return exprBuilder.takePendingStatements(); },
+					[&]() { return exprBuilder.takePrePending(); },
+					[&]() { return exprBuilder.takePending(); },
 					{}, nullptr, {}, nullptr, nullptr, nullptr,
 				};
 
@@ -487,7 +487,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				// Register named return variable names so inner scoping detects shadowing
 				for (auto const& rp: returnParams)
 					if (!rp->name().empty())
-						exprBuilder.builderContext().resolveVarName(rp->name(), rp->id());
+						exprBuilder.resolveVarName(rp->name(), rp->id());
 
 				// Register mapping-storage-ref return params as mapping-key-params
 				// too: `function f() returns (mapping(K=>V) storage r)` — `r` is a
@@ -499,7 +499,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 						&& dynamic_cast<solidity::frontend::MappingType const*>(rp->type())
 						&& !rp->name().empty())
 					{
-						exprBuilder.builderContext().mappingKeyParams[rp->id()] = rp->name();
+						exprBuilder.mappingKeyParams[rp->id()] = rp->name();
 					}
 				}
 
@@ -761,7 +761,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 
 			sub->pure = func->stateMutability() == solidity::frontend::StateMutability::Pure;
 
-			ExpressionBuilder exprBuilder(
+			eb::BuilderContext exprBuilder(
 				m_typeMapper, *m_storageMapper, _sourceFile, "", m_libraryFunctionIds,
 				{}, m_freeFunctionById
 			);
@@ -770,8 +770,8 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				[&](solidity::frontend::Expression const& e) { return exprBuilder.build(e); },
 				[&](solidity::frontend::Statement const& s) { return sol_ast::buildStatement(stmtCtx, exprBuilder, s); },
 				[&](solidity::frontend::Block const& b) { return sol_ast::buildBlock(stmtCtx, exprBuilder, b); },
-				[&]() { return exprBuilder.takePrePendingStatements(); },
-				[&]() { return exprBuilder.takePendingStatements(); },
+				[&]() { return exprBuilder.takePrePending(); },
+				[&]() { return exprBuilder.takePending(); },
 				{}, nullptr, {}, nullptr, nullptr, nullptr,
 			};
 
@@ -813,7 +813,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 			// Register named return variable names so inner scoping detects shadowing
 			for (auto const& rp: returnParams)
 				if (!rp->name().empty())
-					exprBuilder.builderContext().resolveVarName(rp->name(), rp->id());
+					exprBuilder.resolveVarName(rp->name(), rp->id());
 
 			sub->body = sol_ast::buildBlock(stmtCtx, exprBuilder, func->body());
 

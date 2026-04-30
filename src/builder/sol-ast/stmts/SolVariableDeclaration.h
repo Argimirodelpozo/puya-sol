@@ -2,9 +2,9 @@
 
 #include "builder/sol-ast/SolStatement.h"
 
-namespace puyasol::builder
+namespace puyasol::builder::eb
 {
-class ExpressionBuilder;
+class BuilderContext;
 }
 
 namespace puyasol::builder::sol_ast
@@ -19,12 +19,12 @@ public:
 	SolVariableDeclaration(StatementContext& _ctx,
 		solidity::frontend::VariableDeclarationStatement const& _node,
 		awst::SourceLocation _loc,
-		ExpressionBuilder& _exprBuilder);
+		eb::BuilderContext& _exprBuilder);
 	std::vector<std::shared_ptr<awst::Statement>> toAwst() override;
 
 private:
 	solidity::frontend::VariableDeclarationStatement const& m_node;
-	ExpressionBuilder& m_exprBuilder;
+	eb::BuilderContext& m_exprBuilder;
 };
 
 } // namespace puyasol::builder::sol_ast

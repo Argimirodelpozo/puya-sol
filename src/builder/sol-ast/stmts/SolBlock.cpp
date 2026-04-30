@@ -8,7 +8,8 @@
 #include "builder/sol-ast/stmts/SolEmitStatement.h"
 #include "builder/sol-ast/stmts/SolVariableDeclaration.h"
 #include "builder/sol-ast/stmts/SolInlineAssembly.h"
-#include "builder/ExpressionBuilder.h"
+#include "builder/sol-eb/BuilderContext.h"
+#include "builder/sol-types/TypeMapper.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
@@ -22,7 +23,7 @@ SolBlock::SolBlock(
 	StatementContext& _ctx,
 	Block const& _node,
 	awst::SourceLocation _loc,
-	ExpressionBuilder& _exprBuilder)
+	eb::BuilderContext& _exprBuilder)
 	: SolStatement(_ctx, std::move(_loc)), m_block(_node), m_exprBuilder(_exprBuilder)
 {
 }
@@ -30,7 +31,7 @@ SolBlock::SolBlock(
 /// Dispatch a single Solidity statement to the right sol-ast wrapper (free function).
 static std::vector<std::shared_ptr<awst::Statement>> dispatchStatementImpl(
 	StatementContext& _ctx,
-	ExpressionBuilder& _exprBuilder,
+	eb::BuilderContext& _exprBuilder,
 	Statement const& _stmt)
 {
 	auto loc = _ctx.makeLoc(_stmt.location());
@@ -211,7 +212,7 @@ std::shared_ptr<awst::Block> SolBlock::toAwstBlock()
 
 	// Every block creates a scope — mutable context state (funcPtrTargets,
 	// storageAliases, constantLocals) is snapshotted and restored on exit.
-	auto& bc = m_exprBuilder.builderContext();
+	auto& bc = m_exprBuilder;
 	auto scope = bc.pushScope();
 
 	bool const wasUnchecked = bc.inUncheckedBlock;
@@ -249,7 +250,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolBlock::toAwst()
 
 std::shared_ptr<awst::Statement> buildStatement(
 	StatementContext& _ctx,
-	ExpressionBuilder& _exprBuilder,
+	eb::BuilderContext& _exprBuilder,
 	solidity::frontend::Statement const& _stmt)
 {
 	if (auto const* block = dynamic_cast<Block const*>(&_stmt))
@@ -267,7 +268,7 @@ std::shared_ptr<awst::Statement> buildStatement(
 
 std::shared_ptr<awst::Block> buildBlock(
 	StatementContext& _ctx,
-	ExpressionBuilder& _exprBuilder,
+	eb::BuilderContext& _exprBuilder,
 	solidity::frontend::Block const& _block)
 {
 	auto loc = _ctx.makeLoc(_block.location());
