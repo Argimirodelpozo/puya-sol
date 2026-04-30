@@ -57,11 +57,13 @@ compile() {
         extra_args+=(--ensure-budget convertPositions:80000)
         # Helper1 carries CTHelpers.{sqrt,getCollectionId,getPositionId},
         # all keccak/EC-heavy. The NegRisk override of redeemPositions
-        # invokes Helper1.getCollectionId+getPositionId twice, so pump
-        # those subroutines' budgets too. Cap at 50000 — higher pumps
-        # eat too many opup inner-tx slots and trip the per-call 256 limit.
-        extra_args+=(--ensure-budget CTHelpers.getCollectionId:50000)
-        extra_args+=(--ensure-budget CTHelpers.getPositionId:50000)
+        # invokes Helper1.getCollectionId+getPositionId twice. Cap at
+        # 30000 — when the matchOrders × NegRisk path stacks orch's 70k
+        # CTHelpers pump on top of the adapter's, 50k+50k overflows the
+        # 256 inner-tx-per-outer-call limit. 30k is the smallest that
+        # still completes the heavy EC paths.
+        extra_args+=(--ensure-budget CTHelpers.getCollectionId:30000)
+        extra_args+=(--ensure-budget CTHelpers.getPositionId:30000)
     elif [[ "$rel" == "collateral/PermissionedRamp.sol" ]]; then
         # PermissionedRamp.__postInit runs the inherited Solady EIP712
         # constructor (computeDomainSeparator: keccak256 of the typed-data

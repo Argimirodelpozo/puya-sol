@@ -767,7 +767,8 @@ H3_DIR = SPLIT_DIR / "CTFExchange__Helper3"
 
 def _build_split_exchange(localnet, admin, *, collateral_app_id, ctf_app_id,
                           ctf_collateral_app_id, factory_app_id,
-                          outcome_factory_app_id=None):
+                          outcome_factory_app_id=None,
+                          ctf_collateral_addr_override=None):
     """Internal helper. Deploys h1+h2+orch, runs __postInit with the given
     apps for each slot. `factory_app_id` is used for proxyFactory /
     safeFactory (which need getImplementation()/masterCopy() during init)
@@ -827,7 +828,14 @@ def _build_split_exchange(localnet, admin, *, collateral_app_id, ctf_app_id,
 
     coll_addr = list(app_id_to_address(collateral_app_id))
     ctf_addr = list(app_id_to_address(ctf_app_id))
-    ctf_coll_addr = list(app_id_to_address(ctf_collateral_app_id))
+    # NegRisk variant overrides this with the algod-form of the
+    # NegRiskAdapter mock so that orch.ctfCollateral matches the adapter's
+    # WRAPPED_COLLATERAL (= wcol() = algod-form). For the default CTF
+    # adapter case both forms collapse to the same psol-form value.
+    ctf_coll_addr = list(
+        ctf_collateral_addr_override
+        if ctf_collateral_addr_override is not None
+        else app_id_to_address(ctf_collateral_app_id))
     factory_addr = list(app_id_to_address(factory_app_id))
     otf_app_id = outcome_factory_app_id if outcome_factory_app_id else factory_app_id
     otf_addr = list(app_id_to_address(otf_app_id))
@@ -971,6 +979,66 @@ def split_adapter_with_delegate(
     ), send_params=AUTO_POPULATE)
 
     return h1, h2, orch, ct, ctf, usdce, adapter, chunk
+
+
+@pytest.fixture(scope="function")
+def split_exchange_with_negrisk_adapter(
+    localnet, admin, universal_mock, collateral_token_wired,
+    negrisk_adapter_wired, negrisk_adapter_mock, ctf_stateful, usdce_stateful,
+):
+    """NegRisk variant of `split_exchange_with_adapter`:
+      - collateral slot   = CollateralToken (pUSD)
+      - ctf slot          = CTFMock
+      - ctfCollateral     = NegRiskAdapter mock's algod-form address
+                            (= adapter.WRAPPED_COLLATERAL = wcol())
+      - outcomeTokenFactory = NegRiskCtfCollateralAdapter
+
+    The ctfCollateral form is special: `NegRiskCtfCollateralAdapter`'s
+    `WRAPPED_COLLATERAL` is set at construction to `wcol()` which the
+    mock returns as `op.Global.current_application_address` — the
+    algod-form, not the puya-sol-conv form. matchOrders' position-id
+    validation hashes (orch.ctfCollateral, conditionId, indexSet); the
+    adapter's `_getPositionIds` hashes (WRAPPED_COLLATERAL, …). Both
+    must use the same byte sequence or token-id validation rejects.
+    Override the orch's stored `ctfCollateral` to algod-form to match.
+
+    Returns (h1, h2, orch, ct, ctf, usdce, negrisk_adapter, negrisk_mock)."""
+    h1, h2, orch = _build_split_exchange(
+        localnet, admin,
+        collateral_app_id=collateral_token_wired.app_id,
+        ctf_app_id=ctf_stateful.app_id,
+        ctf_collateral_app_id=negrisk_adapter_mock.app_id,
+        ctf_collateral_addr_override=algod_addr_bytes_for_app(
+            negrisk_adapter_mock.app_id),
+        factory_app_id=universal_mock.app_id,
+        outcome_factory_app_id=negrisk_adapter_wired.app_id,
+    )
+    return (h1, h2, orch, collateral_token_wired, ctf_stateful,
+            usdce_stateful, negrisk_adapter_wired, negrisk_adapter_mock)
+
+
+@pytest.fixture(scope="function")
+def split_negrisk_adapter_with_delegate(
+    localnet, admin, split_exchange_with_negrisk_adapter,
+    lonely_chunk_artifacts,
+):
+    """`split_exchange_with_negrisk_adapter` + lonely-chunk delegate.
+    Returns (h1, h2, orch, ct, ctf, usdce, negrisk_adapter, negrisk_mock,
+    chunk)."""
+    h1, h2, orch, ct, ctf, usdce, negrisk_adapter, negrisk_mock = (
+        split_exchange_with_negrisk_adapter)
+    chunk = _build_chunk_for(localnet, admin, orch, lonely_chunk_artifacts,
+                             h1_app_id=h1.app_id, h2_app_id=h2.app_id)
+
+    chunk_addr32 = algod_addr_bytes_for_app(chunk.app_id)
+    orch.send.call(au.AppClientMethodCallParams(
+        method="addOperator",
+        args=[chunk_addr32],
+        extra_fee=au.AlgoAmount(micro_algo=10_000),
+    ), send_params=AUTO_POPULATE)
+
+    return (h1, h2, orch, ct, ctf, usdce, negrisk_adapter, negrisk_mock,
+            chunk)
 
 
 @pytest.fixture(scope="function")
