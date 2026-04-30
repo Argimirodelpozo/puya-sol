@@ -54,8 +54,11 @@ def _deploy_maker_wallet(localnet, admin, *, owner_eth_addr32: bytes):
 
 def _canonical_yes_no_ids(orch, h1, ctf_collateral_app_id):
     """Position ids derived from `ctf_collateral_app_id` (= USDCe in the
-    adapter variant) — that's what adapter._getPositionIds passes."""
-    coll_addr32 = algod_addr_bytes_for_app(ctf_collateral_app_id)
+    adapter variant) — that's what adapter._getPositionIds passes.
+    Uses the puya-sol-conv form (24 zeros + itob(app_id)) because
+    helper3._validateTokenIds reads `ctfCollateral` from app_global_get
+    which was populated with the puya-sol-conv form during __postInit."""
+    coll_addr32 = bytes(app_id_to_address(ctf_collateral_app_id))
 
     def _pid(index_set):
         coll_id = h1.send.call(au.AppClientMethodCallParams(
@@ -94,18 +97,19 @@ def _fund_wallet_pusd(
          sender=admin)
 
 
-XFAIL_DEEP = (
-    "Wallet + fixtures + CT.avmPortForceApprove all wired. validateOrderSignature "
-    "passes standalone in 1271 path (smoke-tested: deploy wallet, fund via "
-    "Onramp.wrap to wallet_psol, force-approve allowance, sign+validate). "
-    "matchOrders dance through chunk → orch → helper3 → helper2._validateOrdersMatch "
-    "fails with `bz...; intc_2 // 1; assert` at pc=3406 in helper3 territory "
-    "after sig validation passes. Likely a matchType-related check (NotCrossing "
-    "or MismatchedTokenIds branch) — needs simulate-trace dive with source map."
+XFAIL_MINT_DEEP = (
+    "Wallet/CT.avmPortForceApprove/CT.balanceOf-uint256-override all wired. "
+    "Mint dance gets through fixture init, validateOrderSignature, h1.transferFrom "
+    "of pUSD from both 1271 wallets, adapter.splitPosition, CT.unwrap, USDCe "
+    "transferFrom from VAULT, CTF.split, batch transfers — then hits a `b>; !; "
+    "assert` in helper3's settlement flow (TooLittleTokensReceived or "
+    "ComplementaryFillExceedsTakerFill). Pricing/fill-amount calculation "
+    "edge case, possibly tied to how 1271 wallet maker addresses round-trip "
+    "through arc4 encoding vs the takingAmount math."
 )
 
 
-@pytest.mark.xfail(reason=XFAIL_DEEP, strict=True)
+@pytest.mark.xfail(reason=XFAIL_MINT_DEEP, strict=True)
 def test_MatchOrdersCtfCollateralAdapter_Mint(
     split_adapter_with_delegate, admin, localnet,
     collateral_onramp_wired, vault,
@@ -115,6 +119,9 @@ def test_MatchOrdersCtfCollateralAdapter_Mint(
     (unwraps pUSD → USDCe → CTF.splitPosition mints YES+NO to orch),
     then distributes YES → bob's wallet, NO → carla's wallet."""
     h1, _, orch, ct, ctf, usdce, adapter, chunk = split_adapter_with_delegate
+    print(f"\nAPP IDS: h1={h1.app_id} orch={orch.app_id} ct={ct.app_id} "
+          f"ctf={ctf.app_id} usdce={usdce.app_id} adapter={adapter.app_id} "
+          f"chunk={chunk.app_id}")
 
     bob_signer, carla_signer = bob(), carla()
     bob_wallet = _deploy_maker_wallet(
@@ -137,6 +144,20 @@ def test_MatchOrdersCtfCollateralAdapter_Mint(
         onramp=collateral_onramp_wired, vault=vault,
         h1_app_id=h1.app_id, admin=admin, amount=50_000_000,
     )
+    # adapter.split unwraps the COMBINED 100M pUSD via CT.unwrap, which
+    # pulls 100M USDCe from VAULT via transferFrom. The per-wallet fund
+    # calls each set vault→ct allowance to 50M (overwriting); bump to
+    # 100M for the combined unwrap.
+    set_usdce_allowance(
+        usdce, decode_address(vault.address),
+        algod_addr_bytes_for_app(ct.app_id), 1_000_000_000,
+    )
+    # Sanity-check VAULT's USDCe balance + allowance
+    vault32 = decode_address(vault.address)
+    ct_algod = algod_addr_bytes_for_app(ct.app_id)
+    vbal = call(usdce, "balanceOf", [vault32])
+    vall = call(usdce, "allowance", [vault32, ct_algod])
+    print(f"\nVAULT USDCe balance={vbal}, allowance(VAULT,CT_algod)={vall}")
 
     taker = make_order(
         maker=bob_psol, token_id=yes_id,
@@ -216,7 +237,7 @@ def test_MatchOrdersCtfCollateralAdapter_Mint(
                         adapter.app_id, h1.app_id],
         extra_box_refs=inner_boxes,
         budget_pad=14,
-        per_pad_boxes=4,
+        per_pad_boxes=3,
     )
 
     # Bob's wallet: spent 50 pUSD, received 100 YES (on CTFMock).
@@ -225,36 +246,42 @@ def test_MatchOrdersCtfCollateralAdapter_Mint(
     assert call(ct, "balanceOf", [carla_psol]) == 0
 
 
-@pytest.mark.xfail(reason=XFAIL_DEEP, strict=True)
+XFAIL_FOLLOW_ON = (
+    "Mint path lands first to validate the 1271 maker-wallet pattern; "
+    "remaining 7 cases follow once Mint is green."
+)
+
+
+@pytest.mark.xfail(reason=XFAIL_FOLLOW_ON, strict=True)
 def test_MatchOrdersCtfCollateralAdapter_Mint_Fees():
-    raise NotImplementedError(XFAIL_DEEP)
+    raise NotImplementedError(XFAIL_FOLLOW_ON)
 
 
-@pytest.mark.xfail(reason=XFAIL_DEEP, strict=True)
+@pytest.mark.xfail(reason=XFAIL_FOLLOW_ON, strict=True)
 def test_MatchOrdersCtfCollateralAdapter_Complementary():
-    raise NotImplementedError(XFAIL_DEEP)
+    raise NotImplementedError(XFAIL_FOLLOW_ON)
 
 
-@pytest.mark.xfail(reason=XFAIL_DEEP, strict=True)
+@pytest.mark.xfail(reason=XFAIL_FOLLOW_ON, strict=True)
 def test_MatchOrdersCtfCollateralAdapter_Complementary_Fees():
-    raise NotImplementedError(XFAIL_DEEP)
+    raise NotImplementedError(XFAIL_FOLLOW_ON)
 
 
-@pytest.mark.xfail(reason=XFAIL_DEEP, strict=True)
+@pytest.mark.xfail(reason=XFAIL_FOLLOW_ON, strict=True)
 def test_MatchOrdersCtfCollateralAdapter_Merge():
-    raise NotImplementedError(XFAIL_DEEP)
+    raise NotImplementedError(XFAIL_FOLLOW_ON)
 
 
-@pytest.mark.xfail(reason=XFAIL_DEEP, strict=True)
+@pytest.mark.xfail(reason=XFAIL_FOLLOW_ON, strict=True)
 def test_MatchOrdersCtfCollateralAdapter_Merge_Fees():
-    raise NotImplementedError(XFAIL_DEEP)
+    raise NotImplementedError(XFAIL_FOLLOW_ON)
 
 
-@pytest.mark.xfail(reason=XFAIL_DEEP, strict=True)
+@pytest.mark.xfail(reason=XFAIL_FOLLOW_ON, strict=True)
 def test_MatchOrdersCtfCollateralAdapter_Merge_Reverts_WhenAdapterNotApproved():
-    raise NotImplementedError(XFAIL_DEEP)
+    raise NotImplementedError(XFAIL_FOLLOW_ON)
 
 
-@pytest.mark.xfail(reason=XFAIL_DEEP, strict=True)
+@pytest.mark.xfail(reason=XFAIL_FOLLOW_ON, strict=True)
 def test_MatchOrdersCtfCollateralAdapter_Mint_Reverts_WhenAdapterUsdceMismatch():
-    raise NotImplementedError(XFAIL_DEEP)
+    raise NotImplementedError(XFAIL_FOLLOW_ON)

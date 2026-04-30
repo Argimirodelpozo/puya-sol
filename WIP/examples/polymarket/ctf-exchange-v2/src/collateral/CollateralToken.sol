@@ -168,6 +168,7 @@ contract CollateralToken is
         _approve(_owner, _spender, _amount);
     }
 
+
     /// @notice Wraps a supported asset into the collateral token
     /// @param _asset The asset to wrap
     /// @param _to The address to wrap the asset to

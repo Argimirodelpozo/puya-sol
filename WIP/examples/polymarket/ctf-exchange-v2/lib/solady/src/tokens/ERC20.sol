@@ -152,13 +152,21 @@ abstract contract ERC20 {
     }
 
     /// @dev Returns the amount of tokens owned by `owner`.
-    function balanceOf(address owner) public view virtual returns (uint256 result) {
+    function balanceOf(address owner) public view virtual returns (uint256) {
+        // AVM-PORT-ADAPTATION: read into bytes32 via inline asm then cast,
+        // rather than `result := sload(...)` directly into the named return.
+        // The latter form makes puya-sol widen the return ABI type to
+        // uint512, shifting the public selector to `balanceOf(address)uint512`
+        // and breaking dispatch from callers using the canonical EVM-style
+        // `(address)uint256` selector.
+        bytes32 raw;
         /// @solidity memory-safe-assembly
         assembly {
             mstore(0x0c, _BALANCE_SLOT_SEED)
             mstore(0x00, owner)
-            result := sload(keccak256(0x0c, 0x20))
+            raw := sload(keccak256(0x0c, 0x20))
         }
+        return uint256(raw);
     }
 
     /// @dev Returns the amount of tokens that `spender` can spend on behalf of `owner`.
