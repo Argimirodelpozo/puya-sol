@@ -197,18 +197,6 @@ private:
 	/// Get the disambiguated method name for a function.
 	std::string resolveMethodName(solidity::frontend::FunctionDefinition const& _func);
 
-	/// Map Solidity binary operator token to AWST equivalent.
-	std::shared_ptr<awst::Expression> buildBinaryOp(
-		solidity::frontend::Token _op,
-		std::shared_ptr<awst::Expression> _left,
-		std::shared_ptr<awst::Expression> _right,
-		awst::WType const* _resultType,
-		awst::SourceLocation const& _loc
-	);
-
-	/// Check if a type is biguint.
-	static bool isBigUInt(awst::WType const* _type);
-
 	/// Build a copy-on-write tuple with one field updated.
 	std::shared_ptr<awst::Expression> buildTupleWithUpdatedField(
 		std::shared_ptr<awst::Expression> _base,
