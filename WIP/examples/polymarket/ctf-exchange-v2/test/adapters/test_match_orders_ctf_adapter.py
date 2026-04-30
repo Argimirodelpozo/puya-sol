@@ -5,165 +5,84 @@ Exercises matchOrders settlement when:
   - outcomeTokenFactory  = CtfCollateralAdapter
   - ctfCollateral        = USDCe
 
-The adapter sits between the orchestrator and the CTF mock: MINT
-settlement calls adapter.splitPosition (which pulls pUSD from orch,
-unwraps to USDCe, then calls CTF.splitPosition for the actual outcome-
-token mint). MERGE is the reverse path.
+`split_exchange_with_adapter` and `split_adapter_with_delegate` fixtures
+are wired up in conftest.py and ready to use. Two layered blockers
+remain before any of the 8 cases can run:
 
-AVM-port adaptation: maker eth-style identities can't sign Algorand
-allowance txns, and CollateralToken (real Solady ERC20) has no test
-cheat to set allowances directly. Instead we use the preapprove path:
-    - makers are real Algorand-keyed accounts (bob_acct, carla_acct)
-    - they wrap USDCe → pUSD and approve h1 with their own keys
-    - operator preapproves the orders (skips ECDSA validation)
-    - operator dances matchOrders
+1. **uint256 / uint512 approve selector** — RESOLVED. Solady's open-coded
+   approve compiled to `approve(address,uint512)bool` while
+   `Assets.ctor` calls it with the canonical `approve(address,uint256)bool`
+   selector. Fixed by routing approve through `_approve` in Solady
+   (matches the existing transferFrom patch) and adding an `approve`
+   entry to `IERC20Min` in TransferHelper.sol so Assets dispatches via
+   the uint256 shape.
 
-`maker` field in the order = the algorand 32-byte address; `signer` is
-the same; `signature` is empty. validateOrderSignature short-circuits
-on `_isPreapproved(orderHash)` for empty signatures.
+2. **Maker funding via real CollateralToken** — OPEN. Order makers in
+   matchOrders use eth-style identities (bob/carla, ECDSA secp256k1)
+   with no algorand key, so `dealUsdcAndApprove`-style cheats can't be
+   used directly: real Solady CollateralToken has no test cheat to set
+   allowances, and bob can't sign `pUSD.approve(h1)` himself.
+   `preapproveOrder` doesn't help — `_preapproveOrder` itself runs
+   `_isValidSignature`, so the order still needs a real ECDSA signature.
+   Three feasible paths once we tackle this:
+     - EIP-2612 `permit`: bob signs an off-chain permit, anyone submits;
+       requires Solady's inline-asm permit to make it through puya-sol's
+       optimizer (the same hazard that broke `ECDSA.recoverCalldata`).
+     - ERC-1271 maker: deploy a mock 1271 wallet that holds pUSD,
+       approves h1 from admin, and validates signatures unconditionally.
+       Order's `maker` becomes the mock's address.
+     - CollateralToken test cheat: add admin-gated `__test_setAllowance`
+       to CT (production change, but minimal AVM-port pattern).
 """
-import algokit_utils as au
 import pytest
-from algosdk.encoding import decode_address
-
-from dev.addrs import addr, algod_addr_bytes_for_app, app_id_to_address
-from dev.deals import (
-    deal_usdc as deal_usdce, set_allowance as set_usdce_allowance,
-    prepare_condition,
-)
-from dev.invoke import call
-from dev.localnet import fund_random_account
-from dev.match_dispatch import dance_match_orders
-from dev.orders import make_order, Side, SignatureType
 
 
-CONDITION_ID = b"\xc0" * 32
-
-
-def _canonical_yes_no_ids(orch, h1, ctf_collateral_app_id):
-    """Compute YES/NO position ids using `ctf_collateral_app_id`'s algod
-    addr as the collateral input — that's what adapter._getPositionIds
-    passes to CTHelpers.positionIds.
-    """
-    coll_addr32 = algod_addr_bytes_for_app(ctf_collateral_app_id)
-    coll_id = h1.send.call(au.AppClientMethodCallParams(
-        method="CTHelpers.getCollectionId",
-        args=[list(b"\x00" * 32), list(CONDITION_ID), 1],
-        extra_fee=au.AlgoAmount(micro_algo=500_000),
-    ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return
-    coll_id_bytes = bytes(coll_id) if not isinstance(coll_id, bytes) else coll_id
-    yes = h1.send.call(au.AppClientMethodCallParams(
-        method="CTHelpers.getPositionId",
-        args=[bytes(coll_addr32), list(coll_id_bytes)],
-        extra_fee=au.AlgoAmount(micro_algo=500_000),
-    ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return
-    coll_id2 = h1.send.call(au.AppClientMethodCallParams(
-        method="CTHelpers.getCollectionId",
-        args=[list(b"\x00" * 32), list(CONDITION_ID), 2],
-        extra_fee=au.AlgoAmount(micro_algo=500_000),
-    ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return
-    coll_id2_bytes = bytes(coll_id2) if not isinstance(coll_id2, bytes) else coll_id2
-    no = h1.send.call(au.AppClientMethodCallParams(
-        method="CTHelpers.getPositionId",
-        args=[bytes(coll_addr32), list(coll_id2_bytes)],
-        extra_fee=au.AlgoAmount(micro_algo=500_000),
-    ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return
-    return int(yes), int(no)
-
-
-def _fund_pusd_and_approve(
-    *, account, ct_client, usdce_stateful, onramp_client, vault, h1_app_id,
-    amount,
-):
-    """Fund `account` with `amount` pUSD by:
-      1. Mint USDCe to account (USDCe mock cheat)
-      2. account approves onramp on USDCe (USDCe mock cheat)
-      3. account calls onramp.wrap(USDCe, account, amount) — pUSD minted to account
-      4. Set vault's USDCe allowance for CT (vault is the USDCe escrow)
-      5. account calls CT.approve(h1_algod, amount) — pUSD allowance for h1
-    """
-    acct32 = decode_address(account.address)
-    deal_usdce(usdce_stateful, acct32, amount)
-    set_usdce_allowance(
-        usdce_stateful, acct32,
-        algod_addr_bytes_for_app(onramp_client.app_id),
-        amount,
-    )
-    call(onramp_client, "wrap",
-         [app_id_to_address(usdce_stateful.app_id), addr(account), amount],
-         sender=account)
-    set_usdce_allowance(
-        usdce_stateful,
-        decode_address(vault.address),
-        algod_addr_bytes_for_app(ct_client.app_id),
-        amount,
-    )
-    h1_algod = algod_addr_bytes_for_app(h1_app_id)
-    call(ct_client, "approve", [h1_algod, amount], sender=account)
-
-
-def _preapprove_order(orch, order, *, sender_account):
-    """Mark `order` as preapproved on the exchange. Caller must be an
-    operator. Order is registered without a signature (matchOrders later
-    sees empty signature → short-circuits to preapproval check)."""
-    return orch.send.call(au.AppClientMethodCallParams(
-        method="preapproveOrder",
-        args=[order.to_abi_list()],
-        sender=sender_account.address,
-        extra_fee=au.AlgoAmount(micro_algo=200_000),
-    ), send_params=au.SendParams(populate_app_call_resources=True)).abi_return
-
-
-XFAIL_UINT512_SELECTOR_MISMATCH = (
-    "split_exchange_with_adapter fixture lands but __postInit's Assets.ctor "
-    "does `ERC20(collateral).approve(otf, max)` with `approve(address,uint256)bool` "
-    "selector (0x095ea7b3). When collateral is the real Solady-compiled "
-    "CollateralToken, puya-sol generates `approve(address,uint512)bool` "
-    "(selector 0x42820278) — selector mismatch → method dispatch falls "
-    "through to err. Same uint256↔uint512 asymmetry that the existing "
-    "`split_exchange_settled` fixture sidesteps by using the Python USDCMock "
-    "delegate (uint256-native). Fix path: add an `approve(address,uint256)` "
-    "shim on CollateralToken that forwards to the inherited Solady "
-    "approve — pattern matches the existing IERC20Min interface AVM-port "
-    "adaptation in CollateralToken.sol."
+XFAIL_MAKER_FUNDING = (
+    "Blocked on maker funding for real CollateralToken (pUSD): bob/carla "
+    "have eth ECDSA keys but no algorand keys, so they can't sign "
+    "`CT.approve(h1, _)` directly. Solady CT has no test cheat. "
+    "preapproveOrder doesn't bypass — _preapproveOrder still runs "
+    "_isValidSignature. Need EIP-2612 permit, an ERC-1271 maker mock, "
+    "or a test cheat on CT. uint256↔uint512 approve selector mismatch "
+    "(separate issue) is now resolved via the Solady approve patch."
 )
 
 
-@pytest.mark.xfail(reason=XFAIL_UINT512_SELECTOR_MISMATCH, strict=True)
+@pytest.mark.xfail(reason=XFAIL_MAKER_FUNDING, strict=True)
 def test_MatchOrdersCtfCollateralAdapter_Mint():
-    raise NotImplementedError(XFAIL_UINT512_SELECTOR_MISMATCH)
+    raise NotImplementedError(XFAIL_MAKER_FUNDING)
 
 
-@pytest.mark.xfail(reason=XFAIL_UINT512_SELECTOR_MISMATCH, strict=True)
+@pytest.mark.xfail(reason=XFAIL_MAKER_FUNDING, strict=True)
 def test_MatchOrdersCtfCollateralAdapter_Mint_Fees():
-    raise NotImplementedError(XFAIL_UINT512_SELECTOR_MISMATCH)
+    raise NotImplementedError(XFAIL_MAKER_FUNDING)
 
 
-@pytest.mark.xfail(reason=XFAIL_UINT512_SELECTOR_MISMATCH, strict=True)
+@pytest.mark.xfail(reason=XFAIL_MAKER_FUNDING, strict=True)
 def test_MatchOrdersCtfCollateralAdapter_Complementary():
-    raise NotImplementedError(XFAIL_UINT512_SELECTOR_MISMATCH)
+    raise NotImplementedError(XFAIL_MAKER_FUNDING)
 
 
-@pytest.mark.xfail(reason=XFAIL_UINT512_SELECTOR_MISMATCH, strict=True)
+@pytest.mark.xfail(reason=XFAIL_MAKER_FUNDING, strict=True)
 def test_MatchOrdersCtfCollateralAdapter_Complementary_Fees():
-    raise NotImplementedError(XFAIL_UINT512_SELECTOR_MISMATCH)
+    raise NotImplementedError(XFAIL_MAKER_FUNDING)
 
 
-@pytest.mark.xfail(reason=XFAIL_UINT512_SELECTOR_MISMATCH, strict=True)
+@pytest.mark.xfail(reason=XFAIL_MAKER_FUNDING, strict=True)
 def test_MatchOrdersCtfCollateralAdapter_Merge():
-    raise NotImplementedError(XFAIL_UINT512_SELECTOR_MISMATCH)
+    raise NotImplementedError(XFAIL_MAKER_FUNDING)
 
 
-@pytest.mark.xfail(reason=XFAIL_UINT512_SELECTOR_MISMATCH, strict=True)
+@pytest.mark.xfail(reason=XFAIL_MAKER_FUNDING, strict=True)
 def test_MatchOrdersCtfCollateralAdapter_Merge_Fees():
-    raise NotImplementedError(XFAIL_UINT512_SELECTOR_MISMATCH)
+    raise NotImplementedError(XFAIL_MAKER_FUNDING)
 
 
-@pytest.mark.xfail(reason=XFAIL_UINT512_SELECTOR_MISMATCH, strict=True)
+@pytest.mark.xfail(reason=XFAIL_MAKER_FUNDING, strict=True)
 def test_MatchOrdersCtfCollateralAdapter_Merge_Reverts_WhenAdapterNotApproved():
-    raise NotImplementedError(XFAIL_UINT512_SELECTOR_MISMATCH)
+    raise NotImplementedError(XFAIL_MAKER_FUNDING)
 
 
-@pytest.mark.xfail(reason=XFAIL_UINT512_SELECTOR_MISMATCH, strict=True)
+@pytest.mark.xfail(reason=XFAIL_MAKER_FUNDING, strict=True)
 def test_MatchOrdersCtfCollateralAdapter_Mint_Reverts_WhenAdapterUsdceMismatch():
-    raise NotImplementedError(XFAIL_UINT512_SELECTOR_MISMATCH)
+    raise NotImplementedError(XFAIL_MAKER_FUNDING)

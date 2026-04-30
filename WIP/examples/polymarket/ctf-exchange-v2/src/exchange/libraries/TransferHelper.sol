@@ -15,6 +15,13 @@ import { ERC1155 } from "@solady/src/tokens/ERC1155.sol";
 interface IERC20Min {
     function transfer(address to, uint256 amount) external returns (bool);
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
+    // AVM-PORT-ADAPTATION: same uint256↔uint512 selector mismatch as transfer
+    // — when the collateral slot is a Solady-via-puya-sol contract, its
+    // `approve` selector is `approve(address,uint512)bool` rather than the
+    // EVM-canonical `approve(address,uint256)bool`. Routing approve through
+    // IERC20Min keeps the call site at uint256 so it dispatches against
+    // the IERC20Min-shim methods on the collateral contract.
+    function approve(address spender, uint256 amount) external returns (bool);
 }
 
 /// @title TransferHelper

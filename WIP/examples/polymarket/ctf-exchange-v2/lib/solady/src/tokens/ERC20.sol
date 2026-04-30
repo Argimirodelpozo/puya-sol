@@ -184,27 +184,24 @@ abstract contract ERC20 {
     ///
     /// Emits a {Approval} event.
     function approve(address spender, uint256 amount) public virtual returns (bool) {
+        // AVM-PORT-ADAPTATION: same pattern as the transferFrom patch.
+        // Inline-asm version writes via raw sstore against a slot derived
+        // from `caller() ‖ spender ‖ _ALLOWANCE_SLOT_SEED` keccak256. puya-sol
+        // compiles that as uint512-typed bytes32 storage, which both shifts
+        // the public selector to `approve(address,uint512)bool` and writes
+        // to slots disjoint from `_approve` / `allowance`. Routing through
+        // `_approve` keeps the public selector at the canonical uint256
+        // shape AND uses the verified slot derivation.
         if (_givePermit2InfiniteAllowance()) {
             /// @solidity memory-safe-assembly
             assembly {
-                // If `spender == _PERMIT2 && amount != type(uint256).max`.
                 if iszero(or(xor(shr(96, shl(96, spender)), _PERMIT2), iszero(not(amount)))) {
                     mstore(0x00, 0x3f68539a) // `Permit2AllowanceIsFixedAtInfinity()`.
                     revert(0x1c, 0x04)
                 }
             }
         }
-        /// @solidity memory-safe-assembly
-        assembly {
-            // Compute the allowance slot and store the amount.
-            mstore(0x20, spender)
-            mstore(0x0c, _ALLOWANCE_SLOT_SEED)
-            mstore(0x00, caller())
-            sstore(keccak256(0x0c, 0x34), amount)
-            // Emit the {Approval} event.
-            mstore(0x00, amount)
-            log3(0x00, 0x20, _APPROVAL_EVENT_SIGNATURE, caller(), shr(96, mload(0x2c)))
-        }
+        _approve(msg.sender, spender, amount);
         return true;
     }
 
