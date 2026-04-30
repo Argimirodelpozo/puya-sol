@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/evaluation_order.sol.D.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/modifiers/evaluation_order.sol.D.approval_program() -> uint64:
 main:
-    intcblock 0 1 32 2
+    intcblock 0 1 2 32
     bytecblock "x" "__ctor_pending"
     pushint 4096
     bzero
@@ -34,7 +34,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/evaluation_order.sol.D.__postInit[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/modifiers/evaluation_order.sol.D.__postInit[routing]() -> void:
 __postInit:
     bytec_1 // "__ctor_pending"
     app_global_get
@@ -43,8 +43,20 @@ __postInit:
     intc_0 // 0
     app_global_put
     bytec_0 // "x"
-    intc_3 // 2
+    intc_2 // 2
     box_create
+    pop
+    pushint 4
+    itob
+    callsub f
+    pop
+    intc_2 // 2
+    itob
+    callsub f
+    pop
+    pushint 6
+    itob
+    callsub f
     pop
     pushint 5
     itob
@@ -66,7 +78,7 @@ __postInit:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/evaluation_order.sol.D.query[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/modifiers/evaluation_order.sol.D.query[routing]() -> void:
 query:
     txn GroupIndex
     bz query_ternary_false@3
@@ -95,15 +107,15 @@ query_ternary_false@3:
     b query_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/evaluation_order.sol.D.f(y: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/modifiers/evaluation_order.sol.D.f(y: bytes) -> bytes:
 f:
     proto 1 1
     frame_dig -1
     len
-    intc_2 // 32
+    intc_3 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_3 // 32
     bzero
     frame_dig -1
     b|
@@ -117,14 +129,14 @@ f:
     extract_uint16 // on error: invalid array length header
     bytec_0 // "x"
     intc_0 // 0
-    intc_3 // 2
+    intc_2 // 2
     box_extract
     btoi
     bytec_0 // "x"
     box_len
     pop
     dig 2
-    intc_2 // 32
+    intc_3 // 32
     *
     +
     bytec_0 // "x"
@@ -139,9 +151,9 @@ f:
     intc_0 // 0
     uncover 2
     box_replace
-    intc_2 // 32
+    intc_3 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     bytec_0 // "x"
     swap

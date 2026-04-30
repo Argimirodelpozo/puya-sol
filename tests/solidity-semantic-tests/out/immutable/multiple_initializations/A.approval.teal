@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/multiple_initializations.sol.A.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/immutable/multiple_initializations.sol.A.approval_program() -> uint64:
 main:
     intcblock 0 1 32
     bytecblock "x"
@@ -15,7 +15,7 @@ main:
     replace2 64
     store 0
     txn ApplicationID
-    bnz main_after_if_else@8
+    bnz main_after_if_else@2
     intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -36,13 +36,13 @@ main:
     intc_1 // 1
     return
 
-main_after_if_else@8:
+main_after_if_else@2:
     pushbytes 0xf08d7860 // method "get()uint256"
     txna ApplicationArgs 0
-    match main_get_route@10
+    match main_get_route@4
     err
 
-main_get_route@10:
+main_get_route@4:
     txn OnCompletion
     !
     txn ApplicationID
@@ -51,7 +51,7 @@ main_get_route@10:
     b get
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/multiple_initializations.sol.A.get[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/immutable/multiple_initializations.sol.A.get[routing]() -> void:
 get:
     txn GroupIndex
     bz get_ternary_false@3

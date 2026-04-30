@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 32
-    bytecblock "s" "__ctor_pending" 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000
+    intcblock 1 0 32 2
+    bytecblock "s" "__ctor_pending" 0x 0x151f7c7540
     pushint 4096
     bzero
     dup
@@ -34,7 +34,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.__postInit[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.__postInit[routing]() -> void:
 __postInit:
     bytec_1 // "__ctor_pending"
     app_global_get
@@ -43,7 +43,7 @@ __postInit:
     intc_1 // 0
     app_global_put
     bytec_0 // "s"
-    intc_2 // 2
+    intc_3 // 2
     box_create
     pop
 
@@ -51,7 +51,7 @@ __postInit_while_top@2:
     bytec_0 // "s"
     box_len
     pop
-    intc_2 // 2
+    intc_3 // 2
     >=
     bz __postInit_ternary_false@4
     bytec_0 // "s"
@@ -59,9 +59,9 @@ __postInit_while_top@2:
     pop
 
 __postInit_ternary_merge@5:
-    intc_2 // 2
+    intc_3 // 2
     -
-    intc_3 // 32
+    intc_2 // 32
     /
     itob
     pushbytes 0x2a
@@ -69,13 +69,13 @@ __postInit_ternary_merge@5:
     bz __postInit_after_while@7
     bytec_0 // "s"
     intc_1 // 0
-    intc_2 // 2
+    intc_3 // 2
     box_extract
     btoi
     bytec_0 // "s"
     box_len
     pop
-    intc_3 // 32
+    intc_2 // 32
     +
     bytec_0 // "s"
     swap
@@ -89,9 +89,9 @@ __postInit_ternary_merge@5:
     intc_1 // 0
     uncover 2
     box_replace
-    intc_3 // 32
+    intc_2 // 32
     *
-    intc_2 // 2
+    intc_3 // 2
     +
     bytec_0 // "s"
     swap
@@ -105,11 +105,11 @@ __postInit_after_while@7:
     return
 
 __postInit_ternary_false@4:
-    intc_2 // 2
+    intc_3 // 2
     b __postInit_ternary_merge@5
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.f[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.f[routing]() -> void:
 f:
     txn GroupIndex
     bz f_ternary_false@3
@@ -121,7 +121,19 @@ f:
 f_ternary_merge@4:
     !
     assert // not payable
-    bytec_2 // 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x
+    extract 0 32
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c7540
+    swap
+    concat
     log
     intc_0 // 1
     return
@@ -131,7 +143,7 @@ f_ternary_false@3:
     b f_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.g[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.g[routing]() -> void:
 g:
     txn GroupIndex
     bz g_ternary_false@3
@@ -145,7 +157,19 @@ g_ternary_merge@4:
     assert // not payable
     load 0
     store 0
-    pushbytes 0x151f7c754000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x
+    extract 0 32
+    dup
+    len
+    pushint 64
+    <=
+    assert // overflow
+    pushint 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c7540
+    swap
+    concat
     log
     intc_0 // 1
     return
@@ -155,7 +179,7 @@ g_ternary_false@3:
     b g_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.h[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.h[routing]() -> void:
 h:
     txn GroupIndex
     bz h_ternary_false@3
@@ -167,7 +191,19 @@ h:
 h_ternary_merge@4:
     !
     assert // not payable
-    bytec_2 // 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x
+    extract 0 32
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c7540
+    swap
+    concat
     log
     intc_0 // 1
     return

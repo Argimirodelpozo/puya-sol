@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_post_cancun_redeploy.sol.Factory.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_post_cancun_redeploy.sol.Factory.approval_program() -> uint64:
 main:
     intcblock 32 1
-    bytecblock 0x5ad93c9d3c2816c34b358565e8f5fcd6ed6a8120e4b073c8ee7812e3317ef0f8 0xffffffffffffffffffffffffffffffffffffffff
+    bytecblock 0xff 0x5ad93c9d3c2816c34b358565e8f5fcd6ed6a8120e4b073c8ee7812e3317ef0f8 0xffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
     dup
@@ -34,7 +34,7 @@ main_deploy_route@4:
     b deploy
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_post_cancun_redeploy.sol.Factory.deploy[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_post_cancun_redeploy.sol.Factory.deploy[routing]() -> void:
 deploy:
     txna ApplicationArgs 1
     dup
@@ -44,34 +44,28 @@ deploy:
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     intc_0 // 32
     bzero
+    bytec_0 // 0xff
     global CurrentApplicationAddress
+    concat
+    dig 2
+    concat
+    bytec_1 // 0x5ad93c9d3c2816c34b358565e8f5fcd6ed6a8120e4b073c8ee7812e3317ef0f8
+    concat
+    keccak256
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffff
+    b&
     dig 1
+    swap
+    concat
+    bytec_0 // 0xff
+    global CurrentApplicationAddress
+    concat
     dig 3
     concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    dig 1
-    concat
-    bytec_0 // 0x5ad93c9d3c2816c34b358565e8f5fcd6ed6a8120e4b073c8ee7812e3317ef0f8
+    bytec_1 // 0x5ad93c9d3c2816c34b358565e8f5fcd6ed6a8120e4b073c8ee7812e3317ef0f8
     concat
     keccak256
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffff
-    b&
-    dig 2
-    swap
-    concat
-    global CurrentApplicationAddress
-    uncover 2
-    concat
-    bytec_0 // 0x5ad93c9d3c2816c34b358565e8f5fcd6ed6a8120e4b073c8ee7812e3317ef0f8
-    concat
-    keccak256
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffff
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffff
     b&
     uncover 2
     swap

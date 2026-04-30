@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifier_init_return.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifier_init_return.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
     pushint 4096
@@ -19,7 +19,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushbytes 0xd8d81c03 // method "f(uint512)uint256[5]"
+    pushbytes 0xbf84b9ad // method "f(uint256)uint256[5]"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -33,15 +33,15 @@ main_f_route@4:
     b f
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifier_init_return.sol.C.f[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifier_init_return.sol.C.f[routing]() -> void:
 f:
     intc_1 // 0
     txna ApplicationArgs 1
-    dup
     len
-    pushint 64
+    pushint 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 0
     txn GroupIndex
     bz f_ternary_false@3
     txn GroupIndex
@@ -57,7 +57,7 @@ f_ternary_merge@4:
     dup
     pushbytes 0x0a
     b>=
-    bz f_after_if_else@8
+    bz f_after_if_else@6
     load 0
     pushint 24
     bzero
@@ -73,7 +73,7 @@ f_ternary_merge@4:
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     bury 2
 
-f_after_if_else@8:
+f_after_if_else@6:
     pushbytes 0x151f7c75
     dig 2
     concat

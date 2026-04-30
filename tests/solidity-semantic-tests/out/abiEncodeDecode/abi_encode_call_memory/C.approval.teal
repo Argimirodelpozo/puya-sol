@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_memory.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_memory.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 24 16
-    bytecblock TMPL_APPROVAL_D TMPL_CLEAR_D
+    bytecblock 0x40e33532 TMPL_APPROVAL_D TMPL_CLEAR_D
     pushint 4096
     bzero
     dup
@@ -25,13 +25,14 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x40e33532 0x32064c45 // method "something()void", method "test()byte[4]"
+    bytec_0 // method "something()void"
+    pushbytes 0x32064c45 // method "test()byte[4]"
     txna ApplicationArgs 0
     match something test
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_memory.sol.C.something[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_memory.sol.C.something[routing]() -> void:
 something:
     txn GroupIndex
     bz something_ternary_false@3
@@ -51,7 +52,7 @@ something_ternary_false@3:
     b something_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_memory.sol.C.test[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_memory.sol.C.test[routing]() -> void:
 test:
     txn GroupIndex
     bz test_ternary_false@3
@@ -76,8 +77,8 @@ test_ternary_merge@4:
     replace2 64
     store 0
     itxn_begin
-    bytec_0 // TMPL_APPROVAL_D
-    bytec_1 // TMPL_CLEAR_D
+    bytec_1 // TMPL_APPROVAL_D
+    bytec_2 // TMPL_CLEAR_D
     pushint 6
     itxn_field TypeEnum
     intc_3 // 16
@@ -92,6 +93,7 @@ test_ternary_merge@4:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -103,9 +105,18 @@ test_ternary_merge@4:
     pushint 1000000
     itxn_field Amount
     itxn_submit
+    itob
+    bytec_0 // method "something()void"
+    concat
+    pushbytes 0x000000000000000040e33532000000000000000000000000
+    swap
+    replace2 12 // on error: index access is out of bounds
+    extract 12 12 // on error: index access is out of bounds
     intc_1 // 0
     assert
-    intc_1 // 0
+    extract 8 4
+    pushbytes 0x
+    ==
     assert
     pushbytes 0x151f7c75
     log

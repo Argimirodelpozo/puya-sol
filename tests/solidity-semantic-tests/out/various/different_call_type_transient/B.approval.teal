@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.B.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.B.approval_program() -> uint64:
 main:
     intcblock 1 32 0
     pushint 4096
@@ -32,7 +32,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.B.setValue[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.B.setValue[routing]() -> void:
 setValue:
     txna ApplicationArgs 1
     dup
@@ -69,7 +69,7 @@ setValue_ternary_false@3:
     b setValue_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.B.value[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.B.value[routing]() -> void:
 value:
     txn GroupIndex
     bz value_ternary_false@3
@@ -83,6 +83,11 @@ value_ternary_merge@4:
     assert // not payable
     load 5
     extract 0 32
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
     intc_1 // 32
     bzero
     b|

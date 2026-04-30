@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_push_with_arg.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/array_push_with_arg.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32 2
     bytecblock "storageArray" "__ctor_pending" 0x151f7c75
@@ -34,7 +34,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_push_with_arg.sol.C.__postInit[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/array_push_with_arg.sol.C.__postInit[routing]() -> void:
 __postInit:
     bytec_1 // "__ctor_pending"
     app_global_get
@@ -50,7 +50,7 @@ __postInit:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_push_with_arg.sol.C.test[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/array_push_with_arg.sol.C.test[routing]() -> void:
 test:
     txna ApplicationArgs 1
     dup
@@ -117,7 +117,7 @@ test_ternary_false@3:
     b test_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_push_with_arg.sol.C.getLength[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/array_push_with_arg.sol.C.getLength[routing]() -> void:
 getLength:
     txn GroupIndex
     bz getLength_ternary_false@3
@@ -164,7 +164,7 @@ getLength_ternary_false@3:
     b getLength_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_push_with_arg.sol.C.fetch[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/array_push_with_arg.sol.C.fetch[routing]() -> void:
 fetch:
     txna ApplicationArgs 1
     dup
@@ -182,23 +182,27 @@ fetch:
 fetch_ternary_merge@4:
     !
     assert // not payable
+    bytec_0 // "storageArray"
+    box_get
+    pushbytes 0x0000
+    cover 2
+    select
     pushint 8
     bzero
-    dig 1
+    dig 2
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    intc_2 // 32
-    *
-    intc_3 // 2
-    +
-    bytec_0 // "storageArray"
+    swap
+    extract 2 0
     swap
     intc_2 // 32
-    box_extract // on error: index access is out of bounds
+    *
+    intc_2 // 32
+    extract3 // on error: index access is out of bounds
     bytec_2 // 0x151f7c75
     swap
     concat

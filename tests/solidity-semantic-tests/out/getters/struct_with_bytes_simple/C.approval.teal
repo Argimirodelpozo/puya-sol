@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/struct_with_bytes_simple.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/getters/struct_with_bytes_simple.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 34 0 32
     bytecblock "s" "__ctor_pending" 0x000000000000000000000000000000000000000000000000000000000000000000260028002a000000000000 0x6366687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
@@ -34,7 +34,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/struct_with_bytes_simple.sol.C.__postInit[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/getters/struct_with_bytes_simple.sol.C.__postInit[routing]() -> void:
 __postInit:
     bytec_1 // "__ctor_pending"
     app_global_get
@@ -167,7 +167,7 @@ __postInit:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/struct_with_bytes_simple.sol.C.s[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/getters/struct_with_bytes_simple.sol.C.s[routing]() -> void:
 s:
     txn GroupIndex
     bz s_ternary_false@3
@@ -196,6 +196,11 @@ s_ternary_merge@4:
     cover 2
     substring3
     extract 2 0
+    dig 1
+    len
+    pushint 64
+    <=
+    assert // overflow
     pushint 64
     bzero
     uncover 2

@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/decode_slice.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/decode_slice.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 4 2
+    intcblock 0 1 4 32
     pushint 4096
     bzero
     dup
@@ -33,18 +33,18 @@ main_f_route@4:
     b f
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/decode_slice.sol.C.f[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/decode_slice.sol.C.f[routing]() -> void:
 f:
     intc_0 // 0
     dupn 109
     txna ApplicationArgs 1
     len
-    pushint 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     len
-    pushint 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -77,7 +77,7 @@ f_ternary_merge@11:
     concat
     bury 98
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     >
     bz f_ternary_false@13
     txna ApplicationArgs 2
@@ -255,7 +255,7 @@ f_ternary_merge@368:
     concat
     bury 90
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     >
     bz f_ternary_false@370
     txna ApplicationArgs 2
@@ -430,7 +430,7 @@ f_ternary_merge@419:
     concat
     bury 74
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     >
     bz f_ternary_false@421
     txna ApplicationArgs 2
@@ -611,7 +611,7 @@ f_ternary_merge@470:
     concat
     bury 59
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     >
     bz f_ternary_false@472
     txna ApplicationArgs 2
@@ -786,7 +786,7 @@ f_ternary_merge@521:
     concat
     bury 43
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     >
     bz f_ternary_false@523
     txna ApplicationArgs 2
@@ -967,7 +967,7 @@ f_ternary_merge@674:
     concat
     bury 28
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     >
     bz f_ternary_false@676
     txna ApplicationArgs 2
@@ -1144,7 +1144,7 @@ f_ternary_merge@725:
     concat
     bury 14
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     >
     bz f_ternary_false@727
     txna ApplicationArgs 2
@@ -1300,17 +1300,38 @@ f_ternary_merge@767:
 f_ternary_merge@769:
     substring 36 68
     extract 0 32
-    pushint 32
+    dig 110
+    dup
+    len
+    intc_3 // 32
+    <=
+    assert // overflow
+    intc_3 // 32
     bzero
-    dig 111
+    swap
     dig 1
     b|
     dig 111
+    dup
+    len
+    intc_3 // 32
+    <=
+    assert // overflow
     dig 2
     b|
     dig 111
+    dup
+    len
+    intc_3 // 32
+    <=
+    assert // overflow
     dig 3
     b|
+    dig 4
+    len
+    intc_3 // 32
+    <=
+    assert // overflow
     uncover 4
     uncover 4
     b|

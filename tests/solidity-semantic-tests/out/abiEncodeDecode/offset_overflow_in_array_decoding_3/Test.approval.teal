@@ -1,10 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_3.sol.Test.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_3.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 32 65535
-    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80
+    intcblock 1 32 2
     pushint 4096
     bzero
     dup
@@ -34,7 +33,7 @@ main_test_route@4:
     b test
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_3.sol.Test.test[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_3.sol.Test.test[routing]() -> void:
 test:
     txn GroupIndex
     bz test_ternary_false@3
@@ -58,16 +57,18 @@ test_ternary_merge@4:
     concat
     replace2 64
     store 0
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80
-    intc_2 // 65535
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000020ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80
+    pushints 64 18446744073709551488
+    extract3
+    dup
+    intc_2 // 2
+    extract_uint16
+    dup2
     extract_uint16
     intc_1 // 32
     *
-    pushint 2
+    intc_2 // 2
     +
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80
-    intc_2 // 65535
-    uncover 2
     extract3
     extract 2 32
     pushbytes 0x151f7c75

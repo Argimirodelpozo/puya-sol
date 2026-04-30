@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_out_of_bounds_array_access.sol.c.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_out_of_bounds_array_access.sol.c.approval_program() -> uint64:
 main:
     intcblock 1 32 0 8
     bytecblock "__ctor_pending" "data"
@@ -34,7 +34,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_out_of_bounds_array_access.sol.c.__postInit[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_out_of_bounds_array_access.sol.c.__postInit[routing]() -> void:
 __postInit:
     bytec_0 // "__ctor_pending"
     app_global_get
@@ -50,7 +50,7 @@ __postInit:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_out_of_bounds_array_access.sol.c.set[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_out_of_bounds_array_access.sol.c.set[routing]() -> void:
 set:
     txna ApplicationArgs 1
     dup
@@ -99,7 +99,7 @@ set_ternary_false@3:
     b set_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_out_of_bounds_array_access.sol.c.get[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_out_of_bounds_array_access.sol.c.get[routing]() -> void:
 get:
     txna ApplicationArgs 1
     dup
@@ -117,9 +117,14 @@ get:
 get_ternary_merge@4:
     !
     assert // not payable
+    bytec_1 // "data"
+    box_get
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_3 // 8
     bzero
-    dig 1
+    dig 2
     concat
     dup
     len
@@ -128,10 +133,8 @@ get_ternary_merge@4:
     extract_uint64
     intc_1 // 32
     *
-    bytec_1 // "data"
-    swap
     intc_1 // 32
-    box_extract // on error: index access is out of bounds
+    extract3 // on error: index access is out of bounds
     pushbytes 0x151f7c75
     swap
     concat
@@ -144,7 +147,7 @@ get_ternary_false@3:
     b get_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_out_of_bounds_array_access.sol.c.length[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_out_of_bounds_array_access.sol.c.length[routing]() -> void:
 length:
     txn GroupIndex
     bz length_ternary_false@3

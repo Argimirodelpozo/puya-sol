@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_array_struct.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_array_struct.sol.C.approval_program() -> uint64:
 main:
     intcblock 64 1 2 0 192
     bytecblock 0x6dec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5 0x6eec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x0000 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
@@ -76,7 +76,7 @@ box_dynamic_array_concat_fixed:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_array_struct.sol.C.__postInit[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_array_struct.sol.C.__postInit[routing]() -> void:
 __postInit:
     bytec_3 // "__ctor_pending"
     app_global_get
@@ -268,7 +268,7 @@ __postInit_after_if_else@5:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_array_struct.sol.C.m[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_array_struct.sol.C.m[routing]() -> void:
 m:
     txna ApplicationArgs 1
     dup
@@ -330,11 +330,21 @@ m_ternary_merge@4:
     extract 0 32
     swap
     extract 32 32
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
     intc_0 // 64
     bzero
     uncover 2
     dig 1
     b|
+    dig 2
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
     cover 2
     b|
     concat
@@ -350,7 +360,7 @@ m_ternary_false@3:
     b m_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_array_struct.sol.C.n[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_array_struct.sol.C.n[routing]() -> void:
 n:
     txna ApplicationArgs 1
     dup
@@ -409,11 +419,21 @@ n_ternary_merge@4:
     extract 0 32
     swap
     extract 32 32
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
     intc_0 // 64
     bzero
     uncover 2
     dig 1
     b|
+    dig 2
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
     cover 2
     b|
     concat

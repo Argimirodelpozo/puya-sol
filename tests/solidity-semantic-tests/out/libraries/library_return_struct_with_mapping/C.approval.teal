@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_return_struct_with_mapping.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_return_struct_with_mapping.sol.C.approval_program() -> uint64:
 main:
     pushint 4096
     bzero
@@ -32,7 +32,7 @@ main_f_route@4:
     b f
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_return_struct_with_mapping.sol.Lib.get() -> bytes:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_return_struct_with_mapping.sol.Lib.get() -> bytes:
 Lib.get:
     load 0
     store 0
@@ -40,8 +40,9 @@ Lib.get:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_return_struct_with_mapping.sol.C.f[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_return_struct_with_mapping.sol.C.f[routing]() -> void:
 f:
+    pushbytes ""
     txn GroupIndex
     bz f_ternary_false@3
     txn GroupIndex
@@ -55,8 +56,16 @@ f_ternary_merge@4:
     callsub Lib.get
     pop
     load 0
+    dig 1
+    itob
+    swap
     store 0
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    pushint 64
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
     pushint 1
     return

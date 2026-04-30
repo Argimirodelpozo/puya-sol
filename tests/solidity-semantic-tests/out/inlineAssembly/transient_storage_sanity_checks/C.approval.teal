@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_sanity_checks.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_sanity_checks.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 8192 64
+    intcblock 1 0 64 8192
     bytecblock "__dyn_storage" 0x000000000000000000000000000000000000000000000000000000000000002a
     pushint 4096
     bzero
@@ -31,7 +31,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_sanity_checks.sol.C.f[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_sanity_checks.sol.C.f[routing]() -> void:
 f:
     txn GroupIndex
     bz f_ternary_false@3
@@ -51,7 +51,7 @@ f_ternary_merge@4:
     bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000002a
     replace2 0
     bytec_0 // "__dyn_storage"
-    intc_2 // 8192
+    intc_3 // 8192
     box_create
     pop
     bytec_0 // "__dyn_storage"
@@ -74,7 +74,7 @@ f_ternary_false@3:
     b f_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_sanity_checks.sol.C.g[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_sanity_checks.sol.C.g[routing]() -> void:
 g:
     txn GroupIndex
     bz g_ternary_false@3
@@ -88,7 +88,7 @@ g_ternary_merge@4:
     assert // not payable
     load 0
     bytec_0 // "__dyn_storage"
-    intc_2 // 8192
+    intc_3 // 8192
     box_create
     pop
     bytec_0 // "__dyn_storage"
@@ -103,18 +103,28 @@ g_ternary_merge@4:
     store 0
     dig 2
     len
-    intc_3 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_3 // 64
+    intc_2 // 64
     bzero
     uncover 3
     dig 1
     b|
+    dig 3
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
     uncover 3
     dig 2
     b|
     concat
+    dig 2
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
     cover 2
     b|
     concat

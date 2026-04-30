@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/order_of_evaluation.sol.X.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/constructor/order_of_evaluation.sol.X.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "__ctor_pending" "x"
+    intcblock 1 0 2 32
+    bytecblock "x" "__ctor_pending"
     pushint 4096
     bzero
     dup
@@ -16,7 +16,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -34,23 +34,39 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/order_of_evaluation.sol.X.__postInit[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/constructor/order_of_evaluation.sol.X.__postInit[routing]() -> void:
 __postInit:
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    bytec_1 // "x"
-    pushint 2
+    bytec_0 // "x"
+    intc_2 // 2
     box_create
+    pop
+    intc_0 // 1
+    itob
+    callsub f
+    pop
+    pushint 3
+    itob
+    callsub f
+    pop
+    intc_2 // 2
+    itob
+    callsub f
+    pop
+    pushint 4
+    itob
+    callsub f
     pop
     intc_0 // 1
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/order_of_evaluation.sol.X.g[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/constructor/order_of_evaluation.sol.X.g[routing]() -> void:
 g:
     txn GroupIndex
     bz g_ternary_false@3
@@ -62,7 +78,7 @@ g:
 g_ternary_merge@4:
     !
     assert // not payable
-    bytec_1 // "x"
+    bytec_0 // "x"
     box_get
     pushbytes 0x0000
     cover 2
@@ -77,3 +93,60 @@ g_ternary_merge@4:
 g_ternary_false@3:
     intc_1 // 0
     b g_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/constructor/order_of_evaluation.sol.X.f(_x: bytes) -> bytes:
+f:
+    proto 1 1
+    frame_dig -1
+    len
+    intc_3 // 32
+    <=
+    assert // overflow
+    intc_3 // 32
+    bzero
+    frame_dig -1
+    b|
+    pushbytes 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    bytec_0 // "x"
+    intc_1 // 0
+    intc_2 // 2
+    box_extract
+    btoi
+    bytec_0 // "x"
+    box_len
+    pop
+    dig 2
+    intc_3 // 32
+    *
+    +
+    bytec_0 // "x"
+    swap
+    box_resize
+    dup
+    uncover 2
+    +
+    itob
+    extract 6 2
+    bytec_0 // "x"
+    intc_1 // 0
+    uncover 2
+    box_replace
+    intc_3 // 32
+    *
+    intc_2 // 2
+    +
+    bytec_0 // "x"
+    swap
+    intc_1 // 0
+    uncover 3
+    box_splice
+    pushbytes 0x
+    retsub

@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/slot_access_via_mapping_pointer.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/slot_access_via_mapping_pointer.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 64 2
-    bytecblock "__ctor_pending"
+    intcblock 1 64 0 2
+    bytecblock "__ctor_pending" "m0" "m1" "m2"
     pushint 4096
     bzero
     dup
@@ -34,23 +34,23 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/slot_access_via_mapping_pointer.sol.C.__postInit[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/slot_access_via_mapping_pointer.sol.C.__postInit[routing]() -> void:
 __postInit:
     bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_1 // 0
+    intc_2 // 0
     app_global_put
-    pushbytes "m0"
+    bytec_1 // "m0"
     intc_3 // 2
     box_create
     pop
-    pushbytes "m1"
+    bytec_2 // "m1"
     intc_3 // 2
     box_create
     pop
-    pushbytes "m2"
+    bytec_3 // "m2"
     intc_3 // 2
     box_create
     pop
@@ -58,17 +58,18 @@ __postInit:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/slot_access_via_mapping_pointer.sol.C.f[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/slot_access_via_mapping_pointer.sol.C.f[routing]() -> void:
 f:
-    intc_1 // 0
+    intc_2 // 0
+    dup
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 64
+    intc_1 // 64
     ==
     assert // invalid number of bytes for arc4.uint512
-    intc_1 // 0
-    dupn 5
+    pushbytes ""
+    dupn 2
     txn GroupIndex
     bz f_ternary_false@3
     txn GroupIndex
@@ -80,10 +81,10 @@ f_ternary_merge@4:
     !
     assert // not payable
     load 0
-    bury 8
+    bury 6
     pushint 32
     bzero
-    dig 7
+    dig 4
     b|
     dup
     len
@@ -94,27 +95,28 @@ f_ternary_merge@4:
     pushbytess 0x0000000000000000000000000000000000000000000000000000000000000001 0x0000000000000000000000000000000000000000000000000000000000000002
     uncover 2
     match f_switch_case_0@5 f_switch_case_1@6
-    dig 4
-    dig 6
+    bytec_1 // "m0"
+    dig 3
+    itob
+    bury 6
 
 f_switch_case_next@8:
-    dig 9
+    dig 6
     store 0
-    swap
     dup
     len
-    intc_2 // 64
+    intc_1 // 64
     <=
     assert // overflow
-    intc_2 // 64
+    intc_1 // 64
     bzero
     swap
     dig 1
     b|
-    uncover 2
+    dig 6
     dup
     len
-    intc_2 // 64
+    intc_1 // 64
     <=
     assert // overflow
     uncover 2
@@ -128,15 +130,19 @@ f_switch_case_next@8:
     return
 
 f_switch_case_1@6:
+    bytec_3 // "m2"
     dig 2
-    dig 4
+    itob
+    bury 6
     b f_switch_case_next@8
 
 f_switch_case_0@5:
-    dup
-    dig 2
+    bytec_2 // "m1"
+    dig 1
+    itob
+    bury 6
     b f_switch_case_next@8
 
 f_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b f_ternary_merge@4

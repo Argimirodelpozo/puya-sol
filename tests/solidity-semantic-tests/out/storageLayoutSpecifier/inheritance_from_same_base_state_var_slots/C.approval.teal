@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 64
-    bytecblock "x" 0x "z" 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    intcblock 1 0 32
+    bytecblock 0x "x" "z" 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -16,11 +16,11 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "x"
-    bytec_1 // 0x
+    bytec_1 // "x"
+    bytec_0 // 0x
     app_global_put
     bytec_2 // "z"
-    bytec_1 // 0x
+    bytec_0 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -37,9 +37,9 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.C.xAndZSlots[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.C.xAndZSlots[routing]() -> void:
 xAndZSlots:
-    intc_1 // 0
+    bytec_0 // ""
     txn GroupIndex
     bz xAndZSlots_ternary_false@3
     txn GroupIndex
@@ -51,15 +51,12 @@ xAndZSlots_ternary_merge@4:
     !
     assert // not payable
     load 0
-    store 0
-    intc_3 // 64
-    bzero
     dig 1
-    dup
-    len
-    intc_3 // 64
-    <=
-    assert // overflow
+    itob
+    swap
+    store 0
+    pushint 64
+    bzero
     b|
     bytec_3 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     swap
@@ -73,7 +70,7 @@ xAndZSlots_ternary_false@3:
     b xAndZSlots_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.C.z[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.C.z[routing]() -> void:
 z:
     txn GroupIndex
     bz z_ternary_false@3
@@ -109,7 +106,7 @@ z_ternary_false@3:
     b z_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.C.x[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.C.x[routing]() -> void:
 x:
     txn GroupIndex
     bz x_ternary_false@3
@@ -122,7 +119,7 @@ x_ternary_merge@4:
     !
     assert // not payable
     intc_1 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
     assert // check x exists
     dup
@@ -145,7 +142,7 @@ x_ternary_false@3:
     b x_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.C.xSlot[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.C.xSlot[routing]() -> void:
 xSlot:
     txn GroupIndex
     bz xSlot_ternary_false@3

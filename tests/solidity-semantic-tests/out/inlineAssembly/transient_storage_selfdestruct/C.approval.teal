@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_selfdestruct.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_selfdestruct.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 64 32
     pushint 4096
@@ -30,7 +30,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_selfdestruct.sol.C.set[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_selfdestruct.sol.C.set[routing]() -> void:
 set:
     txna ApplicationArgs 1
     dup
@@ -65,7 +65,7 @@ set_ternary_false@3:
     b set_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_selfdestruct.sol.C.get[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_selfdestruct.sol.C.get[routing]() -> void:
 get:
     txn GroupIndex
     bz get_ternary_false@3
@@ -82,6 +82,11 @@ get_ternary_merge@4:
     extract 0 32
     swap
     store 0
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
     intc_2 // 64
     bzero
     b|
@@ -97,7 +102,7 @@ get_ternary_false@3:
     b get_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_selfdestruct.sol.C.terminate[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_selfdestruct.sol.C.terminate[routing]() -> void:
 terminate:
     txna ApplicationArgs 1
     dup

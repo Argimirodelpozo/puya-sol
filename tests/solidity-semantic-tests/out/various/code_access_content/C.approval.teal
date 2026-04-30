@@ -1,0 +1,188 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/code_access_content.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1 16 6 1000000
+    bytecblock TMPL_APPROVAL_D TMPL_CLEAR_D 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563 0x151f7c7580
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x7c2171a4 0x3bf43b21 // method "testRuntime()bool", method "testCreation()bool"
+    txna ApplicationArgs 0
+    match testRuntime testCreation
+    err
+
+
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/code_access_content.sol.C.testRuntime[routing]() -> void:
+testRuntime:
+    txn GroupIndex
+    bz testRuntime_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+testRuntime_ternary_merge@4:
+    !
+    assert // not payable
+    itxn_begin
+    bytec_0 // TMPL_APPROVAL_D
+    bytec_1 // TMPL_CLEAR_D
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_2 // 16
+    itxn_field GlobalNumUint
+    intc_2 // 16
+    itxn_field GlobalNumByteSlice
+    intc_0 // 0
+    itxn_field Fee
+    pushint 3
+    itxn_field ExtraProgramPages
+    itxn_field ClearStateProgram
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    intc 4 // 1000000
+    itxn_field Amount
+    itxn_submit
+    load 0
+    pushint 32
+    bzero
+    pushint 8
+    bzero
+    dig 2
+    extract 64 32
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 2
+    swap
+    pushint 4
+    extract3
+    keccak256
+    concat
+    dup
+    len
+    pushint 32
+    -
+    pushint 32
+    extract3
+    extract 0 32
+    swap
+    store 0
+    intc_0 // 0
+    assert
+    bytec_2 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    ==
+    assert
+    bytec_3 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+testRuntime_ternary_false@3:
+    intc_0 // 0
+    b testRuntime_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/code_access_content.sol.C.testCreation[routing]() -> void:
+testCreation:
+    txn GroupIndex
+    bz testCreation_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+testCreation_ternary_merge@4:
+    !
+    assert // not payable
+    itxn_begin
+    bytec_0 // TMPL_APPROVAL_D
+    bytec_1 // TMPL_CLEAR_D
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_2 // 16
+    itxn_field GlobalNumUint
+    intc_2 // 16
+    itxn_field GlobalNumByteSlice
+    intc_0 // 0
+    itxn_field Fee
+    pushint 3
+    itxn_field ExtraProgramPages
+    itxn_field ClearStateProgram
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    dup
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    intc 4 // 1000000
+    itxn_field Amount
+    itxn_submit
+    pushint 24
+    bzero
+    swap
+    itob
+    concat
+    itxn_begin
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x7632a750 // method "x()byte[32]"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    bytec_2 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    ==
+    assert
+    bytec_3 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+testCreation_ternary_false@3:
+    intc_0 // 0
+    b testCreation_ternary_merge@4

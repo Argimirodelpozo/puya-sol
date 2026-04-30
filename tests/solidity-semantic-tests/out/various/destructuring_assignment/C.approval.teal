@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.approval_program() -> uint64:
 main:
     intcblock 2 1 0 32
-    bytecblock "arrayData" "y" "data" "__ctor_pending" "x" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000004 0x0000000000000000000000000000000000000000000000000000000000000005 0x0000
+    bytecblock "arrayData" "y" 0x0000 "data" "__ctor_pending" "x" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000004 0x0000000000000000000000000000000000000000000000000000000000000005
     pushint 4096
     bzero
     dup
@@ -16,7 +16,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -34,12 +34,12 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.__postInit[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     intc_2 // 0
     app_global_put
     bytec_1 // "y"
@@ -52,17 +52,17 @@ __postInit:
     pop
     pushint 7
     itob
-    bytec 4 // "x"
+    bytec 5 // "x"
     swap
     app_global_put
     intc_1 // 1
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray[routing]() -> void:
 returnsArray:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray
-    bytec 5 // 0x151f7c75
+    callsub /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -70,7 +70,7 @@ returnsArray:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f[routing]() -> void:
 f:
     intc_2 // 0
     txna ApplicationArgs 1
@@ -94,15 +94,15 @@ f:
 f_ternary_merge@4:
     !
     assert // not payable
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray
+    callsub /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray
     bytec_0 // "arrayData"
     pushint 98
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
     box_replace // on error: index out of bounds
-    bytec_2 // "data"
+    bytec_3 // "data"
     box_del
     pop
-    bytec_2 // "data"
+    bytec_3 // "data"
     dig 2
     box_put
     bytec_1 // "y"
@@ -113,7 +113,7 @@ f_ternary_merge@4:
     box_put
     pushint 4
     itob
-    bytec 4 // "x"
+    bytec 5 // "x"
     swap
     app_global_put
     bytec_1 // "y"
@@ -137,8 +137,8 @@ f_ternary_merge@11:
     bz f_after_if_else@13
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
 
-f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35:
-    bytec 5 // 0x151f7c75
+f_after_inlined_/home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35:
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -147,28 +147,32 @@ f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tes
 
 f_after_if_else@13:
     bytec_1 // "y"
-    pushint 66
-    intc_3 // 32
-    box_extract // on error: index access is out of bounds
+    box_get
+    bytec_2 // 0x0000
+    cover 2
+    select
+    extract 66 32
     pushbytes 0x05
     b!=
     bz f_after_if_else@15
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000004
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000004
+    b f_after_inlined_/home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
 
 f_after_if_else@15:
     bytec_1 // "y"
-    pushint 226
-    intc_3 // 32
-    box_extract // on error: index access is out of bounds
+    box_get
+    bytec_2 // 0x0000
+    cover 2
+    select
+    extract 226 32
     pushbytes 0x04
     b!=
     bz f_after_if_else@17
-    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000005
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
+    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000005
+    b f_after_inlined_/home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
 
 f_after_if_else@17:
-    bytec_2 // "data"
+    bytec_3 // "data"
     box_len
     pop
     itob
@@ -178,10 +182,10 @@ f_after_if_else@17:
     b!=
     bz f_after_if_else@19
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000006
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
+    b f_after_inlined_/home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
 
 f_after_if_else@19:
-    bytec_2 // "data"
+    bytec_3 // "data"
     box_get
     pushbytes 0x
     cover 2
@@ -192,23 +196,25 @@ f_after_if_else@19:
     !=
     bz f_after_if_else@21
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
+    b f_after_inlined_/home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
 
 f_after_if_else@21:
     bytec_0 // "arrayData"
-    pushint 98
-    intc_3 // 32
-    box_extract // on error: index access is out of bounds
+    box_get
+    bytec_2 // 0x0000
+    cover 2
+    select
+    extract 98 32
     pushbytes 0x02
     b!=
     bz f_after_if_else@23
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
+    b f_after_inlined_/home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
 
 f_after_if_else@23:
     bytec_0 // "arrayData"
     box_get
-    bytec 8 // 0x0000
+    bytec_2 // 0x0000
     cover 2
     select
     intc_2 // 0
@@ -235,7 +241,7 @@ f_ternary_merge@28:
     b!=
     bz f_after_if_else@30
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
+    b f_after_inlined_/home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
 
 f_after_if_else@30:
     bytec_1 // "y"
@@ -244,22 +250,24 @@ f_after_if_else@30:
     box_replace // on error: index out of bounds
     pushint 456
     itob
-    bytec 4 // "x"
+    bytec 5 // "x"
     swap
     app_global_put
     bytec_1 // "y"
-    pushint 66
-    intc_3 // 32
-    box_extract // on error: index access is out of bounds
+    box_get
+    bytec_2 // 0x0000
+    cover 2
+    select
+    extract 66 32
     pushbytes 0x0315
     b!=
     bz f_after_if_else@34
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000b
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
+    b f_after_inlined_/home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
 
 f_after_if_else@34:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
+    b f_after_inlined_/home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@35
 
 f_ternary_false@27:
     intc_0 // 2
@@ -274,16 +282,16 @@ f_ternary_false@3:
     b f_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray() -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray() -> bytes:
+/home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray_ternary_false@2
+    bz /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray_ternary_merge@3:
+/home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray_ternary_merge@3:
     !
     assert // not payable
     bytec_0 // "arrayData"
@@ -294,19 +302,19 @@ f_ternary_false@3:
     box_put
     bytec_0 // "arrayData"
     pushint 66
-    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000005
+    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000005
     box_replace // on error: index out of bounds
     bytec_0 // "arrayData"
     pushint 226
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000004
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000004
     box_replace // on error: index out of bounds
     bytec_0 // "arrayData"
     box_get
-    bytec 8 // 0x0000
+    bytec_2 // 0x0000
     cover 2
     select
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray_ternary_false@2:
+/home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray_ternary_false@2:
     intc_2 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray_ternary_merge@3
+    b /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray_ternary_merge@3

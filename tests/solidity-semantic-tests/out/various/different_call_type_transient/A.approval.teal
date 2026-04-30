@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.A.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.A.approval_program() -> uint64:
 main:
     intcblock 32 1 0 4
     pushint 4096
@@ -32,7 +32,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.A.delegateSetValue[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.A.delegateSetValue[routing]() -> void:
 delegateSetValue:
     txna ApplicationArgs 1
     len
@@ -62,7 +62,7 @@ delegateSetValue_ternary_false@3:
     b delegateSetValue_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.A.callSetValue[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.A.callSetValue[routing]() -> void:
 callSetValue:
     intc_2 // 0
     dup
@@ -161,7 +161,7 @@ callSetValue_ternary_false@3:
     b callSetValue_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.A.staticSetValue[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.A.staticSetValue[routing]() -> void:
 staticSetValue:
     txna ApplicationArgs 1
     len
@@ -193,7 +193,7 @@ staticSetValue_ternary_false@3:
     b staticSetValue_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.A.value[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.A.value[routing]() -> void:
 value:
     txn GroupIndex
     bz value_ternary_false@3
@@ -207,6 +207,11 @@ value_ternary_merge@4:
     assert // not payable
     load 5
     extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
     intc_0 // 32
     bzero
     b|

@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_struct.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_struct.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 512 64
     bytecblock 0x00 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x "s1" "s2"
@@ -43,7 +43,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_struct.sol.C.initS1[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_struct.sol.C.initS1[routing]() -> void:
 initS1:
     txn GroupIndex
     bz initS1_ternary_false@3
@@ -111,6 +111,11 @@ initS1_ternary_merge@4:
     setbit
     intc_0 // 0
     getbit
+    dig 2
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
     intc_3 // 64
     bzero
     uncover 3
@@ -134,7 +139,7 @@ initS1_ternary_false@3:
     b initS1_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_struct.sol.C.initS2[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_struct.sol.C.initS2[routing]() -> void:
 initS2:
     txn GroupIndex
     bz initS2_ternary_false@3
@@ -202,6 +207,11 @@ initS2_ternary_merge@4:
     setbit
     intc_0 // 0
     getbit
+    dig 2
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
     intc_3 // 64
     bzero
     uncover 3
@@ -225,7 +235,7 @@ initS2_ternary_false@3:
     b initS2_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_struct.sol.C.s2[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_struct.sol.C.s2[routing]() -> void:
 s2:
     txn GroupIndex
     bz s2_ternary_false@3
@@ -255,6 +265,11 @@ s2_ternary_merge@4:
     setbit
     intc_0 // 0
     getbit
+    dig 2
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
     intc_3 // 64
     bzero
     uncover 3
@@ -278,7 +293,7 @@ s2_ternary_false@3:
     b s2_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_struct.sol.C.s1[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_struct.sol.C.s1[routing]() -> void:
 s1:
     txn GroupIndex
     bz s1_ternary_false@3
@@ -308,6 +323,11 @@ s1_ternary_merge@4:
     setbit
     intc_0 // 0
     getbit
+    dig 2
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
     intc_3 // 64
     bzero
     uncover 3

@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 256
+    intcblock 0 1 256 64
     bytecblock "s" 0x00
     pushint 4096
     bzero
@@ -34,7 +34,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.InitUsingReference[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.InitUsingReference[routing]() -> void:
 InitUsingReference:
     txn GroupIndex
     bz InitUsingReference_ternary_false@3
@@ -65,7 +65,7 @@ InitUsingReference_ternary_merge@4:
     bytec_0 // "s"
     dig 1
     app_global_put
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.validate
+    callsub /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.validate
     intc_1 // 1
     return
 
@@ -74,7 +74,7 @@ InitUsingReference_ternary_false@3:
     b InitUsingReference_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.validate[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.validate[routing]() -> void:
 validate:
     txna ApplicationArgs 1
     dup
@@ -82,12 +82,12 @@ validate:
     pushint 33
     ==
     assert // invalid number of bytes for S
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.validate
+    callsub /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.validate
     intc_1 // 1
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.s[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.s[routing]() -> void:
 s:
     txn GroupIndex
     bz s_ternary_false@3
@@ -114,7 +114,12 @@ s_ternary_merge@4:
     setbit
     intc_0 // 0
     getbit
-    pushint 64
+    dig 1
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    intc_3 // 64
     bzero
     uncover 2
     b|
@@ -135,17 +140,17 @@ s_ternary_false@3:
     b s_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.validate(ptr: bytes) -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.validate:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.validate(ptr: bytes) -> void:
+/home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.validate:
     proto 1 0
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.validate_ternary_false@2
+    bz /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.validate_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.validate_ternary_merge@3:
+/home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.validate_ternary_merge@3:
     !
     assert // not payable
     frame_dig -1
@@ -165,6 +170,6 @@ s_ternary_false@3:
     assert
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.validate_ternary_false@2:
+/home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.validate_ternary_false@2:
     intc_0 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.validate_ternary_merge@3
+    b /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.validate_ternary_merge@3

@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_memory_access.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_memory_access.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 8
+    intcblock 0 1 8 32
     pushint 4096
     bzero
     dup
@@ -33,10 +33,10 @@ main_test_route@4:
     b test
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_memory_access.sol.C.test[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_memory_access.sol.C.test[routing]() -> void:
 test:
     intc_0 // 0
-    dup
+    dupn 2
     pushbytes ""
     txn GroupIndex
     bz test_ternary_false@3
@@ -101,11 +101,22 @@ test_while_top@5:
 
 test_after_while@7:
     load 0
+    bury 4
+    dup
+    intc_3 // 32
+    >
+    bz test_ternary_false@9
+    intc_3 // 32
+
+test_ternary_merge@10:
     pushbytes 0x3132333435363738393031323334353637383930313233343536373839303132
     intc_0 // 0
-    dig 3
+    uncover 2
     extract3
+    dig 2
     swap
+    replace2 0
+    dig 4
     store 0
     dup
     len
@@ -119,6 +130,10 @@ test_after_while@7:
     log
     intc_1 // 1
     return
+
+test_ternary_false@9:
+    dup
+    b test_ternary_merge@10
 
 test_ternary_false@3:
     intc_0 // 0

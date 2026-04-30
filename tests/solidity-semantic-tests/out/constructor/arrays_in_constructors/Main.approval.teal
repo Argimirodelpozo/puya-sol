@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.approval_program() -> uint64:
 main:
     intcblock 1 32 0 2
     bytecblock "m_s" "__ctor_pending" "m_x" 0x151f7c75
@@ -34,7 +34,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.__postInit[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.__postInit[routing]() -> void:
 __postInit:
     txna ApplicationArgs 1
     dup
@@ -68,7 +68,7 @@ __postInit:
     pushbytes 0x
     app_global_put
     swap
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.f
+    callsub /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.f
     pop
     bytec_2 // "m_x"
     uncover 2
@@ -83,7 +83,7 @@ __postInit:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.f[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
     dup
@@ -97,7 +97,7 @@ f:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 32>>
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.f
+    callsub /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.f
     pop
     bytec_3 // 0x151f7c75
     swap
@@ -107,7 +107,7 @@ f:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.m_x[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.m_x[routing]() -> void:
 m_x:
     txn GroupIndex
     bz m_x_ternary_false@3
@@ -143,7 +143,7 @@ m_x_ternary_false@3:
     b m_x_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.part[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.part[routing]() -> void:
 part:
     txna ApplicationArgs 1
     dup
@@ -161,23 +161,27 @@ part:
 part_ternary_merge@4:
     !
     assert // not payable
+    bytec_0 // "m_s"
+    box_get
+    pushbytes 0x0000
+    cover 2
+    select
     pushint 8
     bzero
-    dig 1
+    dig 2
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    intc_1 // 32
-    *
-    intc_3 // 2
-    +
-    bytec_0 // "m_s"
+    swap
+    extract 2 0
     swap
     intc_1 // 32
-    box_extract // on error: index access is out of bounds
+    *
+    intc_1 // 32
+    extract3 // on error: index access is out of bounds
     bytec_3 // 0x151f7c75
     swap
     concat
@@ -190,23 +194,23 @@ part_ternary_false@3:
     b part_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.f(s: bytes) -> bytes, bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.f:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.f(s: bytes) -> bytes, bytes:
+/home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.f:
     proto 1 2
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.f_ternary_false@2
+    bz /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.f_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.f_ternary_merge@3:
+/home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.f_ternary_merge@3:
     !
     assert // not payable
     frame_dig -1
     dup
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.f_ternary_false@2:
+/home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.f_ternary_false@2:
     intc_2 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.f_ternary_merge@3
+    b /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.f_ternary_merge@3

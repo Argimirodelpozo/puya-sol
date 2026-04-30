@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.approval_program() -> uint64:
 main:
-    intcblock 1 32 8 0
+    intcblock 1 32 8 0 65536
     bytecblock "data" "__ctor_pending" "ids" 0x151f7c75
     pushint 4096
     bzero
@@ -34,7 +34,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.__postInit[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.__postInit[routing]() -> void:
 __postInit:
     bytec_1 // "__ctor_pending"
     app_global_get
@@ -50,7 +50,7 @@ __postInit:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.setIDStatic[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.setIDStatic[routing]() -> void:
 setIDStatic:
     txna ApplicationArgs 1
     dup
@@ -80,7 +80,7 @@ setIDStatic_ternary_false@3:
     b setIDStatic_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.setID[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.setID[routing]() -> void:
 setID:
     txna ApplicationArgs 1
     dup
@@ -127,7 +127,7 @@ setID_ternary_false@3:
     b setID_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.setData[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.setData[routing]() -> void:
 setData:
     txna ApplicationArgs 1
     dup
@@ -157,9 +157,16 @@ setData:
 setData_ternary_merge@4:
     !
     assert // not payable
+    intc 4 // 65536
+    bzero
+    bytec_0 // "data"
+    box_get
+    dig 2
+    cover 2
+    select
     intc_2 // 8
     bzero
-    dig 3
+    dig 5
     concat
     dup
     len
@@ -168,12 +175,12 @@ setData_ternary_merge@4:
     extract_uint64
     pushint 64
     *
-    bytec_0 // "data"
+    swap
     dig 1
     pushint 64
-    box_extract // on error: index access is out of bounds
+    extract3 // on error: index access is out of bounds
     extract 32 32
-    dig 3
+    dig 4
     swap
     concat
     bytec_0 // "data"
@@ -181,9 +188,13 @@ setData_ternary_merge@4:
     uncover 2
     box_replace // on error: index out of bounds
     bytec_0 // "data"
+    box_get
+    uncover 3
+    cover 2
+    select
     dig 1
     pushint 64
-    box_extract // on error: index access is out of bounds
+    extract3 // on error: index access is out of bounds
     extract 0 32
     dig 2
     concat
@@ -198,7 +209,7 @@ setData_ternary_false@3:
     b setData_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.getID[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.getID[routing]() -> void:
 getID:
     txna ApplicationArgs 1
     dup
@@ -216,9 +227,14 @@ getID:
 getID_ternary_merge@4:
     !
     assert // not payable
+    pushint 32864
+    bzero
+    bytec_2 // "ids"
+    box_get
+    select
     intc_2 // 8
     bzero
-    dig 1
+    dig 2
     concat
     dup
     len
@@ -227,10 +243,8 @@ getID_ternary_merge@4:
     extract_uint64
     intc_1 // 32
     *
-    bytec_2 // "ids"
-    swap
     intc_1 // 32
-    box_extract // on error: index access is out of bounds
+    extract3 // on error: index access is out of bounds
     bytec_3 // 0x151f7c75
     swap
     concat
@@ -243,7 +257,7 @@ getID_ternary_false@3:
     b getID_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.getData[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.getData[routing]() -> void:
 getData:
     txna ApplicationArgs 1
     dup
@@ -261,9 +275,14 @@ getData:
 getData_ternary_merge@4:
     !
     assert // not payable
+    intc 4 // 65536
+    bzero
+    bytec_0 // "data"
+    box_get
+    select
     intc_2 // 8
     bzero
-    dig 1
+    dig 2
     concat
     dup
     len
@@ -272,10 +291,8 @@ getData_ternary_merge@4:
     extract_uint64
     pushint 64
     *
-    bytec_0 // "data"
-    swap
     pushint 64
-    box_extract // on error: index access is out of bounds
+    extract3 // on error: index access is out of bounds
     dup
     extract 0 32
     swap
@@ -293,7 +310,7 @@ getData_ternary_false@3:
     b getData_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.getLengths[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.getLengths[routing]() -> void:
 getLengths:
     txn GroupIndex
     bz getLengths_ternary_false@3

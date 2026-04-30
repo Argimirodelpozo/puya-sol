@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 64
     pushint 4096
@@ -33,26 +33,26 @@ main_getOne_route@4:
     b getOne
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier.sol.C.getOne[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier.sol.C.getOne[routing]() -> void:
 getOne:
     pushbytes 0x
     txn GroupIndex
-    bz getOne_ternary_false@5
+    bz getOne_ternary_false@3
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-getOne_ternary_merge@6:
+getOne_ternary_merge@4:
     itob
     pushbytes 0x
     b>
-    bz getOne_after_if_else@8
+    bz getOne_after_if_else@6
     intc_0 // 1
     itob
     bury 1
 
-getOne_after_if_else@8:
+getOne_after_if_else@6:
     dupn 2
     len
     intc_1 // 64
@@ -68,6 +68,6 @@ getOne_after_if_else@8:
     intc_0 // 1
     return
 
-getOne_ternary_false@5:
+getOne_ternary_false@3:
     pushint 0
-    b getOne_ternary_merge@6
+    b getOne_ternary_merge@4

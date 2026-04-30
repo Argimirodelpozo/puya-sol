@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_uninitialized_function_in_detail.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_uninitialized_function_in_detail.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1
+    intcblock 0 1 32
     bytecblock "mutex" "x" 0x8000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
@@ -40,7 +40,7 @@ main_t_route@4:
     b t
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_uninitialized_function_in_detail.sol.C.t[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_uninitialized_function_in_detail.sol.C.t[routing]() -> void:
 t:
     txn GroupIndex
     bz t_ternary_false@3
@@ -67,7 +67,12 @@ t_ternary_merge@4:
     dup
     store 0
     extract 0 32
-    pushint 32
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
     bzero
     b|
     pushbytes 0x151f7c75

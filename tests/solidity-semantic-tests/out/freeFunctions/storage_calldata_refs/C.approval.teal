@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/storage_calldata_refs.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/storage_calldata_refs.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 32 1 2
-    bytecblock "data" "__ctor_pending" 0x0000
+    bytecblock "data" "__ctor_pending"
     pushint 4096
     bzero
     dup
@@ -34,7 +34,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/storage_calldata_refs.sol.fun(_x: bytes, _y: bytes) -> bytes, bytes, bytes, bytes:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/storage_calldata_refs.sol.fun(_x: bytes, _y: bytes) -> bytes, bytes, bytes, bytes:
 fun:
     proto 2 4
     frame_dig -1
@@ -45,7 +45,7 @@ fun:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/storage_calldata_refs.sol.C.__postInit[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/storage_calldata_refs.sol.C.__postInit[routing]() -> void:
 __postInit:
     bytec_1 // "__ctor_pending"
     app_global_get
@@ -61,7 +61,7 @@ __postInit:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/storage_calldata_refs.sol.C.f[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/storage_calldata_refs.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
     dup
@@ -134,25 +134,14 @@ f_ternary_merge@4:
     box_splice
     bytec_0 // "data"
     box_get
-    bytec_2 // 0x0000
+    pushbytes 0x0000
     cover 2
     select
     dig 1
     swap
     callsub fun
-    pop
-    cover 2
-    pop
-    swap
-    bytec_0 // "data"
-    box_get
-    bytec_2 // 0x0000
-    cover 2
-    select
-    callsub fun
     popn 2
-    cover 2
-    pop
+    swap
     dup
     len
     intc_1 // 32

@@ -1,8 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_reset_between_creation_runtime.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_reset_between_creation_runtime.sol.C.approval_program() -> uint64:
 main:
+    intcblock 1 64
     pushint 4096
     bzero
     dup
@@ -26,7 +27,7 @@ main:
     pushbytes 0x2a
     b==
     assert
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -44,12 +45,12 @@ main_f_route@4:
     b f
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_reset_between_creation_runtime.sol.C.f[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_reset_between_creation_runtime.sol.C.f[routing]() -> void:
 f:
     txn GroupIndex
     bz f_ternary_false@3
     txn GroupIndex
-    pushint 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -66,14 +67,19 @@ f_ternary_merge@4:
     assert // revert
     swap
     store 0
-    pushint 64
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
     bzero
     b|
     pushbytes 0x151f7c75
     swap
     concat
     log
-    pushint 1
+    intc_0 // 1
     return
 
 f_ternary_false@3:

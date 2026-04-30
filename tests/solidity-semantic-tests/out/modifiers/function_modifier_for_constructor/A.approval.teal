@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_for_constructor.sol.A.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_for_constructor.sol.A.approval_program() -> uint64:
 main:
     intcblock 1 0 32
     bytecblock "data"
@@ -15,20 +15,20 @@ main:
     replace2 64
     store 0
     txn ApplicationID
-    bnz main_after_if_else@5
+    bnz main_after_if_else@2
     bytec_0 // "data"
     pushbytes 0x03
     app_global_put
     intc_0 // 1
     return
 
-main_after_if_else@5:
+main_after_if_else@2:
     pushbytes 0xe1e64a74 // method "getData()uint256"
     txna ApplicationArgs 0
-    match main_getData_route@7
+    match main_getData_route@4
     err
 
-main_getData_route@7:
+main_getData_route@4:
     txn OnCompletion
     !
     txn ApplicationID
@@ -37,7 +37,7 @@ main_getData_route@7:
     b getData
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_for_constructor.sol.A.getData[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_for_constructor.sol.A.getData[routing]() -> void:
 getData:
     txn GroupIndex
     bz getData_ternary_false@3

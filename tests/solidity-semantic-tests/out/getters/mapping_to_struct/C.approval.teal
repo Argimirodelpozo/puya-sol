@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_to_struct.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_to_struct.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
+    intcblock 32 1 0 64
     bytecblock "__ctor_pending" "x" 0x78d6ba9329f8932c12192b37849f772104d20048f76434a3290512d9d814e4116f 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
@@ -34,7 +34,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_to_struct.sol.C.__postInit[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_to_struct.sol.C.__postInit[routing]() -> void:
 __postInit:
     bytec_0 // "__ctor_pending"
     app_global_get
@@ -108,7 +108,7 @@ __postInit:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_to_struct.sol.C.x[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_to_struct.sol.C.x[routing]() -> void:
 x:
     txna ApplicationArgs 1
     dup
@@ -176,7 +176,12 @@ x_ternary_merge@4:
     uncover 3
     itob
     concat
-    pushint 64
+    dig 2
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    intc_3 // 64
     bzero
     uncover 3
     dig 1
@@ -184,6 +189,11 @@ x_ternary_merge@4:
     uncover 2
     swap
     concat
+    dig 2
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
     cover 2
     b|
     concat

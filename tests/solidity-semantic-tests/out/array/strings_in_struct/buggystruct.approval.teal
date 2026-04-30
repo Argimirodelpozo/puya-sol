@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.approval_program() -> uint64:
 main:
-    intcblock 1 0 96
+    intcblock 1 0 64 96
     bytecblock "bug" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000620000 0x151f7c75 "__ctor_pending"
     pushint 4096
     bzero
@@ -34,7 +34,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.__postInit[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.__postInit[routing]() -> void:
 __postInit:
     bytec_3 // "__ctor_pending"
     app_global_get
@@ -52,7 +52,7 @@ __postInit:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.getFirst[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.getFirst[routing]() -> void:
 getFirst:
     txn GroupIndex
     bz getFirst_ternary_false@3
@@ -82,7 +82,7 @@ getFirst_ternary_false@3:
     b getFirst_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.getSecond[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.getSecond[routing]() -> void:
 getSecond:
     txn GroupIndex
     bz getSecond_ternary_false@3
@@ -112,7 +112,7 @@ getSecond_ternary_false@3:
     b getSecond_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.getThird[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.getThird[routing]() -> void:
 getThird:
     txn GroupIndex
     bz getThird_ternary_false@3
@@ -142,7 +142,7 @@ getThird_ternary_false@3:
     b getThird_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.getLast[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.getLast[routing]() -> void:
 getLast:
     txn GroupIndex
     bz getLast_ternary_false@3
@@ -160,7 +160,7 @@ getLast_ternary_merge@4:
     cover 2
     select
     dup
-    intc_2 // 96
+    intc_3 // 96
     extract_uint16
     dig 1
     len
@@ -177,7 +177,7 @@ getLast_ternary_false@3:
     b getLast_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.bug[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.bug[routing]() -> void:
 bug:
     txn GroupIndex
     bz bug_ternary_false@3
@@ -201,7 +201,7 @@ bug_ternary_merge@4:
     dig 2
     extract 64 32
     dig 3
-    intc_2 // 96
+    intc_3 // 96
     extract_uint16
     dig 4
     len
@@ -209,15 +209,30 @@ bug_ternary_merge@4:
     cover 2
     substring3
     extract 2 0
-    pushint 64
+    dig 3
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
     bzero
     uncover 4
     dig 1
     b|
+    dig 4
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
     uncover 4
     dig 2
     b|
     concat
+    dig 3
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
     uncover 3
     uncover 2
     b|

@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_decode_trivial.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_decode_trivial.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1 0 32
     pushint 4096
     bzero
     dup
@@ -33,7 +33,7 @@ main_f_route@4:
     b f
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_decode_trivial.sol.C.f[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_decode_trivial.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
     dupn 2
@@ -57,7 +57,12 @@ f_ternary_merge@4:
     assert // not payable
     dup
     extract 2 32
-    pushint 32
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
     bzero
     b|
     pushbytes 0x151f7c75

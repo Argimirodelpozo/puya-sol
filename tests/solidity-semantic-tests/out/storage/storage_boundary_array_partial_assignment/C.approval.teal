@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_partial_assignment.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_partial_assignment.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32 8192 18446744073709551611 18446744073709551612 18446744073709551613 18446744073709551614 18446744073709551615
-    bytecblock 0x "__dyn_storage"
+    bytecblock 0x151617 "__dyn_storage" 0x0b0c0d0e0f1011
     pushint 4096
     bzero
     dup
@@ -31,7 +31,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_partial_assignment.sol.C.fillArray[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_partial_assignment.sol.C.fillArray[routing]() -> void:
 fillArray:
     intc_1 // 0
     txn GroupIndex
@@ -81,7 +81,7 @@ fillArray_ternary_false@3:
     b fillArray_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_partial_assignment.sol.C.x[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_partial_assignment.sol.C.x[routing]() -> void:
 x:
     txn GroupIndex
     bz x_ternary_false@3
@@ -127,7 +127,7 @@ x_ternary_false@3:
     b x_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_partial_assignment.sol.C.partialAssignArrayBeforeStorageBoundary[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_partial_assignment.sol.C.partialAssignArrayBeforeStorageBoundary[routing]() -> void:
 partialAssignArrayBeforeStorageBoundary:
     txn GroupIndex
     bz partialAssignArrayBeforeStorageBoundary_ternary_false@3
@@ -150,26 +150,40 @@ partialAssignArrayBeforeStorageBoundary_ternary_merge@4:
     intc 6 // 18446744073709551613
     pushbytes 0x17
     callsub __storage_write
+    bytec_0 // 0x151617
+    extract 3 1 // on error: index access is out of bounds
     intc 7 // 18446744073709551614
-    bytec_0 // 0x
+    swap
     callsub __storage_write
+    bytec_0 // 0x151617
+    extract 4 1 // on error: index access is out of bounds
     intc 8 // 18446744073709551615
-    bytec_0 // 0x
+    swap
     callsub __storage_write
+    bytec_0 // 0x151617
+    extract 5 1 // on error: index access is out of bounds
     intc_1 // 0
-    bytec_0 // 0x
+    swap
     callsub __storage_write
+    bytec_0 // 0x151617
+    extract 6 1 // on error: index access is out of bounds
     intc_0 // 1
-    bytec_0 // 0x
+    swap
     callsub __storage_write
+    bytec_0 // 0x151617
+    extract 7 1 // on error: index access is out of bounds
     pushint 2
-    bytec_0 // 0x
+    swap
     callsub __storage_write
+    bytec_0 // 0x151617
+    extract 8 1 // on error: index access is out of bounds
     pushint 3
-    bytec_0 // 0x
+    swap
     callsub __storage_write
+    bytec_0 // 0x151617
+    extract 9 1 // on error: index access is out of bounds
     pushint 4
-    bytec_0 // 0x
+    swap
     callsub __storage_write
     intc_0 // 1
     return
@@ -179,7 +193,7 @@ partialAssignArrayBeforeStorageBoundary_ternary_false@3:
     b partialAssignArrayBeforeStorageBoundary_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_partial_assignment.sol.C.partialAssignArrayCrossStorageBoundary[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_partial_assignment.sol.C.partialAssignArrayCrossStorageBoundary[routing]() -> void:
 partialAssignArrayCrossStorageBoundary:
     txn GroupIndex
     bz partialAssignArrayCrossStorageBoundary_ternary_false@3
@@ -214,14 +228,20 @@ partialAssignArrayCrossStorageBoundary_ternary_merge@4:
     intc_0 // 1
     pushbytes 0x11
     callsub __storage_write
+    bytec_2 // 0x0b0c0d0e0f1011
+    extract 7 1 // on error: index access is out of bounds
     pushint 2
-    bytec_0 // 0x
+    swap
     callsub __storage_write
+    bytec_2 // 0x0b0c0d0e0f1011
+    extract 8 1 // on error: index access is out of bounds
     pushint 3
-    bytec_0 // 0x
+    swap
     callsub __storage_write
+    bytec_2 // 0x0b0c0d0e0f1011
+    extract 9 1 // on error: index access is out of bounds
     pushint 4
-    bytec_0 // 0x
+    swap
     callsub __storage_write
     intc_0 // 1
     return
@@ -231,7 +251,7 @@ partialAssignArrayCrossStorageBoundary_ternary_false@3:
     b partialAssignArrayCrossStorageBoundary_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_partial_assignment.sol.C.__storage_write(__slot: uint64, __value: bytes) -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_partial_assignment.sol.C.__storage_write(__slot: uint64, __value: bytes) -> void:
 __storage_write:
     proto 2 0
     bytec_1 // "__dyn_storage"

@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Base.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Base.approval_program() -> uint64:
 main:
     intcblock 1 32 0 2
     bytecblock "m_s" "__ctor_pending" "m_x" 0x151f7c75
@@ -34,7 +34,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Base.__postInit[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Base.__postInit[routing]() -> void:
 __postInit:
     txna ApplicationArgs 1
     dup
@@ -77,7 +77,7 @@ __postInit:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Base.part[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Base.part[routing]() -> void:
 part:
     txna ApplicationArgs 1
     dup
@@ -95,23 +95,27 @@ part:
 part_ternary_merge@4:
     !
     assert // not payable
+    bytec_0 // "m_s"
+    box_get
+    pushbytes 0x0000
+    cover 2
+    select
     pushint 8
     bzero
-    dig 1
+    dig 2
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    intc_1 // 32
-    *
-    intc_3 // 2
-    +
-    bytec_0 // "m_s"
+    swap
+    extract 2 0
     swap
     intc_1 // 32
-    box_extract // on error: index access is out of bounds
+    *
+    intc_1 // 32
+    extract3 // on error: index access is out of bounds
     bytec_3 // 0x151f7c75
     swap
     concat
@@ -124,7 +128,7 @@ part_ternary_false@3:
     b part_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Base.m_x[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Base.m_x[routing]() -> void:
 m_x:
     txn GroupIndex
     bz m_x_ternary_false@3

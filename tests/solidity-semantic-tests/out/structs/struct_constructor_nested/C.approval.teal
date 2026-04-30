@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_constructor_nested.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_constructor_nested.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 24 88
+    intcblock 1 64 0 24
     bytecblock "__ctor_pending" "s"
     pushint 4096
     bzero
@@ -34,19 +34,19 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_constructor_nested.sol.C.__postInit[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_constructor_nested.sol.C.__postInit[routing]() -> void:
 __postInit:
     bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_1 // 0
+    intc_2 // 0
     app_global_put
     load 0
-    intc_2 // 24
+    intc_3 // 24
     bzero
     dig 1
-    intc_3 // 88
+    pushint 88
     extract_uint64
     pushint 96
     +
@@ -61,7 +61,7 @@ __postInit:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_constructor_nested.sol.C.get[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_constructor_nested.sol.C.get[routing]() -> void:
 get:
     txn GroupIndex
     bz get_ternary_false@3
@@ -74,10 +74,10 @@ get_ternary_merge@4:
     !
     assert // not payable
     load 0
-    intc_2 // 24
+    intc_3 // 24
     bzero
     dig 1
-    intc_3 // 88
+    pushint 88
     extract_uint64
     pushint 96
     +
@@ -100,17 +100,32 @@ get_ternary_merge@4:
     extract 0 32
     swap
     extract 32 32
-    pushint 64
+    dig 3
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
     bzero
     uncover 4
     dig 1
     b|
     uncover 4
     concat
+    dig 3
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
     uncover 3
     dig 2
     b|
     concat
+    dig 2
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
     cover 2
     b|
     concat
@@ -122,5 +137,5 @@ get_ternary_merge@4:
     return
 
 get_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b get_ternary_merge@4

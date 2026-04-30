@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/iterated_keccak256_with_bytes.sol.c.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/iterated_keccak256_with_bytes.sol.c.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 0
     bytecblock "data" "__ctor_pending"
     pushint 4096
     bzero
@@ -34,19 +34,19 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/iterated_keccak256_with_bytes.sol.c.__postInit[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/iterated_keccak256_with_bytes.sol.c.__postInit[routing]() -> void:
 __postInit:
     bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
     intc_0 // 1
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/iterated_keccak256_with_bytes.sol.c.foo[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/iterated_keccak256_with_bytes.sol.c.foo[routing]() -> void:
 foo:
     txn GroupIndex
     bz foo_ternary_false@3
@@ -87,17 +87,7 @@ foo_ternary_merge@4:
     bytec_0 // "data"
     dig 1
     box_put
-    intc_1 // 32
-    bzero
-    swap
     keccak256
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
     pushbytes "b"
     swap
     concat
@@ -112,5 +102,5 @@ foo_ternary_merge@4:
     return
 
 foo_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b foo_ternary_merge@4

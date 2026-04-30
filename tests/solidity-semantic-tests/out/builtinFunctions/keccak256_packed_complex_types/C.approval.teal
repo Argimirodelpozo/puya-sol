@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/keccak256_packed_complex_types.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/keccak256_packed_complex_types.sol.C.approval_program() -> uint64:
 main:
     intcblock 15 1 0
-    bytecblock "x"
+    bytecblock "x" 0x0000000000000000000000000000000000fffffffffffffffffffffffffffffd 0x0000000000000000000000000000000000fffffffffffffffffffffffffffffc
     pushint 4096
     bzero
     dup
@@ -37,7 +37,7 @@ main_f_route@4:
     b f
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/keccak256_packed_complex_types.sol.C.f[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/keccak256_packed_complex_types.sol.C.f[routing]() -> void:
 f:
     txn GroupIndex
     bz f_ternary_false@3
@@ -59,16 +59,24 @@ f_ternary_merge@4:
     assert // check x exists
     pushbytes 0x0000000000000000000000000000000000fffffffffffffffffffffffffffffe
     replace2 0 // on error: index access is out of bounds
-    pushbytes 0x0000000000000000000000000000000000fffffffffffffffffffffffffffffd
+    pushbytes 0x00030000000000000000000000000000000000fffffffffffffffffffffffffffffe00000000000000000000000000
+    bytec_1 // 0x0000000000000000000000000000000000fffffffffffffffffffffffffffffd
+    replace2 17 // on error: index access is out of bounds
+    swap
+    bytec_1 // 0x0000000000000000000000000000000000fffffffffffffffffffffffffffffd
     replace2 15 // on error: index access is out of bounds
-    pushbytes 0x0000000000000000000000000000000000fffffffffffffffffffffffffffffc
+    swap
+    bytec_2 // 0x0000000000000000000000000000000000fffffffffffffffffffffffffffffc
+    replace2 32 // on error: index access is out of bounds
+    swap
+    bytec_2 // 0x0000000000000000000000000000000000fffffffffffffffffffffffffffffc
     replace2 30 // on error: index access is out of bounds
     bytec_0 // "x"
     dig 1
     app_global_put
     dup
     extract 0 15 // on error: index access is out of bounds
-    dig 2
+    dig 3
     swap
     concat
     dup
@@ -79,7 +87,7 @@ f_ternary_merge@4:
     extract3
     dig 1
     extract 15 15 // on error: index access is out of bounds
-    dig 3
+    dig 4
     swap
     concat
     dup
@@ -91,7 +99,7 @@ f_ternary_merge@4:
     concat
     swap
     extract 30 15 // on error: index access is out of bounds
-    uncover 2
+    uncover 3
     swap
     concat
     dup
@@ -102,7 +110,10 @@ f_ternary_merge@4:
     extract3
     concat
     keccak256
-    pushbytes 0x1444f059fd7a076e31357cb59d0e76c61d9d0e60b208ef23276b847fc4788d60e321d900f3fd366734e2d071e30949ded20c27fd638f1a059390091c643b62c5
+    swap
+    keccak256
+    concat
+    pushbytes 0xe321d900f3fd366734e2d071e30949ded20c27fd638f1a059390091c643b62c5
     concat
     pushbytes 0x151f7c75
     swap

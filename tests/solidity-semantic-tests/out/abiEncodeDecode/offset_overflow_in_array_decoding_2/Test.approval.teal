@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_2.sol.Test.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_2.sol.Test.approval_program() -> uint64:
 main:
     intcblock 1 32 0 2
     pushint 4096
@@ -33,7 +33,7 @@ main_withinArray_route@4:
     b withinArray
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_2.sol.Test.withinArray[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_2.sol.Test.withinArray[routing]() -> void:
 withinArray:
     txn GroupIndex
     bz withinArray_ternary_false@3
@@ -57,13 +57,15 @@ withinArray_ternary_merge@4:
     concat
     replace2 64
     store 0
-    pushbytes 0x
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002
+    extract 64 2
+    dup
     intc_2 // 0
     extract_uint16
     dup
     assert // index out of bounds
-    pushbytes 0x
-    substring 2 0
+    swap
+    extract 2 0
     dup
     intc_2 // 0
     extract_uint16

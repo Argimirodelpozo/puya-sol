@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding_mapping_to_dynamic_struct.sol.X.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding_mapping_to_dynamic_struct.sol.X.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 32 0 64
     bytecblock 0x746573740a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf "__ctor_pending" "test" 0x000000000000000000000000000000000000000000000000000000000000000000220000
     pushint 4096
     bzero
@@ -34,7 +34,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding_mapping_to_dynamic_struct.sol.X.__postInit[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding_mapping_to_dynamic_struct.sol.X.__postInit[routing]() -> void:
 __postInit:
     bytec_1 // "__ctor_pending"
     app_global_get
@@ -50,7 +50,7 @@ __postInit:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding_mapping_to_dynamic_struct.sol.X.set[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding_mapping_to_dynamic_struct.sol.X.set[routing]() -> void:
 set:
     txn GroupIndex
     bz set_ternary_false@3
@@ -99,7 +99,7 @@ set_ternary_false@3:
     b set_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding_mapping_to_dynamic_struct.sol.X.test[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding_mapping_to_dynamic_struct.sol.X.test[routing]() -> void:
 test:
     txna ApplicationArgs 1
     dup
@@ -146,7 +146,12 @@ test_ternary_merge@4:
     cover 2
     substring3
     extract 2 0
-    pushint 64
+    dig 1
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    intc_3 // 64
     bzero
     uncover 2
     b|

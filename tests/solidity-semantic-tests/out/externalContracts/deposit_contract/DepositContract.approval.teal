@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/deposit_contract.sol.DepositContract.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/deposit_contract.sol.DepositContract.approval_program() -> uint64:
 main:
-    intcblock 32 0 8 1
-    bytecblock 0x01 "deposit_count" "branch" "zero_hashes" 0x20 0x02 "__ctor_pending" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000 0x000000000000000000000000000000000000000000000000 0x3b9aca00 0x010000000000000000000000000000000000000000000000000000000000000000
+    intcblock 0 8 1 32
+    bytecblock 0x01 "deposit_count" "branch" "zero_hashes" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x20 0x02 "__ctor_pending" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000 0x000000000000000000000000000000000000000000000000 0x3b9aca00 0x010000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -16,10 +16,10 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 6 // "__ctor_pending"
-    intc_3 // 1
+    bytec 7 // "__ctor_pending"
+    intc_2 // 1
     app_global_put
-    intc_3 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -34,13 +34,13 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/deposit_contract.sol.DepositContract.__postInit[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/deposit_contract.sol.DepositContract.__postInit[routing]() -> void:
 __postInit:
-    bytec 6 // "__ctor_pending"
+    bytec 7 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec 6 // "__ctor_pending"
-    intc_1 // 0
+    bytec 7 // "__ctor_pending"
+    intc_0 // 0
     app_global_put
     bytec_2 // "branch"
     pushint 1024
@@ -53,7 +53,7 @@ __postInit:
     bytec_1 // "deposit_count"
     pushbytes 0x
     app_global_put
-    intc_1 // 0
+    intc_0 // 0
     itob
 
 __postInit_while_top@2:
@@ -61,9 +61,12 @@ __postInit_while_top@2:
     pushbytes 0x1f
     b<
     bz __postInit_after_while@4
-    intc_0 // 32
-    bzero
-    intc_2 // 8
+    bytec_3 // "zero_hashes"
+    box_get
+    bytec 4 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_1 // 8
     bzero
     dup
     dig 3
@@ -72,24 +75,15 @@ __postInit_while_top@2:
     concat
     dup
     len
-    intc_2 // 8
+    intc_1 // 8
     -
     extract_uint64
-    intc_0 // 32
+    intc_3 // 32
     *
-    bytec_3 // "zero_hashes"
-    swap
-    intc_0 // 32
-    box_extract // on error: index access is out of bounds
     uncover 3
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    intc_3 // 32
+    extract3 // on error: index access is out of bounds
     dup
     concat
     sha256
@@ -103,10 +97,10 @@ __postInit_while_top@2:
     concat
     dup
     len
-    intc_2 // 8
+    intc_1 // 8
     -
     extract_uint64
-    intc_0 // 32
+    intc_3 // 32
     *
     bytec_3 // "zero_hashes"
     swap
@@ -115,39 +109,39 @@ __postInit_while_top@2:
     b __postInit_while_top@2
 
 __postInit_after_while@4:
-    intc_3 // 1
+    intc_2 // 1
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/deposit_contract.sol.DepositContract.get_deposit_root[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/deposit_contract.sol.DepositContract.get_deposit_root[routing]() -> void:
 get_deposit_root:
-    intc_1 // 0
+    intc_0 // 0
     dupn 2
     txn GroupIndex
     bz get_deposit_root_ternary_false@3
     txn GroupIndex
-    intc_3 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
 get_deposit_root_ternary_merge@4:
     !
     assert // not payable
-    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000000
     bury 2
-    intc_1 // 0
+    intc_0 // 0
     bytec_1 // "deposit_count"
     app_global_get_ex
     swap
     bury 2
     assert // check deposit_count exists
-    intc_1 // 0
+    intc_0 // 0
     itob
     bury 3
 
 get_deposit_root_while_top@5:
     dig 2
-    bytec 4 // 0x20
+    bytec 5 // 0x20
     b<
     bz get_deposit_root_after_while@10
     dup
@@ -156,48 +150,32 @@ get_deposit_root_while_top@5:
     bytec_0 // 0x01
     b==
     bz get_deposit_root_else_body@8
-    intc_0 // 32
-    bzero
-    intc_2 // 8
+    bytec_2 // "branch"
+    box_get
+    bytec 4 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_1 // 8
     bzero
     dig 4
     concat
     dup
     len
-    intc_2 // 8
+    intc_1 // 8
     -
     extract_uint64
-    intc_0 // 32
+    intc_3 // 32
     *
-    bytec_2 // "branch"
-    swap
-    intc_0 // 32
-    box_extract // on error: index access is out of bounds
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    dig 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    intc_3 // 32
+    extract3 // on error: index access is out of bounds
+    dig 2
     concat
     sha256
     bury 2
 
 get_deposit_root_after_if_else@9:
     dup
-    bytec 5 // 0x02
+    bytec 6 // 0x02
     b/
     bury 1
     dig 2
@@ -207,108 +185,85 @@ get_deposit_root_after_if_else@9:
     b get_deposit_root_while_top@5
 
 get_deposit_root_else_body@8:
-    intc_0 // 32
+    bytec_3 // "zero_hashes"
+    box_get
+    bytec 4 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_1 // 8
     bzero
-    dup
-    dig 3
+    dig 4
     concat
     dup
     len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_2 // 8
-    bzero
-    dig 5
-    concat
-    dup
-    len
-    intc_2 // 8
+    intc_1 // 8
     -
     extract_uint64
-    intc_0 // 32
+    intc_3 // 32
     *
-    bytec_3 // "zero_hashes"
+    intc_3 // 32
+    extract3 // on error: index access is out of bounds
+    dig 2
     swap
-    intc_0 // 32
-    box_extract // on error: index access is out of bounds
-    uncover 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
     concat
     sha256
     bury 2
     b get_deposit_root_after_if_else@9
 
 get_deposit_root_after_while@10:
-    intc_0 // 32
+    intc_1 // 8
     bzero
-    dig 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_2 // 8
-    bzero
-    intc_1 // 0
+    intc_0 // 0
     bytec_1 // "deposit_count"
     app_global_get_ex
     assert // check deposit_count exists
     concat
     dup
     len
-    intc_2 // 8
+    intc_1 // 8
     -
     extract_uint64
     callsub to_little_endian_64
+    dig 2
+    swap
     concat
-    bytec 9 // 0x000000000000000000000000000000000000000000000000
+    bytec 10 // 0x000000000000000000000000000000000000000000000000
     concat
     sha256
-    bytec 7 // 0x151f7c75
+    bytec 8 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
 get_deposit_root_ternary_false@3:
-    intc_1 // 0
+    intc_0 // 0
     b get_deposit_root_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/deposit_contract.sol.DepositContract.get_deposit_count[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/deposit_contract.sol.DepositContract.get_deposit_count[routing]() -> void:
 get_deposit_count:
     txn GroupIndex
     bz get_deposit_count_ternary_false@3
     txn GroupIndex
-    intc_3 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
 get_deposit_count_ternary_merge@4:
     !
     assert // not payable
-    intc_2 // 8
+    intc_1 // 8
     bzero
-    intc_1 // 0
+    intc_0 // 0
     bytec_1 // "deposit_count"
     app_global_get_ex
     assert // check deposit_count exists
     concat
     dup
     len
-    intc_2 // 8
+    intc_1 // 8
     -
     extract_uint64
     callsub to_little_endian_64
@@ -318,25 +273,25 @@ get_deposit_count_ternary_merge@4:
     extract 6 2
     swap
     concat
-    bytec 7 // 0x151f7c75
+    bytec 8 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
 get_deposit_count_ternary_false@3:
-    intc_1 // 0
+    intc_0 // 0
     b get_deposit_count_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/deposit_contract.sol.DepositContract.deposit[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/deposit_contract.sol.DepositContract.deposit[routing]() -> void:
 deposit:
-    intc_1 // 0
-    dupn 7
+    intc_0 // 0
+    dupn 6
     txna ApplicationArgs 1
     dupn 2
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -352,7 +307,7 @@ deposit:
     dup
     cover 2
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -369,7 +324,7 @@ deposit:
     dup
     cover 3
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -386,7 +341,7 @@ deposit:
     dup
     cover 4
     len
-    intc_0 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     uncover 2
@@ -398,7 +353,7 @@ deposit:
     swap
     len
     itob
-    bytec 4 // 0x20
+    bytec 5 // 0x20
     b==
     assert // DepositContract: invalid withdrawal_credentials length
     len
@@ -410,7 +365,7 @@ deposit:
     txn GroupIndex
     bz deposit_ternary_false@3
     txn GroupIndex
-    intc_3 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -422,13 +377,13 @@ deposit_ternary_merge@4:
     txn GroupIndex
     bz deposit_ternary_false@6
     txn GroupIndex
-    intc_3 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
 deposit_ternary_merge@7:
     itob
-    bytec 10 // 0x3b9aca00
+    bytec 11 // 0x3b9aca00
     b%
     pushbytes 0x
     b==
@@ -436,28 +391,28 @@ deposit_ternary_merge@7:
     txn GroupIndex
     bz deposit_ternary_false@9
     txn GroupIndex
-    intc_3 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
 deposit_ternary_merge@10:
     itob
-    bytec 10 // 0x3b9aca00
+    bytec 11 // 0x3b9aca00
     b/
     dup
     pushbytes 0xffffffffffffffff
     b<=
     assert // DepositContract: deposit value too high
-    intc_2 // 8
+    intc_1 // 8
     bzero
     dup
-    bury 15
+    bury 14
     dup
     uncover 2
     concat
     dup
     len
-    intc_2 // 8
+    intc_1 // 8
     -
     extract_uint64
     callsub to_little_endian_64
@@ -467,7 +422,7 @@ deposit_ternary_merge@10:
     extract 6 2
     dig 1
     concat
-    intc_1 // 0
+    intc_0 // 0
     bytec_1 // "deposit_count"
     app_global_get_ex
     assert // check deposit_count exists
@@ -476,7 +431,7 @@ deposit_ternary_merge@10:
     concat
     dup
     len
-    intc_2 // 8
+    intc_1 // 8
     -
     extract_uint64
     callsub to_little_endian_64
@@ -536,9 +491,9 @@ deposit_ternary_merge@10:
     swap
     concat
     log
-    intc_1 // 0
+    intc_0 // 0
     itob
-    bury 18
+    bury 17
     dig 10
     pushbytes 0x00000000000000000000000000000000
     concat
@@ -547,139 +502,83 @@ deposit_ternary_merge@10:
     dig 4
     <=
     assert // slice: start > end
-    intc_0 // 32
-    bzero
-    dup
-    bury 16
-    dig 6
+    dig 5
     substring 0 64
     sha256
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    uncover 3
+    uncover 2
     extract 66 0
-    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
     sha256
-    dig 2
+    concat
+    sha256
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    sha256
-    dig 1
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 9
-    concat
-    sha256
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    uncover 3
-    bytec 9 // 0x000000000000000000000000000000000000000000000000
-    concat
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    dig 8
     concat
     sha256
     uncover 2
-    swap
+    bytec 10 // 0x000000000000000000000000000000000000000000000000
     concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    uncover 2
+    concat
+    sha256
     concat
     sha256
     dup
-    bury 16
+    bury 15
     dig 2
     ==
     assert // DepositContract: reconstructed DepositData does not match supplied deposit_data_root
     bytec_0 // 0x01
-    bury 17
-    bytec 5 // 0x02
-    bury 19
-    bytec 4 // 0x20
+    bury 16
+    bytec 6 // 0x02
     bury 18
+    bytec 5 // 0x20
+    bury 17
 
 deposit_while_top@11:
-    dig 17
+    dig 16
     pushbytes 0x
     b>
     bz deposit_after_while@15
-    dig 17
+    dig 16
     bytec_0 // 0x01
     b&
     pushbytes 0x
     b!=
     bz deposit_after_if_else@14
-    dig 16
-    dig 19
+    dig 15
+    dig 18
     b*
-    bury 17
+    bury 16
 
 deposit_after_if_else@14:
-    dig 17
-    bytec 5 // 0x02
+    dig 16
+    bytec 6 // 0x02
     b/
-    bury 18
-    dig 18
+    bury 17
+    dig 17
     dup
     b*
-    bury 19
+    bury 18
     b deposit_while_top@11
 
 deposit_after_while@15:
-    dig 16
+    dig 15
     dup
     bytec_0 // 0x01
     b>=
     assert // underflow
-    intc_1 // 0
+    intc_0 // 0
     bytec_1 // "deposit_count"
     app_global_get_ex
     assert // check deposit_count exists
     swap
-    bytec 11 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 12 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     bytec_0 // 0x01
     b-
-    bytec 11 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 12 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dig 1
     b>
@@ -687,101 +586,86 @@ deposit_after_while@15:
     bytec_0 // 0x01
     b+
     dup
-    bury 15
+    bury 14
     bytec_1 // "deposit_count"
     swap
     app_global_put
 
 deposit_while_top@16:
-    dig 15
-    bytec 4 // 0x20
+    dig 14
+    bytec 5 // 0x20
     b<
     assert
-    dig 13
+    dig 12
     bytec_0 // 0x01
     b&
     bytec_0 // 0x01
     b==
     bz deposit_after_if_else@19
-    dig 12
-    dig 16
+    dig 11
+    dig 15
     concat
     dup
     len
-    intc_2 // 8
+    intc_1 // 8
     -
     extract_uint64
-    intc_0 // 32
+    intc_3 // 32
     *
     bytec_2 // "branch"
     swap
-    dig 16
+    dig 15
     box_replace // on error: index out of bounds
-    intc_3 // 1
+    intc_2 // 1
     return
 
 deposit_after_if_else@19:
+    bytec_2 // "branch"
+    box_get
+    bytec 4 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     dig 12
     dig 16
     dup
-    cover 2
+    cover 3
     concat
     dup
     len
-    intc_2 // 8
+    intc_1 // 8
     -
     extract_uint64
-    intc_0 // 32
+    intc_3 // 32
     *
-    bytec_2 // "branch"
-    swap
-    intc_0 // 32
-    box_extract // on error: index access is out of bounds
-    dig 13
-    dup
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    dig 17
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    intc_3 // 32
+    extract3 // on error: index access is out of bounds
+    dig 15
     concat
     sha256
-    bury 16
-    dig 14
-    bytec 5 // 0x02
-    b/
     bury 15
+    dig 13
+    bytec 6 // 0x02
+    b/
+    bury 14
     bytec_0 // 0x01
     b+
-    bury 16
+    bury 15
     b deposit_while_top@16
 
 deposit_ternary_false@9:
-    intc_1 // 0
+    intc_0 // 0
     b deposit_ternary_merge@10
 
 deposit_ternary_false@6:
-    intc_1 // 0
+    intc_0 // 0
     b deposit_ternary_merge@7
 
 deposit_ternary_false@3:
-    intc_1 // 0
+    intc_0 // 0
     b deposit_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/deposit_contract.sol.DepositContract.supportsInterface[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/deposit_contract.sol.DepositContract.supportsInterface[routing]() -> void:
 supportsInterface:
     txna ApplicationArgs 1
     dup
@@ -792,7 +676,7 @@ supportsInterface:
     txn GroupIndex
     bz supportsInterface_ternary_false@3
     txn GroupIndex
-    intc_3 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -809,33 +693,33 @@ supportsInterface_ternary_merge@4:
     bz supportsInterface_bool_false@7
 
 supportsInterface_bool_true@6:
-    intc_3 // 1
+    intc_2 // 1
 
 supportsInterface_bool_merge@8:
     pushbytes 0x00
-    intc_1 // 0
+    intc_0 // 0
     uncover 2
     setbit
-    bytec 7 // 0x151f7c75
+    bytec 8 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
 supportsInterface_bool_false@7:
-    intc_1 // 0
+    intc_0 // 0
     b supportsInterface_bool_merge@8
 
 supportsInterface_ternary_false@3:
-    intc_1 // 0
+    intc_0 // 0
     b supportsInterface_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/deposit_contract.sol.DepositContract.to_little_endian_64(value: uint64) -> bytes:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/deposit_contract.sol.DepositContract.to_little_endian_64(value: uint64) -> bytes:
 to_little_endian_64:
     proto 1 1
-    intc_2 // 8
+    intc_1 // 8
     bzero
     frame_dig -1
     itob

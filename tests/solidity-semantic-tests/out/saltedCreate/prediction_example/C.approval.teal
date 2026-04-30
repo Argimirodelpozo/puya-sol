@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/saltedCreate/prediction_example.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/saltedCreate/prediction_example.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 16
-    bytecblock 0xffffffffffffffffffffffffffffffffffffffff TMPL_APPROVAL_D TMPL_CLEAR_D
+    bytecblock 0xff 0xffffffffffffffffffffffffffffffffffffffff TMPL_APPROVAL_D TMPL_CLEAR_D
     pushint 4096
     bzero
     dup
@@ -34,7 +34,7 @@ main_createDSalted_route@4:
     b createDSalted
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/saltedCreate/prediction_example.sol.C.createDSalted[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/saltedCreate/prediction_example.sol.C.createDSalted[routing]() -> void:
 createDSalted:
     txna ApplicationArgs 1
     dup
@@ -60,20 +60,14 @@ createDSalted_ternary_merge@4:
     assert // not payable
     intc_0 // 32
     bzero
+    bytec_0 // 0xff
     global CurrentApplicationAddress
-    dig 1
-    dig 4
     concat
+    dig 3
     dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    dig 1
+    cover 3
     concat
-    dig 2
+    dig 1
     dig 4
     dup
     cover 5
@@ -88,31 +82,24 @@ createDSalted_ternary_merge@4:
     swap
     concat
     keccak256
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
     swap
     dig 1
     concat
     keccak256
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffff
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffff
     b&
-    dig 3
+    dig 2
     swap
     concat
+    bytec_0 // 0xff
     global CurrentApplicationAddress
-    uncover 3
+    concat
+    uncover 4
     concat
     uncover 2
     concat
     keccak256
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffff
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffff
     b&
     uncover 2
     swap
@@ -123,8 +110,8 @@ createDSalted_ternary_merge@4:
     intc_0 // 32
     extract3
     itxn_begin
-    bytec_1 // TMPL_APPROVAL_D
-    bytec_2 // TMPL_CLEAR_D
+    bytec_2 // TMPL_APPROVAL_D
+    bytec_3 // TMPL_CLEAR_D
     pushint 6
     itxn_field TypeEnum
     intc_3 // 16

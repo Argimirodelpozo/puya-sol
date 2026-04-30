@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/struct_member_access.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/viaYul/struct_member_access.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 0 1 66
     bytecblock "s" 0x151f7c75 "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000000000
@@ -34,7 +34,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/struct_member_access.sol.C.__postInit[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/viaYul/struct_member_access.sol.C.__postInit[routing]() -> void:
 __postInit:
     bytec_2 // "__ctor_pending"
     app_global_get
@@ -186,7 +186,7 @@ __postInit:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/struct_member_access.sol.C.f[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/viaYul/struct_member_access.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
     dupn 2
@@ -227,6 +227,11 @@ f_ternary_merge@4:
     extract 0 32
     swap
     extract 34 32
+    dig 1
+    len
+    pushint 64
+    <=
+    assert // overflow
     pushint 64
     bzero
     uncover 2
@@ -234,6 +239,11 @@ f_ternary_merge@4:
     b|
     pushbytes 0x0082
     concat
+    dig 2
+    len
+    pushint 64
+    <=
+    assert // overflow
     cover 2
     b|
     concat
@@ -251,7 +261,7 @@ f_ternary_false@3:
     b f_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/struct_member_access.sol.C.g[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/viaYul/struct_member_access.sol.C.g[routing]() -> void:
 g:
     txna ApplicationArgs 1
     dupn 2
@@ -329,7 +339,7 @@ g_ternary_false@3:
     b g_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/struct_member_access.sol.C.g2[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/viaYul/struct_member_access.sol.C.g2[routing]() -> void:
 g2:
     txna ApplicationArgs 1
     dupn 2
@@ -429,7 +439,7 @@ g2_ternary_false@3:
     b g2_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/struct_member_access.sol.C.h[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/viaYul/struct_member_access.sol.C.h[routing]() -> void:
 h:
     txn GroupIndex
     bz h_ternary_false@3

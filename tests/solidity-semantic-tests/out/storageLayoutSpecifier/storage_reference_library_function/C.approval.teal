@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_library_function.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_library_function.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 256
+    intcblock 0 1 256 64
     bytecblock "s" 0x00
     pushint 4096
     bzero
@@ -34,7 +34,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_library_function.sol.L.validate(ptr: bytes) -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_library_function.sol.L.validate(ptr: bytes) -> void:
 L.validate:
     proto 1 0
     frame_dig -1
@@ -55,7 +55,7 @@ L.validate:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_library_function.sol.C.initUsingReference[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_library_function.sol.C.initUsingReference[routing]() -> void:
 initUsingReference:
     txn GroupIndex
     bz initUsingReference_ternary_false@3
@@ -95,7 +95,7 @@ initUsingReference_ternary_false@3:
     b initUsingReference_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_library_function.sol.C.s[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_library_function.sol.C.s[routing]() -> void:
 s:
     txn GroupIndex
     bz s_ternary_false@3
@@ -122,7 +122,12 @@ s_ternary_merge@4:
     setbit
     intc_0 // 0
     getbit
-    pushint 64
+    dig 1
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    intc_3 // 64
     bzero
     uncover 2
     b|

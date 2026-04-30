@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak256_optimizer_cache_bug.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak256_optimizer_cache_bug.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8
     bytecblock "__ctor_pending" "data" 0x7b "__dyn_storage"
@@ -34,7 +34,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak256_optimizer_cache_bug.sol.C.__postInit[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak256_optimizer_cache_bug.sol.C.__postInit[routing]() -> void:
 __postInit:
     bytec_0 // "__ctor_pending"
     app_global_get
@@ -50,7 +50,7 @@ __postInit:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak256_optimizer_cache_bug.sol.C.val[routing]() -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak256_optimizer_cache_bug.sol.C.val[routing]() -> void:
 val:
     txn GroupIndex
     bz val_ternary_false@3
@@ -103,9 +103,11 @@ val_ternary_merge@4:
     callsub __storage_write
     store 0
     bytec_1 // "data"
-    pushint 34
-    intc_0 // 32
-    box_extract // on error: index access is out of bounds
+    box_get
+    pushbytes 0x0000
+    cover 2
+    select
+    extract 34 32
     dup
     bytec_2 // 0x7b
     b!=
@@ -123,7 +125,7 @@ val_ternary_false@3:
     b val_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak256_optimizer_cache_bug.sol.C.__storage_write(__slot: uint64, __value: bytes) -> void:
+// /home/argi/AlgorandFoundation/polymarket-experiment/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak256_optimizer_cache_bug.sol.C.__storage_write(__slot: uint64, __value: bytes) -> void:
 __storage_write:
     proto 2 0
     frame_dig -2

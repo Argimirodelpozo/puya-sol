@@ -220,33 +220,14 @@ abstract contract ERC20 {
     ///
     /// Emits a {Transfer} event.
     function transfer(address to, uint256 amount) public virtual returns (bool) {
-        _beforeTokenTransfer(msg.sender, to, amount);
-        /// @solidity memory-safe-assembly
-        assembly {
-            // Compute the balance slot and load its value.
-            mstore(0x0c, _BALANCE_SLOT_SEED)
-            mstore(0x00, caller())
-            let fromBalanceSlot := keccak256(0x0c, 0x20)
-            let fromBalance := sload(fromBalanceSlot)
-            // Revert if insufficient balance.
-            if gt(amount, fromBalance) {
-                mstore(0x00, 0xf4d678b8) // `InsufficientBalance()`.
-                revert(0x1c, 0x04)
-            }
-            // Subtract and store the updated balance.
-            sstore(fromBalanceSlot, sub(fromBalance, amount))
-            // Compute the balance slot of `to`.
-            mstore(0x00, to)
-            let toBalanceSlot := keccak256(0x0c, 0x20)
-            // Add and store the updated balance of `to`.
-            // Will not overflow because the sum of all user balances
-            // cannot exceed the maximum uint256 value.
-            sstore(toBalanceSlot, add(sload(toBalanceSlot), amount))
-            // Emit the {Transfer} event.
-            mstore(0x20, amount)
-            log3(0x20, 0x20, _TRANSFER_EVENT_SIGNATURE, caller(), shr(96, mload(0x0c)))
-        }
-        _afterTokenTransfer(msg.sender, to, amount);
+        // AVM-PORT-ADAPTATION: replaced the inline-assembly fast path with a
+        // call to `_transfer`. Same rationale as `transferFrom` and `approve`:
+        // the inline-asm body's parameter is widened by puya-sol to uint512,
+        // producing a `transfer(address,uint512)bool` ARC4 selector that's
+        // incompatible with EVM-canonical `transfer(address,uint256)bool`
+        // call sites (TransferHelper / IERC20Min). Routing through `_transfer`
+        // keeps the parameter at uint256 so the selectors match.
+        _transfer(msg.sender, to, amount);
         return true;
     }
 
