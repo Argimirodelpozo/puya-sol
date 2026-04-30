@@ -91,7 +91,15 @@ contract NegRiskCtfCollateralAdapter is CtfCollateralAdapter {
         // Wrap any received USDC.e into CollateralToken
         uint256 usdceAmount = IERC20Min(USDCE).balanceOf(address(this));
         if (usdceAmount > 0) {
-            require(IERC20Min(USDCE).transfer(COLLATERAL_TOKEN, usdceAmount), "ERC20 transfer failed");
+            // _avmAlgodAddrFor: see CtfCollateralAdapter.mergePositions for
+            // the rationale — CT.wrap later does USDCE.transfer(VAULT, amt)
+            // from CT_algod's account, so the USDCE we deposit here must be
+            // credited to CT_algod (algod-derived), not the puya-sol-conv
+            // form `COLLATERAL_TOKEN` literal.
+            require(
+                IERC20Min(USDCE).transfer(_avmAlgodAddrFor(COLLATERAL_TOKEN), usdceAmount),
+                "ERC20 transfer failed"
+            );
             // forgefmt: disable-next-item
             CollateralToken(COLLATERAL_TOKEN).wrap({
                 _asset: USDCE,

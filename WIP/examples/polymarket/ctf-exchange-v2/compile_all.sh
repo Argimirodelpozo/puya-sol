@@ -40,8 +40,8 @@ compile() {
         # blow past the 700-op single-tx budget. Pump via ensure_budget so
         # the runtime opup pool covers two ECDSA recovers (~1700 ea) + body.
         extra_args+=(--ensure-budget matchOrders:100000)
-        extra_args+=(--ensure-budget CTHelpers.getCollectionId:30000)
-        extra_args+=(--ensure-budget CTHelpers.getPositionId:30000)
+        extra_args+=(--ensure-budget CTHelpers.getCollectionId:70000)
+        extra_args+=(--ensure-budget CTHelpers.getPositionId:70000)
     elif [[ "$rel" == "adapters/CtfCollateralAdapter.sol" ]]; then
         # CtfCollateralAdapter.{splitPosition,mergePositions,redeemPositions}
         # chain through CT.transferFrom + CT.unwrap + CTHelpers (getCollectionId,
@@ -59,8 +59,8 @@ compile() {
         # all keccak/EC-heavy. The NegRisk override of redeemPositions
         # invokes Helper1.getCollectionId+getPositionId twice, so pump
         # those subroutines' budgets too.
-        extra_args+=(--ensure-budget CTHelpers.getCollectionId:30000)
-        extra_args+=(--ensure-budget CTHelpers.getPositionId:30000)
+        extra_args+=(--ensure-budget CTHelpers.getCollectionId:70000)
+        extra_args+=(--ensure-budget CTHelpers.getPositionId:70000)
     elif [[ "$rel" == "collateral/PermissionedRamp.sol" ]]; then
         # PermissionedRamp.__postInit runs the inherited Solady EIP712
         # constructor (computeDomainSeparator: keccak256 of the typed-data

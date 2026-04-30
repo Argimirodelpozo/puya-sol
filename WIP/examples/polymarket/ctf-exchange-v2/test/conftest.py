@@ -91,7 +91,9 @@ def localnet(localnet_clients, admin):
 
 @pytest.fixture(scope="function")
 def funded_account(localnet, admin):
-    return fund_random_account(localnet, admin)
+    # 50M µAlgo: cover heavy-pad groups (each main call has 400k extra_fee)
+    # for tests that run multiple split/merge/convert flows back-to-back.
+    return fund_random_account(localnet, admin, amount=50_000_000)
 
 
 # ── Shared mocks ──────────────────────────────────────────────────────────

@@ -66,6 +66,10 @@ class NegRiskAdapterMock(ARC4Contract):
         self.cfg = BoxMap(Bytes, Bytes, key_prefix=b"cfg_")
         self.partition = BoxMap(Bytes, Bytes, key_prefix=b"p_")
         self.payouts = BoxMap(Bytes, Bytes, key_prefix=b"po_")
+        # market: marketId → itob(question_count) ‖ itob(fee_bips)  (16 B)
+        self.market = BoxMap(Bytes, Bytes, key_prefix=b"m_")
+        # question: questionId → yes_id (32 B) ‖ no_id (32 B)
+        self.question = BoxMap(Bytes, Bytes, key_prefix=b"q_")
 
     @arc4.abimethod(create="require")
     def init(self) -> None:
@@ -106,6 +110,56 @@ class NegRiskAdapterMock(ARC4Contract):
         """Test-only: record the resolved payouts for redeemPositions."""
         self.payouts[condition_id.bytes] = (
             op.itob(yes_payout.native) + op.itob(no_payout.native))
+
+    @arc4.abimethod
+    def prepare_market(
+        self,
+        market_id: Bytes32,
+        question_count: arc4.UInt64,
+        fee_bips: arc4.UInt64,
+    ) -> None:
+        """Test-only: register a NegRisk market with `question_count` and
+        `fee_bips`. convertPositions iterates `question_count` questions
+        and applies `fee_bips/10_000` to the converted amount."""
+        self.market[market_id.bytes] = (
+            op.itob(question_count.native) + op.itob(fee_bips.native))
+
+    @arc4.abimethod
+    def prepare_question(
+        self,
+        question_id: Bytes32,
+        yes_id: arc4.UInt256,
+        no_id: arc4.UInt256,
+    ) -> None:
+        """Test-only: register the (yes_id, no_id) position IDs for a
+        question. getPositionId reads from this; convertPositions iterates
+        questions in a market and looks up YES/NO IDs to mint/pull."""
+        self.question[question_id.bytes] = yes_id.bytes + no_id.bytes
+
+    # ── NegRisk-market view methods (called by adapter.convertPositions) ──
+
+    @arc4.abimethod
+    def getQuestionCount(self, market_id: Bytes32) -> arc4.UInt256:
+        """Returns the number of questions in `market_id`."""
+        cfg = self.market[market_id.bytes]
+        return arc4.UInt256(op.btoi(op.extract(cfg, UInt64(0), UInt64(8))))
+
+    @arc4.abimethod
+    def getFeeBips(self, market_id: Bytes32) -> arc4.UInt256:
+        """Returns the fee in basis points for `market_id`."""
+        cfg = self.market[market_id.bytes]
+        return arc4.UInt256(op.btoi(op.extract(cfg, UInt64(8), UInt64(8))))
+
+    @arc4.abimethod
+    def getPositionId(
+        self, question_id: Bytes32, is_yes: arc4.Bool,
+    ) -> arc4.UInt256:
+        """Returns the YES (is_yes=True) or NO (is_yes=False) position
+        ID registered for `question_id`."""
+        q = self.question[question_id.bytes]
+        if is_yes.native:
+            return arc4.UInt256.from_bytes(op.extract(q, UInt64(0), UInt64(32)))
+        return arc4.UInt256.from_bytes(op.extract(q, UInt64(32), UInt64(32)))
 
     # ── Adapter-facing API ──────────────────────────────────────────────
 
@@ -173,6 +227,89 @@ class NegRiskAdapterMock(ARC4Contract):
             app_args=(sel_t, sender, amount.bytes),
             fee=0,
         ).submit()
+
+    @arc4.abimethod
+    def convertPositions(
+        self,
+        market_id: Bytes32,
+        index_set: arc4.UInt256,
+        amount: arc4.UInt256,
+    ) -> None:
+        """For each question i in [0, question_count):
+          - if bit i of index_set is set: pull `amount` of NO_i from sender
+          - else: mint `amount_out` of YES_i to sender, where
+            amount_out = amount - amount * fee_bips / 10_000.
+        Plus return `(pull_count - 1) * amount_out` USDCe to sender (the
+        excess collateral from holding NO across pull_count questions in
+        a NegRisk basket).
+        """
+        ensure_budget(60000, OpUpFeeSource.GroupCredit)
+        sender = op.Txn.sender.bytes
+        usdce_app_id = op.btoi(self.cfg[Bytes(b"u")])
+        ctf_app_id = op.btoi(self.cfg[Bytes(b"c")])
+        self_addr = op.Global.current_application_address.bytes
+
+        cfg = self.market[market_id.bytes]
+        question_count = op.btoi(op.extract(cfg, UInt64(0), UInt64(8)))
+        fee_bips = op.btoi(op.extract(cfg, UInt64(8), UInt64(8)))
+
+        amt_native = _amount_to_u64(amount.bytes)
+        fee = amt_native * fee_bips // UInt64(10_000)
+        amount_out = amt_native - fee
+        amount_out_bytes = _u64_to_amount(amount_out)
+        amount_bytes32 = amount.bytes
+
+        # Low 8 bytes of index_set hold the bitmask (NegRisk markets in
+        # tests have <= 8 questions).
+        index_set_low = op.btoi(op.extract(index_set.bytes, UInt64(24), UInt64(8)))
+        market_high = op.extract(market_id.bytes, UInt64(0), UInt64(24))
+        market_low = op.btoi(op.extract(market_id.bytes, UInt64(24), UInt64(8)))
+
+        sel_stf = arc4.arc4_signature(
+            "safeTransferFrom(address,address,uint256,uint256,byte[])void")
+        sel_mint = arc4.arc4_signature("mint(address,uint256,uint256)void")
+        empty_bytes = arc4.DynamicBytes(b"").bytes
+
+        pull_count = UInt64(0)
+        for i in urange(question_count):
+            # questionId = market_id | i (low byte OR; higher question
+            # indices in tests stay <= 7 so it fits in the low byte).
+            question_id = market_high + op.itob(market_low | i)
+            q = self.question[question_id]
+            bit_set = (index_set_low >> i) & UInt64(1)
+            if bit_set != UInt64(0):
+                # Pull NO_i from sender.
+                no_id = op.extract(q, UInt64(32), UInt64(32))
+                itxn.ApplicationCall(
+                    app_id=ctf_app_id,
+                    on_completion=OnCompleteAction.NoOp,
+                    app_args=(sel_stf, sender, self_addr, no_id,
+                              amount_bytes32, empty_bytes),
+                    fee=0,
+                ).submit()
+                pull_count = pull_count + UInt64(1)
+            else:
+                # Mint YES_i to sender (amount_out, post-fee).
+                yes_id = op.extract(q, UInt64(0), UInt64(32))
+                itxn.ApplicationCall(
+                    app_id=ctf_app_id,
+                    on_completion=OnCompleteAction.NoOp,
+                    app_args=(sel_mint, sender, yes_id, amount_out_bytes),
+                    fee=0,
+                ).submit()
+
+        # Send USDCe collateral = (pull_count - 1) * amount_out to sender.
+        # Skip when pull_count <= 1 to avoid sending 0 (or worse, an
+        # underflow if pull_count == 0).
+        if pull_count > UInt64(1):
+            usdce_amount = (pull_count - UInt64(1)) * amount_out
+            sel_t = arc4.arc4_signature("transfer(address,uint256)bool")
+            itxn.ApplicationCall(
+                app_id=usdce_app_id,
+                on_completion=OnCompleteAction.NoOp,
+                app_args=(sel_t, sender, _u64_to_amount(usdce_amount)),
+                fee=0,
+            ).submit()
 
     @arc4.abimethod
     def redeemPositions(
