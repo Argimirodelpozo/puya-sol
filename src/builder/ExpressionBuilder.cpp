@@ -29,26 +29,26 @@ FreeFunctionIdMap const ExpressionBuilder::s_emptyFreeFunctionIds;
 
 void ExpressionBuilder::trackConstantLocal(int64_t _declId, unsigned long long _value)
 {
-	m_constantLocals[_declId] = _value;
+	m_ctx.constantLocals[_declId] = _value;
 }
 
 unsigned long long ExpressionBuilder::getConstantLocal(solidity::frontend::Declaration const* _decl) const
 {
 	if (!_decl)
 		return 0;
-	auto it = m_constantLocals.find(_decl->id());
-	return it != m_constantLocals.end() ? it->second : 0;
+	auto it = m_ctx.constantLocals.find(_decl->id());
+	return it != m_ctx.constantLocals.end() ? it->second : 0;
 }
 
 void ExpressionBuilder::trackFuncPtrTarget(int64_t _declId, solidity::frontend::FunctionDefinition const* _func)
 {
-	m_funcPtrTargets[_declId] = _func;
+	m_ctx.funcPtrTargets[_declId] = _func;
 }
 
 solidity::frontend::FunctionDefinition const* ExpressionBuilder::getFuncPtrTarget(int64_t _declId) const
 {
-	auto it = m_funcPtrTargets.find(_declId);
-	return it != m_funcPtrTargets.end() ? it->second : nullptr;
+	auto it = m_ctx.funcPtrTargets.find(_declId);
+	return it != m_ctx.funcPtrTargets.end() ? it->second : nullptr;
 }
 
 ExpressionBuilder::ExpressionBuilder(
@@ -60,16 +60,35 @@ ExpressionBuilder::ExpressionBuilder(
 	OverloadedNamesSet const& _overloadedNames,
 	FreeFunctionIdMap const& _freeFunctionById
 )
-	: m_typeMapper(_typeMapper),
-	  m_storageMapper(_storageMapper),
-	  m_sourceFile(_sourceFile),
-	  m_contractName(_contractName),
+	: m_ctx(
+		_typeMapper,
+		_storageMapper,
+		_sourceFile,
+		_contractName,
+		_libraryFunctionIds,
+		_overloadedNames.empty() ? s_emptyOverloads : _overloadedNames,
+		_freeFunctionById.empty() ? s_emptyFreeFunctionIds : _freeFunctionById
+	),
 	  m_libraryFunctionIds(_libraryFunctionIds),
 	  m_overloadedNames(_overloadedNames.empty() ? s_emptyOverloads : _overloadedNames),
 	  m_freeFunctionById(_freeFunctionById.empty() ? s_emptyFreeFunctionIds : _freeFunctionById)
 {
 	Logger::instance().debug("[TRACE] ExpressionBuilder m_freeFunctionById.size()=" + std::to_string(m_freeFunctionById.size()) + " paramSize=" + std::to_string(_freeFunctionById.size()) + " addr=" + std::to_string((uintptr_t)&m_freeFunctionById));
-	// Factory is created lazily in visit(FunctionCall) since it needs a BuilderContext
+
+	// Wire the BuilderContext callbacks back into ExpressionBuilder.
+	m_ctx.buildExpr = [this](solidity::frontend::Expression const& _expr) {
+		return this->build(_expr);
+	};
+	m_ctx.buildBinaryOp = [this](solidity::frontend::Token _op,
+		std::shared_ptr<awst::Expression> _left,
+		std::shared_ptr<awst::Expression> _right,
+		awst::WType const* _resultType,
+		awst::SourceLocation const& _loc) {
+		return this->buildBinaryOp(_op, std::move(_left), std::move(_right), _resultType, _loc);
+	};
+	m_ctx.builderForInstance = [this](solidity::frontend::Type const* _solType, std::shared_ptr<awst::Expression> _expr) {
+		return m_registry.tryBuildInstance(m_ctx, _solType, std::move(_expr));
+	};
 }
 
 std::string ExpressionBuilder::resolveMethodName(
@@ -106,64 +125,62 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::build(
 	solidity::frontend::Expression const& _expr
 )
 {
-	m_builderCtxPool.clear();
-	auto ctx = makeBuilderContext();
-	return sol_ast::buildExpression(ctx, _expr);
+	return sol_ast::buildExpression(m_ctx, _expr);
 }
 
 std::vector<std::shared_ptr<awst::Statement>> ExpressionBuilder::takePendingStatements()
 {
 	std::vector<std::shared_ptr<awst::Statement>> result;
-	result.swap(m_pendingStatements);
+	result.swap(m_ctx.pendingStatements);
 	return result;
 }
 
 std::vector<std::shared_ptr<awst::Statement>> ExpressionBuilder::takePrePendingStatements()
 {
 	std::vector<std::shared_ptr<awst::Statement>> result;
-	result.swap(m_prePendingStatements);
+	result.swap(m_ctx.prePendingStatements);
 	return result;
 }
 
 void ExpressionBuilder::addParamRemap(int64_t _declId, std::string const& _uniqueName, awst::WType const* _type)
 {
-	m_paramRemaps[_declId] = {_uniqueName, _type};
+	m_ctx.paramRemaps[_declId] = {_uniqueName, _type};
 }
 
 void ExpressionBuilder::removeParamRemap(int64_t _declId)
 {
-	m_paramRemaps.erase(_declId);
+	m_ctx.paramRemaps.erase(_declId);
 }
 
 void ExpressionBuilder::addSuperTarget(int64_t _funcId, std::string const& _name)
 {
-	m_superTargetNames[_funcId] = _name;
+	m_ctx.superTargetNames[_funcId] = _name;
 }
 
 void ExpressionBuilder::clearSuperTargets()
 {
-	m_superTargetNames.clear();
+	m_ctx.superTargetNames.clear();
 }
 
 void ExpressionBuilder::addStorageAlias(int64_t _declId, std::shared_ptr<awst::Expression> _expr)
 {
-	m_storageAliases[_declId] = std::move(_expr);
+	m_ctx.storageAliases[_declId] = std::move(_expr);
 }
 
 void ExpressionBuilder::removeStorageAlias(int64_t _declId)
 {
-	m_storageAliases.erase(_declId);
+	m_ctx.storageAliases.erase(_declId);
 }
 
 void ExpressionBuilder::addMappingKeyParam(int64_t _declId, std::string const& _paramName)
 {
-	m_mappingKeyParams[_declId] = _paramName;
+	m_ctx.mappingKeyParams[_declId] = _paramName;
 }
 
 std::string ExpressionBuilder::getMappingKeyParam(int64_t _declId) const
 {
-	auto it = m_mappingKeyParams.find(_declId);
-	return it != m_mappingKeyParams.end() ? it->second : std::string{};
+	auto it = m_ctx.mappingKeyParams.find(_declId);
+	return it != m_ctx.mappingKeyParams.end() ? it->second : std::string{};
 }
 
 awst::SourceLocation ExpressionBuilder::makeLoc(
@@ -171,7 +188,7 @@ awst::SourceLocation ExpressionBuilder::makeLoc(
 )
 {
 	awst::SourceLocation loc;
-	loc.file = m_sourceFile;
+	loc.file = m_ctx.sourceFile;
 	loc.line = _solLoc.start >= 0 ? _solLoc.start : 0;
 	loc.endLine = _solLoc.end >= 0 ? _solLoc.end : 0;
 	return loc;
@@ -180,52 +197,6 @@ awst::SourceLocation ExpressionBuilder::makeLoc(
 bool ExpressionBuilder::isBigUInt(awst::WType const* _type)
 {
 	return _type == awst::WType::biguintType();
-}
-
-
-eb::BuilderContext ExpressionBuilder::makeBuilderContext()
-{
-	return eb::BuilderContext{
-		/*.typeMapper =*/ m_typeMapper,
-		/*.storageMapper =*/ m_storageMapper,
-		/*.transientStorage =*/ m_transientStorage,
-		/*.sourceFile =*/ m_sourceFile,
-		/*.contractName =*/ m_contractName,
-		/*.currentContract =*/ m_currentContract,
-		/*.libraryFunctionIds =*/ m_libraryFunctionIds,
-		/*.overloadedNames =*/ m_overloadedNames,
-		/*.freeFunctionById =*/ m_freeFunctionById,
-		/*.pendingStatements =*/ m_pendingStatements,
-		/*.prePendingStatements =*/ m_prePendingStatements,
-		/*.paramRemaps =*/ m_paramRemaps,
-		/*.superTargetNames =*/ m_superTargetNames,
-		/*.storageAliases =*/ m_storageAliases,
-		/*.slotStorageRefs =*/ m_slotStorageRefs,
-		/*.funcPtrTargets =*/ m_funcPtrTargets,
-		/*.constantLocals =*/ m_constantLocals,
-		/*.varNameToId =*/ m_varNameToId,
-		/*.mappingKeyParams =*/ m_mappingKeyParams,
-		/*.inConstructor =*/ m_inConstructor,
-		/*.inUncheckedBlock =*/ m_inUncheckedBlock,
-		/*.pendingArrayPushValue =*/ m_pendingArrayPushValue,
-		/*.buildExpr =*/ [this](solidity::frontend::Expression const& _expr) {
-			return this->build(_expr);
-		},
-		/*.buildBinaryOp =*/ [this](solidity::frontend::Token _op,
-			std::shared_ptr<awst::Expression> _left,
-			std::shared_ptr<awst::Expression> _right,
-			awst::WType const* _resultType,
-			awst::SourceLocation const& _loc) {
-			return this->buildBinaryOp(_op, std::move(_left), std::move(_right), _resultType, _loc);
-		},
-		/*.builderForInstance =*/ [this](solidity::frontend::Type const* _solType, std::shared_ptr<awst::Expression> _expr) {
-			// The returned builder holds BuilderContext by reference, so the context
-			// must outlive the builder. We accumulate contexts in a vector that persists
-			// for the lifetime of ExpressionBuilder (cleared between build() calls).
-			m_builderCtxPool.push_back(std::make_unique<eb::BuilderContext>(makeBuilderContext()));
-			return m_registry.tryBuildInstance(*m_builderCtxPool.back(), _solType, std::move(_expr));
-		},
-	};
 }
 
 std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
@@ -494,12 +465,12 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 		if (_op == Token::Sub || _op == Token::AssignSub)
 		{
 			// Checked subtraction: assert a >= b before wrapping
-			if (!m_inUncheckedBlock)
+			if (!m_ctx.inUncheckedBlock)
 			{
 				auto cmp = awst::makeNumericCompare(_left, awst::NumericComparison::Gte, _right, _loc);
 
 				auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "underflow"), _loc);
-				m_prePendingStatements.push_back(std::move(assertStmt));
+				m_ctx.prePendingStatements.push_back(std::move(assertStmt));
 			}
 
 			// Biguint subtraction needs wrapping mod 2^256 to avoid AVM underflow.
@@ -518,7 +489,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 
 
 		// BigUInt exponentiation: AVM has no biguint exp opcode, so build a
-		// square-and-multiply loop emitted via m_pendingStatements.
+		// square-and-multiply loop emitted via m_ctx.pendingStatements.
 		if (_op == Token::Exp)
 		{
 			static int expCounter = 0;
@@ -560,11 +531,11 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			auto expExpr = implicitNumericCast(std::move(_right), awst::WType::biguintType(), _loc);
 
 			// __biguint_exp_result = 1
-			m_prePendingStatements.push_back(makeAssign(resultVar, makeConst("1")));
+			m_ctx.prePendingStatements.push_back(makeAssign(resultVar, makeConst("1")));
 			// __biguint_exp_base = base
-			m_prePendingStatements.push_back(makeAssign(baseVar, std::move(baseExpr)));
+			m_ctx.prePendingStatements.push_back(makeAssign(baseVar, std::move(baseExpr)));
 			// __biguint_exp_exp = exp
-			m_prePendingStatements.push_back(makeAssign(expVar, std::move(expExpr)));
+			m_ctx.prePendingStatements.push_back(makeAssign(expVar, std::move(expExpr)));
 
 			// while __biguint_exp_exp > 0:
 			auto loop = std::make_shared<awst::WhileLoop>();
@@ -580,7 +551,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			// In unchecked mode, Solidity wraps exponentiation modulo 2^256
 			// so that huge exponents (e.g. 2**1113) don't overflow biguint.
 			// Take each intermediate result mod 2^256 inside the loop.
-			bool const wrapMod = m_inUncheckedBlock;
+			bool const wrapMod = m_ctx.inUncheckedBlock;
 			auto wrapMod256 = [&](std::shared_ptr<awst::Expression> v)
 				-> std::shared_ptr<awst::Expression>
 			{
@@ -623,7 +594,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			}
 
 			loop->loopBody = std::move(body);
-			m_prePendingStatements.push_back(std::move(loop));
+			m_ctx.prePendingStatements.push_back(std::move(loop));
 
 			return makeVar(resultVar);
 		}
@@ -646,7 +617,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 		// In unchecked blocks, arithmetic must wrap mod 2^256 (EVM semantics).
 		// AVM biguint is arbitrary-precision; without truncation, results can
 		// exceed 256 bits and break subsequent operations.
-		if (m_inUncheckedBlock
+		if (m_ctx.inUncheckedBlock
 			&& (_op == Token::Add || _op == Token::AssignAdd
 				|| _op == Token::Sub || _op == Token::AssignSub
 				|| _op == Token::Mul || _op == Token::AssignMul))
@@ -771,7 +742,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildCreateInnerTransaction
 	// Set TypeEnum to the transaction type
 	_fields["TypeEnum"] = makeUint64(std::to_string(_txnType), _loc);
 
-	auto* wtype = m_typeMapper.createType<awst::WInnerTransactionFields>(_txnType);
+	auto* wtype = m_ctx.typeMapper.createType<awst::WInnerTransactionFields>(_txnType);
 
 	auto create = std::make_shared<awst::CreateInnerTransaction>();
 	create->sourceLocation = _loc;
@@ -791,7 +762,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildSubmitAndReturn(
 	if (auto const* itf = dynamic_cast<awst::WInnerTransactionFields const*>(_createExpr->wtype))
 		txnType = itf->transactionType();
 
-	auto* submitWtype = m_typeMapper.createType<awst::WInnerTransaction>(txnType);
+	auto* submitWtype = m_ctx.typeMapper.createType<awst::WInnerTransaction>(txnType);
 
 	auto submit = std::make_shared<awst::SubmitInnerTransaction>();
 	submit->sourceLocation = _loc;
@@ -807,7 +778,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildSubmitAndReturn(
 		&& (!txnType.has_value() || txnType.value() != 6))
 	{
 		auto stmt = awst::makeExpressionStatement(std::move(submit), _loc);
-		m_prePendingStatements.push_back(std::move(stmt));
+		m_ctx.prePendingStatements.push_back(std::move(stmt));
 
 		return awst::makeBoolConstant(true, _loc);
 	}
@@ -817,7 +788,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildSubmitAndReturn(
 	{
 		// Submit as a pre-pending statement so it executes BEFORE reading the result
 		auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);
-		m_prePendingStatements.push_back(std::move(submitStmt));
+		m_ctx.prePendingStatements.push_back(std::move(submitStmt));
 
 		// Read LastLog from most recently submitted inner txn using itxn intrinsic
 		auto readLog = awst::makeIntrinsicCall("itxn", awst::WType::bytesType(), _loc);
@@ -962,7 +933,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildSubmitAndReturn(
 
 	// For non-appl returns: emit submit as pending, return type-appropriate default
 	auto stmt = awst::makeExpressionStatement(std::move(submit), _loc);
-	m_pendingStatements.push_back(std::move(stmt));
+	m_ctx.pendingStatements.push_back(std::move(stmt));
 
 	return StorageMapper::makeDefaultValue(_solidityReturnType, _loc);
 }

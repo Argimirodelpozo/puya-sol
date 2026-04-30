@@ -1443,7 +1443,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		std::string cref = m_sourceFile + "." + contractName;
 		awst::SourceLocation loc;
 		loc.file = m_sourceFile;
-		auto dispCtx = m_exprBuilder->makeBuilderContext();
+		auto& dispCtx = m_exprBuilder->builderContext();
 		auto dispatchMethods = eb::FunctionPointerBuilder::generateDispatchMethods(
 			dispCtx, cref, loc, &m_dispatchSubroutines);
 		for (auto& m : dispatchMethods)

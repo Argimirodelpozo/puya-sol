@@ -42,14 +42,44 @@ struct ParamRemap
 	awst::WType const* type;
 };
 
-/// Shared context passed to all expression builders by reference.
+/// Shared context owning all expression-builder state.
 ///
-/// This struct provides builders access to the compiler state they need
-/// without requiring them to depend on ExpressionBuilder directly.
-/// During the migration, this is populated from ExpressionBuilder's members.
-struct BuilderContext
+/// This is the central state object passed to all expression and statement
+/// builders. It owns the per-translation mutable state (scope tables, pending
+/// statement buffers, parameter remaps, etc.) and holds references to the
+/// long-lived compiler services (TypeMapper, StorageMapper, function tables).
+///
+/// Built-instance dispatch and recursive expression building are exposed via
+/// std::function callbacks — these are filled in by ExpressionBuilder while the
+/// migration is in progress; once `ExpressionBuilder` is removed these will
+/// become direct methods on this class.
+class BuilderContext
 {
-	// ── Compiler services ──
+public:
+	BuilderContext(
+		TypeMapper& _typeMapper,
+		StorageMapper& _storageMapper,
+		std::string const& _sourceFile,
+		std::string const& _contractName,
+		std::unordered_map<std::string, std::string> const& _libraryFunctionIds,
+		std::unordered_set<std::string> const& _overloadedNames,
+		std::unordered_map<int64_t, std::string> const& _freeFunctionById
+	)
+		: typeMapper(_typeMapper),
+		  storageMapper(_storageMapper),
+		  sourceFile(_sourceFile),
+		  contractName(_contractName),
+		  libraryFunctionIds(_libraryFunctionIds),
+		  overloadedNames(_overloadedNames),
+		  freeFunctionById(_freeFunctionById)
+	{}
+
+	BuilderContext(BuilderContext const&) = delete;
+	BuilderContext& operator=(BuilderContext const&) = delete;
+	BuilderContext(BuilderContext&&) = delete;
+	BuilderContext& operator=(BuilderContext&&) = delete;
+
+	// ── Compiler services (external, by reference) ──
 	TypeMapper& typeMapper;
 	StorageMapper& storageMapper;
 	/// Transient storage manager — non-null only when the current contract
@@ -63,32 +93,32 @@ struct BuilderContext
 	/// May be nullptr during free-function translation.
 	solidity::frontend::ContractDefinition const* currentContract = nullptr;
 
-	// ── Function resolution tables ──
+	// ── Function resolution tables (external, by reference) ──
 	std::unordered_map<std::string, std::string> const& libraryFunctionIds;
 	std::unordered_set<std::string> const& overloadedNames;
 	std::unordered_map<int64_t, std::string> const& freeFunctionById;
 
-	// ── Side-effect statement buffers (shared with ExpressionBuilder) ──
-	std::vector<std::shared_ptr<awst::Statement>>& pendingStatements;
-	std::vector<std::shared_ptr<awst::Statement>>& prePendingStatements;
+	// ── Side-effect statement buffers (owned) ──
+	std::vector<std::shared_ptr<awst::Statement>> pendingStatements;
+	std::vector<std::shared_ptr<awst::Statement>> prePendingStatements;
 
-	// ── Expression builder state (passed by reference) ──
-	std::map<int64_t, ParamRemap>& paramRemaps;
-	std::unordered_map<int64_t, std::string>& superTargetNames;
-	std::map<int64_t, std::shared_ptr<awst::Expression>>& storageAliases;
-	std::map<int64_t, std::shared_ptr<awst::Expression>>& slotStorageRefs;
-	std::map<int64_t, solidity::frontend::FunctionDefinition const*>& funcPtrTargets;
-	std::unordered_map<int64_t, unsigned long long>& constantLocals;
-	std::map<std::string, int64_t>& varNameToId;
-	std::map<int64_t, std::string> const& mappingKeyParams;
-	bool inConstructor;
-	bool inUncheckedBlock;
+	// ── Per-translation scope state (owned) ──
+	std::map<int64_t, ParamRemap> paramRemaps;
+	std::unordered_map<int64_t, std::string> superTargetNames;
+	std::map<int64_t, std::shared_ptr<awst::Expression>> storageAliases;
+	std::map<int64_t, std::shared_ptr<awst::Expression>> slotStorageRefs;
+	std::map<int64_t, solidity::frontend::FunctionDefinition const*> funcPtrTargets;
+	std::unordered_map<int64_t, unsigned long long> constantLocals;
+	std::map<std::string, int64_t> varNameToId;
+	std::map<int64_t, std::string> mappingKeyParams;
+	bool inConstructor = false;
+	bool inUncheckedBlock = false;
 
-	/// Reference into ExpressionBuilder: set by SolAssignment when
-	/// translating `arr.push() = value`; the push() handler in
-	/// SolArrayMethod consumes it as the pushed element instead of a
-	/// default value, and returns the ArrayExtend expression directly.
-	std::shared_ptr<awst::Expression>& pendingArrayPushValue;
+	/// Scratch slot for the `arr.push() = value` rewrite: SolAssignment
+	/// stashes the RHS here before the LHS build, and SolArrayMethod's
+	/// push() handler consumes it as the pushed element instead of a
+	/// default value, returning the ArrayExtend expression directly.
+	std::shared_ptr<awst::Expression> pendingArrayPushValue;
 
 	// ── Recursive build callback (delegates back to ExpressionBuilder) ──
 	/// Build a child Solidity expression into an AWST Expression.
