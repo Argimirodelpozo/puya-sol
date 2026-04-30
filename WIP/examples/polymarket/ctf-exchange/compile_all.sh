@@ -5,7 +5,7 @@
 BASEDIR="/home/argi/AlgorandFoundation/polymarket-experiment/puya-sol"
 PUYA_SOL="$BASEDIR/build/puya-sol"
 PUYA_PATH="$BASEDIR/puya/.venv/bin/puya"
-EXAMPLE="$BASEDIR/examples/ctf-exchange"
+EXAMPLE="$BASEDIR/WIP/examples/polymarket/ctf-exchange"
 SRC="$EXAMPLE/src"
 OUTDIR="$EXAMPLE/out"
 RESULTS="$EXAMPLE/compile_results.txt"
