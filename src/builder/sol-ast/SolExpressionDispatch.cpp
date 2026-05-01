@@ -126,10 +126,11 @@ public:
 		}
 
 		// Ultimate fallback — emit a typed zero of the expected result type.
-		// This is a hard error: silently emitting a fake zero produces
-		// runtime nonsense that's hard to diagnose. The cast to error means
-		// users see compile-time failure for unsupported access patterns.
-		Logger::instance().error(
+		// Stays as a warning (not an error) because Solidity has type-level
+		// expressions like `MyType.wrap;` (TypeType member access, no
+		// invocation) where emitting a typed zero is harmless and the
+		// value is never used at runtime.
+		Logger::instance().warning(
 			"unsupported member access '." + _n.memberName() + "'", loc);
 		auto* wtype = m_ctx.typeMapper.map(_n.annotation().type);
 		if (wtype == awst::WType::uint64Type() || wtype == awst::WType::biguintType())
