@@ -1123,7 +1123,7 @@ def _decode_abi_at(words, ty: _AbiType, base: int):
         # string or a 32-byte raw key. Semantic-test fixtures pass integers
         # for address[]; convert to 32-byte BE so encoding succeeds (the
         # full account stays available — AVM doesn't truncate to 20 like EVM).
-        if ty.t == 'address' and isinstance(w, int):
+        if ty.name == 'address' and isinstance(w, int):
             from algosdk.encoding import encode_address as _encaddr
             return _encaddr((w & ((1 << 256) - 1)).to_bytes(32, 'big'))
         return w
@@ -2497,6 +2497,24 @@ def _evm_walk_compare(words, base, actual):
                     head_w = words[body_start + i]
                     inner_base = body_start + (head_w // 32)
                     if not _evm_walk_compare(words, inner_base, actual[i]):
+                        ok = False
+                        break
+                if ok:
+                    return True
+            # Inner list is `address`/`uintN` decoded by algokit as a list of
+            # 32 byte-ints, while the fixture provides a single int (small
+            # address literal). Pack bytes → int and compare to one word.
+            # Examples: contract returning `address[]` decoded as
+            # [[0..0,1],[0..0,2]] against fixture [1,2].
+            if (body_start + n <= len(words)
+                and all(isinstance(elem, (list, tuple)) and len(elem) == 32
+                        and all(isinstance(b, int) and 0 <= b < 256 for b in elem)
+                        for elem in actual)
+                and all(isinstance(words[body_start + i], int) for i in range(n))):
+                ok = True
+                for i in range(n):
+                    elem_int = int.from_bytes(bytes(actual[i]), 'big')
+                    if elem_int != words[body_start + i]:
                         ok = False
                         break
                 if ok:
