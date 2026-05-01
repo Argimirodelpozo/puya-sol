@@ -35,10 +35,10 @@ namespace
 /// Concrete SolASTVisitor that translates Solidity statements into AWST.
 /// Holds the shared StatementContext (control-flow state, modifier
 /// placeholder body, function context) plus the expression builder.
-class AwstStatementVisitor: public SolASTVisitor<std::vector<std::shared_ptr<awst::Statement>>>
+class SolStatementVisitor: public SolASTVisitor<std::vector<std::shared_ptr<awst::Statement>>>
 {
 public:
-	AwstStatementVisitor(StatementContext& _ctx, eb::BuilderContext& _exprBuilder)
+	SolStatementVisitor(StatementContext& _ctx, eb::BuilderContext& _exprBuilder)
 		: m_ctx(_ctx), m_exprBuilder(_exprBuilder) {}
 
 	using ResultT = std::vector<std::shared_ptr<awst::Statement>>;
@@ -247,7 +247,7 @@ static std::vector<std::shared_ptr<awst::Statement>> dispatchStatementImpl(
 	eb::BuilderContext& _exprBuilder,
 	Statement const& _stmt)
 {
-	AwstStatementVisitor visitor(_ctx, _exprBuilder);
+	SolStatementVisitor visitor(_ctx, _exprBuilder);
 	return visitor.visit(_stmt);
 }
 

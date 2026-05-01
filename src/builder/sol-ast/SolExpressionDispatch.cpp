@@ -1,7 +1,7 @@
 /// @file SolExpressionDispatch.cpp
 /// Central expression dispatcher — implemented as a SolASTVisitor subclass.
 ///
-/// `buildExpression` constructs a per-call AwstExpressionVisitor, hands it the
+/// `buildExpression` constructs a per-call SolExpressionVisitor, hands it the
 /// translation context, and dispatches by Solidity AST kind to the right
 /// per-kind handler in src/builder/sol-ast/exprs/. The visitor base
 /// (SolASTVisitor.h) handles the dynamic_cast cascade.
@@ -31,10 +31,10 @@ using namespace solidity::frontend;
 namespace
 {
 
-class AwstExpressionVisitor: public SolASTVisitor<std::shared_ptr<awst::Expression>>
+class SolExpressionVisitor: public SolASTVisitor<std::shared_ptr<awst::Expression>>
 {
 public:
-	explicit AwstExpressionVisitor(eb::BuilderContext& _ctx): m_ctx(_ctx) {}
+	explicit SolExpressionVisitor(eb::BuilderContext& _ctx): m_ctx(_ctx) {}
 
 	std::shared_ptr<awst::Expression> visitLiteral(Literal const& _n) override
 	{
@@ -180,7 +180,7 @@ std::shared_ptr<awst::Expression> buildExpression(
 	eb::BuilderContext& _ctx,
 	Expression const& _expr)
 {
-	AwstExpressionVisitor visitor(_ctx);
+	SolExpressionVisitor visitor(_ctx);
 	return visitor.visit(_expr);
 }
 
