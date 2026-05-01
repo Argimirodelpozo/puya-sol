@@ -1,4 +1,32 @@
-# Semantic Test Status — v177
+# Semantic Test Status — v178
+
+**Totals**: 1076 PASS / 183 FAIL / 63 (47 compile_err + 16 deploy_err) = **1076/1322 (81.4%)**
+
+vs v177's nominal 1083: -7 net, but **all 7 are pre-existing
+puya-sol crashes that v177 was masking via stale cached `.teal`
+artifacts**. The cached files were from Apr 29 (pre-v177); v177's
+compile silently failed, runner picked up the stale outputs as PASS.
+v178 overwrote them with the (correct) failed-compile state, so the
+count drops back to reality. The pre-refactor binary reproduces all
+7 identically — not caused by the nested-context refactor.
+
+Concretely, the "regressions" are:
+
+- 6× compile_err (puya-sol crashes during AWST build):
+  `externalContracts/ramanujan_pi`, `freeFunctions/recursion`,
+  `libraries/internal_library_function_calling_private`,
+  `multiSource/circular_import_2`, `multiSource/circular_reimport`,
+  `multiSource/circular_reimport_2`
+- 1× runtime fail (recurring mapping-key throughput flake):
+  `types/mapping_enum_key_getter_v1`
+
+v178 also validates the nested-context refactor (typed
+Translation/Function/Block/Loop; visitors take narrowest context):
+no code-generation regression in the 1076 still-passing tests.
+
+---
+
+## v177 baseline (preserved below for reference)
 
 **Totals**: 1082 PASS / 183 FAIL / 57 (38 compile_err + 19 deploy_err) = **1082/1322 (81.8%)**
 
