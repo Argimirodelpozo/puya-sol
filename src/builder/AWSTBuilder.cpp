@@ -25,6 +25,7 @@ static void eliminateDeadCode(awst::Contract& _contract)
 		dce(m);
 }
 
+
 std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 	solidity::frontend::CompilerStack& _compiler,
 	std::string const& _sourceFile,
@@ -36,6 +37,21 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 	m_storageMapper = std::make_unique<StorageMapper>(m_typeMapper);
 	m_libraryFunctionIds.clear();
 	std::vector<std::shared_ptr<awst::RootNode>> roots;
+
+	registerFunctionIds(_compiler, _sourceFile);
+	presetDispatchCref(_compiler, _sourceFile);
+	translateLibraryFunctions(_compiler, _sourceFile, roots);
+	translateFreeFunctions(_compiler, _sourceFile, roots);
+	translateContracts(_compiler, _sourceFile, _opupBudget, _ensureBudget, _viaYulBehavior, roots);
+
+	// Drop any subroutine root not reachable from a contract method.
+	return filterToReachableSubroutines(std::move(roots));
+}
+
+void AWSTBuilder::registerFunctionIds(
+	solidity::frontend::CompilerStack& _compiler,
+	std::string const& _sourceFile)
+{
 
 	// First pass: register all library and free function IDs (before translating any bodies)
 	for (auto const& sourceName: _compiler.sourceNames())
@@ -141,7 +157,12 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 			}
 		}
 	}
+}
 
+void AWSTBuilder::presetDispatchCref(
+	solidity::frontend::CompilerStack& _compiler,
+	std::string const& _sourceFile)
+{
 	// Pre-set the function pointer dispatch cref to the first deployable
 	// contract so that library subroutines can construct SubroutineIDs
 	// for dispatch calls. Library bodies are translated before contracts,
@@ -155,13 +176,17 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 			if (c && !c->isLibrary() && !c->abstract() && !c->isInterface())
 			{
 				eb::FunctionPointerBuilder::setCurrentCref(_sourceFile + "." + c->name());
-				goto crefSet;
+				return;
 			}
 		}
 	}
-	crefSet:
+}
 
-	// Second pass: translate library functions as Subroutine root nodes
+void AWSTBuilder::translateLibraryFunctions(
+	solidity::frontend::CompilerStack& _compiler,
+	std::string const& _sourceFile,
+	std::vector<std::shared_ptr<awst::RootNode>>& roots)
+{
 	for (auto const& sourceName: _compiler.sourceNames())
 	{
 		auto const& sourceUnit = _compiler.ast(sourceName);
@@ -573,8 +598,13 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 			}
 		}
 	}
+}
 
-	// Translate free (file-level) functions as Subroutine root nodes
+void AWSTBuilder::translateFreeFunctions(
+	solidity::frontend::CompilerStack& _compiler,
+	std::string const& _sourceFile,
+	std::vector<std::shared_ptr<awst::RootNode>>& roots)
+{
 	for (auto const& sourceName: _compiler.sourceNames())
 	{
 		auto const& sourceUnit = _compiler.ast(sourceName);
@@ -867,8 +897,16 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 			roots.push_back(std::move(sub));
 		}
 	}
+}
 
-	// Translate contracts
+void AWSTBuilder::translateContracts(
+	solidity::frontend::CompilerStack& _compiler,
+	std::string const& _sourceFile,
+	uint64_t _opupBudget,
+	std::map<std::string, uint64_t> const& _ensureBudget,
+	bool _viaYulBehavior,
+	std::vector<std::shared_ptr<awst::RootNode>>& roots)
+{
 	for (auto const& sourceName: _compiler.sourceNames())
 	{
 		auto const& sourceUnit = _compiler.ast(sourceName);
@@ -959,9 +997,6 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				Logger::instance().debug("Skipping non-deployable contract: " + contract->name());
 		}
 	}
-
-	// Drop any subroutine root not reachable from a contract method.
-	return filterToReachableSubroutines(std::move(roots));
 }
 
 } // namespace puyasol::builder
