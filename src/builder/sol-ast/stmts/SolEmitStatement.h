@@ -9,7 +9,7 @@ namespace puyasol::builder::sol_ast
 class SolEmitStatement: public SolStatement
 {
 public:
-	SolEmitStatement(StatementContext& _ctx,
+	SolEmitStatement(BlockContext& _blk,
 		solidity::frontend::EmitStatement const& _node, awst::SourceLocation _loc);
 	std::vector<std::shared_ptr<awst::Statement>> toAwst() override;
 private:

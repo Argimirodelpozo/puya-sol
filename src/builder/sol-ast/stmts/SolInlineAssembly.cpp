@@ -104,15 +104,10 @@ namespace puyasol::builder::sol_ast
 using namespace solidity::frontend;
 
 SolInlineAssembly::SolInlineAssembly(
-	StatementContext& _ctx,
+	BlockContext& _blk,
 	InlineAssembly const& _node,
-	awst::SourceLocation _loc,
-	std::vector<std::pair<std::string, awst::WType const*>> const& _functionParams,
-	awst::WType const* _returnType,
-	std::map<std::string, unsigned> const& _functionParamBitWidths)
-	: SolStatement(_ctx, std::move(_loc)), m_node(_node),
-	  m_functionParams(_functionParams), m_returnType(_returnType),
-	  m_functionParamBitWidths(_functionParamBitWidths)
+	awst::SourceLocation _loc)
+	: SolStatement(_blk, std::move(_loc)), m_node(_node)
 {
 }
 
@@ -120,7 +115,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 {
 	Logger::instance().debug("translating inline assembly block", m_loc);
 
-	std::string contextName = m_ctx.sourceFile;
+	std::string contextName = m_blk.sourceFile();
 	auto lastDot = contextName.rfind('.');
 	if (lastDot != std::string::npos)
 		contextName = contextName.substr(0, lastDot);
@@ -163,10 +158,10 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 			}
 		}
 
-		if (contractDef && m_ctx.typeMapper)
+		if (contractDef)
 		{
 			StorageLayout layout;
-			layout.computeLayout(*contractDef, *m_ctx.typeMapper);
+			layout.computeLayout(*contractDef, m_blk.typeMapper());
 
 			for (auto const& [yulId, extInfo]: annotation.externalReferences)
 			{
@@ -185,7 +180,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				bool resolved = false;
 				if (isTransient)
 				{
-					auto* ts = m_ctx.exprBuilder ? m_ctx.exprBuilder->transientStorage : nullptr;
+					auto* ts = m_blk.builderCtx().transientStorage;
 					if (ts)
 					{
 						if (auto const* tv = ts->getVarInfo(varDecl->name()))
@@ -221,7 +216,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	}
 
 	// Build augmented params
-	auto augmentedParams = m_functionParams;
+	auto augmentedParams = m_blk.fn.params;
 	std::map<std::string, unsigned> paramBitWidths;
 	for (auto const& [yulId, extInfo]: annotation.externalReferences)
 	{
@@ -235,7 +230,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 			if (pName == name) found = true;
 		if (!found)
 		{
-			auto* type = m_ctx.typeMapper->map(varDecl->type());
+			auto* type = m_blk.typeMapper().map(varDecl->type());
 			augmentedParams.emplace_back(name, type);
 		}
 
@@ -245,14 +240,14 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				paramBitWidths[name] = intType->numBits();
 		}
 	}
-	for (auto const& [n, bw]: m_functionParamBitWidths)
+	for (auto const& [n, bw]: m_blk.fn.paramBitWidths)
 		paramBitWidths.emplace(n, bw);
 
-	AssemblyBuilder asmTranslator((*m_ctx.typeMapper), m_ctx.sourceFile, contextName);
+	AssemblyBuilder asmTranslator(m_blk.typeMapper(), m_blk.sourceFile(), contextName);
 	return asmTranslator.buildBlock(
 		m_node.operations().root(),
 		augmentedParams,
-		m_returnType,
+		m_blk.fn.returnType,
 		constants,
 		paramBitWidths,
 		storageSlotVars);

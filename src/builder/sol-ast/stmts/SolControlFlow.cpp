@@ -1,8 +1,10 @@
 /// @file SolControlFlow.cpp
 /// if/while/for control flow wrappers.
-/// Uses StatementContext fields for loop state (forLoopPost, doWhileCondBreak).
+/// Loop bodies derive a LoopContext + BlockContext-with-loop, so
+/// continue/break inside know which post-step / cond-break to splice.
 
 #include "builder/sol-ast/stmts/SolControlFlow.h"
+#include "builder/sol-eb/BuilderContext.h"
 #include "Logger.h"
 
 namespace puyasol::builder::sol_ast
@@ -13,48 +15,36 @@ using namespace solidity::frontend;
 // ── IfStatement ──
 
 SolIfStatement::SolIfStatement(
-	StatementContext& _ctx, IfStatement const& _node, awst::SourceLocation _loc)
-	: SolStatement(_ctx, std::move(_loc)), m_node(_node)
+	BlockContext& _blk, IfStatement const& _node, awst::SourceLocation _loc)
+	: SolStatement(_blk, std::move(_loc)), m_node(_node)
 {
 }
 
 std::vector<std::shared_ptr<awst::Statement>> SolIfStatement::toAwst()
 {
 	std::vector<std::shared_ptr<awst::Statement>> result;
+	auto& bc = m_blk.builderCtx();
 
 	auto stmt = std::make_shared<awst::IfElse>();
 	stmt->sourceLocation = m_loc;
-	stmt->condition = m_ctx.buildExpr(m_node.condition());
+	stmt->condition = bc.build(m_node.condition());
 
-	auto prePending = m_ctx.takePrePending();
-	auto postPending = m_ctx.takePending();
+	auto prePending = bc.takePrePending();
+	auto postPending = bc.takePending();
 
-	auto const& trueBody = m_node.trueStatement();
-	if (auto const* block = dynamic_cast<Block const*>(&trueBody))
-		stmt->ifBranch = m_ctx.buildBlock(*block);
-	else
-	{
+	auto buildBranch = [&](Statement const& body) -> std::shared_ptr<awst::Block> {
+		if (auto const* block = dynamic_cast<Block const*>(&body))
+			return buildBlock(m_blk, *block);
 		auto syntheticBlock = std::make_shared<awst::Block>();
-		syntheticBlock->sourceLocation = m_ctx.makeLoc(trueBody.location());
-		auto translated = m_ctx.buildStmt(trueBody);
+		syntheticBlock->sourceLocation = m_blk.makeLoc(body.location());
+		auto translated = buildStatement(m_blk, body);
 		if (translated) syntheticBlock->body.push_back(std::move(translated));
-		stmt->ifBranch = syntheticBlock;
-	}
+		return syntheticBlock;
+	};
 
+	stmt->ifBranch = buildBranch(m_node.trueStatement());
 	if (m_node.falseStatement())
-	{
-		auto const& falseBody = *m_node.falseStatement();
-		if (auto const* block = dynamic_cast<Block const*>(&falseBody))
-			stmt->elseBranch = m_ctx.buildBlock(*block);
-		else
-		{
-			auto syntheticBlock = std::make_shared<awst::Block>();
-			syntheticBlock->sourceLocation = m_ctx.makeLoc(falseBody.location());
-			auto translated = m_ctx.buildStmt(falseBody);
-			if (translated) syntheticBlock->body.push_back(std::move(translated));
-			stmt->elseBranch = syntheticBlock;
-		}
-	}
+		stmt->elseBranch = buildBranch(*m_node.falseStatement());
 
 	for (auto& p: prePending) result.push_back(std::move(p));
 	result.push_back(stmt);
@@ -65,13 +55,15 @@ std::vector<std::shared_ptr<awst::Statement>> SolIfStatement::toAwst()
 // ── WhileStatement ──
 
 SolWhileStatement::SolWhileStatement(
-	StatementContext& _ctx, WhileStatement const& _node, awst::SourceLocation _loc)
-	: SolStatement(_ctx, std::move(_loc)), m_node(_node)
+	BlockContext& _blk, WhileStatement const& _node, awst::SourceLocation _loc)
+	: SolStatement(_blk, std::move(_loc)), m_node(_node)
 {
 }
 
 std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 {
+	auto& bc = m_blk.builderCtx();
+
 	if (m_node.isDoWhile())
 	{
 		auto loop = std::make_shared<awst::WhileLoop>();
@@ -79,9 +71,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 		loop->condition = awst::makeBoolConstant(true, m_loc);
 
 		auto body = std::make_shared<awst::Block>();
-		body->sourceLocation = m_ctx.makeLoc(m_node.body().location());
+		body->sourceLocation = m_blk.makeLoc(m_node.body().location());
 
-		auto cond = m_ctx.buildExpr(m_node.condition());
+		auto cond = bc.build(m_node.condition());
 		auto notCond = std::make_shared<awst::Not>();
 		notCond->sourceLocation = m_loc;
 		notCond->wtype = awst::WType::boolType();
@@ -96,15 +88,16 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 		ifBreak->condition = notCond;
 		ifBreak->ifBranch = breakBlock;
 
-		auto savedCondBreak = m_ctx.doWhileCondBreak;
-		m_ctx.doWhileCondBreak = ifBreak;
+		LoopContext loopCtx;
+		loopCtx.doWhileCondBreak = ifBreak;
+		auto bodyBlk = m_blk.withLoop(loopCtx);
 
 		bool bodyTerminated = false;
 		if (auto const* block = dynamic_cast<Block const*>(&m_node.body()))
 		{
 			for (auto const& stmt: block->statements())
 			{
-				auto translated = m_ctx.buildStmt(*stmt);
+				auto translated = buildStatement(bodyBlk, *stmt);
 				if (translated)
 				{
 					body->body.push_back(std::move(translated));
@@ -126,7 +119,6 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 			}
 		}
 
-		m_ctx.doWhileCondBreak = savedCondBreak;
 		if (!bodyTerminated) body->body.push_back(ifBreak);
 		loop->loopBody = body;
 		return {loop};
@@ -135,15 +127,21 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 	{
 		auto loop = std::make_shared<awst::WhileLoop>();
 		loop->sourceLocation = m_loc;
-		loop->condition = m_ctx.buildExpr(m_node.condition());
+		loop->condition = bc.build(m_node.condition());
+
+		// while-loop body: no special LoopContext data needed (no for-post,
+		// no doWhile cond break) but we still create one so continue/break
+		// in nested code knows it's inside a loop.
+		LoopContext loopCtx;
+		auto bodyBlk = m_blk.withLoop(loopCtx);
 
 		if (auto const* block = dynamic_cast<Block const*>(&m_node.body()))
-			loop->loopBody = m_ctx.buildBlock(*block);
+			loop->loopBody = buildBlock(bodyBlk, *block);
 		else
 		{
 			auto body = std::make_shared<awst::Block>();
-			body->sourceLocation = m_ctx.makeLoc(m_node.body().location());
-			auto translated = m_ctx.buildStmt(m_node.body());
+			body->sourceLocation = m_blk.makeLoc(m_node.body().location());
+			auto translated = buildStatement(bodyBlk, m_node.body());
 			if (translated) body->body.push_back(std::move(translated));
 			loop->loopBody = body;
 		}
@@ -154,8 +152,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 // ── ForStatement ──
 
 SolForStatement::SolForStatement(
-	StatementContext& _ctx, ForStatement const& _node, awst::SourceLocation _loc)
-	: SolStatement(_ctx, std::move(_loc)), m_node(_node)
+	BlockContext& _blk, ForStatement const& _node, awst::SourceLocation _loc)
+	: SolStatement(_blk, std::move(_loc)), m_node(_node)
 {
 }
 
@@ -166,26 +164,26 @@ std::vector<std::shared_ptr<awst::Statement>> SolForStatement::toAwst()
 
 	if (m_node.initializationExpression())
 	{
-		auto init = m_ctx.buildStmt(*m_node.initializationExpression());
+		auto init = buildStatement(m_blk, *m_node.initializationExpression());
 		if (init) outerBlock->body.push_back(std::move(init));
 	}
 
 	auto loop = std::make_shared<awst::WhileLoop>();
 	loop->sourceLocation = m_loc;
 
+	auto& bc = m_blk.builderCtx();
 	if (m_node.condition())
-		loop->condition = m_ctx.buildExpr(*m_node.condition());
+		loop->condition = bc.build(*m_node.condition());
 	else
-	{
 		loop->condition = awst::makeBoolConstant(true, m_loc);
-	}
 
 	std::shared_ptr<awst::Statement> postStmt;
 	if (m_node.loopExpression())
-		postStmt = m_ctx.buildStmt(*m_node.loopExpression());
+		postStmt = buildStatement(m_blk, *m_node.loopExpression());
 
-	auto savedPost = m_ctx.forLoopPost;
-	m_ctx.forLoopPost = postStmt;
+	LoopContext loopCtx;
+	loopCtx.forLoopPost = postStmt;
+	auto bodyBlk = m_blk.withLoop(loopCtx);
 
 	auto loopBody = std::make_shared<awst::Block>();
 	loopBody->sourceLocation = m_loc;
@@ -194,17 +192,16 @@ std::vector<std::shared_ptr<awst::Statement>> SolForStatement::toAwst()
 	{
 		for (auto const& stmt: block->statements())
 		{
-			auto translated = m_ctx.buildStmt(*stmt);
+			auto translated = buildStatement(bodyBlk, *stmt);
 			if (translated) loopBody->body.push_back(std::move(translated));
 		}
 	}
 	else
 	{
-		auto translated = m_ctx.buildStmt(m_node.body());
+		auto translated = buildStatement(bodyBlk, m_node.body());
 		if (translated) loopBody->body.push_back(std::move(translated));
 	}
 
-	m_ctx.forLoopPost = savedPost;
 	if (postStmt) loopBody->body.push_back(postStmt);
 
 	loop->loopBody = loopBody;

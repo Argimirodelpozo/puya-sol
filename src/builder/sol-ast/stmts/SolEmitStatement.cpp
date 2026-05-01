@@ -2,6 +2,7 @@
 /// Migrated from EmitBuilder.cpp.
 
 #include "builder/sol-ast/stmts/SolEmitStatement.h"
+#include "builder/sol-eb/BuilderContext.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
@@ -12,8 +13,8 @@ namespace puyasol::builder::sol_ast
 using namespace solidity::frontend;
 
 SolEmitStatement::SolEmitStatement(
-	StatementContext& _ctx, EmitStatement const& _node, awst::SourceLocation _loc)
-	: SolStatement(_ctx, std::move(_loc)), m_node(_node)
+	BlockContext& _blk, EmitStatement const& _node, awst::SourceLocation _loc)
+	: SolStatement(_blk, std::move(_loc)), m_node(_node)
 {
 }
 
@@ -32,7 +33,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 		eventDef = dynamic_cast<EventDefinition const*>(ident->annotation().referencedDeclaration);
 
 	auto arc4SigName = [this](Type const* _type) -> std::string {
-		auto* wtype = m_ctx.typeMapper->map(_type);
+		auto* wtype = m_blk.typeMapper().map(_type);
 		if (wtype == awst::WType::biguintType()) return "uint256";
 		if (wtype == awst::WType::uint64Type()) return "uint64";
 		if (wtype == awst::WType::boolType()) return "bool";
@@ -76,7 +77,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 
 	for (size_t i = 0; i < callArgs.size(); ++i)
 	{
-		auto translated = m_ctx.buildExpr(*callArgs[i]);
+		auto translated = m_blk.builderCtx().build(*callArgs[i]);
 
 		// Enum range validation: EVM panics (0x21) on invalid enum values in events
 		if (i < params.size())
@@ -98,7 +99,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 			}
 		}
 
-		auto* arc4Type = m_ctx.typeMapper->mapToARC4Type(translated->wtype);
+		auto* arc4Type = m_blk.typeMapper().mapToARC4Type(translated->wtype);
 
 		std::shared_ptr<awst::Expression> arc4Value;
 		if (translated->wtype->kind() >= awst::WTypeKind::ARC4UIntN
@@ -144,7 +145,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 	std::vector<std::pair<std::string, awst::WType const*>> structFields;
 	for (auto const& f: fields)
 		structFields.emplace_back(f.name, f.arc4Type);
-	auto const* structType = m_ctx.typeMapper->createType<awst::ARC4Struct>(
+	auto const* structType = m_blk.typeMapper().createType<awst::ARC4Struct>(
 		eventName, std::move(structFields), true);
 
 	auto newStruct = std::make_shared<awst::NewStruct>();

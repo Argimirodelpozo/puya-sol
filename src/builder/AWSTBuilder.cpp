@@ -410,15 +410,8 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		exprBuilder.mappingKeyParams[param->id()] = param->name();
 	}
 
-	sol_ast::StatementContext stmtCtx{
-		&exprBuilder, &m_typeMapper, _sourceFile,
-		[&](solidity::frontend::Expression const& e) { return exprBuilder.build(e); },
-		[&](solidity::frontend::Statement const& s) { return sol_ast::buildStatement(stmtCtx, exprBuilder, s); },
-		[&](solidity::frontend::Block const& b) { return sol_ast::buildBlock(stmtCtx, exprBuilder, b); },
-		[&]() { return exprBuilder.takePrePending(); },
-		[&]() { return exprBuilder.takePending(); },
-		{}, nullptr, {}, nullptr, nullptr, nullptr,
-	};
+	sol_ast::TranslationContext tr{exprBuilder, m_typeMapper, _sourceFile};
+	sol_ast::FunctionContext fnCtx{tr, {}, sub->returnType, {}};
 
 	// Param + return-param context for inline assembly + sub-word integer truncation.
 	{
@@ -452,9 +445,9 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			if (intType && intType->numBits() < 64)
 				bitWidths[rp->name()] = intType->numBits();
 		}
-		stmtCtx.functionParams = paramContext;
-		stmtCtx.returnType = sub->returnType;
-		stmtCtx.functionParamBitWidths = bitWidths;
+		fnCtx.params = paramContext;
+		fnCtx.returnType = sub->returnType;
+		fnCtx.paramBitWidths = bitWidths;
 	}
 
 	// Register named return variable names so inner scoping detects shadowing.
@@ -475,7 +468,8 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		}
 	}
 
-	sub->body = sol_ast::buildBlock(stmtCtx, exprBuilder, _func.body());
+	auto blk = sol_ast::BlockContext::top(fnCtx);
+	sub->body = sol_ast::buildBlock(blk, _func.body());
 
 	// Insert zero-initialization for named return variables — Solidity
 	// implicitly initializes named returns to their zero values. Skip

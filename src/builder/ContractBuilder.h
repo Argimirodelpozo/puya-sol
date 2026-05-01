@@ -3,6 +3,7 @@
 #include "awst/Node.h"
 #include "builder/FunctionMaps.h"
 #include "builder/sol-eb/BuilderContext.h"
+#include "builder/sol-ast/Context.h"
 #include "builder/sol-ast/SolStatement.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
@@ -10,10 +11,12 @@
 
 #include <libsolidity/ast/AST.h>
 
+#include <map>
 #include <memory>
 #include <optional>
 #include <set>
 #include <string>
+#include <vector>
 
 namespace puyasol::builder
 {
@@ -67,8 +70,16 @@ private:
 
 	std::unique_ptr<eb::BuilderContext> m_exprBuilder;
 
-	/// Shared statement context for block building.
-	sol_ast::StatementContext m_stmtCtx;
+	/// Translation-level context (per-contract): typeMapper, sourceFile, exprBuilder.
+	/// Constructed in build() once m_exprBuilder exists; FunctionContext/BlockContext
+	/// derive from this during function/block translation.
+	std::optional<sol_ast::TranslationContext> m_tr;
+
+	// ── Per-function scratch (set by setFunctionContext, used by buildBlock) ──
+	std::vector<std::pair<std::string, awst::WType const*>> m_currentParams;
+	awst::WType const* m_currentReturnType = nullptr;
+	std::map<std::string, unsigned> m_currentBitWidths;
+	std::shared_ptr<awst::Block> m_currentPlaceholder;
 
 	/// Build a function body block with function context set.
 	std::shared_ptr<awst::Block> buildBlock(

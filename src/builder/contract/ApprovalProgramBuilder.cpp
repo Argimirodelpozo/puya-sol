@@ -1019,8 +1019,8 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		// return (handled by AssemblyBuilder::handleReturn when m_returnType is
 		// bool). Set stmtCtx.returnType accordingly; restore at the end of the
 		// else branch.
-		auto const* savedReturnType = m_stmtCtx.returnType;
-		m_stmtCtx.returnType = awst::WType::boolType();
+		auto const* savedReturnType = m_currentReturnType;
+		m_currentReturnType = awst::WType::boolType();
 
 		// LEGACY MODE: state var inits emitted BEFORE constructor arg eval.
 		// In Solidity legacy (compileViaYul: false) semantics, base state vars
@@ -1215,7 +1215,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			for (auto& stmt: ctorBody->body)
 				createBlock->body.push_back(std::move(stmt));
 		}
-		m_stmtCtx.returnType = savedReturnType;
+		m_currentReturnType = savedReturnType;
 		} // end else (no postInit needed)
 
 		// Return true to complete the create transaction

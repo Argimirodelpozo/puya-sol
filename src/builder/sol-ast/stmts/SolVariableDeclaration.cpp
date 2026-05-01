@@ -16,11 +16,10 @@ using namespace solidity::frontend;
 
 
 SolVariableDeclaration::SolVariableDeclaration(
-	StatementContext& _ctx,
+	BlockContext& _blk,
 	VariableDeclarationStatement const& _node,
-	awst::SourceLocation _loc,
-	eb::BuilderContext& _exprBuilder)
-	: SolStatement(_ctx, std::move(_loc)), m_node(_node), m_exprBuilder(_exprBuilder)
+	awst::SourceLocation _loc)
+	: SolStatement(_blk, std::move(_loc)), m_node(_node)
 {
 }
 
@@ -33,9 +32,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 	if (declarations.size() == 1 && declarations[0])
 	{
 		auto const& decl = *declarations[0];
-		auto* type = m_ctx.typeMapper->map(decl.type());
+		auto* type = m_blk.typeMapper().map(decl.type());
 
-		auto target = awst::makeVarExpression(m_exprBuilder.resolveVarName(decl.name(), decl.id()), type, m_ctx.makeLoc(decl.location()));
+		auto target = awst::makeVarExpression(m_blk.builderCtx().resolveVarName(decl.name(), decl.id()), type, m_blk.makeLoc(decl.location()));
 
 		std::shared_ptr<awst::Expression> value;
 		if (initialValue)
@@ -47,11 +46,11 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				{
 					if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(
 							initId->annotation().referencedDeclaration))
-						m_exprBuilder.funcPtrTargets[decl.id()] = funcDef;
+						m_blk.builderCtx().funcPtrTargets[decl.id()] = funcDef;
 				}
 			}
 
-			value = m_ctx.buildExpr(*initialValue);
+			value = m_blk.builderCtx().build(*initialValue);
 
 			// Track constant locals (only if value fits in unsigned long long)
 			if (auto const* ratType = dynamic_cast<RationalNumberType const*>(
@@ -59,7 +58,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			{
 				auto val = ratType->literalValue(nullptr);
 				if (val > 0 && val <= std::numeric_limits<unsigned long long>::max())
-					m_exprBuilder.constantLocals[decl.id()] = static_cast<unsigned long long>(val);
+					m_blk.builderCtx().constantLocals[decl.id()] = static_cast<unsigned long long>(val);
 			}
 
 			// Upgrade dynamic array to fixed-size when N is known
@@ -73,7 +72,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 						if (refArr && !refArr->arraySize())
 						{
 							int n = static_cast<int>(newArr->values.size());
-							type = m_ctx.typeMapper->createType<awst::ReferenceArray>(
+							type = m_blk.typeMapper().createType<awst::ReferenceArray>(
 								refArr->elementType(), true, n);
 							newArr->wtype = type;
 							target->wtype = type;
@@ -101,10 +100,10 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				&& decl.type()
 				&& decl.type()->category() == solidity::frontend::Type::Category::Mapping)
 			{
-				m_exprBuilder.storageAliases[decl.id()] = value;
-				for (auto& p: m_ctx.takePrePending())
+				m_blk.builderCtx().storageAliases[decl.id()] = value;
+				for (auto& p: m_blk.builderCtx().takePrePending())
 					result.push_back(std::move(p));
-				for (auto& p: m_ctx.takePending())
+				for (auto& p: m_blk.builderCtx().takePending())
 					result.push_back(std::move(p));
 				return result;
 			}
@@ -132,10 +131,10 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 					stateGet->defaultValue = StorageMapper::makeDefaultValue(appState->wtype, m_loc);
 					aliasExpr = stateGet;
 				}
-				m_exprBuilder.storageAliases[decl.id()] = aliasExpr;
-				for (auto& p: m_ctx.takePrePending())
+				m_blk.builderCtx().storageAliases[decl.id()] = aliasExpr;
+				for (auto& p: m_blk.builderCtx().takePrePending())
 					result.push_back(std::move(p));
-				for (auto& p: m_ctx.takePending())
+				for (auto& p: m_blk.builderCtx().takePending())
 					result.push_back(std::move(p));
 				return result;
 			}
@@ -155,7 +154,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 					&& decl.type()->category() == solidity::frontend::Type::Category::Mapping;
 				if (isMappingPtr && value->wtype == awst::WType::bytesType())
 				{
-					m_exprBuilder.mappingKeyParams[decl.id()] = decl.name();
+					m_blk.builderCtx().mappingKeyParams[decl.id()] = decl.name();
 					// Emit `m = f()` as a plain bytes assignment so `m` holds the
 					// mapping holder name at runtime; subsequent reassignments
 					// (`m = otherMapping`) update which mapping `m` points to.
@@ -163,14 +162,14 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 					auto assign = awst::makeAssignmentStatement(std::move(var), std::move(value), m_loc);
 					result.push_back(std::move(assign));
 
-					for (auto& p: m_ctx.takePrePending())
+					for (auto& p: m_blk.builderCtx().takePrePending())
 						result.push_back(std::move(p));
-					for (auto& p: m_ctx.takePending())
+					for (auto& p: m_blk.builderCtx().takePending())
 						result.push_back(std::move(p));
 					return result;
 				}
 
-				m_exprBuilder.slotStorageRefs[decl.id()] = value;
+				m_blk.builderCtx().slotStorageRefs[decl.id()] = value;
 				// Also emit the call as an assignment so the slot value is available.
 				// The slot var's wtype must match the function's return wtype to
 				// keep AssignmentStatement happy.
@@ -180,9 +179,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				auto assign = awst::makeAssignmentStatement(std::move(slotVar), std::move(value), m_loc);
 				result.push_back(std::move(assign));
 
-				for (auto& p: m_ctx.takePrePending())
+				for (auto& p: m_blk.builderCtx().takePrePending())
 					result.push_back(std::move(p));
-				for (auto& p: m_ctx.takePending())
+				for (auto& p: m_blk.builderCtx().takePending())
 					result.push_back(std::move(p));
 				return result;
 			}
@@ -190,9 +189,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 
 		auto assign = awst::makeAssignmentStatement(std::move(target), std::move(value), m_loc);
 
-		for (auto& p: m_ctx.takePrePending())
+		for (auto& p: m_blk.builderCtx().takePrePending())
 			result.push_back(std::move(p));
-		for (auto& p: m_ctx.takePending())
+		for (auto& p: m_blk.builderCtx().takePending())
 			result.push_back(std::move(p));
 
 		// EVM free-memory-pointer simulation: `T memory t;` (no initializer)
@@ -214,10 +213,10 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 	else if (declarations.size() > 1 && initialValue)
 	{
 		// Tuple destructuring
-		auto rhsExpr = m_ctx.buildExpr(*initialValue);
-		for (auto& p: m_ctx.takePrePending())
+		auto rhsExpr = m_blk.builderCtx().build(*initialValue);
+		for (auto& p: m_blk.builderCtx().takePrePending())
 			result.push_back(std::move(p));
-		for (auto& p: m_ctx.takePending())
+		for (auto& p: m_blk.builderCtx().takePending())
 			result.push_back(std::move(p));
 
 		auto singleRhs = std::make_shared<awst::SingleEvaluation>();
@@ -231,9 +230,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 		{
 			if (!declarations[i]) continue;
 			auto const& decl = *declarations[i];
-			auto* type = m_ctx.typeMapper->map(decl.type());
+			auto* type = m_blk.typeMapper().map(decl.type());
 
-			auto target = awst::makeVarExpression(decl.name(), type, m_ctx.makeLoc(decl.location()));
+			auto target = awst::makeVarExpression(decl.name(), type, m_blk.makeLoc(decl.location()));
 
 			auto itemExpr = std::make_shared<awst::TupleItemExpression>();
 			itemExpr->sourceLocation = m_loc;

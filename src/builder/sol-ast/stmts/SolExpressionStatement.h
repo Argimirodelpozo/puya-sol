@@ -10,7 +10,7 @@ namespace puyasol::builder::sol_ast
 class SolExpressionStatement: public SolStatement
 {
 public:
-	SolExpressionStatement(StatementContext& _ctx,
+	SolExpressionStatement(BlockContext& _blk,
 		solidity::frontend::ExpressionStatement const& _node,
 		awst::SourceLocation _loc);
 	std::vector<std::shared_ptr<awst::Statement>> toAwst() override;
@@ -23,7 +23,7 @@ private:
 class SolRevertStatement: public SolStatement
 {
 public:
-	SolRevertStatement(StatementContext& _ctx,
+	SolRevertStatement(BlockContext& _blk,
 		solidity::frontend::RevertStatement const& _node,
 		awst::SourceLocation _loc);
 	std::vector<std::shared_ptr<awst::Statement>> toAwst() override;
@@ -36,7 +36,7 @@ private:
 class SolReturnStatement: public SolStatement
 {
 public:
-	SolReturnStatement(StatementContext& _ctx,
+	SolReturnStatement(BlockContext& _blk,
 		solidity::frontend::Return const& _node,
 		awst::SourceLocation _loc);
 	std::vector<std::shared_ptr<awst::Statement>> toAwst() override;

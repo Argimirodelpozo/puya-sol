@@ -62,7 +62,13 @@ awst::SourceLocation ContractBuilder::makeLoc(
 std::shared_ptr<awst::Block> ContractBuilder::buildBlock(
 	solidity::frontend::Block const& _block)
 {
-	return sol_ast::buildBlock(m_stmtCtx, *m_exprBuilder, _block);
+	// Build a fresh per-function context, then a top BlockContext (optionally
+	// with the current placeholder body for modifier inlining), then dispatch.
+	sol_ast::FunctionContext fn{*m_tr, m_currentParams, m_currentReturnType, m_currentBitWidths};
+	auto blk = m_currentPlaceholder
+		? sol_ast::BlockContext::top(fn).withPlaceholder(m_currentPlaceholder)
+		: sol_ast::BlockContext::top(fn);
+	return sol_ast::buildBlock(blk, _block);
 }
 
 void ContractBuilder::setFunctionContext(
@@ -70,14 +76,14 @@ void ContractBuilder::setFunctionContext(
 	awst::WType const* _returnType,
 	std::map<std::string, unsigned> const& _bitWidths)
 {
-	m_stmtCtx.functionParams = _params;
-	m_stmtCtx.returnType = _returnType;
-	m_stmtCtx.functionParamBitWidths = _bitWidths;
+	m_currentParams = _params;
+	m_currentReturnType = _returnType;
+	m_currentBitWidths = _bitWidths;
 }
 
 void ContractBuilder::setPlaceholderBody(std::shared_ptr<awst::Block> _body)
 {
-	m_stmtCtx.placeholderBody = std::move(_body);
+	m_currentPlaceholder = std::move(_body);
 }
 
 void ContractBuilder::prependNonPayableCheck(awst::ContractMethod& _method)
@@ -192,20 +198,14 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		m_libraryFunctionIds, m_overloadedNames, m_freeFunctionById
 	);
 	m_exprBuilder->currentContract = &_contract;
-	// Initialize statement context
-	m_stmtCtx = sol_ast::StatementContext{
-		&*m_exprBuilder, &m_typeMapper, m_sourceFile,
-		[this](solidity::frontend::Expression const& e) { return m_exprBuilder->build(e); },
-		[this](solidity::frontend::Statement const& s) {
-			return sol_ast::buildStatement(m_stmtCtx, *m_exprBuilder, s);
-		},
-		[this](solidity::frontend::Block const& b) {
-			return sol_ast::buildBlock(m_stmtCtx, *m_exprBuilder, b);
-		},
-		[this]() { return m_exprBuilder->takePrePending(); },
-		[this]() { return m_exprBuilder->takePending(); },
-		{}, nullptr, {}, nullptr, nullptr, nullptr,
-	};
+
+	// Build the per-contract TranslationContext. FunctionContext + BlockContext
+	// are constructed locally (in buildBlock and similar) on top of this.
+	m_tr.emplace(sol_ast::TranslationContext{*m_exprBuilder, m_typeMapper, m_sourceFile});
+	m_currentParams.clear();
+	m_currentReturnType = nullptr;
+	m_currentBitWidths.clear();
+	m_currentPlaceholder.reset();
 
 	m_exprBuilder->transientStorage =
 		m_transientStorage.hasTransientVars() ? &m_transientStorage : nullptr;

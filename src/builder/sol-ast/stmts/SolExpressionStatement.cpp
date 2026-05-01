@@ -16,8 +16,8 @@ using namespace solidity::frontend;
 // ── ExpressionStatement ──
 
 SolExpressionStatement::SolExpressionStatement(
-	StatementContext& _ctx, ExpressionStatement const& _node, awst::SourceLocation _loc)
-	: SolStatement(_ctx, std::move(_loc)), m_node(_node)
+	BlockContext& _blk, ExpressionStatement const& _node, awst::SourceLocation _loc)
+	: SolStatement(_blk, std::move(_loc)), m_node(_node)
 {
 }
 
@@ -33,9 +33,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolExpressionStatement::toAwst()
 	bool isTypeType = dynamic_cast<solidity::frontend::TypeType const*>(
 		m_node.expression().annotation().type) != nullptr;
 
-	auto expr = m_ctx.buildExpr(m_node.expression());
+	auto expr = m_blk.builderCtx().build(m_node.expression());
 
-	for (auto& p: m_ctx.takePrePending())
+	for (auto& p: m_blk.builderCtx().takePrePending())
 		result.push_back(std::move(p));
 
 	// If buildExpr couldn't produce a value expression, or the expression
@@ -43,7 +43,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolExpressionStatement::toAwst()
 	// avoid a null dereference or invalid AWST.
 	if (!expr || isTypeType)
 	{
-		for (auto& p: m_ctx.takePending())
+		for (auto& p: m_blk.builderCtx().takePending())
 			result.push_back(std::move(p));
 		return result;
 	}
@@ -51,7 +51,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolExpressionStatement::toAwst()
 	auto stmt = awst::makeExpressionStatement(std::move(expr), m_loc);
 	result.push_back(stmt);
 
-	for (auto& p: m_ctx.takePending())
+	for (auto& p: m_blk.builderCtx().takePending())
 		result.push_back(std::move(p));
 
 	return result;
@@ -60,8 +60,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolExpressionStatement::toAwst()
 // ── RevertStatement ──
 
 SolRevertStatement::SolRevertStatement(
-	StatementContext& _ctx, RevertStatement const& _node, awst::SourceLocation _loc)
-	: SolStatement(_ctx, std::move(_loc)), m_node(_node)
+	BlockContext& _blk, RevertStatement const& _node, awst::SourceLocation _loc)
+	: SolStatement(_blk, std::move(_loc)), m_node(_node)
 {
 }
 
@@ -81,8 +81,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolRevertStatement::toAwst()
 // ── ReturnStatement ──
 
 SolReturnStatement::SolReturnStatement(
-	StatementContext& _ctx, Return const& _node, awst::SourceLocation _loc)
-	: SolStatement(_ctx, std::move(_loc)), m_node(_node)
+	BlockContext& _blk, Return const& _node, awst::SourceLocation _loc)
+	: SolStatement(_blk, std::move(_loc)), m_node(_node)
 {
 }
 
@@ -101,7 +101,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 			auto const& retParams = retAnnotation.functionReturnParameters->parameters();
 			if (retParams.size() == 1)
 			{
-				auto* retType = m_ctx.typeMapper->map(retParams[0]->type());
+				auto* retType = m_blk.typeMapper().map(retParams[0]->type());
 				if (!retParams[0]->name().empty())
 				{
 					// Named return: return the variable
@@ -118,7 +118,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 	}
 	else if (m_node.expression())
 	{
-		stmt->value = m_ctx.buildExpr(*m_node.expression());
+		stmt->value = m_blk.builderCtx().build(*m_node.expression());
 
 		auto const& retAnnotation = dynamic_cast<ReturnAnnotation const&>(m_node.annotation());
 		if (retAnnotation.functionReturnParameters)
@@ -126,7 +126,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 			auto const& retParams = retAnnotation.functionReturnParameters->parameters();
 			if (retParams.size() == 1)
 			{
-				auto* expectedType = m_ctx.typeMapper->map(retParams[0]->type());
+				auto* expectedType = m_blk.typeMapper().map(retParams[0]->type());
 				stmt->value = TypeCoercion::implicitNumericCast(
 					std::move(stmt->value), expectedType, m_loc);
 
@@ -270,7 +270,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 					std::vector<awst::WType const*> expectedTypes;
 					for (size_t i = 0; i < retParams.size(); ++i)
 					{
-						auto* expectedElemType = m_ctx.typeMapper->map(retParams[i]->type());
+						auto* expectedElemType = m_blk.typeMapper().map(retParams[i]->type());
 						tupleExpr->items[i] = TypeCoercion::implicitNumericCast(
 							std::move(tupleExpr->items[i]), expectedElemType, m_loc);
 						// Bytes type widening/narrowing: e.g. bytes2 → bytes32.
@@ -321,7 +321,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 						}
 						expectedTypes.push_back(tupleExpr->items[i]->wtype);
 					}
-					tupleExpr->wtype = m_ctx.typeMapper->createType<awst::WTuple>(
+					tupleExpr->wtype = m_blk.typeMapper().createType<awst::WTuple>(
 						std::move(expectedTypes), std::nullopt);
 				}
 				else if (stmt->value->wtype
@@ -334,8 +334,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 					{
 						std::vector<awst::WType const*> expectedTypes;
 						for (size_t i = 0; i < retParams.size(); ++i)
-							expectedTypes.push_back(m_ctx.typeMapper->map(retParams[i]->type()));
-						auto* expectedTupleType = m_ctx.typeMapper->createType<awst::WTuple>(
+							expectedTypes.push_back(m_blk.typeMapper().map(retParams[i]->type()));
+						auto* expectedTupleType = m_blk.typeMapper().createType<awst::WTuple>(
 							std::vector<awst::WType const*>(expectedTypes), std::nullopt);
 
 						// Coerce true branch
@@ -363,9 +363,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 		}
 	}
 
-	for (auto& p: m_ctx.takePrePending())
+	for (auto& p: m_blk.builderCtx().takePrePending())
 		result.push_back(std::move(p));
-	for (auto& p: m_ctx.takePending())
+	for (auto& p: m_blk.builderCtx().takePending())
 		result.push_back(std::move(p));
 
 	// Enum range validation on return: EVM panics (0x21) on invalid enum return values

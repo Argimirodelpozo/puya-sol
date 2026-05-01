@@ -8,7 +8,7 @@ namespace puyasol::builder::sol_ast
 class SolIfStatement: public SolStatement
 {
 public:
-	SolIfStatement(StatementContext& _ctx,
+	SolIfStatement(BlockContext& _blk,
 		solidity::frontend::IfStatement const& _node, awst::SourceLocation _loc);
 	std::vector<std::shared_ptr<awst::Statement>> toAwst() override;
 private:
@@ -18,7 +18,7 @@ private:
 class SolWhileStatement: public SolStatement
 {
 public:
-	SolWhileStatement(StatementContext& _ctx,
+	SolWhileStatement(BlockContext& _blk,
 		solidity::frontend::WhileStatement const& _node, awst::SourceLocation _loc);
 	std::vector<std::shared_ptr<awst::Statement>> toAwst() override;
 private:
@@ -28,7 +28,7 @@ private:
 class SolForStatement: public SolStatement
 {
 public:
-	SolForStatement(StatementContext& _ctx,
+	SolForStatement(BlockContext& _blk,
 		solidity::frontend::ForStatement const& _node, awst::SourceLocation _loc);
 	std::vector<std::shared_ptr<awst::Statement>> toAwst() override;
 private:
