@@ -38,6 +38,7 @@ set(SOURCES
 	src/awst/Termination.cpp
 	# Builder core
 	src/builder/AWSTBuilder.cpp
+	src/builder/SubroutineReachability.cpp
 	src/builder/ContractBuilder.cpp
 	src/builder/contract/StorageDispatch.cpp
 	src/builder/contract/ModifierInliner.cpp
