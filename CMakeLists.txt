@@ -44,6 +44,7 @@ set(SOURCES
 	src/builder/contract/ModifierInliner.cpp
 	src/builder/contract/FunctionBuilder.cpp
 	src/builder/contract/ApprovalProgramBuilder.cpp
+	src/builder/contract/PublicGetterBuilder.cpp
 
 	# Assembly builder (split by operation type)
 	src/builder/assembly/AssemblyBuilder.cpp

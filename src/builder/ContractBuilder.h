@@ -12,6 +12,7 @@
 
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 
 namespace puyasol::builder
@@ -165,6 +166,19 @@ private:
 		awst::Contract* _contractNode,
 		std::string const& _contractName
 	);
+
+	/// Auto-generate getter methods for public state variables. Walks the
+	/// linearized base contracts and emits one ARC4 getter per `public`
+	/// variable not already covered by an explicit function. Mappings add key
+	/// params, arrays add index params, structs return their non-mapping/
+	/// non-dynamic-array fields. Skips variables whose names are in
+	/// `_translatedFunctions` (explicit getters take precedence) and adds
+	/// each emitted name to that set.
+	void buildPublicStateVariableGetters(
+		solidity::frontend::ContractDefinition const& _contract,
+		awst::Contract& _contractNode,
+		std::string const& _contractName,
+		std::set<std::string>& _translatedFunctions);
 
 	/// If buildApprovalProgram detects box writes in the constructor,
 	/// it populates this with an auto-generated __postInit method.
