@@ -47,6 +47,9 @@ set(SOURCES
 	src/builder/contract/PublicGetterBuilder.cpp
 	src/builder/contract/SuperCallResolution.cpp
 
+	# Builtin support (algorithms with no AVM opcode counterpart)
+	src/builder/builtin/Ripemd160Builder.cpp
+
 	# Assembly builder (split by operation type)
 	src/builder/assembly/AssemblyBuilder.cpp
 	src/builder/assembly/CoreTranslation.cpp

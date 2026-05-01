@@ -1,6 +1,7 @@
 #include "builder/AWSTBuilder.h"
 #include "awst/Termination.h"
 #include "builder/SubroutineReachability.h"
+#include "builder/builtin/Ripemd160Builder.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-eb/FunctionPointerBuilder.h"
 #include "Logger.h"
@@ -43,6 +44,14 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 	translateLibraryFunctions(_compiler, _sourceFile, roots);
 	translateFreeFunctions(_compiler, _sourceFile, roots);
 	translateContracts(_compiler, _sourceFile, _opupBudget, _ensureBudget, _viaYulBehavior, roots);
+
+	// Inject the synthetic RIPEMD-160 subroutine. Always emitted; the
+	// reachability filter below drops it when no contract calls it.
+	{
+		awst::SourceLocation builtinLoc;
+		builtinLoc.file = _sourceFile;
+		roots.push_back(builder::builtin::buildRipemd160Subroutine(builtinLoc));
+	}
 
 	// Drop any subroutine root not reachable from a contract method.
 	return filterToReachableSubroutines(std::move(roots));

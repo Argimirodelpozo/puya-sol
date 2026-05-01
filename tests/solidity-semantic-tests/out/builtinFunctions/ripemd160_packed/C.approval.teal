@@ -3,6 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/ripemd160_packed.sol.C.approval_program() -> uint64:
 main:
+    intcblock 4294967295 255 0 1
+    bytecblock 0x0b0e0f0c050807090b0d0e0f060709080c0d0b0f060909070c0f0b0d070807070d0f0e0b070706080d0e0d0c050506090e0b0c0e080605050f0c0f0e090908060f0c0d0d090508060e0b0c0b08060505 0x068101
     pushint 4096
     bzero
     dup
@@ -14,7 +16,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_3 // 1
     return
 
 main_after_if_else@2:
@@ -32,9 +34,875 @@ main_f_route@4:
     b f
 
 
+// __builtin_ripemd160(data: bytes) -> bytes:
+__builtin_ripemd160:
+    proto 1 1
+    pushbytes ""
+    dupn 16
+    pushints 1732584193 4023233417 2562383102 271733878 3285377520
+    frame_dig -1
+    len
+    dup
+    pushint 8
+    *
+    dig 1
+    pushint 72
+    +
+    pushint 6
+    shr
+    pushint 6
+    shl
+    dup
+    cover 3
+    frame_dig -1
+    pushbytes 0x80
+    concat
+    swap
+    uncover 3
+    -
+    pushint 9
+    -
+    bzero
+    concat
+    pushint 8
+    bzero
+    dig 2
+    intc_2 // 0
+    shr
+    intc_1 // 255
+    &
+    intc_2 // 0
+    swap
+    setbyte
+    dig 2
+    pushint 8
+    shr
+    intc_1 // 255
+    &
+    intc_3 // 1
+    swap
+    setbyte
+    dig 2
+    pushint 16
+    shr
+    intc_1 // 255
+    &
+    pushint 2
+    swap
+    setbyte
+    dig 2
+    pushint 24
+    shr
+    intc_1 // 255
+    &
+    pushint 3
+    swap
+    setbyte
+    dig 2
+    pushint 32
+    shr
+    intc_1 // 255
+    &
+    pushint 4
+    swap
+    setbyte
+    dig 2
+    pushint 40
+    shr
+    intc_1 // 255
+    &
+    pushint 5
+    swap
+    setbyte
+    dig 2
+    pushint 48
+    shr
+    intc_1 // 255
+    &
+    pushint 6
+    swap
+    setbyte
+    uncover 2
+    pushint 56
+    shr
+    intc_1 // 255
+    &
+    pushint 7
+    swap
+    setbyte
+    concat
+    intc_2 // 0
+
+__builtin_ripemd160_while_top@1:
+    frame_dig 24
+    frame_dig 22
+    <
+    bz __builtin_ripemd160_after_while@57
+    intc_2 // 0
+    frame_bury 13
+    frame_dig 21
+    frame_bury 4
+    frame_dig 17
+    frame_bury 0
+    frame_dig 20
+    frame_bury 3
+    frame_dig 19
+    frame_bury 2
+    frame_dig 18
+    frame_bury 1
+
+__builtin_ripemd160_while_top@3:
+    frame_dig 13
+    pushint 5
+    <
+    bz __builtin_ripemd160_after_while@29
+    pushbytes 0x0102030405
+    frame_dig 13
+    dup
+    cover 2
+    getbyte
+    frame_bury 10
+    bnz __builtin_ripemd160_ternary_false@6
+    intc_2 // 0
+    frame_bury 12
+
+__builtin_ripemd160_ternary_merge@13:
+    frame_dig 13
+    pushint 16
+    *
+    frame_bury 14
+    intc_2 // 0
+    frame_bury 11
+
+__builtin_ripemd160_while_top@14:
+    frame_dig 11
+    pushint 16
+    <
+    bz __builtin_ripemd160_after_while@28
+    frame_dig 14
+    dup
+    frame_dig 11
+    +
+    pushbytes 0x000102030405060708090a0b0c0d0e0f07040d010a060f030c000905020e0b08030a0e04090f0801020700060d0b050c01090b0a00080c040d03070f0e05060204000509070c020a0e0103080b060f0d
+    swap
+    getbyte
+    swap
+    dig 1
+    +
+    bytec_0 // 0x0b0e0f0c050807090b0d0e0f060709080c0d0b0f060909070c0f0b0d070807070d0f0e0b070706080d0e0d0c050506090e0b0c0e080605050f0c0f0e090908060f0c0d0d090508060e0b0c0b08060505
+    swap
+    getbyte
+    frame_bury 15
+    pushint 4
+    *
+    frame_dig 24
+    +
+    frame_dig 23
+    dup
+    cover 2
+    dig 1
+    getbyte
+    dig 1
+    intc_3 // 1
+    +
+    dig 3
+    swap
+    getbyte
+    pushint 8
+    shl
+    |
+    dig 1
+    pushint 2
+    +
+    dig 3
+    swap
+    getbyte
+    pushint 16
+    shl
+    |
+    swap
+    pushint 3
+    +
+    uncover 2
+    swap
+    getbyte
+    pushint 24
+    shl
+    |
+    frame_bury 16
+    frame_dig 10
+    intc_3 // 1
+    ==
+    bz __builtin_ripemd160_ternary_false@17
+    frame_dig 1
+    frame_dig 2
+    ^
+    frame_dig 3
+    ^
+
+__builtin_ripemd160_ternary_merge@27:
+    frame_dig 0
+    +
+    intc_0 // 4294967295
+    &
+    frame_dig 16
+    +
+    intc_0 // 4294967295
+    &
+    frame_dig 12
+    +
+    intc_0 // 4294967295
+    &
+    dup
+    frame_dig 15
+    dup
+    cover 2
+    shl
+    pushint 32
+    uncover 2
+    -
+    uncover 2
+    swap
+    shr
+    |
+    intc_0 // 4294967295
+    &
+    frame_dig 4
+    dup
+    cover 2
+    +
+    intc_0 // 4294967295
+    &
+    frame_dig 2
+    dup
+    pushint 10
+    shl
+    swap
+    pushint 22
+    shr
+    |
+    intc_0 // 4294967295
+    &
+    frame_dig 11
+    intc_3 // 1
+    +
+    frame_bury 11
+    uncover 2
+    frame_bury 0
+    frame_dig 3
+    frame_bury 4
+    frame_bury 3
+    frame_dig 1
+    frame_bury 2
+    frame_bury 1
+    b __builtin_ripemd160_while_top@14
+
+__builtin_ripemd160_ternary_false@17:
+    frame_dig 10
+    pushint 2
+    ==
+    bz __builtin_ripemd160_ternary_false@19
+    frame_dig 1
+    dup
+    frame_dig 2
+    &
+    swap
+    intc_0 // 4294967295
+    ^
+    frame_dig 3
+    &
+    |
+    intc_0 // 4294967295
+    &
+
+__builtin_ripemd160_ternary_merge@26:
+    b __builtin_ripemd160_ternary_merge@27
+
+__builtin_ripemd160_ternary_false@19:
+    frame_dig 10
+    pushint 3
+    ==
+    bz __builtin_ripemd160_ternary_false@21
+    frame_dig 2
+    intc_0 // 4294967295
+    ^
+    frame_dig 1
+    |
+    frame_dig 3
+    ^
+
+__builtin_ripemd160_ternary_merge@25:
+    b __builtin_ripemd160_ternary_merge@27
+
+__builtin_ripemd160_ternary_false@21:
+    frame_dig 10
+    pushint 4
+    ==
+    bz __builtin_ripemd160_ternary_false@23
+    frame_dig 1
+    frame_dig 3
+    dup
+    cover 2
+    &
+    swap
+    intc_0 // 4294967295
+    ^
+    frame_dig 2
+    &
+    |
+    intc_0 // 4294967295
+    &
+    b __builtin_ripemd160_ternary_merge@26
+
+__builtin_ripemd160_ternary_false@23:
+    frame_dig 3
+    intc_0 // 4294967295
+    ^
+    frame_dig 2
+    |
+    frame_dig 1
+    ^
+    b __builtin_ripemd160_ternary_merge@25
+
+__builtin_ripemd160_after_while@28:
+    frame_dig 13
+    intc_3 // 1
+    +
+    frame_bury 13
+    b __builtin_ripemd160_while_top@3
+
+__builtin_ripemd160_ternary_false@6:
+    frame_dig 13
+    intc_3 // 1
+    ==
+    bz __builtin_ripemd160_ternary_false@8
+    pushint 1518500249
+
+__builtin_ripemd160_ternary_merge@12:
+    frame_bury 12
+    b __builtin_ripemd160_ternary_merge@13
+
+__builtin_ripemd160_ternary_false@8:
+    frame_dig 13
+    pushint 2
+    ==
+    bz __builtin_ripemd160_ternary_false@10
+    pushint 1859775393
+    b __builtin_ripemd160_ternary_merge@12
+
+__builtin_ripemd160_ternary_false@10:
+    frame_dig 13
+    pushint 3
+    ==
+    pushints 2840853838 2400959708
+    uncover 2
+    select
+    b __builtin_ripemd160_ternary_merge@12
+
+__builtin_ripemd160_after_while@29:
+    intc_2 // 0
+    frame_bury 13
+    frame_dig 21
+    frame_bury 9
+    frame_dig 17
+    frame_bury 5
+    frame_dig 20
+    frame_bury 8
+    frame_dig 19
+    frame_bury 7
+    frame_dig 18
+    frame_bury 6
+
+__builtin_ripemd160_while_top@30:
+    frame_dig 13
+    pushint 5
+    <
+    bz __builtin_ripemd160_after_while@56
+    pushbytes 0x0504030201
+    frame_dig 13
+    dup
+    cover 2
+    getbyte
+    frame_bury 10
+    bnz __builtin_ripemd160_ternary_false@33
+    pushint 1352829926
+    frame_bury 12
+
+__builtin_ripemd160_ternary_merge@40:
+    frame_dig 13
+    pushint 16
+    *
+    frame_bury 14
+    intc_2 // 0
+    frame_bury 11
+
+__builtin_ripemd160_while_top@41:
+    frame_dig 11
+    pushint 16
+    <
+    bz __builtin_ripemd160_after_while@55
+    frame_dig 14
+    dup
+    frame_dig 11
+    +
+    pushbytes 0x050e070009020b040d060f08010a030c060b0307000d050a0e0f080c040901020f050103070e06090b080c020a00040d08060401030b0f00050c020d09070a0e0c0f0a040105080706020d0e0003090b
+    swap
+    getbyte
+    swap
+    dig 1
+    +
+    bytec_0 // 0x0b0e0f0c050807090b0d0e0f060709080c0d0b0f060909070c0f0b0d070807070d0f0e0b070706080d0e0d0c050506090e0b0c0e080605050f0c0f0e090908060f0c0d0d090508060e0b0c0b08060505
+    swap
+    getbyte
+    frame_bury 15
+    pushint 4
+    *
+    frame_dig 24
+    +
+    frame_dig 23
+    dup
+    cover 2
+    dig 1
+    getbyte
+    dig 1
+    intc_3 // 1
+    +
+    dig 3
+    swap
+    getbyte
+    pushint 8
+    shl
+    |
+    dig 1
+    pushint 2
+    +
+    dig 3
+    swap
+    getbyte
+    pushint 16
+    shl
+    |
+    swap
+    pushint 3
+    +
+    uncover 2
+    swap
+    getbyte
+    pushint 24
+    shl
+    |
+    frame_bury 16
+    frame_dig 10
+    intc_3 // 1
+    ==
+    bz __builtin_ripemd160_ternary_false@44
+    frame_dig 6
+    frame_dig 7
+    ^
+    frame_dig 8
+    ^
+
+__builtin_ripemd160_ternary_merge@54:
+    frame_dig 5
+    +
+    intc_0 // 4294967295
+    &
+    frame_dig 16
+    +
+    intc_0 // 4294967295
+    &
+    frame_dig 12
+    +
+    intc_0 // 4294967295
+    &
+    dup
+    frame_dig 15
+    dup
+    cover 2
+    shl
+    pushint 32
+    uncover 2
+    -
+    uncover 2
+    swap
+    shr
+    |
+    intc_0 // 4294967295
+    &
+    frame_dig 9
+    dup
+    cover 2
+    +
+    intc_0 // 4294967295
+    &
+    frame_dig 7
+    dup
+    pushint 10
+    shl
+    swap
+    pushint 22
+    shr
+    |
+    intc_0 // 4294967295
+    &
+    frame_dig 11
+    intc_3 // 1
+    +
+    frame_bury 11
+    uncover 2
+    frame_bury 5
+    frame_dig 8
+    frame_bury 9
+    frame_bury 8
+    frame_dig 6
+    frame_bury 7
+    frame_bury 6
+    b __builtin_ripemd160_while_top@41
+
+__builtin_ripemd160_ternary_false@44:
+    frame_dig 10
+    pushint 2
+    ==
+    bz __builtin_ripemd160_ternary_false@46
+    frame_dig 6
+    dup
+    frame_dig 7
+    &
+    swap
+    intc_0 // 4294967295
+    ^
+    frame_dig 8
+    &
+    |
+    intc_0 // 4294967295
+    &
+
+__builtin_ripemd160_ternary_merge@53:
+    b __builtin_ripemd160_ternary_merge@54
+
+__builtin_ripemd160_ternary_false@46:
+    frame_dig 10
+    pushint 3
+    ==
+    bz __builtin_ripemd160_ternary_false@48
+    frame_dig 7
+    intc_0 // 4294967295
+    ^
+    frame_dig 6
+    |
+    frame_dig 8
+    ^
+
+__builtin_ripemd160_ternary_merge@52:
+    b __builtin_ripemd160_ternary_merge@54
+
+__builtin_ripemd160_ternary_false@48:
+    frame_dig 10
+    pushint 4
+    ==
+    bz __builtin_ripemd160_ternary_false@50
+    frame_dig 6
+    frame_dig 8
+    dup
+    cover 2
+    &
+    swap
+    intc_0 // 4294967295
+    ^
+    frame_dig 7
+    &
+    |
+    intc_0 // 4294967295
+    &
+    b __builtin_ripemd160_ternary_merge@53
+
+__builtin_ripemd160_ternary_false@50:
+    frame_dig 8
+    intc_0 // 4294967295
+    ^
+    frame_dig 7
+    |
+    frame_dig 6
+    ^
+    b __builtin_ripemd160_ternary_merge@52
+
+__builtin_ripemd160_after_while@55:
+    frame_dig 13
+    intc_3 // 1
+    +
+    frame_bury 13
+    b __builtin_ripemd160_while_top@30
+
+__builtin_ripemd160_ternary_false@33:
+    frame_dig 13
+    intc_3 // 1
+    ==
+    bz __builtin_ripemd160_ternary_false@35
+    pushint 1548603684
+
+__builtin_ripemd160_ternary_merge@39:
+    frame_bury 12
+    b __builtin_ripemd160_ternary_merge@40
+
+__builtin_ripemd160_ternary_false@35:
+    frame_dig 13
+    pushint 2
+    ==
+    bz __builtin_ripemd160_ternary_false@37
+    pushint 1836072691
+    b __builtin_ripemd160_ternary_merge@39
+
+__builtin_ripemd160_ternary_false@37:
+    frame_dig 13
+    pushint 3
+    ==
+    pushint 2053994217
+    *
+    b __builtin_ripemd160_ternary_merge@39
+
+__builtin_ripemd160_after_while@56:
+    frame_dig 17
+    frame_dig 1
+    +
+    intc_0 // 4294967295
+    &
+    frame_dig 7
+    +
+    intc_0 // 4294967295
+    &
+    frame_dig 18
+    frame_dig 2
+    +
+    intc_0 // 4294967295
+    &
+    frame_dig 8
+    +
+    intc_0 // 4294967295
+    &
+    frame_bury 17
+    frame_dig 19
+    frame_dig 3
+    +
+    intc_0 // 4294967295
+    &
+    frame_dig 9
+    +
+    intc_0 // 4294967295
+    &
+    frame_bury 18
+    frame_dig 20
+    frame_dig 4
+    +
+    intc_0 // 4294967295
+    &
+    frame_dig 5
+    +
+    intc_0 // 4294967295
+    &
+    frame_bury 19
+    frame_dig 21
+    frame_dig 0
+    +
+    intc_0 // 4294967295
+    &
+    frame_dig 6
+    +
+    intc_0 // 4294967295
+    &
+    frame_bury 20
+    frame_dig 24
+    pushint 64
+    +
+    frame_bury 24
+    frame_bury 21
+    b __builtin_ripemd160_while_top@1
+
+__builtin_ripemd160_after_while@57:
+    pushint 4
+    bzero
+    frame_dig 17
+    dup
+    cover 2
+    intc_2 // 0
+    shr
+    intc_1 // 255
+    &
+    dig 1
+    intc_2 // 0
+    uncover 2
+    setbyte
+    dig 2
+    pushint 8
+    shr
+    intc_1 // 255
+    &
+    intc_3 // 1
+    swap
+    setbyte
+    dig 2
+    pushint 16
+    shr
+    intc_1 // 255
+    &
+    pushint 2
+    swap
+    setbyte
+    uncover 2
+    pushint 24
+    shr
+    intc_1 // 255
+    &
+    pushint 3
+    swap
+    setbyte
+    frame_dig 18
+    dup
+    intc_2 // 0
+    shr
+    intc_1 // 255
+    &
+    dig 3
+    intc_2 // 0
+    uncover 2
+    setbyte
+    dig 1
+    pushint 8
+    shr
+    intc_1 // 255
+    &
+    intc_3 // 1
+    swap
+    setbyte
+    dig 1
+    pushint 16
+    shr
+    intc_1 // 255
+    &
+    pushint 2
+    swap
+    setbyte
+    swap
+    pushint 24
+    shr
+    intc_1 // 255
+    &
+    pushint 3
+    swap
+    setbyte
+    concat
+    frame_dig 19
+    dup
+    intc_2 // 0
+    shr
+    intc_1 // 255
+    &
+    dig 3
+    intc_2 // 0
+    uncover 2
+    setbyte
+    dig 1
+    pushint 8
+    shr
+    intc_1 // 255
+    &
+    intc_3 // 1
+    swap
+    setbyte
+    dig 1
+    pushint 16
+    shr
+    intc_1 // 255
+    &
+    pushint 2
+    swap
+    setbyte
+    swap
+    pushint 24
+    shr
+    intc_1 // 255
+    &
+    pushint 3
+    swap
+    setbyte
+    concat
+    frame_dig 20
+    dup
+    intc_2 // 0
+    shr
+    intc_1 // 255
+    &
+    dig 3
+    intc_2 // 0
+    uncover 2
+    setbyte
+    dig 1
+    pushint 8
+    shr
+    intc_1 // 255
+    &
+    intc_3 // 1
+    swap
+    setbyte
+    dig 1
+    pushint 16
+    shr
+    intc_1 // 255
+    &
+    pushint 2
+    swap
+    setbyte
+    swap
+    pushint 24
+    shr
+    intc_1 // 255
+    &
+    pushint 3
+    swap
+    setbyte
+    concat
+    frame_dig 21
+    dup
+    intc_2 // 0
+    shr
+    intc_1 // 255
+    &
+    uncover 3
+    intc_2 // 0
+    uncover 2
+    setbyte
+    dig 1
+    pushint 8
+    shr
+    intc_1 // 255
+    &
+    intc_3 // 1
+    swap
+    setbyte
+    dig 1
+    pushint 16
+    shr
+    intc_1 // 255
+    &
+    pushint 2
+    swap
+    setbyte
+    swap
+    pushint 24
+    shr
+    intc_1 // 255
+    &
+    pushint 3
+    swap
+    setbyte
+    concat
+    frame_bury 0
+    retsub
+
+
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/ripemd160_packed.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
+    dup
     len
     pushint 32
     ==
@@ -42,18 +910,72 @@ f:
     txn GroupIndex
     bz f_ternary_false@3
     txn GroupIndex
-    pushint 1
+    intc_3 // 1
     -
     gtxns Amount
 
 f_ternary_merge@4:
     !
     assert // not payable
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+
+f_while_top@6:
+    pushint 170010
+    global OpcodeBudget
+    >
+    bz f_after_while@11
+    itxn_begin
+    pushint 6 // appl
+    itxn_field TypeEnum
+    pushint 5 // DeleteApplication
+    itxn_field OnCompletion
+    bytec_1 // 0x068101
+    itxn_field ApprovalProgram
+    bytec_1 // 0x068101
+    itxn_field ClearStateProgram
+    intc_2 // 0
+    itxn_field Fee
+    itxn_submit
+    b f_while_top@6
+
+f_after_while@11:
+    pushint 32
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    pushint 32
+    -
+    pushint 32
+    extract3
+    concat
+    dup
+    len
+    pushint 32
+    -
+    pushint 32
+    extract3
+    pushbytes 0x08
+    dig 1
+    concat
+    pushbytes 0x010000
+    concat
+    swap
+    concat
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000100
+    concat
+    callsub __builtin_ripemd160
+    pushint 12
+    bzero
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
-    pushint 1
+    intc_3 // 1
     return
 
 f_ternary_false@3:
-    pushint 0
+    intc_2 // 0
     b f_ternary_merge@4

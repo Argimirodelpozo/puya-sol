@@ -1,4 +1,6 @@
 #include "builder/sol-ast/calls/SolBuiltinCall.h"
+#include "builder/builtin/Ripemd160Builder.h"
+#include "builder/sol-eb/BuilderContext.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
@@ -104,12 +106,29 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 					m_ctx.typeMapper.createType<awst::BytesWType>(20));
 			}
 		}
-		Logger::instance().warning(
-			"ripemd160() has no AVM equivalent — returning bytes20(0); "
-			"cryptographic uses will misbehave.", m_loc);
-		return awst::makeBytesConstant(
-			std::vector<uint8_t>(20, 0), m_loc, awst::BytesEncoding::Base16,
-			m_ctx.typeMapper.createType<awst::BytesWType>(20));
+		// Real implementation: call the synthesized __builtin_ripemd160
+		// subroutine. AWSTBuilder always emits the body; reachability DCE
+		// drops it when no contract uses it.
+		auto arg = buildExpr(*m_call.arguments()[0]);
+		auto* bytes20Type = m_ctx.typeMapper.createType<awst::BytesWType>(20);
+		auto call = std::make_shared<awst::SubroutineCallExpression>();
+		call->sourceLocation = m_loc;
+		call->wtype = awst::WType::bytesType();
+		call->target = awst::SubroutineID{builtin::ripemd160SubroutineId()};
+		awst::CallArg callArg;
+		callArg.name = "data";
+		// Solidity's `ripemd160(bytes memory)` accepts string/bytes/etc.
+		// Coerce non-bytes to bytes via ReinterpretCast where the wtype
+		// already matches the bytes representation (bytes/string), and
+		// otherwise fall back to whatever buildExpr produced — non-bytes
+		// shapes shouldn't reach here per Solidity type rules.
+		if (arg && arg->wtype != awst::WType::bytesType())
+			arg = awst::makeReinterpretCast(std::move(arg), awst::WType::bytesType(), m_loc);
+		callArg.value = std::move(arg);
+		call->args.push_back(std::move(callArg));
+		// Bytes20 result type: reinterpret the 20-byte return from the
+		// subroutine to bytes20 so callers' type expectations match.
+		return awst::makeReinterpretCast(std::move(call), bytes20Type, m_loc);
 	}
 
 	// erc7201 — ERC-7201 namespace slot.
