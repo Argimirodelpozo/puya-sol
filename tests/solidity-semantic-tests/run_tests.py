@@ -2416,8 +2416,11 @@ def _evm_walk_compare(words, base, actual):
     distinction between e.g. `uint256[]` (dynamic) and `uint256[2]`
     (static) elements."""
     # String/bytes leaf: EVM-ABI dynamic encoding is [length, data words...].
-    # `actual` is a Python str or bytes after algokit decodes the ARC4 string.
-    if isinstance(actual, (str, bytes)):
+    # `actual` is a Python str/bytes (or list-of-byte-ints — algokit's
+    # default decode for arc4 byte[]) after algokit decodes the ARC4 value.
+    is_byte_list = (isinstance(actual, (list, tuple)) and len(actual) > 0
+        and all(isinstance(b, int) and 0 <= b < 256 for b in actual))
+    if isinstance(actual, (str, bytes)) or is_byte_list:
         if base >= len(words):
             return False
         n = words[base]
@@ -2501,19 +2504,27 @@ def _evm_walk_compare(words, base, actual):
                         break
                 if ok:
                     return True
-            # Inner list is `address`/`uintN` decoded by algokit as a list of
-            # 32 byte-ints, while the fixture provides a single int (small
-            # address literal). Pack bytes → int and compare to one word.
-            # Examples: contract returning `address[]` decoded as
-            # [[0..0,1],[0..0,2]] against fixture [1,2].
+            # Inner list is `address` / `uintN` / `bytesN` decoded by algokit
+            # as a list of byte-ints, while the fixture provides a single int
+            # per element. Pack bytes → int and compare to one word per
+            # element. For N < 32 (bytesN), EVM left-aligns the value within
+            # a 32-byte word (right-padded with zeros), so we shift the
+            # packed int left to match. Examples:
+            #   contract returning `address[]`  decoded [[0..0,1],[0..0,2]]
+            #                                   fixture [1,2]                  (N=32)
+            #   contract returning `bytes20[]`  decoded [[..20B..],..]
+            #                                   fixture [int<<96, ..]          (N=20)
             if (body_start + n <= len(words)
-                and all(isinstance(elem, (list, tuple)) and len(elem) == 32
+                and all(isinstance(elem, (list, tuple)) and 0 < len(elem) <= 32
                         and all(isinstance(b, int) and 0 <= b < 256 for b in elem)
                         for elem in actual)
+                and len(set(len(e) for e in actual)) == 1   # uniform width
                 and all(isinstance(words[body_start + i], int) for i in range(n))):
+                elem_bytes = len(actual[0])
+                pad_shift = (32 - elem_bytes) * 8  # left-align in 32B word
                 ok = True
                 for i in range(n):
-                    elem_int = int.from_bytes(bytes(actual[i]), 'big')
+                    elem_int = int.from_bytes(bytes(actual[i]), 'big') << pad_shift
                     if elem_int != words[body_start + i]:
                         ok = False
                         break
