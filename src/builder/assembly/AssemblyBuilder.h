@@ -547,6 +547,29 @@ private:
 		std::vector<std::pair<std::string, awst::WType const*>> const& _params
 	);
 
+	/// Synthetic calldata-blob support — for Yul that does dynamic-offset
+	/// calldataload/calldatacopy/calldatasize. We materialise a single
+	/// `__cd_blob` bytes local at the start of the assembly block whose
+	/// content matches Solidity's EVM-ABI calldata layout for the function
+	/// (selector + head section + tail section). Then any
+	/// calldataload(off) becomes `extract3(__cd_blob, off, 32)`.
+	bool m_useSyntheticCalldata = false;
+	std::vector<std::pair<std::string, awst::WType const*>> m_calldataParams;
+	static constexpr char const* CD_BLOB_VAR = "__cd_blob";
+
+	/// Walk the Yul block and detect any calldataload / calldatacopy /
+	/// calldatasize whose offset is not a compile-time constant. Returns
+	/// true iff at least one such site is found.
+	bool detectDynamicCalldataAccess(solidity::yul::Block const& _block);
+
+	/// Emit `__cd_blob = <selector ++ head ++ tail>` as AWST statements.
+	/// Reads from the param locals; uses runtime concat / pad ops.
+	void buildSyntheticCalldataBlob(
+		std::vector<std::pair<std::string, awst::WType const*>> const& _params,
+		std::vector<std::shared_ptr<awst::Statement>>& _out,
+		awst::SourceLocation const& _loc
+	);
+
 	/// Compute the flat element count for an AWST type (handles nested arrays).
 	static int computeFlatElementCount(awst::WType const* _type);
 

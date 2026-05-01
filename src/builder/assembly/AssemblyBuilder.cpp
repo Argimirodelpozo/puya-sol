@@ -132,6 +132,12 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 
 	initializeCalldataMap(_params);
 
+	// If the Yul block accesses calldata at non-constant offsets (or uses
+	// calldatasize), enable the synthetic-calldata blob path. The blob is
+	// emitted in the prelude statements below, after array-param init.
+	m_useSyntheticCalldata = detectDynamicCalldataAccess(_block);
+	m_calldataParams = _params;
+
 	// Detect array parameter for blob initialization
 	for (auto const& [name, type]: _params)
 	{
@@ -417,6 +423,14 @@ void AssemblyBuilder::initializeMemoryBlob(
 	// Set __free_memory_ptr as a local constant for resolveConstantOffset.
 	// This is the initial value; actual runtime value may differ after mstore(0x40,...).
 	m_localConstants["__free_memory_ptr"] = 0x80;
+
+	// Synthesize the EVM-ABI calldata blob if the Yul accesses calldata
+	// at a dynamic offset (or uses calldatasize). Builds a `__cd_blob`
+	// local that mirrors Solidity's calldata layout
+	// (selector + head section + tail section), letting any
+	// calldataload(off) translate to extract3(__cd_blob, off, 32).
+	if (m_useSyntheticCalldata)
+		buildSyntheticCalldataBlob(_params, _out, loc);
 
 	// Write array parameter elements into the blob at 0x80 + i*0x20
 	if (!m_arrayParamName.empty() && m_arrayParamSize > 0)
