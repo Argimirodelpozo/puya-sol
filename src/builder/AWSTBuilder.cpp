@@ -1,4 +1,5 @@
 #include "builder/AWSTBuilder.h"
+#include "awst/Termination.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-eb/FunctionPointerBuilder.h"
 #include "Logger.h"
@@ -11,104 +12,14 @@
 namespace puyasol::builder
 {
 
-/// Returns true if a statement always terminates (return or assert(false)).
-static bool statementAlwaysTerminates(awst::Statement const& _stmt)
-{
-	if (dynamic_cast<awst::ReturnStatement const*>(&_stmt))
-		return true;
-	// assert(false) from revert/require
-	if (auto const* exprStmt = dynamic_cast<awst::ExpressionStatement const*>(&_stmt))
-	{
-		if (auto const* assertExpr = dynamic_cast<awst::AssertExpression const*>(exprStmt->expr.get()))
-		{
-			if (auto const* boolConst = dynamic_cast<awst::BoolConstant const*>(assertExpr->condition.get()))
-				if (!boolConst->value)
-					return true;
-		}
-	}
-	return false;
-}
-
-/// Returns true if the given block always terminates (return or revert on all paths).
-static bool blockAlwaysTerminates(awst::Block const& _block)
-{
-	if (_block.body.empty())
-		return false;
-	auto const& last = _block.body.back();
-	if (statementAlwaysTerminates(*last))
-		return true;
-	// Check if last statement is an IfElse where both branches terminate
-	if (auto const* ifElse = dynamic_cast<awst::IfElse const*>(last.get()))
-	{
-		if (!ifElse->elseBranch)
-			return false; // no else → might fall through
-		bool ifTerminates = blockAlwaysTerminates(*ifElse->ifBranch);
-		bool elseTerminates = blockAlwaysTerminates(*ifElse->elseBranch);
-		return ifTerminates && elseTerminates;
-	}
-	// Nested Block: recurse — brace-less branches wrap their single stmt in a Block
-	if (auto const* inner = dynamic_cast<awst::Block const*>(last.get()))
-		return blockAlwaysTerminates(*inner);
-	return false;
-}
-
-/// Remove unreachable statements after terminators in a block body.
-static void removeDeadCode(std::vector<std::shared_ptr<awst::Statement>>& _body)
-{
-	for (size_t i = 0; i < _body.size(); ++i)
-	{
-		// Recurse into nested blocks
-		if (auto* ifElse = dynamic_cast<awst::IfElse*>(_body[i].get()))
-		{
-			if (ifElse->ifBranch) removeDeadCode(ifElse->ifBranch->body);
-			if (ifElse->elseBranch) removeDeadCode(ifElse->elseBranch->body);
-		}
-		else if (auto* block = dynamic_cast<awst::Block*>(_body[i].get()))
-			removeDeadCode(block->body);
-		else if (auto* whileLoop = dynamic_cast<awst::WhileLoop*>(_body[i].get()))
-		{
-			if (whileLoop->loopBody) removeDeadCode(whileLoop->loopBody->body);
-		}
-		else if (auto* forLoop = dynamic_cast<awst::ForInLoop*>(_body[i].get()))
-		{
-			if (forLoop->loopBody) removeDeadCode(forLoop->loopBody->body);
-		}
-
-		// If this statement always terminates, remove everything after it
-		if (statementAlwaysTerminates(*_body[i]) && i + 1 < _body.size())
-		{
-			_body.erase(_body.begin() + i + 1, _body.end());
-			break;
-		}
-		// Also check if an IfElse terminates on all paths
-		if (auto const* ifElse = dynamic_cast<awst::IfElse const*>(_body[i].get()))
-		{
-			if (ifElse->ifBranch && ifElse->elseBranch
-				&& blockAlwaysTerminates(*ifElse->ifBranch)
-				&& blockAlwaysTerminates(*ifElse->elseBranch)
-				&& i + 1 < _body.size())
-			{
-				_body.erase(_body.begin() + i + 1, _body.end());
-				break;
-			}
-		}
-		// Nested Block that terminates → trim following
-		if (auto const* inner = dynamic_cast<awst::Block const*>(_body[i].get()))
-		{
-			if (blockAlwaysTerminates(*inner) && i + 1 < _body.size())
-			{
-				_body.erase(_body.begin() + i + 1, _body.end());
-				break;
-			}
-		}
-	}
-}
+using awst::statementAlwaysTerminates;
+using awst::blockAlwaysTerminates;
 
 /// Apply dead code elimination to all methods in a contract.
 static void eliminateDeadCode(awst::Contract& _contract)
 {
 	auto dce = [](awst::ContractMethod& m) {
-		if (m.body) removeDeadCode(m.body->body);
+		if (m.body) awst::removeDeadCode(m.body->body);
 	};
 	dce(_contract.approvalProgram);
 	dce(_contract.clearProgram);

@@ -1,4 +1,5 @@
 #include "builder/ContractBuilder.h"
+#include "awst/Termination.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -9,30 +10,7 @@
 namespace puyasol::builder
 {
 
-static bool blockAlwaysTerminates(awst::Block const& _block)
-{
-	if (_block.body.empty())
-		return false;
-	auto const& last = _block.body.back();
-	if (dynamic_cast<awst::ReturnStatement const*>(last.get()))
-		return true;
-	if (auto const* exprStmt = dynamic_cast<awst::ExpressionStatement const*>(last.get()))
-	{
-		if (auto const* assertExpr = dynamic_cast<awst::AssertExpression const*>(exprStmt->expr.get()))
-			if (auto const* boolConst = dynamic_cast<awst::BoolConstant const*>(assertExpr->condition.get()))
-				if (!boolConst->value)
-					return true;
-	}
-	if (auto const* ifElse = dynamic_cast<awst::IfElse const*>(last.get()))
-	{
-		if (!ifElse->elseBranch)
-			return false;
-		return blockAlwaysTerminates(*ifElse->ifBranch) && blockAlwaysTerminates(*ifElse->elseBranch);
-	}
-	if (auto const* inner = dynamic_cast<awst::Block const*>(last.get()))
-		return blockAlwaysTerminates(*inner);
-	return false;
-}
+using awst::blockAlwaysTerminates;
 
 awst::ContractMethod ContractBuilder::buildClearProgram(
 	solidity::frontend::ContractDefinition const& _contract,
