@@ -2203,6 +2203,13 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                             actual_for_cmp = bytes(actual)
                         if _compare_values(actual_for_cmp, data):
                             return True, f"{actual}"
+                        # msg.data / msg.sig fixtures encode the EVM keccak256
+                        # selector in the first 4 bytes of `data`; our runtime
+                        # emits the ARC4 sha512_256 selector. If both sides
+                        # are bytes that differ only in their first 4-byte
+                        # selector and the tail matches, accept.
+                        if _bytes_field_selector_bridge(actual_for_cmp, data):
+                            return True, f"{actual}"
                         return False, f"expected {data}, got {actual_for_cmp}"
                     if collapsed:
                         expected_list = collapsed
