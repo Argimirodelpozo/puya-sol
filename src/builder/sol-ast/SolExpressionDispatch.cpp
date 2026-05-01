@@ -1,7 +1,13 @@
 /// @file SolExpressionDispatch.cpp
-/// Central expression dispatcher — replaces the legacy visitor pattern.
+/// Central expression dispatcher — implemented as a SolASTVisitor subclass.
+///
+/// `buildExpression` constructs a per-call AwstExpressionVisitor, hands it the
+/// translation context, and dispatches by Solidity AST kind to the right
+/// per-kind handler in src/builder/sol-ast/exprs/. The visitor base
+/// (SolASTVisitor.h) handles the dynamic_cast cascade.
 
 #include "builder/sol-ast/SolExpressionDispatch.h"
+#include "builder/sol-ast/SolASTVisitor.h"
 #include "builder/sol-ast/SolExpressionFactory.h"
 #include "builder/sol-ast/exprs/SolLiteral.h"
 #include "builder/sol-ast/exprs/SolConditional.h"
@@ -22,76 +28,96 @@ namespace puyasol::builder::sol_ast
 
 using namespace solidity::frontend;
 
-std::shared_ptr<awst::Expression> buildExpression(
-	eb::BuilderContext& _ctx,
-	Expression const& _expr)
+namespace
 {
-	auto makeLoc = [&](Expression const& e) {
-		return _ctx.makeLoc(e.location().start, e.location().end);
-	};
 
-	// Literal
-	if (auto const* node = dynamic_cast<Literal const*>(&_expr))
+class AwstExpressionVisitor: public SolASTVisitor<std::shared_ptr<awst::Expression>>
+{
+public:
+	explicit AwstExpressionVisitor(eb::BuilderContext& _ctx): m_ctx(_ctx) {}
+
+	std::shared_ptr<awst::Expression> visitLiteral(Literal const& _n) override
 	{
-		SolLiteral handler(_ctx, *node);
+		SolLiteral handler(m_ctx, _n);
 		return handler.toAwst();
 	}
 
-	// Identifier
-	if (auto const* node = dynamic_cast<Identifier const*>(&_expr))
+	std::shared_ptr<awst::Expression> visitIdentifier(Identifier const& _n) override
 	{
-		SolIdentifier handler(_ctx, *node);
+		SolIdentifier handler(m_ctx, _n);
 		return handler.toAwst();
 	}
 
-	// BinaryOperation
-	if (auto const* node = dynamic_cast<BinaryOperation const*>(&_expr))
+	std::shared_ptr<awst::Expression> visitBinaryOp(BinaryOperation const& _n) override
 	{
-		SolBinaryOperation handler(_ctx, *node);
+		SolBinaryOperation handler(m_ctx, _n);
 		return handler.toAwst();
 	}
 
-	// UnaryOperation
-	if (auto const* node = dynamic_cast<UnaryOperation const*>(&_expr))
+	std::shared_ptr<awst::Expression> visitUnaryOp(UnaryOperation const& _n) override
 	{
-		SolUnaryOperation handler(_ctx, *node);
+		SolUnaryOperation handler(m_ctx, _n);
 		return handler.toAwst();
 	}
 
-	// FunctionCall — uses factory for Kind dispatch
-	if (auto const* node = dynamic_cast<FunctionCall const*>(&_expr))
+	std::shared_ptr<awst::Expression> visitConditional(Conditional const& _n) override
 	{
-		SolExpressionFactory factory(_ctx);
-		auto handler = factory.createFunctionCall(*node);
+		SolConditional handler(m_ctx, _n);
+		return handler.toAwst();
+	}
+
+	std::shared_ptr<awst::Expression> visitAssignment(Assignment const& _n) override
+	{
+		SolAssignment handler(m_ctx, _n);
+		return handler.toAwst();
+	}
+
+	std::shared_ptr<awst::Expression> visitIndexAccess(IndexAccess const& _n) override
+	{
+		SolIndexAccess handler(m_ctx, _n);
+		return handler.toAwst();
+	}
+
+	std::shared_ptr<awst::Expression> visitIndexRange(IndexRangeAccess const& _n) override
+	{
+		SolIndexRangeAccess handler(m_ctx, _n);
+		return handler.toAwst();
+	}
+
+	std::shared_ptr<awst::Expression> visitTuple(TupleExpression const& _n) override
+	{
+		SolTupleExpression handler(m_ctx, _n);
+		return handler.toAwst();
+	}
+
+	std::shared_ptr<awst::Expression> visitFunctionCall(FunctionCall const& _n) override
+	{
+		SolExpressionFactory factory(m_ctx);
+		auto handler = factory.createFunctionCall(_n);
 		if (handler)
 			return handler->toAwst();
-		// Unhandled function call kind
-		Logger::instance().warning("unhandled function call kind", makeLoc(*node));
-		auto vc = std::make_shared<awst::VoidConstant>();
-		vc->sourceLocation = makeLoc(*node);
-		vc->wtype = awst::WType::voidType();
-		return vc;
+		Logger::instance().warning("unhandled function call kind", makeLoc(_n));
+		return makeVoid(_n);
 	}
 
-	// MemberAccess — uses factory for dispatch
-	if (auto const* node = dynamic_cast<MemberAccess const*>(&_expr))
+	std::shared_ptr<awst::Expression> visitMemberAccess(MemberAccess const& _n) override
 	{
-		SolExpressionFactory factory(_ctx);
-		auto handler = factory.createMemberAccess(*node);
+		SolExpressionFactory factory(m_ctx);
+		auto handler = factory.createMemberAccess(_n);
 		if (handler)
 		{
 			auto result = handler->toAwst();
 			if (result) return result;
 		}
 
-		// Fallback: sol-eb builder dispatch
-		auto base = buildExpression(_ctx, node->expression());
-		auto loc = makeLoc(*node);
-		auto* baseSolType = node->expression().annotation().type;
-		auto builder = _ctx.builderForInstance(baseSolType, base);
+		// Fallback: sol-eb builder dispatch on the base value's instance builder.
+		auto base = visit(_n.expression());
+		auto loc = makeLoc(_n);
+		auto* baseSolType = _n.expression().annotation().type;
+		auto builder = m_ctx.builderForInstance(baseSolType, base);
 		if (builder)
 		{
-			auto result = builder->member_access(node->memberName(), loc);
+			auto result = builder->member_access(_n.memberName(), loc);
 			if (result)
 			{
 				if (auto* instBuilder = dynamic_cast<eb::InstanceBuilder*>(result.get()))
@@ -99,82 +125,63 @@ std::shared_ptr<awst::Expression> buildExpression(
 			}
 		}
 
-		// Ultimate fallback
+		// Ultimate fallback — emit a typed zero of the expected result type.
 		Logger::instance().warning(
-			"unsupported member access '." + node->memberName() + "'", loc);
-		auto* wtype = _ctx.typeMapper.map(node->annotation().type);
+			"unsupported member access '." + _n.memberName() + "'", loc);
+		auto* wtype = m_ctx.typeMapper.map(_n.annotation().type);
 		if (wtype == awst::WType::uint64Type() || wtype == awst::WType::biguintType())
-		{
-			auto e = awst::makeIntegerConstant("0", loc, wtype);
-			return e;
-		}
+			return awst::makeIntegerConstant("0", loc, wtype);
 		if (wtype == awst::WType::boolType())
-		{
 			return awst::makeBoolConstant(false, loc, wtype);
-		}
 		return awst::makeBytesConstant({}, loc);
 	}
 
-	// Conditional
-	if (auto const* node = dynamic_cast<Conditional const*>(&_expr))
+	std::shared_ptr<awst::Expression> visitCallOptions(FunctionCallOptions const& _n) override
 	{
-		SolConditional handler(_ctx, *node);
-		return handler.toAwst();
-	}
-
-	// Assignment
-	if (auto const* node = dynamic_cast<Assignment const*>(&_expr))
-	{
-		SolAssignment handler(_ctx, *node);
-		return handler.toAwst();
-	}
-
-	// IndexAccess
-	if (auto const* node = dynamic_cast<IndexAccess const*>(&_expr))
-	{
-		SolIndexAccess handler(_ctx, *node);
-		return handler.toAwst();
-	}
-
-	// IndexRangeAccess
-	if (auto const* node = dynamic_cast<IndexRangeAccess const*>(&_expr))
-	{
-		SolIndexRangeAccess handler(_ctx, *node);
-		return handler.toAwst();
-	}
-
-	// TupleExpression
-	if (auto const* node = dynamic_cast<TupleExpression const*>(&_expr))
-	{
-		SolTupleExpression handler(_ctx, *node);
-		return handler.toAwst();
-	}
-
-	// FunctionCallOptions — payment inner transaction
-	if (auto const* node = dynamic_cast<FunctionCallOptions const*>(&_expr))
-	{
-		// Translate the base expression (options like {value:, gas:} are handled
-		// by SolFunctionCall::extractCallValue when the outer FunctionCall is processed)
+		// {value:, gas:} options are consumed by the outer FunctionCall via
+		// SolFunctionCall::extractCallValue. Here we just translate the base.
 		Logger::instance().warning(
-			"function call options {value:, gas:} ignored on Algorand", makeLoc(*node));
-		return buildExpression(_ctx, node->expression());
+			"function call options {value:, gas:} ignored on Algorand", makeLoc(_n));
+		return visit(_n.expression());
 	}
 
-	// ElementaryTypeNameExpression
-	if (dynamic_cast<ElementaryTypeNameExpression const*>(&_expr))
+	std::shared_ptr<awst::Expression> visitTypeName(ElementaryTypeNameExpression const& _n) override
+	{
+		return makeVoid(_n);
+	}
+
+	std::shared_ptr<awst::Expression> visitDefault(solidity::frontend::ASTNode const& _node) override
+	{
+		Logger::instance().warning("unhandled expression type", makeLoc(_node));
+		return makeVoid(_node);
+	}
+
+private:
+	eb::BuilderContext& m_ctx;
+
+	awst::SourceLocation makeLoc(solidity::frontend::ASTNode const& _node)
+	{
+		auto const& l = _node.location();
+		return m_ctx.makeLoc(l.start, l.end);
+	}
+
+	std::shared_ptr<awst::Expression> makeVoid(solidity::frontend::ASTNode const& _node)
 	{
 		auto vc = std::make_shared<awst::VoidConstant>();
-		vc->sourceLocation = makeLoc(_expr);
+		vc->sourceLocation = makeLoc(_node);
 		vc->wtype = awst::WType::voidType();
 		return vc;
 	}
+};
 
-	// Unknown expression type
-	Logger::instance().warning("unhandled expression type", makeLoc(_expr));
-	auto vc = std::make_shared<awst::VoidConstant>();
-	vc->sourceLocation = makeLoc(_expr);
-	vc->wtype = awst::WType::voidType();
-	return vc;
+} // anonymous namespace
+
+std::shared_ptr<awst::Expression> buildExpression(
+	eb::BuilderContext& _ctx,
+	Expression const& _expr)
+{
+	AwstExpressionVisitor visitor(_ctx);
+	return visitor.visit(_expr);
 }
 
 } // namespace puyasol::builder::sol_ast
