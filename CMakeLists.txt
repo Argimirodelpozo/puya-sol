@@ -45,6 +45,7 @@ set(SOURCES
 	src/builder/contract/FunctionBuilder.cpp
 	src/builder/contract/ApprovalProgramBuilder.cpp
 	src/builder/contract/PublicGetterBuilder.cpp
+	src/builder/contract/SuperCallResolution.cpp
 
 	# Assembly builder (split by operation type)
 	src/builder/assembly/AssemblyBuilder.cpp

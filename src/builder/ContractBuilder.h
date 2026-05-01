@@ -180,6 +180,34 @@ private:
 		std::string const& _contractName,
 		std::set<std::string>& _translatedFunctions);
 
+	// ── Super-call resolution ──
+	//
+	// `super.f()` inside a function body resolves to the next implementation of
+	// `f` in the linearized-base-contract MRO, not necessarily this contract's
+	// own `f`. We resolve this by emitting per-caller `f__super_<callerId>`
+	// subroutines that stand in for the right base implementation. There are
+	// three flavours: MRO-driven (most super.f() calls), cross-function
+	// fallback (super.g() called from f), and explicit Base.f() calls.
+
+	/// Walk the contract's MRO and constructor, collect every super.f() and
+	/// Base.f() target, and populate m_perFuncSuperOverrides / m_superTargetFuncs
+	/// / m_fallbackSuperFuncs / m_explicitBaseTargetFuncs accordingly. Also
+	/// pre-registers names into m_exprBuilder->superTargetNames.
+	void collectSuperCallMetadata(solidity::frontend::ContractDefinition const& _contract);
+
+	/// Before translating a function body, set m_exprBuilder->superTargetNames
+	/// to the per-caller MRO overrides for `_callerFuncId` plus the always-on
+	/// fallback / explicit-base entries.
+	void applySuperOverridesFor(int64_t _callerFuncId);
+
+	/// Wipe m_exprBuilder->superTargetNames (called between function bodies to
+	/// avoid super-context cross-contamination).
+	void clearSuperOverrides();
+
+	/// Emit the actual `f__super_<callerId>` subroutines once all bodies have
+	/// been translated — one per MRO entry, fallback, or explicit base target.
+	void emitSuperSubroutines(awst::Contract& _contractNode, std::string const& _contractName);
+
 	/// If buildApprovalProgram detects box writes in the constructor,
 	/// it populates this with an auto-generated __postInit method.
 	std::optional<awst::ContractMethod> m_postInitMethod;
