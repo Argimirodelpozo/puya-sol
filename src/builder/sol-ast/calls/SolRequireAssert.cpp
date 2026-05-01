@@ -22,7 +22,7 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 
 	if (args.size() > 1)
 	{
-		// Custom error constructor: require(cond, Errors.Foo())
+		// Custom error constructor: require(cond, Errors.Foo(args...))
 		bool isCustomError = false;
 		if (auto const* errorCall = dynamic_cast<solidity::frontend::FunctionCall const*>(args[1].get()))
 		{
@@ -37,6 +37,13 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 				message = id->name();
 				isCustomError = true;
 			}
+			// Solidity evaluates require's args eagerly — even on the
+			// success path. Build each error-arg expression so its side
+			// effects (e.g. an inner call that short-circuits via Yul
+			// return) actually run.
+			if (isCustomError)
+				for (auto const& a : errorCall->arguments())
+					(void)buildExpr(*a);
 		}
 		if (!isCustomError)
 		{
