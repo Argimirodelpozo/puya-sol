@@ -96,7 +96,7 @@ public:
 		auto handler = factory.createFunctionCall(_n);
 		if (handler)
 			return handler->toAwst();
-		Logger::instance().warning("unhandled function call kind", makeLoc(_n));
+		Logger::instance().error("unhandled function call kind", makeLoc(_n));
 		return makeVoid(_n);
 	}
 
@@ -126,7 +126,10 @@ public:
 		}
 
 		// Ultimate fallback — emit a typed zero of the expected result type.
-		Logger::instance().warning(
+		// This is a hard error: silently emitting a fake zero produces
+		// runtime nonsense that's hard to diagnose. The cast to error means
+		// users see compile-time failure for unsupported access patterns.
+		Logger::instance().error(
 			"unsupported member access '." + _n.memberName() + "'", loc);
 		auto* wtype = m_ctx.typeMapper.map(_n.annotation().type);
 		if (wtype == awst::WType::uint64Type() || wtype == awst::WType::biguintType())
@@ -152,7 +155,7 @@ public:
 
 	std::shared_ptr<awst::Expression> visitDefault(solidity::frontend::ASTNode const& _node) override
 	{
-		Logger::instance().warning("unhandled expression type", makeLoc(_node));
+		Logger::instance().error("unhandled expression type", makeLoc(_node));
 		return makeVoid(_node);
 	}
 

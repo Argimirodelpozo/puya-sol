@@ -711,7 +711,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveFunctionPointerCast(
 		}
 	}
 
-	Logger::instance().warning("could not resolve function call target", m_loc);
+	Logger::instance().error("could not resolve function call target", m_loc);
 	auto* retType = m_ctx.typeMapper.map(m_call.annotation().type);
 	return buildSubroutineCall(
 		awst::InstanceMethodTarget{"unknown"}, retType, nullptr, false);
@@ -792,7 +792,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::toAwst()
 		return resolveFunctionPointerCast(*innerCall);
 
 	// Fallback: unresolvable call
-	Logger::instance().warning("could not resolve function call target", m_loc);
+	Logger::instance().error("could not resolve function call target", m_loc);
 	auto* retType = m_ctx.typeMapper.map(m_call.annotation().type);
 	return buildSubroutineCall(
 		awst::InstanceMethodTarget{"unknown"}, retType, nullptr, false);

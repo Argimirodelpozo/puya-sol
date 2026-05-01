@@ -227,7 +227,7 @@ public:
 
 	ResultT visitDefault(solidity::frontend::ASTNode const& _node) override
 	{
-		Logger::instance().warning("unhandled statement type", m_blk.makeLoc(_node.location()));
+		Logger::instance().error("unhandled statement type", m_blk.makeLoc(_node.location()));
 		return {};
 	}
 

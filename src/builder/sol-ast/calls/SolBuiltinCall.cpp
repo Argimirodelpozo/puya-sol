@@ -203,7 +203,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 	if (result)
 		return result->resolve();
 
-	Logger::instance().warning("unhandled builtin: " + m_builtinName, m_loc);
+	Logger::instance().error("unhandled builtin: " + m_builtinName, m_loc);
 	auto vc = std::make_shared<awst::VoidConstant>();
 	vc->sourceLocation = m_loc;
 	vc->wtype = awst::WType::voidType();
