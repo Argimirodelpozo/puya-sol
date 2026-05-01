@@ -2186,6 +2186,17 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                     actual_list = flattened
 
             if len(actual_list) != len(expected_list):
+                # Multi-return EVM-ABI compare: when the actual is a tuple
+                # of N declared return values and `expected_list` is a flat
+                # list of EVM-ABI words encoding that tuple, walk the words
+                # as a tuple-with-mixed-fields starting at base 0. Each
+                # actual[i] is either a scalar (compared directly to
+                # words[i]) or a dynamic value (list/str/bytes — words[i]
+                # is a head offset relative to base 0).
+                if (isinstance(actual_list, (list, tuple)) and len(actual_list) > 0
+                    and all(isinstance(w, int) for w in expected_list[:len(actual_list)])
+                    and _evm_walk_compare_multi_return(expected_list, actual_list)):
+                    return True, f"{actual_list}"
                 return False, f"expected {len(expected_list)} values, got {len(actual_list)}"
 
             for i, (a, e) in enumerate(zip(actual_list, expected_list)):
@@ -2320,6 +2331,36 @@ def _compare_evm_abi_to_value(expected_words, actual):
     if not (isinstance(expected_words[0], int) and expected_words[0] == 32):
         return False
     return _evm_walk_compare(expected_words, 1, actual)
+
+
+def _evm_walk_compare_multi_return(words, actual_tuple):
+    """Walk `words` as the EVM-ABI encoding of a multi-return tuple
+    `(R0, R1, ..., RN-1)`. Each R_i sits at words[i] when static, or
+    `words[i]` is a head offset (relative to base 0) into the tail when
+    R_i is dynamic. Reuses _evm_walk_compare for sub-trees.
+
+    No declared types are passed in — type kind is inferred from
+    `actual_tuple[i]`: int → static scalar, list/str/bytes → dynamic.
+    """
+    n = len(actual_tuple)
+    if n == 0:
+        return True
+    for i, elem in enumerate(actual_tuple):
+        if i >= len(words):
+            return False
+        if isinstance(elem, int):
+            if not _compare_values(elem, words[i]):
+                return False
+        elif isinstance(elem, (list, tuple, str, bytes)):
+            head_w = words[i]
+            if not (isinstance(head_w, int) and head_w % 32 == 0):
+                return False
+            inner_base = head_w // 32
+            if not _evm_walk_compare(words, inner_base, elem):
+                return False
+        else:
+            return False
+    return True
 
 
 def _evm_walk_compare(words, base, actual):
