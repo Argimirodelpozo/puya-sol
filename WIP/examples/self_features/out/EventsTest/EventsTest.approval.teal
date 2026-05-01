@@ -1,10 +1,19 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M08_Events.sol.EventsTest.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M08_Events.sol.EventsTest.approval_program() -> uint64:
 main:
-    intcblock 1 64
+    intcblock 1 32 0
     bytecblock "value"
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "value"
@@ -19,47 +28,119 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xd0da65fd 0x049bcfc1 // method "setValue(uint512)void", method "emitTransfer(address,uint512)void"
+    pushbytess 0xc46a4b39 0x6c4a2b31 0x75d12918 // method "setValue(uint256)void", method "emitTransfer(address,uint256)void", method "value()uint256"
     txna ApplicationArgs 0
-    match setValue emitTransfer
+    match setValue emitTransfer value
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M08_Events.sol.EventsTest.setValue[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M08_Events.sol.EventsTest.setValue[routing]() -> void:
 setValue:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz setValue_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+setValue_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "value"
     dig 1
+    dup
+    cover 2
     app_global_put
-    pushbytes 0x012c78e2
+    pushbytes 0x8b8d27bf // method "ValueSet(uint256)"
     swap
     concat
     log
     intc_0 // 1
     return
 
+setValue_ternary_false@3:
+    intc_2 // 0
+    b setValue_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M08_Events.sol.EventsTest.emitTransfer[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M08_Events.sol.EventsTest.emitTransfer[routing]() -> void:
 emitTransfer:
     txna ApplicationArgs 1
+    dup
     len
-    pushint 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    pushbytes 0xddf252ad
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz emitTransfer_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+emitTransfer_ternary_merge@4:
+    !
+    assert // not payable
+    txn Sender
+    dig 2
+    concat
+    dig 1
+    concat
+    pushbytes 0x9ac8d3f1 // method "Transfer(uint8[32],uint8[32],uint256)"
     swap
     concat
     log
     intc_0 // 1
     return
+
+emitTransfer_ternary_false@3:
+    intc_2 // 0
+    b emitTransfer_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M08_Events.sol.EventsTest.value[routing]() -> void:
+value:
+    txn GroupIndex
+    bz value_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+value_ternary_merge@4:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_0 // "value"
+    app_global_get_ex
+    assert // check value exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+value_ternary_false@3:
+    intc_2 // 0
+    b value_ternary_merge@4

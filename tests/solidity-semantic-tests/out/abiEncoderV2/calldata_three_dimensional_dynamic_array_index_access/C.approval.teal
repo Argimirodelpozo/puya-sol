@@ -31,69 +31,6 @@ main_after_if_else@2:
     err
 
 
-// _puya_lib.arc4.dynamic_array_read_dynamic_element(array: bytes, index: uint64) -> bytes:
-dynamic_array_read_dynamic_element:
-    proto 2 1
-    frame_dig -2
-    extract 2 0
-    frame_dig -2
-    intc_2 // 0
-    extract_uint16
-    frame_dig -1
-    intc_0 // 2
-    *
-    dig 2
-    swap
-    extract_uint16
-    dig 2
-    len
-    frame_dig -1
-    intc_3 // 1
-    +
-    dup
-    intc_0 // 2
-    *
-    dig 5
-    swap
-    extract_uint16
-    uncover 4
-    uncover 2
-    -
-    select
-    substring3
-    retsub
-
-
-// _puya_lib.arc4.static_array_read_dynamic_element(array_head_and_tail: bytes, index: uint64, array_length: uint64) -> bytes:
-static_array_read_dynamic_element:
-    proto 3 1
-    frame_dig -2
-    intc_0 // 2
-    *
-    frame_dig -3
-    swap
-    extract_uint16
-    frame_dig -3
-    len
-    frame_dig -2
-    intc_3 // 1
-    +
-    dup
-    intc_0 // 2
-    *
-    frame_dig -3
-    swap
-    extract_uint16
-    frame_dig -1
-    uncover 2
-    -
-    select
-    frame_dig -3
-    cover 2
-    substring3
-    retsub
-
-
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_three_dimensional_dynamic_array_index_access.sol.C.f[routing]() -> void:
 f:
     intc_2 // 0
@@ -201,7 +138,7 @@ f_ternary_merge@8:
     dig 1
     dig 8
     <
-    assert // index out of bounds
+    assert // index access is out of bounds
     swap
     intc_0 // 2
     *
@@ -254,7 +191,7 @@ g:
     bytec_1 // ""
     dupn 2
     txna ApplicationArgs 1
-    dupn 2
+    dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
@@ -291,30 +228,30 @@ g_for_header@1:
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 11
+    bury 10
     intc_0 // 2
     *
-    bury 8
+    bury 7
     extract 2 0
-    bury 10
+    bury 9
     intc_2 // 0
-    bury 8
+    bury 7
 
 g_for_header@3:
-    dig 7
-    dig 9
+    dig 6
+    dig 8
     <
     bz g_after_for@6
-    dig 7
+    dig 6
     dup
     intc_0 // 2
     *
-    dig 11
+    dig 10
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 10
+    dig 9
     dup
     cover 4
     ==
@@ -329,14 +266,14 @@ g_for_header@3:
     intc_0 // 2
     +
     +
-    bury 8
+    bury 7
     intc_3 // 1
     +
-    bury 8
+    bury 7
     b g_for_header@3
 
 g_after_for@6:
-    dig 6
+    dig 5
     intc_0 // 2
     +
     dig 4
@@ -357,21 +294,21 @@ g_after_for@8:
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>>
     txna ApplicationArgs 2
     dup
-    bury 14
+    bury 13
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    bury 13
+    bury 12
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
     dup
-    bury 12
+    bury 11
     len
     intc_1 // 32
     ==
@@ -391,22 +328,6 @@ g_ternary_merge@12:
     pushint 8
     bzero
     dup
-    dig 15
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    dig 1
-    dig 15
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    uncover 2
     dig 14
     concat
     dup
@@ -414,16 +335,57 @@ g_ternary_merge@12:
     pushint 8
     -
     extract_uint64
-    dig 9
-    uncover 3
-    callsub dynamic_array_read_dynamic_element
+    dig 1
+    dig 14
+    concat
     dup
-    intc_2 // 0
+    len
+    pushint 8
+    -
+    extract_uint64
+    uncover 2
+    dig 13
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 2
+    intc_0 // 2
+    *
+    dig 6
+    dup
+    cover 3
+    swap
     extract_uint16
+    uncover 4
+    intc_3 // 1
+    +
+    dig 10
+    dig 1
+    - // on error: index access is out of bounds
+    dig 4
+    len
+    uncover 2
+    intc_0 // 2
+    *
+    dig 5
+    swap
+    extract_uint16
+    uncover 2
+    select
+    uncover 3
+    cover 2
+    substring3
+    dup
+    extract 2 0
+    swap
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
     dig 3
     >
-    assert // index out of bounds
-    extract 2 0
+    assert // index access is out of bounds
     uncover 2
     intc_0 // 2
     *
@@ -473,7 +435,7 @@ h:
     intc_2 // 0
     dup
     bytec_1 // ""
-    dupn 2
+    dupn 3
     txna ApplicationArgs 1
     intc_0 // 2
     intc_2 // 0
@@ -501,25 +463,25 @@ h_for_header@1:
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 8
+    bury 9
     intc_0 // 2
     *
     bury 5
     extract 2 0
-    bury 7
+    bury 8
     intc_2 // 0
-    bury 5
+    bury 6
 
 h_for_header@3:
-    dig 4
-    dig 6
+    dig 5
+    dig 7
     <
     bz h_after_for@6
-    dig 4
+    dig 5
     dup
     intc_0 // 2
     *
-    dig 8
+    dig 9
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
@@ -542,7 +504,7 @@ h_for_header@3:
     bury 5
     intc_3 // 1
     +
-    bury 5
+    bury 6
     b h_for_header@3
 
 h_after_for@6:
@@ -561,12 +523,14 @@ h_after_for@6:
 h_after_for@8:
     dig 2
     len
+    dup
+    bury 6
     dig 2
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>, 1>
     txna ApplicationArgs 2
     dup
-    bury 9
+    bury 10
     len
     intc_1 // 32
     ==
@@ -585,7 +549,7 @@ h_ternary_merge@12:
     bzero
     pushint 8
     bzero
-    dig 9
+    dig 10
     concat
     dup
     len
@@ -593,16 +557,19 @@ h_ternary_merge@12:
     -
     extract_uint64
     dig 4
-    intc_2 // 0
-    intc_3 // 1
-    callsub static_array_read_dynamic_element
     dup
     intc_2 // 0
     extract_uint16
+    dig 8
+    substring3
+    dup
+    extract 2 0
+    swap
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
     dig 2
     >
-    assert // index out of bounds
-    extract 2 0
+    assert // index access is out of bounds
     swap
     intc_0 // 2
     *
@@ -663,7 +630,7 @@ k:
     bytec_1 // ""
     dupn 2
     txna ApplicationArgs 1
-    dupn 2
+    dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
@@ -700,30 +667,30 @@ k_for_header@1:
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 11
+    bury 10
     intc_0 // 2
     *
-    bury 8
+    bury 7
     extract 2 0
-    bury 10
+    bury 9
     intc_2 // 0
-    bury 8
+    bury 7
 
 k_for_header@3:
-    dig 7
-    dig 9
+    dig 6
+    dig 8
     <
     bz k_after_for@6
-    dig 7
+    dig 6
     dup
     intc_0 // 2
     *
-    dig 11
+    dig 10
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 10
+    dig 9
     dup
     cover 4
     ==
@@ -749,14 +716,14 @@ k_for_header@3:
     pushint 4
     +
     +
-    bury 8
+    bury 7
     intc_3 // 1
     +
-    bury 8
+    bury 7
     b k_for_header@3
 
 k_after_for@6:
-    dig 6
+    dig 5
     intc_0 // 2
     +
     dig 4
@@ -777,14 +744,14 @@ k_after_for@8:
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<S>>
     txna ApplicationArgs 2
     dup
-    bury 13
+    bury 12
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    bury 12
+    bury 11
     len
     intc_1 // 32
     ==
@@ -804,14 +771,6 @@ k_ternary_merge@12:
     pushint 8
     bzero
     dup
-    dig 14
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    swap
     dig 13
     concat
     dup
@@ -819,11 +778,69 @@ k_ternary_merge@12:
     pushint 8
     -
     extract_uint64
-    dig 8
-    uncover 2
-    callsub dynamic_array_read_dynamic_element
     swap
-    callsub dynamic_array_read_dynamic_element
+    dig 12
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 1
+    intc_0 // 2
+    *
+    dig 5
+    dup
+    cover 3
+    swap
+    extract_uint16
+    uncover 3
+    intc_3 // 1
+    +
+    dig 9
+    dig 1
+    - // on error: index access is out of bounds
+    dig 4
+    len
+    uncover 2
+    intc_0 // 2
+    *
+    dig 5
+    swap
+    extract_uint16
+    uncover 2
+    select
+    uncover 3
+    cover 2
+    substring3
+    dup
+    extract 2 0
+    swap
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    dig 2
+    intc_0 // 2
+    *
+    dig 2
+    swap
+    extract_uint16
+    uncover 3
+    intc_3 // 1
+    +
+    uncover 2
+    dig 1
+    - // on error: index access is out of bounds
+    dig 3
+    len
+    uncover 2
+    intc_0 // 2
+    *
+    dig 4
+    swap
+    extract_uint16
+    uncover 2
+    select
+    substring3
     dup
     intc_2 // 0
     extract_uint16
@@ -875,7 +892,7 @@ l:
     intc_2 // 0
     dupn 2
     bytec_1 // ""
-    dup
+    dupn 2
     txna ApplicationArgs 1
     pushint 4
     intc_2 // 0
@@ -899,22 +916,22 @@ l_for_header@1:
     dig 1
     len
     substring3
-    bury 6
+    bury 7
     pushint 4
     bury 4
     intc_2 // 0
-    bury 5
+    bury 6
 
 l_for_header@3:
-    dig 4
+    dig 5
     intc_0 // 2
     <
     bz l_after_for@6
-    dig 4
+    dig 5
     dup
     intc_0 // 2
     *
-    dig 7
+    dig 8
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
@@ -948,7 +965,7 @@ l_for_header@3:
     bury 5
     intc_3 // 1
     +
-    bury 5
+    bury 6
     b l_for_header@3
 
 l_after_for@6:
@@ -965,19 +982,21 @@ l_after_for@6:
 l_after_for@8:
     dig 2
     len
+    dup
+    bury 6
     dig 2
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.static_array<S, 2>, 2>
     txna ApplicationArgs 2
     dup
-    bury 9
+    bury 10
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    bury 8
+    bury 9
     len
     intc_1 // 32
     ==
@@ -997,6 +1016,14 @@ l_ternary_merge@12:
     pushint 8
     bzero
     dup
+    dig 11
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    swap
     dig 10
     concat
     dup
@@ -1004,21 +1031,56 @@ l_ternary_merge@12:
     pushint 8
     -
     extract_uint64
-    swap
-    dig 9
-    concat
+    dig 1
+    intc_0 // 2
+    *
+    dig 6
     dup
+    cover 3
+    swap
+    extract_uint16
+    uncover 3
+    intc_3 // 1
+    +
+    intc_0 // 2
+    dig 1
+    - // on error: index access is out of bounds
+    swap
+    intc_0 // 2
+    *
+    dig 4
+    swap
+    extract_uint16
+    dig 10
+    swap
+    uncover 2
+    select
+    uncover 3
+    cover 2
+    substring3
+    dig 1
+    intc_0 // 2
+    *
+    dig 1
+    swap
+    extract_uint16
+    uncover 2
+    intc_3 // 1
+    +
+    intc_0 // 2
+    dig 1
+    - // on error: index access is out of bounds
+    dig 3
     len
-    pushint 8
-    -
-    extract_uint64
-    dig 5
     uncover 2
     intc_0 // 2
-    callsub static_array_read_dynamic_element
+    *
+    dig 4
     swap
-    intc_0 // 2
-    callsub static_array_read_dynamic_element
+    extract_uint16
+    uncover 2
+    select
+    substring3
     dup
     intc_2 // 0
     extract_uint16

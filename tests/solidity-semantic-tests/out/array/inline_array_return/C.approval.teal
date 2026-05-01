@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/inline_array_return.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 255 0 2
-    bytecblock "tester" "__ctor_pending" 0x151f7c75
+    bytecblock "__ctor_pending" "tester" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -16,7 +16,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -36,13 +36,13 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/inline_array_return.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    bytec_0 // "tester"
+    bytec_1 // "tester"
     intc_3 // 2
     box_create
     pop
@@ -77,45 +77,35 @@ test_ternary_merge@4:
     pushbytes 0x0005
     swap
     concat
-    bytec_0 // "tester"
+    bytec_1 // "tester"
     box_del
     pop
-    bytec_0 // "tester"
-    swap
+    bytec_1 // "tester"
+    dig 1
     box_put
-    bytec_0 // "tester"
+    dup
     intc_3 // 2
-    intc_0 // 1
-    box_extract // on error: index access is out of bounds
-    btoi
+    getbyte
     intc_1 // 255
     &
-    bytec_0 // "tester"
+    dig 1
     pushint 3
-    intc_0 // 1
-    box_extract // on error: index access is out of bounds
-    btoi
+    getbyte
     intc_1 // 255
     &
-    bytec_0 // "tester"
+    dig 2
     pushint 4
-    intc_0 // 1
-    box_extract // on error: index access is out of bounds
-    btoi
+    getbyte
     intc_1 // 255
     &
-    bytec_0 // "tester"
+    dig 3
     pushint 5
-    intc_0 // 1
-    box_extract // on error: index access is out of bounds
-    btoi
+    getbyte
     intc_1 // 255
     &
-    bytec_0 // "tester"
+    uncover 4
     pushint 6
-    intc_0 // 1
-    box_extract // on error: index access is out of bounds
-    btoi
+    getbyte
     intc_1 // 255
     &
     uncover 4

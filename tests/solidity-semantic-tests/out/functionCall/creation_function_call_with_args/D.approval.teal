@@ -39,6 +39,7 @@ __postInit:
     txna ApplicationArgs 1
     dup
     len
+    dup
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
@@ -49,6 +50,12 @@ __postInit:
     intc_0 // 0
     app_global_put
     itxn_begin
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
     bytec_2 // TMPL_APPROVAL_C
     bytec_3 // TMPL_CLEAR_C
     intc_3 // 6

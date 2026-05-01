@@ -1,0 +1,192 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/UniswapPairOracle.sol.Owned.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock "owner" "nominatedOwner" 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    txna ApplicationArgs 0
+    bytec_0 // "owner"
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_1 // "nominatedOwner"
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    dup
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    !=
+    assert // Owner address cannot be 0
+    bytec_0 // "owner"
+    dig 1
+    app_global_put
+    pushbytes 0x63dadbe50000000000000000000000000000000000000000000000000000000000000000
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x3ad3a103 0xd521d604 0xb1bbb0a8 0x7d2f355c // method "nominateNewOwner(address)void", method "acceptOwnership()void", method "owner()address", method "nominatedOwner()address"
+    txna ApplicationArgs 0
+    match nominateNewOwner acceptOwnership owner nominatedOwner
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/UniswapPairOracle.sol.Owned.nominateNewOwner[routing]() -> void:
+nominateNewOwner:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz nominateNewOwner_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+nominateNewOwner_ternary_merge@4:
+    !
+    assert // not payable
+    txn Sender
+    intc_1 // 0
+    bytec_0 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    assert // Only the contract owner may perform this action
+    bytec_1 // "nominatedOwner"
+    dig 1
+    dup
+    cover 2
+    app_global_put
+    pushbytes 0xc3be7b3a // method "OwnerNominated(uint8[32])"
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+nominateNewOwner_ternary_false@3:
+    intc_1 // 0
+    b nominateNewOwner_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/UniswapPairOracle.sol.Owned.acceptOwnership[routing]() -> void:
+acceptOwnership:
+    txn GroupIndex
+    bz acceptOwnership_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+acceptOwnership_ternary_merge@4:
+    !
+    assert // not payable
+    txn Sender
+    intc_1 // 0
+    bytec_1 // "nominatedOwner"
+    app_global_get_ex
+    assert // check nominatedOwner exists
+    swap
+    dig 1
+    ==
+    assert // You must be nominated before you can accept ownership
+    intc_1 // 0
+    bytec_0 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    dig 1
+    concat
+    pushbytes 0x63dadbe5 // method "OwnerChanged(uint8[32],uint8[32])"
+    swap
+    concat
+    log
+    bytec_0 // "owner"
+    swap
+    app_global_put
+    bytec_1 // "nominatedOwner"
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    intc_0 // 1
+    return
+
+acceptOwnership_ternary_false@3:
+    intc_1 // 0
+    b acceptOwnership_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/UniswapPairOracle.sol.Owned.owner[routing]() -> void:
+owner:
+    txn GroupIndex
+    bz owner_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+owner_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+owner_ternary_false@3:
+    intc_1 // 0
+    b owner_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/UniswapPairOracle.sol.Owned.nominatedOwner[routing]() -> void:
+nominatedOwner:
+    txn GroupIndex
+    bz nominatedOwner_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+nominatedOwner_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_1 // "nominatedOwner"
+    app_global_get_ex
+    assert // check nominatedOwner exists
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+nominatedOwner_ternary_false@3:
+    intc_1 // 0
+    b nominatedOwner_ternary_merge@4

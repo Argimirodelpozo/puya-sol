@@ -1,10 +1,19 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M42_AbiEncode.sol.AbiEncode.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M42_AbiEncode.sol.AbiEncode.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 32 1 0
     bytecblock 0x151f7c75 0xcb4afe8b
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -22,7 +31,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M42_AbiEncode.sol.AbiEncode.testEncodeCall[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M42_AbiEncode.sol.AbiEncode.testEncodeCall[routing]() -> void:
 testEncodeCall:
     txna ApplicationArgs 1
     dup
@@ -36,12 +45,22 @@ testEncodeCall:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz testEncodeCall_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+testEncodeCall_ternary_merge@4:
+    !
+    assert // not payable
     pushbytes 0x198c9820 // method "transfer(address,uint256)bool"
-    uncover 2
+    dig 2
     concat
     intc_0 // 32
     bzero
-    uncover 2
+    dig 2
     concat
     dup
     len
@@ -63,8 +82,12 @@ testEncodeCall:
     intc_1 // 1
     return
 
+testEncodeCall_ternary_false@3:
+    intc_2 // 0
+    b testEncodeCall_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M42_AbiEncode.sol.AbiEncode.testEncodeCallVoid[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M42_AbiEncode.sol.AbiEncode.testEncodeCallVoid[routing]() -> void:
 testEncodeCallVoid:
     txna ApplicationArgs 1
     dup
@@ -78,10 +101,20 @@ testEncodeCallVoid:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz testEncodeCallVoid_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+testEncodeCallVoid_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
     dup
-    uncover 3
+    dig 3
     concat
     dup
     len
@@ -93,7 +126,7 @@ testEncodeCallVoid:
     swap
     concat
     swap
-    uncover 2
+    dig 2
     concat
     dup
     len
@@ -115,8 +148,12 @@ testEncodeCallVoid:
     intc_1 // 1
     return
 
+testEncodeCallVoid_ternary_false@3:
+    intc_2 // 0
+    b testEncodeCallVoid_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M42_AbiEncode.sol.AbiEncode.testEncodeWithSelector[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M42_AbiEncode.sol.AbiEncode.testEncodeWithSelector[routing]() -> void:
 testEncodeWithSelector:
     txna ApplicationArgs 1
     dup
@@ -130,9 +167,19 @@ testEncodeWithSelector:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz testEncodeWithSelector_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+testEncodeWithSelector_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
-    swap
+    dig 1
     concat
     dup
     len
@@ -140,6 +187,8 @@ testEncodeWithSelector:
     -
     intc_0 // 32
     extract3
+    dig 2
+    swap
     concat
     dup
     len
@@ -154,8 +203,12 @@ testEncodeWithSelector:
     intc_1 // 1
     return
 
+testEncodeWithSelector_ternary_false@3:
+    intc_2 // 0
+    b testEncodeWithSelector_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M42_AbiEncode.sol.AbiEncode.testEncodeWithSignature[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M42_AbiEncode.sol.AbiEncode.testEncodeWithSignature[routing]() -> void:
 testEncodeWithSignature:
     txna ApplicationArgs 1
     dup
@@ -163,9 +216,19 @@ testEncodeWithSignature:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz testEncodeWithSignature_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+testEncodeWithSignature_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
-    swap
+    dig 1
     concat
     dup
     len
@@ -173,7 +236,7 @@ testEncodeWithSignature:
     -
     intc_0 // 32
     extract3
-    pushbytes 0x3b88ef57
+    pushbytes 0xa9059cbb
     swap
     concat
     dup
@@ -189,8 +252,12 @@ testEncodeWithSignature:
     intc_1 // 1
     return
 
+testEncodeWithSignature_ternary_false@3:
+    intc_2 // 0
+    b testEncodeWithSignature_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M42_AbiEncode.sol.AbiEncode.testEncodeCallLength[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M42_AbiEncode.sol.AbiEncode.testEncodeCallLength[routing]() -> void:
 testEncodeCallLength:
     txna ApplicationArgs 1
     dup
@@ -204,10 +271,20 @@ testEncodeCallLength:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz testEncodeCallLength_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+testEncodeCallLength_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
     dup
-    uncover 3
+    dig 3
     concat
     dup
     len
@@ -219,7 +296,7 @@ testEncodeCallLength:
     swap
     concat
     dig 1
-    uncover 3
+    dig 3
     concat
     dup
     len
@@ -237,3 +314,7 @@ testEncodeCallLength:
     log
     intc_1 // 1
     return
+
+testEncodeCallLength_ternary_false@3:
+    intc_2 // 0
+    b testEncodeCallLength_ternary_merge@4

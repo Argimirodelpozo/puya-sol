@@ -1,10 +1,19 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M37_TupleReturns.sol.TupleReturnsTest.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M37_TupleReturns.sol.TupleReturnsTest.approval_program() -> uint64:
 main:
     intcblock 32 1 0
     bytecblock 0x151f7c75
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -22,37 +31,31 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M37_TupleReturns.sol.TupleReturnsTest.getPoint[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M37_TupleReturns.sol.TupleReturnsTest.getPoint[routing]() -> void:
 getPoint:
     txna ApplicationArgs 1
     dup
     len
-    dup
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    dup
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    uncover 2
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    uncover 3
-    dig 1
-    b|
-    uncover 2
-    intc_0 // 32
-    <=
-    assert // overflow
-    cover 2
-    b|
+    txn GroupIndex
+    bz getPoint_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getPoint_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -61,8 +64,12 @@ getPoint:
     intc_1 // 1
     return
 
+getPoint_ternary_false@3:
+    intc_2 // 0
+    b getPoint_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M37_TupleReturns.sol.TupleReturnsTest.getInfo[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M37_TupleReturns.sol.TupleReturnsTest.getInfo[routing]() -> void:
 getInfo:
     txna ApplicationArgs 1
     dup
@@ -70,36 +77,43 @@ getInfo:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    pushint 2
-    itob
-    dig 1
-    b*
+    txn GroupIndex
+    bz getInfo_ternary_false@3
+    txn GroupIndex
     intc_1 // 1
-    itob
-    dig 2
-    b+
-    intc_2 // 0
-    itob
-    uncover 3
-    b<
-    dig 2
+    -
+    gtxns Amount
+
+getInfo_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
+    pushbytes 0x02
+    b*
+    dup
     len
     intc_0 // 32
     <=
     assert // overflow
     intc_0 // 32
     bzero
-    uncover 3
+    swap
     dig 1
     b|
-    dig 3
+    dig 2
+    pushbytes 0x01
+    b+
+    dup
     len
     intc_0 // 32
     <=
     assert // overflow
-    uncover 3
     uncover 2
     b|
+    uncover 2
+    pushbytes 0x
+    b>
+    cover 2
     concat
     pushbytes 0x00
     intc_2 // 0
@@ -113,8 +127,12 @@ getInfo:
     intc_1 // 1
     return
 
+getInfo_ternary_false@3:
+    intc_2 // 0
+    b getInfo_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M37_TupleReturns.sol.TupleReturnsTest.getPair[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M37_TupleReturns.sol.TupleReturnsTest.getPair[routing]() -> void:
 getPair:
     txna ApplicationArgs 1
     dup
@@ -128,26 +146,41 @@ getPair:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    dup2
-    b+
-    cover 2
-    b*
+    txn GroupIndex
+    bz getPair_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getPair_ternary_merge@4:
+    !
+    assert // not payable
     dig 1
+    dup
+    dig 2
+    dup
+    cover 3
+    b+
+    dup
     len
     intc_0 // 32
     <=
     assert // overflow
     intc_0 // 32
     bzero
-    uncover 2
+    swap
     dig 1
     b|
-    dig 2
+    uncover 2
+    uncover 3
+    b*
+    dup
     len
     intc_0 // 32
     <=
     assert // overflow
-    cover 2
+    uncover 2
     b|
     concat
     bytec_0 // 0x151f7c75
@@ -157,8 +190,12 @@ getPair:
     intc_1 // 1
     return
 
+getPair_ternary_false@3:
+    intc_2 // 0
+    b getPair_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M37_TupleReturns.sol.TupleReturnsTest.getSum[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M37_TupleReturns.sol.TupleReturnsTest.getSum[routing]() -> void:
 getSum:
     txna ApplicationArgs 1
     dup
@@ -172,6 +209,17 @@ getSum:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz getSum_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getSum_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
     b+
     dup
     len
@@ -187,3 +235,7 @@ getSum:
     log
     intc_1 // 1
     return
+
+getSum_ternary_false@3:
+    intc_2 // 0
+    b getSum_ternary_merge@4

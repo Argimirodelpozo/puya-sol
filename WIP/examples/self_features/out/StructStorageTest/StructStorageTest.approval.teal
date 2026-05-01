@@ -1,14 +1,23 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M04_StructStorage.sol.StructStorageTest.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M04_StructStorage.sol.StructStorageTest.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    bytecblock "config" 0x 0x151f7c75
+    intcblock 0 1 256 32
+    bytecblock "config" 0x00 0x151f7c75
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "config"
-    bytec_1 // 0x
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     intc_1 // 1
     return
@@ -19,45 +28,44 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xac5bbcfc 0xa8adfc6d 0x6da23006 0x4281bf5c // method "setConfig(uint256,bool)void", method "updateThreshold(uint256)void", method "getThreshold()uint256", method "isActive()bool"
+    pushbytess 0xac5bbcfc 0xa8adfc6d 0x6da23006 0x4281bf5c 0x253bb67b // method "setConfig(uint256,bool)void", method "updateThreshold(uint256)void", method "getThreshold()uint256", method "isActive()bool", method "config()(uint512,bool)"
     txna ApplicationArgs 0
-    match setConfig updateThreshold getThreshold isActive
+    match setConfig updateThreshold getThreshold isActive config
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M04_StructStorage.sol.StructStorageTest.setConfig[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M04_StructStorage.sol.StructStorageTest.setConfig[routing]() -> void:
 setConfig:
     txna ApplicationArgs 1
     dup
     len
-    dup
-    intc_0 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
-    dup
+    dupn 2
     len
     intc_1 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    intc_2 // 0
+    intc_0 // 0
     getbit
-    itob
+    txn GroupIndex
+    bz setConfig_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+setConfig_ternary_merge@4:
+    !
+    assert // not payable
     dup
-    bitlen
-    pushint 8
+    intc_1 // 1
     <=
-    assert // overflow
-    extract 7 1
-    swap
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    uncover 2
-    b|
-    swap
+    assert // ABI bool validation
+    dig 2
+    dig 2
     concat
     bytec_0 // "config"
     swap
@@ -65,29 +73,40 @@ setConfig:
     intc_1 // 1
     return
 
+setConfig_ternary_false@3:
+    intc_0 // 0
+    b setConfig_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M04_StructStorage.sol.StructStorageTest.updateThreshold[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M04_StructStorage.sol.StructStorageTest.updateThreshold[routing]() -> void:
 updateThreshold:
     txna ApplicationArgs 1
     dup
     len
-    dup
-    intc_0 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_2 // 0
+    txn GroupIndex
+    bz updateThreshold_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+updateThreshold_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 0
     bytec_0 // "config"
     app_global_get_ex
     assert // check config exists
-    extract 32 1
-    swap
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
+    intc_2 // 256
+    getbit
+    bytec_1 // 0x00
+    intc_0 // 0
     uncover 2
-    b|
+    setbit
+    dig 1
     swap
     concat
     bytec_0 // "config"
@@ -96,17 +115,28 @@ updateThreshold:
     intc_1 // 1
     return
 
+updateThreshold_ternary_false@3:
+    intc_0 // 0
+    b updateThreshold_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M04_StructStorage.sol.StructStorageTest.getThreshold[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M04_StructStorage.sol.StructStorageTest.getThreshold[routing]() -> void:
 getThreshold:
-    intc_2 // 0
+    txn GroupIndex
+    bz getThreshold_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getThreshold_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 0
     bytec_0 // "config"
     app_global_get_ex
     assert // check config exists
     extract 0 32
-    intc_0 // 32
-    bzero
-    b|
     bytec_2 // 0x151f7c75
     swap
     concat
@@ -114,18 +144,31 @@ getThreshold:
     intc_1 // 1
     return
 
+getThreshold_ternary_false@3:
+    intc_0 // 0
+    b getThreshold_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M04_StructStorage.sol.StructStorageTest.isActive[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M04_StructStorage.sol.StructStorageTest.isActive[routing]() -> void:
 isActive:
-    intc_2 // 0
+    txn GroupIndex
+    bz isActive_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+isActive_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 0
     bytec_0 // "config"
     app_global_get_ex
     assert // check config exists
-    extract 32 1
-    bytec_1 // 0x
-    b!=
-    pushbytes 0x00
-    intc_2 // 0
+    intc_2 // 256
+    getbit
+    bytec_1 // 0x00
+    intc_0 // 0
     uncover 2
     setbit
     bytec_2 // 0x151f7c75
@@ -134,3 +177,55 @@ isActive:
     log
     intc_1 // 1
     return
+
+isActive_ternary_false@3:
+    intc_0 // 0
+    b isActive_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M04_StructStorage.sol.StructStorageTest.config[routing]() -> void:
+config:
+    txn GroupIndex
+    bz config_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+config_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "config"
+    app_global_get_ex
+    assert // check config exists
+    dup
+    extract 0 32
+    swap
+    intc_2 // 256
+    getbit
+    bytec_1 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    intc_0 // 0
+    getbit
+    pushint 64
+    bzero
+    uncover 2
+    b|
+    bytec_1 // 0x00
+    intc_0 // 0
+    uncover 3
+    setbit
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+config_ternary_false@3:
+    intc_0 // 0
+    b config_ternary_merge@4

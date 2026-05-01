@@ -45,6 +45,7 @@ createDSalted:
     txna ApplicationArgs 2
     dup
     len
+    dup
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
@@ -62,7 +63,7 @@ createDSalted_ternary_merge@4:
     bzero
     global CurrentApplicationAddress
     dig 1
-    dig 4
+    dig 5
     concat
     dup
     len
@@ -74,7 +75,7 @@ createDSalted_ternary_merge@4:
     dig 1
     concat
     dig 2
-    dig 4
+    dig 5
     dup
     cover 5
     concat
@@ -114,7 +115,7 @@ createDSalted_ternary_merge@4:
     keccak256
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffff
     b&
-    uncover 2
+    dig 2
     swap
     concat
     len
@@ -123,6 +124,12 @@ createDSalted_ternary_merge@4:
     intc_0 // 32
     extract3
     itxn_begin
+    dig 3
+    intc_0 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
     bytec_1 // TMPL_APPROVAL_D
     bytec_2 // TMPL_CLEAR_D
     pushint 6
@@ -137,7 +144,6 @@ createDSalted_ternary_merge@4:
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
     itxn_field ApprovalProgram
-    swap
     itxn_field ApplicationArgs
     itxn_submit
     itxn CreatedApplicationID

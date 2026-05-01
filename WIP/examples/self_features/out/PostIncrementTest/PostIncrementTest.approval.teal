@@ -1,16 +1,23 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock 0x151f7c75 0x01 "counter" "nonces"
+    bytecblock 0x151f7c75 0x01 "counter" "nonces" "__ctor_pending"
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 0
-    itob
-    bytec_2 // "counter"
-    swap
+    bytec 4 // "__ctor_pending"
+    intc_1 // 1
     app_global_put
     intc_1 // 1
     return
@@ -21,39 +28,61 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x90ef599a 0xe89028ba 0x879a0284 0xc7ee69c4 0x76978257 0xe0b11e7e 0xb4b24d37 0xa0b69804 0x69705dd6 0x5f026f4f // method "testLocalPostInc(uint256)(uint256,uint256)", method "testLocalPreInc(uint256)(uint256,uint256)", method "testLocalPostDec(uint256)(uint256,uint256)", method "testLocalPreDec(uint256)(uint256,uint256)", method "useNonce(address)uint256", method "getNonce(address)uint256", method "postIncCounter()uint256", method "preIncCounter()uint256", method "incrementNonce(address)void", method "counter()uint256"
+    pushbytess 0xbacc49e3 0x90ef599a 0xe89028ba 0x879a0284 0xc7ee69c4 0x76978257 0xe0b11e7e 0xb4b24d37 0xa0b69804 0x69705dd6 0xd1c0e0b1 0x5f026f4f // method "__postInit()void", method "testLocalPostInc(uint256)(uint256,uint256)", method "testLocalPreInc(uint256)(uint256,uint256)", method "testLocalPostDec(uint256)(uint256,uint256)", method "testLocalPreDec(uint256)(uint256,uint256)", method "useNonce(address)uint256", method "getNonce(address)uint256", method "postIncCounter()uint256", method "preIncCounter()uint256", method "incrementNonce(address)void", method "nonces(address)uint256", method "counter()uint256"
     txna ApplicationArgs 0
-    match testLocalPostInc testLocalPreInc testLocalPostDec testLocalPreDec useNonce getNonce postIncCounter preIncCounter incrementNonce counter
+    match __postInit testLocalPostInc testLocalPreInc testLocalPostDec testLocalPreDec useNonce getNonce postIncCounter preIncCounter incrementNonce nonces counter
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.testLocalPostInc[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.__postInit[routing]() -> void:
+__postInit:
+    bytec 4 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 4 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_3 // "nonces"
+    pushint 2
+    box_create
+    pop
+    intc_2 // 0
+    itob
+    bytec_2 // "counter"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.testLocalPostInc[routing]() -> void:
 testLocalPostInc:
     txna ApplicationArgs 1
     dup
     len
-    dup
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    dig 1
+    txn GroupIndex
+    bz testLocalPostInc_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+testLocalPostInc_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     bytec_1 // 0x01
     b+
-    swap
+    dup
+    len
     intc_0 // 32
     <=
     assert // overflow
     intc_0 // 32
     bzero
-    uncover 2
-    dig 1
-    b|
-    dig 2
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    cover 2
     b|
     concat
     bytec_0 // 0x151f7c75
@@ -63,8 +92,12 @@ testLocalPostInc:
     intc_1 // 1
     return
 
+testLocalPostInc_ternary_false@3:
+    intc_2 // 0
+    b testLocalPostInc_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.testLocalPreInc[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.testLocalPreInc[routing]() -> void:
 testLocalPreInc:
     txna ApplicationArgs 1
     dup
@@ -72,6 +105,17 @@ testLocalPreInc:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz testLocalPreInc_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+testLocalPreInc_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     bytec_1 // 0x01
     b+
     dup
@@ -91,34 +135,39 @@ testLocalPreInc:
     intc_1 // 1
     return
 
+testLocalPreInc_ternary_false@3:
+    intc_2 // 0
+    b testLocalPreInc_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.testLocalPostDec[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.testLocalPostDec[routing]() -> void:
 testLocalPostDec:
     txna ApplicationArgs 1
     dup
     len
-    dup
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    dig 1
+    txn GroupIndex
+    bz testLocalPostDec_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+testLocalPostDec_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
     bytec_1 // 0x01
     b-
-    swap
+    dup
+    len
     intc_0 // 32
     <=
     assert // overflow
     intc_0 // 32
     bzero
-    uncover 2
-    dig 1
-    b|
-    dig 2
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    cover 2
     b|
     concat
     bytec_0 // 0x151f7c75
@@ -128,8 +177,12 @@ testLocalPostDec:
     intc_1 // 1
     return
 
+testLocalPostDec_ternary_false@3:
+    intc_2 // 0
+    b testLocalPostDec_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.testLocalPreDec[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.testLocalPreDec[routing]() -> void:
 testLocalPreDec:
     txna ApplicationArgs 1
     dup
@@ -137,6 +190,17 @@ testLocalPreDec:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz testLocalPreDec_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+testLocalPreDec_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     bytec_1 // 0x01
     b-
     dup
@@ -156,8 +220,12 @@ testLocalPreDec:
     intc_1 // 1
     return
 
+testLocalPreDec_ternary_false@3:
+    intc_2 // 0
+    b testLocalPreDec_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.useNonce[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.useNonce[routing]() -> void:
 useNonce:
     txna ApplicationArgs 1
     dup
@@ -165,6 +233,17 @@ useNonce:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz useNonce_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+useNonce_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     sha256
     bytec_3 // "nonces"
     swap
@@ -198,8 +277,12 @@ useNonce:
     intc_1 // 1
     return
 
+useNonce_ternary_false@3:
+    intc_2 // 0
+    b useNonce_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.getNonce[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.getNonce[routing]() -> void:
 getNonce:
     txna ApplicationArgs 1
     dup
@@ -207,6 +290,17 @@ getNonce:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz getNonce_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getNonce_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     sha256
     bytec_3 // "nonces"
     swap
@@ -230,9 +324,23 @@ getNonce:
     intc_1 // 1
     return
 
+getNonce_ternary_false@3:
+    intc_2 // 0
+    b getNonce_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.postIncCounter[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.postIncCounter[routing]() -> void:
 postIncCounter:
+    txn GroupIndex
+    bz postIncCounter_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+postIncCounter_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 0
     bytec_2 // "counter"
     app_global_get_ex
@@ -258,9 +366,23 @@ postIncCounter:
     intc_1 // 1
     return
 
+postIncCounter_ternary_false@3:
+    intc_2 // 0
+    b postIncCounter_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.preIncCounter[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.preIncCounter[routing]() -> void:
 preIncCounter:
+    txn GroupIndex
+    bz preIncCounter_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+preIncCounter_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 0
     bytec_2 // "counter"
     app_global_get_ex
@@ -285,8 +407,12 @@ preIncCounter:
     intc_1 // 1
     return
 
+preIncCounter_ternary_false@3:
+    intc_2 // 0
+    b preIncCounter_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.incrementNonce[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.incrementNonce[routing]() -> void:
 incrementNonce:
     txna ApplicationArgs 1
     dup
@@ -294,6 +420,17 @@ incrementNonce:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz incrementNonce_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+incrementNonce_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     sha256
     bytec_3 // "nonces"
     swap
@@ -312,9 +449,70 @@ incrementNonce:
     intc_1 // 1
     return
 
+incrementNonce_ternary_false@3:
+    intc_2 // 0
+    b incrementNonce_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.counter[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.nonces[routing]() -> void:
+nonces:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz nonces_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+nonces_ternary_merge@4:
+    !
+    assert // not payable
+    dup
+    sha256
+    bytec_3 // "nonces"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+nonces_ternary_false@3:
+    intc_2 // 0
+    b nonces_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.counter[routing]() -> void:
 counter:
+    txn GroupIndex
+    bz counter_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+counter_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 0
     bytec_2 // "counter"
     app_global_get_ex
@@ -333,3 +531,7 @@ counter:
     log
     intc_1 // 1
     return
+
+counter_ternary_false@3:
+    intc_2 // 0
+    b counter_ternary_merge@4

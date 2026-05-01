@@ -428,6 +428,14 @@ reenc_ternary_false@7:
     *
     intc_1 // 32
     extract3 // on error: index access is out of bounds
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
     frame_dig -3
     retsub
 

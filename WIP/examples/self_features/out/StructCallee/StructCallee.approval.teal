@@ -1,10 +1,19 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M41_StructCallee.sol.StructCallee.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M41_StructCallee.sol.StructCallee.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 32 1 0
     bytecblock 0x151f7c75
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -22,7 +31,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M41_StructCallee.sol.StructCallee.getPoint[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M41_StructCallee.sol.StructCallee.getPoint[routing]() -> void:
 getPoint:
     txna ApplicationArgs 1
     dup
@@ -36,30 +45,38 @@ getPoint:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    pushint 2
-    itob
-    uncover 2
-    b*
-    pushint 3
-    itob
-    uncover 2
-    b*
+    txn GroupIndex
+    bz getPoint_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getPoint_ternary_merge@4:
+    !
+    assert // not payable
     dig 1
+    pushbytes 0x02
+    b*
+    dup
     len
     intc_0 // 32
     <=
     assert // overflow
     intc_0 // 32
     bzero
-    uncover 2
+    swap
     dig 1
     b|
     dig 2
+    pushbytes 0x03
+    b*
+    dup
     len
     intc_0 // 32
     <=
     assert // overflow
-    cover 2
+    uncover 2
     b|
     concat
     bytec_0 // 0x151f7c75
@@ -69,8 +86,12 @@ getPoint:
     intc_1 // 1
     return
 
+getPoint_ternary_false@3:
+    intc_2 // 0
+    b getPoint_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M41_StructCallee.sol.StructCallee.getSum[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M41_StructCallee.sol.StructCallee.getSum[routing]() -> void:
 getSum:
     txna ApplicationArgs 1
     dup
@@ -84,6 +105,17 @@ getSum:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz getSum_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getSum_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
     b+
     dup
     len
@@ -99,3 +131,7 @@ getSum:
     log
     intc_1 // 1
     return
+
+getSum_ternary_false@3:
+    intc_2 // 0
+    b getSum_ternary_merge@4

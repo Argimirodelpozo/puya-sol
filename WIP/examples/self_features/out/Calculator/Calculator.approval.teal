@@ -1,10 +1,19 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M16_Calculator.sol.Calculator.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M16_Calculator.sol.Calculator.approval_program() -> uint64:
 main:
-    intcblock 64 1 0
+    intcblock 32 1 0
     bytecblock 0x151f7c75
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -16,33 +25,44 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x1ff2e886 0x0cf7db5f 0xca0ed4c6 // method "add(uint512,uint512)uint512", method "multiply(uint512,uint512)uint512", method "isPositive(uint512)bool"
+    pushbytess 0xac976e02 0x413eca59 0x98708847 // method "add(uint256,uint256)uint256", method "multiply(uint256,uint256)uint256", method "isPositive(uint256)bool"
     txna ApplicationArgs 0
     match add multiply isPositive
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M16_Calculator.sol.Calculator.add[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M16_Calculator.sol.Calculator.add[routing]() -> void:
 add:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz add_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+add_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
     b+
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -52,28 +72,43 @@ add:
     intc_1 // 1
     return
 
+add_ternary_false@3:
+    intc_2 // 0
+    b add_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M16_Calculator.sol.Calculator.multiply[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M16_Calculator.sol.Calculator.multiply[routing]() -> void:
 multiply:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz multiply_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+multiply_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
     b*
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -83,17 +118,31 @@ multiply:
     intc_1 // 1
     return
 
+multiply_ternary_false@3:
+    intc_2 // 0
+    b multiply_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M16_Calculator.sol.Calculator.isPositive[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M16_Calculator.sol.Calculator.isPositive[routing]() -> void:
 isPositive:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    intc_2 // 0
-    itob
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz isPositive_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+isPositive_ternary_merge@4:
+    !
+    assert // not payable
+    dup
+    pushbytes 0x
     b>
     pushbytes 0x00
     intc_2 // 0
@@ -105,3 +154,7 @@ isPositive:
     log
     intc_1 // 1
     return
+
+isPositive_ternary_false@3:
+    intc_2 // 0
+    b isPositive_ternary_merge@4

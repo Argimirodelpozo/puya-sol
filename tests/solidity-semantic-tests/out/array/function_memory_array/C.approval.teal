@@ -122,6 +122,7 @@ test:
     txna ApplicationArgs 1
     dup
     len
+    dup
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
@@ -156,11 +157,18 @@ test_ternary_merge@4:
     swap
     extract_uint64
     dup
-    bury 4
+    bury 5
     pushint 5
     ==
     bz test_else_body@7
     dig 1
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    dig 3
+    b|
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_memory_array.sol.C.e
 
 test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_memory_array.sol.C.__funcptr_dispatch_u256_ret_u256@14:
@@ -180,38 +188,66 @@ test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     return
 
 test_else_body@7:
-    dig 2
+    dig 3
     pushint 4
     ==
     bz test_else_body@9
     dig 1
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    dig 3
+    b|
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_memory_array.sol.C.d
     b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_memory_array.sol.C.__funcptr_dispatch_u256_ret_u256@14
 
 test_else_body@9:
-    dig 2
+    dig 3
     pushint 3
     ==
     bz test_else_body@11
     dig 1
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    dig 3
+    b|
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_memory_array.sol.C.c
     b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_memory_array.sol.C.__funcptr_dispatch_u256_ret_u256@14
 
 test_else_body@11:
-    dig 2
+    dig 3
     pushint 2
     ==
     bz test_else_body@13
     dig 1
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    dig 3
+    b|
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_memory_array.sol.C.b
     b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_memory_array.sol.C.__funcptr_dispatch_u256_ret_u256@14
 
 test_else_body@13:
-    dig 2
+    dig 3
     intc_1 // 1
     ==
     assert // invalid function pointer
     dig 1
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    dig 3
+    b|
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_memory_array.sol.C.a
     b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_memory_array.sol.C.__funcptr_dispatch_u256_ret_u256@14
 

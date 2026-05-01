@@ -36,6 +36,7 @@ set:
     txna ApplicationArgs 1
     dup
     len
+    dup
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
@@ -52,6 +53,7 @@ set:
     txna ApplicationArgs 3
     dup
     len
+    dup
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
@@ -65,6 +67,15 @@ set:
 set_ternary_merge@4:
     !
     assert // not payable
+    dig 3
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    dig 5
+    dig 1
+    b|
     bytec_0 // "data1"
     box_get
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000000000
@@ -80,7 +91,7 @@ set_ternary_merge@4:
     uncover 3
     cover 2
     substring3
-    dig 4
+    uncover 2
     bytec_2 // 0x0042
     concat
     uncover 2
@@ -95,18 +106,25 @@ set_ternary_merge@4:
     box_put
     dup
     extract 0 32
-    dig 1
+    dig 3
+    intc_1 // 32
+    <=
+    assert // overflow
+    dig 4
+    uncover 3
+    b|
+    dig 2
     intc_1 // 32
     extract_uint16
-    dig 2
+    dig 3
     len
-    uncover 3
+    uncover 4
     cover 2
     substring3
-    swap
+    uncover 2
     bytec_2 // 0x0042
     concat
-    dig 2
+    uncover 2
     concat
     swap
     concat
@@ -125,7 +143,7 @@ set_ternary_merge@4:
     concat
     swap
     concat
-    dig 2
+    dig 3
     concat
     bytec_0 // "data1"
     box_del

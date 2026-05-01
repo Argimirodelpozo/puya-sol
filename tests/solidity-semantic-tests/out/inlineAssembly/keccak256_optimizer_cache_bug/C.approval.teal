@@ -103,9 +103,11 @@ val_ternary_merge@4:
     callsub __storage_write
     store 0
     bytec_1 // "data"
-    pushint 34
-    intc_0 // 32
-    box_extract // on error: index access is out of bounds
+    box_get
+    pushbytes 0x0000
+    cover 2
+    select
+    extract 34 32
     dup
     bytec_2 // 0x7b
     b!=

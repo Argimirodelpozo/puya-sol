@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata_to_storage.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 2 0 8
-    bytecblock 0x151f7c75 "small" "l" "__ctor_pending"
+    intcblock 1 0 2 8
+    bytecblock 0x151f7c75 "small" "l" "__ctor_pending" 0x0000
     pushint 4096
     bzero
     dup
@@ -40,14 +40,14 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_3 // "__ctor_pending"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
     bytec_1 // "small"
-    intc_1 // 2
+    intc_2 // 2
     box_create
     pop
     bytec_2 // "l"
-    intc_1 // 2
+    intc_2 // 2
     box_create
     pop
     intc_0 // 1
@@ -79,7 +79,7 @@ f_ternary_merge@4:
     return
 
 f_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b f_ternary_merge@4
 
 
@@ -87,11 +87,11 @@ f_ternary_false@3:
 g:
     txna ApplicationArgs 1
     dupn 2
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_1 // 2
+    intc_2 // 2
     *
-    intc_1 // 2
+    intc_2 // 2
     +
     swap
     len
@@ -123,7 +123,7 @@ g_ternary_merge@4:
     return
 
 g_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b g_ternary_merge@4
 
 
@@ -131,11 +131,11 @@ g_ternary_false@3:
 h:
     txna ApplicationArgs 1
     dupn 2
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_1 // 2
+    intc_2 // 2
     *
-    intc_1 // 2
+    intc_2 // 2
     +
     swap
     len
@@ -167,7 +167,7 @@ h_ternary_merge@4:
     return
 
 h_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b h_ternary_merge@4
 
 
@@ -189,7 +189,7 @@ s_ternary_merge@4:
     cover 2
     select
     dup
-    intc_2 // 0
+    intc_1 // 0
     getbyte
     dig 1
     intc_0 // 1
@@ -217,7 +217,7 @@ s_ternary_merge@4:
     return
 
 s_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b s_ternary_merge@4
 
 
@@ -239,24 +239,26 @@ small:
 small_ternary_merge@4:
     !
     assert // not payable
+    bytec_1 // "small"
+    box_get
+    bytec 4 // 0x0000
+    cover 2
+    select
     intc_3 // 8
     bzero
-    dig 1
+    dig 2
     concat
     dup
     len
     intc_3 // 8
     -
     extract_uint64
-    intc_1 // 2
-    *
-    intc_1 // 2
-    +
-    bytec_1 // "small"
     swap
-    intc_1 // 2
-    box_extract // on error: index access is out of bounds
-    btoi
+    extract 2 0
+    swap
+    intc_2 // 2
+    *
+    extract_uint16
     itob
     bytec_0 // 0x151f7c75
     swap
@@ -266,7 +268,7 @@ small_ternary_merge@4:
     return
 
 small_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b small_ternary_merge@4
 
 
@@ -288,23 +290,27 @@ l:
 l_ternary_merge@4:
     !
     assert // not payable
+    bytec_2 // "l"
+    box_get
+    bytec 4 // 0x0000
+    cover 2
+    select
     intc_3 // 8
     bzero
-    dig 1
+    dig 2
     concat
     dup
     len
     intc_3 // 8
     -
     extract_uint64
-    intc_1 // 2
-    *
-    intc_1 // 2
-    +
-    bytec_2 // "l"
     swap
-    intc_1 // 2
-    box_extract // on error: index access is out of bounds
+    extract 2 0
+    swap
+    intc_2 // 2
+    *
+    intc_2 // 2
+    extract3 // on error: index access is out of bounds
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -313,5 +319,5 @@ l_ternary_merge@4:
     return
 
 l_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b l_ternary_merge@4

@@ -1,0 +1,725 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.ERC20Custom.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 2
+    bytecblock 0x "_allowances" 0x0000000000000000000000000000000000000000000000000000000000000000 "_balances" 0x151f7c7580 "_totalSupply" "__ctor_pending" 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x9ac8d3f1
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 6 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x79fab465 0x83bad7cc 0x198c9820 0x5d854d0e 0xfafb6a08 0x6df41f6d 0xe99cc979 0x7eb6db4c 0xf1505527 0xd3437554 // method "__postInit()void", method "totalSupply()uint256", method "balanceOf(address)uint256", method "transfer(address,uint256)bool", method "allowance(address,address)uint256", method "approve(address,uint256)bool", method "transferFrom(address,address,uint256)bool", method "increaseAllowance(address,uint256)bool", method "decreaseAllowance(address,uint256)bool", method "burn(uint256)void", method "burnFrom(address,uint256)void"
+    txna ApplicationArgs 0
+    match __postInit totalSupply balanceOf transfer allowance approve transferFrom increaseAllowance decreaseAllowance burn burnFrom
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.SafeMath.add(a: bytes, b: bytes) -> bytes:
+SafeMath.add:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b+
+    dup
+    frame_dig -2
+    b>=
+    assert // SafeMath: addition overflow
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.SafeMath.sub(2)(a: bytes, b: bytes) -> bytes:
+SafeMath.sub:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    pushbytes "SafeMath: subtraction overflow"
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.SafeMath.sub(3)
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.SafeMath.sub(3)(a: bytes, b: bytes, errorMessage: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.SafeMath.sub(3):
+    proto 3 1
+    frame_dig -2
+    frame_dig -3
+    b<=
+    assert // assertion failed
+    frame_dig -3
+    frame_dig -2
+    b>=
+    assert // underflow
+    frame_dig -3
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig -2
+    b-
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.ERC20Custom.__postInit[routing]() -> void:
+__postInit:
+    bytec 6 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 6 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_3 // "_balances"
+    intc_3 // 2
+    box_create
+    pop
+    bytec_1 // "_allowances"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 5 // "_totalSupply"
+    bytec_0 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.ERC20Custom.totalSupply[routing]() -> void:
+totalSupply:
+    txn GroupIndex
+    bz totalSupply_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+totalSupply_ternary_merge@4:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec 5 // "_totalSupply"
+    app_global_get_ex
+    assert // check _totalSupply exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 7 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+totalSupply_ternary_false@3:
+    intc_2 // 0
+    b totalSupply_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.ERC20Custom.balanceOf[routing]() -> void:
+balanceOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz balanceOf_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+balanceOf_ternary_merge@4:
+    !
+    assert // not payable
+    dup
+    sha256
+    bytec_3 // "_balances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 7 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+balanceOf_ternary_false@3:
+    intc_2 // 0
+    b balanceOf_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.ERC20Custom.transfer[routing]() -> void:
+transfer:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz transfer_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+transfer_ternary_merge@4:
+    !
+    assert // not payable
+    txn Sender
+    dig 2
+    dig 2
+    callsub _transfer
+    bytec 4 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+transfer_ternary_false@3:
+    intc_2 // 0
+    b transfer_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.ERC20Custom.allowance[routing]() -> void:
+allowance:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.ERC20Custom.allowance
+    bytec 7 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.ERC20Custom.approve[routing]() -> void:
+approve:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz approve_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+approve_ternary_merge@4:
+    !
+    assert // not payable
+    txn Sender
+    dig 2
+    dig 2
+    callsub _approve
+    bytec 4 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+approve_ternary_false@3:
+    intc_2 // 0
+    b approve_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.ERC20Custom.transferFrom[routing]() -> void:
+transferFrom:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz transferFrom_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+transferFrom_ternary_merge@4:
+    !
+    assert // not payable
+    dig 2
+    dup
+    dig 3
+    dig 3
+    dup
+    cover 4
+    callsub _transfer
+    txn Sender
+    dig 1
+    txn Sender
+    concat
+    sha256
+    bytec_1 // "_allowances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    uncover 3
+    pushbytes "ERC20: transfer amount exceeds allowance"
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.SafeMath.sub(3)
+    callsub _approve
+    bytec 4 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+transferFrom_ternary_false@3:
+    intc_2 // 0
+    b transferFrom_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.ERC20Custom.increaseAllowance[routing]() -> void:
+increaseAllowance:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz increaseAllowance_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+increaseAllowance_ternary_merge@4:
+    !
+    assert // not payable
+    txn Sender
+    dup
+    dig 3
+    dup
+    cover 2
+    concat
+    sha256
+    bytec_1 // "_allowances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 3
+    callsub SafeMath.add
+    callsub _approve
+    bytec 4 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+increaseAllowance_ternary_false@3:
+    intc_2 // 0
+    b increaseAllowance_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.ERC20Custom.decreaseAllowance[routing]() -> void:
+decreaseAllowance:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz decreaseAllowance_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+decreaseAllowance_ternary_merge@4:
+    !
+    assert // not payable
+    txn Sender
+    dup
+    dig 3
+    dup
+    cover 2
+    concat
+    sha256
+    bytec_1 // "_allowances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 3
+    pushbytes "ERC20: decreased allowance below zero"
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.SafeMath.sub(3)
+    callsub _approve
+    bytec 4 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+decreaseAllowance_ternary_false@3:
+    intc_2 // 0
+    b decreaseAllowance_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.ERC20Custom.burn[routing]() -> void:
+burn:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz burn_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+burn_ternary_merge@4:
+    !
+    assert // not payable
+    txn Sender
+    dig 1
+    callsub _burn
+    intc_1 // 1
+    return
+
+burn_ternary_false@3:
+    intc_2 // 0
+    b burn_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.ERC20Custom.burnFrom[routing]() -> void:
+burnFrom:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz burnFrom_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+burnFrom_ternary_merge@4:
+    !
+    assert // not payable
+    txn Sender
+    dig 2
+    dup
+    uncover 2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.ERC20Custom.allowance
+    dig 2
+    dup
+    cover 3
+    pushbytes "ERC20: burn amount exceeds allowance"
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.SafeMath.sub(3)
+    dig 1
+    txn Sender
+    uncover 2
+    callsub _approve
+    swap
+    callsub _burn
+    intc_1 // 1
+    return
+
+burnFrom_ternary_false@3:
+    intc_2 // 0
+    b burnFrom_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.ERC20Custom.allowance(owner: bytes, spender: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.ERC20Custom.allowance:
+    proto 2 1
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.ERC20Custom.allowance_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.ERC20Custom.allowance_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -2
+    frame_dig -1
+    concat
+    sha256
+    bytec_1 // "_allowances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.ERC20Custom.allowance_ternary_false@2:
+    intc_2 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.ERC20Custom.allowance_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.ERC20Custom._transfer(sender: bytes, recipient: bytes, amount: bytes) -> void:
+_transfer:
+    proto 3 0
+    frame_dig -3
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    !=
+    assert // ERC20: transfer from the zero address
+    frame_dig -2
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    !=
+    assert // ERC20: transfer to the zero address
+    frame_dig -3
+    sha256
+    bytec_3 // "_balances"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    frame_dig -1
+    pushbytes "ERC20: transfer amount exceeds balance"
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.SafeMath.sub(3)
+    dig 1
+    box_del
+    pop
+    box_put
+    frame_dig -2
+    sha256
+    bytec_3 // "_balances"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    frame_dig -1
+    callsub SafeMath.add
+    dig 1
+    box_del
+    pop
+    box_put
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    b|
+    frame_dig -3
+    frame_dig -2
+    concat
+    swap
+    concat
+    bytec 9 // method "Transfer(uint8[32],uint8[32],uint256)"
+    swap
+    concat
+    log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.ERC20Custom._burn(account: bytes, amount: bytes) -> void:
+_burn:
+    proto 2 0
+    frame_dig -2
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    !=
+    assert // ERC20: burn from the zero address
+    frame_dig -2
+    sha256
+    bytec_3 // "_balances"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    frame_dig -1
+    pushbytes "ERC20: burn amount exceeds balance"
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.SafeMath.sub(3)
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 0
+    bytec 5 // "_totalSupply"
+    app_global_get_ex
+    assert // check _totalSupply exists
+    frame_dig -1
+    callsub SafeMath.sub
+    bytec 5 // "_totalSupply"
+    swap
+    app_global_put
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    b|
+    frame_dig -2
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat
+    swap
+    concat
+    bytec 9 // method "Transfer(uint8[32],uint8[32],uint256)"
+    swap
+    concat
+    log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/frax/contracts/ERC20Custom.sol.ERC20Custom._approve(owner: bytes, spender: bytes, amount: bytes) -> void:
+_approve:
+    proto 3 0
+    frame_dig -3
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    !=
+    assert // ERC20: approve from the zero address
+    frame_dig -2
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    !=
+    assert // ERC20: approve to the zero address
+    frame_dig -3
+    frame_dig -2
+    concat
+    dup
+    sha256
+    bytec_1 // "_allowances"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    frame_dig -1
+    box_put
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    b|
+    concat
+    pushbytes 0x050d5a90 // method "Approval(uint8[32],uint8[32],uint256)"
+    swap
+    concat
+    log
+    retsub

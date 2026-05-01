@@ -1,23 +1,25 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/PoseidonVerifier.sol.PoseidonVerifier.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/PoseidonVerifier.sol.PoseidonVerifier.approval_program() -> uint64:
 main:
     intcblock 8 32 1 64
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000000 0x20 0x80
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_2 // 1
     return
 
 main_after_if_else@2:
-    pushint 4096
-    bzero
-    store 0
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    replace2 64
-    store 0
     pushbytes 0x66393c3a // method "verifyProof(uint256[2],uint256[2][2],uint256[2],uint256[1])bool"
     txna ApplicationArgs 0
     match main_verifyProof_route@4
@@ -32,7 +34,7 @@ main_verifyProof_route@4:
     b verifyProof
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/PoseidonVerifier.sol.PoseidonVerifier.verifyProof[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/PoseidonVerifier.sol.PoseidonVerifier.verifyProof[routing]() -> void:
 verifyProof:
     txna ApplicationArgs 1
     dup
@@ -57,6 +59,16 @@ verifyProof:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 1>
+    txn GroupIndex
+    bz verifyProof_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+verifyProof_ternary_merge@4:
+    !
+    assert // not payable
     load 0
     intc_0 // 8
     bzero
@@ -215,7 +227,7 @@ verifyProof:
     intc_0 // 8
     -
     extract_uint64
-    uncover 9
+    dig 9
     extract 0 32 // on error: index access is out of bounds
     dig 5
     swap
@@ -258,7 +270,7 @@ verifyProof:
     intc_0 // 8
     -
     extract_uint64
-    uncover 9
+    dig 9
     extract 0 64 // on error: index access is out of bounds
     extract 0 32 // on error: index access is out of bounds
     dig 6
@@ -546,7 +558,7 @@ verifyProof:
     intc_0 // 8
     -
     extract_uint64
-    uncover 6
+    dig 6
     extract 0 32 // on error: index access is out of bounds
     dig 5
     swap
@@ -664,3 +676,7 @@ verifyProof:
     log
     intc_2 // 1
     return
+
+verifyProof_ternary_false@3:
+    pushint 0
+    b verifyProof_ternary_merge@4

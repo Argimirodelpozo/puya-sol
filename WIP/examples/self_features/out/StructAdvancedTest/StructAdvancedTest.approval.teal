@@ -1,10 +1,19 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M32_StructAdvanced.sol.StructAdvancedTest.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M32_StructAdvanced.sol.StructAdvancedTest.approval_program() -> uint64:
 main:
-    intcblock 64 1
+    intcblock 32 1 0 88
     bytecblock 0x151f7c75
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -16,102 +25,73 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x49660768 0xf48ad0b3 0x6adf7094 0x5cd1623a 0x3292f857 0x392bb454 // method "testNestedStruct(uint512,uint512,uint512,uint512)(uint512,uint512,uint512,uint512)", method "testStructWithArray(uint512,uint512,uint512,uint512)(uint512,uint512)", method "testFieldMutation(uint512,uint512,uint512)(uint512,uint512)", method "testNestedFieldMutation(uint512,uint512,uint512,uint512,uint512)(uint512,uint512)", method "testStructPassReturn(uint512,uint512,uint512,uint512)(uint512,uint512)", method "testMultiStructReturn(uint512,uint512,uint512,uint512)(uint512,uint512,uint512,uint512)"
+    pushbytess 0xae128b72 0x51c38e24 0xe114bd97 0xa7480a12 0x03dfa948 0x04ac1c75 // method "testNestedStruct(uint256,uint256,uint256,uint256)(uint256,uint256,uint256,uint256)", method "testStructWithArray(uint256,uint256,uint256,uint256)(uint256,uint256)", method "testFieldMutation(uint256,uint256,uint256)(uint256,uint256)", method "testNestedFieldMutation(uint256,uint256,uint256,uint256,uint256)(uint256,uint256)", method "testStructPassReturn(uint256,uint256,uint256,uint256)(uint256,uint256)", method "testMultiStructReturn(uint256,uint256,uint256,uint256)(uint256,uint256,uint256,uint256)"
     txna ApplicationArgs 0
     match testNestedStruct testStructWithArray testFieldMutation testNestedFieldMutation testStructPassReturn testMultiStructReturn
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M32_StructAdvanced.sol.StructAdvancedTest.testNestedStruct[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M32_StructAdvanced.sol.StructAdvancedTest.testNestedStruct[routing]() -> void:
 testNestedStruct:
     txna ApplicationArgs 1
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    uncover 2
-    intc_0 // 64
-    <=
-    assert // overflow
-    intc_0 // 64
-    bzero
-    uncover 3
-    dig 1
-    b|
-    uncover 2
-    intc_0 // 64
-    <=
-    assert // overflow
-    uncover 2
-    dig 2
-    b|
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz testNestedStruct_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+testNestedStruct_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
     concat
-    uncover 4
-    intc_0 // 64
-    <=
-    assert // overflow
-    uncover 4
-    dig 2
-    b|
-    uncover 3
-    intc_0 // 64
-    <=
-    assert // overflow
-    uncover 3
-    dig 3
-    b|
+    dig 4
+    dig 4
     concat
     swap
     concat
-    dup
-    extract 0 128
     dup
     extract 0 64
-    swap
-    extract 64 64
-    uncover 2
-    extract 128 128
     dup
-    extract 0 64
+    extract 0 32
     swap
+    extract 32 32
+    uncover 2
     extract 64 64
+    dup
+    extract 0 32
+    swap
+    extract 32 32
     uncover 3
-    dig 4
-    b|
     uncover 3
-    dig 4
-    b|
     concat
     uncover 2
-    dig 3
-    b|
     concat
     swap
-    uncover 2
-    b|
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -120,85 +100,74 @@ testNestedStruct:
     intc_1 // 1
     return
 
+testNestedStruct_ternary_false@3:
+    intc_2 // 0
+    b testNestedStruct_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M32_StructAdvanced.sol.StructAdvancedTest.testStructWithArray[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M32_StructAdvanced.sol.StructAdvancedTest.testStructWithArray[routing]() -> void:
 testStructWithArray:
     txna ApplicationArgs 1
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    intc_0 // 64
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz testStructWithArray_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+testStructWithArray_ternary_merge@4:
+    !
+    assert // not payable
+    load 0
+    pushint 24
     bzero
-    uncover 5
-    intc_0 // 64
-    <=
-    assert // overflow
-    uncover 5
     dig 1
-    b|
-    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    swap
+    intc_3 // 88
+    extract_uint64
+    pushint 96
+    +
+    itob
+    concat
+    replace2 64
+    store 0
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    dig 3
     replace2 0 // on error: index access is out of bounds
-    uncover 4
-    intc_0 // 64
-    <=
-    assert // overflow
-    uncover 4
     dig 2
-    b|
+    replace2 32 // on error: index access is out of bounds
+    dig 1
     replace2 64 // on error: index access is out of bounds
-    uncover 2
-    intc_0 // 64
-    <=
-    assert // overflow
-    uncover 2
-    dig 2
-    b|
-    replace2 128 // on error: index access is out of bounds
-    uncover 2
-    intc_0 // 64
-    <=
-    assert // overflow
-    uncover 2
-    dig 2
-    b|
+    dig 4
     swap
     concat
     dup
-    extract 0 64
+    extract 0 32
     swap
-    extract 64 192
-    extract 64 64 // on error: index access is out of bounds
-    swap
-    dig 2
-    b|
-    swap
-    uncover 2
-    b|
+    extract 32 96
+    extract 32 32 // on error: index access is out of bounds
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -207,67 +176,52 @@ testStructWithArray:
     intc_1 // 1
     return
 
+testStructWithArray_ternary_false@3:
+    intc_2 // 0
+    b testStructWithArray_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M32_StructAdvanced.sol.StructAdvancedTest.testFieldMutation[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M32_StructAdvanced.sol.StructAdvancedTest.testFieldMutation[routing]() -> void:
 testFieldMutation:
     txna ApplicationArgs 1
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    uncover 4
-    intc_0 // 64
-    <=
-    assert // overflow
-    intc_0 // 64
-    bzero
-    uncover 5
-    dig 1
-    b|
-    uncover 4
-    intc_0 // 64
-    <=
-    assert // overflow
-    uncover 4
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz testFieldMutation_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+testFieldMutation_ternary_merge@4:
+    !
+    assert // not payable
     dig 2
-    b|
+    dig 2
     concat
-    uncover 2
-    intc_0 // 64
-    <=
-    assert // overflow
-    uncover 2
-    dig 2
-    b|
+    extract 32 32
+    dig 1
     swap
-    extract 64 64
     concat
     dup
-    extract 0 64
+    extract 0 32
     swap
-    extract 64 64
-    swap
-    dig 2
-    b|
-    swap
-    uncover 2
-    b|
+    extract 32 32
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -276,101 +230,76 @@ testFieldMutation:
     intc_1 // 1
     return
 
+testFieldMutation_ternary_false@3:
+    intc_2 // 0
+    b testFieldMutation_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M32_StructAdvanced.sol.StructAdvancedTest.testNestedFieldMutation[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M32_StructAdvanced.sol.StructAdvancedTest.testNestedFieldMutation[routing]() -> void:
 testNestedFieldMutation:
     txna ApplicationArgs 1
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 5
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    uncover 4
-    intc_0 // 64
-    <=
-    assert // overflow
-    intc_0 // 64
-    bzero
-    uncover 5
-    dig 1
-    b|
-    uncover 4
-    intc_0 // 64
-    <=
-    assert // overflow
-    uncover 4
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz testNestedFieldMutation_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+testNestedFieldMutation_ternary_merge@4:
+    !
+    assert // not payable
     dig 2
-    b|
+    dig 2
     concat
-    uncover 6
-    intc_0 // 64
-    <=
-    assert // overflow
-    uncover 6
-    dig 2
-    b|
-    uncover 5
-    intc_0 // 64
-    <=
-    assert // overflow
-    uncover 5
-    dig 3
-    b|
+    dig 5
+    dig 5
     concat
     swap
     concat
-    uncover 2
-    intc_0 // 64
-    <=
-    assert // overflow
-    uncover 2
-    dig 2
-    b|
-    dig 1
-    extract 0 128
-    extract 64 64
-    concat
-    replace2 0
-    extract 0 128
     dup
-    extract 0 64
-    swap
     extract 64 64
     swap
+    extract 0 64
+    extract 32 32
     dig 2
-    b|
     swap
-    uncover 2
-    b|
+    concat
+    swap
+    concat
+    extract 0 64
+    dup
+    extract 0 32
+    swap
+    extract 32 32
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -379,104 +308,97 @@ testNestedFieldMutation:
     intc_1 // 1
     return
 
+testNestedFieldMutation_ternary_false@3:
+    intc_2 // 0
+    b testNestedFieldMutation_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M32_StructAdvanced.sol.StructAdvancedTest.testStructPassReturn[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M32_StructAdvanced.sol.StructAdvancedTest.testStructPassReturn[routing]() -> void:
 testStructPassReturn:
     txna ApplicationArgs 1
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    uncover 6
-    intc_0 // 64
-    <=
-    assert // overflow
-    intc_0 // 64
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz testStructPassReturn_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+testStructPassReturn_ternary_merge@4:
+    !
+    assert // not payable
+    dig 3
+    dig 3
+    concat
+    dig 2
+    dig 2
+    concat
+    load 0
+    pushint 24
     bzero
-    uncover 7
     dig 1
-    b|
-    uncover 6
-    intc_0 // 64
-    <=
-    assert // overflow
-    uncover 6
-    dig 2
-    b|
+    intc_3 // 88
+    extract_uint64
+    pushint 64
+    +
+    itob
     concat
-    uncover 4
-    intc_0 // 64
-    <=
-    assert // overflow
-    uncover 4
-    dig 2
-    b|
-    uncover 3
-    intc_0 // 64
-    <=
-    assert // overflow
-    uncover 3
-    dig 3
-    b|
-    concat
+    replace2 64
+    store 0
     dig 1
-    extract 0 64
+    extract 0 32
     dig 1
-    extract 0 64
+    extract 0 32
     b+
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    dig 3
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
     b|
-    uncover 2
-    extract 64 64
-    uncover 2
-    extract 64 64
+    uncover 3
+    extract 32 32
+    uncover 3
+    extract 32 32
     b+
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    dig 2
+    uncover 2
     b|
     concat
     dup
-    extract 0 64
+    extract 0 32
     swap
-    extract 64 64
-    swap
-    dig 2
-    b|
-    swap
-    uncover 2
-    b|
+    extract 32 32
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -485,97 +407,75 @@ testStructPassReturn:
     intc_1 // 1
     return
 
+testStructPassReturn_ternary_false@3:
+    intc_2 // 0
+    b testStructPassReturn_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M32_StructAdvanced.sol.StructAdvancedTest.testMultiStructReturn[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M32_StructAdvanced.sol.StructAdvancedTest.testMultiStructReturn[routing]() -> void:
 testMultiStructReturn:
     txna ApplicationArgs 1
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    uncover 2
-    intc_0 // 64
-    <=
-    assert // overflow
-    intc_0 // 64
-    bzero
-    uncover 3
-    dig 1
-    b|
-    uncover 2
-    intc_0 // 64
-    <=
-    assert // overflow
-    uncover 2
-    dig 2
-    b|
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz testMultiStructReturn_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+testMultiStructReturn_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
     concat
-    uncover 4
-    intc_0 // 64
-    <=
-    assert // overflow
-    uncover 4
-    dig 2
-    b|
-    uncover 3
-    intc_0 // 64
-    <=
-    assert // overflow
-    uncover 3
-    dig 3
-    b|
+    dig 4
+    dig 4
     concat
     swap
     concat
     dup
-    extract 0 128
+    callsub _splitLine
+    pop
     swap
-    extract 128 128
-    dig 1
-    extract 0 64
-    uncover 2
-    extract 64 64
+    callsub _splitLine
+    cover 2
+    pop
+    dup
+    extract 0 32
+    swap
+    extract 32 32
     dig 2
-    extract 0 64
+    extract 0 32
     uncover 3
-    extract 64 64
+    extract 32 32
     uncover 3
-    dig 4
-    b|
     uncover 3
-    dig 4
-    b|
     concat
     uncover 2
-    dig 3
-    b|
     concat
     swap
-    uncover 2
-    b|
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -583,3 +483,45 @@ testMultiStructReturn:
     log
     intc_1 // 1
     return
+
+testMultiStructReturn_ternary_false@3:
+    intc_2 // 0
+    b testMultiStructReturn_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M32_StructAdvanced.sol.StructAdvancedTest._splitLine(l: bytes) -> bytes, bytes:
+_splitLine:
+    proto 1 2
+    load 0
+    pushint 24
+    bzero
+    dig 1
+    intc_3 // 88
+    extract_uint64
+    pushint 64
+    +
+    itob
+    dig 1
+    swap
+    concat
+    uncover 2
+    swap
+    replace2 64
+    store 0
+    load 0
+    dup
+    intc_3 // 88
+    extract_uint64
+    pushint 64
+    +
+    itob
+    uncover 2
+    swap
+    concat
+    replace2 64
+    store 0
+    frame_dig -1
+    extract 0 64
+    frame_dig -1
+    extract 64 64
+    retsub

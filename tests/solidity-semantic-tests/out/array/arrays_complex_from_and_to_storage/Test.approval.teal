@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/arrays_complex_from_and_to_storage.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 2 0 9
-    bytecblock "data" "__ctor_pending" 0x151f7c75
+    intcblock 1 0 2 9
+    bytecblock "data" "__ctor_pending" 0x151f7c75 0x0000
     pushint 4096
     bzero
     dup
@@ -40,10 +40,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
     bytec_0 // "data"
-    intc_1 // 2
+    intc_2 // 2
     box_create
     pop
     intc_0 // 1
@@ -54,11 +54,11 @@ __postInit:
 set:
     txna ApplicationArgs 1
     dupn 2
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_3 // 9
     *
-    intc_1 // 2
+    intc_2 // 2
     +
     swap
     len
@@ -83,7 +83,7 @@ set_ternary_merge@4:
     bytec_0 // "data"
     box_len
     pop
-    intc_1 // 2
+    intc_2 // 2
     >=
     bz set_ternary_false@6
     bytec_0 // "data"
@@ -91,7 +91,7 @@ set_ternary_merge@4:
     pop
 
 set_ternary_merge@7:
-    intc_1 // 2
+    intc_2 // 2
     -
     intc_3 // 9
     /
@@ -107,11 +107,11 @@ set_ternary_merge@7:
     return
 
 set_ternary_false@6:
-    intc_1 // 2
+    intc_2 // 2
     b set_ternary_merge@7
 
 set_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b set_ternary_merge@4
 
 
@@ -129,7 +129,7 @@ get_ternary_merge@4:
     assert // not payable
     bytec_0 // "data"
     box_get
-    pushbytes 0x0000
+    bytec_3 // 0x0000
     cover 2
     select
     bytec_2 // 0x151f7c75
@@ -140,7 +140,7 @@ get_ternary_merge@4:
     return
 
 get_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b get_ternary_merge@4
 
 
@@ -168,9 +168,22 @@ data:
 data_ternary_merge@4:
     !
     assert // not payable
+    bytec_0 // "data"
+    box_get
+    bytec_3 // 0x0000
+    cover 2
+    select
     pushint 8
     bzero
     dup
+    dig 4
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    swap
     dig 3
     concat
     dup
@@ -178,22 +191,14 @@ data_ternary_merge@4:
     pushint 8
     -
     extract_uint64
+    uncover 2
+    extract 2 0
+    uncover 2
     intc_3 // 9
     *
-    intc_1 // 2
-    +
-    bytec_0 // "data"
-    swap
     intc_3 // 9
-    box_extract // on error: index access is out of bounds
+    extract3 // on error: index access is out of bounds
     swap
-    dig 2
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
     pushint 3
     *
     pushint 3
@@ -208,5 +213,5 @@ data_ternary_merge@4:
     return
 
 data_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b data_ternary_merge@4

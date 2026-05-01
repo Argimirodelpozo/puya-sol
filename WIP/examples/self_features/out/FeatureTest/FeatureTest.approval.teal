@@ -1,13 +1,22 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.approval_program() -> uint64:
 main:
-    intcblock 64 1 0 2
-    bytecblock 0x151f7c75 0x00
+    intcblock 1 32 0 255
+    bytecblock 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x00
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -16,156 +25,260 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x851699b1 0xff1abeb6 0xd30149e0 0x141b40ce 0xb620f07f 0xb812b365 0x3783f9da 0x8657910f 0xa7b69211 0x8b2b9c3d // method "testWrap(uint512)uint512", method "testFrAdd(uint512,uint512)uint512", method "testFrSub(uint512,uint512)uint512", method "testFrMul(uint512,uint512)uint512", method "testFrEq(uint512,uint512)bool", method "testFrNeq(uint512,uint512)bool", method "testEnumValue()uint64", method "testEnumCompare()bool", method "testEnumIndex(uint64)uint64", method "testUnchecked(uint512,uint512)uint512"
+    pushbytess 0x2e52c74e 0x130a9d9a 0xe8eae4b1 0xb40a3fe5 0x480df9c5 0x33eb050d 0x3783f9da 0x8657910f 0xa7b69211 0x849139d8 // method "testWrap(uint256)uint256", method "testFrAdd(uint256,uint256)uint256", method "testFrSub(uint256,uint256)uint256", method "testFrMul(uint256,uint256)uint256", method "testFrEq(uint256,uint256)bool", method "testFrNeq(uint256,uint256)bool", method "testEnumValue()uint64", method "testEnumCompare()bool", method "testEnumIndex(uint64)uint64", method "testUnchecked(uint256,uint256)uint256"
     txna ApplicationArgs 0
-    match testWrap testFrAdd testFrSub testFrMul testFrEq testFrNeq main_testEnumValue_route@11 main_testEnumCompare_route@12 testEnumIndex testUnchecked
+    match testWrap testFrAdd testFrSub testFrMul testFrEq testFrNeq testEnumValue testEnumCompare testEnumIndex testUnchecked
     err
 
-main_testEnumCompare_route@12:
-    pushbytes 0x151f7c7580
-    log
-    intc_1 // 1
-    return
 
-main_testEnumValue_route@11:
-    pushbytes 0x151f7c750000000000000002
-    log
-    intc_1 // 1
-    return
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M29_FeatureTest.sol.add(a: bytes, b: bytes) -> bytes:
+add:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b+
+    retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testWrap[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M29_FeatureTest.sol.sub(a: bytes, b: bytes) -> bytes:
+sub:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b>=
+    assert // underflow
+    frame_dig -2
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig -1
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M29_FeatureTest.sol.mul(a: bytes, b: bytes) -> bytes:
+mul:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b*
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M29_FeatureTest.sol.eq(a: bytes, b: bytes) -> uint64:
+eq:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b==
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M29_FeatureTest.sol.neq(a: bytes, b: bytes) -> uint64:
+neq:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b!=
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testWrap[routing]() -> void:
 testWrap:
     txna ApplicationArgs 1
     dup
     len
-    dup
-    intc_0 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    intc_0 // 64
-    <=
-    assert // overflow
-    intc_0 // 64
-    bzero
-    b|
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz testWrap_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+testWrap_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // 0x151f7c75
-    swap
+    dig 1
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
+testWrap_ternary_false@3:
+    intc_2 // 0
+    b testWrap_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testFrAdd[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testFrAdd[routing]() -> void:
 testFrAdd:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    b+
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz testFrAdd_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+testFrAdd_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
+    callsub add
     dup
     len
-    intc_0 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
+testFrAdd_ternary_false@3:
+    intc_2 // 0
+    b testFrAdd_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testFrSub[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testFrSub[routing]() -> void:
 testFrSub:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    b-
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz testFrSub_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+testFrSub_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
+    callsub sub
     dup
     len
-    intc_0 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
+testFrSub_ternary_false@3:
+    intc_2 // 0
+    b testFrSub_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testFrMul[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testFrMul[routing]() -> void:
 testFrMul:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    b*
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz testFrMul_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+testFrMul_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
+    callsub mul
     dup
     len
-    intc_0 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
+testFrMul_ternary_false@3:
+    intc_2 // 0
+    b testFrMul_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testFrEq[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testFrEq[routing]() -> void:
 testFrEq:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    b==
-    bytec_1 // 0x00
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz testFrEq_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+testFrEq_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
+    callsub eq
+    bytec_2 // 0x00
     intc_2 // 0
     uncover 2
     setbit
@@ -173,26 +286,41 @@ testFrEq:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
+testFrEq_ternary_false@3:
+    intc_2 // 0
+    b testFrEq_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testFrNeq[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testFrNeq[routing]() -> void:
 testFrNeq:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    b!=
-    bytec_1 // 0x00
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz testFrNeq_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+testFrNeq_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
+    callsub neq
+    bytec_2 // 0x00
     intc_2 // 0
     uncover 2
     setbit
@@ -200,11 +328,59 @@ testFrNeq:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
+testFrNeq_ternary_false@3:
+    intc_2 // 0
+    b testFrNeq_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testEnumIndex[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testEnumValue[routing]() -> void:
+testEnumValue:
+    txn GroupIndex
+    bz testEnumValue_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+testEnumValue_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000002
+    log
+    intc_0 // 1
+    return
+
+testEnumValue_ternary_false@3:
+    intc_2 // 0
+    b testEnumValue_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testEnumCompare[routing]() -> void:
+testEnumCompare:
+    txn GroupIndex
+    bz testEnumCompare_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+testEnumCompare_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+testEnumCompare_ternary_false@3:
+    intc_2 // 0
+    b testEnumCompare_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testEnumIndex[routing]() -> void:
 testEnumIndex:
     txna ApplicationArgs 1
     dup
@@ -213,66 +389,104 @@ testEnumIndex:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    txn GroupIndex
+    bz testEnumIndex_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+testEnumIndex_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
+    intc_3 // 255
+    <=
+    assert // ABI validation
+    intc_3 // 255
+    &
     dup
-    bnz testEnumIndex_after_if_else@3
+    bury 2
+    bnz testEnumIndex_after_if_else@6
     intc_2 // 0
 
-testEnumIndex_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testEnumIndex@8:
+testEnumIndex_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testEnumIndex@11:
     itob
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
-testEnumIndex_after_if_else@3:
+testEnumIndex_after_if_else@6:
     dup
-    intc_1 // 1
+    intc_0 // 1
     ==
-    bz testEnumIndex_after_if_else@5
-    intc_1 // 1
-    b testEnumIndex_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testEnumIndex@8
+    bz testEnumIndex_after_if_else@8
+    intc_0 // 1
+    b testEnumIndex_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testEnumIndex@11
 
-testEnumIndex_after_if_else@5:
+testEnumIndex_after_if_else@8:
     dup
-    intc_3 // 2
+    pushint 2
     ==
-    bz testEnumIndex_after_if_else@7
-    intc_3 // 2
-    b testEnumIndex_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testEnumIndex@8
+    bz testEnumIndex_after_if_else@10
+    pushint 2
+    b testEnumIndex_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testEnumIndex@11
 
-testEnumIndex_after_if_else@7:
+testEnumIndex_after_if_else@10:
     pushint 3
-    b testEnumIndex_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testEnumIndex@8
+    b testEnumIndex_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testEnumIndex@11
+
+testEnumIndex_ternary_false@3:
+    intc_2 // 0
+    b testEnumIndex_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testUnchecked[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testUnchecked[routing]() -> void:
 testUnchecked:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz testUnchecked_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+testUnchecked_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
     b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     dup
     len
-    intc_0 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+testUnchecked_ternary_false@3:
+    intc_2 // 0
+    b testUnchecked_ternary_merge@4

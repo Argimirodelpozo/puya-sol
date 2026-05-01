@@ -1,16 +1,25 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M40_ReturnCaller.sol.ReturnCaller.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M40_ReturnCaller.sol.ReturnCaller.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 24
+    intcblock 0 1 32 24
     bytecblock "target" 0x151f7c75
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "target"
     txna ApplicationArgs 0
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -25,10 +34,20 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M40_ReturnCaller.sol.ReturnCaller.callGetNumber[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M40_ReturnCaller.sol.ReturnCaller.callGetNumber[routing]() -> void:
 callGetNumber:
+    txn GroupIndex
+    bz callGetNumber_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+callGetNumber_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
-    intc_1 // 0
+    intc_0 // 0
     bytec_0 // "target"
     app_global_get_ex
     assert // check target exists
@@ -36,68 +55,71 @@ callGetNumber:
     extract_uint64
     pushint 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
     pushbytes 0x18d5f28c // method "getNumber()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
-    extract 4 0
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
+    extract 4 32
+    intc_2 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
+callGetNumber_ternary_false@3:
+    intc_0 // 0
+    b callGetNumber_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M40_ReturnCaller.sol.ReturnCaller.callAdd[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M40_ReturnCaller.sol.ReturnCaller.callAdd[routing]() -> void:
 callAdd:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz callAdd_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+callAdd_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
-    intc_0 // 32
+    intc_2 // 32
     bzero
     dup
-    uncover 3
+    dig 3
     concat
+    intc_0 // 0
     dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
     extract3
     dig 1
-    uncover 3
+    dig 3
     concat
+    intc_0 // 0
     dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
     extract3
-    intc_1 // 0
+    intc_0 // 0
     bytec_0 // "target"
     app_global_get_ex
     assert // check target exists
@@ -105,9 +127,9 @@ callAdd:
     extract_uint64
     pushint 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
     pushbytes 0xac976e02 // method "add(uint256,uint256)uint256"
@@ -117,41 +139,47 @@ callAdd:
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
-    extract 4 0
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
+    extract 4 32
     b|
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
+callAdd_ternary_false@3:
+    intc_0 // 0
+    b callAdd_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M40_ReturnCaller.sol.ReturnCaller.callIsEven[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M40_ReturnCaller.sol.ReturnCaller.callIsEven[routing]() -> void:
 callIsEven:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    itxn_begin
-    intc_0 // 32
-    bzero
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
+    txn GroupIndex
+    bz callIsEven_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
     -
-    intc_0 // 32
+    gtxns Amount
+
+callIsEven_ternary_merge@4:
+    !
+    assert // not payable
+    itxn_begin
+    intc_2 // 32
+    bzero
+    dig 1
+    concat
+    intc_0 // 0
+    dup
     extract3
-    intc_1 // 0
+    intc_0 // 0
     bytec_0 // "target"
     app_global_get_ex
     assert // check target exists
@@ -159,9 +187,9 @@ callIsEven:
     extract_uint64
     pushint 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
     pushbytes 0x4b25d867 // method "isEven(uint256)bool"
@@ -171,23 +199,37 @@ callIsEven:
     itxn LastLog
     extract 4 0
     btoi
-    intc_1 // 0
+    intc_0 // 0
     !=
     pushbytes 0x00
-    intc_1 // 0
+    intc_0 // 0
     uncover 2
     setbit
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
+callIsEven_ternary_false@3:
+    intc_0 // 0
+    b callIsEven_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M40_ReturnCaller.sol.ReturnCaller.target[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M40_ReturnCaller.sol.ReturnCaller.target[routing]() -> void:
 target:
-    intc_1 // 0
+    txn GroupIndex
+    bz target_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+target_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 0
     bytec_0 // "target"
     app_global_get_ex
     assert // check target exists
@@ -195,5 +237,9 @@ target:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
+
+target_ternary_false@3:
+    intc_0 // 0
+    b target_ternary_merge@4

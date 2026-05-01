@@ -1,10 +1,19 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M41_StructCaller.sol.StructCaller.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M41_StructCaller.sol.StructCaller.approval_program() -> uint64:
 main:
     intcblock 32 0 1 24
     bytecblock "target" 0x151f7c75
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "target"
@@ -25,7 +34,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M41_StructCaller.sol.StructCaller.callGetPoint[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M41_StructCaller.sol.StructCaller.callGetPoint[routing]() -> void:
 callGetPoint:
     txna ApplicationArgs 1
     dup
@@ -39,11 +48,21 @@ callGetPoint:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz callGetPoint_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+callGetPoint_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     intc_0 // 32
     bzero
     dup
-    uncover 3
+    dig 3
     concat
     dup
     len
@@ -52,7 +71,7 @@ callGetPoint:
     intc_0 // 32
     extract3
     dig 1
-    uncover 3
+    dig 3
     concat
     dup
     len
@@ -80,10 +99,9 @@ callGetPoint:
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
-    extract 4 32
-    itxn LastLog
     extract 36 32
-    swap
+    itxn LastLog
+    extract 4 32
     dig 2
     b|
     swap
@@ -97,8 +115,12 @@ callGetPoint:
     intc_2 // 1
     return
 
+callGetPoint_ternary_false@3:
+    intc_1 // 0
+    b callGetPoint_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M41_StructCaller.sol.StructCaller.callGetSum[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M41_StructCaller.sol.StructCaller.callGetSum[routing]() -> void:
 callGetSum:
     txna ApplicationArgs 1
     dup
@@ -112,11 +134,21 @@ callGetSum:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz callGetSum_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+callGetSum_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
     intc_0 // 32
     bzero
     dup
-    uncover 3
+    dig 3
     concat
     dup
     len
@@ -125,7 +157,7 @@ callGetSum:
     intc_0 // 32
     extract3
     dig 1
-    uncover 3
+    dig 3
     concat
     dup
     len
@@ -167,9 +199,23 @@ callGetSum:
     intc_2 // 1
     return
 
+callGetSum_ternary_false@3:
+    intc_1 // 0
+    b callGetSum_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M41_StructCaller.sol.StructCaller.target[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M41_StructCaller.sol.StructCaller.target[routing]() -> void:
 target:
+    txn GroupIndex
+    bz target_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+target_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "target"
     app_global_get_ex
@@ -180,3 +226,7 @@ target:
     log
     intc_2 // 1
     return
+
+target_ternary_false@3:
+    intc_1 // 0
+    b target_ternary_merge@4

@@ -1,12 +1,47 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "counter" "threshold" "admin" "paused" 0x151f7c75
+    bytecblock "counter" "threshold" "admin" "paused" 0x151f7c75 "__ctor_pending"
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec 5 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xf2289b12 0x17866912 0x4e37efbd 0x2fa47328 0xf461de0e 0x0a4fb6b3 0x9ad48402 0x5f026f4f // method "__postInit()void", method "setThreshold(uint256)void", method "setAdmin(address)void", method "setPaused(bool)void", method "increment()void", method "threshold()uint256", method "admin()address", method "paused()bool", method "counter()uint256"
+    txna ApplicationArgs 0
+    match __postInit setThreshold setAdmin setPaused increment threshold admin paused counter
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.__postInit[routing]() -> void:
+__postInit:
+    bytec 5 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 5 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
     bytec_1 // "threshold"
     pushbytes 0x
     app_global_put
@@ -38,19 +73,8 @@ main:
     intc_0 // 1
     return
 
-main_after_if_else@2:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xf2289b12 0x17866912 0x4e37efbd 0x2fa47328 0xf461de0e 0x0a4fb6b3 0x9ad48402 0x5f026f4f // method "setThreshold(uint256)void", method "setAdmin(address)void", method "setPaused(bool)void", method "increment()void", method "threshold()uint256", method "admin()address", method "paused()bool", method "counter()uint256"
-    txna ApplicationArgs 0
-    match setThreshold setAdmin setPaused increment threshold admin paused counter
-    err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.setThreshold[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.setThreshold[routing]() -> void:
 setThreshold:
     txna ApplicationArgs 1
     dup
@@ -58,14 +82,28 @@ setThreshold:
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz setThreshold_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+setThreshold_ternary_merge@4:
+    !
+    assert // not payable
     bytec_1 // "threshold"
-    swap
+    dig 1
     app_global_put
     intc_0 // 1
     return
 
+setThreshold_ternary_false@3:
+    intc_1 // 0
+    b setThreshold_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.setAdmin[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.setAdmin[routing]() -> void:
 setAdmin:
     txna ApplicationArgs 1
     dup
@@ -73,14 +111,28 @@ setAdmin:
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz setAdmin_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+setAdmin_ternary_merge@4:
+    !
+    assert // not payable
     bytec_2 // "admin"
-    swap
+    dig 1
     app_global_put
     intc_0 // 1
     return
 
+setAdmin_ternary_false@3:
+    intc_1 // 0
+    b setAdmin_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.setPaused[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.setPaused[routing]() -> void:
 setPaused:
     txna ApplicationArgs 1
     dup
@@ -90,21 +142,48 @@ setPaused:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
+    txn GroupIndex
+    bz setPaused_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+setPaused_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
     bytec_3 // "paused"
     swap
     app_global_put
     intc_0 // 1
     return
 
+setPaused_ternary_false@3:
+    intc_1 // 0
+    b setPaused_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.increment[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.increment[routing]() -> void:
 increment:
+    txn GroupIndex
+    bz increment_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+increment_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "counter"
     app_global_get_ex
     assert // check counter exists
-    intc_0 // 1
-    itob
+    pushbytes 0x01
     b+
     bytec_0 // "counter"
     swap
@@ -112,9 +191,23 @@ increment:
     intc_0 // 1
     return
 
+increment_ternary_false@3:
+    intc_1 // 0
+    b increment_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.threshold[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.threshold[routing]() -> void:
 threshold:
+    txn GroupIndex
+    bz threshold_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+threshold_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_1 // "threshold"
     app_global_get_ex
@@ -134,9 +227,23 @@ threshold:
     intc_0 // 1
     return
 
+threshold_ternary_false@3:
+    intc_1 // 0
+    b threshold_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.admin[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.admin[routing]() -> void:
 admin:
+    txn GroupIndex
+    bz admin_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+admin_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_2 // "admin"
     app_global_get_ex
@@ -148,9 +255,23 @@ admin:
     intc_0 // 1
     return
 
+admin_ternary_false@3:
+    intc_1 // 0
+    b admin_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.paused[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.paused[routing]() -> void:
 paused:
+    txn GroupIndex
+    bz paused_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+paused_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_3 // "paused"
     app_global_get_ex
@@ -166,9 +287,23 @@ paused:
     intc_0 // 1
     return
 
+paused_ternary_false@3:
+    intc_1 // 0
+    b paused_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.counter[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.counter[routing]() -> void:
 counter:
+    txn GroupIndex
+    bz counter_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+counter_ternary_merge@4:
+    !
+    assert // not payable
     intc_1 // 0
     bytec_0 // "counter"
     app_global_get_ex
@@ -187,3 +322,7 @@ counter:
     log
     intc_0 // 1
     return
+
+counter_ternary_false@3:
+    intc_1 // 0
+    b counter_ternary_merge@4

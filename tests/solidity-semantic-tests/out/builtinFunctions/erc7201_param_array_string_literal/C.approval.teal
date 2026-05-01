@@ -3,8 +3,6 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_array_string_literal.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2
-    bytecblock 0x00 0x01
     pushint 4096
     bzero
     dup
@@ -16,7 +14,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    pushint 1
     return
 
 main_after_if_else@2:
@@ -34,78 +32,23 @@ main_test_route@4:
     b test
 
 
-// _puya_lib.arc4.static_array_read_byte_length_element(array: bytes, index: uint64) -> bytes:
-static_array_read_byte_length_element:
-    proto 2 1
-    frame_dig -1
-    intc_2 // 2
-    *
-    frame_dig -2
-    swap
-    extract_uint16
-    frame_dig -2
-    dig 1
-    extract_uint16
-    intc_2 // 2
-    +
-    frame_dig -2
-    cover 2
-    extract3
-    retsub
-
-
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_array_string_literal.sol.C.test[routing]() -> void:
 test:
     txn GroupIndex
     bz test_ternary_false@3
     txn GroupIndex
-    intc_0 // 1
+    pushint 1
     -
     gtxns Amount
 
 test_ternary_merge@4:
     !
     assert // not payable
-    pushint 32
-    bzero
-    pushbytes 0x0002000178
-    intc_1 // 0
-    callsub static_array_read_byte_length_element
-    extract 2 0
-    keccak256
-    bytec_1 // 0x01
-    b-
-    dig 1
-    b|
-    keccak256
-    extract 0 31
-    bytec_0 // 0x00
-    concat
-    pushbytes 0x00040007000179000178
-    intc_0 // 1
-    callsub static_array_read_byte_length_element
-    extract 2 0
-    keccak256
-    bytec_1 // 0x01
-    b-
-    uncover 2
-    b|
-    keccak256
-    extract 0 31
-    bytec_0 // 0x00
-    concat
-    b==
-    bytec_0 // 0x00
-    intc_1 // 0
-    uncover 2
-    setbit
-    pushbytes 0x151f7c75
-    swap
-    concat
+    pushbytes 0x151f7c7580
     log
-    intc_0 // 1
+    pushint 1
     return
 
 test_ternary_false@3:
-    intc_1 // 0
+    pushint 0
     b test_ternary_merge@4

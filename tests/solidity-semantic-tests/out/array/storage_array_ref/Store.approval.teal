@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/storage_array_ref.sol.Store.approval_program() -> uint64:
 main:
-    intcblock 32 2 0 1
+    intcblock 32 2 1 0
     bytecblock "data" 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending"
     pushint 4096
     bzero
@@ -17,9 +17,9 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_3 // "__ctor_pending"
-    intc_3 // 1
+    intc_2 // 1
     app_global_put
-    intc_3 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -40,30 +40,31 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_3 // "__ctor_pending"
-    intc_2 // 0
+    intc_3 // 0
     app_global_put
     bytec_0 // "data"
     intc_1 // 2
     box_create
     pop
-    intc_3 // 1
+    intc_2 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/storage_array_ref.sol.Store.add[routing]() -> void:
 add:
-    intc_2 // 0
-    dup
+    intc_3 // 0
+    dupn 3
     txna ApplicationArgs 1
     dup
     len
+    dup
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz add_ternary_false@3
     txn GroupIndex
-    intc_3 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -71,36 +72,27 @@ add_ternary_merge@4:
     !
     assert // not payable
     bytec_0 // "data"
-    intc_2 // 0
-    intc_1 // 2
-    box_extract
-    btoi
-    bytec_0 // "data"
-    box_len
-    pop
+    box_get
+    assert // box exists
     intc_0 // 32
-    +
-    bytec_0 // "data"
-    swap
-    box_resize
+    bzero
+    bury 6
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat // on error: max array length exceeded
     dup
-    intc_3 // 1
-    +
+    extract 2 0
+    len
+    intc_0 // 32
+    /
     itob
     extract 6 2
+    replace2 0
     bytec_0 // "data"
-    intc_2 // 0
-    uncover 2
-    box_replace
-    intc_0 // 32
-    *
-    intc_1 // 2
-    +
+    box_del
+    pop
     bytec_0 // "data"
     swap
-    intc_2 // 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
-    box_splice
+    box_put
     bytec_0 // "data"
     box_len
     pop
@@ -120,9 +112,17 @@ add_ternary_merge@7:
     bytec_1 // 0x01
     b>=
     assert // underflow
+    dup
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    dig 5
+    b|
+    bury 6
     pushint 8
     bzero
-    bury 3
+    bury 4
     bytec_0 // "data"
     box_len
     pop
@@ -145,10 +145,10 @@ add_ternary_merge@10:
     b-
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    dig 3
+    dig 4
     swap
     concat
-    bury 2
+    bury 3
     bytec_0 // "data"
     box_len
     pop
@@ -171,13 +171,13 @@ add_ternary_merge@13:
     b-
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    dig 3
+    dig 4
     swap
     concat
     len
     pushint 8
     -
-    dig 2
+    dig 3
     swap
     extract_uint64
     intc_0 // 32
@@ -186,9 +186,9 @@ add_ternary_merge@13:
     +
     bytec_0 // "data"
     swap
-    dig 2
-    box_replace // on error: index out of bounds
-    intc_3 // 1
+    dig 7
+    box_replace
+    intc_2 // 1
     return
 
 add_ternary_false@12:
@@ -204,7 +204,7 @@ add_ternary_false@6:
     b add_ternary_merge@7
 
 add_ternary_false@3:
-    intc_2 // 0
+    intc_3 // 0
     b add_ternary_merge@4
 
 
@@ -219,7 +219,7 @@ find(u256):
     txn GroupIndex
     bz find(u256)_ternary_false@3
     txn GroupIndex
-    intc_3 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -231,10 +231,10 @@ find(u256)_ternary_merge@4:
     pushbytes 0x0000
     cover 2
     select
-    intc_2 // 0
+    intc_3 // 0
     itob
     dig 1
-    intc_2 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
     itob
     dig 3
@@ -252,18 +252,18 @@ find(u256)_ternary_merge@4:
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
 find(u256)_ternary_false@3:
-    intc_2 // 0
+    intc_3 // 0
     b find(u256)_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/storage_array_ref.sol.Store.find(23,u256,u256,u256)(_data: bytes, _begin: bytes, _len: bytes, _value: bytes) -> bytes, bytes:
 find(23,u256,u256,u256):
     proto 4 2
-    intc_2 // 0
+    intc_3 // 0
     dupn 2
     frame_dig -2
     pushbytes 0x

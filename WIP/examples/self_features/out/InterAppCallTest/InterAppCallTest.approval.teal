@@ -1,10 +1,19 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M16_InterAppCall.sol.InterAppCallTest.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M16_InterAppCall.sol.InterAppCallTest.approval_program() -> uint64:
 main:
-    intcblock 64 0 1 6
-    bytecblock "calculator" 0x151f7c75 0x1ff2e886 0x0cf7db5f
+    intcblock 32 0 1 6
+    bytecblock "calculator" 0x151f7c75 0xac976e02 0x413eca59
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "calculator"
@@ -19,46 +28,56 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x12c06675 0x02ffd110 0xab988299 0x32b56fda // method "callAdd(uint512,uint512)uint512", method "callMultiply(uint512,uint512)uint512", method "callIsPositive(uint512)bool", method "callAddThenMultiply(uint512,uint512,uint512)uint512"
+    pushbytess 0xdd71b809 0xee64acf2 0x5abf9a60 0x09287e9e 0x147f6911 // method "callAdd(uint256,uint256)uint256", method "callMultiply(uint256,uint256)uint256", method "callIsPositive(uint256)bool", method "callAddThenMultiply(uint256,uint256,uint256)uint256", method "calculator()address"
     txna ApplicationArgs 0
-    match callAdd callMultiply callIsPositive callAddThenMultiply
+    match callAdd callMultiply callIsPositive callAddThenMultiply calculator
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M16_InterAppCall.sol.InterAppCallTest.callAdd[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M16_InterAppCall.sol.InterAppCallTest.callAdd[routing]() -> void:
 callAdd:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz callAdd_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+callAdd_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
-    intc_0 // 64
+    intc_0 // 32
     bzero
     dup
-    uncover 3
+    dig 3
     concat
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     -
-    intc_0 // 64
+    intc_0 // 32
     extract3
     dig 1
-    uncover 3
+    dig 3
     concat
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     -
-    intc_0 // 64
+    intc_0 // 32
     extract3
     intc_1 // 0
     bytec_0 // "calculator"
@@ -73,7 +92,7 @@ callAdd:
     intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_2 // method "add(uint512,uint512)uint512"
+    bytec_2 // method "add(uint256,uint256)uint256"
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
@@ -83,7 +102,7 @@ callAdd:
     extract 4 0
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
     b|
@@ -94,41 +113,55 @@ callAdd:
     intc_2 // 1
     return
 
+callAdd_ternary_false@3:
+    intc_1 // 0
+    b callAdd_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M16_InterAppCall.sol.InterAppCallTest.callMultiply[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M16_InterAppCall.sol.InterAppCallTest.callMultiply[routing]() -> void:
 callMultiply:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz callMultiply_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+callMultiply_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
-    intc_0 // 64
+    intc_0 // 32
     bzero
     dup
-    uncover 3
+    dig 3
     concat
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     -
-    intc_0 // 64
+    intc_0 // 32
     extract3
     dig 1
-    uncover 3
+    dig 3
     concat
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     -
-    intc_0 // 64
+    intc_0 // 32
     extract3
     intc_1 // 0
     bytec_0 // "calculator"
@@ -143,7 +176,7 @@ callMultiply:
     intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_3 // method "multiply(uint512,uint512)uint512"
+    bytec_3 // method "multiply(uint256,uint256)uint256"
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
@@ -153,7 +186,7 @@ callMultiply:
     extract 4 0
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
     b|
@@ -164,25 +197,39 @@ callMultiply:
     intc_2 // 1
     return
 
+callMultiply_ternary_false@3:
+    intc_1 // 0
+    b callMultiply_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M16_InterAppCall.sol.InterAppCallTest.callIsPositive[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M16_InterAppCall.sol.InterAppCallTest.callIsPositive[routing]() -> void:
 callIsPositive:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz callIsPositive_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+callIsPositive_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
-    intc_0 // 64
+    intc_0 // 32
     bzero
-    swap
+    dig 1
     concat
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     -
-    intc_0 // 64
+    intc_0 // 32
     extract3
     intc_1 // 0
     bytec_0 // "calculator"
@@ -197,7 +244,7 @@ callIsPositive:
     intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    pushbytes 0xca0ed4c6 // method "isPositive(uint512)bool"
+    pushbytes 0x98708847 // method "isPositive(uint256)bool"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
@@ -205,6 +252,8 @@ callIsPositive:
     extract 4 0
     intc_1 // 0
     getbit
+    intc_1 // 0
+    !=
     pushbytes 0x00
     intc_1 // 0
     uncover 2
@@ -216,47 +265,61 @@ callIsPositive:
     intc_2 // 1
     return
 
+callIsPositive_ternary_false@3:
+    intc_1 // 0
+    b callIsPositive_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M16_InterAppCall.sol.InterAppCallTest.callAddThenMultiply[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M16_InterAppCall.sol.InterAppCallTest.callAddThenMultiply[routing]() -> void:
 callAddThenMultiply:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz callAddThenMultiply_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+callAddThenMultiply_ternary_merge@4:
+    !
+    assert // not payable
     itxn_begin
-    intc_0 // 64
+    intc_0 // 32
     bzero
     dup
-    uncover 4
+    dig 4
     concat
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     -
-    intc_0 // 64
+    intc_0 // 32
     extract3
     dig 1
-    uncover 4
+    dig 4
     concat
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     -
-    intc_0 // 64
+    intc_0 // 32
     extract3
     intc_1 // 0
     bytec_0 // "calculator"
@@ -272,7 +335,7 @@ callAddThenMultiply:
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec_2 // method "add(uint512,uint512)uint512"
+    bytec_2 // method "add(uint256,uint256)uint256"
     itxn_field ApplicationArgs
     uncover 2
     itxn_field ApplicationArgs
@@ -287,18 +350,18 @@ callAddThenMultiply:
     concat
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     -
-    intc_0 // 64
+    intc_0 // 32
     extract3
     dig 2
-    uncover 4
+    dig 4
     concat
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     -
-    intc_0 // 64
+    intc_0 // 32
     extract3
     intc_3 // 6
     itxn_field TypeEnum
@@ -308,7 +371,7 @@ callAddThenMultiply:
     itxn_field Fee
     uncover 2
     itxn_field ApplicationID
-    bytec_3 // method "multiply(uint512,uint512)uint512"
+    bytec_3 // method "multiply(uint256,uint256)uint256"
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
@@ -318,7 +381,7 @@ callAddThenMultiply:
     extract 4 0
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
     b|
@@ -328,3 +391,35 @@ callAddThenMultiply:
     log
     intc_2 // 1
     return
+
+callAddThenMultiply_ternary_false@3:
+    intc_1 // 0
+    b callAddThenMultiply_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M16_InterAppCall.sol.InterAppCallTest.calculator[routing]() -> void:
+calculator:
+    txn GroupIndex
+    bz calculator_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+calculator_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "calculator"
+    app_global_get_ex
+    assert // check calculator exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+calculator_ternary_false@3:
+    intc_1 // 0
+    b calculator_ternary_merge@4

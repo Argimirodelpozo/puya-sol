@@ -1,10 +1,19 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M40_ReturnCallee.sol.ReturnCallee.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M40_ReturnCallee.sol.ReturnCallee.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
+    intcblock 1 32 0
     bytecblock "storedValue" 0x151f7c75
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     pushint 42
@@ -12,7 +21,7 @@ main:
     bytec_0 // "storedValue"
     swap
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -27,72 +36,110 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M40_ReturnCallee.sol.ReturnCallee.getNumber[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M40_ReturnCallee.sol.ReturnCallee.getNumber[routing]() -> void:
 getNumber:
+    txn GroupIndex
+    bz getNumber_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getNumber_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 0
     bytec_0 // "storedValue"
     app_global_get_ex
     assert // check storedValue exists
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
+getNumber_ternary_false@3:
+    intc_2 // 0
+    b getNumber_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M40_ReturnCallee.sol.ReturnCallee.add[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M40_ReturnCallee.sol.ReturnCallee.add[routing]() -> void:
 add:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz add_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+add_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
     b+
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
+add_ternary_false@3:
+    intc_2 // 0
+    b add_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M40_ReturnCallee.sol.ReturnCallee.isEven[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M40_ReturnCallee.sol.ReturnCallee.isEven[routing]() -> void:
 isEven:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    pushint 2
-    itob
+    txn GroupIndex
+    bz isEven_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+isEven_ternary_merge@4:
+    !
+    assert // not payable
+    dup
+    pushbytes 0x02
     b%
-    intc_2 // 0
-    itob
+    pushbytes 0x
     b==
     pushbytes 0x00
     intc_2 // 0
@@ -102,42 +149,74 @@ isEven:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
+isEven_ternary_false@3:
+    intc_2 // 0
+    b isEven_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M40_ReturnCallee.sol.ReturnCallee.setNumber[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M40_ReturnCallee.sol.ReturnCallee.setNumber[routing]() -> void:
 setNumber:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz setNumber_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+setNumber_ternary_merge@4:
+    !
+    assert // not payable
     bytec_0 // "storedValue"
-    swap
+    dig 1
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
+setNumber_ternary_false@3:
+    intc_2 // 0
+    b setNumber_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M40_ReturnCallee.sol.ReturnCallee.storedValue[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M40_ReturnCallee.sol.ReturnCallee.storedValue[routing]() -> void:
 storedValue:
+    txn GroupIndex
+    bz storedValue_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+storedValue_ternary_merge@4:
+    !
+    assert // not payable
     intc_2 // 0
     bytec_0 // "storedValue"
     app_global_get_ex
     assert // check storedValue exists
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+storedValue_ternary_false@3:
+    intc_2 // 0
+    b storedValue_ternary_merge@4

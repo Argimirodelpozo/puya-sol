@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_library_inheritance.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "s" 0x0000000000000000000000000000000000000000000000000000000000000000
+    intcblock 1 32 0
+    bytecblock "s"
     pushint 4096
     bzero
     dup
@@ -17,7 +17,7 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "s"
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     intc_0 // 1
     return
@@ -40,7 +40,20 @@ main_f_route@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_library_inheritance.sol.L.libFun(s: bytes) -> bytes:
 L.libFun:
     proto 1 1
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    frame_dig -1
+    extract 0 32
+    pushbytes 0x0100
+    b+
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    dup
+    frame_bury -1
     retsub
 
 
@@ -56,7 +69,7 @@ f:
 f_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 0
+    intc_2 // 0
     bytec_0 // "s"
     app_global_get_ex
     assert // check s exists
@@ -69,6 +82,9 @@ f_ternary_merge@4:
     dig 1
     app_global_put
     extract 0 32
+    intc_1 // 32
+    bzero
+    b|
     pushbytes 0x151f7c75
     swap
     concat
@@ -77,5 +93,5 @@ f_ternary_merge@4:
     return
 
 f_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b f_ternary_merge@4

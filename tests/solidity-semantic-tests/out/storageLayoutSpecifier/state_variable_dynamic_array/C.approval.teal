@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_dynamic_array.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 2 0
-    bytecblock "arrayA" "arrayC" 0x151f7c75 "__ctor_pending"
+    intcblock 32 1 0 2
+    bytecblock "arrayA" "arrayC" 0x151f7c75 0x0000 "__ctor_pending"
     pushint 4096
     bzero
     dup
@@ -16,7 +16,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -34,102 +34,47 @@ main_after_if_else@2:
     err
 
 
-// _puya_lib.box_arc4.box_dynamic_array_pop_fixed_size(box_key: bytes, array_offset: uint64, fixed_byte_size: uint64) -> void:
-box_dynamic_array_pop_fixed_size:
-    proto 3 0
-    frame_dig -3
+// _puya_lib.arc4.dynamic_array_pop_fixed_size(array: bytes, fixed_byte_size: uint64) -> bytes, bytes:
+dynamic_array_pop_fixed_size:
+    proto 2 2
     frame_dig -2
-    intc_2 // 2
-    box_extract
-    btoi
+    intc_2 // 0
+    extract_uint16
     intc_1 // 1
     -
-    dup
     itob
-    extract 6 2
-    frame_dig -3
+    extract 6 0
     frame_dig -2
-    uncover 2
-    box_replace
-    frame_dig -2
-    intc_2 // 2
-    +
     swap
-    frame_dig -1
-    *
-    +
-    frame_dig -3
-    swap
-    frame_dig -1
-    pushbytes 0x
-    box_splice
-    frame_dig -3
-    box_len
-    pop
+    replace2 0
+    dup
+    len
     frame_dig -1
     -
-    frame_dig -3
-    swap
-    box_resize
-    retsub
-
-
-// _puya_lib.box_arc4.box_dynamic_array_concat_fixed(box_key: bytes, array_offset: uint64, new_items_bytes: bytes, new_items_count: uint64, fixed_element_size: uint64) -> void:
-box_dynamic_array_concat_fixed:
-    proto 5 0
-    frame_dig -5
-    frame_dig -4
-    intc_2 // 2
-    box_extract
-    btoi
-    frame_dig -5
-    box_len
-    pop
-    frame_dig -2
+    dup2
     frame_dig -1
-    *
-    +
-    frame_dig -5
-    swap
-    box_resize
-    dup
-    frame_dig -2
-    +
-    itob
-    extract 6 2
-    frame_dig -5
-    frame_dig -4
+    extract3
     uncover 2
-    box_replace
-    frame_dig -4
-    intc_2 // 2
-    +
-    swap
-    frame_dig -1
-    *
-    +
-    frame_dig -5
-    swap
-    intc_3 // 0
-    frame_dig -3
-    box_splice
+    intc_2 // 0
+    uncover 3
+    substring3
     retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_dynamic_array.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_3 // "__ctor_pending"
-    intc_3 // 0
+    bytec 4 // "__ctor_pending"
+    intc_2 // 0
     app_global_put
     bytec_0 // "arrayA"
-    intc_2 // 2
+    intc_3 // 2
     box_create
     pop
     bytec_1 // "arrayC"
-    intc_2 // 2
+    intc_3 // 2
     box_create
     pop
     intc_1 // 1
@@ -149,35 +94,71 @@ initA_ternary_merge@4:
     !
     assert // not payable
     bytec_0 // "arrayA"
-    intc_3 // 0
+    box_get
+    assert // box exists
+    intc_0 // 32
+    bzero
+    swap
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
-    intc_1 // 1
+    concat // on error: max array length exceeded
+    dup
+    extract 2 0
+    len
     intc_0 // 32
-    callsub box_dynamic_array_concat_fixed
+    /
+    itob
+    extract 6 2
+    replace2 0
     bytec_0 // "arrayA"
-    intc_3 // 0
+    box_del
+    pop
+    bytec_0 // "arrayA"
+    dig 1
+    box_put
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
-    intc_1 // 1
+    concat // on error: max array length exceeded
+    dup
+    extract 2 0
+    len
     intc_0 // 32
-    callsub box_dynamic_array_concat_fixed
+    /
+    itob
+    extract 6 2
+    replace2 0
     bytec_0 // "arrayA"
-    intc_3 // 0
+    box_del
+    pop
+    bytec_0 // "arrayA"
+    dig 1
+    box_put
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
-    intc_1 // 1
+    concat // on error: max array length exceeded
+    dup
+    extract 2 0
+    len
     intc_0 // 32
-    callsub box_dynamic_array_concat_fixed
+    /
+    itob
+    extract 6 2
+    replace2 0
     bytec_0 // "arrayA"
-    intc_2 // 2
-    intc_0 // 32
-    box_extract // on error: index access is out of bounds
+    box_del
+    pop
     bytec_0 // "arrayA"
-    pushint 34
-    intc_0 // 32
-    box_extract // on error: index access is out of bounds
-    bytec_0 // "arrayA"
-    pushint 66
-    intc_0 // 32
-    box_extract // on error: index access is out of bounds
+    dig 1
+    box_put
+    dup
+    extract 2 32
+    dig 2
+    b|
+    dig 1
+    extract 34 32
+    dig 3
+    b|
+    uncover 2
+    extract 66 32
+    uncover 3
+    b|
     cover 2
     concat
     swap
@@ -190,7 +171,7 @@ initA_ternary_merge@4:
     return
 
 initA_ternary_false@3:
-    intc_3 // 0
+    intc_2 // 0
     b initA_ternary_merge@4
 
 
@@ -213,41 +194,61 @@ initCFromAInReverse_ternary_merge@4:
     pushbytes 0x0003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     box_put
     bytec_0 // "arrayA"
-    pushint 66
+    box_get
+    bytec_3 // 0x0000
+    cover 2
+    select
+    extract 66 32
     intc_0 // 32
-    box_extract // on error: index access is out of bounds
+    bzero
+    swap
+    dig 1
+    b|
     bytec_1 // "arrayC"
-    intc_2 // 2
+    intc_3 // 2
     uncover 2
-    box_replace // on error: index out of bounds
+    box_replace
     bytec_0 // "arrayA"
-    pushint 34
-    intc_0 // 32
-    box_extract // on error: index access is out of bounds
+    box_get
+    bytec_3 // 0x0000
+    cover 2
+    select
+    extract 34 32
+    dig 1
+    b|
     bytec_1 // "arrayC"
     pushint 34
     uncover 2
-    box_replace // on error: index out of bounds
+    box_replace
     bytec_0 // "arrayA"
-    intc_2 // 2
-    intc_0 // 32
-    box_extract // on error: index access is out of bounds
+    box_get
+    bytec_3 // 0x0000
+    cover 2
+    select
+    extract 2 32
+    dig 1
+    b|
     bytec_1 // "arrayC"
     pushint 66
     uncover 2
-    box_replace // on error: index out of bounds
+    box_replace
     bytec_1 // "arrayC"
-    intc_2 // 2
-    intc_0 // 32
-    box_extract // on error: index access is out of bounds
-    bytec_1 // "arrayC"
-    pushint 34
-    intc_0 // 32
-    box_extract // on error: index access is out of bounds
-    bytec_1 // "arrayC"
-    pushint 66
-    intc_0 // 32
-    box_extract // on error: index access is out of bounds
+    box_get
+    bytec_3 // 0x0000
+    cover 2
+    select
+    dup
+    extract 2 32
+    dig 2
+    b|
+    dig 1
+    extract 34 32
+    dig 3
+    b|
+    uncover 2
+    extract 66 32
+    uncover 3
+    b|
     cover 2
     concat
     swap
@@ -260,7 +261,7 @@ initCFromAInReverse_ternary_merge@4:
     return
 
 initCFromAInReverse_ternary_false@3:
-    intc_3 // 0
+    intc_2 // 0
     b initCFromAInReverse_ternary_merge@4
 
 
@@ -277,22 +278,40 @@ clearA_ternary_merge@4:
     !
     assert // not payable
     bytec_0 // "arrayA"
-    intc_3 // 0
+    box_get
+    assert // box exists
     intc_0 // 32
-    callsub box_dynamic_array_pop_fixed_size
+    callsub dynamic_array_pop_fixed_size
+    bury 1
     bytec_0 // "arrayA"
-    intc_3 // 0
-    intc_0 // 32
-    callsub box_dynamic_array_pop_fixed_size
+    box_del
+    pop
     bytec_0 // "arrayA"
-    intc_3 // 0
+    dig 1
+    box_put
     intc_0 // 32
-    callsub box_dynamic_array_pop_fixed_size
+    callsub dynamic_array_pop_fixed_size
+    bury 1
+    bytec_0 // "arrayA"
+    box_del
+    pop
+    bytec_0 // "arrayA"
+    dig 1
+    box_put
+    intc_0 // 32
+    callsub dynamic_array_pop_fixed_size
+    bury 1
+    bytec_0 // "arrayA"
+    box_del
+    pop
+    bytec_0 // "arrayA"
+    swap
+    box_put
     intc_1 // 1
     return
 
 clearA_ternary_false@3:
-    intc_3 // 0
+    intc_2 // 0
     b clearA_ternary_merge@4
 
 
@@ -311,7 +330,7 @@ arrayALength_ternary_merge@4:
     bytec_0 // "arrayA"
     box_len
     pop
-    intc_2 // 2
+    intc_3 // 2
     >=
     bz arrayALength_ternary_false@6
     bytec_0 // "arrayA"
@@ -319,7 +338,7 @@ arrayALength_ternary_merge@4:
     pop
 
 arrayALength_ternary_merge@7:
-    intc_2 // 2
+    intc_3 // 2
     -
     intc_0 // 32
     /
@@ -335,11 +354,11 @@ arrayALength_ternary_merge@7:
     return
 
 arrayALength_ternary_false@6:
-    intc_2 // 2
+    intc_3 // 2
     b arrayALength_ternary_merge@7
 
 arrayALength_ternary_false@3:
-    intc_3 // 0
+    intc_2 // 0
     b arrayALength_ternary_merge@4
 
 
@@ -358,7 +377,7 @@ arrayCLength_ternary_merge@4:
     bytec_1 // "arrayC"
     box_len
     pop
-    intc_2 // 2
+    intc_3 // 2
     >=
     bz arrayCLength_ternary_false@6
     bytec_1 // "arrayC"
@@ -366,7 +385,7 @@ arrayCLength_ternary_merge@4:
     pop
 
 arrayCLength_ternary_merge@7:
-    intc_2 // 2
+    intc_3 // 2
     -
     intc_0 // 32
     /
@@ -382,11 +401,11 @@ arrayCLength_ternary_merge@7:
     return
 
 arrayCLength_ternary_false@6:
-    intc_2 // 2
+    intc_3 // 2
     b arrayCLength_ternary_merge@7
 
 arrayCLength_ternary_false@3:
-    intc_3 // 0
+    intc_2 // 0
     b arrayCLength_ternary_merge@4
 
 
@@ -408,23 +427,35 @@ arrayC:
 arrayC_ternary_merge@4:
     !
     assert // not payable
+    bytec_1 // "arrayC"
+    box_get
+    bytec_3 // 0x0000
+    cover 2
+    select
     pushint 8
     bzero
-    dig 1
+    dig 2
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    intc_0 // 32
-    *
-    intc_2 // 2
-    +
-    bytec_1 // "arrayC"
+    swap
+    extract 2 0
     swap
     intc_0 // 32
-    box_extract // on error: index access is out of bounds
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
     bytec_2 // 0x151f7c75
     swap
     concat
@@ -433,7 +464,7 @@ arrayC_ternary_merge@4:
     return
 
 arrayC_ternary_false@3:
-    intc_3 // 0
+    intc_2 // 0
     b arrayC_ternary_merge@4
 
 
@@ -455,23 +486,35 @@ arrayA:
 arrayA_ternary_merge@4:
     !
     assert // not payable
+    bytec_0 // "arrayA"
+    box_get
+    bytec_3 // 0x0000
+    cover 2
+    select
     pushint 8
     bzero
-    dig 1
+    dig 2
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    intc_0 // 32
-    *
-    intc_2 // 2
-    +
-    bytec_0 // "arrayA"
+    swap
+    extract 2 0
     swap
     intc_0 // 32
-    box_extract // on error: index access is out of bounds
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
     bytec_2 // 0x151f7c75
     swap
     concat
@@ -480,5 +523,5 @@ arrayA_ternary_merge@4:
     return
 
 arrayA_ternary_false@3:
-    intc_3 // 0
+    intc_2 // 0
     b arrayA_ternary_merge@4

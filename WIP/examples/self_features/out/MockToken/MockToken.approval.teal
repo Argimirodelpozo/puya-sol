@@ -1,12 +1,24 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M33_MockToken.sol.MockToken.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M33_MockToken.sol.MockToken.approval_program() -> uint64:
 main:
-    intcblock 1 64 32
-    bytecblock "_balances" 0x
+    intcblock 1 32 0
+    bytecblock "_balances" 0x "__ctor_pending" 0x010000000000000000000000000000000000000000000000000000000000000000
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec_2 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
     intc_0 // 1
     return
 
@@ -16,27 +28,53 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xf95588ea 0x42820278 0xc90c90b1 // method "mint(address,uint512)void", method "transfer(address,uint512)bool", method "balanceOf(address)uint512"
+    pushbytess 0xbacc49e3 0xb595ec13 0x198c9820 0x83bad7cc // method "__postInit()void", method "mint(address,uint256)void", method "transfer(address,uint256)bool", method "balanceOf(address)uint256"
     txna ApplicationArgs 0
-    match mint transfer balanceOf
+    match __postInit mint transfer balanceOf
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M33_MockToken.sol.MockToken.mint[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M33_MockToken.sol.MockToken.__postInit[routing]() -> void:
+__postInit:
+    bytec_2 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_2 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_0 // "_balances"
+    pushint 2
+    box_create
+    pop
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M33_MockToken.sol.MockToken.mint[routing]() -> void:
 mint:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    swap
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz mint_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+mint_ternary_merge@4:
+    !
+    assert // not payable
+    dig 1
     sha256
     bytec_0 // "_balances"
     swap
@@ -46,7 +84,7 @@ mint:
     bytec_1 // 0x
     cover 2
     select
-    uncover 2
+    dig 2
     b+
     dig 1
     box_del
@@ -55,21 +93,35 @@ mint:
     intc_0 // 1
     return
 
+mint_ternary_false@3:
+    intc_2 // 0
+    b mint_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M33_MockToken.sol.MockToken.transfer[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M33_MockToken.sol.MockToken.transfer[routing]() -> void:
 transfer:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz transfer_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+transfer_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
     sha256
     bytec_0 // "_balances"
@@ -82,15 +134,23 @@ transfer:
     select
     dup
     dig 3
+    dup
+    cover 3
     b>=
     assert // insufficient balance
-    dig 2
-    b-
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
     dig 1
+    b-
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 2
     box_del
     pop
-    box_put
+    uncover 2
     swap
+    box_put
+    dig 2
     sha256
     bytec_0 // "_balances"
     swap
@@ -111,15 +171,30 @@ transfer:
     intc_0 // 1
     return
 
+transfer_ternary_false@3:
+    intc_2 // 0
+    b transfer_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M33_MockToken.sol.MockToken.balanceOf[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M33_MockToken.sol.MockToken.balanceOf[routing]() -> void:
 balanceOf:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz balanceOf_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+balanceOf_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     sha256
     bytec_0 // "_balances"
     swap
@@ -130,10 +205,10 @@ balanceOf:
     select
     dup
     len
-    intc_1 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_1 // 64
+    intc_1 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -142,3 +217,7 @@ balanceOf:
     log
     intc_0 // 1
     return
+
+balanceOf_ternary_false@3:
+    intc_2 // 0
+    b balanceOf_ternary_merge@4

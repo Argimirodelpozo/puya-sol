@@ -1,12 +1,24 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.approval_program() -> uint64:
 main:
-    intcblock 32 1
-    bytecblock "_positions" 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "_orders" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    intcblock 32 1 0 512
+    bytecblock "_positions" 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "_orders" 0x00 "__ctor_pending" 0x151f7c75 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec 4 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
     intc_1 // 1
     return
 
@@ -16,13 +28,33 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xa385066b 0x84a300fa 0x161b840d 0xd87e4a17 0x3b95c1d2 0xb56bef9c 0xd39a8f8c 0x05c023a0 0xdee20300 0xaa25959f 0x20f1c3f9 0xb9de959e // method "setSupply(uint256,uint256)void", method "getSupply(uint256)uint256", method "addSupply(uint256,uint256)void", method "subSupply(uint256,uint256)void", method "updatePosition(uint256,uint256,uint256,uint256)void", method "getPosition(uint256)(uint256,uint256,uint256)", method "updateViaPointer(uint256,uint256)void", method "addCollateralViaPointer(uint256,uint256)void", method "createAndModify(uint256,uint256,uint256)void", method "getOrder(uint256)(uint256,uint256,bool)", method "fillOrder(uint256,uint256)void", method "setBoth(uint256,uint256,uint256)void"
+    pushbytess 0xbacc49e3 0xa385066b 0x84a300fa 0x161b840d 0xd87e4a17 0x3b95c1d2 0xb56bef9c 0xd39a8f8c 0x05c023a0 0xdee20300 0xaa25959f 0x20f1c3f9 0xb9de959e // method "__postInit()void", method "setSupply(uint256,uint256)void", method "getSupply(uint256)uint256", method "addSupply(uint256,uint256)void", method "subSupply(uint256,uint256)void", method "updatePosition(uint256,uint256,uint256,uint256)void", method "getPosition(uint256)(uint256,uint256,uint256)", method "updateViaPointer(uint256,uint256)void", method "addCollateralViaPointer(uint256,uint256)void", method "createAndModify(uint256,uint256,uint256)void", method "getOrder(uint256)(uint256,uint256,bool)", method "fillOrder(uint256,uint256)void", method "setBoth(uint256,uint256,uint256)void"
     txna ApplicationArgs 0
-    match setSupply getSupply addSupply subSupply updatePosition getPosition updateViaPointer addCollateralViaPointer createAndModify getOrder fillOrder setBoth
+    match __postInit setSupply getSupply addSupply subSupply updatePosition getPosition updateViaPointer addCollateralViaPointer createAndModify getOrder fillOrder setBoth
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.setSupply[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.__postInit[routing]() -> void:
+__postInit:
+    bytec 4 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 4 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_0 // "_positions"
+    pushint 2
+    box_create
+    pop
+    bytec_2 // "_orders"
+    pushint 2
+    box_create
+    pop
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.setSupply[routing]() -> void:
 setSupply:
     txna ApplicationArgs 1
     dup
@@ -33,14 +65,22 @@ setSupply:
     txna ApplicationArgs 2
     dup
     len
-    dup
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz setSupply_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+setSupply_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
-    dup
-    uncover 4
+    dig 2
     concat
     dup
     len
@@ -61,13 +101,7 @@ setSupply:
     extract 32 32
     swap
     extract 64 32
-    uncover 4
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 4
-    uncover 4
-    b|
+    dig 3
     uncover 2
     concat
     swap
@@ -76,8 +110,12 @@ setSupply:
     intc_1 // 1
     return
 
+setSupply_ternary_false@3:
+    intc_2 // 0
+    b setSupply_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.getSupply[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.getSupply[routing]() -> void:
 getSupply:
     txna ApplicationArgs 1
     dup
@@ -85,10 +123,19 @@ getSupply:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz getSupply_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getSupply_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
-    dup
-    uncover 2
+    dig 1
     concat
     dup
     len
@@ -105,16 +152,19 @@ getSupply:
     cover 2
     select
     extract 0 32
-    b|
-    bytec_3 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
+getSupply_ternary_false@3:
+    intc_2 // 0
+    b getSupply_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.addSupply[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.addSupply[routing]() -> void:
 addSupply:
     txna ApplicationArgs 1
     dup
@@ -128,10 +178,20 @@ addSupply:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz addSupply_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+addSupply_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
     dup
-    uncover 3
+    dig 3
     concat
     dup
     len
@@ -154,7 +214,7 @@ addSupply:
     extract 64 32
     uncover 2
     extract 0 32
-    uncover 5
+    dig 5
     b+
     dup
     len
@@ -171,8 +231,12 @@ addSupply:
     intc_1 // 1
     return
 
+addSupply_ternary_false@3:
+    intc_2 // 0
+    b addSupply_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.subSupply[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.subSupply[routing]() -> void:
 subSupply:
     txna ApplicationArgs 1
     dup
@@ -186,10 +250,20 @@ subSupply:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz subSupply_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+subSupply_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
     dup
-    uncover 3
+    dig 3
     concat
     dup
     len
@@ -207,13 +281,24 @@ subSupply:
     cover 2
     select
     dup
-    extract 32 32
+    extract 0 32
+    dup
+    dig 5
+    dup
+    cover 4
+    b>=
+    assert // underflow
     dig 1
+    extract 32 32
+    uncover 2
     extract 64 32
     uncover 2
-    extract 0 32
-    uncover 5
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    uncover 3
     b-
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     dup
     len
     intc_0 // 32
@@ -229,8 +314,12 @@ subSupply:
     intc_1 // 1
     return
 
+subSupply_ternary_false@3:
+    intc_2 // 0
+    b subSupply_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.updatePosition[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.updatePosition[routing]() -> void:
 updatePosition:
     txna ApplicationArgs 1
     dup
@@ -241,28 +330,34 @@ updatePosition:
     txna ApplicationArgs 2
     dup
     len
-    dup
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    dup
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
     dup
     len
-    dup
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz updatePosition_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+updatePosition_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
-    dup
-    uncover 8
+    dig 4
     concat
     dup
     len
@@ -283,53 +378,37 @@ updatePosition:
     extract 32 32
     swap
     extract 64 32
-    uncover 8
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 8
-    dig 4
-    b|
-    uncover 2
-    concat
-    swap
-    concat
-    uncover 5
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 5
-    dig 3
-    b|
-    dig 1
-    extract 64 32
-    uncover 2
-    extract 0 32
+    dig 5
     uncover 2
     concat
     swap
     concat
     dup
-    extract 32 32
-    uncover 4
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 4
-    uncover 4
-    b|
-    uncover 2
+    extract 64 32
+    swap
     extract 0 32
-    uncover 2
+    dig 4
     concat
     swap
+    concat
+    dup
+    extract 32 32
+    swap
+    extract 0 32
+    swap
+    concat
+    dig 2
     concat
     box_put
     intc_1 // 1
     return
 
+updatePosition_ternary_false@3:
+    intc_2 // 0
+    b updatePosition_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.getPosition[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.getPosition[routing]() -> void:
 getPosition:
     txna ApplicationArgs 1
     dup
@@ -337,10 +416,19 @@ getPosition:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz getPosition_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getPosition_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
-    dup
-    uncover 2
+    dig 1
     concat
     dup
     len
@@ -362,26 +450,23 @@ getPosition:
     extract 32 32
     uncover 2
     extract 64 32
-    uncover 2
-    dig 3
-    b|
-    uncover 2
-    dig 3
-    b|
+    cover 2
     concat
     swap
-    uncover 2
-    b|
     concat
-    bytec_3 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
+getPosition_ternary_false@3:
+    intc_2 // 0
+    b getPosition_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.updateViaPointer[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.updateViaPointer[routing]() -> void:
 updateViaPointer:
     txna ApplicationArgs 1
     dup
@@ -392,20 +477,22 @@ updateViaPointer:
     txna ApplicationArgs 2
     dup
     len
-    dup
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_0 // 32
-    <=
-    assert // overflow
+    txn GroupIndex
+    bz updateViaPointer_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+updateViaPointer_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
-    swap
-    dig 1
-    b|
-    swap
-    uncover 2
+    dig 2
     concat
     dup
     len
@@ -426,7 +513,7 @@ updateViaPointer:
     extract 64 32
     swap
     extract 0 32
-    uncover 3
+    dig 3
     concat
     swap
     concat
@@ -434,8 +521,12 @@ updateViaPointer:
     intc_1 // 1
     return
 
+updateViaPointer_ternary_false@3:
+    intc_2 // 0
+    b updateViaPointer_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.addCollateralViaPointer[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.addCollateralViaPointer[routing]() -> void:
 addCollateralViaPointer:
     txna ApplicationArgs 1
     dup
@@ -449,10 +540,20 @@ addCollateralViaPointer:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz addCollateralViaPointer_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+addCollateralViaPointer_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
     dup
-    uncover 3
+    dig 3
     concat
     dup
     len
@@ -473,7 +574,7 @@ addCollateralViaPointer:
     extract 32 32
     dig 1
     extract 64 32
-    uncover 5
+    dig 5
     b+
     dup
     len
@@ -492,8 +593,12 @@ addCollateralViaPointer:
     intc_1 // 1
     return
 
+addCollateralViaPointer_ternary_false@3:
+    intc_2 // 0
+    b addCollateralViaPointer_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.createAndModify[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.createAndModify[routing]() -> void:
 createAndModify:
     txna ApplicationArgs 1
     dup
@@ -504,38 +609,32 @@ createAndModify:
     txna ApplicationArgs 2
     dup
     len
-    dup
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    dup
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    uncover 2
-    intc_0 // 32
-    <=
-    assert // overflow
+    txn GroupIndex
+    bz createAndModify_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+createAndModify_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
+    concat
+    bytec_3 // 0x00
+    concat
     intc_0 // 32
     bzero
-    uncover 3
-    dig 1
-    b|
-    uncover 2
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 2
-    dig 2
-    b|
-    concat
-    pushbytes 0x00
-    concat
-    swap
-    uncover 2
+    dig 4
     concat
     dup
     len
@@ -552,14 +651,18 @@ createAndModify:
     uncover 2
     extract 32 32
     concat
-    pushbytes 0x01
+    pushbytes 0x80
     concat
     box_put
     intc_1 // 1
     return
 
+createAndModify_ternary_false@3:
+    intc_2 // 0
+    b createAndModify_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.getOrder[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.getOrder[routing]() -> void:
 getOrder:
     txna ApplicationArgs 1
     dup
@@ -567,10 +670,19 @@ getOrder:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz getOrder_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getOrder_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
-    dup
-    uncover 2
+    dig 1
     concat
     dup
     len
@@ -583,7 +695,7 @@ getOrder:
     swap
     concat
     box_get
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
@@ -591,30 +703,34 @@ getOrder:
     dig 1
     extract 32 32
     uncover 2
-    extract 64 1
-    pushbytes 0x
-    b!=
+    intc_3 // 512
+    getbit
+    bytec_3 // 0x00
+    intc_2 // 0
     uncover 2
-    dig 3
-    b|
-    uncover 2
-    uncover 3
-    b|
+    setbit
+    intc_2 // 0
+    getbit
+    cover 2
     concat
-    pushbytes 0x00
-    pushint 0
+    bytec_3 // 0x00
+    intc_2 // 0
     uncover 3
     setbit
     concat
-    bytec_3 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
+getOrder_ternary_false@3:
+    intc_2 // 0
+    b getOrder_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.fillOrder[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.fillOrder[routing]() -> void:
 fillOrder:
     txna ApplicationArgs 1
     dup
@@ -625,14 +741,22 @@ fillOrder:
     txna ApplicationArgs 2
     dup
     len
-    dup
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz fillOrder_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+fillOrder_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
-    dup
-    uncover 4
+    dig 2
     concat
     dup
     len
@@ -646,20 +770,20 @@ fillOrder:
     concat
     dup
     box_get
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
-    extract 64 1
-    uncover 4
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 4
-    uncover 4
-    b|
+    intc_3 // 512
+    getbit
+    bytec_3 // 0x00
+    intc_2 // 0
     uncover 2
+    setbit
+    swap
     extract 32 32
+    dig 3
+    swap
     concat
     swap
     concat
@@ -668,14 +792,18 @@ fillOrder:
     swap
     extract 32 32
     concat
-    pushbytes 0x01
+    pushbytes 0x80
     concat
     box_put
     intc_1 // 1
     return
 
+fillOrder_ternary_false@3:
+    intc_2 // 0
+    b fillOrder_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.setBoth[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.setBoth[routing]() -> void:
 setBoth:
     txna ApplicationArgs 1
     dup
@@ -686,21 +814,28 @@ setBoth:
     txna ApplicationArgs 2
     dup
     len
-    dup
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    dup
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz setBoth_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+setBoth_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
-    dup
-    uncover 6
+    dig 3
     concat
     dup
     len
@@ -721,13 +856,7 @@ setBoth:
     extract 32 32
     swap
     extract 64 32
-    uncover 7
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 7
     dig 5
-    b|
     uncover 2
     concat
     swap
@@ -738,23 +867,27 @@ setBoth:
     concat
     dup
     box_get
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
-    extract 64 1
-    uncover 4
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 4
-    uncover 4
-    b|
+    intc_3 // 512
+    getbit
+    bytec_3 // 0x00
+    intc_2 // 0
     uncover 2
+    setbit
+    swap
     extract 32 32
+    dig 3
+    swap
     concat
     swap
     concat
     box_put
     intc_1 // 1
     return
+
+setBoth_ternary_false@3:
+    intc_2 // 0
+    b setBoth_ternary_merge@4

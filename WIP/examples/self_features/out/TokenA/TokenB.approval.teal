@@ -1,0 +1,241 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M43_MultiContract.sol.TokenB.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    bytecblock "balances" "totalMinted" 0x "__ctor_pending" 0x151f7c75
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xb595ec13 0x83bad7cc 0x1d543f54 0x4dae1968 // method "__postInit()void", method "mint(address,uint256)void", method "balanceOf(address)uint256", method "balances(address)uint256", method "totalMinted()uint256"
+    txna ApplicationArgs 0
+    match __postInit mint balanceOf balances totalMinted
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M43_MultiContract.sol.TokenB.__postInit[routing]() -> void:
+__postInit:
+    bytec_3 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_3 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_0 // "balances"
+    pushint 2
+    box_create
+    pop
+    bytec_1 // "totalMinted"
+    bytec_2 // 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M43_MultiContract.sol.TokenB.mint[routing]() -> void:
+mint:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz mint_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+mint_ternary_merge@4:
+    !
+    assert // not payable
+    dig 1
+    sha256
+    bytec_0 // "balances"
+    swap
+    concat
+    dup
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dig 2
+    dup
+    cover 3
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 0
+    bytec_1 // "totalMinted"
+    app_global_get_ex
+    assert // check totalMinted exists
+    b+
+    bytec_1 // "totalMinted"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+mint_ternary_false@3:
+    intc_2 // 0
+    b mint_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M43_MultiContract.sol.TokenB.balanceOf[routing]() -> void:
+balanceOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz balanceOf_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+balanceOf_ternary_merge@4:
+    !
+    assert // not payable
+    dup
+    sha256
+    bytec_0 // "balances"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+balanceOf_ternary_false@3:
+    intc_2 // 0
+    b balanceOf_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M43_MultiContract.sol.TokenB.balances[routing]() -> void:
+balances:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz balances_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+balances_ternary_merge@4:
+    !
+    assert // not payable
+    dup
+    sha256
+    bytec_0 // "balances"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+balances_ternary_false@3:
+    intc_2 // 0
+    b balances_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M43_MultiContract.sol.TokenB.totalMinted[routing]() -> void:
+totalMinted:
+    txn GroupIndex
+    bz totalMinted_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+totalMinted_ternary_merge@4:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_1 // "totalMinted"
+    app_global_get_ex
+    assert // check totalMinted exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+totalMinted_ternary_false@3:
+    intc_2 // 0
+    b totalMinted_ternary_merge@4

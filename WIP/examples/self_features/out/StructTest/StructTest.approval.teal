@@ -1,10 +1,19 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M03_StructTest.sol.StructTest.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M03_StructTest.sol.StructTest.approval_program() -> uint64:
 main:
-    intcblock 64 1
+    intcblock 32 1 0
     bytecblock 0x151f7c75
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -16,55 +25,42 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x373051cd 0x5f0ae518 // method "makePoint(uint512,uint512)(uint512,uint512)", method "addPoints(uint512,uint512,uint512,uint512)(uint512,uint512)"
+    pushbytess 0x342cad9c 0x4ab00c3b // method "makePoint(uint256,uint256)(uint256,uint256)", method "addPoints(uint256,uint256,uint256,uint256)(uint256,uint256)"
     txna ApplicationArgs 0
     match makePoint addPoints
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M03_StructTest.sol.StructTest.makePoint[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M03_StructTest.sol.StructTest.makePoint[routing]() -> void:
 makePoint:
     txna ApplicationArgs 1
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    uncover 2
-    intc_0 // 64
-    <=
-    assert // overflow
-    intc_0 // 64
-    bzero
-    uncover 3
-    dig 1
-    b|
-    uncover 2
-    intc_0 // 64
-    <=
-    assert // overflow
-    uncover 2
-    dig 2
-    b|
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz makePoint_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+makePoint_ternary_merge@4:
+    !
+    assert // not payable
+    dup2
     concat
     dup
-    extract 0 64
+    extract 0 32
     swap
-    extract 64 64
-    swap
-    dig 2
-    b|
-    swap
-    uncover 2
-    b|
+    extract 32 32
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -73,93 +69,78 @@ makePoint:
     intc_1 // 1
     return
 
+makePoint_ternary_false@3:
+    intc_2 // 0
+    b makePoint_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M03_StructTest.sol.StructTest.addPoints[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M03_StructTest.sol.StructTest.addPoints[routing]() -> void:
 addPoints:
     txna ApplicationArgs 1
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
     dup
     len
-    dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    uncover 6
-    intc_0 // 64
-    <=
-    assert // overflow
-    intc_0 // 64
-    bzero
-    uncover 7
-    dig 1
-    b|
-    uncover 6
-    intc_0 // 64
-    <=
-    assert // overflow
-    uncover 6
-    dig 2
-    b|
-    concat
-    uncover 4
-    intc_0 // 64
-    <=
-    assert // overflow
-    uncover 4
-    dig 2
-    b|
-    uncover 3
-    intc_0 // 64
-    <=
-    assert // overflow
-    uncover 3
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz addPoints_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+addPoints_ternary_merge@4:
+    !
+    assert // not payable
     dig 3
-    b|
+    dig 3
+    concat
+    dig 2
+    dig 2
     concat
     dig 1
-    extract 0 64
+    extract 0 32
     dig 1
-    extract 0 64
+    extract 0 32
     b+
-    uncover 2
-    extract 64 64
-    uncover 2
-    extract 64 64
-    b+
-    dig 1
+    dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
+    intc_0 // 32
+    bzero
     swap
-    dig 2
+    dig 1
     b|
-    dig 1
+    uncover 3
+    extract 32 32
+    uncover 3
+    extract 32 32
+    b+
+    dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    swap
     uncover 2
     b|
     concat
@@ -169,3 +150,7 @@ addPoints:
     log
     intc_1 // 1
     return
+
+addPoints_ternary_false@3:
+    intc_2 // 0
+    b addPoints_ternary_merge@4

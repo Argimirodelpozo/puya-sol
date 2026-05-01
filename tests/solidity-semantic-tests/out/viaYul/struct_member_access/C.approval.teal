@@ -77,16 +77,16 @@ __postInit:
     dig 2
     uncover 2
     substring3
-    dup
-    intc_1 // 0
-    extract_uint16
-    intc_2 // 1
-    +
-    itob
-    extract 6 0
-    replace2 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
-    concat
+    concat // on error: max array length exceeded
+    dup
+    extract 2 0
+    len
+    intc_0 // 32
+    /
+    itob
+    extract 6 2
+    replace2 0
     uncover 2
     intc_1 // 0
     uncover 3
@@ -108,16 +108,16 @@ __postInit:
     dig 2
     uncover 2
     substring3
-    dup
-    intc_1 // 0
-    extract_uint16
-    intc_2 // 1
-    +
-    itob
-    extract 6 0
-    replace2 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
-    concat
+    concat // on error: max array length exceeded
+    dup
+    extract 2 0
+    len
+    intc_0 // 32
+    /
+    itob
+    extract 6 2
+    replace2 0
     uncover 2
     intc_1 // 0
     uncover 3
@@ -139,16 +139,16 @@ __postInit:
     dig 2
     uncover 2
     substring3
-    dup
-    intc_1 // 0
-    extract_uint16
-    intc_2 // 1
-    +
-    itob
-    extract 6 0
-    replace2 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
-    concat
+    concat // on error: max array length exceeded
+    dup
+    extract 2 0
+    len
+    intc_0 // 32
+    /
+    itob
+    extract 6 2
+    replace2 0
     uncover 2
     intc_1 // 0
     uncover 3
@@ -292,20 +292,33 @@ g_ternary_merge@4:
     dig 2
     dup
     extract 0 32
-    dig 2
-    itob
     intc_0 // 32
     bzero
-    b|
-    uncover 2
-    extract 34 32
-    dig 4
-    dup
-    extract 2 32
+    swap
     dig 1
+    b|
+    dig 3
+    itob
+    dig 2
+    b|
+    uncover 3
     extract 34 32
-    uncover 2
+    dig 3
+    b|
+    dig 5
+    dup
+    cover 2
+    extract 2 32
+    dig 5
+    b|
+    dig 2
+    extract 34 32
+    dig 6
+    b|
+    uncover 3
     extract 66 32
+    uncover 6
+    b|
     uncover 5
     uncover 5
     concat
@@ -392,20 +405,33 @@ g2_ternary_merge@4:
     dig 3
     dup
     extract 0 32
-    swap
-    extract 34 32
-    dig 4
-    dup
-    extract 0 32
-    dig 4
-    itob
     intc_0 // 32
     bzero
+    swap
+    dig 1
     b|
     uncover 2
     extract 34 32
-    dig 6
+    dig 2
+    b|
+    dig 5
+    dup
+    cover 2
+    extract 0 32
+    dig 4
+    b|
+    dig 5
+    itob
+    dig 5
+    b|
+    uncover 3
+    extract 34 32
+    dig 5
+    b|
+    dig 7
     extract 2 32
+    uncover 6
+    b|
     uncover 5
     uncover 5
     concat
@@ -448,29 +474,41 @@ h_ternary_merge@4:
     select
     dup
     extract 0 32
+    intc_0 // 32
+    bzero
+    swap
     dig 1
+    b|
+    dig 2
     intc_0 // 32
     extract_uint16
-    dig 2
-    len
     dig 3
+    len
+    dig 4
     cover 2
     substring3
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     itob
-    intc_0 // 32
-    bzero
+    dig 3
     b|
-    uncover 3
+    uncover 4
     extract 34 32
+    dig 4
+    b|
     dig 2
     extract 2 32
+    dig 5
+    b|
     dig 3
     extract 34 32
+    dig 6
+    b|
     uncover 4
     extract 66 32
+    uncover 6
+    b|
     uncover 5
     uncover 5
     concat

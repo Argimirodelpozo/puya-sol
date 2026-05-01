@@ -1,7 +1,7 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_xv97pzjj/B.sol.A.approval_program() -> uint64:
+// /tmp/multisource_rikhvewy/B.sol.A.approval_program() -> uint64:
 main:
     intcblock 0 1 32 6
     bytecblock TMPL_APPROVAL_D TMPL_CLEAR_D
@@ -34,11 +34,12 @@ main_g_route@4:
     b g
 
 
-// /tmp/multisource_xv97pzjj/B.sol.A.g[routing]() -> void:
+// /tmp/multisource_rikhvewy/B.sol.A.g[routing]() -> void:
 g:
     txna ApplicationArgs 1
     dup
     len
+    dup
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
@@ -53,6 +54,15 @@ g_ternary_merge@4:
     !
     assert // not payable
     itxn_begin
+    dup
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    dig 2
+    dig 1
+    b|
     bytec_0 // TMPL_APPROVAL_D
     bytec_1 // TMPL_CLEAR_D
     intc_3 // 6
@@ -67,7 +77,6 @@ g_ternary_merge@4:
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
     itxn_field ApprovalProgram
-    dup
     itxn_field ApplicationArgs
     itxn_submit
     itxn CreatedApplicationID
@@ -108,8 +117,6 @@ g_ternary_merge@4:
     intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 32
-    bzero
     b|
     pushbytes 0x151f7c75
     swap

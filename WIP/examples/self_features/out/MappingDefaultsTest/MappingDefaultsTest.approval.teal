@@ -1,12 +1,24 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    bytecblock 0x 0x151f7c75 "_values" 0x00 "_flags" "_infos" "_balances" "_nested"
+    intcblock 32 1 0 2
+    bytecblock 0x 0x151f7c75 "_values" 0x00 "__ctor_pending" "_flags" "_infos" "_balances" "_nested"
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec 4 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
     intc_1 // 1
     return
 
@@ -16,13 +28,45 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xdb0f056d 0x94192dc0 0xb615f487 0x22c585b1 0x029f35b5 0x0b008467 0xbc6721b6 0xc788bdce 0xd829bf87 0x65b5d279 0x98b8c3a0 0x1c65951f // method "getValue(uint256)uint256", method "getFlag(uint256)bool", method "getInfo(uint256)(uint256,bool)", method "getBalance(address)uint256", method "getNested(uint256,uint256)uint256", method "setValue(uint256,uint256)void", method "setFlag(uint256,bool)void", method "setInfo(uint256,uint256,bool)void", method "setBalance(address,uint256)void", method "setNested(uint256,uint256,uint256)void", method "isZero(uint256)bool", method "increment(uint256)void"
+    pushbytess 0xbacc49e3 0xdb0f056d 0x94192dc0 0xb615f487 0x22c585b1 0x029f35b5 0x0b008467 0xbc6721b6 0xc788bdce 0xd829bf87 0x65b5d279 0x98b8c3a0 0x1c65951f // method "__postInit()void", method "getValue(uint256)uint256", method "getFlag(uint256)bool", method "getInfo(uint256)(uint256,bool)", method "getBalance(address)uint256", method "getNested(uint256,uint256)uint256", method "setValue(uint256,uint256)void", method "setFlag(uint256,bool)void", method "setInfo(uint256,uint256,bool)void", method "setBalance(address,uint256)void", method "setNested(uint256,uint256,uint256)void", method "isZero(uint256)bool", method "increment(uint256)void"
     txna ApplicationArgs 0
-    match getValue getFlag getInfo getBalance getNested setValue setFlag setInfo setBalance setNested isZero increment
+    match __postInit getValue getFlag getInfo getBalance getNested setValue setFlag setInfo setBalance setNested isZero increment
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.getValue[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.__postInit[routing]() -> void:
+__postInit:
+    bytec 4 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 4 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_2 // "_values"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 5 // "_flags"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 6 // "_infos"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 7 // "_balances"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 8 // "_nested"
+    intc_3 // 2
+    box_create
+    pop
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.getValue[routing]() -> void:
 getValue:
     txna ApplicationArgs 1
     dup
@@ -30,10 +74,20 @@ getValue:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz getValue_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getValue_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
     dup
-    uncover 2
+    dig 2
     concat
     dup
     len
@@ -62,8 +116,12 @@ getValue:
     intc_1 // 1
     return
 
+getValue_ternary_false@3:
+    intc_2 // 0
+    b getValue_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.getFlag[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.getFlag[routing]() -> void:
 getFlag:
     txna ApplicationArgs 1
     dup
@@ -71,9 +129,19 @@ getFlag:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz getFlag_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getFlag_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
-    swap
+    dig 1
     concat
     dup
     len
@@ -82,7 +150,7 @@ getFlag:
     intc_0 // 32
     extract3
     sha256
-    bytec 4 // "_flags"
+    bytec 5 // "_flags"
     swap
     concat
     box_get
@@ -103,8 +171,12 @@ getFlag:
     intc_1 // 1
     return
 
+getFlag_ternary_false@3:
+    intc_2 // 0
+    b getFlag_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.getInfo[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.getInfo[routing]() -> void:
 getInfo:
     txna ApplicationArgs 1
     dup
@@ -112,10 +184,19 @@ getInfo:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz getInfo_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getInfo_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
-    dup
-    uncover 2
+    dig 1
     concat
     dup
     len
@@ -124,25 +205,27 @@ getInfo:
     intc_0 // 32
     extract3
     sha256
-    bytec 5 // "_infos"
+    bytec 6 // "_infos"
     swap
     concat
     box_get
-    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
     extract 0 32
     swap
-    extract 32 1
-    bytec_0 // 0x
-    b!=
-    swap
-    uncover 2
-    b|
+    pushint 256
+    getbit
     bytec_3 // 0x00
     intc_2 // 0
-    uncover 3
+    uncover 2
+    setbit
+    intc_2 // 0
+    getbit
+    bytec_3 // 0x00
+    intc_2 // 0
+    uncover 2
     setbit
     concat
     bytec_1 // 0x151f7c75
@@ -152,8 +235,12 @@ getInfo:
     intc_1 // 1
     return
 
+getInfo_ternary_false@3:
+    intc_2 // 0
+    b getInfo_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.getBalance[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.getBalance[routing]() -> void:
 getBalance:
     txna ApplicationArgs 1
     dup
@@ -161,8 +248,19 @@ getBalance:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz getBalance_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getBalance_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     sha256
-    bytec 6 // "_balances"
+    bytec 7 // "_balances"
     swap
     concat
     box_get
@@ -184,8 +282,12 @@ getBalance:
     intc_1 // 1
     return
 
+getBalance_ternary_false@3:
+    intc_2 // 0
+    b getBalance_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.getNested[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.getNested[routing]() -> void:
 getNested:
     txna ApplicationArgs 1
     dup
@@ -199,10 +301,20 @@ getNested:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz getNested_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getNested_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
     dup
-    uncover 3
+    dig 3
     concat
     dup
     len
@@ -211,7 +323,7 @@ getNested:
     intc_0 // 32
     extract3
     dig 1
-    uncover 3
+    dig 3
     concat
     dup
     len
@@ -221,7 +333,7 @@ getNested:
     extract3
     concat
     sha256
-    bytec 7 // "_nested"
+    bytec 8 // "_nested"
     swap
     concat
     box_get
@@ -241,8 +353,12 @@ getNested:
     intc_1 // 1
     return
 
+getNested_ternary_false@3:
+    intc_2 // 0
+    b getNested_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.setValue[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.setValue[routing]() -> void:
 setValue:
     txna ApplicationArgs 1
     dup
@@ -256,9 +372,19 @@ setValue:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz setValue_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+setValue_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
-    uncover 2
+    dig 2
     concat
     dup
     len
@@ -273,13 +399,17 @@ setValue:
     dup
     box_del
     pop
-    swap
+    dig 1
     box_put
     intc_1 // 1
     return
 
+setValue_ternary_false@3:
+    intc_2 // 0
+    b setValue_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.setFlag[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.setFlag[routing]() -> void:
 setFlag:
     txna ApplicationArgs 1
     dup
@@ -295,9 +425,23 @@ setFlag:
     assert // invalid number of bytes for arc4.bool
     intc_2 // 0
     getbit
+    txn GroupIndex
+    bz setFlag_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+setFlag_ternary_merge@4:
+    !
+    assert // not payable
+    dupn 2
+    intc_1 // 1
+    <=
+    assert // ABI bool validation
     intc_0 // 32
     bzero
-    uncover 2
+    dig 3
     concat
     dup
     len
@@ -306,7 +450,7 @@ setFlag:
     intc_0 // 32
     extract3
     sha256
-    bytec 4 // "_flags"
+    bytec 5 // "_flags"
     swap
     concat
     swap
@@ -315,8 +459,12 @@ setFlag:
     intc_1 // 1
     return
 
+setFlag_ternary_false@3:
+    intc_2 // 0
+    b setFlag_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.setInfo[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.setInfo[routing]() -> void:
 setInfo:
     txna ApplicationArgs 1
     dup
@@ -327,38 +475,37 @@ setInfo:
     txna ApplicationArgs 2
     dup
     len
-    dup
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
-    dup
+    dupn 2
     len
     intc_1 // 1
     ==
     assert // invalid number of bytes for arc4.bool
     intc_2 // 0
     getbit
-    itob
+    txn GroupIndex
+    bz setInfo_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+setInfo_ternary_merge@4:
+    !
+    assert // not payable
     dup
-    bitlen
-    pushint 8
+    intc_1 // 1
     <=
-    assert // overflow
-    extract 7 1
-    swap
-    intc_0 // 32
-    <=
-    assert // overflow
+    assert // ABI bool validation
+    dig 2
+    dig 2
+    concat
     intc_0 // 32
     bzero
-    uncover 2
-    dig 1
-    b|
-    uncover 2
-    concat
-    swap
-    uncover 2
+    dig 5
     concat
     dup
     len
@@ -367,7 +514,7 @@ setInfo:
     intc_0 // 32
     extract3
     sha256
-    bytec 5 // "_infos"
+    bytec 6 // "_infos"
     swap
     concat
     swap
@@ -375,8 +522,12 @@ setInfo:
     intc_1 // 1
     return
 
+setInfo_ternary_false@3:
+    intc_2 // 0
+    b setInfo_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.setBalance[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.setBalance[routing]() -> void:
 setBalance:
     txna ApplicationArgs 1
     dup
@@ -390,21 +541,35 @@ setBalance:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    swap
+    txn GroupIndex
+    bz setBalance_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+setBalance_ternary_merge@4:
+    !
+    assert // not payable
+    dig 1
     sha256
-    bytec 6 // "_balances"
+    bytec 7 // "_balances"
     swap
     concat
     dup
     box_del
     pop
-    swap
+    dig 1
     box_put
     intc_1 // 1
     return
 
+setBalance_ternary_false@3:
+    intc_2 // 0
+    b setBalance_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.setNested[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.setNested[routing]() -> void:
 setNested:
     txna ApplicationArgs 1
     dup
@@ -424,10 +589,20 @@ setNested:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz setNested_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+setNested_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
     dup
-    uncover 4
+    dig 4
     concat
     dup
     len
@@ -436,7 +611,7 @@ setNested:
     intc_0 // 32
     extract3
     swap
-    uncover 3
+    dig 3
     concat
     dup
     len
@@ -446,19 +621,23 @@ setNested:
     extract3
     concat
     sha256
-    bytec 7 // "_nested"
+    bytec 8 // "_nested"
     swap
     concat
     dup
     box_del
     pop
-    swap
+    dig 1
     box_put
     intc_1 // 1
     return
 
+setNested_ternary_false@3:
+    intc_2 // 0
+    b setNested_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.isZero[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.isZero[routing]() -> void:
 isZero:
     txna ApplicationArgs 1
     dup
@@ -466,9 +645,19 @@ isZero:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz isZero_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+isZero_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
-    swap
+    dig 1
     concat
     dup
     len
@@ -484,8 +673,7 @@ isZero:
     bytec_0 // 0x
     cover 2
     select
-    intc_2 // 0
-    itob
+    bytec_0 // 0x
     b==
     bytec_3 // 0x00
     intc_2 // 0
@@ -498,8 +686,12 @@ isZero:
     intc_1 // 1
     return
 
+isZero_ternary_false@3:
+    intc_2 // 0
+    b isZero_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.increment[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M35_MappingDefaults.sol.MappingDefaultsTest.increment[routing]() -> void:
 increment:
     txna ApplicationArgs 1
     dup
@@ -507,9 +699,19 @@ increment:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz increment_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+increment_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
-    swap
+    dig 1
     concat
     dup
     len
@@ -526,8 +728,7 @@ increment:
     bytec_0 // 0x
     cover 2
     select
-    intc_1 // 1
-    itob
+    pushbytes 0x01
     b+
     dig 1
     box_del
@@ -535,3 +736,7 @@ increment:
     box_put
     intc_1 // 1
     return
+
+increment_ternary_false@3:
+    intc_2 // 0
+    b increment_ternary_merge@4

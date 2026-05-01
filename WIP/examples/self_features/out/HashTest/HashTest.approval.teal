@@ -1,10 +1,19 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M06_HashTest.sol.HashTest.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M06_HashTest.sol.HashTest.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 64
+    intcblock 1 32 0 2
     bytecblock 0x151f7c75
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -16,25 +25,36 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xd89f9830 0x238a4b53 0x7575a89d // method "hashSha256(byte[])byte[32]", method "hashCombined(uint512,uint512)byte[32]", method "hashKeccak(byte[])byte[32]"
+    pushbytess 0xd89f9830 0xb0f3a01f 0x7575a89d // method "hashSha256(byte[])byte[32]", method "hashCombined(uint256,uint256)byte[32]", method "hashKeccak(byte[])byte[32]"
     txna ApplicationArgs 0
     match hashSha256 hashCombined hashKeccak
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M06_HashTest.sol.HashTest.hashSha256[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M06_HashTest.sol.HashTest.hashSha256[routing]() -> void:
 hashSha256:
     txna ApplicationArgs 1
     dup
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_2 // 2
+    intc_3 // 2
     +
     dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    txn GroupIndex
+    bz hashSha256_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+hashSha256_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     sha256
     bytec_0 // 0x151f7c75
     swap
@@ -43,21 +63,55 @@ hashSha256:
     intc_0 // 1
     return
 
+hashSha256_ternary_false@3:
+    intc_2 // 0
+    b hashSha256_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M06_HashTest.sol.HashTest.hashCombined[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M06_HashTest.sol.HashTest.hashCombined[routing]() -> void:
 hashCombined:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz hashCombined_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+hashCombined_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    dup
+    dig 3
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    swap
+    dig 2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
     concat
     sha256
     bytec_0 // 0x151f7c75
@@ -67,20 +121,35 @@ hashCombined:
     intc_0 // 1
     return
 
+hashCombined_ternary_false@3:
+    intc_2 // 0
+    b hashCombined_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M06_HashTest.sol.HashTest.hashKeccak[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M06_HashTest.sol.HashTest.hashKeccak[routing]() -> void:
 hashKeccak:
     txna ApplicationArgs 1
     dup
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_2 // 2
+    intc_3 // 2
     +
     dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    txn GroupIndex
+    bz hashKeccak_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+hashKeccak_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     keccak256
     bytec_0 // 0x151f7c75
     swap
@@ -88,3 +157,7 @@ hashKeccak:
     log
     intc_0 // 1
     return
+
+hashKeccak_ternary_false@3:
+    intc_2 // 0
+    b hashKeccak_ternary_merge@4

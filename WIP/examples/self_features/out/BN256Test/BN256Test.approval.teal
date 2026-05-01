@@ -1,10 +1,19 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M09_BN256Test.sol.BN256Test.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M09_BN256Test.sol.BN256Test.approval_program() -> uint64:
 main:
-    intcblock 32 64 1
-    bytecblock 0x151f7c75
+    intcblock 32 64 1 0
+    bytecblock 0x151f7c75 0x01
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_2 // 1
@@ -22,7 +31,7 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M09_BN256Test.sol.BN256Test.ecAdd[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M09_BN256Test.sol.BN256Test.ecAdd[routing]() -> void:
 ecAdd:
     txna ApplicationArgs 1
     dup
@@ -48,29 +57,21 @@ ecAdd:
     intc_1 // 64
     ==
     assert // invalid number of bytes for arc4.uint512
+    txn GroupIndex
+    bz ecAdd_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+ecAdd_ternary_merge@4:
+    !
+    assert // not payable
+    load 0
     intc_0 // 32
     bzero
     dup
-    uncover 5
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 1
-    uncover 5
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    dig 1
-    uncover 4
+    dig 6
     concat
     dup
     len
@@ -79,7 +80,10 @@ ecAdd:
     intc_0 // 32
     extract3
     uncover 2
-    uncover 3
+    swap
+    replace2 0
+    dig 1
+    dig 5
     concat
     dup
     len
@@ -87,12 +91,46 @@ ecAdd:
     -
     intc_0 // 32
     extract3
+    replace2 32
+    dig 1
+    dig 4
     concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 64
+    swap
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 96
+    dup
+    extract 0 64
+    dig 1
+    extract 64 64
     ec_add BN254g1
     dup
     extract 0 32
+    uncover 2
+    swap
+    replace2 128
     swap
     extract 32 32
+    replace2 160
+    dup
+    extract 128 32
+    dig 1
+    extract 160 32
+    uncover 2
+    store 0
     intc_1 // 64
     bzero
     uncover 2
@@ -108,8 +146,12 @@ ecAdd:
     intc_2 // 1
     return
 
+ecAdd_ternary_false@3:
+    intc_3 // 0
+    b ecAdd_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M09_BN256Test.sol.BN256Test.ecMul[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M09_BN256Test.sol.BN256Test.ecMul[routing]() -> void:
 ecMul:
     txna ApplicationArgs 1
     dup
@@ -129,10 +171,21 @@ ecMul:
     intc_1 // 64
     ==
     assert // invalid number of bytes for arc4.uint512
+    txn GroupIndex
+    bz ecMul_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+ecMul_ternary_merge@4:
+    !
+    assert // not payable
+    load 0
     intc_0 // 32
     bzero
     dup
-    uncover 4
+    dig 5
     concat
     dup
     len
@@ -140,18 +193,11 @@ ecMul:
     -
     intc_0 // 32
     extract3
-    dig 1
-    uncover 4
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    swap
     uncover 2
+    swap
+    replace2 0
+    dig 1
+    dig 4
     concat
     dup
     len
@@ -159,11 +205,36 @@ ecMul:
     -
     intc_0 // 32
     extract3
+    replace2 32
+    swap
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 64
+    dup
+    extract 0 64
+    dig 1
+    extract 64 32
     ec_scalar_mul BN254g1
     dup
     extract 0 32
+    uncover 2
+    swap
+    replace2 96
     swap
     extract 32 32
+    replace2 128
+    dup
+    extract 96 32
+    dig 1
+    extract 128 32
+    uncover 2
+    store 0
     intc_1 // 64
     bzero
     uncover 2
@@ -179,8 +250,12 @@ ecMul:
     intc_2 // 1
     return
 
+ecMul_ternary_false@3:
+    intc_3 // 0
+    b ecMul_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M09_BN256Test.sol.BN256Test.pairingCheck2[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M09_BN256Test.sol.BN256Test.pairingCheck2[routing]() -> void:
 pairingCheck2:
     txna ApplicationArgs 1
     dup
@@ -254,10 +329,21 @@ pairingCheck2:
     intc_1 // 64
     ==
     assert // invalid number of bytes for arc4.uint512
+    txn GroupIndex
+    bz pairingCheck2_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+pairingCheck2_ternary_merge@4:
+    !
+    assert // not payable
+    load 0
     intc_0 // 32
     bzero
     dup
-    uncover 13
+    dig 14
     concat
     dup
     len
@@ -265,8 +351,11 @@ pairingCheck2:
     -
     intc_0 // 32
     extract3
+    uncover 2
+    swap
+    replace2 0
     dig 1
-    uncover 13
+    dig 13
     concat
     dup
     len
@@ -274,9 +363,124 @@ pairingCheck2:
     -
     intc_0 // 32
     extract3
+    replace2 32
+    dig 1
+    dig 12
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 64
+    dig 1
+    dig 11
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 96
+    dig 1
+    dig 10
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 128
+    dig 1
+    dig 9
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 160
+    dig 1
+    dig 8
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 192
+    dig 1
+    dig 7
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 224
+    dig 1
+    dig 6
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushint 256
+    swap
+    replace3
+    dig 1
+    dig 5
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushint 288
+    swap
+    replace3
+    dig 1
+    dig 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushint 320
+    swap
+    replace3
+    dig 1
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushint 352
+    swap
+    replace3
+    dup
+    extract 0 64
+    dig 1
+    extract 192 64
     concat
     dig 1
-    uncover 8
+    extract 96 32
+    dig 3
+    swap
     concat
     dup
     len
@@ -285,27 +489,9 @@ pairingCheck2:
     intc_0 // 32
     extract3
     dig 2
-    uncover 8
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    concat
-    dig 1
-    uncover 10
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 2
-    uncover 10
+    extract 64 32
+    dig 4
+    swap
     concat
     dup
     len
@@ -315,27 +501,9 @@ pairingCheck2:
     extract3
     concat
     dig 2
-    uncover 9
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    dig 2
-    uncover 8
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    dig 2
-    uncover 7
+    extract 160 32
+    dig 4
+    swap
     concat
     dup
     len
@@ -344,7 +512,37 @@ pairingCheck2:
     intc_0 // 32
     extract3
     dig 3
-    uncover 7
+    extract 128 32
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    concat
+    dig 2
+    pushint 288
+    intc_0 // 32
+    extract3
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    pushint 256
+    intc_0 // 32
+    extract3
+    dig 5
+    swap
     concat
     dup
     len
@@ -354,7 +552,24 @@ pairingCheck2:
     extract3
     concat
     dig 3
-    uncover 6
+    pushint 352
+    intc_0 // 32
+    extract3
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    pushint 320
+    intc_0 // 32
+    extract3
+    dig 6
+    swap
     concat
     dup
     len
@@ -363,26 +578,35 @@ pairingCheck2:
     intc_0 // 32
     extract3
     concat
-    uncover 3
-    uncover 4
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
     concat
     concat
     ec_pairing_check BN254g1
-    pushbytess 0x 0x01
+    pushbytes 0x
+    bytec_1 // 0x01
     uncover 2
     select
-    intc_2 // 1
-    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushint 384
+    swap
+    replace3
+    dup
+    pushint 384
+    intc_0 // 32
+    extract3
+    swap
+    store 0
+    bytec_1 // 0x01
     b==
     pushbytes 0x00
-    pushint 0
+    intc_3 // 0
     uncover 2
     setbit
     bytec_0 // 0x151f7c75
@@ -391,3 +615,7 @@ pairingCheck2:
     log
     intc_2 // 1
     return
+
+pairingCheck2_ternary_false@3:
+    intc_3 // 0
+    b pairingCheck2_ternary_merge@4
