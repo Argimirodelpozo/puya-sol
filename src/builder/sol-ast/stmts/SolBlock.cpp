@@ -3,6 +3,7 @@
 /// Central statement dispatcher: builds AWST statements from Solidity AST nodes.
 
 #include "builder/sol-ast/stmts/SolBlock.h"
+#include "builder/sol-ast/SolASTVisitor.h"
 #include "builder/sol-ast/stmts/SolExpressionStatement.h"
 #include "builder/sol-ast/stmts/SolControlFlow.h"
 #include "builder/sol-ast/stmts/SolEmitStatement.h"
@@ -28,75 +29,94 @@ SolBlock::SolBlock(
 {
 }
 
-/// Dispatch a single Solidity statement to the right sol-ast wrapper (free function).
-static std::vector<std::shared_ptr<awst::Statement>> dispatchStatementImpl(
-	StatementContext& _ctx,
-	eb::BuilderContext& _exprBuilder,
-	Statement const& _stmt)
+namespace
 {
-	auto loc = _ctx.makeLoc(_stmt.location());
 
-	if (auto const* node = dynamic_cast<ExpressionStatement const*>(&_stmt))
+/// Concrete SolASTVisitor that translates Solidity statements into AWST.
+/// Holds the shared StatementContext (control-flow state, modifier
+/// placeholder body, function context) plus the expression builder.
+class AwstStatementVisitor: public SolASTVisitor<std::vector<std::shared_ptr<awst::Statement>>>
+{
+public:
+	AwstStatementVisitor(StatementContext& _ctx, eb::BuilderContext& _exprBuilder)
+		: m_ctx(_ctx), m_exprBuilder(_exprBuilder) {}
+
+	using ResultT = std::vector<std::shared_ptr<awst::Statement>>;
+
+	ResultT visitExprStatement(ExpressionStatement const& _n) override
 	{
-		SolExpressionStatement handler(_ctx, *node, loc);
+		SolExpressionStatement handler(m_ctx, _n, locOf(_n));
 		return handler.toAwst();
 	}
-	if (auto const* node = dynamic_cast<Return const*>(&_stmt))
+
+	ResultT visitReturn(Return const& _n) override
 	{
-		SolReturnStatement handler(_ctx, *node, loc);
+		SolReturnStatement handler(m_ctx, _n, locOf(_n));
 		return handler.toAwst();
 	}
-	if (auto const* node = dynamic_cast<RevertStatement const*>(&_stmt))
+
+	ResultT visitRevert(RevertStatement const& _n) override
 	{
-		SolRevertStatement handler(_ctx, *node, loc);
+		SolRevertStatement handler(m_ctx, _n, locOf(_n));
 		return handler.toAwst();
 	}
-	if (auto const* node = dynamic_cast<EmitStatement const*>(&_stmt))
+
+	ResultT visitEmit(EmitStatement const& _n) override
 	{
-		SolEmitStatement handler(_ctx, *node, loc);
+		SolEmitStatement handler(m_ctx, _n, locOf(_n));
 		return handler.toAwst();
 	}
-	if (auto const* node = dynamic_cast<VariableDeclarationStatement const*>(&_stmt))
+
+	ResultT visitVarDecl(VariableDeclarationStatement const& _n) override
 	{
-		SolVariableDeclaration handler(_ctx, *node, loc, _exprBuilder);
+		SolVariableDeclaration handler(m_ctx, _n, locOf(_n), m_exprBuilder);
 		return handler.toAwst();
 	}
-	if (auto const* node = dynamic_cast<IfStatement const*>(&_stmt))
+
+	ResultT visitIfStatement(IfStatement const& _n) override
 	{
-		SolIfStatement handler(_ctx, *node, loc);
+		SolIfStatement handler(m_ctx, _n, locOf(_n));
 		return handler.toAwst();
 	}
-	if (auto const* node = dynamic_cast<WhileStatement const*>(&_stmt))
+
+	ResultT visitWhile(WhileStatement const& _n) override
 	{
-		SolWhileStatement handler(_ctx, *node, loc);
+		SolWhileStatement handler(m_ctx, _n, locOf(_n));
 		return handler.toAwst();
 	}
-	if (auto const* node = dynamic_cast<ForStatement const*>(&_stmt))
+
+	ResultT visitFor(ForStatement const& _n) override
 	{
-		SolForStatement handler(_ctx, *node, loc);
+		SolForStatement handler(m_ctx, _n, locOf(_n));
 		return handler.toAwst();
 	}
-	if (auto const* node = dynamic_cast<InlineAssembly const*>(&_stmt))
+
+	ResultT visitInlineAssembly(InlineAssembly const& _n) override
 	{
-		SolInlineAssembly handler(_ctx, *node, loc,
-			_ctx.functionParams, _ctx.returnType, _ctx.functionParamBitWidths);
+		SolInlineAssembly handler(m_ctx, _n, locOf(_n),
+			m_ctx.functionParams, m_ctx.returnType, m_ctx.functionParamBitWidths);
 		return handler.toAwst();
 	}
-	if (dynamic_cast<Continue const*>(&_stmt))
+
+	ResultT visitContinue(Continue const& _n) override
 	{
-		if (_ctx.forLoopPost)
+		auto loc = locOf(_n);
+		// Inside a for-loop, the post-statement (i++) must run before continuing
+		// so the loop converges. Inside a do/while, the condition→break check
+		// must happen at the bottom of the body.
+		if (m_ctx.forLoopPost)
 		{
 			auto block = std::make_shared<awst::Block>();
 			block->sourceLocation = loc;
-			block->body.push_back(_ctx.forLoopPost);
+			block->body.push_back(m_ctx.forLoopPost);
 			block->body.push_back(std::make_shared<awst::LoopContinue>());
 			return {block};
 		}
-		if (_ctx.doWhileCondBreak)
+		if (m_ctx.doWhileCondBreak)
 		{
 			auto block = std::make_shared<awst::Block>();
 			block->sourceLocation = loc;
-			block->body.push_back(_ctx.doWhileCondBreak);
+			block->body.push_back(m_ctx.doWhileCondBreak);
 			block->body.push_back(std::make_shared<awst::LoopContinue>());
 			return {block};
 		}
@@ -104,69 +124,71 @@ static std::vector<std::shared_ptr<awst::Statement>> dispatchStatementImpl(
 		stmt->sourceLocation = loc;
 		return {stmt};
 	}
-	if (dynamic_cast<Break const*>(&_stmt))
+
+	ResultT visitBreak(Break const& _n) override
 	{
 		auto stmt = std::make_shared<awst::LoopExit>();
-		stmt->sourceLocation = loc;
+		stmt->sourceLocation = locOf(_n);
 		return {stmt};
 	}
-	if (dynamic_cast<PlaceholderStatement const*>(&_stmt))
+
+	ResultT visitPlaceholder(PlaceholderStatement const& _n) override
 	{
-		if (_ctx.placeholderBody)
+		// Modifier `_;` — splice in the placeholder body if one is set.
+		if (m_ctx.placeholderBody)
 		{
 			auto block = std::make_shared<awst::Block>();
-			block->sourceLocation = loc;
-			for (auto const& s: _ctx.placeholderBody->body)
+			block->sourceLocation = locOf(_n);
+			for (auto const& s: m_ctx.placeholderBody->body)
 				block->body.push_back(s);
 			return {block};
 		}
 		return {};
 	}
-	if (auto const* tryStmt = dynamic_cast<TryStatement const*>(&_stmt))
+
+	ResultT visitTryCatch(TryStatement const& _n) override
 	{
+		auto loc = locOf(_n);
 		Logger::instance().warning(
 			"try/catch stubbed as success path: AVM cannot catch runtime errors,"
 			" catch clauses are dropped — behavior differs from EVM when the try"
 			" call reverts", loc);
 
-		std::vector<std::shared_ptr<awst::Statement>> result;
+		ResultT result;
 
 		// 1. Evaluate the external call.
-		auto callExpr = _exprBuilder.build(tryStmt->externalCall());
+		auto callExpr = m_exprBuilder.build(_n.externalCall());
 
 		// 2. Find the success clause and assign return values to its named
 		//    parameters (declaring locals first).
-		auto const* successClause = tryStmt->successClause();
+		auto const* successClause = _n.successClause();
 		if (successClause && successClause->parameters())
 		{
 			auto const& params = successClause->parameters()->parameters();
 			if (!params.empty() && callExpr)
 			{
-				// Emit: declare each param as a local, then assign from the call.
-				// If multiple returns: value is a tuple, unpack element-by-element.
 				if (params.size() == 1)
 				{
-					auto* paramType = _ctx.typeMapper->map(params[0]->type());
+					auto* paramType = m_ctx.typeMapper->map(params[0]->type());
 					auto target = awst::makeVarExpression(params[0]->name(), paramType, loc);
-
 					auto assign = awst::makeAssignmentStatement(std::move(target), std::move(callExpr), loc);
 					result.push_back(std::move(assign));
 				}
 				else
 				{
+					// Multiple returns: tuple-unpack into named locals.
 					auto tupleTarget = std::make_shared<awst::TupleExpression>();
 					tupleTarget->sourceLocation = loc;
 					std::vector<awst::WType const*> tupleTypes;
 					for (auto const& p : params)
 					{
-						auto* paramType = _ctx.typeMapper->map(p->type());
+						auto* paramType = m_ctx.typeMapper->map(p->type());
 						auto v = awst::makeVarExpression(p->name(), paramType, loc);
 						tupleTarget->items.push_back(std::move(v));
 						tupleTypes.push_back(paramType);
 					}
-					tupleTarget->wtype = _ctx.typeMapper->createType<awst::WTuple>(
+					tupleTarget->wtype = m_ctx.typeMapper->createType<awst::WTuple>(
 						std::move(tupleTypes), std::nullopt);
-
 					auto assign = awst::makeAssignmentStatement(std::move(tupleTarget), std::move(callExpr), loc);
 					result.push_back(std::move(assign));
 				}
@@ -180,29 +202,53 @@ static std::vector<std::shared_ptr<awst::Statement>> dispatchStatementImpl(
 
 			// 3. Emit the success-clause block inline.
 			SolBlock successHandler(
-				_ctx, successClause->block(),
-				_ctx.makeLoc(successClause->block().location()), _exprBuilder);
+				m_ctx, successClause->block(),
+				m_ctx.makeLoc(successClause->block().location()), m_exprBuilder);
 			auto successBlock = successHandler.toAwstBlock();
 			for (auto& s : successBlock->body)
 				result.push_back(std::move(s));
 		}
 		else if (callExpr)
 		{
-			// No success clause (unusual) — just execute the call for its side effects.
 			auto exprStmt = awst::makeExpressionStatement(std::move(callExpr), loc);
 			result.push_back(std::move(exprStmt));
 		}
 
 		return result;
 	}
-	if (auto const* node = dynamic_cast<Block const*>(&_stmt))
+
+	ResultT visitBlock(Block const& _n) override
 	{
-		SolBlock handler(_ctx, *node, _ctx.makeLoc(node->location()), _exprBuilder);
+		SolBlock handler(m_ctx, _n, locOf(_n), m_exprBuilder);
 		return handler.toAwst();
 	}
 
-	Logger::instance().warning("unhandled statement type", loc);
-	return {};
+	ResultT visitDefault(solidity::frontend::ASTNode const& _node) override
+	{
+		Logger::instance().warning("unhandled statement type", m_ctx.makeLoc(_node.location()));
+		return {};
+	}
+
+private:
+	StatementContext& m_ctx;
+	eb::BuilderContext& m_exprBuilder;
+
+	awst::SourceLocation locOf(solidity::frontend::ASTNode const& _n) const
+	{
+		return m_ctx.makeLoc(_n.location());
+	}
+};
+
+} // anonymous namespace
+
+/// Dispatch a single Solidity statement to the right sol-ast wrapper (free function).
+static std::vector<std::shared_ptr<awst::Statement>> dispatchStatementImpl(
+	StatementContext& _ctx,
+	eb::BuilderContext& _exprBuilder,
+	Statement const& _stmt)
+{
+	AwstStatementVisitor visitor(_ctx, _exprBuilder);
+	return visitor.visit(_stmt);
 }
 
 std::shared_ptr<awst::Block> SolBlock::toAwstBlock()
