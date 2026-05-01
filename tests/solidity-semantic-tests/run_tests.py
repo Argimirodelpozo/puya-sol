@@ -293,6 +293,38 @@ def _group_ctor_args(flat_vals, param_types):
     args = []
     flat_idx = 0
     for ptype in param_types:
+        # Dynamic array: type[]
+        # EVM-ABI lays this out as: offset (32B) | length (32B) | N×elem (32B each).
+        # The semantic-test fixture passes the values flat, so the
+        # offset is the first int, length is the second, and we then
+        # consume `length` more values as the elements.
+        m_dyn = re.match(r'(\w+)\[\]$', ptype)
+        if m_dyn and flat_idx < len(flat_vals):
+            elem_type = m_dyn.group(1)
+            offset = flat_vals[flat_idx]
+            # Sanity-check: offset is an int word-aligned multiple of 32.
+            if isinstance(offset, int) and offset % 32 == 0 and flat_idx + 1 < len(flat_vals):
+                length = flat_vals[flat_idx + 1]
+                if isinstance(length, int) and 0 <= length <= 1024:
+                    elem_start = flat_idx + 2
+                    elements = flat_vals[elem_start:elem_start + length]
+                    if len(elements) == length:
+                        # ARC4 encoding for `T[]`: uint16 length header + N×elem.
+                        # `address` becomes 32-byte raw account (AVM doesn't
+                        # truncate to 20). Other scalars → 32 bytes BE.
+                        encoded = length.to_bytes(2, 'big')
+                        for v in elements:
+                            if isinstance(v, int):
+                                encoded += v.to_bytes(32, 'big')
+                            elif isinstance(v, bytes):
+                                encoded += v.ljust(32, b'\x00')[:32]
+                            else:
+                                encoded += int(v).to_bytes(32, 'big')
+                        args.append(encoded)
+                        flat_idx = elem_start + length
+                        continue
+            # Fall through to scalar default if shape didn't match.
+
         # Check for static array: type[N]
         m = re.match(r'(\w+)\[(\d+)\]$', ptype)
         if m:
@@ -1086,9 +1118,15 @@ def _decode_abi_at(words, ty: _AbiType, base: int):
     if isinstance(ty, _AbiScalar):
         if base >= len(words):
             raise _MalformedAbi(f"scalar OOB at word {base}")
-        # Pass through whatever shape parse_value produced — algokit ABI
-        # encoder will coerce to the declared type.
-        return words[base]
+        w = words[base]
+        # algosdk's AddressType.encode requires either a 58-char checksummed
+        # string or a 32-byte raw key. Semantic-test fixtures pass integers
+        # for address[]; convert to 32-byte BE so encoding succeeds (the
+        # full account stays available — AVM doesn't truncate to 20 like EVM).
+        if ty.t == 'address' and isinstance(w, int):
+            from algosdk.encoding import encode_address as _encaddr
+            return _encaddr((w & ((1 << 256) - 1)).to_bytes(32, 'big'))
+        return w
 
     if isinstance(ty, (_AbiBytes, _AbiString)):
         if base >= len(words):
