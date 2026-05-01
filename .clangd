@@ -1,0 +1,18 @@
+# clangd configuration — used by VSCode's clangd extension and clangd CLI.
+#
+# CompilationDatabase points at the CMake build dir where puya-sol generates
+# compile_commands.json. Both this and the symlink at the repo root work; the
+# symlink is for editors that don't read .clangd (VSCode's Microsoft C/C++,
+# CLion, neovim's nvim-lspconfig defaults, etc.).
+CompileFlags:
+  CompilationDatabase: build
+  Add:
+    - -Wno-everything       # silence noise from solidity headers
+  Remove:
+    - -W*                   # drop all -W* — they're noise during indexing
+
+Diagnostics:
+  UnusedIncludes: None      # too noisy for solidity headers
+  Suppress:
+    # Solidity uses Boost heavily; libstdc++ deduction guides occasionally trip clangd
+    - "-Wunused-parameter"
