@@ -95,7 +95,6 @@ ContractBuilder::ContractBuilder(
 	  m_ensureBudget(_ensureBudget),
 	  m_viaIR(_viaIR)
 {
-	Logger::instance().debug("[TRACE] ContractBuilder m_freeFunctionById.size()=" + std::to_string(m_freeFunctionById.size()) + " addr=" + std::to_string((uintptr_t)&m_freeFunctionById));
 }
 
 awst::SourceLocation ContractBuilder::makeLoc(

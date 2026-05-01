@@ -12,7 +12,7 @@ class BuilderContext;
 
 /// Build an AWST binary-operation expression from already-resolved operands.
 ///
-/// This is the legacy fallback path: SolBinaryOperation calls this after its
+/// This is the default path: SolBinaryOperation calls this after its
 /// own per-token routing (user-defined op overload, constant folding, sol-eb
 /// type-builder dispatch) fails to handle the operation. It chooses between
 /// uint64, biguint, and bytes operations based on operand and result types,

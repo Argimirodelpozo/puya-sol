@@ -990,7 +990,6 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				continue;
 
 			Logger::instance().info("Translating contract: " + contract->name());
-			Logger::instance().debug("[TRACE] AWSTBuilder m_freeFunctionById.size()=" + std::to_string(m_freeFunctionById.size()) + " addr=" + std::to_string((uintptr_t)&m_freeFunctionById));
 
 			ContractBuilder translator(
 				m_typeMapper, *m_storageMapper, _sourceFile, m_libraryFunctionIds,
