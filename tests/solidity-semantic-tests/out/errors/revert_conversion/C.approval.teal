@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/revert_conversion.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1 0 2 32
     bytecblock "x" "__ctor_pending"
     pushint 4096
     bzero
@@ -43,7 +43,7 @@ __postInit:
     intc_1 // 0
     app_global_put
     bytec_0 // "x"
-    pushint 2
+    intc_2 // 2
     box_create
     pop
     intc_0 // 1
@@ -63,24 +63,36 @@ f_ternary_merge@4:
     !
     assert // not payable
     bytec_0 // "x"
-    box_get
-    assert // box exists
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
-    concat // on error: max array length exceeded
-    dup
-    extract 2 0
-    len
-    pushint 32
-    /
-    itob
-    extract 6 2
-    replace2 0
+    intc_1 // 0
+    intc_2 // 2
+    box_extract
+    btoi
     bytec_0 // "x"
-    box_del
+    box_len
     pop
+    intc_3 // 32
+    +
     bytec_0 // "x"
     swap
-    box_put
+    box_resize
+    dup
+    intc_0 // 1
+    +
+    itob
+    extract 6 2
+    bytec_0 // "x"
+    intc_1 // 0
+    uncover 2
+    box_replace
+    intc_3 // 32
+    *
+    intc_2 // 2
+    +
+    bytec_0 // "x"
+    swap
+    intc_1 // 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
+    box_splice
     err // E
 
 f_ternary_false@3:

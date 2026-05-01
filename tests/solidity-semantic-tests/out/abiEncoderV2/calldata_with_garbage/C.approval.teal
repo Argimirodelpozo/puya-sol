@@ -273,14 +273,6 @@ f_index_ternary_merge@4:
     *
     intc_0 // 32
     extract3 // on error: index access is out of bounds
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -565,20 +557,8 @@ g_index_ternary_merge@4:
     *
     intc_0 // 32
     extract3 // on error: index access is out of bounds
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    swap
-    dig 1
-    b|
-    dig 3
+    dig 2
     extract 0 32 // on error: index access is out of bounds
-    uncover 2
-    b|
     concat
     bytec_0 // 0x151f7c75
     swap

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_function.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 4 32 0
+    intcblock 1 4 0 3
     bytecblock 0x151f7c75
     pushint 4096
     bzero
@@ -62,14 +62,6 @@ f_ternary_merge@4:
     ==
     assert // invalid function pointer
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_function.sol.test.f0
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -78,7 +70,7 @@ f_ternary_merge@4:
     return
 
 f_ternary_false@3:
-    intc_3 // 0
+    intc_2 // 0
     b f_ternary_merge@4
 
 
@@ -98,7 +90,7 @@ f_ternary_false@3:
     retsub
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_function.sol.test.f0_ternary_false@2:
-    intc_3 // 0
+    intc_2 // 0
     b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_function.sol.test.f0_ternary_merge@3
 
 
@@ -109,12 +101,12 @@ __funcptr_dispatch_ret_x:
     intc_1 // 4
     ==
     bz __funcptr_dispatch_ret_x_else_body@2
-    pushint 3
+    intc_3 // 3
     retsub
 
 __funcptr_dispatch_ret_x_else_body@2:
     frame_dig -1
-    pushint 3
+    intc_3 // 3
     ==
     bz __funcptr_dispatch_ret_x_else_body@4
     pushint 2

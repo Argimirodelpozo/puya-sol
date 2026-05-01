@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/require_error_function_pointer_parameter.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 0
     pushint 4096
     bzero
     dup
@@ -35,8 +35,7 @@ e:
     txna ApplicationArgs 1
     dup
     len
-    dup
-    intc_1 // 32
+    pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -49,23 +48,15 @@ e:
 e_ternary_merge@4:
     !
     assert // not payable
-    dup
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    dig 2
-    b|
     pushbytes 0x151f7c75
-    swap
+    dig 1
     concat
     log
     intc_0 // 1
     return
 
 e_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b e_ternary_merge@4
 
 
@@ -84,5 +75,5 @@ f_ternary_merge@4:
     err // CustomError
 
 f_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b f_ternary_merge@4

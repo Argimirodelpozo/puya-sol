@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/events_with_same_name_file_level.sol.ClientReceipt.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 0 32
     pushint 4096
     bzero
     dup
@@ -50,7 +50,7 @@ deposit()_ternary_merge@4:
     return
 
 deposit()_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b deposit()_ternary_merge@4
 
 
@@ -59,7 +59,7 @@ deposit(addr):
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
@@ -72,7 +72,7 @@ deposit(addr):
 deposit(addr)_ternary_merge@4:
     !
     assert // not payable
-    pushbytes 0x08db9ab9 // method "Deposit(address)"
+    pushbytes 0xe5a84a72 // method "Deposit(uint8[32])"
     dig 1
     concat
     log
@@ -82,7 +82,7 @@ deposit(addr)_ternary_merge@4:
     return
 
 deposit(addr)_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b deposit(addr)_ternary_merge@4
 
 
@@ -91,14 +91,13 @@ deposit(addr,u256):
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    dup
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -111,18 +110,9 @@ deposit(addr,u256):
 deposit(addr,u256)_ternary_merge@4:
     !
     assert // not payable
-    dup
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    dig 2
-    b|
-    dig 3
-    swap
+    dup2
     concat
-    pushbytes 0x18a962c4 // method "Deposit(address,uint256)"
+    pushbytes 0x6733cac3 // method "Deposit(uint8[32],uint256)"
     swap
     concat
     log
@@ -132,7 +122,7 @@ deposit(addr,u256)_ternary_merge@4:
     return
 
 deposit(addr,u256)_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b deposit(addr,u256)_ternary_merge@4
 
 
@@ -141,7 +131,7 @@ deposit(addr,b):
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
@@ -150,7 +140,7 @@ deposit(addr,b):
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    intc_2 // 0
+    intc_1 // 0
     getbit
     txn GroupIndex
     bz deposit(addr,b)_ternary_false@3
@@ -169,7 +159,7 @@ deposit(addr,b)_ternary_merge@4:
     dig 2
     dig 2
     concat
-    pushbytes 0x1a400015 // method "Deposit(address,bool)"
+    pushbytes 0x1a2634dd // method "Deposit(uint8[32],bool)"
     swap
     concat
     log
@@ -179,5 +169,5 @@ deposit(addr,b)_ternary_merge@4:
     return
 
 deposit(addr,b)_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b deposit(addr,b)_ternary_merge@4

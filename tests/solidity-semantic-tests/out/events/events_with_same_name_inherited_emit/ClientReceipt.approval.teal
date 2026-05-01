@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/events_with_same_name_inherited_emit.sol.ClientReceipt.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 0 32
     bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     pushint 4096
     bzero
@@ -51,7 +51,7 @@ deposit()_ternary_merge@4:
     return
 
 deposit()_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b deposit()_ternary_merge@4
 
 
@@ -60,7 +60,7 @@ deposit(addr):
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
@@ -73,7 +73,7 @@ deposit(addr):
 deposit(addr)_ternary_merge@4:
     !
     assert // not payable
-    pushbytes 0x08db9ab9 // method "Deposit(address)"
+    pushbytes 0xe5a84a72 // method "Deposit(uint8[32])"
     dig 1
     concat
     log
@@ -83,7 +83,7 @@ deposit(addr)_ternary_merge@4:
     return
 
 deposit(addr)_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b deposit(addr)_ternary_merge@4
 
 
@@ -92,14 +92,13 @@ deposit(addr,u256):
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    dup
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -112,18 +111,9 @@ deposit(addr,u256):
 deposit(addr,u256)_ternary_merge@4:
     !
     assert // not payable
-    dup
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    dig 2
-    b|
-    dig 3
-    swap
+    dup2
     concat
-    pushbytes 0x18a962c4 // method "Deposit(address,uint256)"
+    pushbytes 0x6733cac3 // method "Deposit(uint8[32],uint256)"
     swap
     concat
     log
@@ -133,5 +123,5 @@ deposit(addr,u256)_ternary_merge@4:
     return
 
 deposit(addr,u256)_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b deposit(addr,u256)_ternary_merge@4

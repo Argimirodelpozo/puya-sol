@@ -528,7 +528,6 @@ set_d:
     txna ApplicationArgs 1
     dup
     len
-    dup
     pushint 12
     ==
     assert // invalid number of bytes for arc4.uint96
@@ -548,19 +547,13 @@ set_d:
 set_d_ternary_merge@4:
     !
     assert // not payable
-    dig 1
-    pushint 12
-    <=
-    assert // overflow
-    pushint 12
-    bzero
-    dig 3
-    b|
     intc_1 // 0
     bytec 8 // "d"
     app_global_get_ex
     assert // check d exists
     extract 12 32
+    dig 2
+    swap
     concat
     extract 0 12
     dig 1
@@ -581,7 +574,6 @@ set_rd:
     txna ApplicationArgs 1
     dup
     len
-    dup
     pushint 12
     ==
     assert // invalid number of bytes for arc4.uint96
@@ -601,19 +593,13 @@ set_rd:
 set_rd_ternary_merge@4:
     !
     assert // not payable
-    dig 1
-    pushint 12
-    <=
-    assert // overflow
-    pushint 12
-    bzero
-    dig 3
-    b|
     intc_1 // 0
     bytec 9 // "rd"
     app_global_get_ex
     assert // check rd exists
     extract 12 32
+    dig 2
+    swap
     concat
     extract 0 12
     dig 1

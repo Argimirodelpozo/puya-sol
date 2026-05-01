@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_2d_new.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 32
+    intcblock 1 0 2 8
     pushint 4096
     bzero
     dup
@@ -42,8 +42,7 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    dup
-    intc_3 // 32
+    pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -57,46 +56,35 @@ f_ternary_merge@4:
     !
     assert // not payable
     pushbytes 0x00020004000600000000
-    bury 9
+    bury 8
     intc_1 // 0
     itob
-    bury 8
+    bury 7
 
 f_while_top@5:
-    dig 7
+    dig 6
     pushbytes 0x02
     b<
     bz f_after_while@7
-    pushint 8
+    intc_3 // 8
     bzero
-    dig 8
+    dig 7
     concat
     dup
     len
-    pushint 8
+    intc_3 // 8
     -
     extract_uint64
-    dig 9
+    dig 8
     dup
-    cover 2
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    dig 1
-    >
-    assert // index access is out of bounds
-    dig 1
     substring 0 2
     dup
-    bury 9
+    bury 8
     btoi
-    uncover 2
-    extract 2 0
-    dig 2
-    intc_2 // 2
-    *
-    dig 1
     swap
-    extract_uint16
+    extract 2 0
+    dup
+    len
     dig 3
     intc_0 // 1
     +
@@ -105,87 +93,81 @@ f_while_top@5:
     dig 2
     dig 1
     extract_uint16
-    dig 3
-    len
-    dig 5
-    uncover 7
+    dig 4
+    dig 6
     -
     intc_0 // 1
     -
-    dig 1
-    uncover 3
-    uncover 2
+    dig 3
+    cover 2
     select
-    dup
+    uncover 5
+    intc_2 // 2
+    *
     dig 4
+    swap
+    extract_uint16
+    dup2
     -
-    bury 10
+    bury 9
     dig 4
     intc_1 // 0
-    uncover 5
+    uncover 2
     substring3
     pushbytes 0x0003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     concat
     uncover 4
     uncover 2
-    uncover 3
+    uncover 4
     substring3
     concat
-    bury 9
+    bury 8
     swap
     intc_2 // 2
     *
+    bury 3
     bury 4
-    bury 5
 
 f_for_header@9:
-    dig 4
     dig 3
+    dig 2
     <
     bz f_after_for@11
-    dig 6
+    dig 5
     dup
-    dig 6
+    dig 5
     dup
     cover 3
     extract_uint16
     pushint 98
     +
-    dig 6
+    dig 5
     -
     itob
-    extract 6 2
+    extract 6 0
     dig 2
     swap
     replace3
-    bury 8
+    bury 7
     intc_2 // 2
     +
-    bury 5
+    bury 4
     b f_for_header@9
 
 f_after_for@11:
-    dig 5
-    dig 7
+    dig 4
+    dig 6
     concat
-    bury 9
-    dig 7
+    bury 8
+    dig 6
     pushbytes 0x01
     b+
-    bury 8
+    bury 7
     b f_while_top@5
 
 f_after_while@7:
-    dup
-    intc_3 // 32
-    <=
-    assert // overflow
-    intc_3 // 32
-    bzero
-    dig 2
-    b|
     pushbytes 0x151f7c75
-    swap
+    dig 1
     concat
     log
     intc_0 // 1

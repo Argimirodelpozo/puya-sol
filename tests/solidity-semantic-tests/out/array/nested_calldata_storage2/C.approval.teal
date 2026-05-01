@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/nested_calldata_storage2.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 2
+    intcblock 1 0 2 32
     bytecblock "tmp_i" "__ctor_pending"
     pushint 4096
     bzero
@@ -40,10 +40,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
     bytec_0 // "tmp_i"
-    intc_3 // 2
+    intc_2 // 2
     box_create
     pop
     intc_0 // 1
@@ -54,18 +54,18 @@ __postInit:
 i:
     txna ApplicationArgs 1
     dupn 2
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
     cover 2
-    intc_3 // 2
+    intc_2 // 2
     *
     swap
     dup
     len
     swap
     extract 2 0
-    intc_2 // 0
+    intc_1 // 0
 
 i_for_header@1:
     dup
@@ -73,7 +73,7 @@ i_for_header@1:
     <
     bz i_after_for@4
     dupn 2
-    intc_3 // 2
+    intc_2 // 2
     *
     dig 3
     dup
@@ -88,11 +88,11 @@ i_for_header@1:
     dig 1
     len
     substring3
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_1 // 32
+    intc_3 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     +
     bury 5
@@ -103,7 +103,7 @@ i_for_header@1:
 
 i_after_for@4:
     dig 3
-    intc_3 // 2
+    intc_2 // 2
     +
     dig 3
     ==
@@ -128,7 +128,7 @@ i_ternary_merge@8:
     return
 
 i_ternary_false@7:
-    intc_2 // 0
+    intc_1 // 0
     b i_ternary_merge@8
 
 
@@ -137,13 +137,13 @@ tmp_i:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -180,40 +180,32 @@ tmp_i_ternary_merge@4:
     -
     extract_uint64
     dig 2
-    extract 2 0
-    uncover 3
-    intc_2 // 0
-    extract_uint16 // on error: invalid array length header
-    dig 3
+    intc_1 // 0
+    extract_uint16
+    dig 2
     >
-    assert // index access is out of bounds
+    assert // index out of bounds
     uncover 2
-    intc_3 // 2
+    extract 2 0
+    uncover 2
+    intc_2 // 2
     *
     dig 1
     swap
     extract_uint16
     dup2
     extract_uint16
-    intc_1 // 32
+    intc_3 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     extract3
     extract 2 0
     swap
-    intc_1 // 32
+    intc_3 // 32
     *
-    intc_1 // 32
+    intc_3 // 32
     extract3 // on error: index access is out of bounds
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    b|
     pushbytes 0x151f7c75
     swap
     concat
@@ -222,5 +214,5 @@ tmp_i_ternary_merge@4:
     return
 
 tmp_i_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b tmp_i_ternary_merge@4

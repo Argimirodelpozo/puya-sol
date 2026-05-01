@@ -3,7 +3,6 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_struct_memory_v2.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
     pushint 4096
     bzero
     dup
@@ -15,7 +14,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    pushint 1
     return
 
 main_after_if_else@2:
@@ -38,33 +37,24 @@ createEvent:
     txna ApplicationArgs 1
     dup
     len
-    dup
-    intc_1 // 32
+    pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz createEvent_ternary_false@3
     txn GroupIndex
-    intc_0 // 1
+    pushint 1
     -
     gtxns Amount
 
 createEvent_ternary_merge@4:
     !
     assert // not payable
-    dup
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    dig 2
-    b|
-    pushbytes 0xec1cb9b2 // method "E(struct C.S)"
-    swap
+    pushbytes 0xdc195c34 // method "E((uint256))"
+    dig 1
     concat
     log
-    intc_0 // 1
+    pushint 1
     return
 
 createEvent_ternary_false@3:

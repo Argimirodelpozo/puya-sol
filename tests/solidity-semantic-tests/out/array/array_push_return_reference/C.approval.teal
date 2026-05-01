@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_push_return_reference.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
+    intcblock 1 0 32 2
     bytecblock "storageArray" "__ctor_pending" 0x151f7c75
     pushint 4096
     bzero
@@ -17,9 +17,9 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
-    intc_1 // 1
+    intc_0 // 1
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -40,13 +40,13 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
     bytec_0 // "storageArray"
     intc_3 // 2
     box_create
     pop
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -55,55 +55,65 @@ test:
     txna ApplicationArgs 1
     dup
     len
-    dup
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz test_ternary_false@3
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 test_ternary_merge@4:
     !
     assert // not payable
-    bytec_0 // "storageArray"
-    box_get
-    assert // box exists
-    dig 1
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    dig 3
-    b|
     pushbytes 0x0001
-    swap
+    dig 1
     concat
-    extract 2 0
-    concat // on error: max array length exceeded
     dup
     extract 2 0
-    len
-    intc_0 // 32
-    /
-    itob
-    extract 6 2
-    replace2 0
+    swap
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
     bytec_0 // "storageArray"
-    box_del
+    intc_1 // 0
+    intc_3 // 2
+    box_extract
+    btoi
+    bytec_0 // "storageArray"
+    box_len
     pop
+    dig 2
+    intc_2 // 32
+    *
+    +
     bytec_0 // "storageArray"
     swap
-    box_put
-    intc_1 // 1
+    box_resize
+    dup
+    uncover 2
+    +
+    itob
+    extract 6 2
+    bytec_0 // "storageArray"
+    intc_1 // 0
+    uncover 2
+    box_replace
+    intc_2 // 32
+    *
+    intc_3 // 2
+    +
+    bytec_0 // "storageArray"
+    swap
+    intc_1 // 0
+    uncover 3
+    box_splice
+    intc_0 // 1
     return
 
 test_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b test_ternary_merge@4
 
 
@@ -112,7 +122,7 @@ getLength:
     txn GroupIndex
     bz getLength_ternary_false@3
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -132,17 +142,17 @@ getLength_ternary_merge@4:
 getLength_ternary_merge@7:
     intc_3 // 2
     -
-    intc_0 // 32
+    intc_2 // 32
     /
     itob
-    intc_0 // 32
+    intc_2 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 getLength_ternary_false@6:
@@ -150,7 +160,7 @@ getLength_ternary_false@6:
     b getLength_ternary_merge@7
 
 getLength_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b getLength_ternary_merge@4
 
 
@@ -159,55 +169,43 @@ fetch:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz fetch_ternary_false@3
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 fetch_ternary_merge@4:
     !
     assert // not payable
-    bytec_0 // "storageArray"
-    box_get
-    pushbytes 0x0000
-    cover 2
-    select
     pushint 8
     bzero
-    dig 2
+    dig 1
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    swap
-    extract 2 0
-    swap
-    intc_0 // 32
+    intc_2 // 32
     *
-    intc_0 // 32
-    extract3 // on error: index access is out of bounds
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
+    intc_3 // 2
+    +
+    bytec_0 // "storageArray"
+    swap
+    intc_2 // 32
+    box_extract // on error: index access is out of bounds
     bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 fetch_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b fetch_ternary_merge@4

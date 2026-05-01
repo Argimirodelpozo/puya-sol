@@ -68,24 +68,36 @@ __postInit_ternary_merge@5:
     b<
     bz __postInit_after_while@7
     bytec_0 // "s"
-    box_get
-    assert // box exists
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
-    concat // on error: max array length exceeded
-    dup
-    extract 2 0
-    len
-    intc_3 // 32
-    /
-    itob
-    extract 6 2
-    replace2 0
+    intc_1 // 0
+    intc_2 // 2
+    box_extract
+    btoi
     bytec_0 // "s"
-    box_del
+    box_len
     pop
+    intc_3 // 32
+    +
     bytec_0 // "s"
     swap
-    box_put
+    box_resize
+    dup
+    intc_0 // 1
+    +
+    itob
+    extract 6 2
+    bytec_0 // "s"
+    intc_1 // 0
+    uncover 2
+    box_replace
+    intc_3 // 32
+    *
+    intc_2 // 2
+    +
+    bytec_0 // "s"
+    swap
+    intc_1 // 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    box_splice
     b __postInit_while_top@2
 
 __postInit_after_while@7:

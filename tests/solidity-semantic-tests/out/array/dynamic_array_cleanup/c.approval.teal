@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/dynamic_array_cleanup.sol.c.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 2
+    intcblock 0 1 2 32
     bytecblock "dynamic" "__ctor_pending"
     pushint 4096
     bzero
@@ -17,9 +17,9 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
-    intc_0 // 1
+    intc_1 // 1
     app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -40,34 +40,34 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_1 // 0
+    intc_0 // 0
     app_global_put
     pushbytes "spacer"
     pushint 640
     box_create
     pop
     bytec_0 // "dynamic"
-    intc_3 // 2
+    intc_2 // 2
     box_create
     pop
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/dynamic_array_cleanup.sol.c.fill[routing]() -> void:
 fill:
-    intc_1 // 0
+    intc_0 // 0
     txn GroupIndex
     bz fill_ternary_false@3
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
 fill_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 0
+    intc_0 // 0
     itob
     bury 1
 
@@ -76,49 +76,68 @@ fill_while_top@5:
     pushbytes 0x15
     b<
     bz fill_after_while@7
-    bytec_0 // "dynamic"
-    box_get
-    assert // box exists
-    dig 1
+    dup
     pushbytes 0x01
     b+
     dup
-    bury 3
+    bury 2
     dup
     len
-    intc_2 // 32
+    intc_3 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_3 // 32
     bzero
     b|
     pushbytes 0x0001
     swap
     concat
-    extract 2 0
-    concat // on error: max array length exceeded
     dup
     extract 2 0
-    len
-    intc_2 // 32
-    /
-    itob
-    extract 6 2
-    replace2 0
+    swap
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
     bytec_0 // "dynamic"
-    box_del
+    intc_0 // 0
+    intc_2 // 2
+    box_extract
+    btoi
+    bytec_0 // "dynamic"
+    box_len
     pop
+    dig 2
+    intc_3 // 32
+    *
+    +
     bytec_0 // "dynamic"
     swap
-    box_put
+    box_resize
+    dup
+    uncover 2
+    +
+    itob
+    extract 6 2
+    bytec_0 // "dynamic"
+    intc_0 // 0
+    uncover 2
+    box_replace
+    intc_3 // 32
+    *
+    intc_2 // 2
+    +
+    bytec_0 // "dynamic"
+    swap
+    intc_0 // 0
+    uncover 3
+    box_splice
     b fill_while_top@5
 
 fill_after_while@7:
-    intc_0 // 1
+    intc_1 // 1
     return
 
 fill_ternary_false@3:
-    intc_1 // 0
+    intc_0 // 0
     b fill_ternary_merge@4
 
 
@@ -127,7 +146,7 @@ halfClear:
     txn GroupIndex
     bz halfClear_ternary_false@3
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -139,7 +158,7 @@ halfClear_while_top@5:
     bytec_0 // "dynamic"
     box_len
     pop
-    intc_3 // 2
+    intc_2 // 2
     >=
     bz halfClear_ternary_false@7
     bytec_0 // "dynamic"
@@ -147,50 +166,57 @@ halfClear_while_top@5:
     pop
 
 halfClear_ternary_merge@8:
-    intc_3 // 2
+    intc_2 // 2
     -
-    intc_2 // 32
+    intc_3 // 32
     /
     itob
     pushbytes 0x05
     b>
     bz halfClear_after_while@10
     bytec_0 // "dynamic"
-    box_get
-    assert // box exists
-    dup
-    intc_1 // 0
-    extract_uint16
-    intc_0 // 1
+    intc_0 // 0
+    intc_2 // 2
+    box_extract
+    btoi
+    intc_1 // 1
     -
+    dup
     itob
-    extract 6 0
-    replace2 0
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_1 // 0
-    swap
-    substring3
+    extract 6 2
     bytec_0 // "dynamic"
-    box_del
+    intc_0 // 0
+    uncover 2
+    box_replace
+    intc_3 // 32
+    *
+    intc_2 // 2
+    +
+    bytec_0 // "dynamic"
+    swap
+    intc_3 // 32
+    pushbytes 0x
+    box_splice
+    bytec_0 // "dynamic"
+    box_len
     pop
+    intc_3 // 32
+    -
     bytec_0 // "dynamic"
     swap
-    box_put
+    box_resize
     b halfClear_while_top@5
 
 halfClear_after_while@10:
-    intc_0 // 1
+    intc_1 // 1
     return
 
 halfClear_ternary_false@7:
-    intc_3 // 2
+    intc_2 // 2
     b halfClear_ternary_merge@8
 
 halfClear_ternary_false@3:
-    intc_1 // 0
+    intc_0 // 0
     b halfClear_ternary_merge@4
 
 
@@ -199,7 +225,7 @@ fullClear:
     txn GroupIndex
     bz fullClear_ternary_false@3
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -212,9 +238,9 @@ fullClear_ternary_merge@4:
     bytec_0 // "dynamic"
     pushbytes 0x0000
     box_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 fullClear_ternary_false@3:
-    intc_1 // 0
+    intc_0 // 0
     b fullClear_ternary_merge@4

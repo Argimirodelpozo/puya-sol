@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/inline_array_storage_to_memory_conversion_strings.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 2 0 4
+    intcblock 1 2 0
     pushint 4096
     bzero
     dup
@@ -33,6 +33,26 @@ main_f_route@4:
     &&
     assert
     b f
+
+
+// _puya_lib.arc4.static_array_read_byte_length_element(array: bytes, index: uint64) -> bytes:
+static_array_read_byte_length_element:
+    proto 2 1
+    frame_dig -1
+    intc_1 // 2
+    *
+    frame_dig -2
+    swap
+    extract_uint16
+    frame_dig -2
+    dig 1
+    extract_uint16
+    intc_1 // 2
+    +
+    frame_dig -2
+    cover 2
+    extract3
+    retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/inline_array_storage_to_memory_conversion_strings.sol.C.f[routing]() -> void:
@@ -78,27 +98,12 @@ f_ternary_merge@4:
     pushbytes 0x000372617900026d69
     concat
     dup
-    intc_1 // 2
-    extract_uint16
-    dup2
-    extract_uint16
-    intc_1 // 2
-    +
-    dig 2
-    cover 2
-    extract3
+    intc_0 // 1
+    callsub static_array_read_byte_length_element
     extract 2 0
-    dig 1
-    intc_3 // 4
-    extract_uint16
-    dig 2
-    dig 1
-    extract_uint16
+    swap
     intc_1 // 2
-    +
-    uncover 3
-    cover 2
-    extract3
+    callsub static_array_read_byte_length_element
     extract 2 0
     dig 1
     len
@@ -108,7 +113,7 @@ f_ternary_merge@4:
     concat
     dup
     len
-    intc_3 // 4
+    pushint 4
     +
     dig 2
     len

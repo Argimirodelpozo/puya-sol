@@ -44,14 +44,16 @@ main:
     dig 2
     uncover 2
     substring3
-    pushbytes 0x07
-    concat // on error: max array length exceeded
     dup
-    extract 2 0
-    len
+    intc_0 // 0
+    extract_uint16
+    intc_1 // 1
+    +
     itob
-    extract 6 2
+    extract 6 0
     replace2 0
+    pushbytes 0x07
+    concat
     uncover 2
     intc_0 // 0
     uncover 3
@@ -67,14 +69,16 @@ main:
     dig 2
     uncover 2
     substring3
-    pushbytes 0x0b
-    concat // on error: max array length exceeded
     dup
-    extract 2 0
-    len
+    intc_0 // 0
+    extract_uint16
+    intc_1 // 1
+    +
     itob
-    extract 6 2
+    extract 6 0
     replace2 0
+    pushbytes 0x0b
+    concat
     uncover 2
     intc_0 // 0
     uncover 3

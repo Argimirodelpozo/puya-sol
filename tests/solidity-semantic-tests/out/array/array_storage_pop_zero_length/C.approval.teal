@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_pop_zero_length.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1 0 2 32
     bytecblock "storageArray" "__ctor_pending"
     pushint 4096
     bzero
@@ -43,7 +43,7 @@ __postInit:
     intc_1 // 0
     app_global_put
     bytec_0 // "storageArray"
-    pushint 2
+    intc_2 // 2
     box_create
     pop
     intc_0 // 1
@@ -63,29 +63,36 @@ popEmpty_ternary_merge@4:
     !
     assert // not payable
     bytec_0 // "storageArray"
-    box_get
-    assert // box exists
-    dup
     intc_1 // 0
-    extract_uint16
+    intc_2 // 2
+    box_extract
+    btoi
     intc_0 // 1
     -
-    itob
-    extract 6 0
-    replace2 0
     dup
-    len
-    pushint 32
-    -
+    itob
+    extract 6 2
+    bytec_0 // "storageArray"
     intc_1 // 0
-    swap
-    substring3
+    uncover 2
+    box_replace
+    intc_3 // 32
+    *
+    intc_2 // 2
+    +
     bytec_0 // "storageArray"
-    box_del
+    swap
+    intc_3 // 32
+    pushbytes 0x
+    box_splice
+    bytec_0 // "storageArray"
+    box_len
     pop
+    intc_3 // 32
+    -
     bytec_0 // "storageArray"
     swap
-    box_put
+    box_resize
     intc_0 // 1
     return
 

@@ -1,9 +1,9 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_v0ati1qg/B.sol.B.approval_program() -> uint64:
+// /tmp/multisource_26k9h6xu/B.sol.B.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
+    intcblock 1 0
     pushint 4096
     bzero
     dup
@@ -33,12 +33,12 @@ main_foo_route@4:
     b foo
 
 
-// /tmp/multisource_v0ati1qg/B.sol.B.foo[routing]() -> void:
+// /tmp/multisource_26k9h6xu/B.sol.B.foo[routing]() -> void:
 foo:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    pushint 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
@@ -68,9 +68,6 @@ foo_ternary_merge@4:
     itxn LastLog
     extract 36 64
     extract 32 32 // on error: index access is out of bounds
-    intc_2 // 32
-    bzero
-    b|
     pushbytes 0x151f7c75
     swap
     concat

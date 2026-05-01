@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 34
+    intcblock 1 0 32 34
     bytecblock "str" 0x0024000000000000000000000000000000000000000000000000000000000000000000480000000000000000000000000000000000000000000000000000000000000000002200000000 0x151f7c75 "__ctor_pending" 0x746f704d617070696e6766687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925 0x746f704d617070696e67ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5 "toDelete"
     pushint 4096
     bzero
@@ -40,7 +40,7 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_3 // "__ctor_pending"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
     bytec_0 // "str"
     box_get
@@ -48,7 +48,7 @@ __postInit:
     cover 2
     select
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16
     dig 1
     intc_3 // 34
@@ -112,7 +112,7 @@ __postInit:
     cover 2
     select
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16
     dig 1
     intc_3 // 34
@@ -122,7 +122,7 @@ __postInit:
     dig 2
     substring3
     dup
-    intc_1 // 32
+    intc_2 // 32
     extract_uint16
     dig 1
     len
@@ -180,7 +180,7 @@ __postInit:
     pushbytes 0x6e65737465644d617070696e6766687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
     swap
     box_put
-    intc_2 // 0
+    intc_1 // 0
     itob
     pushbytes 0x6e65737465644d617070696e67ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
     swap
@@ -210,16 +210,16 @@ getToDelete:
 getToDelete_ternary_merge@4:
     !
     assert // not payable
-    intc_2 // 0
+    intc_1 // 0
     bytec 6 // "toDelete"
     app_global_get_ex
     assert // check toDelete exists
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -230,7 +230,7 @@ getToDelete_ternary_merge@4:
     return
 
 getToDelete_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b getToDelete_ternary_merge@4
 
 
@@ -252,9 +252,6 @@ getTopValue_ternary_merge@4:
     cover 2
     select
     extract 2 32
-    intc_1 // 32
-    bzero
-    b|
     bytec_2 // 0x151f7c75
     swap
     concat
@@ -263,7 +260,7 @@ getTopValue_ternary_merge@4:
     return
 
 getTopValue_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b getTopValue_ternary_merge@4
 
 
@@ -285,16 +282,13 @@ getNestedValue_ternary_merge@4:
     cover 2
     select
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16
     dig 1
     intc_3 // 34
     extract_uint16
     substring3
     extract 0 32
-    intc_1 // 32
-    bzero
-    b|
     bytec_2 // 0x151f7c75
     swap
     concat
@@ -303,7 +297,7 @@ getNestedValue_ternary_merge@4:
     return
 
 getNestedValue_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b getNestedValue_ternary_merge@4
 
 
@@ -312,7 +306,7 @@ getTopMapping:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -325,16 +319,16 @@ getTopMapping:
 getTopMapping_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 32
+    intc_2 // 32
     bzero
     dup
     dig 2
     concat
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     -
-    intc_1 // 32
+    intc_2 // 32
     extract3
     sha256
     pushbytes "topMapping"
@@ -346,7 +340,7 @@ getTopMapping_ternary_merge@4:
     select
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
     b|
@@ -358,7 +352,7 @@ getTopMapping_ternary_merge@4:
     return
 
 getTopMapping_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b getTopMapping_ternary_merge@4
 
 
@@ -367,7 +361,7 @@ getNestedMapping:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -380,15 +374,15 @@ getNestedMapping:
 getNestedMapping_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 32
+    intc_2 // 32
     bzero
     dig 1
     concat
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     -
-    intc_1 // 32
+    intc_2 // 32
     extract3
     sha256
     pushbytes "nestedMapping"
@@ -397,12 +391,12 @@ getNestedMapping_ternary_merge@4:
     box_get
     swap
     btoi
-    intc_2 // 0
+    intc_1 // 0
     swap
     uncover 2
     select
     pushbytes 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec_2 // 0x151f7c75
@@ -413,5 +407,5 @@ getNestedMapping_ternary_merge@4:
     return
 
 getNestedMapping_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b getNestedMapping_ternary_merge@4
