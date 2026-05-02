@@ -44,6 +44,16 @@ namespace eb { class BuilderContext; }
 namespace puyasol::builder::sol_ast
 {
 
+/// Modifier-inliner param remap entry: when a modifier is applied
+/// multiple times in a single function, each instance's locals get a
+/// unique mangled name with their original AWST type.
+struct ParamRemap
+{
+	std::string name;
+	awst::WType const* type;
+};
+
+
 /// Common base for every scope level. Holds an upward parent pointer so
 /// scope-bound lookups can be resolved by walking the chain. Non-virtual
 /// where possible; virtual destructor so `delete` of a base pointer works
@@ -129,6 +139,14 @@ public:
 		return m_parent ? m_parent->findMappingKeyParam(_declId) : std::string{};
 	}
 
+	/// Modifier-inliner param remap: when the same modifier is applied
+	/// multiple times in a single function, each instance's locals get a
+	/// unique mangled name. Returns nullptr if no remap is in effect.
+	virtual ParamRemap const* findParamRemap(int64_t _declId) const
+	{
+		return m_parent ? m_parent->findParamRemap(_declId) : nullptr;
+	}
+
 protected:
 	explicit Context(Context* _parent): m_parent(_parent) {}
 
@@ -145,6 +163,13 @@ struct TranslationContext: Context
 	TypeMapper& typeMapper;
 	std::string sourceFile;
 
+	/// Modifier-inliner param remaps. Lives at the translation level
+	/// because modifier-body translation re-enters `ContractBuilder::buildBlock`
+	/// (which creates a fresh FunctionContext parented to `*this`) while
+	/// the remap is in effect — the chain walk from inside the modifier
+	/// body reaches `TranslationContext` but not the outer FunctionContext.
+	std::map<int64_t, ParamRemap> paramRemaps;
+
 	TranslationContext(
 		eb::BuilderContext& _exprBuilder,
 		TypeMapper& _typeMapper,
@@ -155,6 +180,12 @@ struct TranslationContext: Context
 		  typeMapper(_typeMapper),
 		  sourceFile(std::move(_sourceFile))
 	{}
+
+	ParamRemap const* findParamRemap(int64_t _declId) const override
+	{
+		auto it = paramRemaps.find(_declId);
+		return it != paramRemaps.end() ? &it->second : nullptr;
+	}
 
 	awst::SourceLocation makeLoc(solidity::langutil::SourceLocation const& _sl) const
 	{
@@ -191,6 +222,7 @@ struct FunctionContext: Context
 	/// `mapping(K=>V) storage` carry their name as a runtime bytes value
 	/// — `r[k]` resolves to a box-access prefixed by `r`'s holder name.
 	std::map<int64_t, std::string> mappingKeyParams;
+
 
 	FunctionContext(
 		TranslationContext& _tr,

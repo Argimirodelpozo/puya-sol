@@ -2,6 +2,7 @@
 
 #include "awst/Node.h"
 #include "awst/WType.h"
+#include "builder/sol-ast/Context.h"
 
 #include <libsolidity/ast/Types.h>
 #include <liblangutil/Token.h>
@@ -28,7 +29,10 @@ namespace puyasol::builder
 class TypeMapper;
 class StorageMapper;
 class TransientStorage;
-namespace sol_ast { class Context; }
+namespace sol_ast {
+class Context;
+struct ParamRemap;
+}
 }
 
 namespace puyasol::builder::eb
@@ -37,12 +41,10 @@ namespace puyasol::builder::eb
 class InstanceBuilder;
 class BuilderRegistry;
 
-/// Parameter remap entry: redirects an AST declaration to a unique variable name.
-struct ParamRemap
-{
-	std::string name;
-	awst::WType const* type;
-};
+// `ParamRemap` is now defined in `sol_ast/Context.h` since it's owned by
+// `FunctionContext`. Re-exported as `eb::ParamRemap` for legacy callers
+// (e.g. ModifierInliner) that use the qualified name.
+using ParamRemap = sol_ast::ParamRemap;
 
 /// Shared context owning all expression-builder state.
 ///
@@ -112,7 +114,6 @@ public:
 	std::vector<std::shared_ptr<awst::Statement>> prePendingStatements;
 
 	// ── Per-translation scope state (owned) ──
-	std::map<int64_t, ParamRemap> paramRemaps;
 	std::unordered_map<int64_t, std::string> superTargetNames;
 
 	/// Innermost active scope. Updated on entry to each
@@ -203,6 +204,12 @@ public:
 	/// Bind a mapping-storage-pointer param on the innermost enclosing
 	/// function.
 	void setMappingKeyParam(int64_t _declId, std::string _name);
+
+	/// Modifier-inliner param remap accessors. Bindings live on the
+	/// innermost enclosing FunctionContext.
+	sol_ast::ParamRemap const* findParamRemap(int64_t _declId) const;
+	void setParamRemap(int64_t _declId, sol_ast::ParamRemap _remap);
+	void eraseParamRemap(int64_t _declId);
 
 	/// Scratch slot for the `arr.push() = value` rewrite: SolAssignment
 	/// stashes the RHS here before the LHS build, and SolArrayMethod's

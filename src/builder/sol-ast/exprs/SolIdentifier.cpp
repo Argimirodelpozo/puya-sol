@@ -42,12 +42,8 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 	if (decl)
 	{
 		// Parameter remaps (modifier parameters)
-		auto remapIt = m_ctx.paramRemaps.find(decl->id());
-		if (remapIt != m_ctx.paramRemaps.end())
-		{
-			auto var = awst::makeVarExpression(remapIt->second.name, remapIt->second.type, m_loc);
-			return var;
-		}
+		if (auto const* remap = m_ctx.findParamRemap(decl->id()))
+			return awst::makeVarExpression(remap->name, remap->type, m_loc);
 
 		// Storage pointer aliases
 		if (auto alias = m_ctx.findStorageAlias(decl->id()))

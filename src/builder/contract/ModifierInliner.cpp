@@ -207,7 +207,7 @@ void ContractBuilder::inlineModifiers(
 				modBody->body.push_back(std::move(assignment));
 
 				// Register remap so modifier body references resolve to the unique name
-				m_exprBuilder->paramRemaps[param->id()] = puyasol::builder::eb::ParamRemap{uniqueName, paramType};
+				m_exprBuilder->setParamRemap(param->id(), sol_ast::ParamRemap{uniqueName, paramType});
 				remappedDeclIds.push_back(param->id());
 			}
 		}
@@ -233,7 +233,7 @@ void ContractBuilder::inlineModifiers(
 					std::string uniqueName
 						= "__mod_local_" + localDecl->name() + "_" + std::to_string(modCounter++);
 					auto* localType = m_typeMapper.map(localDecl->type());
-					m_exprBuilder->paramRemaps[localDecl->id()] = puyasol::builder::eb::ParamRemap{uniqueName, localType};
+					m_exprBuilder->setParamRemap(localDecl->id(), sol_ast::ParamRemap{uniqueName, localType});
 					remappedDeclIds.push_back(localDecl->id());
 				}
 			}
@@ -506,7 +506,7 @@ void ContractBuilder::inlineModifiers(
 
 		// Unregister remaps so they don't affect subsequent code
 		for (auto declId: remappedDeclIds)
-			m_exprBuilder->paramRemaps.erase(declId);
+			m_exprBuilder->eraseParamRemap(declId);
 
 		_body = modBody;
 	}
@@ -629,7 +629,7 @@ void ContractBuilder::buildModifierChain(
 				auto assignment = awst::makeAssignmentStatement(target, std::move(argExpr), modLoc);
 				modBody->body.push_back(std::move(assignment));
 
-				m_exprBuilder->paramRemaps[param->id()] = puyasol::builder::eb::ParamRemap{uniqueName, paramType};
+				m_exprBuilder->setParamRemap(param->id(), sol_ast::ParamRemap{uniqueName, paramType});
 				remappedDeclIds.push_back(param->id());
 			}
 		}
@@ -744,7 +744,7 @@ void ContractBuilder::buildModifierChain(
 
 		// Unregister remaps
 		for (auto declId: remappedDeclIds)
-			m_exprBuilder->paramRemaps.erase(declId);
+			m_exprBuilder->eraseParamRemap(declId);
 
 		modSub.body = modBody;
 		m_modifierSubroutines.push_back(std::move(modSub));

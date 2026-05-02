@@ -48,9 +48,8 @@ std::string BuilderContext::resolveVarName(std::string const& _name, int64_t _de
 {
 	// Honour explicit remaps (used by modifier inliner when the same
 	// modifier — with its own local vars — is applied multiple times).
-	auto remapIt = paramRemaps.find(_declId);
-	if (remapIt != paramRemaps.end())
-		return remapIt->second.name;
+	if (auto const* remap = findParamRemap(_declId))
+		return remap->name;
 
 	auto* blk = nearestBlock(currentScope);
 	int64_t existing = currentScope ? currentScope->lookupVarId(_name) : 0;
@@ -166,6 +165,39 @@ void BuilderContext::setMappingKeyParam(int64_t _declId, std::string _name)
 {
 	if (auto* fn = nearestFunction(currentScope))
 		fn->mappingKeyParams[_declId] = std::move(_name);
+}
+
+sol_ast::ParamRemap const* BuilderContext::findParamRemap(int64_t _declId) const
+{
+	return currentScope ? currentScope->findParamRemap(_declId) : nullptr;
+}
+
+namespace
+{
+sol_ast::TranslationContext* nearestTranslation(sol_ast::Context* _scope)
+{
+	for (auto* ctx = _scope; ctx; ctx = ctx->parent())
+		if (auto* tr = dynamic_cast<sol_ast::TranslationContext*>(ctx))
+			return tr;
+	return nullptr;
+}
+} // namespace
+
+void BuilderContext::setParamRemap(int64_t _declId, sol_ast::ParamRemap _remap)
+{
+	// Lives on TranslationContext: the remap is read from inside modifier
+	// body translation, which re-enters buildBlock with a fresh
+	// FunctionContext that doesn't include the outer FC in its parent
+	// chain. TranslationContext is the only ancestor visible from both
+	// the outer (where the remap was set) and inner scopes.
+	if (auto* tr = nearestTranslation(currentScope))
+		tr->paramRemaps[_declId] = std::move(_remap);
+}
+
+void BuilderContext::eraseParamRemap(int64_t _declId)
+{
+	if (auto* tr = nearestTranslation(currentScope))
+		tr->paramRemaps.erase(_declId);
 }
 
 BuilderContext::BuilderContext(
