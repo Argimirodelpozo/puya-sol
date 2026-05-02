@@ -3,8 +3,11 @@
 /// @file Context.h
 /// Typed nested contexts for Solidity AST traversal.
 ///
-/// Each level of the source tree carries information that doesn't make sense
-/// at outer levels:
+/// Every scope level inherits from `Context` and carries a parent pointer.
+/// The chain terminates at `TranslationContext` (parent == nullptr). Future
+/// state migrations push scope-bound fields into the appropriate subclass
+/// and override base-class accessors to terminate the lookup walk when the
+/// subclass owns the answer.
 ///
 ///   TranslationContext  — per-contract: type mapper, source file, the
 ///                          BuilderContext (low-level translation state).
@@ -15,6 +18,8 @@
 ///                          link for nesting.
 ///   LoopContext         — per-loop: forLoopPost (i++ to run before
 ///                          continue) or doWhileCondBreak (cond at bottom).
+///                          Currently orthogonal to the parent chain;
+///                          referenced via BlockContext::enclosingLoop.
 ///
 /// Visitors are *transient* and take the **narrowest context** they need.
 /// When entering a nested scope, we derive a new context with `nest()`,
@@ -39,15 +44,44 @@ namespace eb { class BuilderContext; }
 namespace puyasol::builder::sol_ast
 {
 
+/// Common base for every scope level. Holds an upward parent pointer so
+/// scope-bound lookups can be resolved by walking the chain. Non-virtual
+/// where possible; virtual destructor so `delete` of a base pointer works
+/// once we start storing them through Context*.
+class Context
+{
+public:
+	virtual ~Context() = default;
+
+	/// Walk one level up. Returns nullptr at the root (TranslationContext).
+	Context* parent() const { return m_parent; }
+
+protected:
+	explicit Context(Context* _parent): m_parent(_parent) {}
+
+	Context* m_parent;
+};
+
 /// Top-level translation context: per-contract state we share across
 /// every function and statement. Wraps BuilderContext (which still holds
 /// the lower-level shared state like storage layout, library function IDs,
 /// scope mappings); future cleanup can flatten more of that down here.
-struct TranslationContext
+struct TranslationContext: Context
 {
 	eb::BuilderContext& exprBuilder;
 	TypeMapper& typeMapper;
 	std::string sourceFile;
+
+	TranslationContext(
+		eb::BuilderContext& _exprBuilder,
+		TypeMapper& _typeMapper,
+		std::string _sourceFile
+	)
+		: Context(nullptr),
+		  exprBuilder(_exprBuilder),
+		  typeMapper(_typeMapper),
+		  sourceFile(std::move(_sourceFile))
+	{}
 
 	awst::SourceLocation makeLoc(solidity::langutil::SourceLocation const& _sl) const
 	{
@@ -69,18 +103,35 @@ struct TranslationContext
 };
 
 /// Function-level context: signature info needed to translate the body.
-struct FunctionContext
+struct FunctionContext: Context
 {
 	TranslationContext& tr;
 	std::vector<std::pair<std::string, awst::WType const*>> params;
 	awst::WType const* returnType = nullptr;
 	std::map<std::string, unsigned> paramBitWidths;
+
+	FunctionContext(
+		TranslationContext& _tr,
+		std::vector<std::pair<std::string, awst::WType const*>> _params,
+		awst::WType const* _returnType,
+		std::map<std::string, unsigned> _paramBitWidths
+	)
+		: Context(&_tr),
+		  tr(_tr),
+		  params(std::move(_params)),
+		  returnType(_returnType),
+		  paramBitWidths(std::move(_paramBitWidths))
+	{}
 };
 
 /// Loop-level context: control-flow targets for continue inside this loop.
 /// `forLoopPost` is the post-step (e.g., `i++`) to splice in before
 /// `LoopContinue`. `doWhileCondBreak` is the bottom-of-body condition check
 /// for do/while. At most one of the two is set.
+///
+/// Currently *not* in the parent chain — referenced laterally through
+/// `BlockContext::enclosingLoop`. We can weave it in later if loop-local
+/// state ever needs scope lookup.
 struct LoopContext
 {
 	std::shared_ptr<awst::Statement> forLoopPost;
@@ -89,12 +140,25 @@ struct LoopContext
 
 /// Block/scope-level context: nesting chain, enclosing loop (for
 /// continue/break), modifier placeholder body (for `_;` inlining).
-struct BlockContext
+struct BlockContext: Context
 {
 	FunctionContext& fn;
-	BlockContext const* parent = nullptr;
+	BlockContext* outer = nullptr;
 	LoopContext const* enclosingLoop = nullptr;
 	std::shared_ptr<awst::Block> placeholderBody;
+
+	BlockContext(
+		FunctionContext& _fn,
+		BlockContext* _outer,
+		LoopContext const* _loop,
+		std::shared_ptr<awst::Block> _placeholderBody
+	)
+		: Context(_outer ? static_cast<Context*>(_outer) : static_cast<Context*>(&_fn)),
+		  fn(_fn),
+		  outer(_outer),
+		  enclosingLoop(_loop),
+		  placeholderBody(std::move(_placeholderBody))
+	{}
 
 	/// Construct the top-level block (function body root).
 	static BlockContext top(FunctionContext& _fn)
@@ -103,13 +167,13 @@ struct BlockContext
 	}
 
 	/// Derive a child block context — same enclosing loop & placeholder.
-	BlockContext nest() const
+	BlockContext nest()
 	{
 		return {fn, this, enclosingLoop, placeholderBody};
 	}
 
 	/// Derive a context whose body is the body of `_loop`.
-	BlockContext withLoop(LoopContext const& _loop) const
+	BlockContext withLoop(LoopContext const& _loop)
 	{
 		BlockContext c = nest();
 		c.enclosingLoop = &_loop;
@@ -118,7 +182,7 @@ struct BlockContext
 
 	/// Derive a context for the body of a modifier-inlined function:
 	/// `_;` placeholders splice in `_body`.
-	BlockContext withPlaceholder(std::shared_ptr<awst::Block> _body) const
+	BlockContext withPlaceholder(std::shared_ptr<awst::Block> _body)
 	{
 		BlockContext c = nest();
 		c.placeholderBody = std::move(_body);
