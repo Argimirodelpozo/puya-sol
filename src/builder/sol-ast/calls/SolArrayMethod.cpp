@@ -205,14 +205,14 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 		{
 			if (!decl->isStateVariable())
 			{
-				auto aliasIt = m_ctx.storageAliases.find(decl->id());
-				if (aliasIt != m_ctx.storageAliases.end()
+				auto aliasShared = m_ctx.findStorageAlias(decl->id());
+				if (aliasShared
 					&& (memberName == "push" || memberName == "pop"))
 				{
 					auto const* solArrType = dynamic_cast<ArrayType const*>(decl->type());
 					if (solArrType && !solArrType->isByteArrayOrString())
 					{
-						std::shared_ptr<awst::Expression> aliasExpr = aliasIt->second;
+						std::shared_ptr<awst::Expression> aliasExpr = aliasShared;
 						// Unwrap StateGet to underlying writable target.
 						if (auto const* sg = dynamic_cast<awst::StateGet const*>(
 								aliasExpr.get()))

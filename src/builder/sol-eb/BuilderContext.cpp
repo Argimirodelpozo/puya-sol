@@ -13,6 +13,26 @@ bool BuilderContext::isUnchecked() const
 	return currentScope && currentScope->isUnchecked();
 }
 
+std::shared_ptr<awst::Expression> BuilderContext::findStorageAlias(int64_t _declId) const
+{
+	return currentScope ? currentScope->findStorageAlias(_declId) : nullptr;
+}
+
+void BuilderContext::setStorageAlias(
+	int64_t _declId,
+	std::shared_ptr<awst::Expression> _expr
+)
+{
+	for (auto* ctx = currentScope; ctx; ctx = ctx->parent())
+	{
+		if (auto* blk = dynamic_cast<sol_ast::BlockContext*>(ctx))
+		{
+			blk->storageAliases[_declId] = std::move(_expr);
+			return;
+		}
+	}
+}
+
 BuilderContext::BuilderContext(
 	TypeMapper& _typeMapper,
 	StorageMapper& _storageMapper,

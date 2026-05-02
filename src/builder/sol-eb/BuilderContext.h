@@ -114,7 +114,6 @@ public:
 	// ── Per-translation scope state (owned) ──
 	std::map<int64_t, ParamRemap> paramRemaps;
 	std::unordered_map<int64_t, std::string> superTargetNames;
-	std::map<int64_t, std::shared_ptr<awst::Expression>> storageAliases;
 	std::map<int64_t, std::shared_ptr<awst::Expression>> slotStorageRefs;
 	std::map<int64_t, solidity::frontend::FunctionDefinition const*> funcPtrTargets;
 	std::unordered_map<int64_t, unsigned long long> constantLocals;
@@ -156,6 +155,15 @@ public:
 	/// is inside an `unchecked { }` block. Resolved by chain walk through
 	/// `currentScope`. Returns false before any scope is pushed.
 	bool isUnchecked() const;
+
+	/// Look up a storage-pointer alias by AST decl ID. Walks `currentScope`
+	/// up the parent chain; returns nullptr if no alias is bound.
+	std::shared_ptr<awst::Expression> findStorageAlias(int64_t _declId) const;
+
+	/// Bind a storage-pointer alias in the innermost enclosing block.
+	/// Lifetime is the block's lifetime — the binding is discarded when
+	/// the block ends (its BlockContext destructs).
+	void setStorageAlias(int64_t _declId, std::shared_ptr<awst::Expression> _expr);
 
 	/// Scratch slot for the `arr.push() = value` rewrite: SolAssignment
 	/// stashes the RHS here before the LHS build, and SolArrayMethod's
@@ -235,14 +243,12 @@ public:
 		explicit ScopeGuard(BuilderContext& _ctx)
 			: m_ctx(_ctx),
 			  m_savedFuncPtrTargets(_ctx.funcPtrTargets),
-			  m_savedStorageAliases(_ctx.storageAliases),
 			  m_savedConstantLocals(_ctx.constantLocals),
 			  m_savedVarNames(_ctx.varNameToId)
 		{}
 		~ScopeGuard()
 		{
 			m_ctx.funcPtrTargets = std::move(m_savedFuncPtrTargets);
-			m_ctx.storageAliases = std::move(m_savedStorageAliases);
 			m_ctx.constantLocals = std::move(m_savedConstantLocals);
 			m_ctx.varNameToId = std::move(m_savedVarNames);
 		}
@@ -251,7 +257,6 @@ public:
 	private:
 		BuilderContext& m_ctx;
 		std::map<int64_t, solidity::frontend::FunctionDefinition const*> m_savedFuncPtrTargets;
-		std::map<int64_t, std::shared_ptr<awst::Expression>> m_savedStorageAliases;
 		std::unordered_map<int64_t, unsigned long long> m_savedConstantLocals;
 		std::map<std::string, int64_t> m_savedVarNames;
 	};

@@ -157,7 +157,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 					sg->defaultValue = StorageMapper::makeDefaultValue(rhsExpr->wtype, m_loc);
 					aliasExpr = sg;
 				}
-				m_ctx.storageAliases[lhsDecl->id()] = std::move(aliasExpr);
+				m_ctx.setStorageAlias(lhsDecl->id(), std::move(aliasExpr));
 				auto voidExpr = std::make_shared<awst::VoidConstant>();
 				voidExpr->sourceLocation = m_loc;
 				voidExpr->wtype = awst::WType::voidType();

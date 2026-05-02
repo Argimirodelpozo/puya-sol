@@ -50,9 +50,8 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 		}
 
 		// Storage pointer aliases
-		auto aliasIt = m_ctx.storageAliases.find(decl->id());
-		if (aliasIt != m_ctx.storageAliases.end())
-			return aliasIt->second;
+		if (auto alias = m_ctx.findStorageAlias(decl->id()))
+			return alias;
 	}
 
 	// Variable references

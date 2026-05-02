@@ -100,7 +100,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				&& decl.type()
 				&& decl.type()->category() == solidity::frontend::Type::Category::Mapping)
 			{
-				m_blk.builderCtx().storageAliases[decl.id()] = value;
+				m_blk.builderCtx().setStorageAlias(decl.id(), value);
 				for (auto& p: m_blk.builderCtx().takePrePending())
 					result.push_back(std::move(p));
 				for (auto& p: m_blk.builderCtx().takePending())
@@ -131,7 +131,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 					stateGet->defaultValue = StorageMapper::makeDefaultValue(appState->wtype, m_loc);
 					aliasExpr = stateGet;
 				}
-				m_blk.builderCtx().storageAliases[decl.id()] = aliasExpr;
+				m_blk.builderCtx().setStorageAlias(decl.id(), aliasExpr);
 				for (auto& p: m_blk.builderCtx().takePrePending())
 					result.push_back(std::move(p));
 				for (auto& p: m_blk.builderCtx().takePending())

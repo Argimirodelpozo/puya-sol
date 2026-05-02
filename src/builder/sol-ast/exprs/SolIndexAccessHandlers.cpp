@@ -147,10 +147,10 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 		// the local's name, or writes land under the wrong key.
 		if (auto const* decl = ident->annotation().referencedDeclaration)
 		{
-			auto aliasIt = m_ctx.storageAliases.find(decl->id());
-			if (aliasIt != m_ctx.storageAliases.end())
+			auto aliasShared = m_ctx.findStorageAlias(decl->id());
+			if (aliasShared)
 			{
-				auto const* expr = aliasIt->second.get();
+				auto const* expr = aliasShared.get();
 				// Unwrap StateGet → underlying state expression
 				if (auto const* sg = dynamic_cast<awst::StateGet const*>(expr))
 					expr = sg->field.get();

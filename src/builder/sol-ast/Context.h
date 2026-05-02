@@ -67,6 +67,14 @@ public:
 		return m_parent && m_parent->isUnchecked();
 	}
 
+	/// Storage-pointer alias: `mapping(K=>V) storage m = m1; ...; m[k]`
+	/// resolves `m` to the same expression as `m1`. Returns nullptr if no
+	/// alias is bound for this decl in any enclosing block.
+	virtual std::shared_ptr<awst::Expression> findStorageAlias(int64_t _declId) const
+	{
+		return m_parent ? m_parent->findStorageAlias(_declId) : nullptr;
+	}
+
 protected:
 	explicit Context(Context* _parent): m_parent(_parent) {}
 
@@ -163,9 +171,20 @@ struct BlockContext: Context
 	/// `isUnchecked()`, which walks the chain.
 	bool unchecked = false;
 
+	/// Storage-pointer aliases bound in this block's lexical scope.
+	std::map<int64_t, std::shared_ptr<awst::Expression>> storageAliases;
+
 	bool isUnchecked() const override
 	{
 		return unchecked || (m_parent && m_parent->isUnchecked());
+	}
+
+	std::shared_ptr<awst::Expression> findStorageAlias(int64_t _declId) const override
+	{
+		auto it = storageAliases.find(_declId);
+		if (it != storageAliases.end())
+			return it->second;
+		return m_parent ? m_parent->findStorageAlias(_declId) : nullptr;
 	}
 
 	BlockContext(
