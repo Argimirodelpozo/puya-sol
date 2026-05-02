@@ -154,7 +154,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 					&& decl.type()->category() == solidity::frontend::Type::Category::Mapping;
 				if (isMappingPtr && value->wtype == awst::WType::bytesType())
 				{
-					m_blk.builderCtx().mappingKeyParams[decl.id()] = decl.name();
+					m_blk.builderCtx().setMappingKeyParam(decl.id(), decl.name());
 					// Emit `m = f()` as a plain bytes assignment so `m` holds the
 					// mapping holder name at runtime; subsequent reassignments
 					// (`m = otherMapping`) update which mapping `m` points to.

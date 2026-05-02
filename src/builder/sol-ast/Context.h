@@ -112,6 +112,23 @@ public:
 		return m_parent ? m_parent->findSlotStorageRef(_declId) : nullptr;
 	}
 
+	/// True if the enclosing function is a constructor body. Constructor-only
+	/// behaviour (e.g. immutable writes via direct app-global init) gates on
+	/// this flag.
+	virtual bool isInConstructor() const
+	{
+		return m_parent && m_parent->isInConstructor();
+	}
+
+	/// Mapping-storage-pointer parameter: function-scoped binding from a
+	/// param/return decl ID to its name (used as the box-key prefix at
+	/// runtime). Returns empty string if the decl isn't a mapping-storage
+	/// param in any enclosing function.
+	virtual std::string findMappingKeyParam(int64_t _declId) const
+	{
+		return m_parent ? m_parent->findMappingKeyParam(_declId) : std::string{};
+	}
+
 protected:
 	explicit Context(Context* _parent): m_parent(_parent) {}
 
@@ -166,6 +183,15 @@ struct FunctionContext: Context
 	awst::WType const* returnType = nullptr;
 	std::map<std::string, unsigned> paramBitWidths;
 
+	/// True iff this function is a constructor body (or is being inlined
+	/// into one). Set by ApprovalProgramBuilder around constructor inlining.
+	bool inConstructor = false;
+
+	/// Mapping-storage-pointer locals: function params (or returns) typed
+	/// `mapping(K=>V) storage` carry their name as a runtime bytes value
+	/// — `r[k]` resolves to a box-access prefixed by `r`'s holder name.
+	std::map<int64_t, std::string> mappingKeyParams;
+
 	FunctionContext(
 		TranslationContext& _tr,
 		std::vector<std::pair<std::string, awst::WType const*>> _params,
@@ -178,6 +204,16 @@ struct FunctionContext: Context
 		  returnType(_returnType),
 		  paramBitWidths(std::move(_paramBitWidths))
 	{}
+
+	bool isInConstructor() const override { return inConstructor; }
+
+	std::string findMappingKeyParam(int64_t _declId) const override
+	{
+		auto it = mappingKeyParams.find(_declId);
+		if (it != mappingKeyParams.end())
+			return it->second;
+		return m_parent ? m_parent->findMappingKeyParam(_declId) : std::string{};
+	}
 };
 
 /// Loop-level context: control-flow targets for continue inside this loop.

@@ -420,7 +420,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	for (size_t idx: mappingStorageParams)
 	{
 		auto const& param = _func.parameters()[idx];
-		exprBuilder.mappingKeyParams[param->id()] = param->name();
+		exprBuilder.setMappingKeyParam(param->id(), param->name());
 	}
 
 	sol_ast::TranslationContext tr{exprBuilder, m_typeMapper, _sourceFile};
@@ -486,7 +486,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			&& dynamic_cast<solidity::frontend::MappingType const*>(rp->type())
 			&& !rp->name().empty())
 		{
-			exprBuilder.mappingKeyParams[rp->id()] = rp->name();
+			exprBuilder.setMappingKeyParam(rp->id(), rp->name());
 		}
 	}
 

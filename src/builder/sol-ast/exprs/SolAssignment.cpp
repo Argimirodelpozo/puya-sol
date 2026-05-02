@@ -127,7 +127,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 				// the side effect (returns VoidConstant) which is fine for
 				// state-var aliases but loses runtime mutations like
 				// `r = a; r[k] = v; r = b; r[k] = v;`.
-				if (m_ctx.mappingKeyParams.count(lhsDecl->id()))
+				if (m_ctx.hasMappingKeyParam(lhsDecl->id()))
 				{
 					auto rhsExpr = buildExpr(m_assignment.rightHandSide());
 					if (rhsExpr->wtype != awst::WType::bytesType())

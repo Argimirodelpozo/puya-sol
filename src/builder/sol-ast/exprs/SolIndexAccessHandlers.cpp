@@ -233,8 +233,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 	std::string mappingKeyParam;
 	if (auto const* ident = dynamic_cast<Identifier const*>(cursor))
 		if (auto const* decl = ident->annotation().referencedDeclaration)
-			mappingKeyParam = m_ctx.mappingKeyParams.count(decl->id())
-				? m_ctx.mappingKeyParams.at(decl->id()) : "";
+			mappingKeyParam = m_ctx.hasMappingKeyParam(decl->id())
+				? m_ctx.findMappingKeyParam(decl->id()) : "";
 	if (!mappingKeyParam.empty())
 	{
 		// Dynamic prefix from function parameter (bytes value at runtime)

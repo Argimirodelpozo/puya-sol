@@ -1028,10 +1028,10 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			// Main constructor body
 			if (constructor && constructor->body().statements().size() > 0)
 			{
-				m_exprBuilder->inConstructor = true;
+				m_exprBuilder->setInConstructor(true);
 				auto ctorBody = buildBlock(constructor->body());
 				inlineModifiers(*constructor, ctorBody);
-				m_exprBuilder->inConstructor = false;
+				m_exprBuilder->setInConstructor(false);
 				for (auto& stmt: ctorBody->body)
 					postInitBody->body.push_back(std::move(stmt));
 			}
@@ -1234,10 +1234,10 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					for (auto const& [targetId, superName]: pfit->second)
 						m_exprBuilder->superTargetNames[targetId] = superName;
 			}
-			m_exprBuilder->inConstructor = true;
+			m_exprBuilder->setInConstructor(true);
 			auto ctorBody = buildBlock(constructor->body());
 			inlineModifiers(*constructor, ctorBody);
-			m_exprBuilder->inConstructor = false;
+			m_exprBuilder->setInConstructor(false);
 			m_exprBuilder->superTargetNames.clear();
 			for (auto& stmt: ctorBody->body)
 				createBlock->body.push_back(std::move(stmt));

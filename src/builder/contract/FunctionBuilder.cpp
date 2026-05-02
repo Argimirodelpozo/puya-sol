@@ -360,7 +360,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				&& dynamic_cast<solidity::frontend::MappingType const*>(rp->type())
 				&& !rp->name().empty())
 			{
-				m_exprBuilder->mappingKeyParams[rp->id()] = rp->name();
+				m_exprBuilder->setMappingKeyParam(rp->id(), rp->name());
 			}
 		}
 

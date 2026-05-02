@@ -130,6 +130,44 @@ void BuilderContext::setSlotStorageRef(
 		blk->slotStorageRefs[_declId] = std::move(_expr);
 }
 
+namespace
+{
+sol_ast::FunctionContext* nearestFunction(sol_ast::Context* _scope)
+{
+	for (auto* ctx = _scope; ctx; ctx = ctx->parent())
+		if (auto* fn = dynamic_cast<sol_ast::FunctionContext*>(ctx))
+			return fn;
+	return nullptr;
+}
+} // namespace
+
+bool BuilderContext::isInConstructor() const
+{
+	return currentScope && currentScope->isInConstructor();
+}
+
+void BuilderContext::setInConstructor(bool _flag)
+{
+	if (auto* fn = nearestFunction(currentScope))
+		fn->inConstructor = _flag;
+}
+
+std::string BuilderContext::findMappingKeyParam(int64_t _declId) const
+{
+	return currentScope ? currentScope->findMappingKeyParam(_declId) : std::string{};
+}
+
+bool BuilderContext::hasMappingKeyParam(int64_t _declId) const
+{
+	return !findMappingKeyParam(_declId).empty();
+}
+
+void BuilderContext::setMappingKeyParam(int64_t _declId, std::string _name)
+{
+	if (auto* fn = nearestFunction(currentScope))
+		fn->mappingKeyParams[_declId] = std::move(_name);
+}
+
 BuilderContext::BuilderContext(
 	TypeMapper& _typeMapper,
 	StorageMapper& _storageMapper,

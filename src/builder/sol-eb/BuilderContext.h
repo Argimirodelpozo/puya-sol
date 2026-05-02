@@ -114,8 +114,6 @@ public:
 	// ── Per-translation scope state (owned) ──
 	std::map<int64_t, ParamRemap> paramRemaps;
 	std::unordered_map<int64_t, std::string> superTargetNames;
-	std::map<int64_t, std::string> mappingKeyParams;
-	bool inConstructor = false;
 
 	/// Innermost active scope. Updated on entry to each
 	/// TranslationContext / FunctionContext / BlockContext via
@@ -188,6 +186,23 @@ public:
 
 	/// Bind a slot-based storage ref in the innermost enclosing block.
 	void setSlotStorageRef(int64_t _declId, std::shared_ptr<awst::Expression> _expr);
+
+	/// True if the innermost enclosing function is a constructor body.
+	bool isInConstructor() const;
+
+	/// Set/clear the constructor flag on the innermost enclosing function.
+	void setInConstructor(bool _flag);
+
+	/// Look up a mapping-storage-pointer param's holder name.
+	std::string findMappingKeyParam(int64_t _declId) const;
+
+	/// Returns true if the given decl is bound as a mapping-storage param
+	/// in any enclosing function. (Convenience for `count()` callers.)
+	bool hasMappingKeyParam(int64_t _declId) const;
+
+	/// Bind a mapping-storage-pointer param on the innermost enclosing
+	/// function.
+	void setMappingKeyParam(int64_t _declId, std::string _name);
 
 	/// Scratch slot for the `arr.push() = value` rewrite: SolAssignment
 	/// stashes the RHS here before the LHS build, and SolArrayMethod's
