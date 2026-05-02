@@ -621,38 +621,64 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 		{
 			if (bv->key && dynamic_cast<awst::BoxPrefixedKeyExpression const*>(bv->key.get()))
 			{
-				uint64_t totalSize = 0;
-				if (bv->wtype)
+				// Static array of dynamic-content elements: a zero-filled
+				// box_create yields invalid ARC4 (head offsets all zero).
+				// Pre-populate with the proper default encoding so subsequent
+				// element splices have a valid head/tail layout to work with.
+				bool dynamicArc4 = false;
+				if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(bv->wtype))
+					dynamicArc4 = TypeCoercion::arc4IsDynamic(sa);
+				if (dynamicArc4)
 				{
-					if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(bv->wtype))
+					if (auto enc = TypeCoercion::arc4DefaultEncoding(bv->wtype))
 					{
-						uint64_t elemSize = 32;
-						if (auto const* elemT = sa->elementType())
+						if (enc->size() > 0 && enc->size() <= 32768)
 						{
-							if (auto const* uintN = dynamic_cast<awst::ARC4UIntN const*>(elemT))
-								elemSize = std::max<uint64_t>(1u, static_cast<uint64_t>(uintN->n() / 8));
-							else if (auto const* bw = dynamic_cast<awst::BytesWType const*>(elemT))
-								if (bw->length().has_value())
-									elemSize = *bw->length();
+							auto putCall = awst::makeIntrinsicCall(
+								"box_put", awst::WType::voidType(), m_loc);
+							putCall->stackArgs.push_back(bv->key);
+							putCall->stackArgs.push_back(awst::makeBytesConstant(
+								std::move(*enc), m_loc));
+							auto putStmt = awst::makeExpressionStatement(std::move(putCall), m_loc);
+							m_ctx.prePendingStatements.push_back(std::move(putStmt));
 						}
-						if (sa->arraySize() > 0)
-							totalSize = elemSize * static_cast<uint64_t>(sa->arraySize());
-					}
-					else if (auto const* bw = dynamic_cast<awst::BytesWType const*>(bv->wtype))
-					{
-						if (bw->length().has_value() && *bw->length() > 0)
-							totalSize = static_cast<uint64_t>(*bw->length());
 					}
 				}
-				if (totalSize > 0 && totalSize <= 32768)
+				else
 				{
-					auto createCall = awst::makeIntrinsicCall(
-						"box_create", awst::WType::boolType(), m_loc);
-					createCall->stackArgs.push_back(bv->key);
-					createCall->stackArgs.push_back(
-						awst::makeIntegerConstant(std::to_string(totalSize), m_loc));
-					auto createStmt = awst::makeExpressionStatement(std::move(createCall), m_loc);
-					m_ctx.prePendingStatements.push_back(std::move(createStmt));
+					uint64_t totalSize = 0;
+					if (bv->wtype)
+					{
+						if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(bv->wtype))
+						{
+							uint64_t elemSize = 32;
+							if (auto const* elemT = sa->elementType())
+							{
+								if (auto const* uintN = dynamic_cast<awst::ARC4UIntN const*>(elemT))
+									elemSize = std::max<uint64_t>(1u, static_cast<uint64_t>(uintN->n() / 8));
+								else if (auto const* bw = dynamic_cast<awst::BytesWType const*>(elemT))
+									if (bw->length().has_value())
+										elemSize = *bw->length();
+							}
+							if (sa->arraySize() > 0)
+								totalSize = elemSize * static_cast<uint64_t>(sa->arraySize());
+						}
+						else if (auto const* bw = dynamic_cast<awst::BytesWType const*>(bv->wtype))
+						{
+							if (bw->length().has_value() && *bw->length() > 0)
+								totalSize = static_cast<uint64_t>(*bw->length());
+						}
+					}
+					if (totalSize > 0 && totalSize <= 32768)
+					{
+						auto createCall = awst::makeIntrinsicCall(
+							"box_create", awst::WType::boolType(), m_loc);
+						createCall->stackArgs.push_back(bv->key);
+						createCall->stackArgs.push_back(
+							awst::makeIntegerConstant(std::to_string(totalSize), m_loc));
+						auto createStmt = awst::makeExpressionStatement(std::move(createCall), m_loc);
+						m_ctx.prePendingStatements.push_back(std::move(createStmt));
+					}
 				}
 			}
 		}

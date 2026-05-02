@@ -401,6 +401,163 @@ std::shared_ptr<awst::Expression> TypeCoercion::prependArc4LengthHeader(
 	return convert;
 }
 
+bool TypeCoercion::arc4IsDynamic(awst::WType const* _type)
+{
+	if (!_type)
+		return false;
+	switch (_type->kind())
+	{
+	case awst::WTypeKind::ARC4DynamicArray:
+		return true;
+	case awst::WTypeKind::ARC4StaticArray:
+	{
+		auto const* arr = static_cast<awst::ARC4StaticArray const*>(_type);
+		return arc4IsDynamic(arr->elementType());
+	}
+	case awst::WTypeKind::ARC4Struct:
+	{
+		auto const* st = static_cast<awst::ARC4Struct const*>(_type);
+		for (auto const& [name, ft]: st->fields())
+			if (arc4IsDynamic(ft))
+				return true;
+		return false;
+	}
+	case awst::WTypeKind::ARC4Tuple:
+	{
+		auto const* tu = static_cast<awst::ARC4Tuple const*>(_type);
+		for (auto const* ft: tu->types())
+			if (arc4IsDynamic(ft))
+				return true;
+		return false;
+	}
+	case awst::WTypeKind::Bytes:
+	{
+		auto const* bw = static_cast<awst::BytesWType const*>(_type);
+		return !bw->length().has_value();
+	}
+	default:
+		return false;
+	}
+}
+
+std::optional<std::vector<uint8_t>> TypeCoercion::arc4DefaultEncoding(
+	awst::WType const* _type
+)
+{
+	if (!_type)
+		return std::nullopt;
+	switch (_type->kind())
+	{
+	case awst::WTypeKind::ARC4UIntN:
+	{
+		auto const* u = static_cast<awst::ARC4UIntN const*>(_type);
+		return std::vector<uint8_t>(static_cast<size_t>(u->n() / 8), 0);
+	}
+	case awst::WTypeKind::ARC4UFixedNxM:
+	{
+		auto const* u = static_cast<awst::ARC4UFixedNxM const*>(_type);
+		return std::vector<uint8_t>(static_cast<size_t>(u->n() / 8), 0);
+	}
+	case awst::WTypeKind::ARC4DynamicArray:
+		return std::vector<uint8_t>{0, 0};
+	case awst::WTypeKind::ARC4StaticArray:
+	{
+		auto const* arr = static_cast<awst::ARC4StaticArray const*>(_type);
+		auto const* elemT = arr->elementType();
+		auto N = static_cast<int64_t>(arr->arraySize());
+		if (N < 0)
+			return std::nullopt;
+		auto elemDefault = arc4DefaultEncoding(elemT);
+		if (!elemDefault)
+			return std::nullopt;
+
+		std::vector<uint8_t> result;
+		if (arc4IsDynamic(elemT))
+		{
+			int64_t headSize = N * 2;
+			int64_t tailSize = static_cast<int64_t>(elemDefault->size());
+			result.reserve(static_cast<size_t>(headSize + N * tailSize));
+			for (int64_t i = 0; i < N; ++i)
+			{
+				int64_t off = headSize + i * tailSize;
+				result.push_back(static_cast<uint8_t>((off >> 8) & 0xFF));
+				result.push_back(static_cast<uint8_t>(off & 0xFF));
+			}
+			for (int64_t i = 0; i < N; ++i)
+				result.insert(result.end(), elemDefault->begin(), elemDefault->end());
+		}
+		else
+		{
+			result.reserve(static_cast<size_t>(N * static_cast<int64_t>(elemDefault->size())));
+			for (int64_t i = 0; i < N; ++i)
+				result.insert(result.end(), elemDefault->begin(), elemDefault->end());
+		}
+		return result;
+	}
+	case awst::WTypeKind::ARC4Struct:
+	{
+		auto const* st = static_cast<awst::ARC4Struct const*>(_type);
+		// Pre-compute each field's default and total head size so dynamic
+		// field offsets can be embedded.
+		struct FieldEnc { bool dynamic; std::vector<uint8_t> bytes; };
+		std::vector<FieldEnc> encs;
+		encs.reserve(st->fields().size());
+		int64_t headSize = 0;
+		for (auto const& [name, ft]: st->fields())
+		{
+			auto fd = arc4DefaultEncoding(ft);
+			if (!fd)
+				return std::nullopt;
+			bool dyn = arc4IsDynamic(ft);
+			headSize += dyn ? 2 : static_cast<int64_t>(fd->size());
+			encs.push_back({dyn, std::move(*fd)});
+		}
+
+		std::vector<uint8_t> head;
+		std::vector<uint8_t> tail;
+		head.reserve(static_cast<size_t>(headSize));
+		int64_t tailOff = headSize;
+		for (auto const& fe: encs)
+		{
+			if (fe.dynamic)
+			{
+				head.push_back(static_cast<uint8_t>((tailOff >> 8) & 0xFF));
+				head.push_back(static_cast<uint8_t>(tailOff & 0xFF));
+				tail.insert(tail.end(), fe.bytes.begin(), fe.bytes.end());
+				tailOff += static_cast<int64_t>(fe.bytes.size());
+			}
+			else
+			{
+				head.insert(head.end(), fe.bytes.begin(), fe.bytes.end());
+			}
+		}
+		head.insert(head.end(), tail.begin(), tail.end());
+		return head;
+	}
+	case awst::WTypeKind::Bytes:
+	{
+		auto const* bw = static_cast<awst::BytesWType const*>(_type);
+		if (bw->length().has_value())
+			return std::vector<uint8_t>(static_cast<size_t>(*bw->length()), 0);
+		return std::vector<uint8_t>{0, 0};
+	}
+	case awst::WTypeKind::Basic:
+	{
+		if (_type == awst::WType::biguintType())
+			return std::vector<uint8_t>(32, 0);
+		if (_type == awst::WType::uint64Type())
+			return std::vector<uint8_t>(8, 0);
+		if (_type == awst::WType::boolType())
+			return std::vector<uint8_t>{0};
+		if (_type == awst::WType::accountType())
+			return std::vector<uint8_t>(32, 0);
+		return std::nullopt;
+	}
+	default:
+		return std::nullopt;
+	}
+}
+
 int TypeCoercion::computeEncodedElementSize(awst::WType const* _type)
 {
 	if (!_type)

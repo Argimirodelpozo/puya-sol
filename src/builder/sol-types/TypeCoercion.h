@@ -11,7 +11,9 @@
 #include "awst/Node.h"
 
 #include <memory>
+#include <optional>
 #include <string>
+#include <vector>
 
 namespace puyasol::builder
 {
@@ -96,6 +98,22 @@ public:
 	/// Compute the fixed encoded byte size of an ARC4 type.
 	/// Returns 0 for variable-length types.
 	static int computeEncodedElementSize(awst::WType const* _type);
+
+	/// True if the ARC4 encoding of T contains any dynamic (variable-length)
+	/// component (DynamicArray, dynamic-length Bytes, or any container of
+	/// such). Static arrays/structs are themselves dynamic if any element/field
+	/// is dynamic.
+	static bool arc4IsDynamic(awst::WType const* _type);
+
+	/// Default ARC4 encoding (the byte sequence representing the zero/empty
+	/// value of T). Returns std::nullopt for types whose default encoding is
+	/// not statically computable (e.g. Bytes with no fixed length used outside
+	/// a structured ARC4 context). Used to initialise box-stored static arrays
+	/// of dynamic-element types so that subsequent splice writes operate on a
+	/// valid ARC4 head/tail layout instead of all-zero garbage.
+	static std::optional<std::vector<uint8_t>> arc4DefaultEncoding(
+		awst::WType const* _type
+	);
 
 private:
 	/// Emit `bzero(_n)` wrapped in a ReinterpretCast to _targetType so the

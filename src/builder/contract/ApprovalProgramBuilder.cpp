@@ -867,6 +867,12 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				// elementSize*N for fixed-size ARC4 static arrays (e.g. uint[20]).
 				unsigned boxSizeVal = 2; // ARC4 dynamic array length header
 				std::shared_ptr<awst::Expression> boxInitVal;
+				// For ARC4StaticArray<dynamic T> a zero-filled buffer is not a
+				// valid ARC4 encoding (head offsets must point past the head),
+				// so we synthesise the default encoding here and emit a
+				// `box_put` instead of `box_create`. dynArc4Default holds the
+				// computed bytes when applicable.
+				std::optional<std::vector<uint8_t>> dynArc4Default;
 				{
 					auto const& lin = _contract.annotation().linearizedBaseContracts;
 					for (auto const* base: lin)
@@ -883,6 +889,12 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 								auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(varWtype);
 								if (sa && sa->arraySize() > 0)
 								{
+									if (TypeCoercion::arc4IsDynamic(sa))
+									{
+										if (auto enc = TypeCoercion::arc4DefaultEncoding(sa))
+											if (enc->size() > 0 && enc->size() <= 32768)
+												dynArc4Default = std::move(*enc);
+									}
 									uint64_t elemSize = 32; // default for uint256
 									auto const* elemT = sa->elementType();
 									if (elemT)
@@ -926,24 +938,39 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 							}
 						}
 				}
-				auto boxSize = awst::makeIntegerConstant(std::to_string(boxSizeVal), method.sourceLocation);
 
-				auto boxCreate = awst::makeIntrinsicCall("box_create", awst::WType::boolType(), method.sourceLocation);
-				boxCreate->stackArgs.push_back(std::move(boxKey));
-				boxCreate->stackArgs.push_back(std::move(boxSize));
-
-				auto boxStmt = awst::makeExpressionStatement(std::move(boxCreate), method.sourceLocation);
-				postInitBody->body.push_back(std::move(boxStmt));
-
-				// Write initial value for bytes vars with initializers
-				if (boxInitVal)
+				if (dynArc4Default)
 				{
-					auto putKey = awst::makeUtf8BytesConstant(varName, method.sourceLocation);
+					// box_put(key, default_encoding) — creates the box and
+					// initialises with a valid ARC4 head/tail layout in one op.
 					auto put = awst::makeIntrinsicCall("box_put", awst::WType::voidType(), method.sourceLocation);
-					put->stackArgs.push_back(std::move(putKey));
-					put->stackArgs.push_back(std::move(boxInitVal));
+					put->stackArgs.push_back(std::move(boxKey));
+					put->stackArgs.push_back(awst::makeBytesConstant(
+						std::move(*dynArc4Default), method.sourceLocation));
 					auto putStmt = awst::makeExpressionStatement(std::move(put), method.sourceLocation);
 					postInitBody->body.push_back(std::move(putStmt));
+				}
+				else
+				{
+					auto boxSize = awst::makeIntegerConstant(std::to_string(boxSizeVal), method.sourceLocation);
+
+					auto boxCreate = awst::makeIntrinsicCall("box_create", awst::WType::boolType(), method.sourceLocation);
+					boxCreate->stackArgs.push_back(std::move(boxKey));
+					boxCreate->stackArgs.push_back(std::move(boxSize));
+
+					auto boxStmt = awst::makeExpressionStatement(std::move(boxCreate), method.sourceLocation);
+					postInitBody->body.push_back(std::move(boxStmt));
+
+					// Write initial value for bytes vars with initializers
+					if (boxInitVal)
+					{
+						auto putKey = awst::makeUtf8BytesConstant(varName, method.sourceLocation);
+						auto put = awst::makeIntrinsicCall("box_put", awst::WType::voidType(), method.sourceLocation);
+						put->stackArgs.push_back(std::move(putKey));
+						put->stackArgs.push_back(std::move(boxInitVal));
+						auto putStmt = awst::makeExpressionStatement(std::move(put), method.sourceLocation);
+						postInitBody->body.push_back(std::move(putStmt));
+					}
 				}
 			}
 
