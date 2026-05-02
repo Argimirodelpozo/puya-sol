@@ -678,5 +678,127 @@ void AssemblyBuilder::handleIdentityPrecompileRT(
 	assignMemoryVar(std::move(replace), _loc, _out);
 }
 
+void AssemblyBuilder::handleModExpRT(
+	std::shared_ptr<awst::Expression> _inputOffset,
+	std::shared_ptr<awst::Expression> /*_inputSize*/,
+	std::shared_ptr<awst::Expression> _outputOffset,
+	std::shared_ptr<awst::Expression> /*_outputSize*/,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	// EIP-198 layout (Bsize=Esize=Msize=32 — the only shape we currently
+	// emit on the AVM side; same constraint as the constant variant). Slots:
+	//   +0x00 Bsize, +0x20 Esize, +0x40 Msize, +0x60 base, +0x80 exp,
+	//   +0xa0 mod. Output: 1 slot at outputOffset.
+	using O = awst::UInt64BinaryOperator;
+
+	// Bind input offset to a local so we don't reduplicate the expression
+	// for each slot read.
+	std::string inOffVar = "__modexp_in_off";
+	m_locals[inOffVar] = awst::WType::uint64Type();
+	_out.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(inOffVar, awst::WType::uint64Type(), _loc),
+		offsetToUint64(std::move(_inputOffset), _loc), _loc));
+
+	auto baseOff = [&]() {
+		return awst::makeVarExpression(inOffVar, awst::WType::uint64Type(), _loc);
+	};
+	auto plusConst = [&](std::shared_ptr<awst::Expression> b, uint64_t k)
+		-> std::shared_ptr<awst::Expression>
+	{
+		if (k == 0) return b;
+		return std::shared_ptr<awst::Expression>(awst::makeUInt64BinOp(
+			std::move(b), O::Add,
+			awst::makeIntegerConstant(std::to_string(k), _loc), _loc));
+	};
+	auto readSlot = [&](uint64_t slotOff) -> std::shared_ptr<awst::Expression>
+	{
+		auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
+		extract->stackArgs.push_back(memoryVar(_loc));
+		extract->stackArgs.push_back(plusConst(baseOff(), slotOff));
+		extract->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
+		return awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
+	};
+
+	auto base = readSlot(0x60);
+	auto exp = readSlot(0x80);
+	auto mod = readSlot(0xa0);
+
+	// Square-and-multiply (mirrors handleModExp's loop):
+	//   result = 1; base = base % mod
+	//   while exp > 0:
+	//       if exp & 1: result = (result * base) % mod
+	//       exp = exp / 2
+	//       base = (base * base) % mod
+	std::string resultVar = "__modexp_result";
+	std::string baseVar = "__modexp_base";
+	std::string expVar = "__modexp_exp";
+	std::string modVar = "__modexp_mod";
+	m_locals[resultVar] = awst::WType::biguintType();
+	m_locals[baseVar] = awst::WType::biguintType();
+	m_locals[expVar] = awst::WType::biguintType();
+	m_locals[modVar] = awst::WType::biguintType();
+
+	auto makeVar = [&](std::string const& n) {
+		return awst::makeVarExpression(n, awst::WType::biguintType(), _loc);
+	};
+	auto makeConst = [&](std::string const& v) {
+		return awst::makeIntegerConstant(v, _loc, awst::WType::biguintType());
+	};
+	auto makeAssign = [&](std::string const& t, std::shared_ptr<awst::Expression> v) {
+		return awst::makeAssignmentStatement(makeVar(t), std::move(v), _loc);
+	};
+
+	_out.push_back(makeAssign(modVar, std::move(mod)));
+	_out.push_back(makeAssign(resultVar, makeConst("1")));
+	_out.push_back(makeAssign(baseVar,
+		makeBigUIntBinOp(std::move(base), awst::BigUIntBinaryOperator::Mod, makeVar(modVar), _loc)
+	));
+	_out.push_back(makeAssign(expVar, std::move(exp)));
+
+	auto loop = std::make_shared<awst::WhileLoop>();
+	loop->sourceLocation = _loc;
+	loop->condition = awst::makeNumericCompare(makeVar(expVar), awst::NumericComparison::Gt, makeConst("0"), _loc);
+
+	auto body = std::make_shared<awst::Block>();
+	body->sourceLocation = _loc;
+
+	{
+		auto expAnd1 = makeBigUIntBinOp(
+			makeVar(expVar), awst::BigUIntBinaryOperator::BitAnd, makeConst("1"), _loc);
+		auto isOdd = awst::makeNumericCompare(std::move(expAnd1), awst::NumericComparison::Ne, makeConst("0"), _loc);
+		auto product = makeBigUIntBinOp(
+			makeVar(resultVar), awst::BigUIntBinaryOperator::Mult, makeVar(baseVar), _loc);
+		auto modResult = makeBigUIntBinOp(
+			std::move(product), awst::BigUIntBinaryOperator::Mod, makeVar(modVar), _loc);
+		auto ifBlock = std::make_shared<awst::Block>();
+		ifBlock->sourceLocation = _loc;
+		ifBlock->body.push_back(makeAssign(resultVar, std::move(modResult)));
+		auto ifStmt = std::make_shared<awst::IfElse>();
+		ifStmt->sourceLocation = _loc;
+		ifStmt->condition = std::move(isOdd);
+		ifStmt->ifBranch = std::move(ifBlock);
+		body->body.push_back(std::move(ifStmt));
+	}
+
+	body->body.push_back(makeAssign(expVar,
+		makeBigUIntBinOp(makeVar(expVar), awst::BigUIntBinaryOperator::FloorDiv, makeConst("2"), _loc)
+	));
+
+	{
+		auto squared = makeBigUIntBinOp(
+			makeVar(baseVar), awst::BigUIntBinaryOperator::Mult, makeVar(baseVar), _loc);
+		auto modSquared = makeBigUIntBinOp(
+			std::move(squared), awst::BigUIntBinaryOperator::Mod, makeVar(modVar), _loc);
+		body->body.push_back(makeAssign(baseVar, std::move(modSquared)));
+	}
+
+	loop->loopBody = std::move(body);
+	_out.push_back(std::move(loop));
+
+	storeResultToMemoryRT(makeVar(resultVar), std::move(_outputOffset), 1, _loc, _out);
+}
+
 
 } // namespace puyasol::builder

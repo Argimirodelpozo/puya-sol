@@ -457,6 +457,14 @@ private:
 		awst::SourceLocation const& _loc,
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
+	void handleModExpRT(
+		std::shared_ptr<awst::Expression> _inputOffset,
+		std::shared_ptr<awst::Expression> _inputSize,
+		std::shared_ptr<awst::Expression> _outputOffset,
+		std::shared_ptr<awst::Expression> _outputSize,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
 
 	// ── Memory blob helpers ──────────────────────────────────────────
 

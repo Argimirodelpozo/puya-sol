@@ -73,6 +73,11 @@ void AssemblyBuilder::handlePrecompileCall(
 			handleIdentityPrecompileRT(inOffExpr, inSizeExpr, outOffExpr, outSizeExpr, _loc, _out);
 			rtDispatched = true;
 			break;
+		case 5:
+			Logger::instance().debug("precompile 0x05: ModExp (runtime offsets)", _loc);
+			handleModExpRT(inOffExpr, inSizeExpr, outOffExpr, outSizeExpr, _loc, _out);
+			rtDispatched = true;
+			break;
 		case 6:
 			Logger::instance().debug("precompile 0x06: ecAdd (runtime offsets)", _loc);
 			handleEcAddRT(inOffExpr, outOffExpr, _loc, _out);
