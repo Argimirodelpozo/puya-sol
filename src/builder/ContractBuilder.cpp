@@ -79,6 +79,13 @@ std::shared_ptr<awst::Block> ContractBuilder::buildBlock(
 		if (rp && !rp->name().empty())
 			m_exprBuilder->resolveVarName(rp->name(), rp->id());
 
+	// Register mapping-storage-ref params on the FunctionContext so that
+	// `m[k]` inside the body resolves the dynamic box-key prefix at
+	// runtime. Same scope-push ordering constraint as the named returns.
+	for (auto const* mp: m_currentMappingKeyParams)
+		if (mp && !mp->name().empty())
+			m_exprBuilder->setMappingKeyParam(mp->id(), mp->name());
+
 	return sol_ast::buildBlock(blk, _block);
 }
 
@@ -219,6 +226,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	m_currentBitWidths.clear();
 	m_currentPlaceholder.reset();
 	m_currentNamedReturns.clear();
+	m_currentMappingKeyParams.clear();
 
 	m_exprBuilder->transientStorage =
 		m_transientStorage.hasTransientVars() ? &m_transientStorage : nullptr;

@@ -81,6 +81,7 @@ private:
 	std::map<std::string, unsigned> m_currentBitWidths;
 	std::shared_ptr<awst::Block> m_currentPlaceholder;
 	std::vector<solidity::frontend::VariableDeclaration const*> m_currentNamedReturns;
+	std::vector<solidity::frontend::VariableDeclaration const*> m_currentMappingKeyParams;
 
 	/// Build a function body block with function context set.
 	std::shared_ptr<awst::Block> buildBlock(
@@ -103,6 +104,16 @@ private:
 	)
 	{
 		m_currentNamedReturns = _namedReturns;
+	}
+
+	/// Set the mapping-storage-ref param decls for the current function.
+	/// `buildBlock` registers them on the function-body FunctionContext so
+	/// SolIndexAccess can build dynamic box-key prefixes at runtime.
+	void setMappingKeyParams(
+		std::vector<solidity::frontend::VariableDeclaration const*> const& _params
+	)
+	{
+		m_currentMappingKeyParams = _params;
 	}
 
 	/// Emit Solidity's non-payable check at method body entry:

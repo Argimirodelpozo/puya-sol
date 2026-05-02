@@ -415,18 +415,20 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		EMPTY_OVERLOAD_NAMES, m_freeFunctionById
 	);
 
+	sol_ast::TranslationContext tr{exprBuilder, m_typeMapper, _sourceFile};
+	auto trGuard = exprBuilder.pushScopeRaii(&tr);
+	sol_ast::FunctionContext fnCtx{tr, {}, sub->returnType, {}};
+	auto fnGuard = exprBuilder.pushScopeRaii(&fnCtx);
+
 	// Register mapping-storage-ref params so SolIndexAccess can build dynamic
-	// box-key prefixes at runtime.
+	// box-key prefixes at runtime. Must happen *after* the FunctionContext
+	// is pushed — `setMappingKeyParam` writes into the innermost enclosing
+	// FunctionContext via `nearestFunction(currentScope)`.
 	for (size_t idx: mappingStorageParams)
 	{
 		auto const& param = _func.parameters()[idx];
 		exprBuilder.setMappingKeyParam(param->id(), param->name());
 	}
-
-	sol_ast::TranslationContext tr{exprBuilder, m_typeMapper, _sourceFile};
-	auto trGuard = exprBuilder.pushScopeRaii(&tr);
-	sol_ast::FunctionContext fnCtx{tr, {}, sub->returnType, {}};
-	auto fnGuard = exprBuilder.pushScopeRaii(&fnCtx);
 
 	// Param + return-param context for inline assembly + sub-word integer truncation.
 	{

@@ -353,16 +353,19 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// Register mapping-storage-ref return params as mapping-key-params:
 		// `function f() returns (mapping(K=>V) storage r)` — `r` is a local
 		// pointer; r[k] resolves to box access prefixed by `r`'s runtime
-		// bytes value (the holder name).
+		// bytes value (the holder name). The actual `setMappingKeyParam`
+		// calls happen inside `buildBlock` after the FunctionContext is
+		// pushed — stash the decls in `m_currentMappingKeyParams` for it
+		// to pick up. (Match the v185 behaviour: only return-params are
+		// registered here; input params for library functions are handled
+		// by AWSTBuilder's freestanding-subroutine path.)
+		std::vector<solidity::frontend::VariableDeclaration const*> mappingKeyParamDecls;
 		for (auto const& rp: returnParams)
-		{
 			if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 				&& dynamic_cast<solidity::frontend::MappingType const*>(rp->type())
 				&& !rp->name().empty())
-			{
-				m_exprBuilder->setMappingKeyParam(rp->id(), rp->name());
-			}
-		}
+				mappingKeyParamDecls.push_back(rp.get());
+		setMappingKeyParams(mappingKeyParamDecls);
 
 		method.body = buildBlock(_func.body());
 
