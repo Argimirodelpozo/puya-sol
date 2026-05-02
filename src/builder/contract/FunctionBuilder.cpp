@@ -340,10 +340,15 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			setFunctionContext(paramContext, method.returnType, bitWidths);
 		}
 
-		// Register named return variable names so inner scoping detects shadowing
+		// Register named return variable names so inner scoping detects
+		// shadowing. The actual `resolveVarName` calls happen inside
+		// `buildBlock` after the function-body BlockContext is pushed —
+		// stash the decls in `m_currentNamedReturns` for it to pick up.
+		std::vector<solidity::frontend::VariableDeclaration const*> namedReturnDecls;
 		for (auto const& rp: returnParams)
 			if (!rp->name().empty())
-				m_exprBuilder->resolveVarName(rp->name(), rp->id());
+				namedReturnDecls.push_back(rp.get());
+		setNamedReturns(namedReturnDecls);
 
 		// Register mapping-storage-ref return params as mapping-key-params:
 		// `function f() returns (mapping(K=>V) storage r)` — `r` is a local

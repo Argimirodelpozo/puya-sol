@@ -80,6 +80,7 @@ private:
 	awst::WType const* m_currentReturnType = nullptr;
 	std::map<std::string, unsigned> m_currentBitWidths;
 	std::shared_ptr<awst::Block> m_currentPlaceholder;
+	std::vector<solidity::frontend::VariableDeclaration const*> m_currentNamedReturns;
 
 	/// Build a function body block with function context set.
 	std::shared_ptr<awst::Block> buildBlock(
@@ -93,6 +94,16 @@ private:
 
 	/// Set/clear placeholder body for modifier inlining.
 	void setPlaceholderBody(std::shared_ptr<awst::Block> _body);
+
+	/// Set the named-return parameter decls for the current function.
+	/// `buildBlock` registers them in the function-body BlockContext so
+	/// inner declarations with the same name get shadow-renamed.
+	void setNamedReturns(
+		std::vector<solidity::frontend::VariableDeclaration const*> const& _namedReturns
+	)
+	{
+		m_currentNamedReturns = _namedReturns;
+	}
 
 	/// Emit Solidity's non-payable check at method body entry:
 	///   assert((GroupIndex > 0 ? gtxns(GroupIndex-1).Amount : 0) == 0,

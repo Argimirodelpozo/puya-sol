@@ -70,6 +70,15 @@ std::shared_ptr<awst::Block> ContractBuilder::buildBlock(
 		? sol_ast::BlockContext::top(fn).withPlaceholder(m_currentPlaceholder)
 		: sol_ast::BlockContext::top(fn);
 	auto blkGuard = m_exprBuilder->pushScopeRaii(&blk);
+
+	// Register named return parameters so inner-block declarations of the
+	// same name get the unique-name shadow rename. Must happen *after* the
+	// BlockContext is pushed — `resolveVarName` writes into the innermost
+	// enclosing block via `nearestBlock(currentScope)`.
+	for (auto const* rp: m_currentNamedReturns)
+		if (rp && !rp->name().empty())
+			m_exprBuilder->resolveVarName(rp->name(), rp->id());
+
 	return sol_ast::buildBlock(blk, _block);
 }
 
@@ -209,6 +218,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	m_currentReturnType = nullptr;
 	m_currentBitWidths.clear();
 	m_currentPlaceholder.reset();
+	m_currentNamedReturns.clear();
 
 	m_exprBuilder->transientStorage =
 		m_transientStorage.hasTransientVars() ? &m_transientStorage : nullptr;
