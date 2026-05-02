@@ -167,7 +167,7 @@ protected:
 /// scope mappings); future cleanup can flatten more of that down here.
 struct TranslationContext: Context
 {
-	eb::ContractContext& exprBuilder;
+	eb::ContractContext& contractCtx;
 	TypeMapper& typeMapper;
 	std::string sourceFile;
 
@@ -185,12 +185,12 @@ struct TranslationContext: Context
 	std::unordered_map<int64_t, std::string> superTargetNames;
 
 	TranslationContext(
-		eb::ContractContext& _exprBuilder,
+		eb::ContractContext& _contractCtx,
 		TypeMapper& _typeMapper,
 		std::string _sourceFile
 	)
 		: Context(nullptr),
-		  exprBuilder(_exprBuilder),
+		  contractCtx(_contractCtx),
 		  typeMapper(_typeMapper),
 		  sourceFile(std::move(_sourceFile))
 	{}
@@ -408,7 +408,7 @@ struct BlockContext: Context
 
 	// ── Convenience accessors (bridge to underlying ContractContext) ──
 
-	eb::ContractContext& builderCtx() const { return fn.tr.exprBuilder; }
+	eb::ContractContext& builderCtx() const { return fn.tr.contractCtx; }
 	TypeMapper& typeMapper() const { return fn.tr.typeMapper; }
 	std::string const& sourceFile() const { return fn.tr.sourceFile; }
 	awst::SourceLocation makeLoc(solidity::langutil::SourceLocation const& _sl) const
