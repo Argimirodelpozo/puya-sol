@@ -20,7 +20,7 @@ using namespace solidity::frontend;
 using Token = solidity::frontend::Token;
 
 SolUnaryOperation::SolUnaryOperation(
-	eb::BuilderContext& _ctx, UnaryOperation const& _node)
+	eb::ContractContext& _ctx, UnaryOperation const& _node)
 	: SolExpression(_ctx, _node), m_unaryOp(_node)
 {
 }

@@ -15,7 +15,7 @@ namespace puyasol::builder::eb
 class GenericResultBuilder: public InstanceBuilder
 {
 public:
-	GenericResultBuilder(BuilderContext& _ctx, std::shared_ptr<awst::Expression> _expr)
+	GenericResultBuilder(ContractContext& _ctx, std::shared_ptr<awst::Expression> _expr)
 		: InstanceBuilder(_ctx, std::move(_expr)) {}
 	solidity::frontend::Type const* solType() const override { return nullptr; }
 };

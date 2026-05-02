@@ -22,7 +22,7 @@ namespace puyasol::builder::eb
 {
 
 std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _receiver,
 	solidity::frontend::FunctionCall const& _encodeCallExpr,
 	awst::SourceLocation const& _loc)
@@ -213,7 +213,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 // ── .call(rawBytes) → inner app call with raw ApplicationArgs[0] ──
 
 std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _receiver,
 	std::shared_ptr<awst::Expression> _dataBytes,
 	awst::SourceLocation const& _loc)
@@ -321,7 +321,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 // ── .staticcall precompile routing ──
 
 std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	uint64_t _precompileAddr,
 	std::shared_ptr<awst::Expression> _inputData,
 	awst::SourceLocation const& _loc)

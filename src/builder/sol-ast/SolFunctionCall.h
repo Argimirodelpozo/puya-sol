@@ -16,7 +16,7 @@ class SolFunctionCall: public SolExpression
 {
 public:
 	SolFunctionCall(
-		eb::BuilderContext& _ctx,
+		eb::ContractContext& _ctx,
 		solidity::frontend::FunctionCall const& _call);
 
 	/// The underlying FunctionCall AST node.

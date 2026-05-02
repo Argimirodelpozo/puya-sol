@@ -11,7 +11,7 @@ namespace puyasol::builder::sol_ast
 class SolTupleExpression: public SolExpression
 {
 public:
-	SolTupleExpression(eb::BuilderContext& _ctx, solidity::frontend::TupleExpression const& _node);
+	SolTupleExpression(eb::ContractContext& _ctx, solidity::frontend::TupleExpression const& _node);
 	std::shared_ptr<awst::Expression> toAwst() override;
 
 private:

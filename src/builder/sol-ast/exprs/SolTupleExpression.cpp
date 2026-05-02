@@ -9,7 +9,7 @@ namespace puyasol::builder::sol_ast
 {
 
 SolTupleExpression::SolTupleExpression(
-	eb::BuilderContext& _ctx,
+	eb::ContractContext& _ctx,
 	solidity::frontend::TupleExpression const& _node)
 	: SolExpression(_ctx, _node), m_tuple(_node)
 {

@@ -15,7 +15,7 @@ class SolBuiltinCall: public SolFunctionCall
 {
 public:
 	SolBuiltinCall(
-		eb::BuilderContext& _ctx,
+		eb::ContractContext& _ctx,
 		solidity::frontend::FunctionCall const& _call,
 		std::string _builtinName);
 

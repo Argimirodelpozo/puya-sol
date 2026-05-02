@@ -17,7 +17,7 @@ namespace puyasol::builder::sol_ast
 using namespace solidity::frontend;
 
 SolIdentifier::SolIdentifier(
-	eb::BuilderContext& _ctx,
+	eb::ContractContext& _ctx,
 	Identifier const& _node)
 	: SolExpression(_ctx, _node), m_ident(_node)
 {

@@ -13,7 +13,7 @@ namespace puyasol::builder::sol_ast
 class SolAssignment: public SolExpression
 {
 public:
-	SolAssignment(eb::BuilderContext& _ctx, solidity::frontend::Assignment const& _node);
+	SolAssignment(eb::ContractContext& _ctx, solidity::frontend::Assignment const& _node);
 	std::shared_ptr<awst::Expression> toAwst() override;
 
 private:

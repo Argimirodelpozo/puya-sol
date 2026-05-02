@@ -12,7 +12,7 @@ namespace puyasol::builder::sol_ast
 class SolUnaryOperation: public SolExpression
 {
 public:
-	SolUnaryOperation(eb::BuilderContext& _ctx, solidity::frontend::UnaryOperation const& _node);
+	SolUnaryOperation(eb::ContractContext& _ctx, solidity::frontend::UnaryOperation const& _node);
 	std::shared_ptr<awst::Expression> toAwst() override;
 
 private:

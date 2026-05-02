@@ -1,4 +1,4 @@
-#include "builder/sol-eb/BuilderContext.h"
+#include "builder/sol-eb/ContractContext.h"
 
 #include "builder/sol-ast/Context.h"
 #include "builder/sol-ast/SolExpressionDispatch.h"
@@ -8,17 +8,17 @@
 namespace puyasol::builder::eb
 {
 
-bool BuilderContext::isUnchecked() const
+bool ContractContext::isUnchecked() const
 {
 	return currentScope && currentScope->isUnchecked();
 }
 
-std::shared_ptr<awst::Expression> BuilderContext::findStorageAlias(int64_t _declId) const
+std::shared_ptr<awst::Expression> ContractContext::findStorageAlias(int64_t _declId) const
 {
 	return currentScope ? currentScope->findStorageAlias(_declId) : nullptr;
 }
 
-void BuilderContext::setStorageAlias(
+void ContractContext::setStorageAlias(
 	int64_t _declId,
 	std::shared_ptr<awst::Expression> _expr
 )
@@ -44,7 +44,7 @@ sol_ast::BlockContext* nearestBlock(sol_ast::Context* _scope)
 }
 } // namespace
 
-std::string BuilderContext::resolveVarName(std::string const& _name, int64_t _declId)
+std::string ContractContext::resolveVarName(std::string const& _name, int64_t _declId)
 {
 	// Honour explicit remaps (used by modifier inliner when the same
 	// modifier — with its own local vars — is applied multiple times).
@@ -64,7 +64,7 @@ std::string BuilderContext::resolveVarName(std::string const& _name, int64_t _de
 	return _name;
 }
 
-std::string BuilderContext::lookupVarName(std::string const& _name, int64_t _declId) const
+std::string ContractContext::lookupVarName(std::string const& _name, int64_t _declId) const
 {
 	std::string unique = _name + "__" + std::to_string(_declId);
 	if (currentScope && currentScope->lookupVarId(unique) == _declId)
@@ -72,14 +72,14 @@ std::string BuilderContext::lookupVarName(std::string const& _name, int64_t _dec
 	return _name;
 }
 
-solidity::frontend::FunctionDefinition const* BuilderContext::findFuncPtrTarget(
+solidity::frontend::FunctionDefinition const* ContractContext::findFuncPtrTarget(
 	int64_t _declId
 ) const
 {
 	return currentScope ? currentScope->findFuncPtrTarget(_declId) : nullptr;
 }
 
-void BuilderContext::setFuncPtrTarget(
+void ContractContext::setFuncPtrTarget(
 	int64_t _declId,
 	solidity::frontend::FunctionDefinition const* _target
 )
@@ -88,7 +88,7 @@ void BuilderContext::setFuncPtrTarget(
 		blk->funcPtrTargets[_declId] = _target;
 }
 
-void BuilderContext::eraseFuncPtrTarget(int64_t _declId)
+void ContractContext::eraseFuncPtrTarget(int64_t _declId)
 {
 	for (auto* ctx = currentScope; ctx; ctx = ctx->parent())
 	{
@@ -104,23 +104,23 @@ void BuilderContext::eraseFuncPtrTarget(int64_t _declId)
 	}
 }
 
-unsigned long long BuilderContext::findConstantLocal(int64_t _declId) const
+unsigned long long ContractContext::findConstantLocal(int64_t _declId) const
 {
 	return currentScope ? currentScope->findConstantLocal(_declId) : 0ULL;
 }
 
-void BuilderContext::setConstantLocal(int64_t _declId, unsigned long long _value)
+void ContractContext::setConstantLocal(int64_t _declId, unsigned long long _value)
 {
 	if (auto* blk = nearestBlock(currentScope))
 		blk->constantLocals[_declId] = _value;
 }
 
-std::shared_ptr<awst::Expression> BuilderContext::findSlotStorageRef(int64_t _declId) const
+std::shared_ptr<awst::Expression> ContractContext::findSlotStorageRef(int64_t _declId) const
 {
 	return currentScope ? currentScope->findSlotStorageRef(_declId) : nullptr;
 }
 
-void BuilderContext::setSlotStorageRef(
+void ContractContext::setSlotStorageRef(
 	int64_t _declId,
 	std::shared_ptr<awst::Expression> _expr
 )
@@ -140,34 +140,34 @@ sol_ast::FunctionContext* nearestFunction(sol_ast::Context* _scope)
 }
 } // namespace
 
-bool BuilderContext::isInConstructor() const
+bool ContractContext::isInConstructor() const
 {
 	return currentScope && currentScope->isInConstructor();
 }
 
-void BuilderContext::setInConstructor(bool _flag)
+void ContractContext::setInConstructor(bool _flag)
 {
 	if (auto* fn = nearestFunction(currentScope))
 		fn->inConstructor = _flag;
 }
 
-std::string BuilderContext::findMappingKeyParam(int64_t _declId) const
+std::string ContractContext::findMappingKeyParam(int64_t _declId) const
 {
 	return currentScope ? currentScope->findMappingKeyParam(_declId) : std::string{};
 }
 
-bool BuilderContext::hasMappingKeyParam(int64_t _declId) const
+bool ContractContext::hasMappingKeyParam(int64_t _declId) const
 {
 	return !findMappingKeyParam(_declId).empty();
 }
 
-void BuilderContext::setMappingKeyParam(int64_t _declId, std::string _name)
+void ContractContext::setMappingKeyParam(int64_t _declId, std::string _name)
 {
 	if (auto* fn = nearestFunction(currentScope))
 		fn->mappingKeyParams[_declId] = std::move(_name);
 }
 
-sol_ast::ParamRemap const* BuilderContext::findParamRemap(int64_t _declId) const
+sol_ast::ParamRemap const* ContractContext::findParamRemap(int64_t _declId) const
 {
 	return currentScope ? currentScope->findParamRemap(_declId) : nullptr;
 }
@@ -183,7 +183,7 @@ sol_ast::TranslationContext* nearestTranslation(sol_ast::Context* _scope)
 }
 } // namespace
 
-void BuilderContext::setParamRemap(int64_t _declId, sol_ast::ParamRemap _remap)
+void ContractContext::setParamRemap(int64_t _declId, sol_ast::ParamRemap _remap)
 {
 	// Lives on TranslationContext: the remap is read from inside modifier
 	// body translation, which re-enters buildBlock with a fresh
@@ -194,24 +194,24 @@ void BuilderContext::setParamRemap(int64_t _declId, sol_ast::ParamRemap _remap)
 		tr->paramRemaps[_declId] = std::move(_remap);
 }
 
-void BuilderContext::eraseParamRemap(int64_t _declId)
+void ContractContext::eraseParamRemap(int64_t _declId)
 {
 	if (auto* tr = nearestTranslation(currentScope))
 		tr->paramRemaps.erase(_declId);
 }
 
-std::string BuilderContext::findSuperTarget(int64_t _declId) const
+std::string ContractContext::findSuperTarget(int64_t _declId) const
 {
 	return currentScope ? currentScope->findSuperTarget(_declId) : std::string{};
 }
 
-void BuilderContext::setSuperTarget(int64_t _declId, std::string _name)
+void ContractContext::setSuperTarget(int64_t _declId, std::string _name)
 {
 	if (auto* tr = nearestTranslation(currentScope))
 		tr->superTargetNames[_declId] = std::move(_name);
 }
 
-void BuilderContext::clearSuperTargets()
+void ContractContext::clearSuperTargets()
 {
 	if (auto* tr = nearestTranslation(currentScope))
 		tr->superTargetNames.clear();
@@ -221,14 +221,14 @@ namespace {
 std::unordered_map<int64_t, std::string> const kEmptySuperTargets;
 }
 
-std::unordered_map<int64_t, std::string> const& BuilderContext::allSuperTargets() const
+std::unordered_map<int64_t, std::string> const& ContractContext::allSuperTargets() const
 {
 	if (auto* tr = nearestTranslation(currentScope))
 		return tr->superTargetNames;
 	return kEmptySuperTargets;
 }
 
-BuilderContext::BuilderContext(
+ContractContext::ContractContext(
 	TypeMapper& _typeMapper,
 	StorageMapper& _storageMapper,
 	std::string const& _sourceFile,
@@ -246,7 +246,7 @@ BuilderContext::BuilderContext(
 	  freeFunctionById(_freeFunctionById),
 	  registry(std::make_unique<BuilderRegistry>())
 {
-	// Wire callbacks. Each captures `this` — BuilderContext is non-movable
+	// Wire callbacks. Each captures `this` — ContractContext is non-movable
 	// and non-copyable, so the captured pointer remains stable.
 	buildExpr = [this](solidity::frontend::Expression const& _expr) {
 		return this->build(_expr);
@@ -263,22 +263,22 @@ BuilderContext::BuilderContext(
 	};
 }
 
-BuilderContext::~BuilderContext() = default;
+ContractContext::~ContractContext() = default;
 
-std::shared_ptr<awst::Expression> BuilderContext::build(
+std::shared_ptr<awst::Expression> ContractContext::build(
 	solidity::frontend::Expression const& _expr)
 {
 	return sol_ast::buildExpression(*this, _expr);
 }
 
-std::vector<std::shared_ptr<awst::Statement>> BuilderContext::takePending()
+std::vector<std::shared_ptr<awst::Statement>> ContractContext::takePending()
 {
 	std::vector<std::shared_ptr<awst::Statement>> result;
 	result.swap(pendingStatements);
 	return result;
 }
 
-std::vector<std::shared_ptr<awst::Statement>> BuilderContext::takePrePending()
+std::vector<std::shared_ptr<awst::Statement>> ContractContext::takePrePending()
 {
 	std::vector<std::shared_ptr<awst::Statement>> result;
 	result.swap(prePendingStatements);

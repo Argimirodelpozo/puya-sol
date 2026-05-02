@@ -17,7 +17,7 @@ class SolFixedBytesBuilder: public InstanceBuilder
 {
 public:
 	SolFixedBytesBuilder(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::FixedBytesType const* _bytesType,
 		std::shared_ptr<awst::Expression> _expr);
 

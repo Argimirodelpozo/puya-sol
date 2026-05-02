@@ -2,7 +2,7 @@
 /// Migrated from InlineAssemblyBuilder.cpp.
 
 #include "builder/sol-ast/stmts/SolInlineAssembly.h"
-#include "builder/sol-eb/BuilderContext.h"
+#include "builder/sol-eb/ContractContext.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/storage/StorageLayout.h"

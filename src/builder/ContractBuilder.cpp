@@ -204,7 +204,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	}
 
 	// Create translators for this contract (with overload info)
-	m_exprBuilder = std::make_unique<eb::BuilderContext>(
+	m_exprBuilder = std::make_unique<eb::ContractContext>(
 		m_typeMapper, m_storageMapper, m_sourceFile, contractName,
 		m_libraryFunctionIds, m_overloadedNames, m_freeFunctionById
 	);

@@ -6,7 +6,7 @@ namespace puyasol::builder::sol_ast
 {
 
 SolRevert::SolRevert(
-	eb::BuilderContext& _ctx,
+	eb::ContractContext& _ctx,
 	solidity::frontend::FunctionCall const& _call)
 	: SolFunctionCall(_ctx, _call)
 {

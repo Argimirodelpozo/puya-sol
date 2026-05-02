@@ -16,7 +16,7 @@ class SolStringBuilder: public InstanceBuilder
 {
 public:
 	SolStringBuilder(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::Type const* _solType,
 		std::shared_ptr<awst::Expression> _expr)
 		: InstanceBuilder(_ctx, std::move(_expr)), m_solType(_solType)
@@ -45,7 +45,7 @@ class SolDynamicBytesBuilder: public InstanceBuilder
 {
 public:
 	SolDynamicBytesBuilder(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::Type const* _solType,
 		std::shared_ptr<awst::Expression> _expr)
 		: InstanceBuilder(_ctx, std::move(_expr)), m_solType(_solType)

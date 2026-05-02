@@ -34,7 +34,7 @@ namespace
 class SolExpressionVisitor: public SolASTVisitor<std::shared_ptr<awst::Expression>>
 {
 public:
-	explicit SolExpressionVisitor(eb::BuilderContext& _ctx): m_ctx(_ctx) {}
+	explicit SolExpressionVisitor(eb::ContractContext& _ctx): m_ctx(_ctx) {}
 
 	std::shared_ptr<awst::Expression> visitLiteral(Literal const& _n) override
 	{
@@ -161,7 +161,7 @@ public:
 	}
 
 private:
-	eb::BuilderContext& m_ctx;
+	eb::ContractContext& m_ctx;
 
 	awst::SourceLocation makeLoc(solidity::frontend::ASTNode const& _node)
 	{
@@ -181,7 +181,7 @@ private:
 } // anonymous namespace
 
 std::shared_ptr<awst::Expression> buildExpression(
-	eb::BuilderContext& _ctx,
+	eb::ContractContext& _ctx,
 	Expression const& _expr)
 {
 	SolExpressionVisitor visitor(_ctx);

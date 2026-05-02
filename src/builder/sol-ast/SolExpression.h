@@ -1,6 +1,6 @@
 #pragma once
 
-#include "builder/sol-eb/BuilderContext.h"
+#include "builder/sol-eb/ContractContext.h"
 #include "awst/Node.h"
 
 #include <libsolidity/ast/AST.h>
@@ -39,16 +39,16 @@ public:
 
 protected:
 	SolExpression(
-		eb::BuilderContext& _ctx,
+		eb::ContractContext& _ctx,
 		solidity::frontend::Expression const& _node);
 
-	eb::BuilderContext& m_ctx;
+	eb::ContractContext& m_ctx;
 	solidity::frontend::Expression const& m_node;
 	solidity::frontend::Type const* m_solType;
 	awst::WType const* m_wtype;
 	awst::SourceLocation m_loc;
 
-	/// Build a child expression (routes through BuilderContext).
+	/// Build a child expression (routes through ContractContext).
 	std::shared_ptr<awst::Expression> buildExpr(
 		solidity::frontend::Expression const& _expr)
 	{

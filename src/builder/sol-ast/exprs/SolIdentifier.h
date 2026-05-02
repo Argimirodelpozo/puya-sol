@@ -11,7 +11,7 @@ namespace puyasol::builder::sol_ast
 class SolIdentifier: public SolExpression
 {
 public:
-	SolIdentifier(eb::BuilderContext& _ctx, solidity::frontend::Identifier const& _node);
+	SolIdentifier(eb::ContractContext& _ctx, solidity::frontend::Identifier const& _node);
 	std::shared_ptr<awst::Expression> toAwst() override;
 
 private:

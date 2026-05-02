@@ -17,7 +17,7 @@ namespace puyasol::builder::eb
 class SolBoolBuilder: public InstanceBuilder
 {
 public:
-	SolBoolBuilder(BuilderContext& _ctx, std::shared_ptr<awst::Expression> _expr)
+	SolBoolBuilder(ContractContext& _ctx, std::shared_ptr<awst::Expression> _expr)
 		: InstanceBuilder(_ctx, std::move(_expr))
 	{
 	}

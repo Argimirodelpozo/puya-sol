@@ -12,7 +12,7 @@ class SolRevert: public SolFunctionCall
 {
 public:
 	SolRevert(
-		eb::BuilderContext& _ctx,
+		eb::ContractContext& _ctx,
 		solidity::frontend::FunctionCall const& _call);
 
 	std::shared_ptr<awst::Expression> toAwst() override;

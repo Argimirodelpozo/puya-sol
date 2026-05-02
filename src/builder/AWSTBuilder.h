@@ -78,7 +78,7 @@ private:
 	/// Build an awst::Subroutine root node from either a library function or a
 	/// file-level free function. The two phases share virtually identical logic;
 	/// `_libraryName` is the library this function came from (empty for free
-	/// functions) and is forwarded to the BuilderContext as the `contractName`
+	/// functions) and is forwarded to the ContractContext as the `contractName`
 	/// for member-name resolution.
 	std::shared_ptr<awst::Subroutine> buildFreestandingSubroutine(
 		solidity::frontend::FunctionDefinition const& _func,

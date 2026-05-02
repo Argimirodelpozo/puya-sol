@@ -4,7 +4,7 @@
 /// continue/break inside know which post-step / cond-break to splice.
 
 #include "builder/sol-ast/stmts/SolControlFlow.h"
-#include "builder/sol-eb/BuilderContext.h"
+#include "builder/sol-eb/ContractContext.h"
 #include "Logger.h"
 
 namespace puyasol::builder::sol_ast

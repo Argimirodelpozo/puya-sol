@@ -5,7 +5,7 @@
 ///   collectSuperCallMetadata — find every super-call target across the
 ///                              contract's linearized base hierarchy.
 ///   applySuperOverridesFor    — wire the per-caller super names into
-///                              BuilderContext before translating a body.
+///                              ContractContext before translating a body.
 ///   clearSuperOverrides       — wipe between function translations.
 ///   emitSuperSubroutines      — generate the f__super_<callerId> bodies
 ///                              once all regular methods are built.

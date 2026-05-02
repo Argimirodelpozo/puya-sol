@@ -14,7 +14,7 @@ namespace puyasol::builder::eb
 {
 
 SolIntegerBuilder::SolIntegerBuilder(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::IntegerType const* _intType,
 	std::shared_ptr<awst::Expression> _expr)
 	: InstanceBuilder(_ctx, std::move(_expr)),

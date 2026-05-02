@@ -5,7 +5,7 @@ namespace puyasol::builder::sol_ast
 {
 
 SolExpression::SolExpression(
-	eb::BuilderContext& _ctx,
+	eb::ContractContext& _ctx,
 	solidity::frontend::Expression const& _node)
 	: m_ctx(_ctx),
 	  m_node(_node),

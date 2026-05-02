@@ -8,7 +8,7 @@ namespace puyasol::builder::eb
 {
 
 std::string CallResolver::resolveMethodName(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::FunctionDefinition const& _func)
 {
 	std::string name = _func.name();
@@ -38,7 +38,7 @@ std::string CallResolver::resolveMethodName(
 }
 
 bool CallResolver::tryResolveLibraryOrFree(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::FunctionDefinition const* _funcDef,
 	ResolvedCall& _result)
 {
@@ -95,7 +95,7 @@ bool CallResolver::tryResolveLibraryOrFree(
 }
 
 std::optional<ResolvedCall> CallResolver::resolveFromIdentifier(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::Identifier const& _ident,
 	std::string const& _resolvedName)
 {
@@ -119,7 +119,7 @@ std::optional<ResolvedCall> CallResolver::resolveFromIdentifier(
 }
 
 std::optional<ResolvedCall> CallResolver::resolveFromMemberAccess(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::MemberAccess const& _memberAccess,
 	std::string const& _resolvedName,
 	size_t _argCount)

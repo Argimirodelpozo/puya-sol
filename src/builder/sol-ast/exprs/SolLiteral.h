@@ -11,7 +11,7 @@ namespace puyasol::builder::sol_ast
 class SolLiteral: public SolExpression
 {
 public:
-	SolLiteral(eb::BuilderContext& _ctx, solidity::frontend::Literal const& _node);
+	SolLiteral(eb::ContractContext& _ctx, solidity::frontend::Literal const& _node);
 	std::shared_ptr<awst::Expression> toAwst() override;
 
 private:

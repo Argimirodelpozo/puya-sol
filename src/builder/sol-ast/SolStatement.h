@@ -10,7 +10,7 @@
 /// passed (possibly derived) context.
 ///
 /// Expression children go through `m_blk.builderCtx().build(...)` — the
-/// expression layer hasn't been moved off BuilderContext yet.
+/// expression layer hasn't been moved off ContractContext yet.
 
 #include "awst/Node.h"
 #include "builder/sol-ast/Context.h"

@@ -8,7 +8,7 @@
 
 namespace puyasol::builder::eb
 {
-class BuilderContext;
+class ContractContext;
 
 /// Build an AWST binary-operation expression from already-resolved operands.
 ///
@@ -19,7 +19,7 @@ class BuilderContext;
 /// and emits any side-effect statements (e.g. the biguint exp loop) into
 /// `ctx.prePendingStatements` / `ctx.pendingStatements`.
 std::shared_ptr<awst::Expression> buildBinaryOp(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::Token _op,
 	std::shared_ptr<awst::Expression> _left,
 	std::shared_ptr<awst::Expression> _right,

@@ -1,6 +1,6 @@
 #include "builder/sol-ast/calls/SolBuiltinCall.h"
 #include "builder/builtin/Ripemd160Builder.h"
-#include "builder/sol-eb/BuilderContext.h"
+#include "builder/sol-eb/ContractContext.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
@@ -14,7 +14,7 @@ namespace puyasol::builder::sol_ast
 {
 
 SolBuiltinCall::SolBuiltinCall(
-	eb::BuilderContext& _ctx,
+	eb::ContractContext& _ctx,
 	solidity::frontend::FunctionCall const& _call,
 	std::string _builtinName)
 	: SolFunctionCall(_ctx, _call),

@@ -11,7 +11,7 @@ namespace puyasol::builder::eb
 {
 
 std::shared_ptr<awst::Expression> AssignmentHelper::tryComputeCompoundValue(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::Token _assignOp,
 	solidity::frontend::Type const* _targetSolType,
 	std::shared_ptr<awst::Expression> _currentValue,

@@ -13,7 +13,7 @@ namespace puyasol::builder::sol_ast
 
 using namespace solidity::frontend;
 
-SolLiteral::SolLiteral(eb::BuilderContext& _ctx, Literal const& _node)
+SolLiteral::SolLiteral(eb::ContractContext& _ctx, Literal const& _node)
 	: SolExpression(_ctx, _node), m_literal(_node)
 {
 }

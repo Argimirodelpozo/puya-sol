@@ -1,6 +1,6 @@
 #pragma once
 
-#include "builder/sol-eb/BuilderContext.h"
+#include "builder/sol-eb/ContractContext.h"
 #include "builder/sol-ast/SolFunctionCall.h"
 #include "builder/sol-ast/SolMemberAccess.h"
 
@@ -19,7 +19,7 @@ namespace puyasol::builder::sol_ast
 class SolExpressionFactory
 {
 public:
-	explicit SolExpressionFactory(eb::BuilderContext& _ctx);
+	explicit SolExpressionFactory(eb::ContractContext& _ctx);
 
 	/// Create a SolFunctionCall for a FunctionCall AST node.
 	/// Returns nullptr if the call kind is not yet handled.
@@ -32,7 +32,7 @@ public:
 		solidity::frontend::MemberAccess const& _node);
 
 private:
-	eb::BuilderContext& m_ctx;
+	eb::ContractContext& m_ctx;
 };
 
 } // namespace puyasol::builder::sol_ast

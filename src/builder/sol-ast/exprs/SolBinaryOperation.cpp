@@ -20,7 +20,7 @@ using namespace solidity::frontend;
 using Token = solidity::frontend::Token;
 
 SolBinaryOperation::SolBinaryOperation(
-	eb::BuilderContext& _ctx,
+	eb::ContractContext& _ctx,
 	BinaryOperation const& _node)
 	: SolExpression(_ctx, _node), m_binOp(_node)
 {

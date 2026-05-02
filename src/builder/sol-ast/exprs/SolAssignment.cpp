@@ -17,7 +17,7 @@ namespace puyasol::builder::sol_ast
 using namespace solidity::frontend;
 using Token = solidity::frontend::Token;
 
-SolAssignment::SolAssignment(eb::BuilderContext& _ctx, Assignment const& _node)
+SolAssignment::SolAssignment(eb::ContractContext& _ctx, Assignment const& _node)
 	: SolExpression(_ctx, _node), m_assignment(_node)
 {
 }

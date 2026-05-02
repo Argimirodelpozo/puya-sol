@@ -24,7 +24,7 @@ public:
 	///                     "encodeWithSignature", "decode"
 	/// Returns nullptr if not handled.
 	static std::unique_ptr<InstanceBuilder> tryHandle(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		std::string const& _memberName,
 		solidity::frontend::FunctionCall const& _callNode,
 		awst::SourceLocation const& _loc);
@@ -36,7 +36,7 @@ private:
 	/// For encodePacked: uint8 → 1 byte, uint256 → 32 bytes, etc.
 	/// For encode: always 32-byte ABI words.
 	static std::shared_ptr<awst::Expression> toPackedBytes(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _expr,
 		solidity::frontend::Type const* _solType,
 		bool _isPacked,
@@ -44,7 +44,7 @@ private:
 
 	/// Encode a single expression as ARC4 bytes (32-byte padded for most types).
 	static std::shared_ptr<awst::Expression> encodeArgAsARC4Bytes(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _argExpr,
 		awst::SourceLocation const& _loc);
 
@@ -52,7 +52,7 @@ public:
 	/// Build ARC4 method selector from a FunctionDefinition.
 	/// Exposed for fn-pointer dispatch (cross-contract inner txn).
 	static std::string buildARC4MethodSelector(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::FunctionDefinition const* _funcDef);
 
 private:
@@ -69,7 +69,7 @@ private:
 	/// Returns a single concatenated bytes expression; if all args are
 	/// static the result is just packed bytes without offsets.
 	static std::shared_ptr<awst::Expression> encodeArgsHeadTail(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::FunctionCall const& _callNode,
 		size_t _startIdx,
 		awst::SourceLocation const& _loc);
@@ -92,7 +92,7 @@ private:
 	/// @param _solType  The Solidity type to decode as
 	/// @param _loc      Source location for generated nodes
 	static std::shared_ptr<awst::Expression> decodeAbiValue(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _data,
 		std::shared_ptr<awst::Expression> _offset,
 		solidity::frontend::Type const* _solType,
@@ -101,14 +101,14 @@ private:
 	// ── Individual handlers ──
 
 	static std::unique_ptr<InstanceBuilder> handleEncodePacked(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::FunctionCall const& _callNode,
 		bool _isPacked,
 		awst::SourceLocation const& _loc);
 
 	/// EVM ABI encode with proper head/tail encoding for dynamic types.
 	static std::unique_ptr<InstanceBuilder> handleEncode(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::FunctionCall const& _callNode,
 		awst::SourceLocation const& _loc);
 
@@ -119,7 +119,7 @@ private:
 
 	/// Encode a dynamic type's tail data: [length as 32 bytes][data right-padded to 32].
 	static std::shared_ptr<awst::Expression> encodeDynamicTail(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _expr,
 		solidity::frontend::Type const* _solType,
 		awst::SourceLocation const& _loc);
@@ -130,7 +130,7 @@ private:
 	/// expression), this takes raw bytes already extracted from a parent
 	/// container so it can be called from inside a runtime loop body.
 	static std::shared_ptr<awst::Expression> encodeFromArc4Bytes(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _bytesExpr,
 		solidity::frontend::Type const* _solType,
 		awst::SourceLocation const& _loc);
@@ -142,7 +142,7 @@ private:
 	/// `_ctx.prePendingStatements` and returns a fresh local var holding
 	/// the encoded bytes.
 	static std::shared_ptr<awst::Expression> encodeDynArrayPadSmallElems(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _expr,
 		solidity::frontend::Type const* _elemSolType,
 		unsigned _elemByteSize,
@@ -155,7 +155,7 @@ private:
 	/// builds new EVM-ABI head (uint256 offsets) + tail (re-encoded
 	/// bodies). Emits a `while` loop into `_ctx.prePendingStatements`.
 	static std::shared_ptr<awst::Expression> encodeDynArrayDynElems(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _expr,
 		solidity::frontend::Type const* _elemSolType,
 		awst::SourceLocation const& _loc);
@@ -165,29 +165,29 @@ private:
 	/// as `encodeDynArrayDynElems` but no leading uint256 length word
 	/// and `n` is a compile-time constant.
 	static std::shared_ptr<awst::Expression> encodeStaticArrayDynElems(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _expr,
 		solidity::frontend::Type const* _elemSolType,
 		unsigned _n,
 		awst::SourceLocation const& _loc);
 
 	static std::unique_ptr<InstanceBuilder> handleEncodeCall(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::FunctionCall const& _callNode,
 		awst::SourceLocation const& _loc);
 
 	static std::unique_ptr<InstanceBuilder> handleEncodeWithSelector(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::FunctionCall const& _callNode,
 		awst::SourceLocation const& _loc);
 
 	static std::unique_ptr<InstanceBuilder> handleEncodeWithSignature(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::FunctionCall const& _callNode,
 		awst::SourceLocation const& _loc);
 
 	static std::unique_ptr<InstanceBuilder> handleDecode(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::FunctionCall const& _callNode,
 		awst::SourceLocation const& _loc);
 };

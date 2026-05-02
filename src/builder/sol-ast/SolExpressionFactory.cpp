@@ -44,7 +44,7 @@ namespace puyasol::builder::sol_ast
 class SolFunctionAddressAccess : public SolMemberAccess
 {
 public:
-	SolFunctionAddressAccess(eb::BuilderContext& _ctx,
+	SolFunctionAddressAccess(eb::ContractContext& _ctx,
 		solidity::frontend::MemberAccess const& _node)
 		: SolMemberAccess(_ctx, _node) {}
 
@@ -100,7 +100,7 @@ public:
 class SolFunctionPointerAccess : public SolMemberAccess
 {
 public:
-	SolFunctionPointerAccess(eb::BuilderContext& _ctx,
+	SolFunctionPointerAccess(eb::ContractContext& _ctx,
 		solidity::frontend::MemberAccess const& _node,
 		solidity::frontend::FunctionDefinition const* _funcDef,
 		solidity::frontend::FunctionType const* _callerFuncType = nullptr)
@@ -163,7 +163,7 @@ private:
 	solidity::frontend::FunctionType const* m_callerFuncType;
 };
 
-SolExpressionFactory::SolExpressionFactory(eb::BuilderContext& _ctx)
+SolExpressionFactory::SolExpressionFactory(eb::ContractContext& _ctx)
 	: m_ctx(_ctx)
 {
 }

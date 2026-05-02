@@ -1,6 +1,6 @@
 #pragma once
 
-#include "builder/sol-eb/BuilderContext.h"
+#include "builder/sol-eb/ContractContext.h"
 #include "builder/sol-eb/NodeBuilder.h"
 
 #include <libsolidity/ast/AST.h>
@@ -25,7 +25,7 @@ public:
 	/// Compute the compound assignment value: `currentValue {op} rhs`.
 	/// Returns nullptr if the builder can't handle this type (fall through to old code).
 	static std::shared_ptr<awst::Expression> tryComputeCompoundValue(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::Token _assignOp,
 		solidity::frontend::Type const* _targetSolType,
 		std::shared_ptr<awst::Expression> _currentValue,

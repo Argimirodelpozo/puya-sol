@@ -9,7 +9,7 @@ namespace puyasol::builder::sol_ast
 {
 
 SolConditional::SolConditional(
-	eb::BuilderContext& _ctx,
+	eb::ContractContext& _ctx,
 	solidity::frontend::Conditional const& _node)
 	: SolExpression(_ctx, _node), m_conditional(_node)
 {

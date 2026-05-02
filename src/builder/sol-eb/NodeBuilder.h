@@ -1,6 +1,6 @@
 #pragma once
 
-#include "builder/sol-eb/BuilderContext.h"
+#include "builder/sol-eb/ContractContext.h"
 #include "builder/sol-eb/BuilderOps.h"
 #include "awst/Node.h"
 #include "awst/WType.h"
@@ -39,8 +39,8 @@ public:
 		awst::SourceLocation const& _loc, bool _negate = false) = 0;
 
 protected:
-	BuilderContext& m_ctx;
-	explicit NodeBuilder(BuilderContext& _ctx): m_ctx(_ctx) {}
+	ContractContext& m_ctx;
+	explicit NodeBuilder(ContractContext& _ctx): m_ctx(_ctx) {}
 };
 
 // ─────────────────────────────────────────────────────────────────────
@@ -109,7 +109,7 @@ public:
 protected:
 	std::shared_ptr<awst::Expression> m_expr;
 
-	InstanceBuilder(BuilderContext& _ctx, std::shared_ptr<awst::Expression> _expr)
+	InstanceBuilder(ContractContext& _ctx, std::shared_ptr<awst::Expression> _expr)
 		: NodeBuilder(_ctx), m_expr(std::move(_expr))
 	{
 	}
@@ -142,7 +142,7 @@ public:
 		awst::SourceLocation const& _loc, bool _negate = false) override;
 
 protected:
-	TypeBuilder(BuilderContext& _ctx): NodeBuilder(_ctx) {}
+	TypeBuilder(ContractContext& _ctx): NodeBuilder(_ctx) {}
 };
 
 // ─────────────────────────────────────────────────────────────────────
@@ -166,7 +166,7 @@ public:
 		awst::SourceLocation const& _loc, bool _negate = false) override;
 
 protected:
-	CallableBuilder(BuilderContext& _ctx): NodeBuilder(_ctx) {}
+	CallableBuilder(ContractContext& _ctx): NodeBuilder(_ctx) {}
 };
 
 } // namespace puyasol::builder::eb

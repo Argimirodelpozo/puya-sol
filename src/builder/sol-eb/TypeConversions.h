@@ -20,7 +20,7 @@ class TypeConversionRegistry
 {
 public:
 	using ConvertHandler = std::function<std::unique_ptr<InstanceBuilder>(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::Type const* _targetSolType,
 		awst::WType const* _targetWType,
 		std::shared_ptr<awst::Expression> _arg,
@@ -31,7 +31,7 @@ public:
 	/// Try to handle a type conversion.
 	/// Returns nullptr if not handled (fall through to old code).
 	std::unique_ptr<InstanceBuilder> tryConvert(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::Type const* _targetSolType,
 		awst::WType const* _targetWType,
 		std::shared_ptr<awst::Expression> _arg,
@@ -44,35 +44,35 @@ private:
 
 	// Handlers
 	static std::unique_ptr<InstanceBuilder> convertToInteger(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::Type const* _targetSolType,
 		awst::WType const* _targetWType,
 		std::shared_ptr<awst::Expression> _arg,
 		awst::SourceLocation const& _loc);
 
 	static std::unique_ptr<InstanceBuilder> convertToBool(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::Type const* _targetSolType,
 		awst::WType const* _targetWType,
 		std::shared_ptr<awst::Expression> _arg,
 		awst::SourceLocation const& _loc);
 
 	static std::unique_ptr<InstanceBuilder> convertToAddress(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::Type const* _targetSolType,
 		awst::WType const* _targetWType,
 		std::shared_ptr<awst::Expression> _arg,
 		awst::SourceLocation const& _loc);
 
 	static std::unique_ptr<InstanceBuilder> convertToFixedBytes(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::Type const* _targetSolType,
 		awst::WType const* _targetWType,
 		std::shared_ptr<awst::Expression> _arg,
 		awst::SourceLocation const& _loc);
 
 	static std::unique_ptr<InstanceBuilder> convertToEnum(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::Type const* _targetSolType,
 		awst::WType const* _targetWType,
 		std::shared_ptr<awst::Expression> _arg,

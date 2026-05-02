@@ -28,7 +28,7 @@ namespace puyasol::builder::eb
 {
 
 std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgsHeadTail(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::FunctionCall const& _callNode,
 	size_t _startIdx,
 	awst::SourceLocation const& _loc)
@@ -120,7 +120,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::uint64FromAbiWord(
 // ── decodeAbiValue: decode one value from EVM ABI bytes ──
 
 std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _data,
 	std::shared_ptr<awst::Expression> _offset,
 	solidity::frontend::Type const* _solType,
@@ -342,7 +342,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::rightPadTo32(
 // ── encodeDynamicTail: [length as 32 bytes][data right-padded to 32] ──
 
 std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _expr,
 	solidity::frontend::Type const* _solType,
 	awst::SourceLocation const& _loc)
@@ -619,7 +619,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 // ── handleEncode: EVM ABI encode with head/tail encoding ──
 
 std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynArrayPadSmallElems(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _expr,
 	solidity::frontend::Type const* _elemSolType,
 	unsigned _elemByteSize,
@@ -722,7 +722,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynArrayPadSmallElems
 }
 
 std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynArrayDynElems(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _expr,
 	solidity::frontend::Type const* _elemSolType,
 	awst::SourceLocation const& _loc)
@@ -901,7 +901,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynArrayDynElems(
 }
 
 std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeStaticArrayDynElems(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _expr,
 	solidity::frontend::Type const* _elemSolType,
 	unsigned _n,
@@ -1062,7 +1062,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeStaticArrayDynElems(
 // branch's `FieldExpression` constructor would fail its assertion that
 // the base wtype is `ARC4Struct | WTuple`.
 std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeFromArc4Bytes(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _bytesExpr,
 	solidity::frontend::Type const* _solType,
 	awst::SourceLocation const& _loc)

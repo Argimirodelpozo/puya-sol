@@ -10,7 +10,7 @@
 /// subclass owns the answer.
 ///
 ///   TranslationContext  — per-contract: type mapper, source file, the
-///                          BuilderContext (low-level translation state).
+///                          ContractContext (low-level translation state).
 ///   FunctionContext     — per-function: params, return type, param bit
 ///                          widths (for inline assembly packing).
 ///   BlockContext        — per-block: enclosing loop (for continue/break),
@@ -38,7 +38,7 @@
 namespace puyasol::builder
 {
 class TypeMapper;
-namespace eb { class BuilderContext; }
+namespace eb { class ContractContext; }
 }
 
 namespace puyasol::builder::sol_ast
@@ -162,12 +162,12 @@ protected:
 };
 
 /// Top-level translation context: per-contract state we share across
-/// every function and statement. Wraps BuilderContext (which still holds
+/// every function and statement. Wraps ContractContext (which still holds
 /// the lower-level shared state like storage layout, library function IDs,
 /// scope mappings); future cleanup can flatten more of that down here.
 struct TranslationContext: Context
 {
-	eb::BuilderContext& exprBuilder;
+	eb::ContractContext& exprBuilder;
 	TypeMapper& typeMapper;
 	std::string sourceFile;
 
@@ -185,7 +185,7 @@ struct TranslationContext: Context
 	std::unordered_map<int64_t, std::string> superTargetNames;
 
 	TranslationContext(
-		eb::BuilderContext& _exprBuilder,
+		eb::ContractContext& _exprBuilder,
 		TypeMapper& _typeMapper,
 		std::string _sourceFile
 	)
@@ -406,9 +406,9 @@ struct BlockContext: Context
 		return c;
 	}
 
-	// ── Convenience accessors (bridge to underlying BuilderContext) ──
+	// ── Convenience accessors (bridge to underlying ContractContext) ──
 
-	eb::BuilderContext& builderCtx() const { return fn.tr.exprBuilder; }
+	eb::ContractContext& builderCtx() const { return fn.tr.exprBuilder; }
 	TypeMapper& typeMapper() const { return fn.tr.typeMapper; }
 	std::string const& sourceFile() const { return fn.tr.sourceFile; }
 	awst::SourceLocation makeLoc(solidity::langutil::SourceLocation const& _sl) const

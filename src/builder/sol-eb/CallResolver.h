@@ -1,6 +1,6 @@
 #pragma once
 
-#include "builder/sol-eb/BuilderContext.h"
+#include "builder/sol-eb/ContractContext.h"
 #include "awst/Node.h"
 
 #include <libsolidity/ast/AST.h>
@@ -46,14 +46,14 @@ public:
 	/// Try to resolve a function call from an Identifier callee.
 	/// Returns nullopt if resolution fails.
 	static std::optional<ResolvedCall> resolveFromIdentifier(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::Identifier const& _ident,
 		std::string const& _resolvedName);
 
 	/// Try to resolve a function call from a MemberAccess callee.
 	/// Returns nullopt if resolution fails.
 	static std::optional<ResolvedCall> resolveFromMemberAccess(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::MemberAccess const& _memberAccess,
 		std::string const& _resolvedName,
 		size_t _argCount);
@@ -61,13 +61,13 @@ public:
 	/// Get the disambiguated method name for a function.
 	/// Returns "name(paramTypes)" if the function name is overloaded, else just "name".
 	static std::string resolveMethodName(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::FunctionDefinition const& _func);
 
 private:
 	/// Try library/free function resolution by AST ID and name.
 	static bool tryResolveLibraryOrFree(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::FunctionDefinition const* _funcDef,
 		ResolvedCall& _result);
 };

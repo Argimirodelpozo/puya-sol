@@ -17,7 +17,7 @@ class SolAddressBuilder: public InstanceBuilder
 {
 public:
 	SolAddressBuilder(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::Type const* _solType,
 		std::shared_ptr<awst::Expression> _expr)
 		: InstanceBuilder(_ctx, std::move(_expr)), m_solType(_solType)

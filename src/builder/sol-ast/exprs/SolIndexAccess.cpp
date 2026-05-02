@@ -16,7 +16,7 @@ namespace puyasol::builder::sol_ast
 
 using namespace solidity::frontend;
 
-SolIndexAccess::SolIndexAccess(eb::BuilderContext& _ctx, IndexAccess const& _node)
+SolIndexAccess::SolIndexAccess(eb::ContractContext& _ctx, IndexAccess const& _node)
 	: SolExpression(_ctx, _node), m_indexAccess(_node)
 {
 }
@@ -251,7 +251,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 // ── IndexRangeAccess ──
 
 SolIndexRangeAccess::SolIndexRangeAccess(
-	eb::BuilderContext& _ctx, IndexRangeAccess const& _node)
+	eb::ContractContext& _ctx, IndexRangeAccess const& _node)
 	: SolExpression(_ctx, _node), m_rangeAccess(_node)
 {
 }

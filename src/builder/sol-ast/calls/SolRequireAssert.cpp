@@ -5,7 +5,7 @@ namespace puyasol::builder::sol_ast
 {
 
 SolRequireAssert::SolRequireAssert(
-	eb::BuilderContext& _ctx,
+	eb::ContractContext& _ctx,
 	solidity::frontend::FunctionCall const& _call)
 	: SolFunctionCall(_ctx, _call)
 {

@@ -13,7 +13,7 @@ class SolMemberAccess: public SolExpression
 {
 public:
 	SolMemberAccess(
-		eb::BuilderContext& _ctx,
+		eb::ContractContext& _ctx,
 		solidity::frontend::MemberAccess const& _node);
 
 	/// The underlying MemberAccess AST node.

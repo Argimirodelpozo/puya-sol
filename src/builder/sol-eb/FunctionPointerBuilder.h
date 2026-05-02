@@ -53,7 +53,7 @@ public:
 	///                         super.f references for the same target astId
 	///                         get distinct dispatcher entries).
 	static std::shared_ptr<awst::Expression> buildFunctionReference(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::FunctionDefinition const* _funcDef,
 		awst::SourceLocation const& _loc,
 		solidity::frontend::FunctionType const* _callerFuncType = nullptr,
@@ -64,7 +64,7 @@ public:
 	/// For internal: calls __funcptr_dispatch(id, args...).
 	/// For external: inner app call.
 	static std::shared_ptr<awst::Expression> buildFunctionPointerCall(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _ptrExpr,
 		solidity::frontend::FunctionType const* _funcType,
 		std::vector<std::shared_ptr<awst::Expression>> _args,
@@ -87,7 +87,7 @@ public:
 	/// Also populates _outRootSubs with root-level Subroutine copies so that
 	/// library subroutines can resolve them via SubroutineID.
 	static std::vector<awst::ContractMethod> generateDispatchMethods(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		std::string const& _cref,
 		awst::SourceLocation const& _loc,
 		std::vector<std::shared_ptr<awst::Subroutine>>* _outRootSubs = nullptr);
@@ -115,7 +115,7 @@ private:
 	/// path. Caller supplies the pointer-id expression (not stored) and the
 	/// raw args (coerced to the dispatch parameter types).
 	static std::shared_ptr<awst::SubroutineCallExpression> buildDispatchCall(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::FunctionType const* _funcType,
 		std::shared_ptr<awst::Expression> _ptrIdExpr,
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,

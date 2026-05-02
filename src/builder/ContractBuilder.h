@@ -2,7 +2,7 @@
 
 #include "awst/Node.h"
 #include "builder/FunctionMaps.h"
-#include "builder/sol-eb/BuilderContext.h"
+#include "builder/sol-eb/ContractContext.h"
 #include "builder/sol-ast/Context.h"
 #include "builder/sol-ast/SolStatement.h"
 #include "builder/storage/StorageMapper.h"
@@ -68,7 +68,7 @@ private:
 	std::map<std::string, uint64_t> m_ensureBudget;
 	bool m_viaIR = false;
 
-	std::unique_ptr<eb::BuilderContext> m_exprBuilder;
+	std::unique_ptr<eb::ContractContext> m_exprBuilder;
 
 	/// Translation-level context (per-contract): typeMapper, sourceFile, exprBuilder.
 	/// Constructed in build() once m_exprBuilder exists; FunctionContext/BlockContext

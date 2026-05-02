@@ -1,6 +1,6 @@
 #include "builder/sol-eb/BinaryOpBuilder.h"
 
-#include "builder/sol-eb/BuilderContext.h"
+#include "builder/sol-eb/ContractContext.h"
 #include "builder/sol-types/TypeCoercion.h"
 
 namespace puyasol::builder::eb
@@ -15,7 +15,7 @@ bool isBigUInt(awst::WType const* _type)
 } // namespace
 
 std::shared_ptr<awst::Expression> buildBinaryOp(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::Token _op,
 	std::shared_ptr<awst::Expression> _left,
 	std::shared_ptr<awst::Expression> _right,

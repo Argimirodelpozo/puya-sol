@@ -19,7 +19,7 @@ namespace puyasol::builder::eb
 class GenericAbiResult: public InstanceBuilder
 {
 public:
-	GenericAbiResult(BuilderContext& _ctx, std::shared_ptr<awst::Expression> _expr)
+	GenericAbiResult(ContractContext& _ctx, std::shared_ptr<awst::Expression> _expr)
 		: InstanceBuilder(_ctx, std::move(_expr)) {}
 	solidity::frontend::Type const* solType() const override { return nullptr; }
 };
@@ -68,7 +68,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::concatByteExprs(
 // ── toPackedBytes: convert expr to bytes with optional packed width ──
 
 std::shared_ptr<awst::Expression> AbiEncoderBuilder::toPackedBytes(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _expr,
 	solidity::frontend::Type const* _solType,
 	bool _isPacked,
@@ -167,7 +167,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::toPackedBytes(
 // ── encodeArgAsARC4Bytes ──
 
 std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgAsARC4Bytes(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _argExpr,
 	awst::SourceLocation const& _loc)
 {
@@ -262,7 +262,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgAsARC4Bytes(
 // ── buildARC4MethodSelector ──
 
 std::string AbiEncoderBuilder::buildARC4MethodSelector(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::FunctionDefinition const* _funcDef)
 {
 	using namespace solidity::frontend;
@@ -317,7 +317,7 @@ std::string AbiEncoderBuilder::buildARC4MethodSelector(
 // ── encodePacked / encode ──
 
 std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::FunctionCall const& _callNode,
 	bool _isPacked,
 	awst::SourceLocation const& _loc)
@@ -421,7 +421,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 // ── encodeCall ──
 
 std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeCall(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::FunctionCall const& _callNode,
 	awst::SourceLocation const& _loc)
 {
@@ -547,7 +547,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeCall(
 // ── encodeWithSelector ──
 
 std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeWithSelector(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::FunctionCall const& _callNode,
 	awst::SourceLocation const& _loc)
 {
@@ -618,7 +618,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeWithSelector(
 // ── encodeWithSignature ──
 
 std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeWithSignature(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::FunctionCall const& _callNode,
 	awst::SourceLocation const& _loc)
 {
@@ -650,7 +650,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeWithSignature(
 // ── decode ──
 
 std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::FunctionCall const& _callNode,
 	awst::SourceLocation const& _loc)
 {
@@ -742,7 +742,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 
 
 std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncode(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::FunctionCall const& _callNode,
 	awst::SourceLocation const& _loc)
 {
@@ -889,7 +889,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncode(
 // ── Top-level dispatcher ──
 
 std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::tryHandle(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::string const& _memberName,
 	solidity::frontend::FunctionCall const& _callNode,
 	awst::SourceLocation const& _loc)

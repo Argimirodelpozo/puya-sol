@@ -12,7 +12,7 @@ namespace puyasol::builder::sol_ast
 class SolIndexAccess: public SolExpression
 {
 public:
-	SolIndexAccess(eb::BuilderContext& _ctx, solidity::frontend::IndexAccess const& _node);
+	SolIndexAccess(eb::ContractContext& _ctx, solidity::frontend::IndexAccess const& _node);
 	std::shared_ptr<awst::Expression> toAwst() override;
 
 private:
@@ -28,7 +28,7 @@ private:
 class SolIndexRangeAccess: public SolExpression
 {
 public:
-	SolIndexRangeAccess(eb::BuilderContext& _ctx, solidity::frontend::IndexRangeAccess const& _node);
+	SolIndexRangeAccess(eb::ContractContext& _ctx, solidity::frontend::IndexRangeAccess const& _node);
 	std::shared_ptr<awst::Expression> toAwst() override;
 
 private:

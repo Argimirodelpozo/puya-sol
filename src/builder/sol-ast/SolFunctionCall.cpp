@@ -5,7 +5,7 @@ namespace puyasol::builder::sol_ast
 {
 
 SolFunctionCall::SolFunctionCall(
-	eb::BuilderContext& _ctx,
+	eb::ContractContext& _ctx,
 	solidity::frontend::FunctionCall const& _call)
 	: SolExpression(_ctx, _call),
 	  m_call(_call)

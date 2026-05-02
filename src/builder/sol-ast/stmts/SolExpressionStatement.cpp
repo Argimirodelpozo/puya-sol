@@ -2,7 +2,7 @@
 /// ExpressionStatement, RevertStatement, ReturnStatement.
 
 #include "builder/sol-ast/stmts/SolExpressionStatement.h"
-#include "builder/sol-eb/BuilderContext.h"
+#include "builder/sol-eb/ContractContext.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"

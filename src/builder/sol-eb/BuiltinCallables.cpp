@@ -13,7 +13,7 @@ namespace puyasol::builder::eb
 class GenericInstanceBuilder: public InstanceBuilder
 {
 public:
-	GenericInstanceBuilder(BuilderContext& _ctx, std::shared_ptr<awst::Expression> _expr)
+	GenericInstanceBuilder(ContractContext& _ctx, std::shared_ptr<awst::Expression> _expr)
 		: InstanceBuilder(_ctx, std::move(_expr))
 	{
 	}
@@ -37,7 +37,7 @@ void BuiltinCallableRegistry::registerHandler(std::string _name, CallHandler _ha
 }
 
 std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::tryCall(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::string const& _name,
 	std::vector<std::shared_ptr<awst::Expression>>& _args,
 	awst::SourceLocation const& _loc) const
@@ -51,7 +51,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::tryCall(
 // ─────────────────────────────────────────────────────────────────────
 
 std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleKeccak256(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::vector<std::shared_ptr<awst::Expression>>& _args,
 	awst::SourceLocation const& _loc)
 {
@@ -62,7 +62,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleKeccak256(
 }
 
 std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleSha256(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::vector<std::shared_ptr<awst::Expression>>& _args,
 	awst::SourceLocation const& _loc)
 {
@@ -87,7 +87,7 @@ std::shared_ptr<awst::Expression> BuiltinCallableRegistry::promoteToBigUInt(
 }
 
 static void emitModByZeroCheck(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> const& _modulus,
 	awst::SourceLocation const& _loc)
 {
@@ -101,7 +101,7 @@ static void emitModByZeroCheck(
 }
 
 std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleMulmod(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::vector<std::shared_ptr<awst::Expression>>& _args,
 	awst::SourceLocation const& _loc)
 {
@@ -122,7 +122,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleMulmod(
 }
 
 std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleAddmod(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::vector<std::shared_ptr<awst::Expression>>& _args,
 	awst::SourceLocation const& _loc)
 {
@@ -143,7 +143,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleAddmod(
 }
 
 std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleSelfdestruct(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::vector<std::shared_ptr<awst::Expression>>& _args,
 	awst::SourceLocation const& _loc)
 {
@@ -205,7 +205,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleSelfdestruct(
 }
 
 std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleGasleft(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::vector<std::shared_ptr<awst::Expression>>& /*_args*/,
 	awst::SourceLocation const& _loc)
 {
@@ -215,7 +215,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleGasleft(
 }
 
 std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::vector<std::shared_ptr<awst::Expression>>& _args,
 	awst::SourceLocation const& _loc)
 {

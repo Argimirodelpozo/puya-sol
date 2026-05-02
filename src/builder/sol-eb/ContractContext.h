@@ -58,10 +58,10 @@ using ParamRemap = sol_ast::ParamRemap;
 /// type-builder dispatch are exposed via std::function callbacks wired up in
 /// the constructor; the field-and-callback layout is preserved as the public
 /// surface that sol-ast wrappers consume.
-class BuilderContext
+class ContractContext
 {
 public:
-	BuilderContext(
+	ContractContext(
 		TypeMapper& _typeMapper,
 		StorageMapper& _storageMapper,
 		std::string const& _sourceFile,
@@ -71,12 +71,12 @@ public:
 		std::unordered_map<int64_t, std::string> const& _freeFunctionById
 	);
 
-	~BuilderContext();
+	~ContractContext();
 
-	BuilderContext(BuilderContext const&) = delete;
-	BuilderContext& operator=(BuilderContext const&) = delete;
-	BuilderContext(BuilderContext&&) = delete;
-	BuilderContext& operator=(BuilderContext&&) = delete;
+	ContractContext(ContractContext const&) = delete;
+	ContractContext& operator=(ContractContext const&) = delete;
+	ContractContext(ContractContext&&) = delete;
+	ContractContext& operator=(ContractContext&&) = delete;
 
 	/// Build an AWST expression from a Solidity expression. Primary entry point.
 	std::shared_ptr<awst::Expression> build(solidity::frontend::Expression const& _expr);
@@ -127,7 +127,7 @@ public:
 	class ScopePush
 	{
 	public:
-		ScopePush(BuilderContext& _ctx, sol_ast::Context* _new)
+		ScopePush(ContractContext& _ctx, sol_ast::Context* _new)
 			: m_ctx(_ctx), m_prev(_ctx.currentScope)
 		{
 			m_ctx.currentScope = _new;
@@ -136,7 +136,7 @@ public:
 		ScopePush(ScopePush const&) = delete;
 		ScopePush& operator=(ScopePush const&) = delete;
 	private:
-		BuilderContext& m_ctx;
+		ContractContext& m_ctx;
 		sol_ast::Context* m_prev;
 	};
 
@@ -223,12 +223,12 @@ public:
 	/// default value, returning the ArrayExtend expression directly.
 	std::shared_ptr<awst::Expression> pendingArrayPushValue;
 
-	// ── Recursive build callback (delegates to BuilderContext::build) ──
+	// ── Recursive build callback (delegates to ContractContext::build) ──
 	/// Build a child Solidity expression into an AWST Expression.
 	std::function<std::shared_ptr<awst::Expression>(
 		solidity::frontend::Expression const&)> buildExpr;
 
-	// ── Binary/unary operation callbacks (delegates to BuilderContext::build) ──
+	// ── Binary/unary operation callbacks (delegates to ContractContext::build) ──
 	/// Build a binary operation from already-resolved operands (fallback when sol-eb builders don't handle it).
 	std::function<std::shared_ptr<awst::Expression>(
 		solidity::frontend::Token, std::shared_ptr<awst::Expression>,

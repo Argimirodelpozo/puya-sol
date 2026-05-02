@@ -11,7 +11,7 @@
 #include "builder/sol-ast/stmts/SolEmitStatement.h"
 #include "builder/sol-ast/stmts/SolVariableDeclaration.h"
 #include "builder/sol-ast/stmts/SolInlineAssembly.h"
-#include "builder/sol-eb/BuilderContext.h"
+#include "builder/sol-eb/ContractContext.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "Logger.h"
 

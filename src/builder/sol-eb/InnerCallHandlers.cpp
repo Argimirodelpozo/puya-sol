@@ -176,7 +176,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 }
 
 std::string InnerCallHandlers::buildMethodSelector(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::FunctionDefinition const* _func)
 {
 	auto solTypeToARC4 = [&](solidity::frontend::Type const* _type) -> std::string {
@@ -244,7 +244,7 @@ std::string InnerCallHandlers::buildMethodSelector(
 // ── Payment helpers ──
 
 std::shared_ptr<awst::Expression> InnerCallHandlers::buildPaymentTransaction(
-	BuilderContext& /*_ctx*/,
+	ContractContext& /*_ctx*/,
 	std::shared_ptr<awst::Expression> _receiver,
 	std::shared_ptr<awst::Expression> _amount,
 	awst::SourceLocation const& _loc)
@@ -262,7 +262,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::buildPaymentTransaction(
 }
 
 std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleTransfer(
-	BuilderContext& _ctx, std::shared_ptr<awst::Expression> _receiver,
+	ContractContext& _ctx, std::shared_ptr<awst::Expression> _receiver,
 	std::shared_ptr<awst::Expression> _amount, awst::SourceLocation const& _loc)
 {
 	auto create = buildPaymentTransaction(_ctx, std::move(_receiver), std::move(_amount), _loc);
@@ -282,7 +282,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleTransfer(
 }
 
 std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleSend(
-	BuilderContext& _ctx, std::shared_ptr<awst::Expression> _receiver,
+	ContractContext& _ctx, std::shared_ptr<awst::Expression> _receiver,
 	std::shared_ptr<awst::Expression> _amount, awst::SourceLocation const& _loc)
 {
 	auto create = buildPaymentTransaction(_ctx, std::move(_receiver), std::move(_amount), _loc);
@@ -299,7 +299,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleSend(
 }
 
 std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithValue(
-	BuilderContext& _ctx, std::shared_ptr<awst::Expression> _receiver,
+	ContractContext& _ctx, std::shared_ptr<awst::Expression> _receiver,
 	std::shared_ptr<awst::Expression> _amount, awst::SourceLocation const& _loc)
 {
 	auto create = buildPaymentTransaction(_ctx, std::move(_receiver), std::move(_amount), _loc);
@@ -318,7 +318,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithValue(
 // ── .call(abi.encodeCall(fn, args)) → inner app call ──
 
 std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleDelegatecall(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::FunctionCall const& _callNode,
 	awst::SourceLocation const& _loc)
 {
@@ -331,7 +331,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleDelegatecall(
 // ── Top-level dispatcher ──
 
 std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _receiver,
 	std::string const& _memberName,
 	solidity::frontend::FunctionCall const& _callNode,
@@ -659,7 +659,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 }
 
 void InnerCallHandlers::fundCreatedApp(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _amount,
 	awst::SourceLocation const& _loc)
 {

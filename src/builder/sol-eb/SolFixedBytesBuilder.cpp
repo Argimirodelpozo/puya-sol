@@ -8,7 +8,7 @@ namespace puyasol::builder::eb
 {
 
 SolFixedBytesBuilder::SolFixedBytesBuilder(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::FixedBytesType const* _bytesType,
 	std::shared_ptr<awst::Expression> _expr)
 	: InstanceBuilder(_ctx, std::move(_expr)),

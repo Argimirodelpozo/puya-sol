@@ -16,7 +16,7 @@ class SolEnumBuilder: public InstanceBuilder
 {
 public:
 	SolEnumBuilder(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::EnumType const* _enumType,
 		std::shared_ptr<awst::Expression> _expr)
 		: InstanceBuilder(_ctx, std::move(_expr)), m_enumType(_enumType)

@@ -405,12 +405,12 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 
 	sub->pure = _func.stateMutability() == solidity::frontend::StateMutability::Pure;
 
-	// Build body via a fresh BuilderContext.
-	// NOTE: BuilderContext stores `overloadedNames` as `unordered_set const&`,
+	// Build body via a fresh ContractContext.
+	// NOTE: ContractContext stores `overloadedNames` as `unordered_set const&`,
 	// so we must pass a long-lived object (not a temporary `{}` — that would
 	// dangle after the constructor returns and SIGSEGV on first access).
 	static std::unordered_set<std::string> const EMPTY_OVERLOAD_NAMES;
-	eb::BuilderContext exprBuilder(
+	eb::ContractContext exprBuilder(
 		m_typeMapper, *m_storageMapper, _sourceFile, _libraryName, m_libraryFunctionIds,
 		EMPTY_OVERLOAD_NAMES, m_freeFunctionById
 	);

@@ -11,7 +11,7 @@ namespace puyasol::builder::sol_ast
 class SolConditional: public SolExpression
 {
 public:
-	SolConditional(eb::BuilderContext& _ctx, solidity::frontend::Conditional const& _node);
+	SolConditional(eb::ContractContext& _ctx, solidity::frontend::Conditional const& _node);
 	std::shared_ptr<awst::Expression> toAwst() override;
 
 private:

@@ -18,7 +18,7 @@ namespace
 
 /// Map a function type's return parameters to the dispatch return WType.
 /// void for no returns, single WType for one return, WTuple for multiple.
-awst::WType const* computeReturnType(BuilderContext& _ctx, FunctionType const* _funcType)
+awst::WType const* computeReturnType(ContractContext& _ctx, FunctionType const* _funcType)
 {
 	if (!_funcType || _funcType->returnParameterTypes().empty())
 		return awst::WType::voidType();
@@ -33,7 +33,7 @@ awst::WType const* computeReturnType(BuilderContext& _ctx, FunctionType const* _
 
 /// True iff translation is happening from a library subroutine context,
 /// where InstanceMethodTarget fails ("invocation outside of a contract method").
-bool inLibraryContext(BuilderContext const& _ctx, std::string const& _currentCref)
+bool inLibraryContext(ContractContext const& _ctx, std::string const& _currentCref)
 {
 	return !_ctx.contractName.empty()
 		&& !_currentCref.empty()
@@ -183,7 +183,7 @@ std::shared_ptr<awst::Expression> encodeArgForInnerTxn(
 } // namespace
 
 std::shared_ptr<awst::SubroutineCallExpression> FunctionPointerBuilder::buildDispatchCall(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	FunctionType const* _funcType,
 	std::shared_ptr<awst::Expression> _ptrIdExpr,
 	std::vector<std::shared_ptr<awst::Expression>> const& _args,
@@ -293,7 +293,7 @@ void FunctionPointerBuilder::setSubroutineIds(
 // ── Build a reference to a function (taking its "address") ──
 
 std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	FunctionDefinition const* _funcDef,
 	awst::SourceLocation const& _loc,
 	FunctionType const* _callerFuncType,
@@ -421,7 +421,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 // ── Build a call through a function pointer ──
 
 std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCall(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _ptrExpr,
 	FunctionType const* _funcType,
 	std::vector<std::shared_ptr<awst::Expression>> _args,
@@ -630,7 +630,7 @@ std::string FunctionPointerBuilder::dispatchName(
 // ── Generate dispatch subroutines ──
 
 std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethods(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	std::string const& _cref,
 	awst::SourceLocation const& _loc,
 	std::vector<std::shared_ptr<awst::Subroutine>>* _outRootSubs)

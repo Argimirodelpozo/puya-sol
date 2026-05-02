@@ -17,7 +17,7 @@ class SolStructBuilder: public InstanceBuilder
 {
 public:
 	SolStructBuilder(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::StructType const* _structType,
 		std::shared_ptr<awst::Expression> _expr)
 		: InstanceBuilder(_ctx, std::move(_expr)), m_structType(_structType)

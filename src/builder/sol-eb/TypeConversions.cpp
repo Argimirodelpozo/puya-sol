@@ -16,7 +16,7 @@ namespace puyasol::builder::eb
 class GenericConvertBuilder: public InstanceBuilder
 {
 public:
-	GenericConvertBuilder(BuilderContext& _ctx, std::shared_ptr<awst::Expression> _expr)
+	GenericConvertBuilder(ContractContext& _ctx, std::shared_ptr<awst::Expression> _expr)
 		: InstanceBuilder(_ctx, std::move(_expr))
 	{
 	}
@@ -40,7 +40,7 @@ void TypeConversionRegistry::registerHandler(
 }
 
 std::unique_ptr<InstanceBuilder> TypeConversionRegistry::tryConvert(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::Type const* _targetSolType,
 	awst::WType const* _targetWType,
 	std::shared_ptr<awst::Expression> _arg,
@@ -58,7 +58,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::tryConvert(
 // ─────────────────────────────────────────────────────────────────────
 
 std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToInteger(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::Type const* _targetSolType,
 	awst::WType const* _targetWType,
 	std::shared_ptr<awst::Expression> _arg,
@@ -150,7 +150,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToInteger(
 // ─────────────────────────────────────────────────────────────────────
 
 std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToBool(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::Type const* /*_targetSolType*/,
 	awst::WType const* /*_targetWType*/,
 	std::shared_ptr<awst::Expression> _arg,
@@ -208,7 +208,7 @@ std::shared_ptr<awst::Expression> TypeConversionRegistry::leftPadToN(
 }
 
 std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToAddress(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::Type const* _targetSolType,
 	awst::WType const* /*_targetWType*/,
 	std::shared_ptr<awst::Expression> _arg,
@@ -249,7 +249,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToAddress(
 // ─────────────────────────────────────────────────────────────────────
 
 std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::Type const* _targetSolType,
 	awst::WType const* _targetWType,
 	std::shared_ptr<awst::Expression> _arg,
@@ -360,7 +360,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 // ─────────────────────────────────────────────────────────────────────
 
 std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToEnum(
-	BuilderContext& _ctx,
+	ContractContext& _ctx,
 	solidity::frontend::Type const* _targetSolType,
 	awst::WType const* /*_targetWType*/,
 	std::shared_ptr<awst::Expression> _arg,

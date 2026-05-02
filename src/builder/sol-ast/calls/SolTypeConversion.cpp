@@ -13,7 +13,7 @@ namespace puyasol::builder::sol_ast
 {
 
 SolTypeConversion::SolTypeConversion(
-	eb::BuilderContext& _ctx,
+	eb::ContractContext& _ctx,
 	solidity::frontend::FunctionCall const& _call)
 	: SolFunctionCall(_ctx, _call)
 {

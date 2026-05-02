@@ -18,7 +18,7 @@ class BuiltinCallableRegistry
 {
 public:
 	using CallHandler = std::function<std::unique_ptr<InstanceBuilder>(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		std::vector<std::shared_ptr<awst::Expression>>& _args,
 		awst::SourceLocation const& _loc)>;
 
@@ -27,7 +27,7 @@ public:
 	/// Try to handle a builtin function call by name.
 	/// Returns nullptr if the name is not a registered builtin.
 	std::unique_ptr<InstanceBuilder> tryCall(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		std::string const& _name,
 		std::vector<std::shared_ptr<awst::Expression>>& _args,
 		awst::SourceLocation const& _loc) const;
@@ -39,37 +39,37 @@ private:
 
 	// Individual handlers
 	static std::unique_ptr<InstanceBuilder> handleKeccak256(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		std::vector<std::shared_ptr<awst::Expression>>& _args,
 		awst::SourceLocation const& _loc);
 
 	static std::unique_ptr<InstanceBuilder> handleSha256(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		std::vector<std::shared_ptr<awst::Expression>>& _args,
 		awst::SourceLocation const& _loc);
 
 	static std::unique_ptr<InstanceBuilder> handleMulmod(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		std::vector<std::shared_ptr<awst::Expression>>& _args,
 		awst::SourceLocation const& _loc);
 
 	static std::unique_ptr<InstanceBuilder> handleAddmod(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		std::vector<std::shared_ptr<awst::Expression>>& _args,
 		awst::SourceLocation const& _loc);
 
 	static std::unique_ptr<InstanceBuilder> handleGasleft(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		std::vector<std::shared_ptr<awst::Expression>>& _args,
 		awst::SourceLocation const& _loc);
 
 	static std::unique_ptr<InstanceBuilder> handleSelfdestruct(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		std::vector<std::shared_ptr<awst::Expression>>& _args,
 		awst::SourceLocation const& _loc);
 
 	static std::unique_ptr<InstanceBuilder> handleEcrecover(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		std::vector<std::shared_ptr<awst::Expression>>& _args,
 		awst::SourceLocation const& _loc);
 

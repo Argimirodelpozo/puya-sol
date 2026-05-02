@@ -18,7 +18,7 @@ class SolArrayBuilder: public InstanceBuilder
 {
 public:
 	SolArrayBuilder(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::ArrayType const* _arrayType,
 		std::shared_ptr<awst::Expression> _expr)
 		: InstanceBuilder(_ctx, std::move(_expr)), m_arrayType(_arrayType)
@@ -49,7 +49,7 @@ class SolMappingBuilder: public InstanceBuilder
 {
 public:
 	SolMappingBuilder(
-		BuilderContext& _ctx,
+		ContractContext& _ctx,
 		solidity::frontend::MappingType const* _mappingType,
 		std::shared_ptr<awst::Expression> _expr)
 		: InstanceBuilder(_ctx, std::move(_expr)), m_mappingType(_mappingType)
