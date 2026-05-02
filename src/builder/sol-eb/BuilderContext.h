@@ -28,6 +28,7 @@ namespace puyasol::builder
 class TypeMapper;
 class StorageMapper;
 class TransientStorage;
+namespace sol_ast { class Context; }
 }
 
 namespace puyasol::builder::eb
@@ -121,6 +122,36 @@ public:
 	std::map<int64_t, std::string> mappingKeyParams;
 	bool inConstructor = false;
 	bool inUncheckedBlock = false;
+
+	/// Innermost active scope. Updated on entry to each
+	/// TranslationContext / FunctionContext / BlockContext via
+	/// `pushScope`; descendants' parent chain reaches the same nodes.
+	/// Null before the first scope is pushed (only happens during very
+	/// early ContractBuilder setup).
+	sol_ast::Context* currentScope = nullptr;
+
+	/// RAII helper: stash the previous scope on construct, restore on
+	/// destruct. Use via `auto guard = ctx.pushScope(&someContext);`.
+	class ScopePush
+	{
+	public:
+		ScopePush(BuilderContext& _ctx, sol_ast::Context* _new)
+			: m_ctx(_ctx), m_prev(_ctx.currentScope)
+		{
+			m_ctx.currentScope = _new;
+		}
+		~ScopePush() { m_ctx.currentScope = m_prev; }
+		ScopePush(ScopePush const&) = delete;
+		ScopePush& operator=(ScopePush const&) = delete;
+	private:
+		BuilderContext& m_ctx;
+		sol_ast::Context* m_prev;
+	};
+
+	[[nodiscard]] ScopePush pushScopeRaii(sol_ast::Context* _scope)
+	{
+		return ScopePush(*this, _scope);
+	}
 
 	/// Scratch slot for the `arr.push() = value` rewrite: SolAssignment
 	/// stashes the RHS here before the LHS build, and SolArrayMethod's

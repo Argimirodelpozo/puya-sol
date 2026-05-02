@@ -424,7 +424,9 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	}
 
 	sol_ast::TranslationContext tr{exprBuilder, m_typeMapper, _sourceFile};
+	auto trGuard = exprBuilder.pushScopeRaii(&tr);
 	sol_ast::FunctionContext fnCtx{tr, {}, sub->returnType, {}};
+	auto fnGuard = exprBuilder.pushScopeRaii(&fnCtx);
 
 	// Param + return-param context for inline assembly + sub-word integer truncation.
 	{
@@ -482,6 +484,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	}
 
 	auto blk = sol_ast::BlockContext::top(fnCtx);
+	auto blkGuard = exprBuilder.pushScopeRaii(&blk);
 	sub->body = sol_ast::buildBlock(blk, _func.body());
 
 	// Insert zero-initialization for named return variables — Solidity

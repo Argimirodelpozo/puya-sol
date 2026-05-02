@@ -221,6 +221,7 @@ public:
 		// honest. (Today the chain is informational; tomorrow it can carry
 		// scope/local maps.)
 		auto childBlk = m_blk.nest();
+		auto blkGuard = m_blk.builderCtx().pushScopeRaii(&childBlk);
 		SolBlock handler(childBlk, _n, m_blk.makeLoc(_n.location()));
 		return handler.toAwst();
 	}
@@ -263,6 +264,7 @@ std::shared_ptr<awst::Block> SolBlock::toAwstBlock()
 			// Flatten nested blocks — they share the same BlockContext nest
 			// so unchecked-arithmetic propagates through.
 			auto childBlk = m_blk.nest();
+			auto blkGuard = m_blk.builderCtx().pushScopeRaii(&childBlk);
 			SolBlock handler(childBlk, *innerBlock,
 				m_blk.makeLoc(innerBlock->location()));
 			auto translated = handler.toAwstBlock();

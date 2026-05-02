@@ -91,6 +91,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 		LoopContext loopCtx;
 		loopCtx.doWhileCondBreak = ifBreak;
 		auto bodyBlk = m_blk.withLoop(loopCtx);
+		auto blkGuard = m_blk.builderCtx().pushScopeRaii(&bodyBlk);
 
 		bool bodyTerminated = false;
 		if (auto const* block = dynamic_cast<Block const*>(&m_node.body()))
@@ -134,6 +135,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 		// in nested code knows it's inside a loop.
 		LoopContext loopCtx;
 		auto bodyBlk = m_blk.withLoop(loopCtx);
+		auto blkGuard = m_blk.builderCtx().pushScopeRaii(&bodyBlk);
 
 		if (auto const* block = dynamic_cast<Block const*>(&m_node.body()))
 			loop->loopBody = buildBlock(bodyBlk, *block);
@@ -184,6 +186,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolForStatement::toAwst()
 	LoopContext loopCtx;
 	loopCtx.forLoopPost = postStmt;
 	auto bodyBlk = m_blk.withLoop(loopCtx);
+	auto blkGuard = m_blk.builderCtx().pushScopeRaii(&bodyBlk);
 
 	auto loopBody = std::make_shared<awst::Block>();
 	loopBody->sourceLocation = m_loc;

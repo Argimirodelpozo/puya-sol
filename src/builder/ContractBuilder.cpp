@@ -65,9 +65,11 @@ std::shared_ptr<awst::Block> ContractBuilder::buildBlock(
 	// Build a fresh per-function context, then a top BlockContext (optionally
 	// with the current placeholder body for modifier inlining), then dispatch.
 	sol_ast::FunctionContext fn{*m_tr, m_currentParams, m_currentReturnType, m_currentBitWidths};
+	auto fnGuard = m_exprBuilder->pushScopeRaii(&fn);
 	auto blk = m_currentPlaceholder
 		? sol_ast::BlockContext::top(fn).withPlaceholder(m_currentPlaceholder)
 		: sol_ast::BlockContext::top(fn);
+	auto blkGuard = m_exprBuilder->pushScopeRaii(&blk);
 	return sol_ast::buildBlock(blk, _block);
 }
 
@@ -202,6 +204,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// Build the per-contract TranslationContext. FunctionContext + BlockContext
 	// are constructed locally (in buildBlock and similar) on top of this.
 	m_tr.emplace(sol_ast::TranslationContext{*m_exprBuilder, m_typeMapper, m_sourceFile});
+	m_exprBuilder->currentScope = &*m_tr;
 	m_currentParams.clear();
 	m_currentReturnType = nullptr;
 	m_currentBitWidths.clear();
