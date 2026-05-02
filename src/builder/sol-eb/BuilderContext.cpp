@@ -105,6 +105,17 @@ void BuilderContext::eraseFuncPtrTarget(int64_t _declId)
 	}
 }
 
+unsigned long long BuilderContext::findConstantLocal(int64_t _declId) const
+{
+	return currentScope ? currentScope->findConstantLocal(_declId) : 0ULL;
+}
+
+void BuilderContext::setConstantLocal(int64_t _declId, unsigned long long _value)
+{
+	if (auto* blk = nearestBlock(currentScope))
+		blk->constantLocals[_declId] = _value;
+}
+
 BuilderContext::BuilderContext(
 	TypeMapper& _typeMapper,
 	StorageMapper& _storageMapper,

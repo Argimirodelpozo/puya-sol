@@ -94,6 +94,14 @@ public:
 		return m_parent ? m_parent->findFuncPtrTarget(_declId) : nullptr;
 	}
 
+	/// Compile-time constant value for a local: e.g. `uint x = 5` is
+	/// folded so later uses of `x` inline `5`. Sentinel return is 0,
+	/// matched against `>0` checks at the read site.
+	virtual unsigned long long findConstantLocal(int64_t _declId) const
+	{
+		return m_parent ? m_parent->findConstantLocal(_declId) : 0ULL;
+	}
+
 protected:
 	explicit Context(Context* _parent): m_parent(_parent) {}
 
@@ -202,6 +210,10 @@ struct BlockContext: Context
 	/// is a local function pointer) as a direct callsub.
 	std::map<int64_t, solidity::frontend::FunctionDefinition const*> funcPtrTargets;
 
+	/// Folded compile-time constant value for a local declaration. Bound
+	/// when a `T x = LITERAL` declaration is encountered.
+	std::unordered_map<int64_t, unsigned long long> constantLocals;
+
 	bool isUnchecked() const override
 	{
 		return unchecked || (m_parent && m_parent->isUnchecked());
@@ -231,6 +243,14 @@ struct BlockContext: Context
 		if (it != funcPtrTargets.end())
 			return it->second;
 		return m_parent ? m_parent->findFuncPtrTarget(_declId) : nullptr;
+	}
+
+	unsigned long long findConstantLocal(int64_t _declId) const override
+	{
+		auto it = constantLocals.find(_declId);
+		if (it != constantLocals.end())
+			return it->second;
+		return m_parent ? m_parent->findConstantLocal(_declId) : 0ULL;
 	}
 
 	BlockContext(

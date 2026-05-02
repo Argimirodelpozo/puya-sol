@@ -115,7 +115,6 @@ public:
 	std::map<int64_t, ParamRemap> paramRemaps;
 	std::unordered_map<int64_t, std::string> superTargetNames;
 	std::map<int64_t, std::shared_ptr<awst::Expression>> slotStorageRefs;
-	std::unordered_map<int64_t, unsigned long long> constantLocals;
 	std::map<int64_t, std::string> mappingKeyParams;
 	bool inConstructor = false;
 
@@ -178,6 +177,13 @@ public:
 	/// block where it exists. No-op if not bound.
 	void eraseFuncPtrTarget(int64_t _declId);
 
+	/// Look up a folded compile-time constant value for a local. Returns 0
+	/// if the local isn't constant-folded (callers check `> 0`).
+	unsigned long long findConstantLocal(int64_t _declId) const;
+
+	/// Bind a constant value for a local in the innermost enclosing block.
+	void setConstantLocal(int64_t _declId, unsigned long long _value);
+
 	/// Scratch slot for the `arr.push() = value` rewrite: SolAssignment
 	/// stashes the RHS here before the LHS build, and SolArrayMethod's
 	/// push() handler consumes it as the pushed element instead of a
@@ -225,28 +231,6 @@ public:
 	/// any enclosing block, otherwise the bare `_name`.
 	std::string lookupVarName(std::string const& _name, int64_t _declId) const;
 
-	// ── Scope guard (RAII) ──
-	/// Snapshots and restores mutable scope state at scope boundaries
-	/// (if/else branches, for/while bodies, blocks).
-	class ScopeGuard
-	{
-	public:
-		explicit ScopeGuard(BuilderContext& _ctx)
-			: m_ctx(_ctx),
-			  m_savedConstantLocals(_ctx.constantLocals)
-		{}
-		~ScopeGuard()
-		{
-			m_ctx.constantLocals = std::move(m_savedConstantLocals);
-		}
-		ScopeGuard(ScopeGuard const&) = delete;
-		ScopeGuard& operator=(ScopeGuard const&) = delete;
-	private:
-		BuilderContext& m_ctx;
-		std::unordered_map<int64_t, unsigned long long> m_savedConstantLocals;
-	};
-
-	ScopeGuard pushScope() { return ScopeGuard(*this); }
 };
 
 } // namespace puyasol::builder::eb

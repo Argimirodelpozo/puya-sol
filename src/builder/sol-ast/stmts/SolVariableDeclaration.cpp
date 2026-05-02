@@ -58,7 +58,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			{
 				auto val = ratType->literalValue(nullptr);
 				if (val > 0 && val <= std::numeric_limits<unsigned long long>::max())
-					m_blk.builderCtx().constantLocals[decl.id()] = static_cast<unsigned long long>(val);
+					m_blk.builderCtx().setConstantLocal(decl.id(), static_cast<unsigned long long>(val));
 			}
 
 			// Upgrade dynamic array to fixed-size when N is known

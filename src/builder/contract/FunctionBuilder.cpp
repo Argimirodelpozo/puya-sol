@@ -41,8 +41,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	std::string const& _nameOverride
 )
 {
-	// Scope guard for per-method state (varNameToId, funcPtrTargets, etc.)
-	auto methodScope = m_exprBuilder->pushScope();
+	// Per-method scope state (varNameToId, funcPtrTargets, storageAliases,
+	// constantLocals) now lives on the BlockContext that buildBlock pushes
+	// for the function body — no manual snapshot/restore needed here.
 
 	awst::ContractMethod method;
 	method.sourceLocation = makeLoc(_func.location());
