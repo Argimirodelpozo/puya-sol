@@ -33,6 +33,46 @@ void BuilderContext::setStorageAlias(
 	}
 }
 
+namespace
+{
+sol_ast::BlockContext* nearestBlock(sol_ast::Context* _scope)
+{
+	for (auto* ctx = _scope; ctx; ctx = ctx->parent())
+		if (auto* blk = dynamic_cast<sol_ast::BlockContext*>(ctx))
+			return blk;
+	return nullptr;
+}
+} // namespace
+
+std::string BuilderContext::resolveVarName(std::string const& _name, int64_t _declId)
+{
+	// Honour explicit remaps (used by modifier inliner when the same
+	// modifier — with its own local vars — is applied multiple times).
+	auto remapIt = paramRemaps.find(_declId);
+	if (remapIt != paramRemaps.end())
+		return remapIt->second.name;
+
+	auto* blk = nearestBlock(currentScope);
+	int64_t existing = currentScope ? currentScope->lookupVarId(_name) : 0;
+	if (existing != 0 && existing != _declId)
+	{
+		// Name is shadowed — use unique name
+		std::string unique = _name + "__" + std::to_string(_declId);
+		if (blk) blk->varNameToId[unique] = _declId;
+		return unique;
+	}
+	if (blk) blk->varNameToId[_name] = _declId;
+	return _name;
+}
+
+std::string BuilderContext::lookupVarName(std::string const& _name, int64_t _declId) const
+{
+	std::string unique = _name + "__" + std::to_string(_declId);
+	if (currentScope && currentScope->lookupVarId(unique) == _declId)
+		return unique;
+	return _name;
+}
+
 BuilderContext::BuilderContext(
 	TypeMapper& _typeMapper,
 	StorageMapper& _storageMapper,

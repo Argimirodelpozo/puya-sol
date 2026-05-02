@@ -117,7 +117,6 @@ public:
 	std::map<int64_t, std::shared_ptr<awst::Expression>> slotStorageRefs;
 	std::map<int64_t, solidity::frontend::FunctionDefinition const*> funcPtrTargets;
 	std::unordered_map<int64_t, unsigned long long> constantLocals;
-	std::map<std::string, int64_t> varNameToId;
 	std::map<int64_t, std::string> mappingKeyParams;
 	bool inConstructor = false;
 
@@ -202,37 +201,15 @@ public:
 
 	// ── Variable-name resolution (handles shadowing) ──
 	/// Get the AWST variable name for a declaration, handling shadowing.
-	/// If the name is already taken by a different declaration in an outer scope,
-	/// appends "__<id>" to make it unique.
-	std::string resolveVarName(std::string const& _name, int64_t _declId)
-	{
-		// Honour explicit remaps (used by modifier inliner when the same
-		// modifier — with its own local vars — is applied multiple times).
-		auto remapIt = paramRemaps.find(_declId);
-		if (remapIt != paramRemaps.end())
-			return remapIt->second.name;
-
-		auto it = varNameToId.find(_name);
-		if (it != varNameToId.end() && it->second != _declId)
-		{
-			// Name is shadowed — use unique name
-			std::string unique = _name + "__" + std::to_string(_declId);
-			varNameToId[unique] = _declId;
-			return unique;
-		}
-		varNameToId[_name] = _declId;
-		return _name;
-	}
+	/// If the name is already taken by a different declaration in an outer
+	/// scope, appends "__<id>" to make it unique. Bindings are inserted
+	/// into the innermost enclosing BlockContext.
+	std::string resolveVarName(std::string const& _name, int64_t _declId);
 
 	/// Look up the AWST variable name for a referenced declaration.
-	std::string lookupVarName(std::string const& _name, int64_t _declId) const
-	{
-		std::string unique = _name + "__" + std::to_string(_declId);
-		auto it = varNameToId.find(unique);
-		if (it != varNameToId.end() && it->second == _declId)
-			return unique;
-		return _name;
-	}
+	/// Returns `_name__declId` if such a unique-name binding exists in
+	/// any enclosing block, otherwise the bare `_name`.
+	std::string lookupVarName(std::string const& _name, int64_t _declId) const;
 
 	// ── Scope guard (RAII) ──
 	/// Snapshots and restores mutable scope state at scope boundaries
@@ -243,14 +220,12 @@ public:
 		explicit ScopeGuard(BuilderContext& _ctx)
 			: m_ctx(_ctx),
 			  m_savedFuncPtrTargets(_ctx.funcPtrTargets),
-			  m_savedConstantLocals(_ctx.constantLocals),
-			  m_savedVarNames(_ctx.varNameToId)
+			  m_savedConstantLocals(_ctx.constantLocals)
 		{}
 		~ScopeGuard()
 		{
 			m_ctx.funcPtrTargets = std::move(m_savedFuncPtrTargets);
 			m_ctx.constantLocals = std::move(m_savedConstantLocals);
-			m_ctx.varNameToId = std::move(m_savedVarNames);
 		}
 		ScopeGuard(ScopeGuard const&) = delete;
 		ScopeGuard& operator=(ScopeGuard const&) = delete;
@@ -258,7 +233,6 @@ public:
 		BuilderContext& m_ctx;
 		std::map<int64_t, solidity::frontend::FunctionDefinition const*> m_savedFuncPtrTargets;
 		std::unordered_map<int64_t, unsigned long long> m_savedConstantLocals;
-		std::map<std::string, int64_t> m_savedVarNames;
 	};
 
 	ScopeGuard pushScope() { return ScopeGuard(*this); }

@@ -75,6 +75,14 @@ public:
 		return m_parent ? m_parent->findStorageAlias(_declId) : nullptr;
 	}
 
+	/// Variable-name → AST decl ID for shadow detection. Returns 0 if the
+	/// name isn't bound in any enclosing block. Inner-block bindings shadow
+	/// outer ones (chain walk returns the innermost hit).
+	virtual int64_t lookupVarId(std::string const& _name) const
+	{
+		return m_parent ? m_parent->lookupVarId(_name) : 0;
+	}
+
 protected:
 	explicit Context(Context* _parent): m_parent(_parent) {}
 
@@ -174,6 +182,10 @@ struct BlockContext: Context
 	/// Storage-pointer aliases bound in this block's lexical scope.
 	std::map<int64_t, std::shared_ptr<awst::Expression>> storageAliases;
 
+	/// Variable-name → AST decl ID for shadowing checks. Inserts go to the
+	/// current block (the innermost when reading via `lookupVarId`).
+	std::map<std::string, int64_t> varNameToId;
+
 	bool isUnchecked() const override
 	{
 		return unchecked || (m_parent && m_parent->isUnchecked());
@@ -185,6 +197,14 @@ struct BlockContext: Context
 		if (it != storageAliases.end())
 			return it->second;
 		return m_parent ? m_parent->findStorageAlias(_declId) : nullptr;
+	}
+
+	int64_t lookupVarId(std::string const& _name) const override
+	{
+		auto it = varNameToId.find(_name);
+		if (it != varNameToId.end())
+			return it->second;
+		return m_parent ? m_parent->lookupVarId(_name) : 0;
 	}
 
 	BlockContext(
