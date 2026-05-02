@@ -475,5 +475,208 @@ void AssemblyBuilder::handleIdentityPrecompile(
 	assignMemoryVar(std::move(replace), _loc, _out);
 }
 
+// ─── Runtime-offset precompile handlers ─────────────────────────────────────
+//
+// Same shape as the constant-offset handlers above, but the input/output
+// offsets and sizes are AWST Expressions (evaluated at runtime). Used when
+// the Yul staticcall has dynamic memory positions.
+
+void AssemblyBuilder::handleEcAddRT(
+	std::shared_ptr<awst::Expression> _inputOffset,
+	std::shared_ptr<awst::Expression> _outputOffset,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	auto ecCall = awst::makeIntrinsicCall("ec_add", awst::WType::bytesType(), _loc);
+	ecCall->immediates.push_back("BN254g1");
+	ecCall->stackArgs.push_back(concatSlotsRT(_inputOffset, 0, 2, _loc));  // point A
+	ecCall->stackArgs.push_back(concatSlotsRT(_inputOffset, 2, 2, _loc));  // point B
+	storeResultToMemoryRT(std::move(ecCall), std::move(_outputOffset), 2, _loc, _out);
+}
+
+void AssemblyBuilder::handleEcMulRT(
+	std::shared_ptr<awst::Expression> _inputOffset,
+	std::shared_ptr<awst::Expression> _outputOffset,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	auto ecCall = awst::makeIntrinsicCall("ec_scalar_mul", awst::WType::bytesType(), _loc);
+	ecCall->immediates.push_back("BN254g1");
+	ecCall->stackArgs.push_back(concatSlotsRT(_inputOffset, 0, 2, _loc));  // point
+	ecCall->stackArgs.push_back(concatSlotsRT(_inputOffset, 2, 1, _loc));  // scalar
+	storeResultToMemoryRT(std::move(ecCall), std::move(_outputOffset), 2, _loc, _out);
+}
+
+void AssemblyBuilder::handleEcPairingRT(
+	std::shared_ptr<awst::Expression> _inputOffset,
+	std::shared_ptr<awst::Expression> _inputSize,
+	std::shared_ptr<awst::Expression> _outputOffset,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	using O = awst::UInt64BinaryOperator;
+	// numPairs = inputSize / (6*32) — runtime value. Honk uses fixed 4-pair
+	// pairings, but we can't generally assume that. For an MVP, support
+	// only the 1-pair and 4-pair pairings the verifier actually emits by
+	// building a runtime-loop variant. For honk specifically (and the
+	// only path stressed today), inputSize is always a compile-time
+	// constant since the verifier does e.g. `staticcall(gas(), 8, ..., 0x180, ...)`.
+	// So we conservatively check: if inputSize resolves to a constant
+	// (integer constant in the AWST), unroll; otherwise fall back to a
+	// dynamic loop.
+	//
+	// Try the unroll path first. We accept any constant-integer expression
+	// regardless of whether the original Yul site was constant — puya may
+	// have constant-folded for us.
+	auto* sizeConst = dynamic_cast<awst::IntegerConstant const*>(_inputSize.get());
+	if (sizeConst)
+	{
+		uint64_t inSize = std::stoull(sizeConst->value);
+		int inputSlots = static_cast<int>(inSize / 0x20);
+		int numPairs = inputSlots / 6;
+		auto ecCall = awst::makeIntrinsicCall("ec_pairing_check", awst::WType::boolType(), _loc);
+		ecCall->immediates.push_back("BN254g1");
+		if (numPairs <= 0)
+		{
+			// Empty pairing: AVM ec_pairing_check needs at least one pair;
+			// emit `true` directly.
+			storeResultToMemoryRT(awst::makeBoolConstant(true, _loc),
+				std::move(_outputOffset), 1, _loc, _out, /*isBool=*/true);
+			return;
+		}
+		// Build G1+G2 inputs as concatenations across all pairs.
+		auto concatTwoSlotsRT = [&](std::shared_ptr<awst::Expression> off1,
+									std::shared_ptr<awst::Expression> off2)
+			-> std::shared_ptr<awst::Expression> {
+			auto extract = [&](std::shared_ptr<awst::Expression> off) {
+				auto a = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
+				a->stackArgs.push_back(memoryVar(_loc));
+				a->stackArgs.push_back(std::move(off));
+				a->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
+				return a;
+			};
+			auto a = extract(std::move(off1));
+			auto b = extract(std::move(off2));
+			auto c = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
+			c->stackArgs.push_back(std::move(a));
+			c->stackArgs.push_back(std::move(b));
+			return c;
+		};
+		auto plusConst = [&](std::shared_ptr<awst::Expression> base, uint64_t k) {
+			if (k == 0) return base;
+			return std::shared_ptr<awst::Expression>(awst::makeUInt64BinOp(
+				std::move(base), O::Add,
+				awst::makeIntegerConstant(std::to_string(k), _loc), _loc));
+		};
+
+		// Bind input offset to a local so we don't reduplicate the
+		// expression for each pair.
+		std::string inOffVar = "__pairing_in_off";
+		m_locals[inOffVar] = awst::WType::uint64Type();
+		_out.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(inOffVar, awst::WType::uint64Type(), _loc),
+			offsetToUint64(std::move(_inputOffset), _loc), _loc));
+		auto baseOff = [&]() {
+			return awst::makeVarExpression(inOffVar, awst::WType::uint64Type(), _loc);
+		};
+
+		std::shared_ptr<awst::Expression> g1All;
+		std::shared_ptr<awst::Expression> g2All;
+		for (int p = 0; p < numPairs; ++p)
+		{
+			uint64_t pairBase = static_cast<uint64_t>(p) * 6 * 0x20;
+			// G1: 2 slots starting at pairBase.
+			auto g1 = concatSlotsRT(plusConst(baseOff(), pairBase), 0, 2, _loc);
+			// G2: EVM (x_im, x_re, y_im, y_re); AVM expects (x_re, x_im, y_re, y_im).
+			auto g2_x = concatTwoSlotsRT(
+				plusConst(baseOff(), pairBase + 3 * 0x20),
+				plusConst(baseOff(), pairBase + 2 * 0x20));
+			auto g2_y = concatTwoSlotsRT(
+				plusConst(baseOff(), pairBase + 5 * 0x20),
+				plusConst(baseOff(), pairBase + 4 * 0x20));
+			auto g2 = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
+			g2->stackArgs.push_back(std::move(g2_x));
+			g2->stackArgs.push_back(std::move(g2_y));
+
+			if (!g1All) g1All = std::move(g1);
+			else
+			{
+				auto c = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
+				c->stackArgs.push_back(std::move(g1All));
+				c->stackArgs.push_back(std::move(g1));
+				g1All = std::move(c);
+			}
+			if (!g2All) g2All = std::move(g2);
+			else
+			{
+				auto c = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
+				c->stackArgs.push_back(std::move(g2All));
+				c->stackArgs.push_back(std::move(g2));
+				g2All = std::move(c);
+			}
+		}
+		ecCall->stackArgs.push_back(std::move(g1All));
+		ecCall->stackArgs.push_back(std::move(g2All));
+		storeResultToMemoryRT(std::move(ecCall), std::move(_outputOffset), 1, _loc, _out, /*isBool=*/true);
+		return;
+	}
+
+	// Fully-dynamic input size: not currently supported (would need a
+	// runtime loop emitting one ec_pairing_check). Fall back to stub.
+	Logger::instance().warning(
+		"ec_pairing with dynamic input size — stubbing as success (no runtime "
+		"pair-count loop yet)", _loc);
+	storeResultToMemoryRT(awst::makeBoolConstant(true, _loc),
+		std::move(_outputOffset), 1, _loc, _out, /*isBool=*/true);
+}
+
+void AssemblyBuilder::handleSha256PrecompileRT(
+	std::shared_ptr<awst::Expression> _inputOffset,
+	std::shared_ptr<awst::Expression> _inputSize,
+	std::shared_ptr<awst::Expression> _outputOffset,
+	std::shared_ptr<awst::Expression> /*_outputSize*/,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	// Read inputSize bytes from memory at inputOffset, hash, write 32 bytes
+	// at outputOffset. The output size for SHA-256 is always 32.
+	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
+	extract->stackArgs.push_back(memoryVar(_loc));
+	extract->stackArgs.push_back(offsetToUint64(std::move(_inputOffset), _loc));
+	extract->stackArgs.push_back(offsetToUint64(std::move(_inputSize), _loc));
+
+	auto sha = awst::makeIntrinsicCall("sha256", awst::WType::bytesType(), _loc);
+	sha->stackArgs.push_back(std::move(extract));
+
+	storeResultToMemoryRT(std::move(sha), std::move(_outputOffset), 1, _loc, _out);
+}
+
+void AssemblyBuilder::handleIdentityPrecompileRT(
+	std::shared_ptr<awst::Expression> _inputOffset,
+	std::shared_ptr<awst::Expression> _inputSize,
+	std::shared_ptr<awst::Expression> _outputOffset,
+	std::shared_ptr<awst::Expression> /*_outputSize*/,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	// Memory-to-memory copy of inputSize bytes from inputOffset to outputOffset.
+	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
+	extract->stackArgs.push_back(memoryVar(_loc));
+	extract->stackArgs.push_back(offsetToUint64(std::move(_inputOffset), _loc));
+	extract->stackArgs.push_back(offsetToUint64(std::move(_inputSize), _loc));
+
+	auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
+	replace->stackArgs.push_back(memoryVar(_loc));
+	replace->stackArgs.push_back(offsetToUint64(std::move(_outputOffset), _loc));
+	replace->stackArgs.push_back(std::move(extract));
+
+	assignMemoryVar(std::move(replace), _loc, _out);
+}
+
 
 } // namespace puyasol::builder

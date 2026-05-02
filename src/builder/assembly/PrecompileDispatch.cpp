@@ -51,29 +51,66 @@ void AssemblyBuilder::handlePrecompileCall(
 
 	if (!inputOffset || !inputSize || !outputOffset || !outputSize)
 	{
-		Logger::instance().warning(
-			"precompile call with non-constant memory offsets/sizes — stubbing as success", _loc
-		);
-		// Set success variable — use the variable's declared type (bool for Solidity bool)
+		// Dynamic offsets/sizes: route to the runtime-offset handlers
+		// for the precompiles that have them implemented (ecAdd / ecMul /
+		// ecPairing / SHA-256 / Identity). Other precompiles still fall
+		// back to the legacy stub.
+		bool rtDispatched = false;
+		bool rtSuccess = true;
+		auto inOffExpr  = buildExpression(_call.arguments[argBase]);
+		auto inSizeExpr = buildExpression(_call.arguments[argBase + 1]);
+		auto outOffExpr = buildExpression(_call.arguments[argBase + 2]);
+		auto outSizeExpr = buildExpression(_call.arguments[argBase + 3]);
+		switch (*precompileAddr)
+		{
+		case 2:
+			Logger::instance().debug("precompile 0x02: SHA-256 (runtime offsets)", _loc);
+			handleSha256PrecompileRT(inOffExpr, inSizeExpr, outOffExpr, outSizeExpr, _loc, _out);
+			rtDispatched = true;
+			break;
+		case 4:
+			Logger::instance().debug("precompile 0x04: Identity (runtime offsets)", _loc);
+			handleIdentityPrecompileRT(inOffExpr, inSizeExpr, outOffExpr, outSizeExpr, _loc, _out);
+			rtDispatched = true;
+			break;
+		case 6:
+			Logger::instance().debug("precompile 0x06: ecAdd (runtime offsets)", _loc);
+			handleEcAddRT(inOffExpr, outOffExpr, _loc, _out);
+			rtDispatched = true;
+			break;
+		case 7:
+			Logger::instance().debug("precompile 0x07: ecMul (runtime offsets)", _loc);
+			handleEcMulRT(inOffExpr, outOffExpr, _loc, _out);
+			rtDispatched = true;
+			break;
+		case 8:
+			Logger::instance().debug("precompile 0x08: ecPairing (runtime offsets)", _loc);
+			handleEcPairingRT(inOffExpr, inSizeExpr, outOffExpr, _loc, _out);
+			rtDispatched = true;
+			break;
+		default:
+			break;
+		}
+		if (!rtDispatched)
+		{
+			Logger::instance().warning(
+				"precompile call with non-constant memory offsets/sizes — stubbing as success "
+				"(no runtime-offset handler for this precompile)", _loc
+			);
+		}
+		// Set success variable.
 		if (!_assignTarget.empty())
 		{
 			auto localIt = m_locals.find(_assignTarget);
 			auto* varType = (localIt != m_locals.end()) ? localIt->second : awst::WType::biguintType();
-
 			auto assignStmt = std::make_shared<awst::AssignmentStatement>();
 			assignStmt->sourceLocation = _loc;
 			auto varExpr = awst::makeVarExpression(_assignTarget, varType, _loc);
 			assignStmt->target = std::move(varExpr);
-
 			if (varType == awst::WType::boolType())
-			{
-				assignStmt->value = awst::makeBoolConstant(true, _loc);
-			}
+				assignStmt->value = awst::makeBoolConstant(rtSuccess, _loc);
 			else
-			{
-				auto val = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType());
-				assignStmt->value = std::move(val);
-			}
+				assignStmt->value = awst::makeIntegerConstant(rtSuccess ? "1" : "0", _loc, awst::WType::biguintType());
 			_out.push_back(std::move(assignStmt));
 		}
 		return;

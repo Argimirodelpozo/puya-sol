@@ -419,6 +419,45 @@ private:
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
 
+	// Runtime-offset variants of the precompile handlers — used when the
+	// staticcall has dynamic input/output offsets (e.g. honk verifier's
+	// `add(free, 0x40)` patterns where `free = mload(0x40)`).
+	void handleEcAddRT(
+		std::shared_ptr<awst::Expression> _inputOffset,
+		std::shared_ptr<awst::Expression> _outputOffset,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+	void handleEcMulRT(
+		std::shared_ptr<awst::Expression> _inputOffset,
+		std::shared_ptr<awst::Expression> _outputOffset,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+	void handleEcPairingRT(
+		std::shared_ptr<awst::Expression> _inputOffset,
+		std::shared_ptr<awst::Expression> _inputSize,
+		std::shared_ptr<awst::Expression> _outputOffset,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+	void handleSha256PrecompileRT(
+		std::shared_ptr<awst::Expression> _inputOffset,
+		std::shared_ptr<awst::Expression> _inputSize,
+		std::shared_ptr<awst::Expression> _outputOffset,
+		std::shared_ptr<awst::Expression> _outputSize,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+	void handleIdentityPrecompileRT(
+		std::shared_ptr<awst::Expression> _inputOffset,
+		std::shared_ptr<awst::Expression> _inputSize,
+		std::shared_ptr<awst::Expression> _outputOffset,
+		std::shared_ptr<awst::Expression> _outputSize,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+
 	// ── Memory blob helpers ──────────────────────────────────────────
 
 	/// Build an expression that loads the memory blob from scratch slot for
@@ -464,10 +503,27 @@ private:
 		awst::SourceLocation const& _loc
 	);
 
+	/// Runtime-offset variant: same as concatSlots but the base offset
+	/// is an Expression evaluated at runtime. Emits
+	/// `extract3(__evm_memory, baseOffset + startSlot*32, count*32)`.
+	std::shared_ptr<awst::Expression> concatSlotsRT(
+		std::shared_ptr<awst::Expression> _baseOffset, int _startSlot, int _count,
+		awst::SourceLocation const& _loc
+	);
+
 	/// Store a bytes/biguint/bool result into the memory blob at a given offset.
 	void storeResultToMemory(
 		std::shared_ptr<awst::Expression> _result,
 		uint64_t _outputOffset, int _outputSlots,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out,
+		bool _isBoolResult = false
+	);
+
+	/// Runtime-offset variant of storeResultToMemory.
+	void storeResultToMemoryRT(
+		std::shared_ptr<awst::Expression> _result,
+		std::shared_ptr<awst::Expression> _outputOffset, int _outputSlots,
 		awst::SourceLocation const& _loc,
 		std::vector<std::shared_ptr<awst::Statement>>& _out,
 		bool _isBoolResult = false
