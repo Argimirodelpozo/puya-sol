@@ -200,6 +200,34 @@ void BuilderContext::eraseParamRemap(int64_t _declId)
 		tr->paramRemaps.erase(_declId);
 }
 
+std::string BuilderContext::findSuperTarget(int64_t _declId) const
+{
+	return currentScope ? currentScope->findSuperTarget(_declId) : std::string{};
+}
+
+void BuilderContext::setSuperTarget(int64_t _declId, std::string _name)
+{
+	if (auto* tr = nearestTranslation(currentScope))
+		tr->superTargetNames[_declId] = std::move(_name);
+}
+
+void BuilderContext::clearSuperTargets()
+{
+	if (auto* tr = nearestTranslation(currentScope))
+		tr->superTargetNames.clear();
+}
+
+namespace {
+std::unordered_map<int64_t, std::string> const kEmptySuperTargets;
+}
+
+std::unordered_map<int64_t, std::string> const& BuilderContext::allSuperTargets() const
+{
+	if (auto* tr = nearestTranslation(currentScope))
+		return tr->superTargetNames;
+	return kEmptySuperTargets;
+}
+
 BuilderContext::BuilderContext(
 	TypeMapper& _typeMapper,
 	StorageMapper& _storageMapper,

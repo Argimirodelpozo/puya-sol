@@ -526,10 +526,9 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 				retType = returnTypeFrom(funcDef);
 
 				// Check if there's a __super_N subroutine for this base function
-				auto superIt = m_ctx.superTargetNames.find(funcDef->id());
-				if (superIt != m_ctx.superTargetNames.end())
+				if (auto superName = m_ctx.findSuperTarget(funcDef->id()); !superName.empty())
 				{
-					auto target = awst::InstanceMethodTarget{superIt->second};
+					auto target = awst::InstanceMethodTarget{std::move(superName)};
 					return buildSubroutineCall(std::move(target), retType, funcDef, false);
 				}
 

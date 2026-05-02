@@ -1225,20 +1225,20 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		{
 			// Restore super targets for constructor body (needed for super.f() calls).
 			for (auto const& [id, name]: m_allSuperTargetNames)
-				m_exprBuilder->superTargetNames[id] = name;
+				m_exprBuilder->setSuperTarget(id, name);
 			// Also set up MRO overrides for the constructor specifically
 			if (constructor)
 			{
 				auto pfit = m_perFuncSuperOverrides.find(constructor->id());
 				if (pfit != m_perFuncSuperOverrides.end())
 					for (auto const& [targetId, superName]: pfit->second)
-						m_exprBuilder->superTargetNames[targetId] = superName;
+						m_exprBuilder->setSuperTarget(targetId, superName);
 			}
 			m_exprBuilder->setInConstructor(true);
 			auto ctorBody = buildBlock(constructor->body());
 			inlineModifiers(*constructor, ctorBody);
 			m_exprBuilder->setInConstructor(false);
-			m_exprBuilder->superTargetNames.clear();
+			m_exprBuilder->clearSuperTargets();
 			for (auto& stmt: ctorBody->body)
 				createBlock->body.push_back(std::move(stmt));
 		}

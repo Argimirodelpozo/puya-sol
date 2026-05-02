@@ -147,6 +147,14 @@ public:
 		return m_parent ? m_parent->findParamRemap(_declId) : nullptr;
 	}
 
+	/// `super.X()` resolution: pre-computed per the contract's MRO so a
+	/// call expression with target decl ID can route to the right base
+	/// implementation. Returns empty string if not bound.
+	virtual std::string findSuperTarget(int64_t _declId) const
+	{
+		return m_parent ? m_parent->findSuperTarget(_declId) : std::string{};
+	}
+
 protected:
 	explicit Context(Context* _parent): m_parent(_parent) {}
 
@@ -170,6 +178,12 @@ struct TranslationContext: Context
 	/// body reaches `TranslationContext` but not the outer FunctionContext.
 	std::map<int64_t, ParamRemap> paramRemaps;
 
+	/// `super.X()` MRO resolution map: AST decl ID → mangled super name.
+	/// Set up per-function before its body is translated; cleared between
+	/// function bodies. Lives at the translation level so inner buildBlock
+	/// recursions (e.g. modifier inlining) can still see the bindings.
+	std::unordered_map<int64_t, std::string> superTargetNames;
+
 	TranslationContext(
 		eb::BuilderContext& _exprBuilder,
 		TypeMapper& _typeMapper,
@@ -185,6 +199,12 @@ struct TranslationContext: Context
 	{
 		auto it = paramRemaps.find(_declId);
 		return it != paramRemaps.end() ? &it->second : nullptr;
+	}
+
+	std::string findSuperTarget(int64_t _declId) const override
+	{
+		auto it = superTargetNames.find(_declId);
+		return it != superTargetNames.end() ? it->second : std::string{};
 	}
 
 	awst::SourceLocation makeLoc(solidity::langutil::SourceLocation const& _sl) const

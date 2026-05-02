@@ -187,9 +187,8 @@ std::optional<ResolvedCall> CallResolver::resolveFromMemberAccess(
 				{
 					result.funcDef = fd;
 					result.isSuperCall = true;
-					auto it = _ctx.superTargetNames.find(fd->id());
-					if (it != _ctx.superTargetNames.end())
-						result.target = awst::InstanceMethodTarget{it->second};
+					if (auto superName = _ctx.findSuperTarget(fd->id()); !superName.empty())
+						result.target = awst::InstanceMethodTarget{std::move(superName)};
 					else
 						result.target = awst::InstanceMethodTarget{_resolvedName};
 					return result;

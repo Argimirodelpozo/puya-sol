@@ -114,7 +114,6 @@ public:
 	std::vector<std::shared_ptr<awst::Statement>> prePendingStatements;
 
 	// ── Per-translation scope state (owned) ──
-	std::unordered_map<int64_t, std::string> superTargetNames;
 
 	/// Innermost active scope. Updated on entry to each
 	/// TranslationContext / FunctionContext / BlockContext via
@@ -210,6 +209,13 @@ public:
 	sol_ast::ParamRemap const* findParamRemap(int64_t _declId) const;
 	void setParamRemap(int64_t _declId, sol_ast::ParamRemap _remap);
 	void eraseParamRemap(int64_t _declId);
+
+	/// `super.X()` MRO resolution accessors. Bindings live on the
+	/// innermost enclosing TranslationContext.
+	std::string findSuperTarget(int64_t _declId) const;
+	void setSuperTarget(int64_t _declId, std::string _name);
+	void clearSuperTargets();
+	std::unordered_map<int64_t, std::string> const& allSuperTargets() const;
 
 	/// Scratch slot for the `arr.push() = value` rewrite: SolAssignment
 	/// stashes the RHS here before the LHS build, and SolArrayMethod's

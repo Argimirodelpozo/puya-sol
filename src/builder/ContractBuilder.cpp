@@ -259,7 +259,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// translated inside buildApprovalProgram below — can resolve `super.f()`
 	// to the eventually-emitted `f__super_N` subroutine instead of falling
 	// back to the current contract's own `f`.
-	m_allSuperTargetNames = m_exprBuilder->superTargetNames;
+	m_allSuperTargetNames = m_exprBuilder->allSuperTargets();
 
 	// Approval and clear programs
 	m_postInitMethod.reset();
