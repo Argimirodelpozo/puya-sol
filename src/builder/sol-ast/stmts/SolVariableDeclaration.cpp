@@ -169,7 +169,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 					return result;
 				}
 
-				m_blk.builderCtx().slotStorageRefs[decl.id()] = value;
+				m_blk.builderCtx().setSlotStorageRef(decl.id(), value);
 				// Also emit the call as an assignment so the slot value is available.
 				// The slot var's wtype must match the function's return wtype to
 				// keep AssignmentStatement happy.

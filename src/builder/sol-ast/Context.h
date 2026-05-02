@@ -102,6 +102,16 @@ public:
 		return m_parent ? m_parent->findConstantLocal(_declId) : 0ULL;
 	}
 
+	/// Slot-based storage ref for a local declaration: when a `T storage`
+	/// pointer is assigned a slot expression, the binding lets later index
+	/// accesses through the local resolve to the slot directly.
+	virtual std::shared_ptr<awst::Expression> findSlotStorageRef(
+		int64_t _declId
+	) const
+	{
+		return m_parent ? m_parent->findSlotStorageRef(_declId) : nullptr;
+	}
+
 protected:
 	explicit Context(Context* _parent): m_parent(_parent) {}
 
@@ -214,6 +224,9 @@ struct BlockContext: Context
 	/// when a `T x = LITERAL` declaration is encountered.
 	std::unordered_map<int64_t, unsigned long long> constantLocals;
 
+	/// Slot-based storage refs for local pointers (`T storage p = base[i]`).
+	std::map<int64_t, std::shared_ptr<awst::Expression>> slotStorageRefs;
+
 	bool isUnchecked() const override
 	{
 		return unchecked || (m_parent && m_parent->isUnchecked());
@@ -251,6 +264,16 @@ struct BlockContext: Context
 		if (it != constantLocals.end())
 			return it->second;
 		return m_parent ? m_parent->findConstantLocal(_declId) : 0ULL;
+	}
+
+	std::shared_ptr<awst::Expression> findSlotStorageRef(
+		int64_t _declId
+	) const override
+	{
+		auto it = slotStorageRefs.find(_declId);
+		if (it != slotStorageRefs.end())
+			return it->second;
+		return m_parent ? m_parent->findSlotStorageRef(_declId) : nullptr;
 	}
 
 	BlockContext(

@@ -114,7 +114,6 @@ public:
 	// ── Per-translation scope state (owned) ──
 	std::map<int64_t, ParamRemap> paramRemaps;
 	std::unordered_map<int64_t, std::string> superTargetNames;
-	std::map<int64_t, std::shared_ptr<awst::Expression>> slotStorageRefs;
 	std::map<int64_t, std::string> mappingKeyParams;
 	bool inConstructor = false;
 
@@ -183,6 +182,12 @@ public:
 
 	/// Bind a constant value for a local in the innermost enclosing block.
 	void setConstantLocal(int64_t _declId, unsigned long long _value);
+
+	/// Look up a slot-based storage ref by AST decl ID.
+	std::shared_ptr<awst::Expression> findSlotStorageRef(int64_t _declId) const;
+
+	/// Bind a slot-based storage ref in the innermost enclosing block.
+	void setSlotStorageRef(int64_t _declId, std::shared_ptr<awst::Expression> _expr);
 
 	/// Scratch slot for the `arr.push() = value` rewrite: SolAssignment
 	/// stashes the RHS here before the LHS build, and SolArrayMethod's

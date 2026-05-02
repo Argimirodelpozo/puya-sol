@@ -116,6 +116,20 @@ void BuilderContext::setConstantLocal(int64_t _declId, unsigned long long _value
 		blk->constantLocals[_declId] = _value;
 }
 
+std::shared_ptr<awst::Expression> BuilderContext::findSlotStorageRef(int64_t _declId) const
+{
+	return currentScope ? currentScope->findSlotStorageRef(_declId) : nullptr;
+}
+
+void BuilderContext::setSlotStorageRef(
+	int64_t _declId,
+	std::shared_ptr<awst::Expression> _expr
+)
+{
+	if (auto* blk = nearestBlock(currentScope))
+		blk->slotStorageRefs[_declId] = std::move(_expr);
+}
+
 BuilderContext::BuilderContext(
 	TypeMapper& _typeMapper,
 	StorageMapper& _storageMapper,

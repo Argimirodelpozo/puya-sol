@@ -54,8 +54,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
 				ident->annotation().referencedDeclaration))
 		{
-			auto slotRef = m_ctx.slotStorageRefs.count(varDecl->id())
-				? m_ctx.slotStorageRefs.at(varDecl->id()) : nullptr;
+			auto slotRef = m_ctx.findSlotStorageRef(varDecl->id());
 			if (slotRef)
 			{
 				// Compute slot offset from index
