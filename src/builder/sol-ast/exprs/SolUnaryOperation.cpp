@@ -104,7 +104,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		}
 
 		// Checked: assert(x != INT_MIN) i.e. x != 2^(N-1)
-		if (!m_ctx.inUncheckedBlock)
+		if (!m_ctx.isUnchecked())
 		{
 			auto cmp = awst::makeNumericCompare(operand, awst::NumericComparison::Ne, makeBiguintConst(halfNStr), m_loc);
 
@@ -418,7 +418,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 			}
 
 			// Checked overflow: inc overflows at MAX (half-1), dec underflows at MIN (half)
-			if (!m_ctx.inUncheckedBlock)
+			if (!m_ctx.isUnchecked())
 			{
 				std::string limitStr;
 				if (isInc)

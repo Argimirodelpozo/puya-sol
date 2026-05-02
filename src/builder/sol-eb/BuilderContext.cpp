@@ -1,11 +1,17 @@
 #include "builder/sol-eb/BuilderContext.h"
 
+#include "builder/sol-ast/Context.h"
 #include "builder/sol-ast/SolExpressionDispatch.h"
 #include "builder/sol-eb/BinaryOpBuilder.h"
 #include "builder/sol-eb/BuilderRegistry.h"
 
 namespace puyasol::builder::eb
 {
+
+bool BuilderContext::isUnchecked() const
+{
+	return currentScope && currentScope->isUnchecked();
+}
 
 BuilderContext::BuilderContext(
 	TypeMapper& _typeMapper,

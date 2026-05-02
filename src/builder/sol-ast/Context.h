@@ -56,6 +56,17 @@ public:
 	/// Walk one level up. Returns nullptr at the root (TranslationContext).
 	Context* parent() const { return m_parent; }
 
+	// ── Scope-bound state accessors ──────────────────────────────────
+	// Default impls chain to the parent so callers can always ask the
+	// innermost scope without caring which level owns the answer.
+	// Subclasses override what they own to terminate the walk.
+
+	/// True if any ancestor scope is inside an `unchecked { }` block.
+	virtual bool isUnchecked() const
+	{
+		return m_parent && m_parent->isUnchecked();
+	}
+
 protected:
 	explicit Context(Context* _parent): m_parent(_parent) {}
 
@@ -146,6 +157,16 @@ struct BlockContext: Context
 	BlockContext* outer = nullptr;
 	LoopContext const* enclosingLoop = nullptr;
 	std::shared_ptr<awst::Block> placeholderBody;
+
+	/// True iff this block is itself an `unchecked { }` block. The
+	/// effective unchecked-status (this + any ancestor) is exposed via
+	/// `isUnchecked()`, which walks the chain.
+	bool unchecked = false;
+
+	bool isUnchecked() const override
+	{
+		return unchecked || (m_parent && m_parent->isUnchecked());
+	}
 
 	BlockContext(
 		FunctionContext& _fn,

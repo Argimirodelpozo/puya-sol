@@ -253,9 +253,9 @@ std::shared_ptr<awst::Block> SolBlock::toAwstBlock()
 	auto& bc = m_blk.builderCtx();
 	auto scope = bc.pushScope();
 
-	bool const wasUnchecked = bc.inUncheckedBlock;
+	bool const wasUnchecked = m_blk.unchecked;
 	if (m_block.unchecked())
-		bc.inUncheckedBlock = true;
+		m_blk.unchecked = true;
 
 	for (auto const& stmt: m_block.statements())
 	{
@@ -279,7 +279,7 @@ std::shared_ptr<awst::Block> SolBlock::toAwstBlock()
 		}
 	}
 
-	bc.inUncheckedBlock = wasUnchecked;
+	m_blk.unchecked = wasUnchecked;
 	return awstBlock;
 }
 

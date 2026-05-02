@@ -121,7 +121,6 @@ public:
 	std::map<std::string, int64_t> varNameToId;
 	std::map<int64_t, std::string> mappingKeyParams;
 	bool inConstructor = false;
-	bool inUncheckedBlock = false;
 
 	/// Innermost active scope. Updated on entry to each
 	/// TranslationContext / FunctionContext / BlockContext via
@@ -152,6 +151,11 @@ public:
 	{
 		return ScopePush(*this, _scope);
 	}
+
+	/// Convenience: true if the innermost scope (or any of its ancestors)
+	/// is inside an `unchecked { }` block. Resolved by chain walk through
+	/// `currentScope`. Returns false before any scope is pushed.
+	bool isUnchecked() const;
 
 	/// Scratch slot for the `arr.push() = value` rewrite: SolAssignment
 	/// stashes the RHS here before the LHS build, and SolArrayMethod's
