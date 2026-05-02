@@ -115,7 +115,6 @@ public:
 	std::map<int64_t, ParamRemap> paramRemaps;
 	std::unordered_map<int64_t, std::string> superTargetNames;
 	std::map<int64_t, std::shared_ptr<awst::Expression>> slotStorageRefs;
-	std::map<int64_t, solidity::frontend::FunctionDefinition const*> funcPtrTargets;
 	std::unordered_map<int64_t, unsigned long long> constantLocals;
 	std::map<int64_t, std::string> mappingKeyParams;
 	bool inConstructor = false;
@@ -163,6 +162,21 @@ public:
 	/// Lifetime is the block's lifetime — the binding is discarded when
 	/// the block ends (its BlockContext destructs).
 	void setStorageAlias(int64_t _declId, std::shared_ptr<awst::Expression> _expr);
+
+	/// Look up a function-pointer target by AST decl ID.
+	solidity::frontend::FunctionDefinition const* findFuncPtrTarget(
+		int64_t _declId
+	) const;
+
+	/// Bind a function-pointer target in the innermost enclosing block.
+	void setFuncPtrTarget(
+		int64_t _declId,
+		solidity::frontend::FunctionDefinition const* _target
+	);
+
+	/// Erase a function-pointer target binding from the innermost enclosing
+	/// block where it exists. No-op if not bound.
+	void eraseFuncPtrTarget(int64_t _declId);
 
 	/// Scratch slot for the `arr.push() = value` rewrite: SolAssignment
 	/// stashes the RHS here before the LHS build, and SolArrayMethod's
@@ -219,19 +233,16 @@ public:
 	public:
 		explicit ScopeGuard(BuilderContext& _ctx)
 			: m_ctx(_ctx),
-			  m_savedFuncPtrTargets(_ctx.funcPtrTargets),
 			  m_savedConstantLocals(_ctx.constantLocals)
 		{}
 		~ScopeGuard()
 		{
-			m_ctx.funcPtrTargets = std::move(m_savedFuncPtrTargets);
 			m_ctx.constantLocals = std::move(m_savedConstantLocals);
 		}
 		ScopeGuard(ScopeGuard const&) = delete;
 		ScopeGuard& operator=(ScopeGuard const&) = delete;
 	private:
 		BuilderContext& m_ctx;
-		std::map<int64_t, solidity::frontend::FunctionDefinition const*> m_savedFuncPtrTargets;
 		std::unordered_map<int64_t, unsigned long long> m_savedConstantLocals;
 	};
 

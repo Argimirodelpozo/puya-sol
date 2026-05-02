@@ -73,6 +73,38 @@ std::string BuilderContext::lookupVarName(std::string const& _name, int64_t _dec
 	return _name;
 }
 
+solidity::frontend::FunctionDefinition const* BuilderContext::findFuncPtrTarget(
+	int64_t _declId
+) const
+{
+	return currentScope ? currentScope->findFuncPtrTarget(_declId) : nullptr;
+}
+
+void BuilderContext::setFuncPtrTarget(
+	int64_t _declId,
+	solidity::frontend::FunctionDefinition const* _target
+)
+{
+	if (auto* blk = nearestBlock(currentScope))
+		blk->funcPtrTargets[_declId] = _target;
+}
+
+void BuilderContext::eraseFuncPtrTarget(int64_t _declId)
+{
+	for (auto* ctx = currentScope; ctx; ctx = ctx->parent())
+	{
+		if (auto* blk = dynamic_cast<sol_ast::BlockContext*>(ctx))
+		{
+			auto it = blk->funcPtrTargets.find(_declId);
+			if (it != blk->funcPtrTargets.end())
+			{
+				blk->funcPtrTargets.erase(it);
+				return;
+			}
+		}
+	}
+}
+
 BuilderContext::BuilderContext(
 	TypeMapper& _typeMapper,
 	StorageMapper& _storageMapper,

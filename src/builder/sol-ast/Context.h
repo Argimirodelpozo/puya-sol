@@ -83,6 +83,17 @@ public:
 		return m_parent ? m_parent->lookupVarId(_name) : 0;
 	}
 
+	/// Function-pointer target: the FunctionDefinition that a local
+	/// `function (…) returns (…)` variable currently points at. Returns
+	/// nullptr if no binding exists in any enclosing block. Used by
+	/// SolInternalCall to lower an indirect call as a direct callsub.
+	virtual solidity::frontend::FunctionDefinition const* findFuncPtrTarget(
+		int64_t _declId
+	) const
+	{
+		return m_parent ? m_parent->findFuncPtrTarget(_declId) : nullptr;
+	}
+
 protected:
 	explicit Context(Context* _parent): m_parent(_parent) {}
 
@@ -186,6 +197,11 @@ struct BlockContext: Context
 	/// current block (the innermost when reading via `lookupVarId`).
 	std::map<std::string, int64_t> varNameToId;
 
+	/// Function-pointer targets: local `function` variables → the
+	/// FunctionDefinition they're bound to. Used to lower `f()` (where `f`
+	/// is a local function pointer) as a direct callsub.
+	std::map<int64_t, solidity::frontend::FunctionDefinition const*> funcPtrTargets;
+
 	bool isUnchecked() const override
 	{
 		return unchecked || (m_parent && m_parent->isUnchecked());
@@ -205,6 +221,16 @@ struct BlockContext: Context
 		if (it != varNameToId.end())
 			return it->second;
 		return m_parent ? m_parent->lookupVarId(_name) : 0;
+	}
+
+	solidity::frontend::FunctionDefinition const* findFuncPtrTarget(
+		int64_t _declId
+	) const override
+	{
+		auto it = funcPtrTargets.find(_declId);
+		if (it != funcPtrTargets.end())
+			return it->second;
+		return m_parent ? m_parent->findFuncPtrTarget(_declId) : nullptr;
 	}
 
 	BlockContext(

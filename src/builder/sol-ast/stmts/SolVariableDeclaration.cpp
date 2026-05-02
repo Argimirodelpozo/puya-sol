@@ -46,7 +46,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				{
 					if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(
 							initId->annotation().referencedDeclaration))
-						m_blk.builderCtx().funcPtrTargets[decl.id()] = funcDef;
+						m_blk.builderCtx().setFuncPtrTarget(decl.id(), funcDef);
 				}
 			}
 

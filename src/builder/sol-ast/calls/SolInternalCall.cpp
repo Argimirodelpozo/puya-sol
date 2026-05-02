@@ -375,11 +375,10 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 	// Check if this is a function pointer variable call
 	if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(decl))
 	{
-		auto it = m_ctx.funcPtrTargets.find(varDecl->id());
-		if (it != m_ctx.funcPtrTargets.end() && it->second)
+		if (auto const* target = m_ctx.findFuncPtrTarget(varDecl->id()))
 		{
-			decl = it->second;
-			Logger::instance().debug("resolved function pointer '" + name + "' to '" + it->second->name() + "'");
+			decl = target;
+			Logger::instance().debug("resolved function pointer '" + name + "' to '" + target->name() + "'");
 		}
 		else if (auto const* funcType = dynamic_cast<FunctionType const*>(varDecl->type()))
 		{
