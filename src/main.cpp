@@ -13,6 +13,8 @@
 
 #include <boost/filesystem.hpp>
 
+#include <unistd.h>
+
 #include <fstream>
 #include <nlohmann/json.hpp>
 using njson = nlohmann::ordered_json;
@@ -440,6 +442,28 @@ int main(int _argc, char* _argv[])
 		fileReader.addIncludePath(nodeModules);
 		fileReader.allowDirectory(nodeModules);
 	}
+
+	// puya-sol stdlib: locate `src/tokens/` relative to the executable
+	// (build/puya-sol → ../src/tokens/) so user contracts can `import
+	// "tokens/AERC20.sol"` regardless of where they live in the tree.
+	// Resolved via /proc/self/exe; falls back to a no-op on platforms
+	// without procfs.
+	try
+	{
+		char execPathBuf[4096];
+		ssize_t len = ::readlink("/proc/self/exe", execPathBuf, sizeof(execPathBuf) - 1);
+		if (len > 0)
+		{
+			execPathBuf[len] = '\0';
+			fs::path stdlibBase = fs::path(execPathBuf).parent_path().parent_path() / "src";
+			if (fs::exists(stdlibBase / "tokens"))
+			{
+				fileReader.addIncludePath(stdlibBase);
+				fileReader.allowDirectory(stdlibBase);
+			}
+		}
+	}
+	catch (...) { /* best-effort, never fatal */ }
 
 	// Allow user-specified import paths
 	for (auto const& ip: opts.importPaths)
