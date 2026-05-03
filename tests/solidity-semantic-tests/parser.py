@@ -12,6 +12,42 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 
+# EVM versions ordered oldest → newest. Mirrors solc's ladder; the puya-sol
+# binary defaults to cancun, but accepts any of these names via --evm-version.
+_EVM_LADDER = [
+    "homestead", "tangerineWhistle", "spuriousDragon", "byzantium",
+    "constantinople", "petersburg", "istanbul", "berlin", "london",
+    "paris", "shanghai", "cancun", "prague", "osaka",
+]
+_EVM_DEFAULT_INDEX = _EVM_LADDER.index("cancun")
+
+
+def _resolve_evm_version_directive(op: str, name: str) -> str | None:
+    """Translate `// EVMVersion: <op?><name>` to a concrete version name.
+
+    Operator semantics match the original C++ scanner:
+      - `<=X`, `=X`, bare `X`: pick X
+      - `<X`: pick X-1 (one older)
+      - `>=X`: pick X if newer than default, else default
+      - `>X`:  pick X+1 if newer than default, else default
+
+    Returns None if the name isn't recognised — caller falls back to default.
+    """
+    if name not in _EVM_LADDER:
+        return None
+    idx = _EVM_LADDER.index(name)
+    if op in ("", "=", "==", "<="):
+        return _EVM_LADDER[idx]
+    if op == "<":
+        return _EVM_LADDER[idx - 1] if idx > 0 else None
+    if op in (">=", ">"):
+        target = idx + 1 if op == ">" else idx
+        if target > _EVM_DEFAULT_INDEX and target < len(_EVM_LADDER):
+            return _EVM_LADDER[target]
+        return None  # already at or past target — use default
+    return None
+
+
 @dataclass
 class TestCall:
     """A single function call assertion."""
@@ -43,6 +79,11 @@ class SemanticTest:
     # `// allowNonExistingFunctions: true` — the harness should treat a call
     # to an undefined method as a raw calldata delivery (fallback dispatch).
     allow_non_existing_functions: bool = False
+    # `// EVMVersion: <op?><name>` directive — concrete EVM version name
+    # (homestead..osaka) the puya-sol compiler should pass to solc, or None
+    # to use the compiler's default (cancun). Operators are resolved here
+    # so the compiler binary stays free of fixture-aware logic.
+    evm_version: str | None = None
 
     @property
     def name(self):
@@ -78,6 +119,17 @@ def parse_test_file(path: Path) -> SemanticTest:
     compile_via_yul = False
     balance_bridge_values: list[int] = []
     allow_non_existing_functions = False
+    evm_version: str | None = None
+    # `EVMVersion:` may live in either the file-level preamble or inside the
+    # assertion block — scan everywhere.
+    evm_dir_re = re.compile(r"//\s*EVMVersion:\s*([<>=!]*)\s*(\w+)")
+    em = evm_dir_re.search(content)
+    if em:
+        evm_version = _resolve_evm_version_directive(em.group(1), em.group(2))
+    # Whole-file scan for setting-style directives. The isoltest format
+    # places these in a `// ====` preamble between source and `// ----`,
+    # in the assertion block after `// ----`, or sometimes both — accept
+    # either spot.
     for line in content.split("\n"):
         line = line.strip()
         if line.startswith("//"):
@@ -86,6 +138,9 @@ def parse_test_file(path: Path) -> SemanticTest:
                 val = inner.split(":", 1)[1].strip().lower()
                 if val == "true":
                     allow_non_existing_functions = True
+            elif inner.startswith("compileViaYul:"):
+                val = inner.split(":", 1)[1].strip().lower()
+                compile_via_yul = val == "true"
     for line in assertion_block.strip().split("\n"):
         line = line.strip()
         if line.startswith("//"):
@@ -135,6 +190,7 @@ def parse_test_file(path: Path) -> SemanticTest:
             source_path=path, source_code=source_code,
             compile_via_yul=compile_via_yul,
             balance_bridge_values=balance_bridge_values,
+            evm_version=evm_version,
         )
 
     return SemanticTest(
@@ -142,6 +198,7 @@ def parse_test_file(path: Path) -> SemanticTest:
         compile_via_yul=compile_via_yul,
         balance_bridge_values=balance_bridge_values,
         allow_non_existing_functions=allow_non_existing_functions,
+        evm_version=evm_version,
     )
 
 

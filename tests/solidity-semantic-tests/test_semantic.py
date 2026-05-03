@@ -134,7 +134,8 @@ def test_semantic(test, localnet_session):
     # Compile
     out_dir = OUT_DIR / test.category / test.name
     log.info("COMPILE %s/%s", test.category, test.name)
-    contracts = compile_sol(test.source_path, out_dir, via_yul_behavior=test.compile_via_yul)
+    contracts = compile_sol(test.source_path, out_dir, via_yul_behavior=test.compile_via_yul,
+                            evm_version=test.evm_version)
     if not contracts:
         log.info("  COMPILE FAILED %s/%s", test.category, test.name)
         pytest.skip("compilation failed")

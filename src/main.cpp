@@ -152,6 +152,7 @@ struct Options
 	bool outputIr = false;
 	bool outputLogs = true;
 	bool viaYulBehavior = false;
+	std::string evmVersion;     // empty = compiler default (cancun)
 };
 
 void printUsage(char const* _progName)
@@ -175,6 +176,8 @@ void printUsage(char const* _progName)
 		<< "  --no-output-logs       Disable writing compilation logs to output directory\n"
 		<< "  --via-yul-behavior     Emulate Solidity's viaIR/compileViaYul codegen semantics\n"
 		<< "                         (separate subroutines per modifier, fresh vars per _ invocation)\n"
+		<< "  --evm-version <name>   EVM version for the Solidity parser. Accepts the same\n"
+		<< "                         names solc supports: homestead..osaka. Default: cancun.\n"
 		<< "  --help                 Show this help message\n";
 }
 
@@ -220,6 +223,8 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.outputLogs = false;
 		else if (arg == "--via-yul-behavior")
 			opts.viaYulBehavior = true;
+		else if (arg == "--evm-version" && i + 1 < _argc)
+			opts.evmVersion = _argv[++i];
 		else if (arg == "--help")
 		{
 			printUsage(_argv[0]);
@@ -440,68 +445,35 @@ int main(int _argc, char* _argv[])
 	}
 	compiler.setSources(sources);
 
-	// Configure EVM version — use Cancun by default, but honour test
-	// directives like `// EVMVersion: <=berlin` when present. A test that
-	// uses names shadowing newer builtins (e.g. a user `basefee` function
-	// on berlin) needs the compiler to pick the older version so the
-	// builtin isn't reserved.
+	// Configure EVM version. Default is cancun; `--evm-version <name>`
+	// overrides — accepts any solc-supported name (homestead..osaka). The
+	// test runner translates fixture-side directives (`// EVMVersion: ...`)
+	// to a concrete name and passes the flag.
 	auto evmVer = solidity::langutil::EVMVersion::cancun();
+	if (!opts.evmVersion.empty())
 	{
-		// Ordered from oldest to newest.
-		std::vector<std::pair<std::string, solidity::langutil::EVMVersion>> ladder = {
-			{"homestead",        solidity::langutil::EVMVersion::homestead()},
-			{"tangerineWhistle", solidity::langutil::EVMVersion::tangerineWhistle()},
-			{"spuriousDragon",   solidity::langutil::EVMVersion::spuriousDragon()},
-			{"byzantium",        solidity::langutil::EVMVersion::byzantium()},
-			{"constantinople",   solidity::langutil::EVMVersion::constantinople()},
-			{"petersburg",       solidity::langutil::EVMVersion::petersburg()},
-			{"istanbul",         solidity::langutil::EVMVersion::istanbul()},
-			{"berlin",           solidity::langutil::EVMVersion::berlin()},
-			{"london",           solidity::langutil::EVMVersion::london()},
-			{"paris",            solidity::langutil::EVMVersion::paris()},
-			{"shanghai",         solidity::langutil::EVMVersion::shanghai()},
-			{"cancun",           solidity::langutil::EVMVersion::cancun()},
-			{"prague",           solidity::langutil::EVMVersion::prague()},
-			{"osaka",            solidity::langutil::EVMVersion::osaka()},
+		using V = solidity::langutil::EVMVersion;
+		static std::map<std::string, V> const namedVersions = {
+			{"homestead",        V::homestead()},
+			{"tangerineWhistle", V::tangerineWhistle()},
+			{"spuriousDragon",   V::spuriousDragon()},
+			{"byzantium",        V::byzantium()},
+			{"constantinople",   V::constantinople()},
+			{"petersburg",       V::petersburg()},
+			{"istanbul",         V::istanbul()},
+			{"berlin",           V::berlin()},
+			{"london",           V::london()},
+			{"paris",            V::paris()},
+			{"shanghai",         V::shanghai()},
+			{"cancun",           V::cancun()},
+			{"prague",           V::prague()},
+			{"osaka",            V::osaka()},
 		};
-		auto pickIndex = [&](std::string const& _name) -> int {
-			for (size_t i = 0; i < ladder.size(); ++i)
-				if (ladder[i].first == _name) return static_cast<int>(i);
-			return -1;
-		};
-		// Look for `// EVMVersion: <op?><name>` directive in the main source.
-		std::regex directiveRe(R"(//\s*EVMVersion:\s*([<>=!]*)\s*(\w+))");
-		std::smatch m;
-		if (std::regex_search(mainSourceContent, m, directiveRe))
-		{
-			std::string op = m[1].str();
-			std::string name = m[2].str();
-			int idx = pickIndex(name);
-			if (idx >= 0)
-			{
-				// `<=X`, `=X`, bare `X`: pick X
-				// `<X`: pick X-1 (previous version)
-				// `>=X`, `>X`: bump to that version (or one above) so that
-				//              tests requiring newer features (e.g. clz which
-				//              needs osaka) can be parsed.
-				if (op == "<=" || op.empty() || op == "=" || op == "==")
-				{
-					evmVer = ladder[idx].second;
-				}
-				else if (op == "<")
-				{
-					if (idx > 0)
-						evmVer = ladder[idx - 1].second;
-				}
-				else if (op == ">=" || op == ">")
-				{
-					int curIdx = pickIndex(evmVer.name());
-					int targetIdx = (op == ">") ? idx + 1 : idx;
-					if (targetIdx > curIdx && targetIdx < static_cast<int>(ladder.size()))
-						evmVer = ladder[targetIdx].second;
-				}
-			}
-		}
+		auto it = namedVersions.find(opts.evmVersion);
+		if (it != namedVersions.end())
+			evmVer = it->second;
+		else
+			logger.warning("Unknown EVM version '" + opts.evmVersion + "'; defaulting to cancun");
 	}
 	compiler.setEVMVersion(evmVer);
 	puyasol::builder::setCompileEVMVersion(evmVer);
