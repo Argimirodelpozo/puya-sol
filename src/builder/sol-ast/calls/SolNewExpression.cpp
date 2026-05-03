@@ -65,7 +65,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 		{
 			if (auto const* ident = dynamic_cast<Identifier const*>(&*m_call.arguments()[0]))
 			{
-				auto v = m_ctx.findConstantLocal(
+				auto v = m_scope.findConstantLocal(
 					ident->annotation().referencedDeclaration->id());
 				if (v > 0)
 					n = v;

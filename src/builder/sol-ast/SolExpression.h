@@ -1,5 +1,6 @@
 #pragma once
 
+#include "builder/sol-ast/Context.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "awst/Node.h"
 
@@ -43,6 +44,12 @@ protected:
 		solidity::frontend::Expression const& _node);
 
 	eb::ContractContext& m_ctx;
+	/// The innermost scope active at the time this visitor was created.
+	/// Resolved from `m_ctx.currentScope` in the base constructor — visitors
+	/// only get created during translation when *some* scope is active.
+	/// Use `m_scope.findX(...) / setX(...)` for scope-bound state instead
+	/// of going through the `m_ctx.X()` bridge.
+	Context& m_scope;
 	solidity::frontend::Expression const& m_node;
 	solidity::frontend::Type const* m_solType;
 	awst::WType const* m_wtype;

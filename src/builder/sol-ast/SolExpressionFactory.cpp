@@ -108,7 +108,7 @@ public:
 
 	std::shared_ptr<awst::Expression> toAwst() override
 	{
-		std::string awstName = m_ctx.findSuperTarget(m_funcDef->id());
+		std::string awstName = m_scope.findSuperTarget(m_funcDef->id());
 
 		// Prefer the caller's function type when available — for
 		// `external`-only functions, functionType(true) may return a

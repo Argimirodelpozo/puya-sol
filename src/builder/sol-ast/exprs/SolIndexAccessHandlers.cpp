@@ -147,7 +147,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 		// the local's name, or writes land under the wrong key.
 		if (auto const* decl = ident->annotation().referencedDeclaration)
 		{
-			auto aliasShared = m_ctx.findStorageAlias(decl->id());
+			auto aliasShared = m_scope.findStorageAlias(decl->id());
 			if (aliasShared)
 			{
 				auto const* expr = aliasShared.get();
@@ -233,8 +233,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 	std::string mappingKeyParam;
 	if (auto const* ident = dynamic_cast<Identifier const*>(cursor))
 		if (auto const* decl = ident->annotation().referencedDeclaration)
-			mappingKeyParam = m_ctx.hasMappingKeyParam(decl->id())
-				? m_ctx.findMappingKeyParam(decl->id()) : "";
+			mappingKeyParam = m_scope.findMappingKeyParam(decl->id());
 	if (!mappingKeyParam.empty())
 	{
 		// Dynamic prefix from function parameter (bytes value at runtime)

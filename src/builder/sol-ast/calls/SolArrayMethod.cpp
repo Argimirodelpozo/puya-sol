@@ -205,7 +205,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 		{
 			if (!decl->isStateVariable())
 			{
-				auto aliasShared = m_ctx.findStorageAlias(decl->id());
+				auto aliasShared = m_scope.findStorageAlias(decl->id());
 				if (aliasShared
 					&& (memberName == "push" || memberName == "pop"))
 				{

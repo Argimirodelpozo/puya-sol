@@ -375,7 +375,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 	// Check if this is a function pointer variable call
 	if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(decl))
 	{
-		if (auto const* target = m_ctx.findFuncPtrTarget(varDecl->id()))
+		if (auto const* target = m_scope.findFuncPtrTarget(varDecl->id()))
 		{
 			decl = target;
 			Logger::instance().debug("resolved function pointer '" + name + "' to '" + target->name() + "'");
@@ -526,7 +526,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 				retType = returnTypeFrom(funcDef);
 
 				// Check if there's a __super_N subroutine for this base function
-				if (auto superName = m_ctx.findSuperTarget(funcDef->id()); !superName.empty())
+				if (auto superName = m_scope.findSuperTarget(funcDef->id()); !superName.empty())
 				{
 					auto target = awst::InstanceMethodTarget{std::move(superName)};
 					return buildSubroutineCall(std::move(target), retType, funcDef, false);

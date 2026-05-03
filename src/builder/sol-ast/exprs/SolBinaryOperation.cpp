@@ -385,7 +385,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 	}
 
 	// Step 3: Signed overflow check (skip in unchecked blocks)
-	if (!m_ctx.isUnchecked())
+	if (!m_scope.isUnchecked())
 	{
 		// Signed overflow for add: both same sign, result different sign
 		// Signed overflow for sub: different signs, result sign != a's sign
@@ -650,7 +650,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 
 	// Check overflow: absResult must fit in signed range
 	// absResult < half for positive result, absResult <= half for negative result
-	if (!m_ctx.isUnchecked())
+	if (!m_scope.isUnchecked())
 	{
 		// expIsOdd: exp % 2 != 0
 		auto two = makeBiguintConst("2");
@@ -809,7 +809,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 
 	// Checked div: assert NOT (x == minVal && y == -1)
 	// minVal = half (= 2^(N-1)), -1 = pow2N - 1
-	if (isDiv && !m_ctx.isUnchecked())
+	if (isDiv && !m_scope.isUnchecked())
 	{
 		std::ostringstream minusOneOss;
 		if (bits == 256)
