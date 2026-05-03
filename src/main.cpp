@@ -443,8 +443,8 @@ int main(int _argc, char* _argv[])
 		fileReader.allowDirectory(nodeModules);
 	}
 
-	// puya-sol stdlib: locate `src/tokens/` relative to the executable
-	// (build/puya-sol → ../src/tokens/) so user contracts can `import
+	// puya-sol stdlib: locate `WIP/tokens/` relative to the executable
+	// (build/puya-sol → ../WIP/tokens/) so user contracts can `import
 	// "tokens/AERC20.sol"` regardless of where they live in the tree.
 	// Resolved via /proc/self/exe; falls back to a no-op on platforms
 	// without procfs.
@@ -455,7 +455,7 @@ int main(int _argc, char* _argv[])
 		if (len > 0)
 		{
 			execPathBuf[len] = '\0';
-			fs::path stdlibBase = fs::path(execPathBuf).parent_path().parent_path() / "src";
+			fs::path stdlibBase = fs::path(execPathBuf).parent_path().parent_path() / "WIP";
 			if (fs::exists(stdlibBase / "tokens"))
 			{
 				fileReader.addIncludePath(stdlibBase);
