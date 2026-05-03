@@ -76,4 +76,13 @@ std::vector<std::shared_ptr<awst::Statement>> ContractContext::takePrePending()
 	return result;
 }
 
+void ContractContext::appendPendingTo(
+	std::vector<std::shared_ptr<awst::Statement>>& _out)
+{
+	for (auto& p: takePrePending())
+		_out.push_back(std::move(p));
+	for (auto& p: takePending())
+		_out.push_back(std::move(p));
+}
+
 } // namespace puyasol::builder::eb

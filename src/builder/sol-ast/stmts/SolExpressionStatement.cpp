@@ -363,10 +363,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 		}
 	}
 
-	for (auto& p: m_blk.builderCtx().takePrePending())
-		result.push_back(std::move(p));
-	for (auto& p: m_blk.builderCtx().takePending())
-		result.push_back(std::move(p));
+	m_blk.builderCtx().appendPendingTo(result);
 
 	// Enum range validation on return: EVM panics (0x21) on invalid enum return values
 	if (stmt->value)

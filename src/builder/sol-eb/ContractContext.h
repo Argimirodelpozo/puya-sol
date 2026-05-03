@@ -87,6 +87,12 @@ public:
 	/// Consume any pre-pending statements (must execute before the expression).
 	std::vector<std::shared_ptr<awst::Statement>> takePrePending();
 
+	/// Drain BOTH pre-pending and pending into `_out` in execution order
+	/// (pre-pending first). The vast majority of statement-builder sites
+	/// flush both together right before returning their result vector;
+	/// keeping them as one call removes the four-line two-loop boilerplate.
+	void appendPendingTo(std::vector<std::shared_ptr<awst::Statement>>& _out);
+
 	/// Owned type-builder registry — populated on construction.
 	std::unique_ptr<BuilderRegistry> registry;
 

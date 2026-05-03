@@ -101,10 +101,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				&& decl.type()->category() == solidity::frontend::Type::Category::Mapping)
 			{
 				m_blk.setStorageAlias(decl.id(), value);
-				for (auto& p: m_blk.builderCtx().takePrePending())
-					result.push_back(std::move(p));
-				for (auto& p: m_blk.builderCtx().takePending())
-					result.push_back(std::move(p));
+				m_blk.builderCtx().appendPendingTo(result);
 				return result;
 			}
 
@@ -132,10 +129,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 					aliasExpr = stateGet;
 				}
 				m_blk.setStorageAlias(decl.id(), aliasExpr);
-				for (auto& p: m_blk.builderCtx().takePrePending())
-					result.push_back(std::move(p));
-				for (auto& p: m_blk.builderCtx().takePending())
-					result.push_back(std::move(p));
+				m_blk.builderCtx().appendPendingTo(result);
 				return result;
 			}
 
@@ -162,10 +156,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 					auto assign = awst::makeAssignmentStatement(std::move(var), std::move(value), m_loc);
 					result.push_back(std::move(assign));
 
-					for (auto& p: m_blk.builderCtx().takePrePending())
-						result.push_back(std::move(p));
-					for (auto& p: m_blk.builderCtx().takePending())
-						result.push_back(std::move(p));
+					m_blk.builderCtx().appendPendingTo(result);
 					return result;
 				}
 
@@ -179,20 +170,14 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				auto assign = awst::makeAssignmentStatement(std::move(slotVar), std::move(value), m_loc);
 				result.push_back(std::move(assign));
 
-				for (auto& p: m_blk.builderCtx().takePrePending())
-					result.push_back(std::move(p));
-				for (auto& p: m_blk.builderCtx().takePending())
-					result.push_back(std::move(p));
+				m_blk.builderCtx().appendPendingTo(result);
 				return result;
 			}
 		}
 
 		auto assign = awst::makeAssignmentStatement(std::move(target), std::move(value), m_loc);
 
-		for (auto& p: m_blk.builderCtx().takePrePending())
-			result.push_back(std::move(p));
-		for (auto& p: m_blk.builderCtx().takePending())
-			result.push_back(std::move(p));
+		m_blk.builderCtx().appendPendingTo(result);
 
 		// EVM free-memory-pointer simulation: `T memory t;` (no initializer)
 		// allocates fresh memory and bumps mload(0x40) by sizeof(T). We mirror
@@ -214,10 +199,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 	{
 		// Tuple destructuring
 		auto rhsExpr = m_blk.builderCtx().build(*initialValue);
-		for (auto& p: m_blk.builderCtx().takePrePending())
-			result.push_back(std::move(p));
-		for (auto& p: m_blk.builderCtx().takePending())
-			result.push_back(std::move(p));
+		m_blk.builderCtx().appendPendingTo(result);
 
 		auto singleRhs = std::make_shared<awst::SingleEvaluation>();
 		singleRhs->sourceLocation = m_loc;
