@@ -2,6 +2,7 @@
 #include "awst/Termination.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
+#include "builder/sol-eb/CallResolver.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 
@@ -11,6 +12,132 @@ namespace puyasol::builder
 {
 
 using awst::blockAlwaysTerminates;
+
+namespace {
+
+/// Recursively visit each `SubroutineCallExpression` reachable from
+/// `_expr`/`_stmt`. Used to retarget self-recursive callsubs after the
+/// public method's biguint params have been remapped to ARC4 — see
+/// `wrapRecursiveCallsubArgs` below for the rewrite.
+class SubroutineCallVisitor
+{
+public:
+	using Callback = std::function<void(awst::SubroutineCallExpression&)>;
+
+	explicit SubroutineCallVisitor(Callback _cb): m_cb(std::move(_cb)) {}
+
+	void visitStmt(awst::Statement& _s)
+	{
+		if (auto* b = dynamic_cast<awst::Block*>(&_s))
+			for (auto& sub: b->body) if (sub) visitStmt(*sub);
+		else if (auto* es = dynamic_cast<awst::ExpressionStatement*>(&_s))
+			{ if (es->expr) visitExpr(*es->expr); }
+		else if (auto* rs = dynamic_cast<awst::ReturnStatement*>(&_s))
+			{ if (rs->value) visitExpr(*rs->value); }
+		else if (auto* ie = dynamic_cast<awst::IfElse*>(&_s))
+		{
+			if (ie->condition) visitExpr(*ie->condition);
+			if (ie->ifBranch) visitStmt(*ie->ifBranch);
+			if (ie->elseBranch) visitStmt(*ie->elseBranch);
+		}
+		else if (auto* wl = dynamic_cast<awst::WhileLoop*>(&_s))
+		{
+			if (wl->condition) visitExpr(*wl->condition);
+			if (wl->loopBody) visitStmt(*wl->loopBody);
+		}
+		else if (auto* as = dynamic_cast<awst::AssignmentStatement*>(&_s))
+		{
+			if (as->target) visitExpr(*as->target);
+			if (as->value) visitExpr(*as->value);
+		}
+		else if (auto* sw = dynamic_cast<awst::Switch*>(&_s))
+		{
+			if (sw->value) visitExpr(*sw->value);
+			for (auto& c: sw->cases)
+			{
+				if (c.first) visitExpr(*c.first);
+				if (c.second) visitStmt(*c.second);
+			}
+			if (sw->defaultCase) visitStmt(*sw->defaultCase);
+		}
+		else if (auto* fl = dynamic_cast<awst::ForInLoop*>(&_s))
+		{
+			if (fl->sequence) visitExpr(*fl->sequence);
+			if (fl->items) visitExpr(*fl->items);
+			if (fl->loopBody) visitStmt(*fl->loopBody);
+		}
+		else if (auto* aa = dynamic_cast<awst::UInt64AugmentedAssignment*>(&_s))
+		{
+			if (aa->target) visitExpr(*aa->target);
+			if (aa->value) visitExpr(*aa->value);
+		}
+		else if (auto* aa = dynamic_cast<awst::BigUIntAugmentedAssignment*>(&_s))
+		{
+			if (aa->target) visitExpr(*aa->target);
+			if (aa->value) visitExpr(*aa->value);
+		}
+		// Goto, LoopExit, LoopContinue have no children.
+	}
+
+	void visitExpr(awst::Expression& _e)
+	{
+		if (auto* call = dynamic_cast<awst::SubroutineCallExpression*>(&_e))
+		{
+			m_cb(*call);
+			for (auto& a: call->args) if (a.value) visitExpr(*a.value);
+			return;
+		}
+		if (auto* op = dynamic_cast<awst::UInt64BinaryOperation*>(&_e))
+			{ if (op->left) visitExpr(*op->left); if (op->right) visitExpr(*op->right); }
+		else if (auto* op = dynamic_cast<awst::BigUIntBinaryOperation*>(&_e))
+			{ if (op->left) visitExpr(*op->left); if (op->right) visitExpr(*op->right); }
+		else if (auto* op = dynamic_cast<awst::BytesBinaryOperation*>(&_e))
+			{ if (op->left) visitExpr(*op->left); if (op->right) visitExpr(*op->right); }
+		else if (auto* op = dynamic_cast<awst::BooleanBinaryOperation*>(&_e))
+			{ if (op->left) visitExpr(*op->left); if (op->right) visitExpr(*op->right); }
+		else if (auto* op = dynamic_cast<awst::BytesUnaryOperation*>(&_e))
+			{ if (op->expr) visitExpr(*op->expr); }
+		else if (auto* op = dynamic_cast<awst::Not*>(&_e))
+			{ if (op->expr) visitExpr(*op->expr); }
+		else if (auto* cmp = dynamic_cast<awst::NumericComparisonExpression*>(&_e))
+			{ if (cmp->lhs) visitExpr(*cmp->lhs); if (cmp->rhs) visitExpr(*cmp->rhs); }
+		else if (auto* cmp = dynamic_cast<awst::BytesComparisonExpression*>(&_e))
+			{ if (cmp->lhs) visitExpr(*cmp->lhs); if (cmp->rhs) visitExpr(*cmp->rhs); }
+		else if (auto* a = dynamic_cast<awst::AssertExpression*>(&_e))
+			{ if (a->condition) visitExpr(*a->condition); }
+		else if (auto* a = dynamic_cast<awst::AssignmentExpression*>(&_e))
+			{ if (a->target) visitExpr(*a->target); if (a->value) visitExpr(*a->value); }
+		else if (auto* c = dynamic_cast<awst::ConditionalExpression*>(&_e))
+		{
+			if (c->condition) visitExpr(*c->condition);
+			if (c->trueExpr) visitExpr(*c->trueExpr);
+			if (c->falseExpr) visitExpr(*c->falseExpr);
+		}
+		else if (auto* ic = dynamic_cast<awst::IntrinsicCall*>(&_e))
+			for (auto& a: ic->stackArgs) if (a) visitExpr(*a);
+		else if (auto* enc = dynamic_cast<awst::ARC4Encode*>(&_e))
+			{ if (enc->value) visitExpr(*enc->value); }
+		else if (auto* dec = dynamic_cast<awst::ARC4Decode*>(&_e))
+			{ if (dec->value) visitExpr(*dec->value); }
+		else if (auto* tup = dynamic_cast<awst::TupleExpression*>(&_e))
+			for (auto& it: tup->items) if (it) visitExpr(*it);
+		else if (auto* ti = dynamic_cast<awst::TupleItemExpression*>(&_e))
+			{ if (ti->base) visitExpr(*ti->base); }
+		else if (auto* fe = dynamic_cast<awst::FieldExpression*>(&_e))
+			{ if (fe->base) visitExpr(*fe->base); }
+		else if (auto* ix = dynamic_cast<awst::IndexExpression*>(&_e))
+			{ if (ix->base) visitExpr(*ix->base); if (ix->index) visitExpr(*ix->index); }
+		else if (auto* ca = dynamic_cast<awst::CommaExpression*>(&_e))
+			for (auto& it: ca->expressions) if (it) visitExpr(*it);
+		// Other expressions (constants, var refs, type-info nodes, etc.)
+		// have no children we care about for recursive-call rewriting.
+	}
+
+private:
+	Callback m_cb;
+};
+
+} // namespace
 
 awst::ContractMethod ContractBuilder::buildClearProgram(
 	solidity::frontend::ContractDefinition const& _contract,
@@ -248,39 +375,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			{ funcHasInlineAssembly = true; break; }
 	}
 
-	// Detect self-recursion: a call to `_func` from within its own body.
-	// Internal callsubs pass the body's native (biguint) value; if we
-	// remapped the public param to ARC4 the recursive callsub would land
-	// in a function expecting 32-byte ARC4 bytes and underflow at decode.
-	// Until we support a wrapper-Subroutine split, leave self-recursive
-	// functions on the biguint path (matching the current behaviour for
-	// modifier-having functions).
-	bool funcHasSelfRecursion = false;
-	if (_func.isImplemented())
-	{
-		struct SelfRecursionChecker: public solidity::frontend::ASTConstVisitor
-		{
-			solidity::frontend::FunctionDefinition const* target;
-			bool found = false;
-			explicit SelfRecursionChecker(solidity::frontend::FunctionDefinition const* _t): target(_t) {}
-			bool visit(solidity::frontend::FunctionCall const& _node) override
-			{
-				if (found) return false;
-				auto const* expr = &_node.expression();
-				solidity::frontend::Declaration const* decl = nullptr;
-				if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(expr))
-					decl = id->annotation().referencedDeclaration;
-				else if (auto const* ma = dynamic_cast<solidity::frontend::MemberAccess const*>(expr))
-					decl = ma->annotation().referencedDeclaration;
-				if (decl == target)
-					found = true;
-				return !found;
-			}
-		};
-		SelfRecursionChecker checker(&_func);
-		_func.body().accept(checker);
-		funcHasSelfRecursion = checker.found;
-	}
+	// (Self-recursion no longer gates the remap — recursive callsubs are
+	// rewritten post-translation to wrap their biguint args in ARC4Encode
+	// so they match the now-arc4-typed param. See the wrap pass below.)
 
 	if (method.arc4MethodConfig.has_value())
 	{
@@ -298,20 +395,16 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			// encoding — we keep ARC4UIntN(256) and let the test runner's
 			// _abi_safe_type helper map int<N>→uint<N> so encode/decode line up.
 			//
-			// Three skip conditions:
+			// One skip condition:
 			//   - inline assembly: body references the param by its original
-			//     name; renaming would break assembly references.
-			//   - self-recursion: internal callsubs pass biguint values built
-			//     from the body, but the renamed param is ARC4 — the recursive
-			//     call would land in a function expecting 32-byte ARC4 bytes
-			//     and underflow at decode. Needs a wrapper-Subroutine split.
+			//     name; renaming would break Yul references.
 			//
-			// Modifier-having functions WITHOUT recursion are fine: the
-			// decode statement at body[0] runs before any modifier-inlined
-			// code (modifier wraps the body proper), so modifier code that
-			// references the param sees the decoded biguint value.
+			// Self-recursive functions are also remapped: a post-translation
+			// walk over `method.body` (further down in this method) wraps
+			// each recursive callsub's biguint arg in ARC4Encode so it
+			// matches the now-arc4-typed param.
 			if (arg.wtype == awst::WType::biguintType() && pi < solParams.size()
-				&& !funcHasInlineAssembly && !funcHasSelfRecursion)
+				&& !funcHasInlineAssembly)
 			{
 				auto const* solType = solParams[pi]->annotation().type;
 				auto const* intType = solType ? dynamic_cast<solidity::frontend::IntegerType const*>(solType) : nullptr;
@@ -1157,6 +1250,44 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				std::make_move_iterator(deferredDecodes.begin()),
 				std::make_move_iterator(deferredDecodes.end())
 			);
+
+			// Recursive-callsub fix-up: any `f(...)` inside `f`'s body
+			// will have been translated to a SubroutineCallExpression
+			// targeting `InstanceMethodTarget{thisName}` with biguint
+			// args. After the param remap above, the method now expects
+			// ARC4-typed args, so the internal callsub needs to encode
+			// each remapped arg before passing. Walk the post-modifier-
+			// inline body and wrap matching arg positions in ARC4Encode.
+			std::string thisName = eb::CallResolver::resolveMethodName(m_tr->contractCtx, _func);
+			std::map<std::string, awst::WType const*> arc4ByOrig;
+			for (auto const& pd: paramDecodes)
+				arc4ByOrig[pd.name] = pd.arc4Type;
+
+			SubroutineCallVisitor wrapper([&](awst::SubroutineCallExpression& _call) {
+				auto const* tgt = std::get_if<awst::InstanceMethodTarget>(&_call.target);
+				if (!tgt || tgt->memberName != thisName)
+					return;
+				// Position arg → method.args[i].name → original name
+				// before rename was `__arc4_<orig>`. We use the order in
+				// `paramDecodes` (which mirrors method.args order) to
+				// know which positions need encoding.
+				size_t argI = 0;
+				for (auto const& pd: paramDecodes)
+				{
+					if (argI >= _call.args.size()) break;
+					auto& a = _call.args[argI++];
+					if (!a.value || a.value->wtype == pd.arc4Type)
+						continue;
+					if (a.value->wtype != awst::WType::biguintType())
+						continue;
+					auto enc = std::make_shared<awst::ARC4Encode>();
+					enc->sourceLocation = a.value->sourceLocation;
+					enc->wtype = pd.arc4Type;
+					enc->value = std::move(a.value);
+					a.value = std::move(enc);
+				}
+			});
+			wrapper.visitStmt(*method.body);
 		}
 
 		// Inject ensure_budget for opup budget padding
