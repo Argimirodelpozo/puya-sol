@@ -3,6 +3,7 @@
 #include "builder/sol-ast/SolExpression.h"
 
 #include <libsolidity/ast/AST.h>
+#include <optional>
 
 namespace puyasol::builder::sol_ast
 {
@@ -47,6 +48,19 @@ private:
 		std::shared_ptr<awst::Expression> _base,
 		std::string const& _fieldName,
 		std::shared_ptr<awst::Expression> _newValue);
+
+	/// LHS-shape early-out handlers: each returns the assignment-as-expression
+	/// result if it owns the shape, or std::nullopt to fall through to the
+	/// generic dispatch in `toAwst`.
+
+	/// `tx = v` / `tx += v` where `tx` is a `transient` state variable —
+	/// routes through TransientStorage's scratch-blob layout.
+	std::optional<std::shared_ptr<awst::Expression>> tryHandleTransientStateWrite();
+
+	/// `m = m2` where `m` is a local storage-pointer (`mapping(K=>V) storage m`).
+	/// Updates the compile-time alias for state-var aliases; for runtime-bound
+	/// mapping-key params, emits an actual bytes assignment.
+	std::optional<std::shared_ptr<awst::Expression>> tryHandleStoragePointerReassign();
 };
 
 } // namespace puyasol::builder::sol_ast

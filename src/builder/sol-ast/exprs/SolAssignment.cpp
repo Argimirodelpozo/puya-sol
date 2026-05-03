@@ -52,119 +52,119 @@ std::shared_ptr<awst::Expression> SolAssignment::buildTupleWithUpdatedField(
 	return tuple;
 }
 
+std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleTransientStateWrite()
+{
+	Token op = m_assignment.assignmentOperator();
+	auto const* lhsIdent = dynamic_cast<Identifier const*>(&m_assignment.leftHandSide());
+	if (!lhsIdent) return std::nullopt;
+	auto const* lhsDecl = dynamic_cast<VariableDeclaration const*>(
+		lhsIdent->annotation().referencedDeclaration);
+	if (!lhsDecl
+		|| !lhsDecl->isStateVariable()
+		|| lhsDecl->referenceLocation() != VariableDeclaration::Location::Transient
+		|| !m_ctx.transientStorage
+		|| !m_ctx.transientStorage->isTransient(*lhsDecl))
+		return std::nullopt;
+
+	auto* ts = m_ctx.transientStorage;
+	auto* varType = m_ctx.typeMapper.map(lhsDecl->type());
+	auto rhs = buildExpr(m_assignment.rightHandSide());
+
+	std::shared_ptr<awst::Expression> newValue;
+	if (op == Token::Assign)
+	{
+		newValue = std::move(rhs);
+	}
+	else
+	{
+		auto currentValue = ts->buildRead(lhsIdent->name(), varType, m_loc);
+		auto* solType = m_assignment.leftHandSide().annotation().type;
+		auto builderResult = eb::AssignmentHelper::tryComputeCompoundValue(
+			m_ctx, op, solType, currentValue, rhs, m_loc);
+		if (builderResult)
+			newValue = std::move(builderResult);
+		else
+			newValue = m_ctx.buildBinaryOp(
+				op, std::move(currentValue), std::move(rhs), varType, m_loc);
+	}
+
+	newValue = builder::TypeCoercion::coerceForAssignment(std::move(newValue), varType, m_loc);
+
+	auto stmt = ts->buildWrite(lhsIdent->name(), newValue, m_loc);
+	if (stmt)
+		m_ctx.pendingStatements.push_back(std::move(stmt));
+
+	// Return the new value so assignment-as-expression yields the
+	// written value (Solidity semantics).
+	return ts->buildRead(lhsIdent->name(), varType, m_loc);
+}
+
+std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleStoragePointerReassign()
+{
+	Token op = m_assignment.assignmentOperator();
+	if (op != Token::Assign) return std::nullopt;
+	auto const* lhsIdent = dynamic_cast<Identifier const*>(&m_assignment.leftHandSide());
+	if (!lhsIdent) return std::nullopt;
+	auto const* lhsDecl = dynamic_cast<VariableDeclaration const*>(
+		lhsIdent->annotation().referencedDeclaration);
+	if (!lhsDecl
+		|| lhsDecl->referenceLocation() != VariableDeclaration::Location::Storage
+		|| lhsDecl->isStateVariable())
+		return std::nullopt;
+
+	// Mapping-key-param locals (`mapping(K=>V) storage r` returned from a
+	// function or declared inside one) hold the box-key prefix as a runtime
+	// bytes value. Reassigning them must do an actual bytes write; the
+	// compile-time alias path drops the side effect (returns VoidConstant)
+	// which is fine for state-var aliases but loses runtime mutations like
+	// `r = a; r[k] = v; r = b; r[k] = v;`.
+	if (m_ctx.hasMappingKeyParam(lhsDecl->id()))
+	{
+		auto rhsExpr = buildExpr(m_assignment.rightHandSide());
+		if (rhsExpr->wtype != awst::WType::bytesType())
+		{
+			rhsExpr = builder::TypeCoercion::coerceForAssignment(
+				std::move(rhsExpr), awst::WType::bytesType(), m_loc);
+		}
+		auto var = awst::makeVarExpression(
+			lhsIdent->name(), awst::WType::bytesType(), m_loc);
+		auto e = std::make_shared<awst::AssignmentExpression>();
+		e->sourceLocation = m_loc;
+		e->wtype = awst::WType::bytesType();
+		e->target = std::move(var);
+		e->value = std::move(rhsExpr);
+		return std::shared_ptr<awst::Expression>(e);
+	}
+
+	auto rhsExpr = buildExpr(m_assignment.rightHandSide());
+	auto aliasExpr = rhsExpr;
+	if (dynamic_cast<awst::BoxValueExpression const*>(rhsExpr.get())
+		|| dynamic_cast<awst::AppStateExpression const*>(rhsExpr.get()))
+	{
+		auto sg = std::make_shared<awst::StateGet>();
+		sg->sourceLocation = m_loc;
+		sg->wtype = rhsExpr->wtype;
+		sg->field = rhsExpr;
+		sg->defaultValue = StorageMapper::makeDefaultValue(rhsExpr->wtype, m_loc);
+		aliasExpr = sg;
+	}
+	m_ctx.setStorageAlias(lhsDecl->id(), std::move(aliasExpr));
+	auto voidExpr = std::make_shared<awst::VoidConstant>();
+	voidExpr->sourceLocation = m_loc;
+	voidExpr->wtype = awst::WType::voidType();
+	return std::shared_ptr<awst::Expression>(voidExpr);
+}
+
 std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 {
 	Token op = m_assignment.assignmentOperator();
 
-	// Transient state var write: intercept before the generic path so the
-	// write goes through TransientStorage (scratch slot TRANSIENT_SLOT
-	// packed blob) rather than through the app_global storage mapper.
-	// Covers simple `x = v` and compound `x += v` forms for identifier LHS.
-	if (auto const* lhsIdent = dynamic_cast<Identifier const*>(&m_assignment.leftHandSide()))
-	{
-		auto const* lhsDecl = dynamic_cast<VariableDeclaration const*>(
-			lhsIdent->annotation().referencedDeclaration);
-		if (lhsDecl && lhsDecl->isStateVariable()
-			&& lhsDecl->referenceLocation() == VariableDeclaration::Location::Transient
-			&& m_ctx.transientStorage
-			&& m_ctx.transientStorage->isTransient(*lhsDecl))
-		{
-			auto* ts = m_ctx.transientStorage;
-			auto* varType = m_ctx.typeMapper.map(lhsDecl->type());
-			auto rhs = buildExpr(m_assignment.rightHandSide());
-
-			std::shared_ptr<awst::Expression> newValue;
-			if (op == Token::Assign)
-			{
-				newValue = std::move(rhs);
-			}
-			else
-			{
-				auto currentValue = ts->buildRead(lhsIdent->name(), varType, m_loc);
-				auto* solType = m_assignment.leftHandSide().annotation().type;
-				auto builderResult = eb::AssignmentHelper::tryComputeCompoundValue(
-					m_ctx, op, solType, currentValue, rhs, m_loc);
-				if (builderResult)
-					newValue = std::move(builderResult);
-				else
-					newValue = m_ctx.buildBinaryOp(
-						op, std::move(currentValue), std::move(rhs), varType, m_loc);
-			}
-
-			newValue = builder::TypeCoercion::coerceForAssignment(std::move(newValue), varType, m_loc);
-
-			auto stmt = ts->buildWrite(lhsIdent->name(), newValue, m_loc);
-			if (stmt)
-				m_ctx.pendingStatements.push_back(std::move(stmt));
-
-			// Return the new value so assignment-as-expression yields the
-			// written value (Solidity semantics).
-			return ts->buildRead(lhsIdent->name(), varType, m_loc);
-		}
-	}
-
-	// Storage pointer reassignment: `mapping storage m = m1; ...; m = m2;`
-	// The LHS is a local with Storage reference location. There is no
-	// runtime write — just update the compile-time alias so that later
-	// `m[k]` accesses resolve to the new state variable. The new alias
-	// is the *same* expression we already built for the RHS, wrapped in
-	// StateGet if necessary so subsequent reads through the alias still
-	// return a value.
-	if (op == Token::Assign)
-	{
-		if (auto const* lhsIdent = dynamic_cast<Identifier const*>(&m_assignment.leftHandSide()))
-		{
-			auto const* lhsDecl = dynamic_cast<VariableDeclaration const*>(
-				lhsIdent->annotation().referencedDeclaration);
-			if (lhsDecl
-				&& lhsDecl->referenceLocation() == VariableDeclaration::Location::Storage
-				&& !lhsDecl->isStateVariable())
-			{
-				// Mapping-key-param locals (`mapping(K=>V) storage r` returned
-				// from a function or declared inside one) hold the box-key
-				// prefix as a runtime bytes value. Reassigning them must do
-				// an actual bytes write; the compile-time alias path drops
-				// the side effect (returns VoidConstant) which is fine for
-				// state-var aliases but loses runtime mutations like
-				// `r = a; r[k] = v; r = b; r[k] = v;`.
-				if (m_ctx.hasMappingKeyParam(lhsDecl->id()))
-				{
-					auto rhsExpr = buildExpr(m_assignment.rightHandSide());
-					if (rhsExpr->wtype != awst::WType::bytesType())
-					{
-						rhsExpr = builder::TypeCoercion::coerceForAssignment(
-							std::move(rhsExpr), awst::WType::bytesType(), m_loc);
-					}
-					auto var = awst::makeVarExpression(
-						lhsIdent->name(), awst::WType::bytesType(), m_loc);
-					auto e = std::make_shared<awst::AssignmentExpression>();
-					e->sourceLocation = m_loc;
-					e->wtype = awst::WType::bytesType();
-					e->target = std::move(var);
-					e->value = std::move(rhsExpr);
-					return e;
-				}
-
-				auto rhsExpr = buildExpr(m_assignment.rightHandSide());
-				auto aliasExpr = rhsExpr;
-				if (dynamic_cast<awst::BoxValueExpression const*>(rhsExpr.get())
-					|| dynamic_cast<awst::AppStateExpression const*>(rhsExpr.get()))
-				{
-					auto sg = std::make_shared<awst::StateGet>();
-					sg->sourceLocation = m_loc;
-					sg->wtype = rhsExpr->wtype;
-					sg->field = rhsExpr;
-					sg->defaultValue = StorageMapper::makeDefaultValue(rhsExpr->wtype, m_loc);
-					aliasExpr = sg;
-				}
-				m_ctx.setStorageAlias(lhsDecl->id(), std::move(aliasExpr));
-				auto voidExpr = std::make_shared<awst::VoidConstant>();
-				voidExpr->sourceLocation = m_loc;
-				voidExpr->wtype = awst::WType::voidType();
-				return voidExpr;
-			}
-		}
-	}
+	// LHS-shape early-out handlers — each returns a complete assignment-
+	// as-expression result if it owns the shape, or nullopt to fall through.
+	if (auto r = tryHandleTransientStateWrite())
+		return std::move(*r);
+	if (auto r = tryHandleStoragePointerReassign())
+		return std::move(*r);
 
 	// Rewrite `arr.push() = value` as `arr.push(value)`. Solidity's
 	// arg-less push() returns a reference to the new slot; we don't
