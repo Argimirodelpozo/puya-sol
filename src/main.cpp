@@ -19,6 +19,7 @@
 #include <nlohmann/json.hpp>
 using njson = nlohmann::ordered_json;
 #include <iostream>
+#include <optional>
 #include <regex>
 #include <set>
 #include <sstream>
@@ -244,197 +245,182 @@ Options parseArgs(int _argc, char* _argv[])
 	return opts;
 }
 
-int main(int _argc, char* _argv[])
+/// Configure the global Logger from --log-level + --output-dir options.
+static void configureLogger(Options const& _opts)
 {
-	Options opts = parseArgs(_argc, _argv);
-
-	// Configure logger from --log-level
 	auto& logger = puyasol::Logger::instance();
-	if (opts.logLevel == "debug")
+	if (_opts.logLevel == "debug")
 		logger.setMinLevel(puyasol::LogLevel::Debug);
-	else if (opts.logLevel == "warning")
+	else if (_opts.logLevel == "warning")
 		logger.setMinLevel(puyasol::LogLevel::Warning);
-	else if (opts.logLevel == "error")
+	else if (_opts.logLevel == "error")
 		logger.setMinLevel(puyasol::LogLevel::Error);
 	else
 		logger.setMinLevel(puyasol::LogLevel::Info);
 
-	// Set up log file output (on by default)
-	if (opts.outputLogs)
+	if (_opts.outputLogs)
 	{
-		fs::create_directories(opts.outputDir);
-		std::string logPath = (fs::path(opts.outputDir) / "puya-sol.log").string();
+		fs::create_directories(_opts.outputDir);
+		std::string logPath = (fs::path(_opts.outputDir) / "puya-sol.log").string();
 		logger.setOutputLogFile(logPath);
 	}
+}
 
-	if (opts.sourceFiles.empty())
+/// --split-test mode: parse `==== Source: ====` / `==== ExternalSource: ====`
+/// directives in `_sourceFile`, materialise each block to its own file under
+/// `opts.outputDir`, then print the main source's path on stdout.
+/// Returns 0 on success, 1 on error.
+static int runSplitTest(Options const& opts, std::string const& sourceFile)
+{
+	std::ifstream ifs(sourceFile);
+	if (!ifs)
 	{
-		std::cerr << "Error: --source is required" << std::endl;
-		printUsage(_argv[0]);
+		std::cerr << "Error: cannot open " << sourceFile << std::endl;
 		return 1;
 	}
+	fs::create_directories(opts.outputDir);
 
-	if (!opts.noPuya && !opts.splitTest && opts.puyaPath.empty())
+	// Determine upstream test dir for ExternalSource resolution
+	fs::path upstreamDir;
+	if (!opts.upstreamTestDir.empty())
+		upstreamDir = fs::path(opts.upstreamTestDir);
+
+	// If not provided, infer from test file's category relative to upstream
+	// semanticTests dir: solidity/test/libsolidity/semanticTests/<category>/
+	if (upstreamDir.empty())
 	{
-		std::cerr << "Error: --puya-path is required (or use --no-puya)" << std::endl;
-		return 1;
+		// Try to find it by looking for the solidity fork
+		fs::path srcDir = fs::path(sourceFile).parent_path();
+		// Walk up to find a "tests" or similar directory
+		upstreamDir = srcDir; // fallback: same directory
 	}
 
-	// Resolve absolute path (first source is the "main" source)
-	fs::path sourceAbsPath = fs::absolute(opts.sourceFiles[0]);
-	std::string sourceFile = sourceAbsPath.string();
+	std::string mainSource;
+	std::string line;
+	std::string currentName;
+	std::string currentContent;
+	std::map<std::string, std::string> sources;
 
-	// --split-test mode: parse Source/ExternalSource directives, write split files
-	if (opts.splitTest)
+	auto flushCurrent = [&]() {
+		if (!currentName.empty() || !currentContent.empty())
+		{
+			// Strip test assertions
+			auto pos = currentContent.find("// ----");
+			if (pos != std::string::npos)
+				currentContent = currentContent.substr(0, pos);
+			// Strip ==== lines
+			std::string cleaned;
+			std::istringstream ss(currentContent);
+			std::string l;
+			while (std::getline(ss, l))
+			{
+				if (l.find("==== ") == 0 && l.rfind(" ====") == l.size() - 5)
+					continue;
+				cleaned += l + "\n";
+			}
+			if (currentName.empty())
+				currentName = fs::path(sourceFile).filename().string();
+			sources[currentName] = cleaned;
+			mainSource = currentName;
+		}
+	};
+
+	while (std::getline(ifs, line))
 	{
-		std::ifstream ifs(sourceFile);
-		if (!ifs)
+		// ==== Source: name ====
+		if (line.find("==== Source: ") == 0 && line.rfind(" ====") == line.size() - 5)
 		{
-			std::cerr << "Error: cannot open " << sourceFile << std::endl;
-			return 1;
+			flushCurrent();
+			currentName = line.substr(12, line.size() - 17); // strip delimiters
+			// Trim whitespace
+			while (!currentName.empty() && currentName.front() == ' ') currentName.erase(0, 1);
+			while (!currentName.empty() && currentName.back() == ' ') currentName.pop_back();
+			currentContent.clear();
 		}
-		fs::create_directories(opts.outputDir);
-
-		// Determine upstream test dir for ExternalSource resolution
-		fs::path upstreamDir;
-		if (!opts.upstreamTestDir.empty())
-			upstreamDir = fs::path(opts.upstreamTestDir);
-
-		// If not provided, infer from test file's category relative to upstream
-		// semanticTests dir: solidity/test/libsolidity/semanticTests/<category>/
-		if (upstreamDir.empty())
+		// ==== ExternalSource: spec ====
+		else if (line.find("==== ExternalSource: ") == 0 && line.rfind(" ====") == line.size() - 5)
 		{
-			// Try to find it by looking for the solidity fork
-			fs::path srcDir = fs::path(sourceFile).parent_path();
-			// Walk up to find a "tests" or similar directory
-			upstreamDir = srcDir; // fallback: same directory
-		}
+			std::string spec = line.substr(21, line.size() - 26);
+			while (!spec.empty() && spec.front() == ' ') spec.erase(0, 1);
+			while (!spec.empty() && spec.back() == ' ') spec.pop_back();
 
-		std::string mainSource;
-		std::string line;
-		std::string currentName;
-		std::string currentContent;
-		std::map<std::string, std::string> sources;
-
-		auto flushCurrent = [&]() {
-			if (!currentName.empty() || !currentContent.empty())
+			std::string importName, fsPath;
+			auto eqPos = spec.find('=');
+			if (eqPos != std::string::npos)
 			{
-				// Strip test assertions
-				auto pos = currentContent.find("// ----");
-				if (pos != std::string::npos)
-					currentContent = currentContent.substr(0, pos);
-				// Strip ==== lines
-				std::string cleaned;
-				std::istringstream ss(currentContent);
-				std::string l;
-				while (std::getline(ss, l))
-				{
-					if (l.find("==== ") == 0 && l.rfind(" ====") == l.size() - 5)
-						continue;
-					cleaned += l + "\n";
-				}
-				if (currentName.empty())
-					currentName = fs::path(sourceFile).filename().string();
-				sources[currentName] = cleaned;
-				mainSource = currentName;
-			}
-		};
-
-		while (std::getline(ifs, line))
-		{
-			// ==== Source: name ====
-			if (line.find("==== Source: ") == 0 && line.rfind(" ====") == line.size() - 5)
-			{
-				flushCurrent();
-				currentName = line.substr(12, line.size() - 17); // strip delimiters
-				// Trim whitespace
-				while (!currentName.empty() && currentName.front() == ' ') currentName.erase(0, 1);
-				while (!currentName.empty() && currentName.back() == ' ') currentName.pop_back();
-				currentContent.clear();
-			}
-			// ==== ExternalSource: spec ====
-			else if (line.find("==== ExternalSource: ") == 0 && line.rfind(" ====") == line.size() - 5)
-			{
-				std::string spec = line.substr(21, line.size() - 26);
-				while (!spec.empty() && spec.front() == ' ') spec.erase(0, 1);
-				while (!spec.empty() && spec.back() == ' ') spec.pop_back();
-
-				std::string importName, fsPath;
-				auto eqPos = spec.find('=');
-				if (eqPos != std::string::npos)
-				{
-					importName = spec.substr(0, eqPos);
-					fsPath = spec.substr(eqPos + 1);
-				}
-				else
-				{
-					importName = spec;
-					fsPath = spec;
-				}
-				// Trim
-				while (!importName.empty() && importName.front() == ' ') importName.erase(0, 1);
-				while (!importName.empty() && importName.back() == ' ') importName.pop_back();
-				while (!fsPath.empty() && fsPath.front() == ' ') fsPath.erase(0, 1);
-				while (!fsPath.empty() && fsPath.back() == ' ') fsPath.pop_back();
-
-				// Resolve external source from upstream test directory
-				fs::path extPath = upstreamDir / fsPath;
-				if (fs::exists(extPath))
-				{
-					std::ifstream extIfs(extPath.string());
-					std::string extContent((std::istreambuf_iterator<char>(extIfs)),
-						std::istreambuf_iterator<char>());
-					// Sanitize import name for filesystem
-					std::string safeName = importName;
-					while (!safeName.empty() && safeName.front() == '/') safeName.erase(0, 1);
-					while (safeName.find("../") == 0) safeName.erase(0, 3);
-					sources[safeName] = extContent;
-					// Write immediately
-					fs::path dst = fs::path(opts.outputDir) / safeName;
-					fs::create_directories(dst.parent_path());
-					std::ofstream(dst.string()) << extContent;
-				}
-				else
-				{
-					std::cerr << "Warning: ExternalSource not found: " << extPath << std::endl;
-				}
+				importName = spec.substr(0, eqPos);
+				fsPath = spec.substr(eqPos + 1);
 			}
 			else
 			{
-				currentContent += line + "\n";
+				importName = spec;
+				fsPath = spec;
+			}
+			// Trim
+			while (!importName.empty() && importName.front() == ' ') importName.erase(0, 1);
+			while (!importName.empty() && importName.back() == ' ') importName.pop_back();
+			while (!fsPath.empty() && fsPath.front() == ' ') fsPath.erase(0, 1);
+			while (!fsPath.empty() && fsPath.back() == ' ') fsPath.pop_back();
+
+			// Resolve external source from upstream test directory
+			fs::path extPath = upstreamDir / fsPath;
+			if (fs::exists(extPath))
+			{
+				std::ifstream extIfs(extPath.string());
+				std::string extContent((std::istreambuf_iterator<char>(extIfs)),
+					std::istreambuf_iterator<char>());
+				// Sanitize import name for filesystem
+				std::string safeName = importName;
+				while (!safeName.empty() && safeName.front() == '/') safeName.erase(0, 1);
+				while (safeName.find("../") == 0) safeName.erase(0, 3);
+				sources[safeName] = extContent;
+				// Write immediately
+				fs::path dst = fs::path(opts.outputDir) / safeName;
+				fs::create_directories(dst.parent_path());
+				std::ofstream(dst.string()) << extContent;
+			}
+			else
+			{
+				std::cerr << "Warning: ExternalSource not found: " << extPath << std::endl;
 			}
 		}
-		flushCurrent();
-
-		// Write all sources to output dir
-		for (auto const& [name, content]: sources)
+		else
 		{
-			fs::path dst = fs::path(opts.outputDir) / name;
-			fs::create_directories(dst.parent_path());
-			std::ofstream(dst.string()) << content;
+			currentContent += line + "\n";
 		}
+	}
+	flushCurrent();
 
-		// Output: main source path
-		std::cout << (fs::path(opts.outputDir) / mainSource).string() << std::endl;
-		return 0;
+	// Write all sources to output dir
+	for (auto const& [name, content]: sources)
+	{
+		fs::path dst = fs::path(opts.outputDir) / name;
+		fs::create_directories(dst.parent_path());
+		std::ofstream(dst.string()) << content;
 	}
 
-	logger.info("puya-sol v0.1.0 — Solidity to Algorand Compiler");
-	logger.info("Source: " + sourceFile);
+	// Output: main source path
+	std::cout << (fs::path(opts.outputDir) / mainSource).string() << std::endl;
+	return 0;
+}
 
-	// Set up Solidity FileReader for import resolution
-	fs::path sourceDir = sourceAbsPath.parent_path();
-	fs::path projectRoot = sourceDir.parent_path(); // contracts/ → project root
-	fs::path nodeModules = projectRoot / "node_modules";
+/// Set up the Solidity FileReader with allowed directories and include
+/// paths: source dir, project root, optional node_modules, the puya-sol
+/// stdlib at `<exe>/../WIP/`, and any user-specified --import-path entries.
+static solidity::frontend::FileReader setupFileReader(
+	Options const& _opts,
+	fs::path const& _sourceDir,
+	fs::path const& _projectRoot)
+{
+	fs::path nodeModules = _projectRoot / "node_modules";
 
 	solidity::frontend::FileReader fileReader(
-		projectRoot, // base path
-		{}           // allowed directories (populated below)
+		_projectRoot, // base path
+		{}            // allowed directories (populated below)
 	);
 
-	// Allow source directory
-	fileReader.allowDirectory(sourceDir);
-	fileReader.allowDirectory(projectRoot);
+	fileReader.allowDirectory(_sourceDir);
+	fileReader.allowDirectory(_projectRoot);
 
 	// Add node_modules as include path (for @openzeppelin etc.)
 	if (fs::exists(nodeModules))
@@ -466,26 +452,67 @@ int main(int _argc, char* _argv[])
 	catch (...) { /* best-effort, never fatal */ }
 
 	// Allow user-specified import paths
-	for (auto const& ip: opts.importPaths)
+	for (auto const& ip: _opts.importPaths)
 	{
 		fs::path absIp = fs::absolute(ip);
 		fileReader.addIncludePath(absIp);
 		fileReader.allowDirectory(absIp);
 	}
 
-	// Read main source
-	std::string rawMainSource;
+	return fileReader;
+}
+
+/// Read `_path` into a string. Returns std::nullopt if the file can't be opened.
+static std::optional<std::string> readSourceFile(std::string const& _path)
+{
+	std::ifstream file(_path);
+	if (!file.is_open()) return std::nullopt;
+	std::ostringstream ss;
+	ss << file.rdbuf();
+	return ss.str();
+}
+
+int main(int _argc, char* _argv[])
+{
+	Options opts = parseArgs(_argc, _argv);
+	configureLogger(opts);
+	auto& logger = puyasol::Logger::instance();
+
+	if (opts.sourceFiles.empty())
 	{
-		std::ifstream file(sourceFile);
-		if (!file.is_open())
-		{
-			logger.error("Cannot read source file: " + sourceFile);
-			return 1;
-		}
-		std::ostringstream ss;
-		ss << file.rdbuf();
-		rawMainSource = ss.str();
+		std::cerr << "Error: --source is required" << std::endl;
+		printUsage(_argv[0]);
+		return 1;
 	}
+
+	if (!opts.noPuya && !opts.splitTest && opts.puyaPath.empty())
+	{
+		std::cerr << "Error: --puya-path is required (or use --no-puya)" << std::endl;
+		return 1;
+	}
+
+	// Resolve absolute path (first source is the "main" source)
+	fs::path sourceAbsPath = fs::absolute(opts.sourceFiles[0]);
+	std::string sourceFile = sourceAbsPath.string();
+
+	// --split-test mode: parse Source/ExternalSource directives, write split files
+	if (opts.splitTest)
+		return runSplitTest(opts, sourceFile);
+
+	logger.info("puya-sol v0.1.0 — Solidity to Algorand Compiler");
+	logger.info("Source: " + sourceFile);
+
+	fs::path sourceDir = sourceAbsPath.parent_path();
+	fs::path projectRoot = sourceDir.parent_path(); // contracts/ → project root
+	auto fileReader = setupFileReader(opts, sourceDir, projectRoot);
+
+	auto rawMainSourceOpt = readSourceFile(sourceFile);
+	if (!rawMainSourceOpt)
+	{
+		logger.error("Cannot read source file: " + sourceFile);
+		return 1;
+	}
+	std::string rawMainSource = std::move(*rawMainSourceOpt);
 
 	// Auto-detect `// compileViaYul: true` directive in semantic test files
 	// so we match Solidity's viaIR codegen semantics (modifier `_` invocations
