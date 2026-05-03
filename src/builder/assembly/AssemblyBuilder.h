@@ -373,55 +373,12 @@ private:
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
 
+	// All other precompile handlers are runtime-offset variants below;
+	// the dispatch wraps constant offsets as IntegerConstant nodes and
+	// calls them. Only `handleEcRecover` keeps a constant-only path
+	// because no test exercises a dynamic-offset call yet.
+
 	/// 0x02: SHA-256 hash
-	void handleSha256Precompile(
-		uint64_t _inputOffset, uint64_t _inputSize,
-		uint64_t _outputOffset, uint64_t _outputSize,
-		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Statement>>& _out
-	);
-
-	/// 0x05: ModExp — modular exponentiation via square-and-multiply loop
-	void handleModExp(
-		uint64_t _inputOffset, uint64_t _inputSize,
-		uint64_t _outputOffset, uint64_t _outputSize,
-		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Statement>>& _out
-	);
-
-	/// 0x04: Identity (memory copy)
-	void handleIdentityPrecompile(
-		uint64_t _inputOffset, uint64_t _inputSize,
-		uint64_t _outputOffset, uint64_t _outputSize,
-		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Statement>>& _out
-	);
-
-	/// 0x06: BN254 ecAdd
-	void handleEcAdd(
-		uint64_t _inputOffset, uint64_t _outputOffset,
-		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Statement>>& _out
-	);
-
-	/// 0x07: BN254 ecMul
-	void handleEcMul(
-		uint64_t _inputOffset, uint64_t _outputOffset,
-		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Statement>>& _out
-	);
-
-	/// 0x08: BN254 ecPairing
-	void handleEcPairing(
-		uint64_t _inputOffset, uint64_t _inputSize,
-		uint64_t _outputOffset,
-		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Statement>>& _out
-	);
-
-	// Runtime-offset variants of the precompile handlers — used when the
-	// staticcall has dynamic input/output offsets (e.g. honk verifier's
-	// `add(free, 0x40)` patterns where `free = mload(0x40)`).
 	void handleEcAddRT(
 		std::shared_ptr<awst::Expression> _inputOffset,
 		std::shared_ptr<awst::Expression> _outputOffset,

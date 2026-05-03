@@ -123,16 +123,25 @@ void AssemblyBuilder::handlePrecompileCall(
 
 	bool success = true;
 
+	// Constant offsets/sizes route through the same RT handlers as the
+	// dynamic-offset path — puya constant-folds the wrapped IntegerConstant
+	// nodes back to a literal at the backend, so generated TEAL for the
+	// common static-arg case is unchanged.
+	auto wrap = [&](uint64_t v) {
+		return awst::makeIntegerConstant(std::to_string(v), _loc);
+	};
+
 	switch (*precompileAddr)
 	{
-	case 1: // ecRecover
+	case 1: // ecRecover (no RT variant — keep constant path)
 		Logger::instance().debug("precompile 0x01: ecRecover", _loc);
 		handleEcRecover(*inputOffset, *inputSize, *outputOffset, *outputSize, _loc, _out);
 		break;
 
 	case 2: // SHA-256
 		Logger::instance().debug("precompile 0x02: SHA-256", _loc);
-		handleSha256Precompile(*inputOffset, *inputSize, *outputOffset, *outputSize, _loc, _out);
+		handleSha256PrecompileRT(wrap(*inputOffset), wrap(*inputSize),
+			wrap(*outputOffset), wrap(*outputSize), _loc, _out);
 		break;
 
 	case 3: // RIPEMD-160
@@ -144,27 +153,30 @@ void AssemblyBuilder::handlePrecompileCall(
 
 	case 4: // Identity (data copy)
 		Logger::instance().debug("precompile 0x04: Identity", _loc);
-		handleIdentityPrecompile(*inputOffset, *inputSize, *outputOffset, *outputSize, _loc, _out);
+		handleIdentityPrecompileRT(wrap(*inputOffset), wrap(*inputSize),
+			wrap(*outputOffset), wrap(*outputSize), _loc, _out);
 		break;
 
 	case 5: // ModExp
 		Logger::instance().debug("precompile 0x05: ModExp (square-and-multiply)", _loc);
-		handleModExp(*inputOffset, *inputSize, *outputOffset, *outputSize, _loc, _out);
+		handleModExpRT(wrap(*inputOffset), wrap(*inputSize),
+			wrap(*outputOffset), wrap(*outputSize), _loc, _out);
 		break;
 
 	case 6: // ecAdd
 		Logger::instance().debug("precompile 0x06: ecAdd → AVM ec_add BN254g1", _loc);
-		handleEcAdd(*inputOffset, *outputOffset, _loc, _out);
+		handleEcAddRT(wrap(*inputOffset), wrap(*outputOffset), _loc, _out);
 		break;
 
 	case 7: // ecMul
 		Logger::instance().debug("precompile 0x07: ecMul → AVM ec_scalar_mul BN254g1", _loc);
-		handleEcMul(*inputOffset, *outputOffset, _loc, _out);
+		handleEcMulRT(wrap(*inputOffset), wrap(*outputOffset), _loc, _out);
 		break;
 
 	case 8: // ecPairing
 		Logger::instance().debug("precompile 0x08: ecPairing → AVM ec_pairing_check BN254g1", _loc);
-		handleEcPairing(*inputOffset, *inputSize, *outputOffset, _loc, _out);
+		handleEcPairingRT(wrap(*inputOffset), wrap(*inputSize),
+			wrap(*outputOffset), _loc, _out);
 		break;
 
 	case 9: // BLAKE2f
