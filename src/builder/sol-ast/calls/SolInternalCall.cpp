@@ -491,7 +491,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 
 	// Try CallResolver first (handles library, free, using-for, super)
 	auto resolved = eb::CallResolver::resolveFromMemberAccess(
-		m_ctx, _memberAccess,
+		m_ctx, m_scope, _memberAccess,
 		_memberAccess.memberName(), m_call.arguments().size());
 	if (resolved)
 	{

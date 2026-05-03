@@ -1,5 +1,7 @@
 #include "builder/sol-eb/ContractContext.h"
 
+#include <cassert>
+
 #include "builder/sol-ast/Context.h"
 #include "builder/sol-ast/SolExpressionDispatch.h"
 #include "builder/sol-eb/BinaryOpBuilder.h"
@@ -8,225 +10,12 @@
 namespace puyasol::builder::eb
 {
 
-bool ContractContext::isUnchecked() const
-{
-	return currentScope && currentScope->isUnchecked();
-}
-
-std::shared_ptr<awst::Expression> ContractContext::findStorageAlias(int64_t _declId) const
-{
-	return currentScope ? currentScope->findStorageAlias(_declId) : nullptr;
-}
-
-void ContractContext::setStorageAlias(
-	int64_t _declId,
-	std::shared_ptr<awst::Expression> _expr
-)
-{
-	for (auto* ctx = currentScope; ctx; ctx = ctx->parent())
-	{
-		if (auto* blk = dynamic_cast<sol_ast::BlockContext*>(ctx))
-		{
-			blk->storageAliases[_declId] = std::move(_expr);
-			return;
-		}
-	}
-}
-
-namespace
-{
-sol_ast::BlockContext* nearestBlock(sol_ast::Context* _scope)
-{
-	for (auto* ctx = _scope; ctx; ctx = ctx->parent())
-		if (auto* blk = dynamic_cast<sol_ast::BlockContext*>(ctx))
-			return blk;
-	return nullptr;
-}
-} // namespace
-
-std::string ContractContext::resolveVarName(std::string const& _name, int64_t _declId)
-{
-	// Honour explicit remaps (used by modifier inliner when the same
-	// modifier — with its own local vars — is applied multiple times).
-	if (auto const* remap = findParamRemap(_declId))
-		return remap->name;
-
-	auto* blk = nearestBlock(currentScope);
-	int64_t existing = currentScope ? currentScope->lookupVarId(_name) : 0;
-	if (existing != 0 && existing != _declId)
-	{
-		// Name is shadowed — use unique name
-		std::string unique = _name + "__" + std::to_string(_declId);
-		if (blk) blk->varNameToId[unique] = _declId;
-		return unique;
-	}
-	if (blk) blk->varNameToId[_name] = _declId;
-	return _name;
-}
-
-std::string ContractContext::lookupVarName(std::string const& _name, int64_t _declId) const
-{
-	std::string unique = _name + "__" + std::to_string(_declId);
-	if (currentScope && currentScope->lookupVarId(unique) == _declId)
-		return unique;
-	return _name;
-}
-
-solidity::frontend::FunctionDefinition const* ContractContext::findFuncPtrTarget(
-	int64_t _declId
-) const
-{
-	return currentScope ? currentScope->findFuncPtrTarget(_declId) : nullptr;
-}
-
-void ContractContext::setFuncPtrTarget(
-	int64_t _declId,
-	solidity::frontend::FunctionDefinition const* _target
-)
-{
-	if (auto* blk = nearestBlock(currentScope))
-		blk->funcPtrTargets[_declId] = _target;
-}
-
-void ContractContext::eraseFuncPtrTarget(int64_t _declId)
-{
-	for (auto* ctx = currentScope; ctx; ctx = ctx->parent())
-	{
-		if (auto* blk = dynamic_cast<sol_ast::BlockContext*>(ctx))
-		{
-			auto it = blk->funcPtrTargets.find(_declId);
-			if (it != blk->funcPtrTargets.end())
-			{
-				blk->funcPtrTargets.erase(it);
-				return;
-			}
-		}
-	}
-}
-
-unsigned long long ContractContext::findConstantLocal(int64_t _declId) const
-{
-	return currentScope ? currentScope->findConstantLocal(_declId) : 0ULL;
-}
-
-void ContractContext::setConstantLocal(int64_t _declId, unsigned long long _value)
-{
-	if (auto* blk = nearestBlock(currentScope))
-		blk->constantLocals[_declId] = _value;
-}
-
-std::shared_ptr<awst::Expression> ContractContext::findSlotStorageRef(int64_t _declId) const
-{
-	return currentScope ? currentScope->findSlotStorageRef(_declId) : nullptr;
-}
-
-void ContractContext::setSlotStorageRef(
-	int64_t _declId,
-	std::shared_ptr<awst::Expression> _expr
-)
-{
-	if (auto* blk = nearestBlock(currentScope))
-		blk->slotStorageRefs[_declId] = std::move(_expr);
-}
-
-namespace
-{
-sol_ast::FunctionContext* nearestFunction(sol_ast::Context* _scope)
-{
-	for (auto* ctx = _scope; ctx; ctx = ctx->parent())
-		if (auto* fn = dynamic_cast<sol_ast::FunctionContext*>(ctx))
-			return fn;
-	return nullptr;
-}
-} // namespace
-
-bool ContractContext::isInConstructor() const
-{
-	return currentScope && currentScope->isInConstructor();
-}
-
-void ContractContext::setInConstructor(bool _flag)
-{
-	if (auto* fn = nearestFunction(currentScope))
-		fn->inConstructor = _flag;
-}
-
-std::string ContractContext::findMappingKeyParam(int64_t _declId) const
-{
-	return currentScope ? currentScope->findMappingKeyParam(_declId) : std::string{};
-}
-
-bool ContractContext::hasMappingKeyParam(int64_t _declId) const
-{
-	return !findMappingKeyParam(_declId).empty();
-}
-
-void ContractContext::setMappingKeyParam(int64_t _declId, std::string _name)
-{
-	if (auto* fn = nearestFunction(currentScope))
-		fn->mappingKeyParams[_declId] = std::move(_name);
-}
-
-sol_ast::ParamRemap const* ContractContext::findParamRemap(int64_t _declId) const
-{
-	return currentScope ? currentScope->findParamRemap(_declId) : nullptr;
-}
-
-namespace
-{
-sol_ast::TranslationContext* nearestTranslation(sol_ast::Context* _scope)
-{
-	for (auto* ctx = _scope; ctx; ctx = ctx->parent())
-		if (auto* tr = dynamic_cast<sol_ast::TranslationContext*>(ctx))
-			return tr;
-	return nullptr;
-}
-} // namespace
-
-void ContractContext::setParamRemap(int64_t _declId, sol_ast::ParamRemap _remap)
-{
-	// Lives on TranslationContext: the remap is read from inside modifier
-	// body translation, which re-enters buildBlock with a fresh
-	// FunctionContext that doesn't include the outer FC in its parent
-	// chain. TranslationContext is the only ancestor visible from both
-	// the outer (where the remap was set) and inner scopes.
-	if (auto* tr = nearestTranslation(currentScope))
-		tr->paramRemaps[_declId] = std::move(_remap);
-}
-
-void ContractContext::eraseParamRemap(int64_t _declId)
-{
-	if (auto* tr = nearestTranslation(currentScope))
-		tr->paramRemaps.erase(_declId);
-}
-
-std::string ContractContext::findSuperTarget(int64_t _declId) const
-{
-	return currentScope ? currentScope->findSuperTarget(_declId) : std::string{};
-}
-
-void ContractContext::setSuperTarget(int64_t _declId, std::string _name)
-{
-	if (auto* tr = nearestTranslation(currentScope))
-		tr->superTargetNames[_declId] = std::move(_name);
-}
-
-void ContractContext::clearSuperTargets()
-{
-	if (auto* tr = nearestTranslation(currentScope))
-		tr->superTargetNames.clear();
-}
-
-namespace {
-std::unordered_map<int64_t, std::string> const kEmptySuperTargets;
-}
-
-std::unordered_map<int64_t, std::string> const& ContractContext::allSuperTargets() const
-{
-	if (auto* tr = nearestTranslation(currentScope))
-		return tr->superTargetNames;
-	return kEmptySuperTargets;
-}
+// All scope-bound state accessor implementations have moved onto
+// `sol_ast::Context` itself (see Context.cpp). Bridges previously
+// defined here delegated through `currentScope`; with every visitor +
+// builder now reading via `m_scope` and every helper writing via the
+// nearest enclosing `TranslationContext` / `FunctionContext` /
+// `BlockContext`, those bridges had no callers and were deleted.
 
 ContractContext::ContractContext(
 	TypeMapper& _typeMapper,
@@ -256,7 +45,9 @@ ContractContext::ContractContext(
 		std::shared_ptr<awst::Expression> _right,
 		awst::WType const* _resultType,
 		awst::SourceLocation const& _loc) {
-		return eb::buildBinaryOp(*this, _op, std::move(_left), std::move(_right), _resultType, _loc);
+		assert(currentScope && "buildBinaryOp called with no current scope");
+		return eb::buildBinaryOp(*this, *currentScope, _op,
+			std::move(_left), std::move(_right), _resultType, _loc);
 	};
 	builderForInstance = [this](solidity::frontend::Type const* _solType, std::shared_ptr<awst::Expression> _expr) {
 		return registry->tryBuildInstance(*this, _solType, std::move(_expr));

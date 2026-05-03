@@ -34,7 +34,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 		auto const& decl = *declarations[0];
 		auto* type = m_blk.typeMapper().map(decl.type());
 
-		auto target = awst::makeVarExpression(m_blk.builderCtx().resolveVarName(decl.name(), decl.id()), type, m_blk.makeLoc(decl.location()));
+		auto target = awst::makeVarExpression(m_blk.resolveVarName(decl.name(), decl.id()), type, m_blk.makeLoc(decl.location()));
 
 		std::shared_ptr<awst::Expression> value;
 		if (initialValue)
@@ -46,7 +46,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				{
 					if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(
 							initId->annotation().referencedDeclaration))
-						m_blk.builderCtx().setFuncPtrTarget(decl.id(), funcDef);
+						m_blk.setFuncPtrTarget(decl.id(), funcDef);
 				}
 			}
 
@@ -58,7 +58,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			{
 				auto val = ratType->literalValue(nullptr);
 				if (val > 0 && val <= std::numeric_limits<unsigned long long>::max())
-					m_blk.builderCtx().setConstantLocal(decl.id(), static_cast<unsigned long long>(val));
+					m_blk.setConstantLocal(decl.id(), static_cast<unsigned long long>(val));
 			}
 
 			// Upgrade dynamic array to fixed-size when N is known
@@ -100,7 +100,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				&& decl.type()
 				&& decl.type()->category() == solidity::frontend::Type::Category::Mapping)
 			{
-				m_blk.builderCtx().setStorageAlias(decl.id(), value);
+				m_blk.setStorageAlias(decl.id(), value);
 				for (auto& p: m_blk.builderCtx().takePrePending())
 					result.push_back(std::move(p));
 				for (auto& p: m_blk.builderCtx().takePending())
@@ -131,7 +131,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 					stateGet->defaultValue = StorageMapper::makeDefaultValue(appState->wtype, m_loc);
 					aliasExpr = stateGet;
 				}
-				m_blk.builderCtx().setStorageAlias(decl.id(), aliasExpr);
+				m_blk.setStorageAlias(decl.id(), aliasExpr);
 				for (auto& p: m_blk.builderCtx().takePrePending())
 					result.push_back(std::move(p));
 				for (auto& p: m_blk.builderCtx().takePending())
@@ -154,7 +154,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 					&& decl.type()->category() == solidity::frontend::Type::Category::Mapping;
 				if (isMappingPtr && value->wtype == awst::WType::bytesType())
 				{
-					m_blk.builderCtx().setMappingKeyParam(decl.id(), decl.name());
+					m_blk.setMappingKeyParam(decl.id(), decl.name());
 					// Emit `m = f()` as a plain bytes assignment so `m` holds the
 					// mapping holder name at runtime; subsequent reassignments
 					// (`m = otherMapping`) update which mapping `m` points to.
@@ -169,7 +169,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 					return result;
 				}
 
-				m_blk.builderCtx().setSlotStorageRef(decl.id(), value);
+				m_blk.setSlotStorageRef(decl.id(), value);
 				// Also emit the call as an assignment so the slot value is available.
 				// The slot var's wtype must match the function's return wtype to
 				// keep AssignmentStatement happy.

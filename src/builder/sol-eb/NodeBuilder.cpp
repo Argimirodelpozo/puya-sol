@@ -1,8 +1,23 @@
 #include "builder/sol-eb/NodeBuilder.h"
 #include "Logger.h"
 
+#include <cassert>
+
 namespace puyasol::builder::eb
 {
+
+namespace {
+sol_ast::Context& currentScopeOrAbort(ContractContext& _ctx)
+{
+	assert(_ctx.currentScope && "NodeBuilder created with no current scope");
+	return *_ctx.currentScope;
+}
+}
+
+NodeBuilder::NodeBuilder(ContractContext& _ctx)
+	: m_ctx(_ctx), m_scope(currentScopeOrAbort(_ctx))
+{
+}
 
 // ─────────────────────────────────────────────────────────────────────
 // InstanceBuilder defaults

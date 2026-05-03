@@ -145,77 +145,18 @@ public:
 		return ScopePush(*this, _scope);
 	}
 
-	/// Convenience: true if the innermost scope (or any of its ancestors)
-	/// is inside an `unchecked { }` block. Resolved by chain walk through
-	/// `currentScope`. Returns false before any scope is pushed.
-	bool isUnchecked() const;
-
-	/// Look up a storage-pointer alias by AST decl ID. Walks `currentScope`
-	/// up the parent chain; returns nullptr if no alias is bound.
-	std::shared_ptr<awst::Expression> findStorageAlias(int64_t _declId) const;
-
-	/// Bind a storage-pointer alias in the innermost enclosing block.
-	/// Lifetime is the block's lifetime — the binding is discarded when
-	/// the block ends (its BlockContext destructs).
-	void setStorageAlias(int64_t _declId, std::shared_ptr<awst::Expression> _expr);
-
-	/// Look up a function-pointer target by AST decl ID.
-	solidity::frontend::FunctionDefinition const* findFuncPtrTarget(
-		int64_t _declId
-	) const;
-
-	/// Bind a function-pointer target in the innermost enclosing block.
-	void setFuncPtrTarget(
-		int64_t _declId,
-		solidity::frontend::FunctionDefinition const* _target
-	);
-
-	/// Erase a function-pointer target binding from the innermost enclosing
-	/// block where it exists. No-op if not bound.
-	void eraseFuncPtrTarget(int64_t _declId);
-
-	/// Look up a folded compile-time constant value for a local. Returns 0
-	/// if the local isn't constant-folded (callers check `> 0`).
-	unsigned long long findConstantLocal(int64_t _declId) const;
-
-	/// Bind a constant value for a local in the innermost enclosing block.
-	void setConstantLocal(int64_t _declId, unsigned long long _value);
-
-	/// Look up a slot-based storage ref by AST decl ID.
-	std::shared_ptr<awst::Expression> findSlotStorageRef(int64_t _declId) const;
-
-	/// Bind a slot-based storage ref in the innermost enclosing block.
-	void setSlotStorageRef(int64_t _declId, std::shared_ptr<awst::Expression> _expr);
-
-	/// True if the innermost enclosing function is a constructor body.
-	bool isInConstructor() const;
-
-	/// Set/clear the constructor flag on the innermost enclosing function.
-	void setInConstructor(bool _flag);
-
-	/// Look up a mapping-storage-pointer param's holder name.
-	std::string findMappingKeyParam(int64_t _declId) const;
-
-	/// Returns true if the given decl is bound as a mapping-storage param
-	/// in any enclosing function. (Convenience for `count()` callers.)
-	bool hasMappingKeyParam(int64_t _declId) const;
-
-	/// Bind a mapping-storage-pointer param on the innermost enclosing
-	/// function.
-	void setMappingKeyParam(int64_t _declId, std::string _name);
-
-	/// Modifier-inliner param remap accessors. Bindings live on the
-	/// innermost enclosing FunctionContext.
-	sol_ast::ParamRemap const* findParamRemap(int64_t _declId) const;
-	void setParamRemap(int64_t _declId, sol_ast::ParamRemap _remap);
-	void eraseParamRemap(int64_t _declId);
-
-	/// `super.X()` MRO resolution accessors. Bindings live on the
-	/// innermost enclosing TranslationContext.
-	std::string findSuperTarget(int64_t _declId) const;
-	void setSuperTarget(int64_t _declId, std::string _name);
-	void clearSuperTargets();
-	std::unordered_map<int64_t, std::string> const& allSuperTargets() const;
+	// Scope-bound state accessors all moved onto `sol_ast::Context`
+	// itself (Context.h). Visitors / builders use `m_scope.findX()` etc.
+	// directly; helpers (ApprovalProgramBuilder, SuperCallResolution,
+	// ModifierInliner, AWSTBuilder freestanding-subroutine path) use
+	// `m_tr->setX()` / local fnCtx / blk. The bridge methods that
+	// previously delegated through `currentScope` have been deleted.
+	//
+	// `currentScope` itself is still alive as plumbing — `pushScopeRaii`
+	// updates it on scope entry, and `SolExpression`/`NodeBuilder`
+	// constructors capture it as their own `m_scope` reference. Once
+	// scope is threaded explicitly through `buildExpr`/`buildBinaryOp`/
+	// the InstanceBuilder factory, that field can go too.
 
 	/// Scratch slot for the `arr.push() = value` rewrite: SolAssignment
 	/// stashes the RHS here before the LHS build, and SolArrayMethod's

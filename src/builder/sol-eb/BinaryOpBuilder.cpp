@@ -16,6 +16,7 @@ bool isBigUInt(awst::WType const* _type)
 
 std::shared_ptr<awst::Expression> buildBinaryOp(
 	ContractContext& _ctx,
+	sol_ast::Context& _scope,
 	solidity::frontend::Token _op,
 	std::shared_ptr<awst::Expression> _left,
 	std::shared_ptr<awst::Expression> _right,
@@ -281,7 +282,7 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 		if (_op == Token::Sub || _op == Token::AssignSub)
 		{
 			// Checked subtraction: assert a >= b before wrapping
-			if (!_ctx.isUnchecked())
+			if (!_scope.isUnchecked())
 			{
 				auto cmp = awst::makeNumericCompare(_left, awst::NumericComparison::Gte, _right, _loc);
 
@@ -367,7 +368,7 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 			// In unchecked mode, Solidity wraps exponentiation modulo 2^256
 			// so that huge exponents (e.g. 2**1113) don't overflow biguint.
 			// Take each intermediate result mod 2^256 inside the loop.
-			bool const wrapMod = _ctx.isUnchecked();
+			bool const wrapMod = _scope.isUnchecked();
 			auto wrapMod256 = [&](std::shared_ptr<awst::Expression> v)
 				-> std::shared_ptr<awst::Expression>
 			{
@@ -433,7 +434,7 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 		// In unchecked blocks, arithmetic must wrap mod 2^256 (EVM semantics).
 		// AVM biguint is arbitrary-precision; without truncation, results can
 		// exceed 256 bits and break subsequent operations.
-		if (_ctx.isUnchecked()
+		if (_scope.isUnchecked()
 			&& (_op == Token::Add || _op == Token::AssignAdd
 				|| _op == Token::Sub || _op == Token::AssignSub
 				|| _op == Token::Mul || _op == Token::AssignMul))

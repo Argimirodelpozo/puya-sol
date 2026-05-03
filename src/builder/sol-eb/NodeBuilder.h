@@ -1,5 +1,6 @@
 #pragma once
 
+#include "builder/sol-ast/Context.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/sol-eb/BuilderOps.h"
 #include "awst/Node.h"
@@ -40,7 +41,13 @@ public:
 
 protected:
 	ContractContext& m_ctx;
-	explicit NodeBuilder(ContractContext& _ctx): m_ctx(_ctx) {}
+	/// The innermost scope active when this builder was created — same
+	/// pattern as `SolExpression::m_scope`. Captured from
+	/// `_ctx.currentScope` at construction (asserted non-null) so
+	/// builders can call `m_scope.isUnchecked()` etc. without going
+	/// through the bridge methods on ContractContext.
+	sol_ast::Context& m_scope;
+	explicit NodeBuilder(ContractContext& _ctx);
 };
 
 // ─────────────────────────────────────────────────────────────────────
@@ -109,7 +116,10 @@ public:
 protected:
 	std::shared_ptr<awst::Expression> m_expr;
 
-	InstanceBuilder(ContractContext& _ctx, std::shared_ptr<awst::Expression> _expr)
+	InstanceBuilder(
+		ContractContext& _ctx,
+		std::shared_ptr<awst::Expression> _expr
+	)
 		: NodeBuilder(_ctx), m_expr(std::move(_expr))
 	{
 	}

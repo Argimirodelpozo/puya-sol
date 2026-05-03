@@ -1,6 +1,7 @@
 #pragma once
 
 #include "awst/Node.h"
+#include "builder/sol-ast/Context.h"
 
 #include <libsolidity/parsing/Token.h>
 
@@ -20,6 +21,7 @@ class ContractContext;
 /// `ctx.prePendingStatements` / `ctx.pendingStatements`.
 std::shared_ptr<awst::Expression> buildBinaryOp(
 	ContractContext& _ctx,
+	sol_ast::Context& _scope,
 	solidity::frontend::Token _op,
 	std::shared_ptr<awst::Expression> _left,
 	std::shared_ptr<awst::Expression> _right,

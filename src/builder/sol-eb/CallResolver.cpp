@@ -120,6 +120,7 @@ std::optional<ResolvedCall> CallResolver::resolveFromIdentifier(
 
 std::optional<ResolvedCall> CallResolver::resolveFromMemberAccess(
 	ContractContext& _ctx,
+	sol_ast::Context& _scope,
 	solidity::frontend::MemberAccess const& _memberAccess,
 	std::string const& _resolvedName,
 	size_t _argCount)
@@ -187,7 +188,7 @@ std::optional<ResolvedCall> CallResolver::resolveFromMemberAccess(
 				{
 					result.funcDef = fd;
 					result.isSuperCall = true;
-					if (auto superName = _ctx.findSuperTarget(fd->id()); !superName.empty())
+					if (auto superName = _scope.findSuperTarget(fd->id()); !superName.empty())
 						result.target = awst::InstanceMethodTarget{std::move(superName)};
 					else
 						result.target = awst::InstanceMethodTarget{_resolvedName};

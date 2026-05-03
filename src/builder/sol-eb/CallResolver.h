@@ -1,5 +1,6 @@
 #pragma once
 
+#include "builder/sol-ast/Context.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "awst/Node.h"
 
@@ -54,6 +55,7 @@ public:
 	/// Returns nullopt if resolution fails.
 	static std::optional<ResolvedCall> resolveFromMemberAccess(
 		ContractContext& _ctx,
+		sol_ast::Context& _scope,
 		solidity::frontend::MemberAccess const& _memberAccess,
 		std::string const& _resolvedName,
 		size_t _argCount);

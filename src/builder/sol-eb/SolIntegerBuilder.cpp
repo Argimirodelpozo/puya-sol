@@ -139,7 +139,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 		std::shared_ptr<awst::Expression> result = e;
 
 		// Unchecked wrapping mod 2^256
-		if (m_ctx.isUnchecked()
+		if (m_scope.isUnchecked()
 			&& (_op == BuilderBinaryOp::Add || _op == BuilderBinaryOp::Mult))
 		{
 			result = wrapMod256(std::move(result), _loc);
@@ -162,7 +162,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 	{
 		// Unchecked uint sub for narrow types: AVM `-` panics on underflow,
 		// so use (a + 2^N - b) % 2^N instead to wrap correctly.
-		if (m_ctx.isUnchecked() && !m_signed && m_bits < 64)
+		if (m_scope.isUnchecked() && !m_signed && m_bits < 64)
 		{
 			uint64_t pow2N = uint64_t(1) << m_bits;
 			auto powConst = awst::makeIntegerConstant(std::to_string(pow2N), _loc);
@@ -199,7 +199,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 		std::shared_ptr<awst::Expression> powResult = std::move(ternary);
 
 		// Apply unchecked sub-type wrapping for Pow (can't fall through to general wrapping)
-		if (m_ctx.isUnchecked() && !m_signed && m_bits < 64)
+		if (m_scope.isUnchecked() && !m_signed && m_bits < 64)
 		{
 			uint64_t modVal = uint64_t(1) << m_bits;
 			auto modConst = awst::makeIntegerConstant(std::to_string(modVal), _loc);
@@ -219,7 +219,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 	std::shared_ptr<awst::Expression> result = e;
 
 	// Unchecked uint64 narrow wrapping: mask to Solidity bit width
-	if (m_ctx.isUnchecked() && !m_signed && m_bits < 64)
+	if (m_scope.isUnchecked() && !m_signed && m_bits < 64)
 	{
 		bool needsWrap = (_op == BuilderBinaryOp::Add || _op == BuilderBinaryOp::Sub
 			|| _op == BuilderBinaryOp::Mult || _op == BuilderBinaryOp::Pow);
@@ -409,7 +409,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			catch (...) {} // fall through
 		}
 		// Signed overflow check: -INT_MIN overflows
-		if (m_signed && !m_ctx.isUnchecked())
+		if (m_signed && !m_scope.isUnchecked())
 		{
 			// INT_MIN = 2^(N-1) in two's complement unsigned representation
 			std::string halfNStr;
@@ -583,7 +583,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::emitOverflowCheck(
 	BuilderBinaryOp _op,
 	awst::SourceLocation const& _loc)
 {
-	if (m_ctx.isUnchecked())
+	if (m_scope.isUnchecked())
 		return _result;
 
 	bool needsCheck = (_op == BuilderBinaryOp::Add || _op == BuilderBinaryOp::Sub
@@ -722,7 +722,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildBigUIntExp(
 
 	// In unchecked mode, Solidity wraps intermediate products mod 2^256 so
 	// that huge exponents (e.g. 2**1113) don't blow past biguint capacity.
-	bool const wrapMod = m_ctx.isUnchecked();
+	bool const wrapMod = m_scope.isUnchecked();
 		auto wrapMod256 = [&](std::shared_ptr<awst::Expression> v)
 		-> std::shared_ptr<awst::Expression>
 	{
@@ -776,7 +776,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildWrappingSubtract(
 	awst::SourceLocation const& _loc)
 {
 	// Checked subtraction: assert a >= b before wrapping
-	if (!m_ctx.isUnchecked())
+	if (!m_scope.isUnchecked())
 	{
 		auto cmp = awst::makeNumericCompare(_left, awst::NumericComparison::Gte, _right, _loc);
 
