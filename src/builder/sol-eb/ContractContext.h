@@ -267,3 +267,14 @@ public:
 };
 
 } // namespace puyasol::builder::eb
+
+namespace puyasol::builder
+{
+// `ContractContext` is conceptually a per-contract translation context,
+// not specifically an expression-builder helper. Hoist the name into the
+// enclosing `puyasol::builder` namespace via a `using` alias so callers
+// outside `eb/` can spell it `builder::ContractContext`. The class itself
+// stays in `eb` because most of its dependencies (BuilderRegistry,
+// InstanceBuilder) genuinely belong there.
+using ContractContext = eb::ContractContext;
+}
