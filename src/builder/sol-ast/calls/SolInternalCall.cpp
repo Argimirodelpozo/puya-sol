@@ -3,6 +3,7 @@
 /// Migrated from FunctionCallBuilder.cpp lines 3324-4390.
 
 #include "builder/sol-ast/calls/SolInternalCall.h"
+#include "builder/sol-eb/AsaIntrinsics.h"
 #include "builder/sol-eb/CallResolver.h"
 #include "builder/sol-eb/FunctionPointerBuilder.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -488,6 +489,13 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 
 	FunctionDefinition const* resolvedFuncDef = nullptr;
 	bool isUsingForCall = false;
+
+	// AVM stdlib intrinsic intercept: short-circuits library resolution for
+	// `AVM.asaCreate / asaBalance / asaTotalSupply / asaTransfer` so the
+	// stub bodies in tokens/AVM.sol never need to compile.
+	if (auto asaResult = eb::AsaIntrinsics::tryHandleCall(
+			m_ctx, _memberAccess, m_call, m_loc))
+		return *asaResult;
 
 	// Try CallResolver first (handles library, free, using-for, super)
 	auto resolved = eb::CallResolver::resolveFromMemberAccess(

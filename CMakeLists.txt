@@ -90,6 +90,7 @@ set(SOURCES
 	src/builder/sol-eb/SolFixedBytesBuilder.cpp
 	src/builder/sol-eb/BuilderRegistry.cpp
 	src/builder/sol-eb/CallResolver.cpp
+	src/builder/sol-eb/AsaIntrinsics.cpp
 	src/builder/sol-eb/AbiEncoderBuilder.cpp
 	src/builder/sol-eb/AbiCodecImpl.cpp
 	src/builder/sol-eb/FunctionPointerBuilder.cpp

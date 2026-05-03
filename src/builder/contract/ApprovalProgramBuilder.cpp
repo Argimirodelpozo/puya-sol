@@ -245,6 +245,66 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		}
 	}
 
+	// Force __postInit when the constructor (or state-var initializer) calls
+	// into the AVM stdlib library — e.g. `AVM.asaCreate(...)` issues an
+	// `acfg` inner txn that requires the contract to already hold its MBR
+	// plus 0.1 algo for the new ASA. That balance can only land via a
+	// pay txn AFTER AppCreate succeeds, so the AVM call has to defer to
+	// __postInit (which the deployer invokes post-fund).
+	if (!needsPostInit)
+	{
+		struct AvmLibCallChecker: public solidity::frontend::ASTConstVisitor
+		{
+			bool found = false;
+			bool visit(solidity::frontend::MemberAccess const& _ma) override
+			{
+				if (found) return false;
+				if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(&_ma.expression()))
+				{
+					if (auto const* contractDef = dynamic_cast<solidity::frontend::ContractDefinition const*>(
+							id->annotation().referencedDeclaration))
+					{
+						if (contractDef->isLibrary() && contractDef->name() == "AVM")
+							found = true;
+					}
+				}
+				return !found;
+			}
+		};
+		AvmLibCallChecker avmChecker;
+		for (auto const* base: _contract.annotation().linearizedBaseContracts)
+			for (auto const* var: base->stateVariables())
+				if (var->value())
+					var->value()->accept(avmChecker);
+		if (auto const* ctor = _contract.constructor())
+			if (ctor->isImplemented())
+				ctor->body().accept(avmChecker);
+		// Inherited base-contract constructor bodies count too — MyToken's
+		// own constructor may be empty; the AVM.asaCreate sits in AERC20's
+		// ctor that runs as part of the linearised base-ctor chain.
+		if (!avmChecker.found)
+		{
+			for (auto const* base: _contract.annotation().linearizedBaseContracts)
+			{
+				if (base == &_contract)
+					continue;
+				auto const* baseCtor = base->constructor();
+				if (baseCtor && baseCtor->isImplemented()
+					&& !baseCtor->body().statements().empty())
+				{
+					baseCtor->body().accept(avmChecker);
+					if (avmChecker.found)
+						break;
+				}
+			}
+		}
+		if (avmChecker.found)
+		{
+			needsPostInit = true;
+			Logger::instance().debug("Forcing __postInit: constructor/state-init calls into AVM stdlib");
+		}
+	}
+
 	// Create-time check: if (Txn.ApplicationID == 0) { base_ctors; ctor_body; return true; }
 	{
 		auto appIdCheck = std::make_shared<awst::IntrinsicCall>();
