@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/return_storage_pointers.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 2 0 32
-    bytecblock "__ctor_pending" "arr1"
+    intcblock 1 0 2 32
+    bytecblock "__ctor_pending" "arr1" "arr2"
     pushint 4096
     bzero
     dup
@@ -40,14 +40,14 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
     bytec_1 // "arr1"
-    intc_1 // 2
+    intc_2 // 2
     box_create
     pop
-    pushbytes "arr2"
-    intc_1 // 2
+    bytec_2 // "arr2"
+    intc_2 // 2
     box_create
     pop
     intc_0 // 1
@@ -56,6 +56,8 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/return_storage_pointers.sol.C.g[routing]() -> void:
 g:
+    intc_1 // 0
+    dup
     txn GroupIndex
     bz g_ternary_false@3
     txn GroupIndex
@@ -69,7 +71,7 @@ g_ternary_merge@4:
     bytec_1 // "arr1"
     box_len
     pop
-    intc_1 // 2
+    intc_2 // 2
     >=
     bz g_ternary_false@6
     bytec_1 // "arr1"
@@ -77,15 +79,33 @@ g_ternary_merge@4:
     pop
 
 g_ternary_merge@7:
-    intc_1 // 2
+    intc_2 // 2
     -
     intc_3 // 32
     /
     itob
     intc_3 // 32
     bzero
+    dup
+    bury 3
     b|
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    bury 2
+    bytec_2 // "arr2"
+    box_len
+    bury 1
+    bz g_ternary_false@9
+    bytec_2 // "arr2"
+    box_get
+    pop
+    intc_1 // 0
+    extract_uint16
+
+g_ternary_merge@10:
+    itob
+    dig 1
+    b|
+    dig 2
+    swap
     concat
     pushbytes 0x151f7c75
     swap
@@ -94,10 +114,14 @@ g_ternary_merge@7:
     intc_0 // 1
     return
 
+g_ternary_false@9:
+    intc_1 // 0
+    b g_ternary_merge@10
+
 g_ternary_false@6:
-    intc_1 // 2
+    intc_2 // 2
     b g_ternary_merge@7
 
 g_ternary_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b g_ternary_merge@4

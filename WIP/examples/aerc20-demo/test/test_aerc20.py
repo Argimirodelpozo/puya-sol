@@ -55,6 +55,30 @@ def test_total_supply(token_client: au.AppClient) -> None:
 
 
 @pytest.mark.localnet
+def test_decimals(token_client: au.AppClient) -> None:
+    result = token_client.send.call(
+        au.AppClientMethodCallParams(method="decimals")
+    )
+    assert int(result.abi_return) == DECIMALS
+
+
+@pytest.mark.localnet
+def test_symbol(token_client: au.AppClient) -> None:
+    result = token_client.send.call(
+        au.AppClientMethodCallParams(method="symbol")
+    )
+    assert result.abi_return == "MTK"
+
+
+@pytest.mark.localnet
+def test_name(token_client: au.AppClient) -> None:
+    result = token_client.send.call(
+        au.AppClientMethodCallParams(method="name")
+    )
+    assert result.abi_return == "My Token"
+
+
+@pytest.mark.localnet
 def test_contract_holds_full_supply(token_client: au.AppClient) -> None:
     """The contract is the reserve / clawback / manager; on creation it
     owns the entire ASA balance."""

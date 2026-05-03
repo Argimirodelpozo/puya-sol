@@ -73,37 +73,10 @@ __postInit:
     intc_2 // 0
     app_global_put
     bytec_0 // "p"
-    pushint 64
-    box_create
-    pop
-    bytec_0 // "p"
-    box_get
-    pop
-    dup
-    len
+    pushbytes 0x00040010000000000008000a00000000000000000008000a00000000
+    box_put
+    pushbytes 0x00040010bbbbcccc0008000f000568656c6c6f0005776f726c64000000000008000a00000000
     intc_0 // 2
-    cover 2
-    dig 1
-    intc_0 // 2
-    extract_uint16
-    dig 2
-    intc_2 // 0
-    extract_uint16
-    dup2
-    -
-    cover 5
-    dig 3
-    intc_2 // 0
-    uncover 2
-    substring3
-    pushbytes 0xbbbbcccc0008000f000568656c6c6f0005776f726c64
-    concat
-    uncover 3
-    uncover 2
-    uncover 3
-    substring3
-    concat
-    swap
 
 __postInit_for_header@2:
     dup
@@ -118,7 +91,7 @@ __postInit_for_header@2:
     extract_uint16
     pushint 22
     +
-    dig 5
+    pushint 12
     -
     itob
     extract 6 0

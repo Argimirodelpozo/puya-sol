@@ -49,6 +49,21 @@ private:
 		std::vector<std::shared_ptr<awst::Expression>>& _args,
 		awst::SourceLocation const& _loc);
 
+	static std::shared_ptr<awst::Expression> handleAsaDecimals(
+		ContractContext& _ctx,
+		std::vector<std::shared_ptr<awst::Expression>>& _args,
+		awst::SourceLocation const& _loc);
+
+	static std::shared_ptr<awst::Expression> handleAsaUnitName(
+		ContractContext& _ctx,
+		std::vector<std::shared_ptr<awst::Expression>>& _args,
+		awst::SourceLocation const& _loc);
+
+	static std::shared_ptr<awst::Expression> handleAsaName(
+		ContractContext& _ctx,
+		std::vector<std::shared_ptr<awst::Expression>>& _args,
+		awst::SourceLocation const& _loc);
+
 	static std::shared_ptr<awst::Expression> handleAsaTransfer(
 		ContractContext& _ctx,
 		std::vector<std::shared_ptr<awst::Expression>>& _args,

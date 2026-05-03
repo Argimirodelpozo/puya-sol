@@ -36,6 +36,24 @@ library AVM {
         revert("AVM.asaTotalSupply: requires puya-sol");
     }
 
+    /// Read decimals of `assetId` (0..19).
+    function asaDecimals(uint64 assetId) internal view returns (uint8) {
+        assetId;
+        revert("AVM.asaDecimals: requires puya-sol");
+    }
+
+    /// Read unit-name of `assetId` (Solidity `symbol()` analogue).
+    function asaUnitName(uint64 assetId) internal view returns (string memory) {
+        assetId;
+        revert("AVM.asaUnitName: requires puya-sol");
+    }
+
+    /// Read display-name of `assetId` (Solidity `name()` analogue).
+    function asaName(uint64 assetId) internal view returns (string memory) {
+        assetId;
+        revert("AVM.asaName: requires puya-sol");
+    }
+
     /// Clawback `amount` of `assetId` from `from` to `to`. Reverts if
     /// either party has not opted in.
     function asaTransfer(

@@ -41,6 +41,18 @@ abstract contract AERC20 {
         return AVM.asaTotalSupply(asaId);
     }
 
+    function decimals() public view returns (uint8) {
+        return AVM.asaDecimals(asaId);
+    }
+
+    function symbol() public view returns (string memory) {
+        return AVM.asaUnitName(asaId);
+    }
+
+    function name() public view returns (string memory) {
+        return AVM.asaName(asaId);
+    }
+
     function balanceOf(address holder) public view returns (uint256) {
         return AVM.asaBalance(holder, asaId);
     }

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aerc20-demo/contracts/MyToken.sol.MyToken.approval_program() -> uint64:
 main:
     intcblock 1 0 32 24
-    bytecblock "asaId" "_allowance" 0x151f7c75 0x151f7c7580 "__ctor_pending" 0x9ac8d3f1 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytecblock "asaId" 0x151f7c75 "_allowance" 0x151f7c7580 "__ctor_pending" 0x9ac8d3f1 0x010000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -28,9 +28,9 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0xa95527fd 0x79fab465 0x83bad7cc 0x198c9820 0xfafb6a08 0x5d854d0e 0x6df41f6d 0x1ce14bbf // method "__postInit()void", method "asaId()uint64", method "totalSupply()uint256", method "balanceOf(address)uint256", method "transfer(address,uint256)bool", method "approve(address,uint256)bool", method "allowance(address,address)uint256", method "transferFrom(address,address,uint256)bool", method "mint(address,uint256)bool"
+    pushbytess 0xbacc49e3 0xa95527fd 0x79fab465 0xb8779ee7 0x005b52b8 0x19750616 0x83bad7cc 0x198c9820 0xfafb6a08 0x5d854d0e 0x6df41f6d 0x1ce14bbf // method "__postInit()void", method "asaId()uint64", method "totalSupply()uint256", method "decimals()uint64", method "symbol()string", method "name()string", method "balanceOf(address)uint256", method "transfer(address,uint256)bool", method "approve(address,uint256)bool", method "allowance(address,address)uint256", method "transferFrom(address,address,uint256)bool", method "mint(address,uint256)bool"
     txna ApplicationArgs 0
-    match __postInit asaId totalSupply balanceOf transfer approve allowance transferFrom mint
+    match __postInit asaId totalSupply decimals symbol name balanceOf transfer approve allowance transferFrom mint
     err
 
 
@@ -42,7 +42,7 @@ __postInit:
     bytec 4 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    bytec_1 // "_allowance"
+    bytec_2 // "_allowance"
     pushint 2
     box_create
     pop
@@ -90,7 +90,7 @@ asaId_ternary_merge@4:
     app_global_get_ex
     assert // check asaId exists
     itob
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -124,7 +124,7 @@ totalSupply_ternary_merge@4:
     intc_2 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -134,6 +134,111 @@ totalSupply_ternary_merge@4:
 totalSupply_ternary_false@3:
     intc_1 // 0
     b totalSupply_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aerc20-demo/contracts/MyToken.sol.MyToken.decimals[routing]() -> void:
+decimals:
+    txn GroupIndex
+    bz decimals_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+decimals_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "asaId"
+    app_global_get_ex
+    assert // check asaId exists
+    asset_params_get AssetDecimals
+    pop
+    pushint 255
+    &
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+decimals_ternary_false@3:
+    intc_1 // 0
+    b decimals_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aerc20-demo/contracts/MyToken.sol.MyToken.symbol[routing]() -> void:
+symbol:
+    txn GroupIndex
+    bz symbol_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+symbol_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "asaId"
+    app_global_get_ex
+    assert // check asaId exists
+    asset_params_get AssetUnitName
+    pop
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+symbol_ternary_false@3:
+    intc_1 // 0
+    b symbol_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aerc20-demo/contracts/MyToken.sol.MyToken.name[routing]() -> void:
+name:
+    txn GroupIndex
+    bz name_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+name_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "asaId"
+    app_global_get_ex
+    assert // check asaId exists
+    asset_params_get AssetName
+    pop
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+name_ternary_false@3:
+    intc_1 // 0
+    b name_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aerc20-demo/contracts/MyToken.sol.MyToken.balanceOf[routing]() -> void:
@@ -166,7 +271,7 @@ balanceOf_ternary_merge@4:
     intc_2 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -272,7 +377,7 @@ approve_ternary_merge@4:
     cover 2
     concat
     sha256
-    bytec_1 // "_allowance"
+    bytec_2 // "_allowance"
     swap
     concat
     dup
@@ -328,7 +433,7 @@ allowance_ternary_merge@4:
     dup2
     concat
     sha256
-    bytec_1 // "_allowance"
+    bytec_2 // "_allowance"
     swap
     concat
     box_get
@@ -343,7 +448,7 @@ allowance_ternary_merge@4:
     intc_2 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -391,7 +496,7 @@ transferFrom_ternary_merge@4:
     uncover 2
     concat
     sha256
-    bytec_1 // "_allowance"
+    bytec_2 // "_allowance"
     swap
     concat
     box_get
@@ -414,7 +519,7 @@ transferFrom_ternary_merge@4:
     txn Sender
     concat
     sha256
-    bytec_1 // "_allowance"
+    bytec_2 // "_allowance"
     swap
     concat
     dup

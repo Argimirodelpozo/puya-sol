@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mappings_array2d_pop_delete.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 2 18446744073709551615
-    bytecblock "a" 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x00020000 0x0000
+    intcblock 0 1 32 2
+    bytecblock "a" 0x010000000000000000000000000000000000000000000000000000000000000000 0x01 "__ctor_pending" 0x0000 0x00020000
     pushint 4096
     bzero
     dup
@@ -17,9 +17,9 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_3 // "__ctor_pending"
-    intc_0 // 1
+    intc_1 // 1
     app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -40,7 +40,7 @@ dynamic_array_read_dynamic_element:
     frame_dig -2
     extract 2 0
     frame_dig -2
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16
     frame_dig -1
     intc_3 // 2
@@ -51,7 +51,7 @@ dynamic_array_read_dynamic_element:
     dig 2
     len
     frame_dig -1
-    intc_0 // 1
+    intc_1 // 1
     +
     dup
     intc_3 // 2
@@ -72,7 +72,7 @@ dynamic_array_concat_dynamic_element:
     proto 3 1
     pushbytes ""
     frame_dig -3
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16
     dup
     frame_dig -1
@@ -88,7 +88,7 @@ dynamic_array_concat_dynamic_element:
     frame_dig -1
     intc_3 // 2
     *
-    intc_1 // 0
+    intc_0 // 0
 
 dynamic_array_concat_dynamic_element_for_header@1:
     frame_dig 5
@@ -117,7 +117,7 @@ dynamic_array_concat_dynamic_element_after_for@4:
     frame_dig 2
     len
     frame_bury 0
-    intc_1 // 0
+    intc_0 // 0
     frame_bury 5
 
 dynamic_array_concat_dynamic_element_for_header@5:
@@ -168,18 +168,20 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_3 // "__ctor_pending"
-    intc_1 // 0
+    intc_0 // 0
     app_global_put
     bytec_0 // "a"
     intc_3 // 2
     box_create
     pop
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mappings_array2d_pop_delete.sol.C.n1[routing]() -> void:
 n1:
+    intc_0 // 0
+    dupn 2
     txna ApplicationArgs 1
     dup
     len
@@ -195,7 +197,7 @@ n1:
     txn GroupIndex
     bz n1_ternary_false@3
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -205,34 +207,106 @@ n1_ternary_merge@4:
     bytec_0 // "a"
     box_get
     assert // box exists
-    bytec 4 // 0x00020000
-    intc_0 // 1
+    bytec 5 // 0x00020000
+    intc_1 // 1
     callsub dynamic_array_concat_dynamic_element
     bytec_0 // "a"
     box_del
     pop
     bytec_0 // "a"
-    dig 1
+    swap
     box_put
-    intc_1 // 0
+    bytec_0 // "a"
+    box_len
+    bury 1
+    bz n1_ternary_false@6
+    bytec_0 // "a"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+n1_ternary_merge@7:
+    itob
+    bytec_2 // 0x01
+    b>=
     assert // underflow
-    intc 4 // 18446744073709551615
+    bytec_0 // "a"
+    box_get
+    bytec 4 // 0x0000
+    cover 2
+    select
+    bury 5
+    pushint 8
+    bzero
+    bury 4
+    bytec_0 // "a"
+    box_len
+    bury 1
+    bz n1_ternary_false@9
+    bytec_0 // "a"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+n1_ternary_merge@10:
+    itob
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec_2 // 0x01
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 4
+    swap
+    concat
+    bury 3
+    bytec_0 // "a"
+    box_len
+    bury 1
+    bz n1_ternary_false@12
+    bytec_0 // "a"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+n1_ternary_merge@13:
+    itob
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec_2 // 0x01
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 4
+    swap
+    concat
+    len
+    pushint 8
+    -
+    dig 3
+    swap
+    extract_uint64
+    dig 5
+    swap
     callsub dynamic_array_read_dynamic_element
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
     itob
     dup
-    bytec_1 // 0x01
+    bytec_2 // 0x01
     b>=
     assert // underflow
     intc_2 // 32
     bzero
     swap
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec_1 // 0x01
+    bytec_2 // 0x01
     b-
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dig 1
     swap
@@ -262,11 +336,23 @@ n1_ternary_merge@4:
     pop
     dig 1
     box_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
+n1_ternary_false@12:
+    intc_0 // 0
+    b n1_ternary_merge@13
+
+n1_ternary_false@9:
+    intc_0 // 0
+    b n1_ternary_merge@10
+
+n1_ternary_false@6:
+    intc_0 // 0
+    b n1_ternary_merge@7
+
 n1_ternary_false@3:
-    intc_1 // 0
+    intc_0 // 0
     b n1_ternary_merge@4
 
 
@@ -275,7 +361,7 @@ n2:
     txn GroupIndex
     bz n2_ternary_false@3
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -285,8 +371,8 @@ n2_ternary_merge@4:
     bytec_0 // "a"
     box_get
     assert // box exists
-    bytec 4 // 0x00020000
-    intc_0 // 1
+    bytec 5 // 0x00020000
+    intc_1 // 1
     callsub dynamic_array_concat_dynamic_element
     bytec_0 // "a"
     box_del
@@ -294,18 +380,37 @@ n2_ternary_merge@4:
     bytec_0 // "a"
     swap
     box_put
-    intc_1 // 0
+    bytec_0 // "a"
+    box_len
+    bury 1
+    bz n2_ternary_false@6
+    bytec_0 // "a"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+n2_ternary_merge@7:
+    itob
+    bytec_2 // 0x01
+    b>=
     assert // underflow
-    intc_0 // 1
+    intc_1 // 1
     return
 
+n2_ternary_false@6:
+    intc_0 // 0
+    b n2_ternary_merge@7
+
 n2_ternary_false@3:
-    intc_1 // 0
+    intc_0 // 0
     b n2_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mappings_array2d_pop_delete.sol.C.map[routing]() -> void:
 map:
+    intc_0 // 0
+    dupn 2
     txna ApplicationArgs 1
     dup
     len
@@ -315,37 +420,104 @@ map:
     txn GroupIndex
     bz map_ternary_false@3
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
 map_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 0
+    bytec_0 // "a"
+    box_len
+    bury 1
+    bz map_ternary_false@6
+    bytec_0 // "a"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+map_ternary_merge@7:
+    itob
+    bytec_2 // 0x01
+    b>=
     assert // underflow
     bytec_0 // "a"
     box_get
-    bytec 5 // 0x0000
+    bytec 4 // 0x0000
     cover 2
     select
-    intc 4 // 18446744073709551615
+    bury 4
+    pushint 8
+    bzero
+    bury 3
+    bytec_0 // "a"
+    box_len
+    bury 1
+    bz map_ternary_false@9
+    bytec_0 // "a"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+map_ternary_merge@10:
+    itob
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec_2 // 0x01
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 3
+    swap
+    concat
+    bury 2
+    bytec_0 // "a"
+    box_len
+    bury 1
+    bz map_ternary_false@12
+    bytec_0 // "a"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+map_ternary_merge@13:
+    itob
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec_2 // 0x01
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 3
+    swap
+    concat
+    len
+    pushint 8
+    -
+    dig 2
+    swap
+    extract_uint64
+    dig 4
+    swap
     callsub dynamic_array_read_dynamic_element
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
     itob
     dup
-    bytec_1 // 0x01
+    bytec_2 // 0x01
     b>=
     assert // underflow
     intc_2 // 32
     bzero
     swap
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec_1 // 0x01
+    bytec_2 // 0x01
     b-
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dig 1
     swap
@@ -384,24 +556,36 @@ map_ternary_merge@4:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
+map_ternary_false@12:
+    intc_0 // 0
+    b map_ternary_merge@13
+
+map_ternary_false@9:
+    intc_0 // 0
+    b map_ternary_merge@10
+
+map_ternary_false@6:
+    intc_0 // 0
+    b map_ternary_merge@7
+
 map_ternary_false@3:
-    intc_1 // 0
+    intc_0 // 0
     b map_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mappings_array2d_pop_delete.sol.C.p[routing]() -> void:
 p:
-    intc_1 // 0
+    intc_0 // 0
     dup
     pushbytes ""
     dup
     txn GroupIndex
     bz p_ternary_false@3
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -415,9 +599,9 @@ p_ternary_merge@4:
     cover 2
     bury 6
     assert // box exists
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16
-    intc_0 // 1
+    intc_1 // 1
     -
     dup
     itob
@@ -469,11 +653,11 @@ p_after_while@8:
     bytec_0 // "a"
     swap
     box_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 p_ternary_false@3:
-    intc_1 // 0
+    intc_0 // 0
     b p_ternary_merge@4
 
 
@@ -482,7 +666,7 @@ d:
     txn GroupIndex
     bz d_ternary_false@3
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -493,13 +677,13 @@ d_ternary_merge@4:
     box_del
     pop
     bytec_0 // "a"
-    bytec 5 // 0x0000
+    bytec 4 // 0x0000
     box_put
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 d_ternary_false@3:
-    intc_1 // 0
+    intc_0 // 0
     b d_ternary_merge@4

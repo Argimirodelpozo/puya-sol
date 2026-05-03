@@ -137,6 +137,12 @@ std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::tryHandleCall(
 		return handleAsaBalance(_ctx, args, _loc);
 	if (method == "asaTotalSupply")
 		return handleAsaTotalSupply(_ctx, args, _loc);
+	if (method == "asaDecimals")
+		return handleAsaDecimals(_ctx, args, _loc);
+	if (method == "asaUnitName")
+		return handleAsaUnitName(_ctx, args, _loc);
+	if (method == "asaName")
+		return handleAsaName(_ctx, args, _loc);
 	if (method == "asaTransfer")
 		return handleAsaTransfer(_ctx, args, _loc);
 
@@ -250,6 +256,72 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaTotalSupply(
 
 	auto totalU64 = tupleFirst(std::move(paramsGet), awst::WType::uint64Type(), _loc);
 	return uint64ToBigUInt(std::move(totalU64), _loc);
+}
+
+std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaDecimals(
+	ContractContext& _ctx,
+	std::vector<std::shared_ptr<awst::Expression>>& _args,
+	awst::SourceLocation const& _loc)
+{
+	if (_args.size() != 1)
+	{
+		Logger::instance().error("AVM.asaDecimals expects 1 arg (assetId)", _loc);
+		return nullptr;
+	}
+
+	auto* tupleType = _ctx.typeMapper.createType<awst::WTuple>(
+		std::vector<awst::WType const*>{
+			awst::WType::uint64Type(), awst::WType::boolType()});
+	auto paramsGet = awst::makeIntrinsicCall("asset_params_get", tupleType, _loc);
+	paramsGet->immediates = {std::string("AssetDecimals")};
+	paramsGet->stackArgs.push_back(std::move(_args[0]));
+
+	// AssetDecimals fits in uint8; the tuple-first uint64 is fine.
+	return tupleFirst(std::move(paramsGet), awst::WType::uint64Type(), _loc);
+}
+
+std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaUnitName(
+	ContractContext& _ctx,
+	std::vector<std::shared_ptr<awst::Expression>>& _args,
+	awst::SourceLocation const& _loc)
+{
+	if (_args.size() != 1)
+	{
+		Logger::instance().error("AVM.asaUnitName expects 1 arg (assetId)", _loc);
+		return nullptr;
+	}
+
+	auto* tupleType = _ctx.typeMapper.createType<awst::WTuple>(
+		std::vector<awst::WType const*>{
+			awst::WType::bytesType(), awst::WType::boolType()});
+	auto paramsGet = awst::makeIntrinsicCall("asset_params_get", tupleType, _loc);
+	paramsGet->immediates = {std::string("AssetUnitName")};
+	paramsGet->stackArgs.push_back(std::move(_args[0]));
+
+	auto bytes = tupleFirst(std::move(paramsGet), awst::WType::bytesType(), _loc);
+	return awst::makeReinterpretCast(std::move(bytes), awst::WType::stringType(), _loc);
+}
+
+std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaName(
+	ContractContext& _ctx,
+	std::vector<std::shared_ptr<awst::Expression>>& _args,
+	awst::SourceLocation const& _loc)
+{
+	if (_args.size() != 1)
+	{
+		Logger::instance().error("AVM.asaName expects 1 arg (assetId)", _loc);
+		return nullptr;
+	}
+
+	auto* tupleType = _ctx.typeMapper.createType<awst::WTuple>(
+		std::vector<awst::WType const*>{
+			awst::WType::bytesType(), awst::WType::boolType()});
+	auto paramsGet = awst::makeIntrinsicCall("asset_params_get", tupleType, _loc);
+	paramsGet->immediates = {std::string("AssetName")};
+	paramsGet->stackArgs.push_back(std::move(_args[0]));
+
+	auto bytes = tupleFirst(std::move(paramsGet), awst::WType::bytesType(), _loc);
+	return awst::makeReinterpretCast(std::move(bytes), awst::WType::stringType(), _loc);
 }
 
 std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaTransfer(
