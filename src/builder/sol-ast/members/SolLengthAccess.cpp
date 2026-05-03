@@ -224,15 +224,47 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 				unsigned elemSize = builder::StorageMapper::computeEncodedElementSize(arc4ElemType);
 
 
-				// Elements with unknown fixed size (e.g. nested dynamic arrays)
-				// can't use the `(box_len - 2) / elemSize` trick. Puya's backend
-				// doesn't yet model this storage shape — return 0 as a
-				// conservative fallback so the AWST at least compiles and
-				// the common empty-array case works.
+				// Elements with unknown fixed size (e.g. nested dynamic
+				// arrays, mappings) can't use the `(box_len - 2) / elemSize`
+				// trick. The ARC4 dynamic-array encoding still has a
+				// uint16 length prefix at offset 0 of the box, so read
+				// that directly. `box_get` returns `(contents, exists)`;
+				// we ternary against `exists` so an uninitialised box
+				// reads as length 0 (Solidity semantics for uninit arrays).
 				if (elemSize == 0)
 				{
-					auto zeroLen = awst::makeIntegerConstant("0", m_loc);
-					return zeroLen;
+					auto boxKey = awst::makeUtf8BytesConstant(ident->name(), m_loc);
+
+					auto* getTupleType = m_ctx.typeMapper.createType<awst::WTuple>(
+						std::vector<awst::WType const*>{
+							awst::WType::bytesType(), awst::WType::boolType()});
+					auto boxGet = awst::makeIntrinsicCall("box_get", getTupleType, m_loc);
+					boxGet->stackArgs.push_back(std::move(boxKey));
+
+					auto contents = std::make_shared<awst::TupleItemExpression>();
+					contents->sourceLocation = m_loc;
+					contents->wtype = awst::WType::bytesType();
+					contents->base = boxGet;
+					contents->index = 0;
+
+					auto exists = std::make_shared<awst::TupleItemExpression>();
+					exists->sourceLocation = m_loc;
+					exists->wtype = awst::WType::boolType();
+					exists->base = boxGet;
+					exists->index = 1;
+
+					auto extractLen = awst::makeIntrinsicCall(
+						"extract_uint16", awst::WType::uint64Type(), m_loc);
+					extractLen->stackArgs.push_back(std::move(contents));
+					extractLen->stackArgs.push_back(awst::makeIntegerConstant("0", m_loc));
+
+					auto cond = std::make_shared<awst::ConditionalExpression>();
+					cond->sourceLocation = m_loc;
+					cond->wtype = awst::WType::uint64Type();
+					cond->condition = std::move(exists);
+					cond->trueExpr = std::move(extractLen);
+					cond->falseExpr = awst::makeIntegerConstant("0", m_loc);
+					return cond;
 				}
 
 				auto elemSizeConst = awst::makeIntegerConstant(std::to_string(elemSize), m_loc);
