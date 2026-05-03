@@ -1,4 +1,41 @@
-# Semantic Test Status — v178
+# Semantic Test Status — v195
+
+**Totals**: 1089 PASS / 176 FAIL / 57 (38 compile_err + 19 deploy_err) = **1089/1322 (82.4%)**
+
+vs v194 = 1089: identical, test-by-test. v195 confirms the
+ContractContext bridge deletion (78c7bdd7b) didn't regress anything —
+threading was complete on the visitor side at v194; this run validates
+that helper writes via the nested context hierarchy (TranslationContext
+/ FunctionContext / BlockContext) cover the same surface.
+
+Side-prototype landed: AERC20 (Solidity ERC20 backed by Algorand
+Standard Asset). Lives at `WIP/examples/aerc20-demo/` with 8/8 tests
+passing. See `aerc20-prototype.md` memory for design + wiring.
+
+## Where we are vs prior sessions
+
+- v178 = 1076 (post-refactor floor; 7 silent crashes surfaced)
+- v194 = 1089 (+13 from chipping at FAIL/compile_err clusters)
+- v195 = 1089 (no movement from refactor; tied to v194 as expected)
+
+## Composition of the still-failing 233
+
+Largely stable since v194:
+- 38 compile_err — categorised in `v176-compile-err-triage.md`
+  (still mostly architectural / puya-side); the AERC20 work added
+  no new compile_errs.
+- 19 deploy_err — TEAL-emit edge cases (substring offset overflow,
+  bytecblock odd length, etc.).
+- 176 runtime FAIL — buckets:
+    - 67 "err opcode executed" (revert reason mismatch in
+      tests with custom error data)
+    - 14+12+10+8+6 invalid Box reference (missing box refs in
+      runner, not compiler bugs)
+    - 12 extract_uint64 type bug (delegatecall paths, EVM-only)
+    - 8 "would result negative" (biguint underflow on edge cases)
+    - long tail of one-offs
+
+## v178 reference (preserved below)
 
 **Totals**: 1076 PASS / 183 FAIL / 63 (47 compile_err + 16 deploy_err) = **1076/1322 (81.4%)**
 
