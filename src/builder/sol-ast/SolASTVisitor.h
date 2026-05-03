@@ -55,6 +55,7 @@ public:
 		if (auto const* n = dynamic_cast<FunctionCall const*>(&_expr))                return visitFunctionCall(*n);
 		if (auto const* n = dynamic_cast<MemberAccess const*>(&_expr))                return visitMemberAccess(*n);
 		if (auto const* n = dynamic_cast<FunctionCallOptions const*>(&_expr))         return visitCallOptions(*n);
+		if (auto const* n = dynamic_cast<NewExpression const*>(&_expr))               return visitNewExpression(*n);
 		if (auto const* n = dynamic_cast<ElementaryTypeNameExpression const*>(&_expr)) return visitTypeName(*n);
 		return visitDefault(_expr);
 	}
@@ -93,6 +94,13 @@ public:
 	virtual R visitFunctionCall(solidity::frontend::FunctionCall const& _n)                    { return visitDefault(_n); }
 	virtual R visitMemberAccess(solidity::frontend::MemberAccess const& _n)                    { return visitDefault(_n); }
 	virtual R visitCallOptions(solidity::frontend::FunctionCallOptions const& _n)              { return visitDefault(_n); }
+	/// Bare `NewExpression` — in practice unreachable because Solidity's grammar
+	/// requires `new C(...)` to parse as `FunctionCall(NewExpression(C), args)`,
+	/// so we always come in via `visitFunctionCall` and route through
+	/// `SolExpressionFactory::createFunctionCall` → `SolNewExpression`. The hook
+	/// is here so a future grammar change (or analysis pass) doesn't silently
+	/// fall through to `visitDefault`.
+	virtual R visitNewExpression(solidity::frontend::NewExpression const& _n)                  { return visitDefault(_n); }
 	virtual R visitTypeName(solidity::frontend::ElementaryTypeNameExpression const& _n)        { return visitDefault(_n); }
 
 	// ── Statement hooks (default → visitDefault) ──────────────────────────

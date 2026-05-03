@@ -74,6 +74,14 @@ std::shared_ptr<awst::Expression> SolConstantAccess::toAwst()
 			"behave differently than on EVM.",
 			m_loc);
 
+		// Build the base expression for its side effects (e.g. an
+		// AssignmentExpression in `((flag = true) ? M : M).D` would
+		// otherwise be silently dropped — the surrounding ternary's
+		// SolConditional already emitted the assignment as a pre-pending
+		// statement, but visiting the base here lets any nested
+		// expression-builder side effects flush too).
+		(void) buildExpr(baseExpression());
+
 		std::vector<unsigned char> zeros(32, 0);
 		auto bc = awst::makeBytesConstant(std::move(zeros), m_loc);
 		return awst::makeReinterpretCast(std::move(bc), awst::WType::accountType(), m_loc);

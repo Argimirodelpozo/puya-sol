@@ -143,21 +143,15 @@ def compile_sol(sol_path, out_dir, via_yul_behavior=False):
     has_multi = "==== Source:" in content or "==== ExternalSource:" in content
 
     if has_multi:
-        # Use puya-sol's --split-test to handle Source/ExternalSource directives
-        import tempfile
-        split_dir = Path(tempfile.mkdtemp(prefix="split_"))
-        # Determine upstream test dir for ExternalSource resolution
-        upstream_dir = ROOT / "solidity" / "test" / "libsolidity" / "semanticTests" / sol_path.parent.name
-        split_cmd = [
-            str(COMPILER), "--source", str(sol_path),
-            "--split-test", "--output-dir", str(split_dir),
-            "--upstream-test-dir", str(upstream_dir),
-        ]
-        split_result = subprocess.run(split_cmd, capture_output=True, text=True, timeout=30)
-        if split_result.returncode != 0:
-            return None
-        source_path = Path(split_result.stdout.strip())
-        import_dir = split_dir
+        # Multi-source fixture: pure-Python preprocessor — see
+        # multisource_splitter.split_multisource. Materialises each
+        # `==== Source: ====` block to a temp file, copies any
+        # `ExternalSource:` files in from the upstream Solidity tree.
+        from multisource_splitter import split_multisource
+        upstream_root = ROOT / "solidity" / "test" / "libsolidity" / "semanticTests"
+        source_path, _all, import_dir = split_multisource(
+            sol_path, upstream_root if upstream_root.exists() else None
+        )
     else:
         source_path = sol_path
         import_dir = None
