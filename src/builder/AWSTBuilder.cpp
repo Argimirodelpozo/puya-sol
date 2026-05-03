@@ -427,7 +427,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	for (size_t idx: mappingStorageParams)
 	{
 		auto const& param = _func.parameters()[idx];
-		exprBuilder.setMappingKeyParam(param->id(), param->name());
+		fnCtx.setMappingKeyParam(param->id(), param->name());
 	}
 
 	// Param + return-param context for inline assembly + sub-word integer truncation.
@@ -477,7 +477,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	// Register named return variable names so inner scoping detects shadowing.
 	for (auto const& rp: returnParams)
 		if (!rp->name().empty())
-			exprBuilder.resolveVarName(rp->name(), rp->id());
+			blk.resolveVarName(rp->name(), rp->id());
 
 	// Register mapping-storage-ref return params: `function f() returns (mapping(K=>V) storage r)`
 	// — `r` is a local pointer to a mapping; r[k] resolves to box access prefixed
@@ -488,7 +488,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			&& dynamic_cast<solidity::frontend::MappingType const*>(rp->type())
 			&& !rp->name().empty())
 		{
-			exprBuilder.setMappingKeyParam(rp->id(), rp->name());
+			fnCtx.setMappingKeyParam(rp->id(), rp->name());
 		}
 	}
 

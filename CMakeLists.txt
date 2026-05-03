@@ -95,6 +95,7 @@ set(SOURCES
 	src/builder/sol-eb/FunctionPointerBuilder.cpp
 	src/builder/sol-eb/AssignmentHelper.cpp
 	src/builder/sol-eb/TypeConversions.cpp
+	src/builder/sol-ast/Context.cpp
 	src/builder/sol-ast/SolExpression.cpp
 	src/builder/sol-ast/SolFunctionCall.cpp
 	src/builder/sol-ast/SolExpressionFactory.cpp

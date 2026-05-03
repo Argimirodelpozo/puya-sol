@@ -250,7 +250,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 						sg->defaultValue = StorageMapper::makeDefaultValue(aliasExpr->wtype, m_loc);
 						aliasExpr = sg;
 					}
-					m_ctx.setStorageAlias(lhsDecl->id(), std::move(aliasExpr));
+					m_scope.setStorageAlias(lhsDecl->id(), std::move(aliasExpr));
 					continue;
 				}
 			}

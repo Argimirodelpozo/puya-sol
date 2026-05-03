@@ -185,7 +185,7 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 		if (auto const* vd = dynamic_cast<VariableDeclaration const*>(decl))
 		{
 			// Look up potentially renamed name (variable shadowing)
-			e->name = m_ctx.lookupVarName(name, decl->id());
+			e->name = m_scope.lookupVarName(name, decl->id());
 			e->wtype = m_ctx.typeMapper.map(vd->type());
 		}
 		else

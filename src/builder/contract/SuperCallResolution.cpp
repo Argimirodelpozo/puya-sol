@@ -158,7 +158,7 @@ void ContractBuilder::collectSuperCallMetadata(
 					std::string superName = name + "__super_" + std::to_string(callerId);
 					m_perFuncSuperOverrides[callerId].push_back({superCallTargetId, superName});
 					m_superTargetFuncs[callerId] = target;
-					m_exprBuilder->setSuperTarget(superCallTargetId, superName);
+					m_tr->setSuperTarget(superCallTargetId, superName);
 				}
 			}
 		}
@@ -196,7 +196,7 @@ void ContractBuilder::collectSuperCallMetadata(
 						if (m_overloadedNames.count(name))
 							name += "_" + std::to_string(func->parameters().size());
 						std::string superName = name + "__super_" + std::to_string(id);
-						m_exprBuilder->setSuperTarget(id, superName);
+						m_tr->setSuperTarget(id, superName);
 					}
 				}
 			}
@@ -227,7 +227,7 @@ void ContractBuilder::collectSuperCallMetadata(
 							name += "(" + std::to_string(func->parameters().size()) + ")";
 						std::string superName = name + "__super_" + std::to_string(id);
 						// Register globally — explicit base calls don't need per-function context
-						m_exprBuilder->setSuperTarget(id, superName);
+						m_tr->setSuperTarget(id, superName);
 					}
 				}
 			}
@@ -241,14 +241,14 @@ void ContractBuilder::applySuperOverridesFor(int64_t _callerFuncId)
 	auto it = m_perFuncSuperOverrides.find(_callerFuncId);
 	if (it != m_perFuncSuperOverrides.end())
 		for (auto const& [targetId, superName]: it->second)
-			m_exprBuilder->setSuperTarget(targetId, superName);
+			m_tr->setSuperTarget(targetId, superName);
 	// Re-register fallback super targets (cross-function super calls)
 	for (auto const& [id, func]: m_fallbackSuperFuncs)
 	{
 		std::string name = func->name();
 		if (m_overloadedNames.count(name))
 			name += "_" + std::to_string(func->parameters().size());
-		m_exprBuilder->setSuperTarget(id, name + "__super_" + std::to_string(id));
+		m_tr->setSuperTarget(id, name + "__super_" + std::to_string(id));
 	}
 	// Re-register explicit base targets (they're fixed, not MRO-dependent)
 	for (auto const& [id, func]: m_explicitBaseTargetFuncs)
@@ -256,13 +256,13 @@ void ContractBuilder::applySuperOverridesFor(int64_t _callerFuncId)
 		std::string name = func->name();
 		if (m_overloadedNames.count(name))
 			name += "(" + std::to_string(func->parameters().size()) + ")";
-		m_exprBuilder->setSuperTarget(id, name + "__super_" + std::to_string(id));
+		m_tr->setSuperTarget(id, name + "__super_" + std::to_string(id));
 	}
 }
 
 void ContractBuilder::clearSuperOverrides()
 {
-	m_exprBuilder->clearSuperTargets();
+	m_tr->clearSuperTargets();
 }
 
 void ContractBuilder::emitSuperSubroutines(

@@ -77,14 +77,14 @@ std::shared_ptr<awst::Block> ContractBuilder::buildBlock(
 	// enclosing block via `nearestBlock(currentScope)`.
 	for (auto const* rp: m_currentNamedReturns)
 		if (rp && !rp->name().empty())
-			m_exprBuilder->resolveVarName(rp->name(), rp->id());
+			blk.resolveVarName(rp->name(), rp->id());
 
 	// Register mapping-storage-ref params on the FunctionContext so that
 	// `m[k]` inside the body resolves the dynamic box-key prefix at
 	// runtime. Same scope-push ordering constraint as the named returns.
 	for (auto const* mp: m_currentMappingKeyParams)
 		if (mp && !mp->name().empty())
-			m_exprBuilder->setMappingKeyParam(mp->id(), mp->name());
+			fn.setMappingKeyParam(mp->id(), mp->name());
 
 	return sol_ast::buildBlock(blk, _block);
 }
@@ -267,7 +267,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// translated inside buildApprovalProgram below — can resolve `super.f()`
 	// to the eventually-emitted `f__super_N` subroutine instead of falling
 	// back to the current contract's own `f`.
-	m_allSuperTargetNames = m_exprBuilder->allSuperTargets();
+	m_allSuperTargetNames = m_tr->allSuperTargets();
 
 	// Approval and clear programs
 	m_postInitMethod.reset();

@@ -155,6 +155,37 @@ public:
 		return m_parent ? m_parent->findSuperTarget(_declId) : std::string{};
 	}
 
+	// ── Mutation API (writes target the right ancestor) ─────────────
+	// Each setter walks the parent chain to find the scope level that
+	// owns the binding (BlockContext for block-scoped state,
+	// FunctionContext for function-scoped, TranslationContext for
+	// contract-scoped). Defined out-of-line in Context.cpp.
+
+	void setStorageAlias(int64_t _declId, std::shared_ptr<awst::Expression> _expr);
+	void setFuncPtrTarget(int64_t _declId,
+		solidity::frontend::FunctionDefinition const* _target);
+	void eraseFuncPtrTarget(int64_t _declId);
+	void setConstantLocal(int64_t _declId, unsigned long long _value);
+	void setSlotStorageRef(int64_t _declId, std::shared_ptr<awst::Expression> _expr);
+	void setMappingKeyParam(int64_t _declId, std::string _name);
+	void setInConstructor(bool _flag);
+	void setParamRemap(int64_t _declId, ParamRemap _remap);
+	void eraseParamRemap(int64_t _declId);
+	void setSuperTarget(int64_t _declId, std::string _name);
+	void clearSuperTargets();
+	std::unordered_map<int64_t, std::string> const& allSuperTargets() const;
+
+	/// Get the AWST variable name for a declaration, handling shadowing.
+	/// If the name is already taken by a different declaration in an outer
+	/// block, appends "__<id>" to make it unique. Bindings are inserted
+	/// into the innermost enclosing BlockContext.
+	std::string resolveVarName(std::string const& _name, int64_t _declId);
+
+	/// Look up the AWST variable name for a referenced declaration.
+	/// Returns `_name__declId` if such a unique-name binding exists in
+	/// any enclosing block, otherwise the bare `_name`.
+	std::string lookupVarName(std::string const& _name, int64_t _declId) const;
+
 protected:
 	explicit Context(Context* _parent): m_parent(_parent) {}
 
