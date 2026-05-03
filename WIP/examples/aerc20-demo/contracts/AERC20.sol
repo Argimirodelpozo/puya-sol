@@ -69,4 +69,14 @@ abstract contract AERC20 {
         emit Transfer(from, to, amount);
         return true;
     }
+
+    /// Distribute `amount` from the contract's reserve holding to `to`.
+    /// Inheriting contracts should gate this — the prototype leaves it
+    /// open so the test suite can exercise transfer paths without first
+    /// having to bootstrap balances out-of-band.
+    function mint(address to, uint256 amount) public returns (bool) {
+        AVM.asaTransfer(asaId, address(this), to, amount);
+        emit Transfer(address(this), to, amount);
+        return true;
+    }
 }

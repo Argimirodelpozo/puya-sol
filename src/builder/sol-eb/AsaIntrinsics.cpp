@@ -41,7 +41,10 @@ std::shared_ptr<awst::Expression> uint64ToBigUInt(
 	return awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
 }
 
-/// Truncate a biguint to uint64 via btoi (taking the low 8 bytes).
+/// Truncate a biguint (or bytes) to uint64. For biguint we first
+/// pad-prepend to 32 bytes (so length stays well-defined regardless of
+/// the source's minimal encoding) and then keep the trailing 8 bytes
+/// before applying `btoi`. For already-uint64 sources, pass through.
 std::shared_ptr<awst::Expression> bigUIntToUint64(
 	std::shared_ptr<awst::Expression> _expr,
 	awst::SourceLocation const& _loc)
@@ -49,16 +52,31 @@ std::shared_ptr<awst::Expression> bigUIntToUint64(
 	if (_expr->wtype == awst::WType::uint64Type())
 		return _expr;
 
-	// biguint → bytes → low-8-byte extract → btoi
+	// biguint → bytes (untyped). bytes-typed `extract3` takes the last 8.
 	auto asBytes = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
 
-	// We want the LAST 8 bytes (low-order in big-endian biguint), so use
-	// `extract3(b, len(b)-8, 8)` via puya's `extract` intrinsic. Simpler:
-	// pad-front and take the trailing 8. The puya runtime's `btoi` on a
-	// biguint reinterpreted as bytes accepts arbitrary-length byteslices
-	// and reads only the last 8 bytes — verify.
+	// Pad to ≥ 8 bytes by ORing with bzero(32); biguint addition + zero
+	// preserves value but normalises length to 32 so `extract3 24 8`
+	// always sees the low-order 8 bytes.
+	auto padBack = awst::makeReinterpretCast(asBytes, awst::WType::biguintType(), _loc);
+	auto zeroBig = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
+	// biguint(b) | biguint(0) ≡ left-pad-with-zeros to 32 bytes via puya's
+	// big-int op. We use addition for a similar effect — `Add(b, 0)` yields
+	// b but normalised to fixed width.
+	auto normalised = awst::makeBigUIntBinOp(
+		std::move(padBack), awst::BigUIntBinaryOperator::Add,
+		std::move(zeroBig), _loc);
+	auto normBytes = awst::makeReinterpretCast(
+		std::move(normalised), awst::WType::bytesType(), _loc);
+
+	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
+	extract->stackArgs.push_back(std::move(normBytes));
+	// offset, length — keep last 8 bytes of the normalised 32-byte rep
+	extract->stackArgs.push_back(awst::makeIntegerConstant("24", _loc));
+	extract->stackArgs.push_back(awst::makeIntegerConstant("8", _loc));
+
 	auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-	btoi->stackArgs.push_back(std::move(asBytes));
+	btoi->stackArgs.push_back(std::move(extract));
 	return btoi;
 }
 
