@@ -9,11 +9,14 @@
 #include <libsolidity/ast/ASTVisitor.h>
 
 #include <boost/multiprecision/cpp_int.hpp>
+#include <functional>
 #include <map>
 #include <set>
 
 namespace puyasol::builder
 {
+
+namespace {
 
 /// Checks if a Solidity AST subtree references any state variable whose AST ID
 /// is in the given set (i.e. box-stored state variables).
@@ -41,6 +44,205 @@ private:
 	bool m_found = false;
 };
 
+/// Walks every constructor body in `_contract`'s linearised inheritance
+/// chain (current contract first, then bases), running `_checker` against
+/// each body. Stops as soon as `_done` returns true.
+template <class V>
+void walkAllConstructors(
+	solidity::frontend::ContractDefinition const& _contract,
+	V& _checker,
+	std::function<bool()> const& _done)
+{
+	if (auto const* ctor = _contract.constructor())
+		if (ctor->isImplemented() && !ctor->body().statements().empty())
+		{
+			ctor->body().accept(_checker);
+			if (_done()) return;
+		}
+
+	for (auto const* base: _contract.annotation().linearizedBaseContracts)
+	{
+		if (base == &_contract)
+			continue;
+		auto const* baseCtor = base->constructor();
+		if (baseCtor && baseCtor->isImplemented()
+			&& !baseCtor->body().statements().empty())
+		{
+			baseCtor->body().accept(_checker);
+			if (_done()) return;
+		}
+	}
+}
+
+/// Walks every state-variable initializer expression in the contract's
+/// linearised chain.
+template <class V>
+void walkAllStateVarInits(
+	solidity::frontend::ContractDefinition const& _contract,
+	V& _checker)
+{
+	for (auto const* base: _contract.annotation().linearizedBaseContracts)
+		for (auto const* var: base->stateVariables())
+			if (var->value())
+				var->value()->accept(_checker);
+}
+
+/// Box-write detector — true if the constructor (directly or transitively
+/// via a function call) touches any box-stored state variable.
+bool detectBoxRefsInConstructor(solidity::frontend::ContractDefinition const& _contract)
+{
+	std::set<int64_t> boxVarIds;
+	for (auto const* base: _contract.annotation().linearizedBaseContracts)
+		for (auto const* var: base->stateVariables())
+		{
+			if (var->isConstant())
+				continue;
+			if (StorageMapper::shouldUseBoxStorage(*var))
+				boxVarIds.insert(var->id());
+		}
+	if (boxVarIds.empty())
+		return false;
+
+	BoxVarRefChecker direct(boxVarIds);
+	walkAllConstructors(_contract, direct, [&]{ return direct.found(); });
+	if (direct.found())
+		return true;
+
+	// Indirect: collect AST IDs of non-constructor functions that touch
+	// box-stored vars, then re-walk constructors looking for calls to them.
+	std::set<int64_t> boxWriteFuncIds;
+	for (auto const* base: _contract.annotation().linearizedBaseContracts)
+		for (auto const* func: base->definedFunctions())
+		{
+			if (func->isConstructor() || !func->isImplemented())
+				continue;
+			BoxVarRefChecker fnCheck(boxVarIds);
+			func->body().accept(fnCheck);
+			if (fnCheck.found())
+				boxWriteFuncIds.insert(func->id());
+		}
+	if (boxWriteFuncIds.empty())
+		return false;
+
+	struct CtorCallChecker: public solidity::frontend::ASTConstVisitor
+	{
+		std::set<int64_t> const& targetIds;
+		bool found = false;
+		explicit CtorCallChecker(std::set<int64_t> const& _ids): targetIds(_ids) {}
+		bool visit(solidity::frontend::FunctionCall const& _node) override
+		{
+			if (found) return false;
+			auto const* expr = &_node.expression();
+			// Unwrap MemberAccess for calls like _grantRole(...)
+			if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(expr))
+			{
+				auto const* decl = id->annotation().referencedDeclaration;
+				if (decl && targetIds.count(decl->id()))
+					found = true;
+			}
+			return !found;
+		}
+	};
+	CtorCallChecker callChecker(boxWriteFuncIds);
+	walkAllConstructors(_contract, callChecker, [&]{ return callChecker.found; });
+	return callChecker.found;
+}
+
+/// `new C(...)` detector — child contracts deployed via inner-create need
+/// the parent to already hold balance, which only lands after AppCreate.
+bool detectNewExprInConstructor(solidity::frontend::ContractDefinition const& _contract)
+{
+	struct NewExprChecker: public solidity::frontend::ASTConstVisitor
+	{
+		bool found = false;
+		bool visit(solidity::frontend::NewExpression const&) override
+		{ found = true; return false; }
+	};
+	NewExprChecker checker;
+	walkAllStateVarInits(_contract, checker);
+	if (auto const* ctor = _contract.constructor())
+		if (ctor->isImplemented())
+			ctor->body().accept(checker);
+	return checker.found;
+}
+
+/// `msg.value` / `msg.sender` / `msg.data` detector — these only resolve
+/// correctly inside `__postInit` when the parent groups the Payment with
+/// the post-init call (not with AppCreate).
+bool detectMsgRefInConstructor(solidity::frontend::ContractDefinition const& _contract)
+{
+	struct MsgRefChecker: public solidity::frontend::ASTConstVisitor
+	{
+		bool found = false;
+		bool visit(solidity::frontend::MemberAccess const& _ma) override
+		{
+			if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(&_ma.expression()))
+				if (id->name() == "msg"
+					&& (_ma.memberName() == "value"
+						|| _ma.memberName() == "sender"
+						|| _ma.memberName() == "data"))
+					found = true;
+			return !found;
+		}
+	};
+	MsgRefChecker checker;
+	walkAllStateVarInits(_contract, checker);
+	if (auto const* ctor = _contract.constructor())
+		if (ctor->isImplemented())
+			ctor->body().accept(checker);
+	return checker.found;
+}
+
+/// `AVM.<x>(...)` detector — the stdlib library issues inner txns that
+/// require the contract to already hold MBR + ASA reserves, which can
+/// only land via a pay txn AFTER AppCreate. Defers to __postInit.
+bool detectAvmLibCallInConstructor(solidity::frontend::ContractDefinition const& _contract)
+{
+	struct AvmLibCallChecker: public solidity::frontend::ASTConstVisitor
+	{
+		bool found = false;
+		bool visit(solidity::frontend::MemberAccess const& _ma) override
+		{
+			if (found) return false;
+			if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(&_ma.expression()))
+				if (auto const* contractDef = dynamic_cast<solidity::frontend::ContractDefinition const*>(
+						id->annotation().referencedDeclaration))
+					if (contractDef->isLibrary() && contractDef->name() == "AVM")
+						found = true;
+			return !found;
+		}
+	};
+	AvmLibCallChecker checker;
+	walkAllStateVarInits(_contract, checker);
+	walkAllConstructors(_contract, checker, [&]{ return checker.found; });
+	return checker.found;
+}
+
+/// Combines the four post-init triggers; logs which one fired (via debug).
+bool computeNeedsPostInit(solidity::frontend::ContractDefinition const& _contract)
+{
+	if (detectBoxRefsInConstructor(_contract))
+		return true;
+	if (detectNewExprInConstructor(_contract))
+	{
+		Logger::instance().debug("Forcing __postInit: constructor/state-init deploys child contracts via new C()");
+		return true;
+	}
+	if (detectMsgRefInConstructor(_contract))
+	{
+		Logger::instance().debug("Forcing __postInit: constructor/state-init references msg.*");
+		return true;
+	}
+	if (detectAvmLibCallInConstructor(_contract))
+	{
+		Logger::instance().debug("Forcing __postInit: constructor/state-init calls into AVM stdlib");
+		return true;
+	}
+	return false;
+}
+
+} // namespace
+
 awst::ContractMethod ContractBuilder::buildApprovalProgram(
 	solidity::frontend::ContractDefinition const& _contract,
 	std::string const& _contractName
@@ -55,255 +257,10 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 	auto body = std::make_shared<awst::Block>();
 	body->sourceLocation = method.sourceLocation;
 
-	// Detect if constructor needs auto-split (box writes in constructor)
-	// Only generate __postInit if the constructor body actually references
-	// box-stored state variables. Having box storage + constructor code is
-	// not sufficient — if the constructor only writes global state, it can
-	// all happen during the create transaction.
-	bool needsPostInit = false;
-	{
-		// Collect AST IDs of all box-stored state variables
-		std::set<int64_t> boxVarIds;
-		for (auto const* base: _contract.annotation().linearizedBaseContracts)
-		{
-			for (auto const* var: base->stateVariables())
-			{
-				if (var->isConstant())
-					continue;
-				if (StorageMapper::shouldUseBoxStorage(*var))
-					boxVarIds.insert(var->id());
-			}
-		}
-
-		if (!boxVarIds.empty())
-		{
-			// Walk constructor bodies to check if they reference any box-stored variable.
-			// Also check functions called from constructors (transitively).
-			BoxVarRefChecker checker(boxVarIds);
-
-			// First, scan ALL non-constructor functions to find which ones
-			// reference box-stored state variables
-			std::set<int64_t> boxWriteFuncIds;
-			for (auto const* base: _contract.annotation().linearizedBaseContracts)
-			{
-				for (auto const* func: base->definedFunctions())
-				{
-					if (func->isConstructor() || !func->isImplemented())
-						continue;
-					BoxVarRefChecker funcChecker(boxVarIds);
-					func->body().accept(funcChecker);
-					if (funcChecker.found())
-						boxWriteFuncIds.insert(func->id());
-				}
-			}
-
-			// Now walk constructor bodies checking for:
-			// 1. Direct references to box-stored state variables
-			// 2. Calls to functions that reference box-stored state variables
-			auto const* ctor = _contract.constructor();
-			if (ctor && !ctor->body().statements().empty())
-				ctor->body().accept(checker);
-
-			if (!checker.found())
-			{
-				for (auto const* base: _contract.annotation().linearizedBaseContracts)
-				{
-					if (base == &_contract)
-						continue;
-					auto const* baseCtor = base->constructor();
-					if (baseCtor && baseCtor->isImplemented()
-						&& !baseCtor->body().statements().empty())
-					{
-						baseCtor->body().accept(checker);
-						if (checker.found())
-							break;
-					}
-				}
-			}
-
-			// If direct references weren't found, check if constructors
-			// call any function that writes to boxes
-			if (!checker.found() && !boxWriteFuncIds.empty())
-			{
-				// Scan constructor bodies for FunctionCall nodes whose
-				// referenced declaration is in boxWriteFuncIds
-				struct CtorCallChecker: public solidity::frontend::ASTConstVisitor
-				{
-					std::set<int64_t> const& targetIds;
-					bool found = false;
-					explicit CtorCallChecker(std::set<int64_t> const& _ids): targetIds(_ids) {}
-					bool visit(solidity::frontend::FunctionCall const& _node) override
-					{
-						if (found) return false;
-						auto const* expr = &_node.expression();
-						// Unwrap MemberAccess for calls like _grantRole(...)
-						if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(expr))
-						{
-							auto const* decl = id->annotation().referencedDeclaration;
-							if (decl && targetIds.count(decl->id()))
-								found = true;
-						}
-						return !found;
-					}
-				};
-				CtorCallChecker callChecker(boxWriteFuncIds);
-				if (ctor && !ctor->body().statements().empty())
-					ctor->body().accept(callChecker);
-				if (!callChecker.found)
-				{
-					for (auto const* base: _contract.annotation().linearizedBaseContracts)
-					{
-						if (base == &_contract)
-							continue;
-						auto const* baseCtor = base->constructor();
-						if (baseCtor && baseCtor->isImplemented()
-							&& !baseCtor->body().statements().empty())
-						{
-							baseCtor->body().accept(callChecker);
-							if (callChecker.found)
-								break;
-						}
-					}
-				}
-				needsPostInit = callChecker.found;
-			}
-			else
-			{
-				needsPostInit = checker.found();
-			}
-		}
-	}
-
-	// Force __postInit if the constructor (or state var initializers)
-	// contains `new C()` — the inner create/fund txns need the parent
-	// to already have balance, which only happens after deployment.
-	if (!needsPostInit)
-	{
-		struct NewExprChecker: public solidity::frontend::ASTConstVisitor
-		{
-			bool found = false;
-			bool visit(solidity::frontend::NewExpression const&) override
-			{ found = true; return false; }
-		};
-		NewExprChecker newChecker;
-		// Check state variable initializers
-		for (auto const* base: _contract.annotation().linearizedBaseContracts)
-			for (auto const* var: base->stateVariables())
-				if (var->value())
-					var->value()->accept(newChecker);
-		// Check constructor body
-		if (auto const* ctor = _contract.constructor())
-			if (ctor->isImplemented())
-				ctor->body().accept(newChecker);
-		if (newChecker.found)
-		{
-			needsPostInit = true;
-			Logger::instance().debug("Forcing __postInit: constructor/state-init deploys child contracts via new C()");
-		}
-	}
-
-	// Force __postInit when any state-var initializer or constructor body
-	// references msg.value / msg.sender / msg.data. At AppCreate time these
-	// read from the caller's group context (e.g. msg.value sees Amount of the
-	// preceding group txn), which is correct when the contract is deployed
-	// by a PaymentTxn-preceded ApplicationCreateTxn. But when this contract
-	// is deployed as a CHILD via `new C{value: N}()`, the parent's
-	// SolNewExpression groups the Payment+__postInit call (not the Payment+
-	// AppCreate), so msg.value is only visible inside __postInit. Deferring
-	// the initializer is the simplest way to make `new C{value:N}(...)`
-	// with msg.value semantics work.
-	if (!needsPostInit)
-	{
-		struct MsgRefChecker: public solidity::frontend::ASTConstVisitor
-		{
-			bool found = false;
-			bool visit(solidity::frontend::MemberAccess const& _ma) override
-			{
-				if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(&_ma.expression()))
-				{
-					if (id->name() == "msg"
-						&& (_ma.memberName() == "value"
-							|| _ma.memberName() == "sender"
-							|| _ma.memberName() == "data"))
-						found = true;
-				}
-				return !found;
-			}
-		};
-		MsgRefChecker msgChecker;
-		for (auto const* base: _contract.annotation().linearizedBaseContracts)
-			for (auto const* var: base->stateVariables())
-				if (var->value())
-					var->value()->accept(msgChecker);
-		if (auto const* ctor = _contract.constructor())
-			if (ctor->isImplemented())
-				ctor->body().accept(msgChecker);
-		if (msgChecker.found)
-		{
-			needsPostInit = true;
-			Logger::instance().debug("Forcing __postInit: constructor/state-init references msg.*");
-		}
-	}
-
-	// Force __postInit when the constructor (or state-var initializer) calls
-	// into the AVM stdlib library — e.g. `AVM.asaCreate(...)` issues an
-	// `acfg` inner txn that requires the contract to already hold its MBR
-	// plus 0.1 algo for the new ASA. That balance can only land via a
-	// pay txn AFTER AppCreate succeeds, so the AVM call has to defer to
-	// __postInit (which the deployer invokes post-fund).
-	if (!needsPostInit)
-	{
-		struct AvmLibCallChecker: public solidity::frontend::ASTConstVisitor
-		{
-			bool found = false;
-			bool visit(solidity::frontend::MemberAccess const& _ma) override
-			{
-				if (found) return false;
-				if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(&_ma.expression()))
-				{
-					if (auto const* contractDef = dynamic_cast<solidity::frontend::ContractDefinition const*>(
-							id->annotation().referencedDeclaration))
-					{
-						if (contractDef->isLibrary() && contractDef->name() == "AVM")
-							found = true;
-					}
-				}
-				return !found;
-			}
-		};
-		AvmLibCallChecker avmChecker;
-		for (auto const* base: _contract.annotation().linearizedBaseContracts)
-			for (auto const* var: base->stateVariables())
-				if (var->value())
-					var->value()->accept(avmChecker);
-		if (auto const* ctor = _contract.constructor())
-			if (ctor->isImplemented())
-				ctor->body().accept(avmChecker);
-		// Inherited base-contract constructor bodies count too — MyToken's
-		// own constructor may be empty; the AVM.asaCreate sits in AERC20's
-		// ctor that runs as part of the linearised base-ctor chain.
-		if (!avmChecker.found)
-		{
-			for (auto const* base: _contract.annotation().linearizedBaseContracts)
-			{
-				if (base == &_contract)
-					continue;
-				auto const* baseCtor = base->constructor();
-				if (baseCtor && baseCtor->isImplemented()
-					&& !baseCtor->body().statements().empty())
-				{
-					baseCtor->body().accept(avmChecker);
-					if (avmChecker.found)
-						break;
-				}
-			}
-		}
-		if (avmChecker.found)
-		{
-			needsPostInit = true;
-			Logger::instance().debug("Forcing __postInit: constructor/state-init calls into AVM stdlib");
-		}
-	}
+	// Detect if the constructor needs auto-split into __postInit. Triggered
+	// by box state-var writes (direct or transitive), `new C()` deployments,
+	// `msg.*` references, or AVM stdlib calls — see helpers above.
+	bool needsPostInit = computeNeedsPostInit(_contract);
 
 	// Create-time check: if (Txn.ApplicationID == 0) { base_ctors; ctor_body; return true; }
 	{
