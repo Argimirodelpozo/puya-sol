@@ -248,6 +248,40 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			{ funcHasInlineAssembly = true; break; }
 	}
 
+	// Detect self-recursion: a call to `_func` from within its own body.
+	// Internal callsubs pass the body's native (biguint) value; if we
+	// remapped the public param to ARC4 the recursive callsub would land
+	// in a function expecting 32-byte ARC4 bytes and underflow at decode.
+	// Until we support a wrapper-Subroutine split, leave self-recursive
+	// functions on the biguint path (matching the current behaviour for
+	// modifier-having functions).
+	bool funcHasSelfRecursion = false;
+	if (_func.isImplemented())
+	{
+		struct SelfRecursionChecker: public solidity::frontend::ASTConstVisitor
+		{
+			solidity::frontend::FunctionDefinition const* target;
+			bool found = false;
+			explicit SelfRecursionChecker(solidity::frontend::FunctionDefinition const* _t): target(_t) {}
+			bool visit(solidity::frontend::FunctionCall const& _node) override
+			{
+				if (found) return false;
+				auto const* expr = &_node.expression();
+				solidity::frontend::Declaration const* decl = nullptr;
+				if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(expr))
+					decl = id->annotation().referencedDeclaration;
+				else if (auto const* ma = dynamic_cast<solidity::frontend::MemberAccess const*>(expr))
+					decl = ma->annotation().referencedDeclaration;
+				if (decl == target)
+					found = true;
+				return !found;
+			}
+		};
+		SelfRecursionChecker checker(&_func);
+		_func.body().accept(checker);
+		funcHasSelfRecursion = checker.found;
+	}
+
 	if (method.arc4MethodConfig.has_value())
 	{
 		// Remap types to ARC4 encoding for ABI-exposed methods.
@@ -258,14 +292,26 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			auto& arg = method.args[pi];
 
 			// Remap biguint args to ARC4UIntN with the original Solidity bit width.
-			// Without this, puya maps biguint→uint512 (AVM max) instead of uint256.
-			// Signed integers use the same 256-bit two's complement encoding —
-			// we keep ARC4UIntN(256) and let the test runner's _abi_safe_type
-			// helper map int<N>→uint<N> so encode/decode line up.
-			// Skip when function has modifiers or inline assembly — both reference
-			// params by their original names and would break on rename.
+			// Without this, puya maps biguint→uint512 (AVM max) instead of uint256,
+			// breaking ABI selectors for callers that use the natural f(uint256)
+			// signature. Signed integers use the same 256-bit two's complement
+			// encoding — we keep ARC4UIntN(256) and let the test runner's
+			// _abi_safe_type helper map int<N>→uint<N> so encode/decode line up.
+			//
+			// Three skip conditions:
+			//   - inline assembly: body references the param by its original
+			//     name; renaming would break assembly references.
+			//   - self-recursion: internal callsubs pass biguint values built
+			//     from the body, but the renamed param is ARC4 — the recursive
+			//     call would land in a function expecting 32-byte ARC4 bytes
+			//     and underflow at decode. Needs a wrapper-Subroutine split.
+			//
+			// Modifier-having functions WITHOUT recursion are fine: the
+			// decode statement at body[0] runs before any modifier-inlined
+			// code (modifier wraps the body proper), so modifier code that
+			// references the param sees the decoded biguint value.
 			if (arg.wtype == awst::WType::biguintType() && pi < solParams.size()
-				&& _func.modifiers().empty() && !funcHasInlineAssembly)
+				&& !funcHasInlineAssembly && !funcHasSelfRecursion)
 			{
 				auto const* solType = solParams[pi]->annotation().type;
 				auto const* intType = solType ? dynamic_cast<solidity::frontend::IntegerType const*>(solType) : nullptr;
@@ -859,12 +905,18 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			}
 		}
 
-		// Insert ARC4 decode operations for aggregate parameters.
-		// The method args were remapped to ARC4 types, but the body uses
-		// native types. We rename the ARC4 arg and insert a decode statement.
+		// Build ARC4 decode operations for aggregate / biguint parameters.
+		// The method args were remapped to ARC4 types but the body refs the
+		// native names. We rename each arg to `__arc4_<name>` and stash the
+		// decode statements; insertion is DEFERRED until after modifier
+		// inlining (below) so the decode lands at the top of the eventually
+		// modifier-wrapped body. Otherwise modifier-inlined pre-code that
+		// reads the param sees an uninitialised local — `inlineModifiers`
+		// replaces `method.body` wholesale, burying anything we prepend
+		// before the rewrap.
+		std::vector<std::shared_ptr<awst::Statement>> deferredDecodes;
 		if (!paramDecodes.empty() && !hasInlineAssembly)
 		{
-			std::vector<std::shared_ptr<awst::Statement>> decodeStmts;
 			for (auto& pd: paramDecodes)
 			{
 				// Rename the method arg to __arc4_<name>
@@ -914,13 +966,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				auto target = awst::makeVarExpression(pd.name, pd.nativeType, pd.loc);
 
 				auto assign = awst::makeAssignmentStatement(std::move(target), std::move(decodeExpr), pd.loc);
-				decodeStmts.push_back(std::move(assign));
+				deferredDecodes.push_back(std::move(assign));
 			}
-			method.body->body.insert(
-				method.body->body.begin(),
-				std::make_move_iterator(decodeStmts.begin()),
-				std::make_move_iterator(decodeStmts.end())
-			);
+			// For modifier-less functions we could insert here, but to keep
+			// a single insertion point we always defer to post-inline below.
 		}
 
 		// Mask sub-64-bit unsigned parameters at function entry.
@@ -1095,6 +1144,19 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				buildModifierChain(_func, method, _contractName);
 			else
 				inlineModifiers(_func, method.body);
+		}
+
+		// Insert ARC4 param-decode statements (built earlier, deferred so
+		// that they land at the very top of the now-modifier-wrapped body).
+		// `inlineModifiers` replaces `method.body` with a fresh wrapper, so
+		// inserting earlier would have buried the decode inside the wrap.
+		if (!deferredDecodes.empty())
+		{
+			method.body->body.insert(
+				method.body->body.begin(),
+				std::make_move_iterator(deferredDecodes.begin()),
+				std::make_move_iterator(deferredDecodes.end())
+			);
 		}
 
 		// Inject ensure_budget for opup budget padding
