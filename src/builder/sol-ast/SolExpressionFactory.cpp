@@ -492,6 +492,16 @@ std::unique_ptr<SolMemberAccess> SolExpressionFactory::createMemberAccess(
 			if (varDecl->isStateVariable())
 				return std::make_unique<SolConstantAccess>(m_ctx, _node);
 		}
+		// `import "x" as M; M.L` — module-aliased contract reference.
+		// The MemberAccess's referencedDeclaration is the contract itself;
+		// when used as a VALUE (e.g. `address(M.L)`) Solidity returns the
+		// library's deployed address, which on AVM is meaningless — we
+		// emit a 32-byte zero so address(M.L) == address(0) holds. When
+		// `M.L.f(...)` is the receiver of a CALL, SolInternalCall's
+		// last-resort library/free resolver dispatches via FunctionDefinition
+		// directly without consulting the result we return here.
+		if (dynamic_cast<ContractDefinition const*>(refDecl))
+			return std::make_unique<SolConstantAccess>(m_ctx, _node);
 	}
 
 	// 5. type(X).max / type(X).min / type(C).name / type(I).interfaceId

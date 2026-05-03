@@ -161,10 +161,16 @@ std::optional<ResolvedCall> CallResolver::resolveFromMemberAccess(
 		if (tryResolveLibraryOrFree(_ctx, funcDef, tempResult))
 		{
 			result.target = tempResult.target;
-			// Determine if receiver should be prepended as first arg
+			// Determine if receiver should be prepended as first arg.
+			// `M.L.f(x)` (module-aliased library) and `L.f(x)` (raw library
+			// reference) should both NOT prepend a receiver: the base is a
+			// type-level reference, not a value. Only true `value.method(...)`
+			// using-for calls prepend.
 			auto const* bt = _memberAccess.expression().annotation().type;
-			bool isModuleCall = bt && bt->category() == Type::Category::Module;
-			result.isUsingForCall = !isModuleCall;
+			bool isTypeLevelBase = bt
+				&& (bt->category() == Type::Category::Module
+					|| bt->category() == Type::Category::TypeType);
+			result.isUsingForCall = !isTypeLevelBase;
 			return result;
 		}
 	}
