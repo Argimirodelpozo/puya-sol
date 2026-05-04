@@ -52,39 +52,42 @@ is observable to integrators that intentionally relied on swallowing.
 
 ## Compile status (post-patches, against current puya-sol main)
 
-| Contract | Status | Notes |
-|---|---|---|
-| `AccessManager` | ✅ compiles | unblocked by [DataOps.cpp `m_haltEmitted` fix](../../../src/builder/assembly/DataOps.cpp) |
-| `AccessManagerEnumerable` | ✅ compiles | same fix |
-| `PositionManagerBase` | ✅ compiles | abstract; try/catch patch applied |
-| `Spoke` | ✅ compiles | abstract; try/catch patch applied |
-| `TokenizationSpoke` | ✅ compiles | abstract; try/catch patch applied |
-| `ConfigPositionManager` | ❌ FAIL | pre-existing puya-sol bug: `_cachedThis = uint256(uint160(address(this)))` — address→uint256 type cast not emitted, assigns `account` to `biguint` slot |
-| `GiverPositionManager` | ❌ same | inherits the same EIP712 base |
-| `SpokeInstance` | ❌ same | inherits the same EIP712 base |
-| `TokenizationSpokeInstance` | ❌ same | inherits the same EIP712 base |
-| `Hub` | ❌ FAIL | pre-existing puya-sol bug: `TupleExpression.wtype` emits `ARC4Struct` (the `Asset` struct from AssetLogic) where puya expects `WTuple` |
-| `ERC1967Proxy` | ❌ FAIL | EVM proxy pattern: needs delegatecall semantics + bytecode-level deploy |
+| Contract | Status | Size | Notes |
+|---|---|---|---|
+| `AccessManager` | ✅ | 5.9 KB | unblocked by [DataOps.cpp `m_haltEmitted` fix](../../../src/builder/assembly/DataOps.cpp) |
+| `AccessManagerEnumerable` | ✅ | 9.0 KB | same fix; needs `--uros-splitter` to deploy |
+| `PositionManagerBase` | ✅ | abstract | try/catch patch applied |
+| `Spoke` | ✅ | abstract | try/catch patch applied |
+| `TokenizationSpoke` | ✅ | abstract | try/catch patch applied |
+| `ConfigPositionManager` | ✅ | 4.4 KB | unblocked by `account → biguint` conversion in TypeConversions.cpp |
+| `GiverPositionManager` | ✅ | 3.8 KB | same fix |
+| `TokenizationSpokeInstance` | ✅ | 7.4 KB | same fix |
+| `SpokeInstance` | ❌ | — | tuple-arity mismatch in inherited Spoke code: source `(bool, Encoded(...), Encoded(...), Encoded(...), Encoded(...))` assigning to `(bool, Encoded(...))` target — separate puya-sol struct-tuple-destructure bug |
+| `Hub` | ❌ | — | `TupleExpression.wtype` emits `ARC4Struct` (the `Asset` struct from AssetLogic) where puya expects `WTuple` |
+| `ERC1967Proxy` | ❌ | — | EVM proxy pattern: delegatecall semantics; should be replaced with native UpdateApplication |
 
 ## Remaining work to ship full AAVE V4
 
-1. **address → uint256 cast emission** (puya-sol bug). Fix in
-   `SolTypeConversion.cpp` to recognize the
-   `uint256(uint160(address X))` idiom and emit a
-   `ReinterpretCast(account, biguint)` followed by an explicit byte-
-   layout match. Unblocks 4 contracts.
+1. **Tuple-arity destructure mismatch** (puya-sol bug, blocks
+   `SpokeInstance`). When a function returning multiple structs is
+   destructured into a smaller tuple (e.g., `(success, accountData) =
+   _tryX()` where `_tryX` returns 5 values), puya-sol emits the full
+   5-tuple as the source of an assignment whose target is the smaller
+   2-tuple. The fix is at the destructure site — slice the source
+   tuple to match the target arity, or rewrite the assignment as
+   per-element copies. Unblocks `SpokeInstance`.
 
-2. **TupleExpression with struct value** (puya-sol bug). The
-   diagnosis is that `TupleExpression.wtype` is required to be
-   `WTuple` by puya, but puya-sol emits the struct's `ARC4Struct`
-   wtype directly when a function returns a struct via a tuple
-   destructure. Fix is at the call site building the
-   `TupleExpression` — wrap the struct in a `WTuple([struct])` or
-   emit a `NewStruct` instead. Unblocks `Hub`.
+2. **TupleExpression with struct value** (puya-sol bug, blocks
+   `Hub`). `TupleExpression.wtype` is required to be `WTuple` by
+   puya, but puya-sol emits the struct's `ARC4Struct` wtype directly
+   when a function returns a struct via a tuple destructure. Fix is
+   at the call site building the `TupleExpression` — wrap the struct
+   in a `WTuple([struct])` or emit a `NewStruct` instead.
 
 3. **Deploy-size for Hub (16 KB) and SpokeInstance (17 KB)**: use
-   `--uros-splitter` (already verified end-to-end on
-   `HubConfigurator`).
+   `--uros-splitter` once compile-side fixes land. Verified
+   end-to-end on `HubConfigurator`. Also `AccessManagerEnumerable` at
+   9 KB needs the splitter.
 
 4. **`ERC1967Proxy`**: AVM has no equivalent of `delegatecall` or
    in-place bytecode replacement during a single txn. Acceptable

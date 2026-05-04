@@ -115,6 +115,39 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToInteger(
 		return std::make_unique<SolIntegerBuilder>(_ctx, targetInt, std::move(result));
 	}
 
+	// account → integer
+	// Solidity's `uint160(address(x))` and `uint256(...)` treat addresses as
+	// 160-bit integers. AVM addresses are 32-byte public keys, so we
+	// reinterpret-cast the account's byte representation as biguint (or
+	// further narrow to uint64). The biguint then represents the full
+	// 32-byte address as a 256-bit integer; subsequent narrowing casts go
+	// through the targetIsBigUInt+biguint path above (already handles
+	// masking to targetBits). For uint64 targets, fall through to the
+	// biguint→uint64 extraction path.
+	if (srcWType == awst::WType::accountType())
+	{
+		auto asBiguint = awst::makeReinterpretCast(std::move(_arg), awst::WType::biguintType(), _loc);
+		// Apply target-bit-width masking if narrower than 256 bits.
+		if (targetIsBigUInt && targetBits < 256)
+		{
+			solidity::u256 mask = (solidity::u256(1) << targetBits) - 1;
+			auto maskConst = awst::makeIntegerConstant(
+				mask.str(), _loc, awst::WType::biguintType());
+			auto masked = awst::makeBigUIntBinOp(
+				std::move(asBiguint), awst::BigUIntBinaryOperator::BitAnd,
+				std::move(maskConst), _loc);
+			return std::make_unique<SolIntegerBuilder>(_ctx, targetInt, std::move(masked));
+		}
+		if (!targetIsBigUInt)
+		{
+			// Coerce to uint64 via the biguint→uint64 extraction path.
+			auto narrowed = TypeCoercion::implicitNumericCast(
+				std::move(asBiguint), awst::WType::uint64Type(), _loc);
+			return std::make_unique<SolIntegerBuilder>(_ctx, targetInt, std::move(narrowed));
+		}
+		return std::make_unique<SolIntegerBuilder>(_ctx, targetInt, std::move(asBiguint));
+	}
+
 	// bytes[N] → integer
 	if (srcWType && srcWType->kind() == awst::WTypeKind::Bytes)
 	{
