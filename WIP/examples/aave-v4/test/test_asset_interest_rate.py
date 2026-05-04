@@ -256,3 +256,31 @@ def test_calculateInterestRate_at_max(strategy):
     result = _call_with_asset(client, "calculateInterestRate", asset_id, 0, 100, 0, 0)
     expected = _bps_to_ray(200 + 400 + 7500)
     assert abs(result - expected) < RAY // 10**4
+
+
+# ─── Ported from upstream AssetInterestRateStrategy.t.sol ─────────────────────
+
+
+def test_minOptimalRatio(strategy):
+    """MIN_OPTIMAL_RATIO public constant = 1_00 (1.00% in BPS)."""
+    client, _ = strategy
+    assert _call(client, "MIN_OPTIMAL_RATIO") == 100
+
+
+def test_maxOptimalRatio(strategy):
+    """MAX_OPTIMAL_RATIO public constant = 99_00 (99.00% in BPS)."""
+    client, _ = strategy
+    assert _call(client, "MAX_OPTIMAL_RATIO") == 9900
+
+
+def test_calculateInterestRate_ZeroDebtZeroLiquidity(strategy):
+    """When the pool has no liquidity AND no debt drawn, the
+    utilization ratio is undefined → contract returns the base rate
+    (slope contributions are zero). Direct port of upstream
+    test_calculateInterestRate_ZeroDebtZeroLiquidity which delegates
+    to the fuzz variant with liquidity=0."""
+    client, asset_id = strategy
+    result = _call_with_asset(client, "calculateInterestRate", asset_id, 0, 0, 0, 0)
+    # base_rate = 200 BPS, no slope contribution at zero debt
+    expected = _bps_to_ray(200)
+    assert abs(result - expected) < RAY // 10**4
