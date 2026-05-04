@@ -3,9 +3,20 @@
 #include "splitter/UrosSplitter.h"
 
 #include "Logger.h"
+#include "json/AWSTSerializer.h"
+#include "json/OptionsWriter.h"
+#include "runner/PuyaRunner.h"
+
+#include <boost/filesystem.hpp>
+#include <nlohmann/json.hpp>
+
+#include <fstream>
 
 namespace puyasol::splitter
 {
+
+namespace fs = boost::filesystem;
+using njson = nlohmann::ordered_json;
 
 namespace
 {
@@ -283,7 +294,7 @@ std::shared_ptr<awst::Contract> shallowCloneContract(
 
 UrosSplitter::Result UrosSplitter::split(
 	std::vector<std::shared_ptr<awst::RootNode>> const& _roots,
-	std::set<std::string> const& _splitNames)
+	std::vector<std::set<std::string>> const& _splitGroups)
 {
 	Result out;
 
@@ -295,123 +306,280 @@ UrosSplitter::Result UrosSplitter::split(
 		return out;
 	}
 
-	// Determine which names are actually present.
+	// Map memberName → index in primary->methods, for fast lookup.
 	std::set<std::string> present;
 	for (auto const& m : primary->methods)
 		present.insert(m.memberName);
 
-	std::set<std::string> applied;
-	for (auto const& n : _splitNames)
+	// Filter each group to names actually present in the primary
+	// contract, AND check no name appears in two groups (every split
+	// method must belong to exactly one chunk).
+	std::vector<std::vector<std::string>> appliedPerGroup(_splitGroups.size());
+	std::set<std::string> seenAcrossGroups;
+	for (size_t gi = 0; gi < _splitGroups.size(); ++gi)
 	{
-		if (present.count(n))
-			applied.insert(n);
-		else
-			Logger::instance().warning(
-				"--uros-splitter: '" + n + "' not found in contract '"
-				+ primary->name + "', skipping");
+		for (auto const& n : _splitGroups[gi])
+		{
+			if (!present.count(n))
+			{
+				Logger::instance().warning(
+					"--uros-splitter: '" + n + "' not found in contract '"
+					+ primary->name + "', skipping");
+				continue;
+			}
+			if (!seenAcrossGroups.insert(n).second)
+			{
+				Logger::instance().error(
+					"--uros-splitter: '" + n + "' appears in multiple chunk "
+					"groups — every split method must belong to exactly one chunk");
+				return out;
+			}
+			appliedPerGroup[gi].push_back(n);
+		}
 	}
-	out.appliedNames.assign(applied.begin(), applied.end());
+	std::set<std::string> appliedAll(seenAcrossGroups);
 
-	if (applied.empty())
+	if (appliedAll.empty())
 	{
 		Logger::instance().warning("--uros-splitter: no matching methods to split; emitting only the main contract");
 		out.mainRoots = _roots;
 		return out;
 	}
 
-	// Build mainContract (split methods → stubs).
+	// Build mainContract: every split method (across all groups) is
+	// stubbed. Non-split methods keep their real bodies. Plus a
+	// synthetic __delegate_update to admit the dance's swap-in.
 	auto mainContract = shallowCloneContract(*primary);
 	for (auto& m : mainContract->methods)
 	{
-		if (applied.count(m.memberName))
+		if (appliedAll.count(m.memberName))
 			m = cloneStubbed(m);
 	}
-	// Append the synthetic UpdateApplication-admitting method that the
-	// orchestrator's dance targets when swapping in the helper bytes.
 	mainContract->methods.push_back(
 		makeDelegateUpdateMethod(primary->id, primary->sourceLocation));
 
-	// Build helperContract (kept methods → stubs, split methods → real).
-	auto helperContract = shallowCloneContract(*primary);
-	helperContract->name = primary->name + "__split";
-	helperContract->id = primary->id + "__split";
-	// puya's resolve_contract_method walks `[id, ...method_resolution_order]`
-	// and matches on `(method.cref == mro_entry)`. Methods carry the ORIGINAL
-	// cref (the source's contract id, e.g. "/.../Smoke.sol.Smoke"), so we
-	// prepend the original id to the MRO. Without this, helper methods are
-	// invisible to the resolver and puya asserts on `m is not None`.
-	helperContract->methodResolutionOrder.insert(
-		helperContract->methodResolutionOrder.begin(), primary->id);
-	// Stub the constructor too — helper is never created, only swapped in
-	// via UpdateApplication, which doesn't run the constructor.
+	// Build N chunk contracts. Each chunk_i:
+	//  - same surface as main (same selectors, same state schema)
+	//  - REAL bodies for its group's methods
+	//  - STUB bodies for split methods OUTSIDE its group (so the chunk
+	//    is small while still carrying the dispatch table)
+	//  - REAL bodies for non-split methods (they may be called
+	//    internally by the chunk's split methods — same constraint as
+	//    the original single-helper design)
+	//  - synthetic __delegate_update to admit step 3's restore
+	for (size_t gi = 0; gi < _splitGroups.size(); ++gi)
 	{
-		awst::ContractMethod stubbedApproval;
-		stubbedApproval.sourceLocation = primary->approvalProgram.sourceLocation;
-		stubbedApproval.args = primary->approvalProgram.args;
-		stubbedApproval.returnType = primary->approvalProgram.returnType;
-		stubbedApproval.cref = primary->approvalProgram.cref + "__split";
-		stubbedApproval.memberName = primary->approvalProgram.memberName;
-		stubbedApproval.body = std::make_shared<awst::Block>();
-		stubbedApproval.body->sourceLocation = primary->approvalProgram.sourceLocation;
-		// Approval body for helper: single dispatch over kept methods (stubs)
-		// and split methods (real bodies). Use the original program body so
-		// the dispatch table stays the same; per-method bodies were already
-		// flipped above. Keep `approvalProgram.body` shared with the source
-		// — modifications happen in `methods`.
-		stubbedApproval.body = primary->approvalProgram.body;
-		helperContract->approvalProgram = stubbedApproval;
-	}
-	// Helper keeps every method's real body (no stubbing). Stubbing the
-	// kept methods saves bytes but breaks split-method bodies that call
-	// kept methods internally — e.g. Tornado's verifyProof calls
-	// verifyingKey() (an internal helper). puya's resolver fails with
-	// "unable to resolve function reference" if the target isn't in
-	// `methods`. The size win from --uros-splitter comes from MAIN
-	// shrinking; helper carrying the full surface is fine because the
-	// helper is compiled separately and lives in its own app-side box,
-	// not deployed standalone.
-	// Helper also needs a __delegate_update method — the dance's revert step
-	// (UpdateApplication on main with main's original bytes) lands while
-	// main's *current* approval is the helper's bytes. Without an admitting
-	// branch on the helper, the revert would fail and the whole atomic dance
-	// would unwind.
-	helperContract->methods.push_back(
-		makeDelegateUpdateMethod(primary->id, primary->sourceLocation));
+		std::set<std::string> myMethods(
+			appliedPerGroup[gi].begin(), appliedPerGroup[gi].end());
 
-	// Both root sets keep all subroutines unchanged. Some of those are
-	// reachable from split methods, others from kept methods. A future
-	// optimisation pass could call-graph-analyse and prune dead
-	// subroutines per side; for the prototype we duplicate.
+		auto chunkContract = shallowCloneContract(*primary);
+		std::string suffix = "__chunk_" + std::to_string(gi);
+		chunkContract->name = primary->name + suffix;
+		chunkContract->id = primary->id + suffix;
+		// Methods carry the ORIGINAL cref — prepend primary->id so puya's
+		// resolve_contract_method (walks [id, ...mro], matches cref) can
+		// find them.
+		chunkContract->methodResolutionOrder.insert(
+			chunkContract->methodResolutionOrder.begin(), primary->id);
+
+		for (auto& m : chunkContract->methods)
+		{
+			// Stub the methods in OTHER chunks' groups; keep this chunk's
+			// real bodies and all non-split methods real.
+			bool isSplitButNotMine =
+				appliedAll.count(m.memberName) && !myMethods.count(m.memberName);
+			if (isSplitButNotMine)
+				m = cloneStubbed(m);
+		}
+		chunkContract->methods.push_back(
+			makeDelegateUpdateMethod(primary->id, primary->sourceLocation));
+
+		// Build this chunk's full root set: all roots, with the primary
+		// contract substituted for chunkContract.
+		Chunk chunk;
+		for (auto const& r : _roots)
+		{
+			if (auto c = std::dynamic_pointer_cast<awst::Contract>(r))
+			{
+				if (c.get() == primary.get())
+					chunk.roots.push_back(chunkContract);
+				else
+					chunk.roots.push_back(r);
+			}
+			else
+			{
+				chunk.roots.push_back(r);
+			}
+		}
+		chunk.appliedNames = std::move(appliedPerGroup[gi]);
+		out.chunks.push_back(std::move(chunk));
+	}
+
+	// mainRoots: replace primary with mainContract; pass all other
+	// roots through unchanged.
 	for (auto const& r : _roots)
 	{
 		if (auto c = std::dynamic_pointer_cast<awst::Contract>(r))
 		{
 			if (c.get() == primary.get())
-			{
 				out.mainRoots.push_back(mainContract);
-				out.helperRoots.push_back(helperContract);
-			}
 			else
-			{
-				// Other contracts (libraries, abstract, sibling deployables)
-				// are passed through to both root sets unchanged.
 				out.mainRoots.push_back(r);
-				out.helperRoots.push_back(r);
-			}
 		}
 		else
 		{
-			// Subroutine root — duplicate into both sets.
 			out.mainRoots.push_back(r);
-			out.helperRoots.push_back(r);
 		}
 	}
 
 	Logger::instance().info(
-		"--uros-splitter: applied to " + std::to_string(applied.size())
+		"--uros-splitter: " + std::to_string(out.chunks.size())
+		+ " chunk(s) carrying " + std::to_string(appliedAll.size())
 		+ " method(s) of '" + primary->name + "'");
 
 	return out;
+}
+
+std::vector<UrosSplitter::ChunkPaths> UrosSplitter::emitChunkAwsts(
+	std::string const& _outputDir,
+	Result const& _result,
+	int _optimizationLevel,
+	bool _outputIr,
+	int64_t _orchAppId)
+{
+	std::vector<ChunkPaths> paths;
+	paths.reserve(_result.chunks.size());
+
+	for (size_t ci = 0; ci < _result.chunks.size(); ++ci)
+	{
+		auto const& chunk = _result.chunks[ci];
+		ChunkPaths p;
+		p.dir = (fs::path(_outputDir) / "__uros_split"
+			/ ("chunk_" + std::to_string(ci))).string();
+		fs::create_directories(p.dir);
+
+		json::AWSTSerializer serializer;
+		auto chunkJson = serializer.serialize(chunk.roots);
+		p.awstPath = (fs::path(p.dir) / "awst.json").string();
+		{
+			std::ofstream out(p.awstPath);
+			out << chunkJson.dump(2) << std::endl;
+			Logger::instance().info("Wrote: " + p.awstPath);
+		}
+
+		std::vector<std::string> chunkContractNames;
+		for (auto const& r : chunk.roots)
+			if (auto const* c = dynamic_cast<awst::Contract const*>(r.get()))
+			{
+				chunkContractNames.push_back(c->id);
+				// The chunk-renamed contract is identified by the
+				// "__chunk_" infix in its name (set by split() above).
+				if (p.contractName.empty()
+					&& c->name.find("__chunk_") != std::string::npos)
+					p.contractName = c->name;
+			}
+
+		p.optionsPath = (fs::path(p.dir) / "options.json").string();
+		std::set<std::string> noChildren;
+		// Chunks emit orc-guards (which reference TMPL_UROS_ORCH_APP_ID)
+		// for the methods they stub out (i.e. methods belonging to OTHER
+		// chunks). Declare the template var so puya doesn't reject.
+		std::map<std::string, int64_t> chunkTemplateVars;
+		chunkTemplateVars["UROS_ORCH_APP_ID"] = _orchAppId;
+		if (chunkContractNames.size() <= 1)
+		{
+			std::string nm = chunkContractNames.empty() ? "" : chunkContractNames[0];
+			json::OptionsWriter::write(
+				p.optionsPath, nm, p.dir,
+				_optimizationLevel, _outputIr, noChildren, chunkTemplateVars);
+		}
+		else
+		{
+			json::OptionsWriter::writeMultiple(
+				p.optionsPath, chunkContractNames, p.dir,
+				_optimizationLevel, _outputIr, noChildren, chunkTemplateVars);
+		}
+
+		paths.push_back(std::move(p));
+	}
+	return paths;
+}
+
+namespace
+{
+std::string readHexFile(fs::path const& _p)
+{
+	if (!fs::exists(_p)) return {};
+	std::ifstream f(_p.string(), std::ios::binary);
+	std::vector<uint8_t> bytes(
+		(std::istreambuf_iterator<char>(f)),
+		std::istreambuf_iterator<char>());
+	std::string hex;
+	hex.reserve(bytes.size() * 2);
+	for (auto b : bytes)
+	{
+		char buf[3];
+		snprintf(buf, sizeof(buf), "%02x", b);
+		hex += buf;
+	}
+	return hex;
+}
+}
+
+int UrosSplitter::compileChunksAndEmitDeployTemplate(
+	std::string const& _outputDir,
+	std::string const& _mainBareName,
+	Result const& _result,
+	std::vector<ChunkPaths> const& _chunkPaths,
+	std::string const& _puyaPath,
+	std::string const& _logLevel)
+{
+	for (size_t ci = 0; ci < _chunkPaths.size(); ++ci)
+	{
+		Logger::instance().info(
+			"Invoking puya backend for --uros-splitter chunk_"
+			+ std::to_string(ci) + "...");
+		runner::PuyaRunner chunkRunner;
+		chunkRunner.setPuyaPath(_puyaPath);
+		int rc = chunkRunner.run(
+			_chunkPaths[ci].awstPath, _chunkPaths[ci].optionsPath, _logLevel);
+		if (rc != 0)
+		{
+			Logger::instance().error(
+				"--uros-splitter: chunk_" + std::to_string(ci)
+				+ " puya run failed");
+			return rc;
+		}
+	}
+
+	njson tmpl = njson::object();
+	tmpl["main_contract"] = _mainBareName;
+	tmpl["main_approval_hex"] = readHexFile(
+		fs::path(_outputDir) / (_mainBareName + ".approval.bin"));
+	tmpl["main_clear_hex"] = readHexFile(
+		fs::path(_outputDir) / (_mainBareName + ".clear.bin"));
+
+	njson chunksArr = njson::array();
+	for (size_t ci = 0; ci < _result.chunks.size(); ++ci)
+	{
+		njson c = njson::object();
+		c["name"] = _chunkPaths[ci].contractName;
+		c["methods"] = _result.chunks[ci].appliedNames;
+		c["approval_hex"] = readHexFile(
+			fs::path(_chunkPaths[ci].dir)
+			/ (_chunkPaths[ci].contractName + ".approval.bin"));
+		c["clear_hex"] = readHexFile(
+			fs::path(_chunkPaths[ci].dir)
+			/ (_chunkPaths[ci].contractName + ".clear.bin"));
+		chunksArr.push_back(c);
+	}
+	tmpl["chunks"] = chunksArr;
+
+	std::string tmplPath = (fs::path(_outputDir) / "deploy.uros.json").string();
+	std::ofstream tf(tmplPath);
+	tf << tmpl.dump(2);
+	Logger::instance().info("Wrote: " + tmplPath);
+	return 0;
 }
 
 } // namespace puyasol::splitter
