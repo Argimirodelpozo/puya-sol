@@ -5,6 +5,7 @@
 #include "json/AWSTSerializer.h"
 #include "json/OptionsWriter.h"
 #include "runner/PuyaRunner.h"
+#include "splitter/UrosSplitter.h"
 
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/FileReader.h>
@@ -153,6 +154,7 @@ struct Options
 	bool outputLogs = true;
 	bool viaYulBehavior = false;
 	std::string evmVersion;     // empty = compiler default (cancun)
+	std::vector<std::string> urosSplit; // method names to split out via --uros-splitter
 };
 
 void printUsage(char const* _progName)
@@ -178,6 +180,11 @@ void printUsage(char const* _progName)
 		<< "                         (separate subroutines per modifier, fresh vars per _ invocation)\n"
 		<< "  --evm-version <name>   EVM version for the Solidity parser. Accepts the same\n"
 		<< "                         names solc supports: homestead..osaka. Default: cancun.\n"
+		<< "  --uros-splitter <list> Comma-separated method names to split out into a sidecar\n"
+		<< "                         contract. Main keeps stubs; <Name>__split.approval.bin\n"
+		<< "                         is emitted alongside <Name>.approval.bin. Run-time swap\n"
+		<< "                         is performed by a separate orchestrator app (see\n"
+		<< "                         src/splitter/uros_orchestrator.py).\n"
 		<< "  --help                 Show this help message\n";
 }
 
@@ -225,6 +232,28 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.viaYulBehavior = true;
 		else if (arg == "--evm-version" && i + 1 < _argc)
 			opts.evmVersion = _argv[++i];
+		else if (arg == "--uros-splitter" && i + 1 < _argc)
+		{
+			// Comma-separated method names. We split here (not in UrosSplitter)
+			// so the splitter API stays string-set-shaped, decoupled from CLI parsing.
+			std::string spec = _argv[++i];
+			size_t start = 0;
+			while (start <= spec.size())
+			{
+				size_t comma = spec.find(',', start);
+				size_t end = (comma == std::string::npos) ? spec.size() : comma;
+				std::string name = spec.substr(start, end - start);
+				// Trim whitespace.
+				while (!name.empty() && std::isspace(static_cast<unsigned char>(name.front())))
+					name.erase(name.begin());
+				while (!name.empty() && std::isspace(static_cast<unsigned char>(name.back())))
+					name.pop_back();
+				if (!name.empty())
+					opts.urosSplit.push_back(std::move(name));
+				if (comma == std::string::npos) break;
+				start = comma + 1;
+			}
+		}
 		else if (arg == "--help")
 		{
 			printUsage(_argv[0]);
@@ -581,6 +610,36 @@ int main(int _argc, char* _argv[])
 
 	logger.info("Generated " + std::to_string(roots.size()) + " AWST root node(s)");
 
+	// ─── --uros-splitter: split AWST into main + helper root sets ────────
+	std::vector<std::shared_ptr<puyasol::awst::RootNode>> helperRoots;
+	std::string helperContractName;  // bare `name`, used as binary file prefix
+	std::string helperContractId;    // fully-qualified id for puya compilation_set
+	if (!opts.urosSplit.empty())
+	{
+		std::set<std::string> splitNames(opts.urosSplit.begin(), opts.urosSplit.end());
+		auto splitResult = puyasol::splitter::UrosSplitter::split(roots, splitNames);
+		// `mainRoots` always contains a copy of every original root (split or not);
+		// we don't fall through to the original `roots` even if the splitter found
+		// nothing to split — that way behavior is "splitter-shaped" once requested.
+		roots = std::move(splitResult.mainRoots);
+		helperRoots = std::move(splitResult.helperRoots);
+		// Track the helper contract id (compilation key) and bare name (binary
+		// file prefix). The splitter renames `<id>` → `<id>__split` and
+		// `<name>` → `<name>__split`.
+		for (auto const& r: helperRoots)
+		{
+			if (auto const* c = dynamic_cast<puyasol::awst::Contract const*>(r.get()))
+			{
+				if (c->name.size() > 7 && c->name.substr(c->name.size() - 7) == "__split")
+				{
+					helperContractId = c->id;
+					helperContractName = c->name;
+					break;
+				}
+			}
+		}
+	}
+
 	// ─── Serialization and output ─────────────────────────────────────────
 
 	// Serialize to JSON
@@ -685,6 +744,111 @@ int main(int _argc, char* _argv[])
 			tf << tmpl.dump(2);
 			logger.info("Wrote: " + tmplPath);
 			puyasol::builder::sol_ast::SolNewExpression::resetChildContracts();
+		}
+
+		// ─── --uros-splitter: second puya pass for helper bytecode ──────
+		if (!helperRoots.empty() && exitCode == 0)
+		{
+			logger.info("Invoking puya backend for --uros-splitter helper...");
+
+			// Helper output goes into a sibling dir so it doesn't stomp main
+			// artifacts. The path lives under the main output dir, e.g.:
+			//   out/__uros_split/awst.json
+			//   out/__uros_split/<Name>__split.approval.bin
+			std::string helperDir = (fs::path(opts.outputDir) / "__uros_split").string();
+			fs::create_directories(helperDir);
+
+			puyasol::json::AWSTSerializer helperSerializer;
+			auto helperJson = helperSerializer.serialize(helperRoots);
+			std::string helperAwstPath = (fs::path(helperDir) / "awst.json").string();
+			{
+				std::ofstream out(helperAwstPath);
+				out << helperJson.dump(2) << std::endl;
+			}
+
+			std::vector<std::string> helperContractNames;
+			for (auto const& r: helperRoots)
+				if (auto const* c = dynamic_cast<puyasol::awst::Contract const*>(r.get()))
+					helperContractNames.push_back(c->id);
+
+			std::string helperOptionsPath = (fs::path(helperDir) / "options.json").string();
+			std::set<std::string> noChildren;  // helper has no `new C()` references
+			if (helperContractNames.size() <= 1)
+			{
+				std::string nm = helperContractNames.empty() ? "" : helperContractNames[0];
+				puyasol::json::OptionsWriter::write(
+					helperOptionsPath, nm, helperDir,
+					opts.optimizationLevel, opts.outputIr, noChildren);
+			}
+			else
+			{
+				puyasol::json::OptionsWriter::writeMultiple(
+					helperOptionsPath, helperContractNames, helperDir,
+					opts.optimizationLevel, opts.outputIr, noChildren);
+			}
+
+			puyasol::runner::PuyaRunner helperRunner;
+			helperRunner.setPuyaPath(opts.puyaPath);
+			int helperExitCode = helperRunner.run(helperAwstPath, helperOptionsPath, opts.logLevel);
+			if (helperExitCode != 0)
+			{
+				logger.error("--uros-splitter: helper puya run failed");
+				return helperExitCode;
+			}
+
+			// Emit a deploy template so test/deploy harnesses can find the
+			// helper bytecode and the list of split selectors. Path:
+			//   <outputDir>/deploy.uros.json
+			//
+			// Schema:
+			//   {
+			//     "main_contract": "MyContract",
+			//     "helper_contract": "MyContract__split",
+			//     "split_methods": ["foo","bar"],
+			//     "main_approval_hex": "0c81...",
+			//     "helper_approval_hex": "0c81..."
+			//   }
+			njson tmpl = njson::object();
+			// puya writes .approval.bin keyed on the bare `name`, not the
+			// fully-qualified `id` — pick that up from the primary contract
+			// in the (post-splitter) main root set.
+			std::string mainBareName;
+			for (auto const& root: roots)
+			{
+				if (auto const* c = dynamic_cast<puyasol::awst::Contract const*>(root.get()))
+				{
+					mainBareName = c->name;
+					break;
+				}
+			}
+			tmpl["main_contract"] = mainBareName;
+			tmpl["helper_contract"] = helperContractName;
+			tmpl["split_methods"] = opts.urosSplit;
+
+			auto readHex = [](fs::path const& _p) -> std::string {
+				if (!fs::exists(_p)) return {};
+				std::ifstream f(_p.string(), std::ios::binary);
+				std::vector<uint8_t> bytes((std::istreambuf_iterator<char>(f)),
+					std::istreambuf_iterator<char>());
+				std::string hex;
+				hex.reserve(bytes.size() * 2);
+				for (auto b: bytes)
+				{
+					char buf[3];
+					snprintf(buf, sizeof(buf), "%02x", b);
+					hex += buf;
+				}
+				return hex;
+			};
+			tmpl["main_approval_hex"] = readHex(fs::path(opts.outputDir) / (mainBareName + ".approval.bin"));
+			tmpl["main_clear_hex"] = readHex(fs::path(opts.outputDir) / (mainBareName + ".clear.bin"));
+			tmpl["helper_approval_hex"] = readHex(fs::path(helperDir) / (helperContractName + ".approval.bin"));
+			tmpl["helper_clear_hex"] = readHex(fs::path(helperDir) / (helperContractName + ".clear.bin"));
+
+			std::string tmplPath = (fs::path(opts.outputDir) / "deploy.uros.json").string();
+			std::ofstream tf(tmplPath);
+			tf << tmpl.dump(2);
+			logger.info("Wrote: " + tmplPath);
 		}
 
 		return exitCode;
