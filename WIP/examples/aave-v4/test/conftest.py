@@ -178,6 +178,10 @@ def deploy_contract_raw(
     clear_program = encoding.base64.b64decode(clear_result["result"])
 
     sp = algod.suggested_params()
+    # Unique note per deploy so two AppCreate txns with otherwise
+    # identical fields (same approval bytes, same app_args, same
+    # sender, same suggestedParams) don't dup in the txn pool.
+    import os
     txn = ApplicationCreateTxn(
         sender=account.address,
         sp=sp,
@@ -188,6 +192,7 @@ def deploy_contract_raw(
         local_schema=StateSchema(num_uints=0, num_byte_slices=0),
         app_args=app_args or [],
         extra_pages=extra_pages,
+        note=os.urandom(8),
     )
     signed = txn.sign(account.private_key)
     txid = algod.send_transaction(signed)

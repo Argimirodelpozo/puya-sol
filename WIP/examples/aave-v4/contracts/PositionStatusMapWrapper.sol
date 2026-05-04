@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {PositionStatusMap} from './PositionStatusMap.sol';
+import {LibBit} from './LibBit.sol';
 import {ISpoke} from './ISpoke.sol';
 
 contract PositionStatusMapWrapper {
@@ -37,6 +38,14 @@ contract PositionStatusMapWrapper {
         return _p.isUsingAsCollateral(reserveId);
     }
 
+    function collateralCount(uint256 reserveCount) external view returns (uint256) {
+        return _p.collateralCount(reserveCount);
+    }
+
+    function borrowCount(uint256 reserveCount) external view returns (uint256) {
+        return _p.borrowCount(reserveCount);
+    }
+
     function bucketId(uint256 reserveId) external pure returns (uint256) {
         return PositionStatusMap.bucketId(reserveId);
     }
@@ -47,5 +56,9 @@ contract PositionStatusMapWrapper {
 
     function isolateCollateral(uint256 word) external pure returns (uint256) {
         return PositionStatusMap.isolateCollateral(word);
+    }
+
+    function fls(uint256 x) external pure returns (uint256) {
+        return LibBit.fls(x);
     }
 }
