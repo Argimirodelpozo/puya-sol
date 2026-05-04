@@ -36,5 +36,5 @@ cp "$REPO_ROOT/src/splitter/uros_orchestrator.py" "$OUT/orch.py"
 echo
 echo "=== sizes ==="
 ls -l "$OUT/Smoke/Smoke.approval.bin" \
-      "$OUT/Smoke/__uros_split/Smoke__split.approval.bin" \
+      "$OUT/Smoke/__uros_split/chunk_0/Smoke__chunk_0.approval.bin" \
       "$OUT/Orchestrator/UrosOrchestrator.approval.bin"

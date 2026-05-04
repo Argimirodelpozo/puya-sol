@@ -1,64 +1,56 @@
-"""puya-sol --uros-splitter orchestrator template.
+"""puya-sol --uros-splitter orchestrator template (multi-chunk).
 
-This file is the runtime piece of the `--uros-splitter` technique. It's
-an algopy contract that holds two approval-program byte blobs in box
-storage and runs a 3-itxn dance to swap one in, call a function, swap
-the original back.
+This algopy contract is the runtime piece of `--uros-splitter`. It
+holds the main contract's bytecode plus N chunks of bytecode in box
+storage, and per call swaps the right chunk into main, runs the
+user's method, then swaps main back.
 
-Usage flow at deploy time (handled by the test harness or user, NOT by
-puya-sol itself — puya-sol only emits the .approval.bin files this
-contract loads):
+## Layout
 
-    1. Compile this template via puyapy → orchestrator.approval.bin.
-       Pin the orchestrator's app id (sets up state/boxes).
-    2. Deploy the main contract (compiled by puya-sol with split-method
-       bodies stubbed). Note its app id.
-    3. Set main's manager to the orchestrator's address (or wire main's
-       UpdateApplication path to assert sender == orchestrator).
-    4. Call orchestrator.set_main(main_app_id).
-    5. Allocate boxes:
-         orchestrator.setup_boxes(len(main_bytes), len(helper_bytes))
-    6. Stream the bytecodes into boxes (chunks <= 2048 B per call):
-         orchestrator.write_codebox(0, offset, chunk)  # main bytes
-         orchestrator.write_codebox(1, offset, chunk)  # helper bytes
+State:
+    main_app_id          UInt64    pinned at deploy time via set_main()
+    main_bytes_len       UInt64    length of main's approval program
+    chunk_count          UInt64    N — total registered chunks
 
-Runtime call flow:
+Boxes:
+    __codebox_main                 main contract's approval bytes
+    __codebox_chunk_<i>            chunk i's approval bytes
+    chunk_lens                     BoxMap[UInt64 chunk_idx → UInt64 length]
+    chunk_for_selector             BoxMap[Bytes selector → UInt64 chunk_idx]
 
-    User submits group [stub, dispatch]:
-      txn 0: ApplicationCall to main with (selector=funcA, args=...).
-             main's funcA body is a stub — runs without effect, but the
-             selector + args are now in gtxn[0].ApplicationArgs.
-      txn 1: ApplicationCall to orchestrator.dispatch(). The dispatcher
-             reads gtxn[group_index - 1].ApplicationArgs to recover the
-             selector and args, then submits an inner-txn group:
+Boxes are allocated via setup_main_box / setup_chunk_box, then their
+bytecode is streamed in via write_main / write_chunk (per-call write
+budget caps a single chunk transfer at ~4 KB, so chunked uploads).
+Each split method's selector is registered against its owning chunk
+via register_chunk_method.
 
-                 itxn 1: UpdateApplication on main with helper bytes
-                         (loaded from box __codebox_1).
-                 itxn 2: NoOp ApplicationCall on main with the same
-                         selector + args. Helper code runs against
-                         main's storage, produces real result.
-                 itxn 3: UpdateApplication on main with main bytes
-                         (restore from box __codebox_0).
+## Dance flow
 
-             dispatch() returns itxn 2's last_log so the caller can
-             decode the real result.
+User submits group [stub_call, dispatch_call]:
 
-The 3 inner-txns are atomically grouped — either all succeed or all
-revert, so main's approval is never left in the helper state.
+  txn 0 — ApplicationCall to main with (selector, args). Main's stub
+          asserts that gtxn[group_index+1] is a dispatch() call to
+          THIS orchestrator (orc-guard); the args land at gtxn[0]
+          for the orch to forward.
+  txn 1 — dispatch() on orch. The orch:
+          1. reads selector = gtxn[group_index-1].ApplicationArgs[0]
+          2. looks up chunk_idx = chunk_for_selector[selector]
+          3. itxn 1: UpdateApplication main with chunk's bytes
+          4. itxn 2: NoOp call main with the user's selector + args
+                    (main is now running chunk's program)
+          5. itxn 3: UpdateApplication main with main's original bytes
 
-Constants:
-    DELEGATE_UPDATE_SELECTOR — sha512_256("__delegate_update()void")[:4],
-    main's UpdateApplication-admitting branch matches on this selector.
+The 3 inner txns are atomically grouped — either all succeed or all
+revert, leaving main's program unchanged on revert.
 
-Box layout: each box is sized at setup time to hold its full payload.
-Reads use op.Box.extract chunked at 2048 B (AVM stack-value cap of 4096
-plus headroom for length args). For payloads > 4096 we slice into a
-tuple of chunks and pass to itxn.ApplicationCall's approval_program
-field, which puyapy serialises as concatenated pages.
+NOTE: there is intentionally NO __delegate_update on the orch. The
+splitter adds __delegate_update to main + each chunk; the orch's
+program is never updated as part of the dance.
 """
 
 from algopy import (
     ARC4Contract,
+    BoxMap,
     Bytes,
     OnCompleteAction,
     UInt64,
@@ -67,179 +59,170 @@ from algopy import (
     op,
 )
 
-# Trivial clear program for the swap's clear-state slot. Hex layout:
-#   0a   pragma version 10  (must match the program being swapped in)
-#   81 01  pushint 1
-#   43   return
-# AVM enforces approval/clear major-version match. puya-sol targets AVM v10
-# by default, so this hardcoded blob matches main+helper. If you bump
-# puya-sol's target version, update this byte too (or, better: regenerate
-# main's clear into a third box and read it dynamically).
+
+# Trivial clear program for the swap's clear-state slot.
+# 0a = pragma version 10 (must match puya-sol's emission); 81 01 = pushint 1; 43 = return.
 CLEAR_PROGRAM = b"\x0a\x81\x01\x43"
 
-# `__delegate_update()void` ABI selector — main's auto-generated router
-# matches on this when OnCompletion=UpdateApplication, admitting only
-# the swap from the orchestrator.
+# `__delegate_update()void` ABI selector — sha512_256 of the sig, first 4 bytes.
+# Both main and each chunk define this method; UpdateApplication itxns target
+# this selector so the dance's swap-in/swap-out land cleanly.
 DELEGATE_UPDATE_SELECTOR = b"\xdc\x5e\x37\x98"
 
 
 class UrosOrchestrator(ARC4Contract):
-    """Per-call approval-program swap orchestrator (--uros-splitter)."""
+    """Per-call program-swap orchestrator. Holds main + N chunks of
+    bytecode in boxes; dispatch() runs the 3-itxn dance per call."""
 
     def __init__(self) -> None:
         self.main_app_id = UInt64(0)
         self.main_bytes_len = UInt64(0)
-        self.helper_bytes_len = UInt64(0)
+        self.chunk_count = UInt64(0)
+        # chunk_idx → length of chunk's approval bytes
+        self.chunk_lens = BoxMap(UInt64, UInt64, key_prefix=b"clen_")
+        # selector (bytes4) → chunk_idx that holds the matching method
+        self.chunk_for_selector = BoxMap(Bytes, UInt64, key_prefix=b"csel_")
 
     @arc4.abimethod(create="require")
     def init(self) -> None:
-        """One-time init at AppCreate. Boxes/lengths/main_app_id are
-        populated by separate ABI calls below — this just exists to
-        anchor the create transaction."""
+        """One-time AppCreate anchor. Other state is populated via
+        the methods below."""
 
     @arc4.abimethod
     def set_main(self, main_app_id: UInt64) -> None:
-        """Pin the main contract's app id. Called after main is deployed."""
+        """Pin which application this orchestrator manages."""
         self.main_app_id = main_app_id
 
     @arc4.abimethod
-    def setup_boxes(
-        self,
-        main_bytes_len: UInt64,
-        helper_bytes_len: UInt64,
-    ) -> None:
-        """Allocate __codebox_0 / __codebox_1 sized to fit the two
-        bytecode payloads. Caller funds MBR before invoking."""
+    def setup_main_box(self, main_bytes_len: UInt64) -> None:
+        """Allocate `__codebox_main` sized for the main approval bytes.
+        Caller funds box MBR before invoking."""
         self.main_bytes_len = main_bytes_len
-        self.helper_bytes_len = helper_bytes_len
-        # op.Box.create returns a bool ("did this allocation create a new
-        # box?"); we don't care about the return value at setup time, but
-        # binding it silences puyapy's "expression result is ignored" lint.
-        _created_main = op.Box.create(Bytes(b"__codebox_0"), main_bytes_len)
-        _created_helper = op.Box.create(Bytes(b"__codebox_1"), helper_bytes_len)
-        assert _created_main and _created_helper, "boxes already exist"
+        _ok = op.Box.create(Bytes(b"__codebox_main"), main_bytes_len)
+        assert _ok, "main codebox already exists"
 
     @arc4.abimethod
-    def write_codebox(
-        self,
-        which: UInt64,
-        offset: UInt64,
-        data: Bytes,
-    ) -> None:
-        """Stream bytecode into __codebox_<which> at byte `offset`. The
-        AVM caps single-call ApplicationArgs total at 2048 B, so callers
-        chunk the bytecode and call this method repeatedly until both
-        boxes are populated."""
-        if which == UInt64(0):
-            op.Box.replace(Bytes(b"__codebox_0"), offset, data)
-        else:
-            op.Box.replace(Bytes(b"__codebox_1"), offset, data)
+    def setup_chunk_box(self, chunk_idx: UInt64, chunk_bytes_len: UInt64) -> None:
+        """Allocate `__codebox_chunk_<i>` for chunk_idx, record its
+        length. Bumps chunk_count when a previously-unallocated index
+        is added."""
+        if chunk_idx + UInt64(1) > self.chunk_count:
+            self.chunk_count = chunk_idx + UInt64(1)
+        self.chunk_lens[chunk_idx] = chunk_bytes_len
+        _ok = op.Box.create(
+            Bytes(b"__codebox_chunk_") + op.itob(chunk_idx),
+            chunk_bytes_len,
+        )
+        assert _ok, "chunk codebox already exists"
 
-    # NOTE: there is intentionally NO __delegate_update on the orch.
-    # The dance only ever UpdateApplications `main` (steps 1 and 3,
-    # never the orch). The splitter already adds __delegate_update to
-    # both main and helper — main admits step 1's swap-in, helper
-    # admits step 3's restore (which fires while main's program IS
-    # the helper). The orch never has its own program updated as
-    # part of the dance, so it doesn't need an admit branch.
+    @arc4.abimethod
+    def write_main(self, offset: UInt64, data: Bytes) -> None:
+        """Stream main approval bytes into __codebox_main. AVM caps
+        per-call ApplicationArgs total at 2048 B, so callers chunk the
+        bytecode and call this method until the box is fully populated."""
+        op.Box.replace(Bytes(b"__codebox_main"), offset, data)
+
+    @arc4.abimethod
+    def write_chunk(self, chunk_idx: UInt64, offset: UInt64, data: Bytes) -> None:
+        """Stream chunk approval bytes into __codebox_chunk_<idx>."""
+        op.Box.replace(
+            Bytes(b"__codebox_chunk_") + op.itob(chunk_idx),
+            offset,
+            data,
+        )
+
+    @arc4.abimethod
+    def register_chunk_method(self, selector: Bytes, chunk_idx: UInt64) -> None:
+        """Map an ABI selector to the chunk that holds its real body.
+        Called once per split method at deploy time."""
+        self.chunk_for_selector[selector] = chunk_idx
 
     @arc4.abimethod
     def dispatch(self) -> Bytes:
-        """Read the previous group txn's ApplicationArgs (selector + args),
-        submit the 3-itxn dance, return the dispatched call's last_log."""
+        """The dance: install chunk → run selector → restore main.
+        Returns the inner call's last_log so the caller can decode
+        the actual return value."""
 
-        # Previous transaction holds the user-facing call to main's stub.
-        # Its ApplicationArgs[0] is the ABI selector; [1..] are the
-        # ABI-encoded positional args. We pass them through unchanged
-        # to the inner call in step 2.
+        # Step 0: locate the user's stub call in the previous group txn.
         assert op.Txn.group_index > UInt64(0), "uros: dispatch needs a prev stub txn"
         prev_idx = op.Txn.group_index - UInt64(1)
-        # Symmetric guard: assert the previous txn is an ApplicationCall
-        # to main. The stub on main asserts the next txn is THIS dispatch;
-        # this asserts the prev txn is a main stub. Together they enforce
-        # the [stub, dispatch] group shape on both sides.
+
+        # Symmetric guard: prev txn must be an ApplicationCall to main.
         assert op.GTxn.type_enum(prev_idx) == op.GTxn.type_enum(op.Txn.group_index), \
             "uros: prev txn not appl"
         assert op.GTxn.application_id(prev_idx).id == self.main_app_id, \
             "uros: prev txn not main"
 
-        # Programs are split into N <= 4 pages of 2048 B each (AVM hard
-        # cap is 4 pages = 8 KB total, and each page must fit in a stack
-        # value capped at 4096 B). The branches below cover all 4 page
-        # counts; itxn.ApplicationCall accepts a tuple of byte values
-        # for approval_program, which puya serialises as concatenated
-        # pages.
-        main_box = Bytes(b"__codebox_0")
-        helper_box = Bytes(b"__codebox_1")
+        # Look up which chunk holds the requested method.
+        selector = op.GTxn.application_args(prev_idx, UInt64(0))
+        chunk_idx = self.chunk_for_selector[selector]
+        chunk_len = self.chunk_lens[chunk_idx]
+        chunk_box = Bytes(b"__codebox_chunk_") + op.itob(chunk_idx)
+        main_box = Bytes(b"__codebox_main")
         clear = Bytes(CLEAR_PROGRAM)
         page = UInt64(2048)
 
-        # Step 1: install helper bytes on main.
-        helper_len = self.helper_bytes_len
-        if helper_len <= page:
-            h0 = op.Box.extract(helper_box, UInt64(0), helper_len)
+        # ── Step 1: install chunk's bytes on main ──────────────────
+        # Programs are split into ≤4 pages of 2 KB each (AVM hard cap).
+        # Branch on size to use the right page count for itxn submit.
+        if chunk_len <= page:
+            c0 = op.Box.extract(chunk_box, UInt64(0), chunk_len)
             itxn.ApplicationCall(
                 app_id=self.main_app_id,
                 on_completion=OnCompleteAction.UpdateApplication,
-                approval_program=h0,
+                approval_program=c0,
                 clear_state_program=clear,
                 app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
                 fee=0,
             ).submit()
-        elif helper_len <= page * UInt64(2):
-            h0 = op.Box.extract(helper_box, UInt64(0), page)
-            h1 = op.Box.extract(helper_box, page, helper_len - page)
+        elif chunk_len <= page * UInt64(2):
+            c0 = op.Box.extract(chunk_box, UInt64(0), page)
+            c1 = op.Box.extract(chunk_box, page, chunk_len - page)
             itxn.ApplicationCall(
                 app_id=self.main_app_id,
                 on_completion=OnCompleteAction.UpdateApplication,
-                approval_program=(h0, h1),
+                approval_program=(c0, c1),
                 clear_state_program=clear,
                 app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
                 fee=0,
             ).submit()
-        elif helper_len <= page * UInt64(3):
-            h0 = op.Box.extract(helper_box, UInt64(0), page)
-            h1 = op.Box.extract(helper_box, page, page)
-            h2 = op.Box.extract(helper_box, page * UInt64(2), helper_len - page * UInt64(2))
+        elif chunk_len <= page * UInt64(3):
+            c0 = op.Box.extract(chunk_box, UInt64(0), page)
+            c1 = op.Box.extract(chunk_box, page, page)
+            c2 = op.Box.extract(chunk_box, page * UInt64(2), chunk_len - page * UInt64(2))
             itxn.ApplicationCall(
                 app_id=self.main_app_id,
                 on_completion=OnCompleteAction.UpdateApplication,
-                approval_program=(h0, h1, h2),
+                approval_program=(c0, c1, c2),
                 clear_state_program=clear,
                 app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
                 fee=0,
             ).submit()
         else:
-            h0 = op.Box.extract(helper_box, UInt64(0), page)
-            h1 = op.Box.extract(helper_box, page, page)
-            h2 = op.Box.extract(helper_box, page * UInt64(2), page)
-            h3 = op.Box.extract(helper_box, page * UInt64(3), helper_len - page * UInt64(3))
+            c0 = op.Box.extract(chunk_box, UInt64(0), page)
+            c1 = op.Box.extract(chunk_box, page, page)
+            c2 = op.Box.extract(chunk_box, page * UInt64(2), page)
+            c3 = op.Box.extract(chunk_box, page * UInt64(3), chunk_len - page * UInt64(3))
             itxn.ApplicationCall(
                 app_id=self.main_app_id,
                 on_completion=OnCompleteAction.UpdateApplication,
-                approval_program=(h0, h1, h2, h3),
+                approval_program=(c0, c1, c2, c3),
                 clear_state_program=clear,
                 app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
                 fee=0,
             ).submit()
 
-        # Step 2: forward the user's call. Pull selector + each arg from
-        # gtxn[prev_idx].ApplicationArgs. AVM caps app_args count at 16,
-        # so we forward up to that limit. Args beyond the actual count
-        # will be empty bytes — accepted by puya's router but not used.
-        sel = op.GTxn.application_args(prev_idx, UInt64(0))
-        # NOTE: the static dispatch surface here is intentionally small.
-        # Solidity contracts with > 4 args per split method need a
-        # broader switch; extending this is mechanical (more cases).
+        # ── Step 2: forward the user's call ────────────────────────
+        # Pull selector + each arg from gtxn[prev_idx].ApplicationArgs.
+        # AVM caps app_args count at 16; we forward up to 5 positional
+        # args (covers the common case). Methods with more args need a
+        # broader switch — extending is mechanical.
         n_args = op.GTxn.num_app_args(prev_idx)
-        # Forward fixed up to 4 positional args (covers the common case).
-        # If a method needs more, regenerate this orchestrator with a
-        # higher arity ceiling.
         if n_args == UInt64(1):
             call_res = itxn.ApplicationCall(
                 app_id=self.main_app_id,
                 on_completion=OnCompleteAction.NoOp,
-                app_args=(sel,),
+                app_args=(selector,),
                 fee=0,
             ).submit()
         elif n_args == UInt64(2):
@@ -247,7 +230,7 @@ class UrosOrchestrator(ARC4Contract):
             call_res = itxn.ApplicationCall(
                 app_id=self.main_app_id,
                 on_completion=OnCompleteAction.NoOp,
-                app_args=(sel, a1),
+                app_args=(selector, a1),
                 fee=0,
             ).submit()
         elif n_args == UInt64(3):
@@ -256,7 +239,7 @@ class UrosOrchestrator(ARC4Contract):
             call_res = itxn.ApplicationCall(
                 app_id=self.main_app_id,
                 on_completion=OnCompleteAction.NoOp,
-                app_args=(sel, a1, a2),
+                app_args=(selector, a1, a2),
                 fee=0,
             ).submit()
         elif n_args == UInt64(4):
@@ -266,7 +249,7 @@ class UrosOrchestrator(ARC4Contract):
             call_res = itxn.ApplicationCall(
                 app_id=self.main_app_id,
                 on_completion=OnCompleteAction.NoOp,
-                app_args=(sel, a1, a2, a3),
+                app_args=(selector, a1, a2, a3),
                 fee=0,
             ).submit()
         else:
@@ -277,13 +260,13 @@ class UrosOrchestrator(ARC4Contract):
             call_res = itxn.ApplicationCall(
                 app_id=self.main_app_id,
                 on_completion=OnCompleteAction.NoOp,
-                app_args=(sel, a1, a2, a3, a4),
+                app_args=(selector, a1, a2, a3, a4),
                 fee=0,
             ).submit()
 
         ret = call_res.last_log
 
-        # Step 3: restore main bytes. Same 4-page branching as step 1.
+        # ── Step 3: restore main bytes ─────────────────────────────
         main_len = self.main_bytes_len
         if main_len <= page:
             m0 = op.Box.extract(main_box, UInt64(0), main_len)
