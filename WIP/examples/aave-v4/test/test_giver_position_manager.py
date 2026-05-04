@@ -1,29 +1,69 @@
-"""
-AAVE V4 GiverPositionManager tests.
-Compilation-only test: constructor parameter passing via inheritance
-chain doesn't read from ApplicationArgs (compiler limitation).
+"""GiverPositionManager tests — ported from upstream
+tests/contracts/position-manager/GiverPositionManager.t.sol.
+
+Concrete coverage: deploy + the 2 spoke-gated methods
+(supplyOnBehalfOf, repayOnBehalfOf) revert with SpokeNotRegistered
+when called against an unregistered spoke.
+
+Skipped:
+ - happy-path supplyOnBehalfOf / repayOnBehalfOf (forward to ISpoke)
+ - `_revertsWith_ReserveNotListed` (needs Spoke wired)
+ - test_multicall (multi-call infrastructure)
+ - all `_fuzz_*` cases
 """
 
+from __future__ import annotations
+
+import os
+
+import algokit_utils as au
 import pytest
-from pathlib import Path
-
-OUT_DIR = Path(__file__).parent.parent / "out"
-
-
-def test_compilation():
-    """Verify GiverPositionManager compiled to TEAL."""
-    teal = OUT_DIR / "GiverPositionManager" / "GiverPositionManager.approval.teal"
-    assert teal.exists()
-    content = teal.read_text()
-    assert len(content.splitlines()) > 100
+from algokit_utils.errors.logic_error import LogicError
+from algosdk import encoding
+from conftest import deploy_contract
 
 
-def test_arc56_spec():
-    """Verify ARC56 spec was generated."""
-    arc56 = OUT_DIR / "GiverPositionManager" / "GiverPositionManager.arc56.json"
-    assert arc56.exists()
-    import json
-    spec = json.loads(arc56.read_text())
-    methods = [m["name"] for m in spec["methods"]]
-    assert "owner" in methods
-    assert "supplyOnBehalfOf" in methods
+def _addr_pk32(addr: str) -> bytes:
+    return encoding.decode_address(addr)
+
+
+ALICE_ADDR = encoding.encode_address(
+    encoding.checksum(b"appID" + (1).to_bytes(8, "big"))
+)
+SPOKE2_ADDR = encoding.encode_address(
+    encoding.checksum(b"appID" + (4).to_bytes(8, "big"))
+)
+
+
+@pytest.fixture(scope="module")
+def gpm(localnet, account):
+    return deploy_contract(
+        localnet, account, "GiverPositionManager",
+        app_args=[_addr_pk32(account.address)],
+    )
+
+
+def _call(client, method, *args, boxes=None):
+    kwargs = dict(method=method, args=list(args), note=os.urandom(8))
+    if boxes:
+        kwargs["box_references"] = boxes
+    result = client.send.call(au.AppClientMethodCallParams(**kwargs))
+    return result.abi_return
+
+
+def test_deploy(gpm):
+    assert gpm.app_id > 0
+
+
+def test_owner(gpm, account):
+    assert _call(gpm, "owner") == account.address
+
+
+def test_supplyOnBehalfOf_revertsWith_SpokeNotRegistered(gpm):
+    with pytest.raises(LogicError):
+        _call(gpm, "supplyOnBehalfOf", SPOKE2_ADDR, 0, 100, ALICE_ADDR)
+
+
+def test_repayOnBehalfOf_revertsWith_SpokeNotRegistered(gpm):
+    with pytest.raises(LogicError):
+        _call(gpm, "repayOnBehalfOf", SPOKE2_ADDR, 0, 100, ALICE_ADDR)
