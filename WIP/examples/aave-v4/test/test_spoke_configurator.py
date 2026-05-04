@@ -55,3 +55,102 @@ def test_setAuthority_requires_authority(configurator, account):
     name; the unauthorized-revert intent is satisfied either way."""
     with pytest.raises(Exception):
         _call(configurator, "setAuthority", account.address)
+
+
+# ─── Restricted-method auth-revert tests ──────────────────────────────────────
+# Same pattern as test_hub_configurator.py: every state-changing
+# SpokeConfigurator method is gated by AccessManaged.restricted. With
+# our EOA-as-authority deploy, every call reverts at the canConsume
+# check. One representative test per method confirms the modifier is
+# wired in our compile output.
+
+
+SPOKE_ADDR = encoding.encode_address(
+    encoding.checksum(b"appID" + (5678).to_bytes(8, "big"))
+)
+HUB_ADDR = encoding.encode_address(
+    encoding.checksum(b"appID" + (1234).to_bytes(8, "big"))
+)
+SOURCE_ADDR = encoding.encode_address(
+    encoding.checksum(b"appID" + (9999).to_bytes(8, "big"))
+)
+
+
+def test_updateReservePriceSource_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "updateReservePriceSource", SPOKE_ADDR, 0, SOURCE_ADDR)
+
+
+def test_updateLiquidationTargetHealthFactor_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "updateLiquidationTargetHealthFactor", SPOKE_ADDR, 100)
+
+
+def test_updateHealthFactorForMaxBonus_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "updateHealthFactorForMaxBonus", SPOKE_ADDR, 100)
+
+
+def test_updateLiquidationBonusFactor_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "updateLiquidationBonusFactor", SPOKE_ADDR, 100)
+
+
+def test_updatePaused_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "updatePaused", SPOKE_ADDR, 0, True)
+
+
+def test_updateFrozen_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "updateFrozen", SPOKE_ADDR, 0, True)
+
+
+def test_updateBorrowable_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "updateBorrowable", SPOKE_ADDR, 0, True)
+
+
+def test_updateReceiveSharesEnabled_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "updateReceiveSharesEnabled", SPOKE_ADDR, 0, True)
+
+
+def test_updateCollateralRisk_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "updateCollateralRisk", SPOKE_ADDR, 0, 100)
+
+
+def test_addCollateralFactor_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "addCollateralFactor", SPOKE_ADDR, 0, 5000)
+
+
+def test_updateCollateralFactor_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "updateCollateralFactor", SPOKE_ADDR, 0, 1, 5000)
+
+
+def test_addLiquidationFee_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "addLiquidationFee", SPOKE_ADDR, 0, 100)
+
+
+def test_updateLiquidationFee_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "updateLiquidationFee", SPOKE_ADDR, 0, 1, 100)
+
+
+def test_pauseReserve_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "pauseReserve", SPOKE_ADDR, 0)
+
+
+def test_freezeReserve_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "freezeReserve", SPOKE_ADDR, 0)
+
+
+def test_updatePositionManager_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "updatePositionManager", SPOKE_ADDR, SOURCE_ADDR, True)

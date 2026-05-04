@@ -62,3 +62,97 @@ def test_setAuthority_requires_authority(configurator, account):
     """
     with pytest.raises(Exception):
         _call(configurator, "setAuthority", account.address)
+
+
+# ─── Restricted-method auth-revert tests ──────────────────────────────────────
+# Every state-changing HubConfigurator method is gated by the
+# AccessManaged `restricted` modifier. Without a real AccessManager
+# (we deploy with `account` as authority, an EOA), every call reverts
+# at the canConsume gate. Upstream tests this with `vm.prank(non-admin)`
+# + `vm.expectRevert(AccessManagedUnauthorized.selector)`; algokit
+# can't prank, but our deployer calling the EOA-authority path
+# triggers the same guard. These tests confirm each restricted method
+# has the modifier wired in our compile output.
+#
+# Shapes vary; we cover one example per arg-shape pattern (single
+# uint, multi-uint, address-arg, struct-arg, byte[]-arg).
+
+
+HUB_ADDR = encoding.encode_address(
+    encoding.checksum(b"appID" + (1234).to_bytes(8, "big"))
+)
+SPOKE_ADDR = encoding.encode_address(
+    encoding.checksum(b"appID" + (5678).to_bytes(8, "big"))
+)
+
+
+def test_updateLiquidityFee_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "updateLiquidityFee", HUB_ADDR, 0, 100)
+
+
+def test_updateFeeReceiver_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "updateFeeReceiver", HUB_ADDR, 0, SPOKE_ADDR)
+
+
+def test_deactivateAsset_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "deactivateAsset", HUB_ADDR, 0)
+
+
+def test_haltAsset_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "haltAsset", HUB_ADDR, 0)
+
+
+def test_resetAssetCaps_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "resetAssetCaps", HUB_ADDR, 0)
+
+
+def test_deactivateSpoke_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "deactivateSpoke", HUB_ADDR, SPOKE_ADDR)
+
+
+def test_haltSpoke_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "haltSpoke", HUB_ADDR, SPOKE_ADDR)
+
+
+def test_resetSpokeCaps_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "resetSpokeCaps", HUB_ADDR, SPOKE_ADDR)
+
+
+def test_updateSpokeActive_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "updateSpokeActive", HUB_ADDR, 0, SPOKE_ADDR, True)
+
+
+def test_updateSpokeHalted_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "updateSpokeHalted", HUB_ADDR, 0, SPOKE_ADDR, True)
+
+
+def test_updateSpokeAddCap_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "updateSpokeAddCap", HUB_ADDR, 0, SPOKE_ADDR, 100)
+
+
+def test_updateSpokeDrawCap_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "updateSpokeDrawCap", HUB_ADDR, 0, SPOKE_ADDR, 100)
+
+
+def test_updateSpokeCaps_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "updateSpokeCaps",
+              HUB_ADDR, 0, SPOKE_ADDR, 100, 100)
+
+
+def test_updateSpokeRiskPremiumThreshold_revertsWith_AccessManagedUnauthorized(configurator):
+    with pytest.raises(Exception):
+        _call(configurator, "updateSpokeRiskPremiumThreshold",
+              HUB_ADDR, 0, SPOKE_ADDR, 100)
