@@ -91,6 +91,28 @@ def test_registerSpoke_revertsWith_InvalidAddress(cpm):
         _call(cpm, "registerSpoke", ZERO_ADDR, True)
 
 
+def test_isSpokeRegistered_initially_false(cpm):
+    """A fresh CPM has no spokes registered."""
+    assert _call(cpm, "isSpokeRegistered", SPOKE1_ADDR) == False
+
+
+def test_registerSpoke_then_unregister(cpm):
+    """Direct port of upstream test_registerSpoke_unregister: register
+    a spoke (isSpokeRegistered → True), then unregister (→ False).
+    Uses SPOKE2_ADDR so it doesn't pollute the SpokeNotRegistered
+    revert tests (each fixture is module-scoped → state shared)."""
+    spoke = encoding.encode_address(
+        encoding.checksum(b"appID" + (777).to_bytes(8, "big"))
+    )
+    assert _call(cpm, "isSpokeRegistered", spoke) == False
+
+    _call(cpm, "registerSpoke", spoke, True)
+    assert _call(cpm, "isSpokeRegistered", spoke) == True
+
+    _call(cpm, "registerSpoke", spoke, False)
+    assert _call(cpm, "isSpokeRegistered", spoke) == False
+
+
 # ─── SpokeNotRegistered reverts on the 8 spoke-gated methods ─────────────────
 # Each method takes spoke as the first arg and is guarded by
 # onlyRegisteredSpoke. A fresh CPM has no registered spokes, so any
