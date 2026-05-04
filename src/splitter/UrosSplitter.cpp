@@ -146,51 +146,117 @@ std::vector<std::shared_ptr<awst::Statement>> makeOrcGuardStatements(
 	return guards;
 }
 
-/// Stub body for a method/subroutine of the given return type.
-/// Returns a Block containing the orc-guard asserts followed by a single
-/// ReturnStatement with a default value of `_ret`.
+// Forward decl — needed because makeDefaultValue recurses into struct
+// fields, which themselves can be any wtype.
+std::shared_ptr<awst::Expression> makeDefaultValue(
+	awst::WType const* _t, awst::SourceLocation const& _loc);
+
+std::shared_ptr<awst::Expression> makeDefaultValue(
+	awst::WType const* _t, awst::SourceLocation const& _loc)
+{
+	if (!_t || _t == awst::WType::voidType())
+		return nullptr;
+	if (_t == awst::WType::uint64Type())
+		return awst::makeIntegerConstant("0", _loc, awst::WType::uint64Type());
+	if (_t == awst::WType::biguintType())
+		return awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
+	if (_t == awst::WType::boolType())
+		return awst::makeBoolConstant(false, _loc);
+	if (_t == awst::WType::accountType())
+	{
+		std::vector<uint8_t> zeros(32, 0);
+		auto bc = awst::makeBytesConstant(std::move(zeros), _loc);
+		return awst::makeReinterpretCast(std::move(bc), awst::WType::accountType(), _loc);
+	}
+	// ARC4Struct (incl. puya-sol's synthesized `<method>Return` structs
+	// for multi-value Solidity returns): build a NewStruct with each
+	// field's default. Empty-bytes reinterpret-cast doesn't work for
+	// these — puya rejects with "unsupported type cast (from: bytes,
+	// to: <synthName>)".
+	if (auto const* sct = dynamic_cast<awst::ARC4Struct const*>(_t))
+	{
+		auto ns = std::make_shared<awst::NewStruct>();
+		ns->sourceLocation = _loc;
+		ns->wtype = _t;
+		for (auto const& [fname, ftype] : sct->fields())
+		{
+			auto fv = makeDefaultValue(ftype, _loc);
+			if (!fv)
+				fv = awst::makeReinterpretCast(
+					awst::makeBytesConstant({}, _loc), ftype, _loc);
+			ns->values[fname] = std::move(fv);
+		}
+		return ns;
+	}
+	// WTuple: puya-sol synthesizes these for multi-return Solidity
+	// methods (`getAccess` returns a 4-tuple → `getAccessReturn`
+	// WTuple). Build a TupleExpression with each component's default.
+	if (auto const* tup = dynamic_cast<awst::WTuple const*>(_t))
+	{
+		auto te = std::make_shared<awst::TupleExpression>();
+		te->sourceLocation = _loc;
+		te->wtype = _t;
+		for (auto const* ft : tup->types())
+		{
+			auto fv = makeDefaultValue(ft, _loc);
+			if (!fv)
+				fv = awst::makeReinterpretCast(
+					awst::makeBytesConstant({}, _loc), ft, _loc);
+			te->items.push_back(std::move(fv));
+		}
+		return te;
+	}
+	// Fallback: empty bytes reinterpret. Works for bytes / strings /
+	// ARC4UIntN / dynamic arrays etc. — puya treats an empty literal as
+	// the canonical "zero" for those types.
+	auto bc = awst::makeBytesConstant(std::vector<uint8_t>{}, _loc);
+	return awst::makeReinterpretCast(std::move(bc), _t, _loc);
+}
+
+/// Name of the shared orc-guard helper method. Each split contract
+/// (main + every chunk) gets a private instance method by this name
+/// that performs the 4 orc-guards. Stubbed methods call into it
+/// instead of inlining all 4 guards — collapses ~150B of guard code
+/// per stub down to a ~10B callsub. For AME this saves ~3 KB on main.
+constexpr char ORC_GUARD_NAME[] = "__uros_orc_guard";
+
+awst::ContractMethod makeOrcGuardMethod(
+	std::string const& _cref, awst::SourceLocation const& _loc)
+{
+	awst::ContractMethod m;
+	m.sourceLocation = _loc;
+	m.cref = _cref;
+	m.memberName = ORC_GUARD_NAME;
+	m.returnType = awst::WType::voidType();
+	// arc4MethodConfig stays nullopt — not exposed via ABI dispatch.
+	auto block = std::make_shared<awst::Block>();
+	block->sourceLocation = _loc;
+	for (auto& g : makeOrcGuardStatements(_loc))
+		block->body.push_back(std::move(g));
+	// Bare `return;` to satisfy puya's terminator requirement on
+	// void-returning subroutines.
+	block->body.push_back(awst::makeReturnStatement(nullptr, _loc));
+	m.body = std::move(block);
+	return m;
+}
+
+/// Stub body: `this.__uros_orc_guard(); return <default>;`
 std::shared_ptr<awst::Block> makeStubBody(
 	awst::WType const* _ret, awst::SourceLocation const& _loc)
 {
 	auto block = std::make_shared<awst::Block>();
 	block->sourceLocation = _loc;
 
-	// Inject the four "the orc" guards before the default-value return so
-	// direct calls to a stubbed method revert instead of silently no-oping.
-	for (auto& g : makeOrcGuardStatements(_loc))
-		block->body.push_back(std::move(g));
+	// `this.__uros_orc_guard()` — InstanceMethodTarget call to the
+	// shared helper. The contract owning this stub method must also
+	// carry the helper (added by split() to mainContract + each chunk).
+	auto callExpr = std::make_shared<awst::SubroutineCallExpression>();
+	callExpr->sourceLocation = _loc;
+	callExpr->wtype = awst::WType::voidType();
+	callExpr->target = awst::InstanceMethodTarget{ORC_GUARD_NAME};
+	block->body.push_back(awst::makeExpressionStatement(std::move(callExpr), _loc));
 
-	std::shared_ptr<awst::Expression> retVal;
-	if (!_ret || _ret == awst::WType::voidType())
-	{
-		// void: bare `return;`
-		auto ret = awst::makeReturnStatement(nullptr, _loc);
-		block->body.push_back(std::move(ret));
-		return block;
-	}
-
-	if (_ret == awst::WType::uint64Type())
-		retVal = awst::makeIntegerConstant("0", _loc, awst::WType::uint64Type());
-	else if (_ret == awst::WType::biguintType())
-		retVal = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
-	else if (_ret == awst::WType::boolType())
-		retVal = awst::makeBoolConstant(false, _loc);
-	else if (_ret == awst::WType::accountType())
-	{
-		// 32-byte zero, reinterpret as account.
-		std::vector<uint8_t> zeros(32, 0);
-		auto bc = awst::makeBytesConstant(std::move(zeros), _loc);
-		retVal = awst::makeReinterpretCast(std::move(bc), awst::WType::accountType(), _loc);
-	}
-	else
-	{
-		// bytes / strings / aggregates / ARC4 — empty bytes value, reinterpret
-		// to the declared return type. puya accepts an empty-bytes literal
-		// reinterpreted as most aggregate types as a "default zero".
-		auto bc = awst::makeBytesConstant(std::vector<uint8_t>{}, _loc);
-		retVal = awst::makeReinterpretCast(std::move(bc), _ret, _loc);
-	}
-
+	auto retVal = makeDefaultValue(_ret, _loc);
 	auto ret = awst::makeReturnStatement(std::move(retVal), _loc);
 	block->body.push_back(std::move(ret));
 	return block;
@@ -357,6 +423,8 @@ UrosSplitter::Result UrosSplitter::split(
 	}
 	mainContract->methods.push_back(
 		makeDelegateUpdateMethod(primary->id, primary->sourceLocation));
+	mainContract->methods.push_back(
+		makeOrcGuardMethod(primary->id, primary->sourceLocation));
 
 	// Build N chunk contracts. Each chunk_i:
 	//  - same surface as main (same selectors, same state schema)
@@ -393,6 +461,8 @@ UrosSplitter::Result UrosSplitter::split(
 		}
 		chunkContract->methods.push_back(
 			makeDelegateUpdateMethod(primary->id, primary->sourceLocation));
+		chunkContract->methods.push_back(
+			makeOrcGuardMethod(primary->id, primary->sourceLocation));
 
 		// Build this chunk's full root set: all roots, with the primary
 		// contract substituted for chunkContract.

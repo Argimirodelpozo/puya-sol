@@ -763,9 +763,12 @@ int main(int _argc, char* _argv[])
 		// ─── --uros-splitter: per-chunk puya pass + deploy template ─────
 		if (!splitResult.chunks.empty() && exitCode == 0)
 		{
+			// Match UrosSplitter::findPrimaryContract — iterate in
+			// reverse to pick the LAST Contract (the deployable target,
+			// per Solidity convention).
 			std::string mainBareName;
-			for (auto const& root: roots)
-				if (auto const* c = dynamic_cast<puyasol::awst::Contract const*>(root.get()))
+			for (auto it = roots.rbegin(); it != roots.rend(); ++it)
+				if (auto const* c = dynamic_cast<puyasol::awst::Contract const*>(it->get()))
 					{ mainBareName = c->name; break; }
 
 			int rc = puyasol::splitter::UrosSplitter::compileChunksAndEmitDeployTemplate(
