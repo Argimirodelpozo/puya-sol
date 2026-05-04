@@ -67,10 +67,15 @@ from algopy import (
     op,
 )
 
-# Trivial clear program: `pragma version 12; pushint 1; return`.
-# Major version must match main's approval (puya emits v12 by default).
-# AVM rejects UpdateApplication when approval/clear majors differ.
-CLEAR_PROGRAM = b"\x0c\x81\x01\x43"
+# Trivial clear program for the swap's clear-state slot. Hex layout:
+#   0a   pragma version 10  (must match the program being swapped in)
+#   81 01  pushint 1
+#   43   return
+# AVM enforces approval/clear major-version match. puya-sol targets AVM v10
+# by default, so this hardcoded blob matches main+helper. If you bump
+# puya-sol's target version, update this byte too (or, better: regenerate
+# main's clear into a third box and read it dynamically).
+CLEAR_PROGRAM = b"\x0a\x81\x01\x43"
 
 # `__delegate_update()void` ABI selector — main's auto-generated router
 # matches on this when OnCompletion=UpdateApplication, admitting only
@@ -107,8 +112,12 @@ class UrosOrchestrator(ARC4Contract):
         bytecode payloads. Caller funds MBR before invoking."""
         self.main_bytes_len = main_bytes_len
         self.helper_bytes_len = helper_bytes_len
-        op.Box.create(Bytes(b"__codebox_0"), main_bytes_len)
-        op.Box.create(Bytes(b"__codebox_1"), helper_bytes_len)
+        # op.Box.create returns a bool ("did this allocation create a new
+        # box?"); we don't care about the return value at setup time, but
+        # binding it silences puyapy's "expression result is ignored" lint.
+        _created_main = op.Box.create(Bytes(b"__codebox_0"), main_bytes_len)
+        _created_helper = op.Box.create(Bytes(b"__codebox_1"), helper_bytes_len)
+        assert _created_main and _created_helper, "boxes already exist"
 
     @arc4.abimethod
     def write_codebox(
@@ -148,31 +157,45 @@ class UrosOrchestrator(ARC4Contract):
         # wasn't, step 2's selector dispatch will fail and the whole
         # dance reverts, leaving main's program unchanged.
 
-        # Read codebox payloads. AVM stack values cap at 4096 B; main
-        # bytecode > 4 KB has to be sliced into pages and passed to
-        # itxn.ApplicationCall as a tuple. The 3-page slicing here
-        # covers up to 12 KB programs (= 1.5x the typical 8 KB single-
-        # page cap, enough for most "too big" candidates).
+        # Read codebox payloads. AVM stack values cap at 4096 B per single
+        # value; programs > 4 KB need to be split into chunks and submitted
+        # as a tuple to itxn.ApplicationCall.approval_program (puya
+        # serialises the tuple as concatenated approval pages). Programs
+        # ≤ 2048 B fit in a single op.Box.extract call.
         main_box = Bytes(b"__codebox_0")
         helper_box = Bytes(b"__codebox_1")
         clear = Bytes(CLEAR_PROGRAM)
 
-        helper_p0 = op.Box.extract(helper_box, UInt64(0), UInt64(2048))
-        helper_p1 = op.Box.extract(
-            helper_box,
-            UInt64(2048),
-            self.helper_bytes_len - UInt64(2048),
-        )
-
-        # Step 1: install helper bytes on main.
-        itxn.ApplicationCall(
-            app_id=self.main_app_id,
-            on_completion=OnCompleteAction.UpdateApplication,
-            approval_program=(helper_p0, helper_p1),
-            clear_state_program=clear,
-            app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
-            fee=0,
-        ).submit()
+        # Step 1: install helper bytes on main. Branch on size — small
+        # programs use a single-extract single-page submit; large ones use
+        # the two-page path.
+        if self.helper_bytes_len <= UInt64(2048):
+            helper_full = op.Box.extract(
+                helper_box, UInt64(0), self.helper_bytes_len
+            )
+            itxn.ApplicationCall(
+                app_id=self.main_app_id,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=helper_full,
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).submit()
+        else:
+            helper_p0 = op.Box.extract(helper_box, UInt64(0), UInt64(2048))
+            helper_p1 = op.Box.extract(
+                helper_box,
+                UInt64(2048),
+                self.helper_bytes_len - UInt64(2048),
+            )
+            itxn.ApplicationCall(
+                app_id=self.main_app_id,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=(helper_p0, helper_p1),
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).submit()
 
         # Step 2: forward the user's call. Pull selector + each arg from
         # gtxn[prev_idx].ApplicationArgs. AVM caps app_args count at 16,
@@ -234,20 +257,34 @@ class UrosOrchestrator(ARC4Contract):
 
         ret = call_res.last_log
 
-        # Step 3: restore main bytes.
-        main_p0 = op.Box.extract(main_box, UInt64(0), UInt64(2048))
-        main_p1 = op.Box.extract(
-            main_box,
-            UInt64(2048),
-            self.main_bytes_len - UInt64(2048),
-        )
-        itxn.ApplicationCall(
-            app_id=self.main_app_id,
-            on_completion=OnCompleteAction.UpdateApplication,
-            approval_program=(main_p0, main_p1),
-            clear_state_program=clear,
-            app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
-            fee=0,
-        ).submit()
+        # Step 3: restore main bytes. Same single-vs-multi-page branching
+        # as step 1.
+        if self.main_bytes_len <= UInt64(2048):
+            main_full = op.Box.extract(
+                main_box, UInt64(0), self.main_bytes_len
+            )
+            itxn.ApplicationCall(
+                app_id=self.main_app_id,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=main_full,
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).submit()
+        else:
+            main_p0 = op.Box.extract(main_box, UInt64(0), UInt64(2048))
+            main_p1 = op.Box.extract(
+                main_box,
+                UInt64(2048),
+                self.main_bytes_len - UInt64(2048),
+            )
+            itxn.ApplicationCall(
+                app_id=self.main_app_id,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=(main_p0, main_p1),
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).submit()
 
         return ret
