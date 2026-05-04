@@ -34,7 +34,11 @@ cluster.
 - v194 = 1089 (+13 chipping at FAIL/compile_err clusters)
 - v200 = 1090
 - v202 = 1091
-- v203 = in flight (running with mapping-array fix + uros-splitter additions)
+- v203 = polluted (mid-run rebuild → "Text file busy" on most invocations)
+- v204 = polluted (same cause)
+- v205 = in flight (with --uros-splitter wired in; main contract output
+  unchanged in the no-flag path, so this run is a regression sentinel
+  for the splitter additions)
 
 ## v195 reference (preserved below)
 
