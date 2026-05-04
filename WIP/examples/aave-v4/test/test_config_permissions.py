@@ -77,3 +77,28 @@ def test_clear_permission(perms):
     # Other permissions should still be set
     assert _call(perms, "canUpdateUserRiskPremium", p) == True
     assert _call(perms, "canUpdateUserDynamicConfig", p) == True
+
+
+def test_getConfigPermissionValues(perms):
+    """Direct port of upstream test_getConfigPermissionValues — for
+    each of the 8 sanitized permission values (0..7, masked by
+    GLOBAL_PERMISSIONS_MASK), the struct returned by
+    getConfigPermissionValues should match the individual canX getters.
+
+    Upstream uses fuzz over uint8; we exhaust the 3-bit space directly."""
+    GLOBAL_MASK = 0x7
+    for p in range(GLOBAL_MASK + 1):
+        values = _call(perms, "getConfigPermissionValues", p)
+        # ARC56 struct decode: algokit returns dict-of-named-fields if the
+        # arc56 spec carries names; otherwise a tuple.
+        def _field(key, idx):
+            return values[key] if isinstance(values, dict) else values[idx]
+        assert _field("canSetUsingAsCollateral", 0) == \
+            _call(perms, "canSetUsingAsCollateral", p), \
+            f"canSetUsingAsCollateral mismatch at p={p:#x}"
+        assert _field("canUpdateUserRiskPremium", 1) == \
+            _call(perms, "canUpdateUserRiskPremium", p), \
+            f"canUpdateUserRiskPremium mismatch at p={p:#x}"
+        assert _field("canUpdateUserDynamicConfig", 2) == \
+            _call(perms, "canUpdateUserDynamicConfig", p), \
+            f"canUpdateUserDynamicConfig mismatch at p={p:#x}"

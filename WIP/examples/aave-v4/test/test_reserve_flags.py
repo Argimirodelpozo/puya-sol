@@ -135,3 +135,38 @@ def test_clear_flag(flags):
     assert _call(flags, "frozen", f) == True
     assert _call(flags, "borrowable", f) == True
     assert _call(flags, "receiveSharesEnabled", f) == True
+
+
+def test_set_flags(flags):
+    """Direct port of upstream test_set_flags(): chain each setter
+    cumulatively starting from zero, verify each subsequent state has
+    exactly the previously-set flags plus the new one."""
+    f = 0
+    assert _call(flags, "paused", f) == False
+    assert _call(flags, "frozen", f) == False
+    assert _call(flags, "borrowable", f) == False
+    assert _call(flags, "receiveSharesEnabled", f) == False
+
+    f = _call(flags, "setPaused", f, True)
+    assert _call(flags, "paused", f) == True
+    assert _call(flags, "frozen", f) == False
+    assert _call(flags, "borrowable", f) == False
+    assert _call(flags, "receiveSharesEnabled", f) == False
+
+    f = _call(flags, "setFrozen", f, True)
+    assert _call(flags, "paused", f) == True
+    assert _call(flags, "frozen", f) == True
+    assert _call(flags, "borrowable", f) == False
+    assert _call(flags, "receiveSharesEnabled", f) == False
+
+    f = _call(flags, "setBorrowable", f, True)
+    assert _call(flags, "paused", f) == True
+    assert _call(flags, "frozen", f) == True
+    assert _call(flags, "borrowable", f) == True
+    assert _call(flags, "receiveSharesEnabled", f) == False
+
+    f = _call(flags, "setReceiveSharesEnabled", f, True)
+    assert _call(flags, "paused", f) == True
+    assert _call(flags, "frozen", f) == True
+    assert _call(flags, "borrowable", f) == True
+    assert _call(flags, "receiveSharesEnabled", f) == True

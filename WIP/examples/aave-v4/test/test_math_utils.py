@@ -137,6 +137,45 @@ def test_add_overflow(math):
         _call(math, "add", UINT256_MAX, 1)
 
 
+# Below: ported from upstream test_add_edge_cases (the boundary cases
+# we didn't already cover).
+INT256_MAX = (1 << 255) - 1
+INT256_MIN_TWOS = 1 << 255  # type(int256).min as a uint256 (two's complement)
+
+
+def test_add_int256_max_to_zero(math):
+    """add(0, INT256_MAX) should return INT256_MAX. The wrapper takes
+    int256 b, so pass the positive value directly."""
+    assert _call(math, "add", 0, INT256_MAX) == INT256_MAX
+
+
+def test_add_int256_min_underflow(math):
+    """add(0, type(int256).min) reverts. The implementation does
+    `a - uint256(-b)`, but `-(int256.min)` overflows uint256 — so
+    even before the subtraction the negation aborts. Encoded as
+    two's complement: int256.min == 2^255."""
+    with pytest.raises(Exception):
+        _call(math, "add", 0, INT256_MIN_TWOS)
+
+
+def test_add_intmax_plus_intmin_plus_1_cancels(math):
+    """add(INT256_MAX, int256.min + 1) == 0. int256.min + 1 = -INT256_MAX,
+    so the sum is INT256_MAX + (-INT256_MAX) = 0 — exercises the exact
+    cancel-out boundary of the signed-add path."""
+    int256_min_plus_1 = INT256_MIN_TWOS + 1  # = -INT256_MAX (two's complement)
+    assert _call(math, "add", INT256_MAX, int256_min_plus_1) == 0
+
+
+def test_signedSub_overflow_b_side(math):
+    """signedSub(0, a) where a > INT256_MAX must also revert (mirror
+    of test_signedSub_overflow which checks the a-side). Direct port
+    of upstream test_signedSub_revertsWith_SafeCastOverflowedUintToInt
+    second assertion."""
+    big = INT256_MAX + 1
+    with pytest.raises(Exception):
+        _call(math, "signedSub", 0, big)
+
+
 # ─── uncheckedAdd ────────────────────────────────────────────────────────────
 
 def test_uncheckedAdd_normal(math):

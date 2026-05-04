@@ -30,6 +30,7 @@ CONTRACTS=(
     IntentConsumer
     MathUtilsWrapper
     NoncesKeyed
+    NoncesKeyedMock
     PercentageMathWrapper
     PositionStatusMapWrapper
     PremiumWrapper

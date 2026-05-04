@@ -107,3 +107,59 @@ def test_useNonce_different_keys(nonces, account):
     # key1 used twice → nonce=2, key2 unused → nonce=0
     assert _call(nonces, "nonces", account.address, key1, boxes=[box1]) == packed1 + 2
     assert _call(nonces, "nonces", account.address, key2, boxes=[box2]) == packed2 + 0
+
+
+# ─── useCheckedNonce ──────────────────────────────────────────────────────────
+# Ported from upstream tests/contracts/utils/NoncesKeyed.t.sol — needs
+# NoncesKeyedMock since `_useCheckedNonce` is internal in the base
+# contract (matches upstream's setup).
+
+
+@pytest.fixture(scope="module")
+def mock(localnet, account):
+    return deploy_contract(localnet, account, "NoncesKeyedMock")
+
+
+def test_useCheckedNonce_monotonic(mock, account):
+    """Calling useCheckedNonce with the CURRENT packed nonce succeeds
+    and increments. Direct port of upstream test_useCheckedNonce_monotonic
+    (without vm.setArbitraryStorage — we use a fresh app, key=7)."""
+    from algosdk import encoding
+    key = 7
+    composite = _composite_key(_account_key(account.address), _biguint_key(key))
+    box_key = _mapping_box_key("_nonces", composite)
+    box = _box_ref(mock.app_id, box_key)
+
+    # Initial keyNonce = (key << 64) | 0
+    current_keyNonce = _call(mock, "nonces", account.address, key, boxes=[box])
+    packed_key = key * (2 ** 64)
+    assert current_keyNonce == packed_key + 0
+
+    _call(mock, "useCheckedNonce", account.address, current_keyNonce, boxes=[box])
+
+    # After: nonce incremented → packed_key + 1
+    next_keyNonce = _call(mock, "nonces", account.address, key, boxes=[box])
+    assert next_keyNonce == packed_key + 1
+
+
+def test_useCheckedNonce_revertsWith_InvalidAccountNonce(mock, account):
+    """Calling useCheckedNonce with the WRONG packed nonce reverts
+    with InvalidAccountNonce(owner, currentNonce). Direct port of
+    the upstream revert test."""
+    from algokit_utils.errors.logic_error import LogicError
+    key = 9
+    composite = _composite_key(_account_key(account.address), _biguint_key(key))
+    box_key = _mapping_box_key("_nonces", composite)
+    box = _box_ref(mock.app_id, box_key)
+
+    # Burn one nonce so the current is 1, not 0.
+    _call(mock, "useNonce", key, boxes=[box])
+    packed_key = key * (2 ** 64)
+    current = _call(mock, "nonces", account.address, key, boxes=[box])
+    assert current == packed_key + 1
+
+    # Off-by-one: the call expects current (packed_key + 1), but pass
+    # an arbitrary stale or future value → revert.
+    invalid_keyNonce = packed_key + 99
+    with pytest.raises(LogicError):
+        _call(mock, "useCheckedNonce", account.address, invalid_keyNonce, boxes=[box])

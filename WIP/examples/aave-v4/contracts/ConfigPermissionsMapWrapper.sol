@@ -45,4 +45,12 @@ contract ConfigPermissionsMapWrapper {
         return ConfigPermissionsMap.eq(ConfigPermissions.wrap(a), ConfigPermissions.wrap(b));
     }
 
+    function getConfigPermissionValues(uint8 perms)
+        external
+        pure
+        returns (IConfigPositionManager.ConfigPermissionValues memory)
+    {
+        return ConfigPermissionsMap.getConfigPermissionValues(ConfigPermissions.wrap(perms));
+    }
+
 }
