@@ -223,11 +223,15 @@ UrosSplitter::Result UrosSplitter::split(
 		stubbedApproval.body = primary->approvalProgram.body;
 		helperContract->approvalProgram = stubbedApproval;
 	}
-	for (auto& m : helperContract->methods)
-	{
-		if (!applied.count(m.memberName))
-			m = cloneStubbed(m);
-	}
+	// Helper keeps every method's real body (no stubbing). Stubbing the
+	// kept methods saves bytes but breaks split-method bodies that call
+	// kept methods internally — e.g. Tornado's verifyProof calls
+	// verifyingKey() (an internal helper). puya's resolver fails with
+	// "unable to resolve function reference" if the target isn't in
+	// `methods`. The size win from --uros-splitter comes from MAIN
+	// shrinking; helper carrying the full surface is fine because the
+	// helper is compiled separately and lives in its own app-side box,
+	// not deployed standalone.
 	// Helper also needs a __delegate_update method — the dance's revert step
 	// (UpdateApplication on main with main's original bytes) lands while
 	// main's *current* approval is the helper's bytes. Without an admitting
