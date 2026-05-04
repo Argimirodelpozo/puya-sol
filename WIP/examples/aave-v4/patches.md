@@ -118,3 +118,41 @@ files). The 12 logic contracts cover the full AAVE V4 deployment.
 | Excluded by design (EVM proxy stack) ⊘ | 4 |
 
 Up from 5 of 13 at session start. **Zero blockers remain.**
+
+## Test results
+
+`./compile_all.sh && pytest test/` → **238 passed / 12 failed / 9 errors**
+out of ~270 total (10 xfailed, 4 xpassed are expected).
+
+The 21 remaining failures+errors split into a few clusters; none
+indicates a compile/codegen regression introduced this session:
+
+1. **Declaration-level state initializers not emitted** (probable
+   puya-sol bug). Affects WETH9 — `string public name = "Wrapped
+   Ether";` at field declaration is not being run at AppCreate. The
+   field-read assert "check name exists" fires at runtime.
+   Failures: `test_weth9::test_name`, `test_symbol`, `test_decimals`,
+   `test_totalSupply`, `test_approve_emits_approval_event`,
+   `test_transfer_emits_transfer_event`. (5 fails)
+
+2. **Constructor arg encoding mismatch** (probable test-side issue).
+   AaveOracle's test passes raw bytes for the `string` ctor arg
+   without ARC4 length-prefix; AssetInterestRateStrategy similar.
+   Manifest as runtime "check FIELD exists" because the storage
+   write inside the constructor never lands.
+   Failures: `test_aave_oracle::test_description`, `::test_spoke_initial`;
+   errors: all 9 in `test_asset_interest_rate`. (~11)
+
+3. **ABI / event-log shape drift** (test-side). A handful of
+   `test_*_emits_*_event` checks assert on bytes that don't match
+   the current ARC4 emission shape — likely the test was written
+   against a different log format. (4)
+
+4. **One-offs**: `test_nonces_keyed::test_useNonce_increments`
+   asserts `0 == bigint`, suggesting the read returns a packed
+   biguint encoding the test expected as an int.
+   `test_treasury_spoke::test_transferOwnership_emits_event` AVM
+   `StopIteration` in algokit's event decoder.
+
+None of these block deploy. They're encoding/initializer
+investigations that can be picked off one cluster at a time.
