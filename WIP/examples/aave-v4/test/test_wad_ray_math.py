@@ -16,7 +16,7 @@ PERCENTAGE_FACTOR = 10**4
 
 @pytest.fixture(scope="module")
 def wad_ray(localnet, account):
-    return deploy_contract(localnet, account, "WadRayMathWrapper", extra_pages=1)
+    return deploy_contract(localnet, account, "WadRayMathWrapper", extra_pages=3)
 
 
 def _call(client, method, *args):

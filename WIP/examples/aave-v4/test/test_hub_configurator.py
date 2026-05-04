@@ -17,7 +17,7 @@ def configurator(localnet, account):
     return deploy_contract(
         localnet, account, "HubConfigurator",
         app_args=[authority],
-        extra_pages=1,
+        extra_pages=3,
     )
 
 

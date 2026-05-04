@@ -72,7 +72,13 @@ def deploy_contract(
     localnet: au.AlgorandClient,
     account: SigningAccount,
     name: str,
-    extra_pages: int = 0,
+    # AVM default is 1 program page (2048 B). extra_pages adds N more
+    # 2048-B pages, max 3 → up to 4 × 2048 = 8192 B per program. Several
+    # AAVE V4 logic contracts (HubConfigurator 5.7 KB, SpokeConfigurator
+    # 5.0 KB, AccessManager 5.9 KB) are over 4 KB; using extra_pages=3
+    # by default removes the per-test guesswork — there's no runtime
+    # cost, only a tiny MBR bump on the deploying account.
+    extra_pages: int = 3,
     fund_amount: int = 1_000_000,
     app_args: list[bytes] | None = None,
 ) -> au.AppClient:

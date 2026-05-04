@@ -66,7 +66,7 @@ is observable to integrators that intentionally relied on swallowing.
 | `SpokeConfigurator` | ✅ | 5.0 KB | already passing |
 | `SpokeInstance` | ✅ | 22.8 KB | unblocked by puya-side patch (see `../../../puyabug.md`); needs `--uros-splitter` to deploy |
 | `Hub` | ✅ | 20.0 KB | unblocked by [AWSTBuilder.cpp augmentReturns shape fix](../../../src/builder/AWSTBuilder.cpp); needs `--uros-splitter` to deploy |
-| `ERC1967Proxy` | ❌ | — | EVM proxy pattern: delegatecall semantics; should be replaced with native UpdateApplication |
+| `ERC1967Proxy` | ⊘ | — | **deliberately excluded** — EVM upgradeability shim has no purpose on AVM (see "Why ERC1967Proxy is excluded" below) |
 
 ## Remaining work to ship full AAVE V4
 
@@ -77,14 +77,44 @@ is observable to integrators that intentionally relied on swallowing.
    - `AccessManagerEnumerable`     9.0 KB
    Splitter dance verified end-to-end on `HubConfigurator`.
 
-2. **`ERC1967Proxy`**: AVM has no equivalent of `delegatecall` or
-   in-place bytecode replacement during a single txn. Acceptable
-   path: drop the proxy pattern entirely for AAVE V4 deployments on
-   Algorand, since AVM's UpdateApplication serves the same upgrade
-   purpose with native auth. Out of scope for this folder.
+## Why ERC1967Proxy is excluded (not "failing")
+
+ERC1967Proxy + TransparentUpgradeableProxy + ProxyAdmin + ERC1967Utils
+together are the EVM-specific deploy-time proxy stack. Their *only*
+purpose is making EVM logic contracts upgradeable, since EVM has no
+native upgrade primitive — the proxy delegatecalls into a separate
+"implementation" contract whose address lives in a magic storage slot,
+and "upgrade" means writing a new address into that slot.
+
+AVM has `UpdateApplication` as a built-in transaction. An app's
+bytecode is upgradeable in-place by an auth-gated `UpdateApplication`
+txn. Same auth model (admin role), same outcome (program changes),
+no proxy needed. We rely on the same primitive in `--uros-splitter`'s
+runtime dance.
+
+The four files (`ERC1967Proxy.sol`, `TransparentUpgradeableProxy.sol`,
+`ProxyAdmin.sol`, `ERC1967Utils.sol`) are EVM-only infrastructure with
+zero functional purpose on AVM. They don't fail to compile because
+of a bug — they fail because the operations they encode (`delegatecall`,
+manual implementation-slot rewrite) don't have AVM equivalents and
+SHOULDN'T. Drop them from the deployment manifest entirely.
+
+Of the contracts that inherit from `Initializable` (the no-constructor
+post-deploy init pattern that goes with proxies):
+`AccessManagedUpgradeable`, `ContextUpgradeable`, `ERC20Upgradeable`,
+`TokenizationSpoke`. All four already compile cleanly under puya-sol —
+`Initializable` itself is harmless on AVM (you just call the
+init function once after AppCreate, same as if it were a constructor).
+
+So the true "blocked" count is 0. Excluded count is 4 (the EVM proxy
+files). The 12 logic contracts cover the full AAVE V4 deployment.
 
 ## Tally
 
-12 of 13 deployable contracts now compile (was 5 before this
-session). All abstract bases compile too. Only remaining failure
-is `ERC1967Proxy` — out of scope by design.
+| Status | Count |
+|---|---|
+| Deployable + compiles ✅ | 12 |
+| Abstract base + compiles ✅ | 3 |
+| Excluded by design (EVM proxy stack) ⊘ | 4 |
+
+Up from 5 of 13 at session start. **Zero blockers remain.**

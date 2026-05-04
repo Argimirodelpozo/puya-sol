@@ -17,7 +17,7 @@ _call_counter = 0
 def manager(localnet, account):
     return deploy_contract(
         localnet, account, "AccessManager",
-        extra_pages=2,
+        extra_pages=3,
     )
 
 
