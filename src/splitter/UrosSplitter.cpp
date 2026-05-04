@@ -238,13 +238,22 @@ awst::ContractMethod makeDelegateUpdateMethod(
 	return m;
 }
 
-/// Find the primary deployable Contract in `_roots` (skip libraries / abstract).
-/// Returns the first non-abstract Contract; nullptr if none.
+/// Find the primary deployable Contract in `_roots`.
+///
+/// AAVE V4 contract files routinely hold a base + a deployable
+/// derived contract (e.g. `AccessManagerEnumerable.sol` defines
+/// `AccessManager` then `AccessManagerEnumerable`). AWST emits the
+/// base first because it's needed for linearization, but the deploy
+/// target is the LAST Contract — that's the one that gets the bare
+/// filename's appName + the canonical compilation_set entry.
+///
+/// Solidity's convention (and puya-sol's emission) is "deployable
+/// last", so iterate roots in reverse and return the first Contract.
 std::shared_ptr<awst::Contract> findPrimaryContract(
 	std::vector<std::shared_ptr<awst::RootNode>> const& _roots)
 {
-	for (auto const& r : _roots)
-		if (auto c = std::dynamic_pointer_cast<awst::Contract>(r))
+	for (auto it = _roots.rbegin(); it != _roots.rend(); ++it)
+		if (auto c = std::dynamic_pointer_cast<awst::Contract>(*it))
 			return c;
 	return nullptr;
 }
