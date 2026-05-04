@@ -62,20 +62,23 @@ is observable to integrators that intentionally relied on swallowing.
 | `ConfigPositionManager` | ✅ | 4.4 KB | unblocked by `account → biguint` conversion in TypeConversions.cpp |
 | `GiverPositionManager` | ✅ | 3.8 KB | same fix |
 | `TokenizationSpokeInstance` | ✅ | 7.4 KB | same fix |
-| `SpokeInstance` | ❌ | — | tuple-arity mismatch in inherited Spoke code: source `(bool, Encoded(...), Encoded(...), Encoded(...), Encoded(...))` assigning to `(bool, Encoded(...))` target — separate puya-sol struct-tuple-destructure bug |
+| `HubConfigurator` | ✅ | 5.7 KB | already passing (also splitter dance demo target) |
+| `SpokeConfigurator` | ✅ | 5.0 KB | already passing |
+| `SpokeInstance` | ❌ | — | hit a puya-side bug after my multi-storage-arg fix landed: `IndexError` in puya's intrinsic simplifier (opt-1) and `'h' format` overflow (opt-0). Needs upstream puya investigation. |
 | `Hub` | ❌ | — | `TupleExpression.wtype` emits `ARC4Struct` (the `Asset` struct from AssetLogic) where puya expects `WTuple` |
 | `ERC1967Proxy` | ❌ | — | EVM proxy pattern: delegatecall semantics; should be replaced with native UpdateApplication |
 
 ## Remaining work to ship full AAVE V4
 
-1. **Tuple-arity destructure mismatch** (puya-sol bug, blocks
-   `SpokeInstance`). When a function returning multiple structs is
-   destructured into a smaller tuple (e.g., `(success, accountData) =
-   _tryX()` where `_tryX` returns 5 values), puya-sol emits the full
-   5-tuple as the source of an assignment whose target is the smaller
-   2-tuple. The fix is at the destructure site — slice the source
-   tuple to match the target arity, or rewrite the assignment as
-   per-element copies. Unblocks `SpokeInstance`.
+1. **`SpokeInstance` puya backend bugs** (upstream puya). Two
+   distinct crashes:
+   - Optimizer: `IndexError: list index out of range` at
+     `intrinsic_simplification.py:601` (`binary_array[index]`).
+   - With `--optimization-level 0`: `error: 'h' format requires
+     -32768 <= number <= 32767` — somewhere a 16-bit struct.pack is
+     receiving a too-large integer.
+   These are upstream puya bugs, not puya-sol. The compile path
+   through puya-sol is now clean for SpokeInstance.
 
 2. **TupleExpression with struct value** (puya-sol bug, blocks
    `Hub`). `TupleExpression.wtype` is required to be `WTuple` by
@@ -94,3 +97,9 @@ is observable to integrators that intentionally relied on swallowing.
    path: drop the proxy pattern entirely for AAVE V4 deployments on
    Algorand, since AVM's UpdateApplication serves the same upgrade
    purpose with native auth. Out of scope for this folder.
+
+## Tally
+
+10 of 13 deployable contracts now compile (was 5 before this session).
+All abstract bases compile too. Remaining 3 fail upstream (`Hub`,
+`SpokeInstance`) or by design (`ERC1967Proxy`).

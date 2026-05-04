@@ -175,143 +175,182 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			if (auto const* contractDef = dynamic_cast<ContractDefinition const*>(scope))
 				calleeIsLibrary = contractDef->isLibrary();
 	}
-	if (_funcDef && !call->args.empty()
+	// Collect ALL storage param indices (mapping-type storage refs are
+	// handled elsewhere — they get a different threading scheme). Order
+	// must match AWSTBuilder.cpp:388-403, which iterates parameters() in
+	// source order and appends each storage param's type to the
+	// augmented return tuple.
+	std::vector<size_t> storageParamIndices;
+	if (_funcDef
 		&& ((calleeIsLibrary && !calleeIsPrivate) || calleeIsFree)
 		&& _funcDef->stateMutability() != StateMutability::View
-		&& _funcDef->stateMutability() != StateMutability::Pure
-		&& !_funcDef->parameters().empty()
-		&& _funcDef->parameters()[0]->referenceLocation()
-			== VariableDeclaration::Location::Storage
-		&& !dynamic_cast<MappingType const*>(_funcDef->parameters()[0]->type()))
+		&& _funcDef->stateMutability() != StateMutability::Pure)
 	{
-		auto const* receiverExpr = call->args[0].value.get();
-		std::shared_ptr<awst::BoxValueExpression> rootBox;
-		std::shared_ptr<awst::AppStateExpression> rootAppState;
-		std::vector<std::string> fieldPath;
-
-		std::function<void(awst::Expression const*)> traceToRoot;
-		traceToRoot = [&](awst::Expression const* e) {
-			if (auto const* field = dynamic_cast<awst::FieldExpression const*>(e)) {
-				fieldPath.push_back(field->name);
-				traceToRoot(field->base.get());
-			} else if (auto const* sg = dynamic_cast<awst::StateGet const*>(e)) {
-				traceToRoot(sg->field.get());
-			} else if (auto const* box = dynamic_cast<awst::BoxValueExpression const*>(e)) {
-				auto b = std::make_shared<awst::BoxValueExpression>();
-				b->sourceLocation = box->sourceLocation;
-				b->wtype = box->wtype;
-				b->key = box->key;
-				b->existsAssertionMessage = std::nullopt;
-				rootBox = b;
-			} else if (auto const* app = dynamic_cast<awst::AppStateExpression const*>(e)) {
-				auto a = std::make_shared<awst::AppStateExpression>();
-				a->sourceLocation = app->sourceLocation;
-				a->wtype = app->wtype;
-				a->key = app->key;
-				a->existsAssertionMessage = std::nullopt;
-				rootAppState = a;
-			}
-		};
-		traceToRoot(receiverExpr);
-
-		bool hasRoot = (rootBox != nullptr) || (rootAppState != nullptr);
-		if (hasRoot)
+		for (size_t pi = 0; pi < _funcDef->parameters().size() && pi < call->args.size(); ++pi)
 		{
-			auto* origRetType = call->wtype;
-			auto* storageArgType = call->args[0].value->wtype;
-			auto* rootType = rootBox ? rootBox->wtype : rootAppState->wtype;
+			auto const& p = _funcDef->parameters()[pi];
+			if (p->referenceLocation() != VariableDeclaration::Location::Storage)
+				continue;
+			if (dynamic_cast<MappingType const*>(p->type()))
+				continue;
+			storageParamIndices.push_back(pi);
+		}
+	}
 
-			// AWSTBuilder augments library function returns:
-			//   (R, T) when the solidity function has a return type R
-			//   (T,)  when the solidity function returns void — in which case
-			//         the augmented single-element return is just storage_type T
-			//         itself (not wrapped in a tuple).
-			bool voidReturn = (origRetType == awst::WType::voidType());
+	if (!storageParamIndices.empty())
+	{
+		// Per-storage-arg root tracing. Each storage arg may resolve to a
+		// different root (one might be `box.field`, another `appState`,
+		// another a plain stack value with no resolvable root).
+		struct StorageRoot {
+			size_t paramIdx = 0;
+			std::shared_ptr<awst::BoxValueExpression> rootBox;
+			std::shared_ptr<awst::AppStateExpression> rootAppState;
+			std::vector<std::string> fieldPath;
+			awst::WType const* rootType = nullptr;
+			awst::WType const* storageArgType = nullptr;
+		};
+		std::vector<StorageRoot> roots;
+		roots.reserve(storageParamIndices.size());
 
-			static int storageWriteBackCounter = 0;
-			std::string tempName = "__storage_wb_" + std::to_string(storageWriteBackCounter++);
+		for (size_t pi: storageParamIndices)
+		{
+			StorageRoot sr;
+			sr.paramIdx = pi;
+			sr.storageArgType = call->args[pi].value->wtype;
 
-			std::shared_ptr<awst::VarExpression> tempVar;
-			std::shared_ptr<awst::Expression> origRet;
-			std::shared_ptr<awst::Expression> modifiedArg;
+			std::function<void(awst::Expression const*)> traceToRoot;
+			traceToRoot = [&](awst::Expression const* e) {
+				if (auto const* field = dynamic_cast<awst::FieldExpression const*>(e)) {
+					sr.fieldPath.push_back(field->name);
+					traceToRoot(field->base.get());
+				} else if (auto const* sg = dynamic_cast<awst::StateGet const*>(e)) {
+					traceToRoot(sg->field.get());
+				} else if (auto const* box = dynamic_cast<awst::BoxValueExpression const*>(e)) {
+					auto b = std::make_shared<awst::BoxValueExpression>();
+					b->sourceLocation = box->sourceLocation;
+					b->wtype = box->wtype;
+					b->key = box->key;
+					b->existsAssertionMessage = std::nullopt;
+					sr.rootBox = b;
+				} else if (auto const* app = dynamic_cast<awst::AppStateExpression const*>(e)) {
+					auto a = std::make_shared<awst::AppStateExpression>();
+					a->sourceLocation = app->sourceLocation;
+					a->wtype = app->wtype;
+					a->key = app->key;
+					a->existsAssertionMessage = std::nullopt;
+					sr.rootAppState = a;
+				}
+			};
+			traceToRoot(call->args[pi].value.get());
+			sr.rootType = sr.rootBox ? sr.rootBox->wtype
+				: sr.rootAppState ? sr.rootAppState->wtype : nullptr;
+			roots.push_back(std::move(sr));
+		}
 
-			if (voidReturn)
-			{
-				// Augmented signature: () → storage_type. No tuple needed.
-				call->wtype = storageArgType;
+		// AWSTBuilder always augments the function's return type when it
+		// has any storage params:
+		//   - non-void return:  (R, sp0, sp1, ..., spN-1)
+		//   - void return:      sp0 if N==1; (sp0, sp1, ...) if N>1
+		// We MUST unpack every time, even if some args don't resolve to a
+		// state root — otherwise the assignment-target wtype mismatches.
+		auto* origRetType = call->wtype;
+		bool voidReturn = (origRetType == awst::WType::voidType());
 
-				tempVar = std::make_shared<awst::VarExpression>();
-				tempVar->sourceLocation = m_loc;
-				tempVar->wtype = storageArgType;
-				tempVar->name = tempName;
+		std::vector<awst::WType const*> tupleTypes;
+		if (!voidReturn) tupleTypes.push_back(origRetType);
+		for (auto const& sr: roots) tupleTypes.push_back(sr.storageArgType);
 
-				auto assignTemp = awst::makeAssignmentStatement(tempVar, std::shared_ptr<awst::Expression>(call), m_loc);
-				m_ctx.prePendingStatements.push_back(std::move(assignTemp));
+		// callTupleType: the wtype the augmented call returns.
+		// 1 element → bare type (puya doesn't wrap a single-element return in
+		//             a tuple). 2+ elements → WTuple wrapper.
+		awst::WType const* callTupleType =
+			tupleTypes.size() == 1 ? tupleTypes[0]
+				: m_ctx.typeMapper.createType<awst::WTuple>(std::move(tupleTypes));
+		call->wtype = callTupleType;
 
-				modifiedArg = tempVar;
-				origRet = std::make_shared<awst::VoidConstant>();
-				origRet->sourceLocation = m_loc;
-				origRet->wtype = awst::WType::voidType();
-			}
-			else
-			{
-				auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
-					std::vector<awst::WType const*>{origRetType, storageArgType});
-				call->wtype = tupleType;
+		static int storageWriteBackCounter = 0;
+		std::string tempName = "__storage_wb_" + std::to_string(storageWriteBackCounter++);
 
-				tempVar = std::make_shared<awst::VarExpression>();
-				tempVar->sourceLocation = m_loc;
-				tempVar->wtype = tupleType;
-				tempVar->name = tempName;
+		auto tempVar = std::make_shared<awst::VarExpression>();
+		tempVar->sourceLocation = m_loc;
+		tempVar->wtype = callTupleType;
+		tempVar->name = tempName;
 
-				auto assignTemp = awst::makeAssignmentStatement(tempVar, std::shared_ptr<awst::Expression>(call), m_loc);
-				m_ctx.prePendingStatements.push_back(std::move(assignTemp));
+		auto assignTemp = awst::makeAssignmentStatement(
+			tempVar, std::shared_ptr<awst::Expression>(call), m_loc);
+		m_ctx.prePendingStatements.push_back(std::move(assignTemp));
 
-				auto origTup = std::make_shared<awst::TupleItemExpression>();
-				origTup->sourceLocation = m_loc;
-				origTup->wtype = origRetType;
-				origTup->base = tempVar;
-				origTup->index = 0;
-				origRet = std::move(origTup);
+		// pickFromTuple: read element `idx` of typed `ty` from tempVar.
+		// In the single-element bare-type case (callTupleType == ty), tempVar
+		// IS the value — no TupleItemExpression needed.
+		bool isBareSingle = (
+			(voidReturn && roots.size() == 1) ||
+			(!voidReturn && roots.empty())
+		);
+		auto pickFromTuple = [&](size_t idx, awst::WType const* ty)
+			-> std::shared_ptr<awst::Expression>
+		{
+			if (isBareSingle)
+				return tempVar;
+			auto t = std::make_shared<awst::TupleItemExpression>();
+			t->sourceLocation = m_loc;
+			t->wtype = ty;
+			t->base = tempVar;
+			t->index = static_cast<int>(idx);
+			return t;
+		};
 
-				auto modTup = std::make_shared<awst::TupleItemExpression>();
-				modTup->sourceLocation = m_loc;
-				modTup->wtype = storageArgType;
-				modTup->base = tempVar;
-				modTup->index = 1;
-				modifiedArg = std::move(modTup);
-			}
+		std::shared_ptr<awst::Expression> origRet;
+		if (voidReturn)
+		{
+			origRet = std::make_shared<awst::VoidConstant>();
+			origRet->sourceLocation = m_loc;
+			origRet->wtype = awst::WType::voidType();
+		}
+		else
+		{
+			origRet = pickFromTuple(0, origRetType);
+		}
 
+		// Emit one writeback per storage arg that resolved to a state root.
+		// Args that didn't resolve (plain locals from the caller) get no
+		// writeback — they're forwarded copies, the call modified them but
+		// there's no source-of-truth to update.
+		size_t baseIdx = voidReturn ? 0 : 1;
+		for (size_t i = 0; i < roots.size(); ++i)
+		{
+			auto const& sr = roots[i];
+			if (!sr.rootBox && !sr.rootAppState)
+				continue;
+
+			auto modifiedArg = pickFromTuple(baseIdx + i, sr.storageArgType);
+			auto fieldPath = sr.fieldPath;
 			std::reverse(fieldPath.begin(), fieldPath.end());
 
-			// Value to write back to the root state. When fieldPath is empty
-			// (receiver IS the root struct), it's the modifiedArg directly.
-			// When fieldPath has a single field (receiver is `root.field`),
-			// we have to read the other fields of root and build a NewStruct
-			// so the final assignment replaces only the touched field.
 			std::shared_ptr<awst::Expression> writeValue = modifiedArg;
 			if (!fieldPath.empty())
 			{
 				if (fieldPath.size() == 1)
 				{
 					auto const* structType =
-						dynamic_cast<awst::ARC4Struct const*>(rootType);
+						dynamic_cast<awst::ARC4Struct const*>(sr.rootType);
 					if (structType)
 					{
 						std::shared_ptr<awst::Expression> readStruct;
-						if (rootBox)
+						if (sr.rootBox)
 						{
 							auto sg = std::make_shared<awst::StateGet>();
 							sg->sourceLocation = m_loc;
-							sg->wtype = rootType;
-							sg->field = rootBox;
+							sg->wtype = sr.rootType;
+							sg->field = sr.rootBox;
 							sg->defaultValue =
-								builder::StorageMapper::makeDefaultValue(rootType, m_loc);
+								builder::StorageMapper::makeDefaultValue(sr.rootType, m_loc);
 							readStruct = std::move(sg);
 						}
 						else
 						{
-							readStruct = rootAppState;
+							readStruct = sr.rootAppState;
 						}
 
 						auto newStruct = std::make_shared<awst::NewStruct>();
@@ -347,21 +386,21 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			if (writeValue)
 			{
 				std::shared_ptr<awst::Expression> writeTarget =
-					rootBox ? std::static_pointer_cast<awst::Expression>(rootBox)
-							: std::static_pointer_cast<awst::Expression>(rootAppState);
+					sr.rootBox ? std::static_pointer_cast<awst::Expression>(sr.rootBox)
+							: std::static_pointer_cast<awst::Expression>(sr.rootAppState);
 
 				auto writeBack = std::make_shared<awst::AssignmentExpression>();
 				writeBack->sourceLocation = m_loc;
-				writeBack->wtype = rootType;
+				writeBack->wtype = sr.rootType;
 				writeBack->target = std::move(writeTarget);
 				writeBack->value = std::move(writeValue);
 
 				auto stmt = awst::makeExpressionStatement(std::move(writeBack), m_loc);
 				m_ctx.pendingStatements.push_back(std::move(stmt));
 			}
-
-			return origRet;
 		}
+
+		return origRet;
 	}
 
 	return call;
