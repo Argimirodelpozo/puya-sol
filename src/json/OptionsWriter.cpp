@@ -8,9 +8,12 @@ namespace puyasol::json
 
 using njson = nlohmann::json;
 
-static void addTemplateVarDefs(njson& opts, std::set<std::string> const& _children)
+static void addTemplateVarDefs(
+	njson& opts,
+	std::set<std::string> const& _children,
+	std::map<std::string, int64_t> const& _intVars = {})
 {
-	if (_children.empty()) return;
+	if (_children.empty() && _intVars.empty()) return;
 	auto& defs = opts["cli_template_definitions"];
 	for (auto const& child : _children)
 	{
@@ -21,6 +24,11 @@ static void addTemplateVarDefs(njson& opts, std::set<std::string> const& _childr
 		defs["APPROVAL_" + child] = "0x068101"; // stub: #pragma version 6; int 1
 		defs["CLEAR_" + child] = "0x068101";
 	}
+	// Integer template vars (e.g. UROS_ORCH_APP_ID for the splitter):
+	// declared with a placeholder 0; deploy-time substitution writes the
+	// real value into the bytecode.
+	for (auto const& [name, value] : _intVars)
+		defs[name] = value;
 }
 
 void OptionsWriter::write(
@@ -29,7 +37,8 @@ void OptionsWriter::write(
 	std::string const& _outputDir,
 	int _optimizationLevel,
 	bool _outputIr,
-	std::set<std::string> const& _templateVarChildren
+	std::set<std::string> const& _templateVarChildren,
+	std::map<std::string, int64_t> const& _intTemplateVars
 )
 {
 	njson opts;
@@ -45,7 +54,7 @@ void OptionsWriter::write(
 	opts["target_avm_version"] = 10;
 	opts["template_vars_prefix"] = "TMPL_";
 	opts["cli_template_definitions"] = njson::object();
-	addTemplateVarDefs(opts, _templateVarChildren);
+	addTemplateVarDefs(opts, _templateVarChildren, _intTemplateVars);
 	if (_outputIr)
 	{
 		opts["output_ssa_ir"] = true;
@@ -69,7 +78,8 @@ void OptionsWriter::writeMultiple(
 	std::string const& _outputDir,
 	int _optimizationLevel,
 	bool _outputIr,
-	std::set<std::string> const& _templateVarChildren
+	std::set<std::string> const& _templateVarChildren,
+	std::map<std::string, int64_t> const& _intTemplateVars
 )
 {
 	njson opts;
@@ -86,7 +96,7 @@ void OptionsWriter::writeMultiple(
 	opts["target_avm_version"] = 10;
 	opts["template_vars_prefix"] = "TMPL_";
 	opts["cli_template_definitions"] = njson::object();
-	addTemplateVarDefs(opts, _templateVarChildren);
+	addTemplateVarDefs(opts, _templateVarChildren, _intTemplateVars);
 	if (_outputIr)
 	{
 		opts["output_ssa_ir"] = true;

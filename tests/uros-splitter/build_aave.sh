@@ -20,11 +20,13 @@ rm -rf "$OUT"
 mkdir -p "$OUT"
 
 echo "=== compiling AAVE HubConfigurator with --uros-splitter ==="
+ORCH_APP_ID="${UROS_ORCH_APP_ID:-0}"
 "$PUYA_SOL" \
     --source "$REPO_ROOT/WIP/examples/aave-v4/contracts/HubConfigurator.sol" \
     --output-dir "$OUT/HubConfigurator" \
     --puya-path "$PUYA_PATH" \
-    --uros-splitter "authority,setAuthority"
+    --uros-splitter "authority,setAuthority" \
+    --uros-orch-app-id "$ORCH_APP_ID"
 
 echo
 echo "=== compiling orchestrator template ==="

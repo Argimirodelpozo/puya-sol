@@ -146,17 +146,31 @@ def test_dance_decrements_counter():
     assert (OUT / "Smoke" / "Smoke.approval.bin").exists(), \
         "run tests/uros-splitter/build.sh first"
 
-    # 1. Deploy main contract (with stubbed `dec`).
-    main_id = _deploy_app("Smoke", "Smoke", sender)
-    _fund(_app_addr(main_id), 1_000_000)
-
-    # 2. Deploy orchestrator (calls __init__ via NoOp create).
+    # 1. Deploy orchestrator FIRST so we know its app id. Main's stubs
+    #    have a guard that asserts `gtxn[next].ApplicationID ==
+    #    TMPL_UROS_ORCH_APP_ID`; we need to recompile main with the
+    #    real orch id baked in before deploying main.
     init_sel = _arc4_selector("init()void")
     orch_id = _deploy_app(
         "Orchestrator", "UrosOrchestrator", sender,
         app_args=[init_sel],
     )
-    _fund(_app_addr(orch_id), 5_000_000)  # extra MBR for boxes
+    _fund(_app_addr(orch_id), 5_000_000)
+
+    # 2. Recompile main with the real orch app id substituted in.
+    import subprocess
+    subprocess.run(
+        [str(HERE.parent.parent / "tests" / "uros-splitter" / "build.sh")],
+        env={**__import__("os").environ, "UROS_ORCH_APP_ID": str(orch_id)},
+        check=True,
+        capture_output=True,
+    )
+    # Sanity: the new main bytes should differ at the pushint8 carrying
+    # the orch id (won't equal the placeholder build).
+
+    # 3. Deploy main with the substituted bytecode.
+    main_id = _deploy_app("Smoke", "Smoke", sender)
+    _fund(_app_addr(main_id), 1_000_000)
 
     # 3. set_main(main_id)
     set_main_sel = _arc4_selector("set_main(uint64)void")
@@ -264,6 +278,25 @@ def test_dance_decrements_counter():
         f"expected {len(expected)} B; first-diff at byte "
         f"{next((i for i, (a, b) in enumerate(zip(on_chain, expected)) if a != b), 'n/a')}"
     )
+
+    # 10. NEGATIVE: a direct call to main.dec(N) without the orch-dispatch
+    #     follow-up must revert (the stub's guard rejects when the next
+    #     group txn isn't orch.dispatch()). Confirms the guard actually
+    #     enforces the dance.
+    sp = _algod().suggested_params()
+    bad_txn = ApplicationCallTxn(
+        sender=sender.address, sp=sp, index=main_id,
+        on_complete=OnComplete.NoOpOC,
+        app_args=[dec_sel, dec_amt],
+    )
+    try:
+        bad_id = _algod().send_transaction(bad_txn.sign(sender.private_key))
+        wait_for_confirmation(_algod(), bad_id, 4)
+        assert False, "direct main.dec() should have reverted (guard didn't fire)"
+    except Exception as e:
+        msg = str(e)
+        assert "assert failed" in msg or "logic eval error" in msg, \
+            f"unexpected error from guard: {msg}"
 
 
 if __name__ == "__main__":

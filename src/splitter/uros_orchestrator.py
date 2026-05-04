@@ -166,10 +166,16 @@ class UrosOrchestrator(ARC4Contract):
         # Its ApplicationArgs[0] is the ABI selector; [1..] are the
         # ABI-encoded positional args. We pass them through unchanged
         # to the inner call in step 2.
+        assert op.Txn.group_index > UInt64(0), "uros: dispatch needs a prev stub txn"
         prev_idx = op.Txn.group_index - UInt64(1)
-        # We don't need to assert prev_idx was a call to main — if it
-        # wasn't, step 2's selector dispatch will fail and the whole
-        # dance reverts, leaving main's program unchanged.
+        # Symmetric guard: assert the previous txn is an ApplicationCall
+        # to main. The stub on main asserts the next txn is THIS dispatch;
+        # this asserts the prev txn is a main stub. Together they enforce
+        # the [stub, dispatch] group shape on both sides.
+        assert op.GTxn.type_enum(prev_idx) == op.GTxn.type_enum(op.Txn.group_index), \
+            "uros: prev txn not appl"
+        assert op.GTxn.application_id(prev_idx).id == self.main_app_id, \
+            "uros: prev txn not main"
 
         # Programs are split into N <= 4 pages of 2048 B each (AVM hard
         # cap is 4 pages = 8 KB total, and each page must fit in a stack

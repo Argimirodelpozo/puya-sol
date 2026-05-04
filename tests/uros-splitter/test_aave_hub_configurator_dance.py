@@ -142,22 +142,31 @@ def test_aave_hub_configurator_dance():
     assert (OUT / "HubConfigurator" / "HubConfigurator.approval.bin").exists(), \
         "run tests/uros-splitter/build_aave.sh first"
 
-    # 1. Deploy HubConfigurator. Constructor takes (address authority);
-    #    we use sender.address so we know what to expect back from authority().
+    # 1. Deploy orchestrator FIRST (its app id has to be baked into main's
+    #    stub guards before main is deployed).
+    init_sel = _arc4_selector("init()void")
+    orch_id = _deploy_app(
+        "Orchestrator", "UrosOrchestrator", sender,
+        app_args=[init_sel],
+    )
+    _fund(_app_addr(orch_id), 100_000_000)
+
+    # 2. Recompile main with orch_id substituted into TMPL_UROS_ORCH_APP_ID.
+    import os, subprocess
+    subprocess.run(
+        [str(HERE / "build_aave.sh")],
+        env={**os.environ, "UROS_ORCH_APP_ID": str(orch_id)},
+        check=True,
+        capture_output=True,
+    )
+
+    # 3. Deploy HubConfigurator with the orch-id-baked-in bytecode.
     authority_bytes = encoding.decode_address(sender.address)
     main_id = _deploy_app(
         "HubConfigurator", "HubConfigurator", sender,
         app_args=[authority_bytes],
     )
     _fund(_app_addr(main_id), 5_000_000)
-
-    # 2. Deploy orchestrator.
-    init_sel = _arc4_selector("init()void")
-    orch_id = _deploy_app(
-        "Orchestrator", "UrosOrchestrator", sender,
-        app_args=[init_sel],
-    )
-    _fund(_app_addr(orch_id), 100_000_000)  # extra MBR for two big boxes
 
     # 3. Pin main's app id on the orchestrator.
     set_main_sel = _arc4_selector("set_main(uint64)void")
@@ -221,7 +230,9 @@ def test_aave_hub_configurator_dance():
     _stream_codebox(orch_id, sender, 0, main_bytes, main_id)
     _stream_codebox(orch_id, sender, 1, helper_bytes, main_id)
 
-    # 6. Direct call to main.authority() — should return zero address (stub).
+    # 6. NEGATIVE: direct call to main.authority() (no orch follow-up
+    # in the group) must revert — stub's guard rejects when next txn
+    # isn't orch.dispatch().
     auth_sel = _arc4_selector("authority()address")
     sp = _algod().suggested_params()
     txn = ApplicationCallTxn(
@@ -229,12 +240,15 @@ def test_aave_hub_configurator_dance():
         on_complete=OnComplete.NoOpOC,
         app_args=[auth_sel],
     )
-    txid = _algod().send_transaction(txn.sign(sender.private_key))
-    result = wait_for_confirmation(_algod(), txid, 4)
-    direct_auth = _decode_address_return(result.get("logs", []))
-    print(f"direct main.authority() = {direct_auth}")
-    zero_addr = encoding.encode_address(b"\x00" * 32)
-    assert direct_auth == zero_addr, f"expected stubbed zero address, got {direct_auth}"
+    try:
+        txid = _algod().send_transaction(txn.sign(sender.private_key))
+        wait_for_confirmation(_algod(), txid, 4)
+        assert False, "direct main.authority() should have reverted (guard didn't fire)"
+    except Exception as e:
+        msg = str(e)
+        assert "assert failed" in msg or "logic eval error" in msg, \
+            f"unexpected error from guard: {msg}"
+    print("direct main.authority() correctly rejected by guard")
 
     # 7. The dance: group [main.authority(), orch.dispatch()].
     dispatch_sel = _arc4_selector("dispatch()byte[]")

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <nlohmann/json.hpp>
 #include <set>
 #include <string>
@@ -19,7 +20,8 @@ public:
 		std::string const& _outputDir,
 		int _optimizationLevel = 1,
 		bool _outputIr = false,
-		std::set<std::string> const& _templateVarChildren = {}
+		std::set<std::string> const& _templateVarChildren = {},
+		std::map<std::string, int64_t> const& _intTemplateVars = {}
 	);
 
 	/// Write options.json for multiple contracts (split contract mode).
@@ -29,7 +31,8 @@ public:
 		std::string const& _outputDir,
 		int _optimizationLevel = 1,
 		bool _outputIr = false,
-		std::set<std::string> const& _templateVarChildren = {}
+		std::set<std::string> const& _templateVarChildren = {},
+		std::map<std::string, int64_t> const& _intTemplateVars = {}
 	);
 };
 

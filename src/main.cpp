@@ -155,6 +155,7 @@ struct Options
 	bool viaYulBehavior = false;
 	std::string evmVersion;     // empty = compiler default (cancun)
 	std::vector<std::string> urosSplit; // method names to split out via --uros-splitter
+	int64_t urosOrchAppId = 0; // orchestrator app id baked into stub guards
 };
 
 void printUsage(char const* _progName)
@@ -185,6 +186,11 @@ void printUsage(char const* _progName)
 		<< "                         is emitted alongside <Name>.approval.bin. Run-time swap\n"
 		<< "                         is performed by a separate orchestrator app (see\n"
 		<< "                         src/splitter/uros_orchestrator.py).\n"
+		<< "  --uros-orch-app-id <N> Substitute TMPL_UROS_ORCH_APP_ID with N at compile time.\n"
+		<< "                         Required for splitter stubs' next-txn-is-orch.dispatch()\n"
+		<< "                         guard to admit calls. Typically set on a SECOND compile\n"
+		<< "                         pass after the orchestrator is deployed and its app id\n"
+		<< "                         is known.\n"
 		<< "  --help                 Show this help message\n";
 }
 
@@ -232,6 +238,8 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.viaYulBehavior = true;
 		else if (arg == "--evm-version" && i + 1 < _argc)
 			opts.evmVersion = _argv[++i];
+		else if (arg == "--uros-orch-app-id" && i + 1 < _argc)
+			opts.urosOrchAppId = std::stoll(_argv[++i]);
 		else if (arg == "--uros-splitter" && i + 1 < _argc)
 		{
 			// Comma-separated method names. We split here (not in UrosSplitter)
@@ -672,14 +680,21 @@ int main(int _argc, char* _argv[])
 	// Write options.json (with template var declarations for child contracts)
 	auto const& childContracts = puyasol::builder::sol_ast::SolNewExpression::childContracts();
 	std::string optionsPath = (fs::path(opts.outputDir) / "options.json").string();
+	// When --uros-splitter is active, the stub bodies reference a
+	// TemplateVar(UROS_ORCH_APP_ID); declare it as an integer template
+	// var so puya doesn't reject the AWST. Default 0 acts as a placeholder
+	// — the deploy harness substitutes the real orchestrator app id.
+	std::map<std::string, int64_t> intTemplateVars;
+	if (!helperRoots.empty())
+		intTemplateVars["UROS_ORCH_APP_ID"] = opts.urosOrchAppId;
 	if (contractNames.size() <= 1)
 	{
 		std::string contractName = contractNames.empty() ? "" : contractNames[0];
-		puyasol::json::OptionsWriter::write(optionsPath, contractName, opts.outputDir, opts.optimizationLevel, opts.outputIr, childContracts);
+		puyasol::json::OptionsWriter::write(optionsPath, contractName, opts.outputDir, opts.optimizationLevel, opts.outputIr, childContracts, intTemplateVars);
 	}
 	else
 	{
-		puyasol::json::OptionsWriter::writeMultiple(optionsPath, contractNames, opts.outputDir, opts.optimizationLevel, opts.outputIr, childContracts);
+		puyasol::json::OptionsWriter::writeMultiple(optionsPath, contractNames, opts.outputDir, opts.optimizationLevel, opts.outputIr, childContracts, intTemplateVars);
 	}
 	logger.info("Wrote: " + optionsPath);
 
