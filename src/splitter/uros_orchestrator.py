@@ -157,41 +157,61 @@ class UrosOrchestrator(ARC4Contract):
         # wasn't, step 2's selector dispatch will fail and the whole
         # dance reverts, leaving main's program unchanged.
 
-        # Read codebox payloads. AVM stack values cap at 4096 B per single
-        # value; programs > 4 KB need to be split into chunks and submitted
-        # as a tuple to itxn.ApplicationCall.approval_program (puya
-        # serialises the tuple as concatenated approval pages). Programs
-        # ≤ 2048 B fit in a single op.Box.extract call.
+        # Programs are split into N <= 4 pages of 2048 B each (AVM hard
+        # cap is 4 pages = 8 KB total, and each page must fit in a stack
+        # value capped at 4096 B). The branches below cover all 4 page
+        # counts; itxn.ApplicationCall accepts a tuple of byte values
+        # for approval_program, which puya serialises as concatenated
+        # pages.
         main_box = Bytes(b"__codebox_0")
         helper_box = Bytes(b"__codebox_1")
         clear = Bytes(CLEAR_PROGRAM)
+        page = UInt64(2048)
 
-        # Step 1: install helper bytes on main. Branch on size — small
-        # programs use a single-extract single-page submit; large ones use
-        # the two-page path.
-        if self.helper_bytes_len <= UInt64(2048):
-            helper_full = op.Box.extract(
-                helper_box, UInt64(0), self.helper_bytes_len
-            )
+        # Step 1: install helper bytes on main.
+        helper_len = self.helper_bytes_len
+        if helper_len <= page:
+            h0 = op.Box.extract(helper_box, UInt64(0), helper_len)
             itxn.ApplicationCall(
                 app_id=self.main_app_id,
                 on_completion=OnCompleteAction.UpdateApplication,
-                approval_program=helper_full,
+                approval_program=h0,
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).submit()
+        elif helper_len <= page * UInt64(2):
+            h0 = op.Box.extract(helper_box, UInt64(0), page)
+            h1 = op.Box.extract(helper_box, page, helper_len - page)
+            itxn.ApplicationCall(
+                app_id=self.main_app_id,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=(h0, h1),
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).submit()
+        elif helper_len <= page * UInt64(3):
+            h0 = op.Box.extract(helper_box, UInt64(0), page)
+            h1 = op.Box.extract(helper_box, page, page)
+            h2 = op.Box.extract(helper_box, page * UInt64(2), helper_len - page * UInt64(2))
+            itxn.ApplicationCall(
+                app_id=self.main_app_id,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=(h0, h1, h2),
                 clear_state_program=clear,
                 app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
                 fee=0,
             ).submit()
         else:
-            helper_p0 = op.Box.extract(helper_box, UInt64(0), UInt64(2048))
-            helper_p1 = op.Box.extract(
-                helper_box,
-                UInt64(2048),
-                self.helper_bytes_len - UInt64(2048),
-            )
+            h0 = op.Box.extract(helper_box, UInt64(0), page)
+            h1 = op.Box.extract(helper_box, page, page)
+            h2 = op.Box.extract(helper_box, page * UInt64(2), page)
+            h3 = op.Box.extract(helper_box, page * UInt64(3), helper_len - page * UInt64(3))
             itxn.ApplicationCall(
                 app_id=self.main_app_id,
                 on_completion=OnCompleteAction.UpdateApplication,
-                approval_program=(helper_p0, helper_p1),
+                approval_program=(h0, h1, h2, h3),
                 clear_state_program=clear,
                 app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
                 fee=0,
@@ -257,31 +277,50 @@ class UrosOrchestrator(ARC4Contract):
 
         ret = call_res.last_log
 
-        # Step 3: restore main bytes. Same single-vs-multi-page branching
-        # as step 1.
-        if self.main_bytes_len <= UInt64(2048):
-            main_full = op.Box.extract(
-                main_box, UInt64(0), self.main_bytes_len
-            )
+        # Step 3: restore main bytes. Same 4-page branching as step 1.
+        main_len = self.main_bytes_len
+        if main_len <= page:
+            m0 = op.Box.extract(main_box, UInt64(0), main_len)
             itxn.ApplicationCall(
                 app_id=self.main_app_id,
                 on_completion=OnCompleteAction.UpdateApplication,
-                approval_program=main_full,
+                approval_program=m0,
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).submit()
+        elif main_len <= page * UInt64(2):
+            m0 = op.Box.extract(main_box, UInt64(0), page)
+            m1 = op.Box.extract(main_box, page, main_len - page)
+            itxn.ApplicationCall(
+                app_id=self.main_app_id,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=(m0, m1),
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).submit()
+        elif main_len <= page * UInt64(3):
+            m0 = op.Box.extract(main_box, UInt64(0), page)
+            m1 = op.Box.extract(main_box, page, page)
+            m2 = op.Box.extract(main_box, page * UInt64(2), main_len - page * UInt64(2))
+            itxn.ApplicationCall(
+                app_id=self.main_app_id,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=(m0, m1, m2),
                 clear_state_program=clear,
                 app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
                 fee=0,
             ).submit()
         else:
-            main_p0 = op.Box.extract(main_box, UInt64(0), UInt64(2048))
-            main_p1 = op.Box.extract(
-                main_box,
-                UInt64(2048),
-                self.main_bytes_len - UInt64(2048),
-            )
+            m0 = op.Box.extract(main_box, UInt64(0), page)
+            m1 = op.Box.extract(main_box, page, page)
+            m2 = op.Box.extract(main_box, page * UInt64(2), page)
+            m3 = op.Box.extract(main_box, page * UInt64(3), main_len - page * UInt64(3))
             itxn.ApplicationCall(
                 app_id=self.main_app_id,
                 on_completion=OnCompleteAction.UpdateApplication,
-                approval_program=(main_p0, main_p1),
+                approval_program=(m0, m1, m2, m3),
                 clear_state_program=clear,
                 app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
                 fee=0,
