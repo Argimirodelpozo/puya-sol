@@ -677,6 +677,18 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 	auto const* ident = dynamic_cast<Identifier const*>(&_baseExpr);
 	std::string arrayVarName = ident->name();
 
+	// Mapping-element arrays — `mapping(K=>V)[] a` and friends — store no
+	// element bytes inline. Each `a[i][k]` is its own box derived from
+	// `a`, `i`, and `sha256(k)` (handled in SolIndexAccess). The array
+	// box itself only tracks length: 2-byte big-endian header, no
+	// element tail. This is also what gives us EVM's "delete leaves
+	// data at hash" semantic for free — `delete a; a.push();` reuses the
+	// same `(i, k)` box keys, and the previously-written values persist
+	// because we never touched those boxes.
+	bool elemIsMapping = dynamic_cast<MappingType const*>(solArrType->baseType()) != nullptr;
+	if (elemIsMapping && (_memberName == "push" || _memberName == "pop"))
+		return handleMappingElementArrayLengthOp(_memberName, _varDecl, arrayVarName);
+
 	// Build BoxValueExpression
 	auto boxKey = awst::makeUtf8BytesConstant(arrayVarName, m_loc, awst::WType::boxKeyType());
 
@@ -882,6 +894,86 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMemoryArray(
 		e->base = std::move(base);
 		return e;
 	}
+
+	auto vc = std::make_shared<awst::VoidConstant>();
+	vc->sourceLocation = m_loc;
+	vc->wtype = awst::WType::voidType();
+	return vc;
+}
+
+std::shared_ptr<awst::Expression> SolArrayMethod::handleMappingElementArrayLengthOp(
+	std::string const& _memberName,
+	solidity::frontend::VariableDeclaration const& /*_varDecl*/,
+	std::string const& _arrayVarName)
+{
+	// Box layout: 2-byte big-endian length, no element data.
+	// Read current length:  box_get → bytes; if empty (deleted/not-yet-created)
+	//                       len=0; else extract_uint16(0).
+	// Write new length:     itob(new_len) → 8 bytes → extract last 2 → box_put.
+
+	auto boxKey = awst::makeUtf8BytesConstant(
+		_arrayVarName, m_loc, awst::WType::boxKeyType());
+
+	// Read box bytes (or empty if missing).
+	auto boxRead = [&]() -> std::shared_ptr<awst::Expression> {
+		auto box = std::make_shared<awst::BoxValueExpression>();
+		box->sourceLocation = m_loc;
+		box->wtype = awst::WType::bytesType();
+		box->key = boxKey;
+		auto sg = std::make_shared<awst::StateGet>();
+		sg->sourceLocation = m_loc;
+		sg->wtype = awst::WType::bytesType();
+		sg->field = box;
+		sg->defaultValue = awst::makeBytesConstant({}, m_loc);
+		return sg;
+	};
+
+	// uint64 currentLen = (box_bytes.length() >= 2) ? extract_uint16(box, 0) : 0
+	// We just call extract_uint16 if length>=2; the only time length<2 is
+	// after a fresh `delete a` or never-written. Since we always write at
+	// least 2 bytes when the box exists, "exists implies len>=2" — guard
+	// with a `len(box) > 0` ternary to avoid extract_uint16 on an empty.
+	auto bytes = boxRead();
+	auto lenOfBytes = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), m_loc);
+	lenOfBytes->stackArgs.push_back(bytes);
+	auto isNonEmpty = awst::makeNumericCompare(
+		std::move(lenOfBytes),
+		awst::NumericComparison::Gt,
+		awst::makeIntegerConstant("0", m_loc),
+		m_loc);
+	auto extractLen = awst::makeIntrinsicCall("extract_uint16", awst::WType::uint64Type(), m_loc);
+	extractLen->stackArgs.push_back(boxRead());
+	extractLen->stackArgs.push_back(awst::makeIntegerConstant("0", m_loc));
+	auto cur = std::make_shared<awst::ConditionalExpression>();
+	cur->sourceLocation = m_loc;
+	cur->wtype = awst::WType::uint64Type();
+	cur->condition = std::move(isNonEmpty);
+	cur->trueExpr = std::move(extractLen);
+	cur->falseExpr = awst::makeIntegerConstant("0", m_loc);
+
+	// new_len = cur ± 1
+	auto delta = awst::makeIntegerConstant("1", m_loc);
+	auto newLen = awst::makeUInt64BinOp(
+		std::move(cur),
+		_memberName == "push" ? awst::UInt64BinaryOperator::Add
+							  : awst::UInt64BinaryOperator::Sub,
+		std::move(delta), m_loc);
+
+	// 2-byte big-endian = extract3(itob(new_len), 6, 2)
+	auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
+	itob->stackArgs.push_back(std::move(newLen));
+	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
+	extract->stackArgs.push_back(std::move(itob));
+	extract->stackArgs.push_back(awst::makeIntegerConstant("6", m_loc));
+	extract->stackArgs.push_back(awst::makeIntegerConstant("2", m_loc));
+
+	// box_put(arrayVarName, len_bytes)
+	auto put = awst::makeIntrinsicCall("box_put", awst::WType::voidType(), m_loc);
+	put->stackArgs.push_back(boxKey);
+	put->stackArgs.push_back(std::move(extract));
+
+	auto stmt = awst::makeExpressionStatement(std::move(put), m_loc);
+	m_ctx.pendingStatements.push_back(std::move(stmt));
 
 	auto vc = std::make_shared<awst::VoidConstant>();
 	vc->sourceLocation = m_loc;

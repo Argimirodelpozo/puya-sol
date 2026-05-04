@@ -31,6 +31,15 @@ private:
 		std::string const& _memberName,
 		solidity::frontend::MemberAccess const& _fieldAccess,
 		solidity::frontend::VariableDeclaration const& _structVar);
+
+	/// Length-only push/pop for arrays whose element type is a mapping
+	/// (`mapping(K=>V)[] a`). The box only stores a 2-byte length header;
+	/// each `a[i][k]` lives in its own derived box, persisting across
+	/// `delete a` (matching EVM's "delete leaves data at hash" semantic).
+	std::shared_ptr<awst::Expression> handleMappingElementArrayLengthOp(
+		std::string const& _memberName,
+		solidity::frontend::VariableDeclaration const& _varDecl,
+		std::string const& _arrayVarName);
 };
 
 } // namespace puyasol::builder::sol_ast
