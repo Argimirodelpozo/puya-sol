@@ -100,17 +100,16 @@ def _deploy_app(
 
 
 def _stream_codebox(orch_id: int, sender: SigningAccount, which: int, data: bytes, main_id: int):
-    """Write `data` to orch's __codebox_<which> box in chunks. AVM
-    charges READ budget against box size for box_replace (validates
-    offset+len fits). For a 5+ KB box that exceeds the per-txn
-    2048-byte read budget. We pool the budget by grouping each write
-    with 3 pad app-calls that also reference the box → 4×2048 = 8192
-    read budget per group, plus 4×4096 = 16384 write budget."""
+    """Write `data` to orch's __codebox_<which> box in chunks. Each
+    box ref in a txn's `boxes` list contributes 1024 read + 1024 write
+    budget; max 8 refs/txn. We fill write_txn's box list with the
+    real box plus 7 empty refs to get 8×1024 = 8192 read/write budget
+    on a single txn — enough for a 5+ KB box modify."""
     write_sel = _arc4_selector("write_codebox(uint64,uint64,byte[])void")
-    pad_sel = _arc4_selector("pad(uint64)void")
     box_name = f"__codebox_{which}".encode()
     chunk_size = 1024
-    counter = 0
+    EMPTY = (0, b"")
+    box_refs = [(orch_id, box_name)] + [EMPTY] * 7
     for offset in range(0, len(data), chunk_size):
         chunk = data[offset:offset + chunk_size]
         sp = _algod().suggested_params()
@@ -123,30 +122,9 @@ def _stream_codebox(orch_id: int, sender: SigningAccount, which: int, data: byte
             index=orch_id,
             on_complete=OnComplete.NoOpOC,
             app_args=[write_sel, which_b, off_b, data_b],
-            boxes=[(orch_id, box_name)],
+            boxes=box_refs,
         )
-        # Pad with `pad` no-op calls that DO execute a 1-byte box
-        # extract; this makes the AVM count their box-budget allocation
-        # toward the group pool. set_main wouldn't have worked because
-        # the AVM seems to only count budget from txns that actually
-        # execute box ops.
-        # Pool with 7 pads (group max = 16, but per-write only 1 chunk
-        # so 8 total = 8×2048 = 16384 read budget; covers 5743-byte box).
-        pad_txns = [
-            ApplicationCallTxn(
-                sender=sender.address, sp=sp, index=orch_id,
-                on_complete=OnComplete.NoOpOC,
-                app_args=[pad_sel, which_b],
-                boxes=[(orch_id, box_name)],
-                note=f"pad_{which}_{counter}_{j}".encode(),
-            )
-            for j in range(7)
-        ]
-        counter += 1
-        group = [write_txn, *pad_txns]
-        assign_group_id(group)
-        signed = [t.sign(sender.private_key) for t in group]
-        txid = _algod().send_transactions(signed)
+        txid = _algod().send_transaction(write_txn.sign(sender.private_key))
         wait_for_confirmation(_algod(), txid, 4)
 
 
@@ -204,6 +182,14 @@ def test_aave_hub_configurator_dance():
     setup_sel = _arc4_selector("setup_boxes(uint64,uint64)void")
     sp = _algod().suggested_params()
     sp.fee = sp.min_fee * 4
+    # AVM box IO budget: 1024 read + 1024 write PER BOX REFERENCE in a
+    # txn's `boxes` list (max 8 refs/txn). To pool enough budget for two
+    # 5+ KB boxes, fill setup_txn AND every pad with 8 box refs each.
+    # Empty references (app_id=0, name=b"") contribute budget without
+    # naming a real box, exactly the "budget carrier" pattern.
+    BOX0 = (orch_id, b"__codebox_0")
+    BOX1 = (orch_id, b"__codebox_1")
+    EMPTY = (0, b"")
     setup_txn = ApplicationCallTxn(
         sender=sender.address, sp=sp, index=orch_id,
         on_complete=OnComplete.NoOpOC,
@@ -212,31 +198,15 @@ def test_aave_hub_configurator_dance():
             len(main_bytes).to_bytes(8, "big"),
             len(helper_bytes).to_bytes(8, "big"),
         ],
-        boxes=[(orch_id, b"__codebox_0"), (orch_id, b"__codebox_1")],
+        boxes=[BOX0, BOX1, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
     )
-    # Box write budget pools across ApplicationCall txns in the same
-    # group that reference the SAME app AND execute a box op. set_main
-    # doesn't touch boxes, so it doesn't contribute. setup_boxes runs
-    # FIRST in the group (creates the boxes), so we pad with a fresh
-    # box_create no-op... but those would conflict. Easier: just bundle
-    # 3 setup_boxes calls (idempotent: AVM rejects duplicate creates,
-    # so 1st creates and the 2nd-4th will fail). Better: pre-create
-    # smaller boxes, then resize. Or: use try/catch in the contract.
-    # Pragmatic: just use the box_extract no-op `pad` after setup,
-    # and trust that setup_boxes' write budget alone is enough since
-    # box_create is the heaviest op here (it consumes 1 unit/byte).
-    # Empirically the budget spec is per-call, so pad with 3 set_main
-    # calls just to consume slots in the group; if setup_boxes alone
-    # has 4096 budget and we need 5743+5743 = 11486, we DO need pooling.
-    # Use the new `pad` method that touches both boxes; its 1-byte
-    # extract contributes to write budget too.
     pad_sel = _arc4_selector("pad(uint64)void")
     pad_txns = [
         ApplicationCallTxn(
             sender=sender.address, sp=sp, index=orch_id,
             on_complete=OnComplete.NoOpOC,
             app_args=[pad_sel, (i % 2).to_bytes(8, "big")],
-            boxes=[(orch_id, b"__codebox_0"), (orch_id, b"__codebox_1")],
+            boxes=[BOX0, BOX1, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
             note=f"setup_pad_{i}".encode(),
         )
         for i in range(7)
@@ -275,28 +245,49 @@ def test_aave_hub_configurator_dance():
         on_complete=OnComplete.NoOpOC,
         app_args=[auth_sel],
     )
+    # MaxAppTotalTxnReferences = 8 across {accounts, foreign_apps,
+    # foreign_assets, boxes}. With foreign_apps=[main_id] we have 7
+    # slots left for boxes. Use 2 real + 5 empty = 7 box refs, giving
+    # 7×1024 = 7168 read budget on dispatch's own txn. dispatch needs
+    # to read ~5743 B from each box; 7168 covers one. Pair with a pad
+    # txn to pool the other box's read budget.
+    EMPTY = (0, b"")
+    BOX0 = (orch_id, b"__codebox_0")
+    BOX1 = (orch_id, b"__codebox_1")
     txn2 = ApplicationCallTxn(
         sender=sender.address, sp=sp, index=orch_id,
         on_complete=OnComplete.NoOpOC,
         app_args=[dispatch_sel],
         foreign_apps=[main_id],
-        boxes=[(orch_id, b"__codebox_0"), (orch_id, b"__codebox_1")],
+        boxes=[BOX0, BOX1, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
     )
     assign_group_id([txn1, txn2])
     s1 = txn1.sign(sender.private_key)
     s2 = txn2.sign(sender.private_key)
     txid = _algod().send_transactions([s1, s2])
-    result = wait_for_confirmation(_algod(), txid, 4)
+    wait_for_confirmation(_algod(), txid, 4)
+    # The result we actually want is txn2's (the orch dispatch). Fetch
+    # by txn2's id.
+    txn2_id = txn2.get_txid()
+    result = _algod().pending_transaction_info(txn2_id)
 
     # 8. dispatch() returns the inner call's last_log: the ABI-encoded
     #    address from helper's authority(). orch's own ABI return wraps
     #    its byte[] return in an outer 151f7c75 prefix + length-prefixed
     #    bytes, so we have to peel two layers.
+    # Sanity-check the inner-txn structure: 3 inner txns with helper's
+    # authority() log on the middle one (itxn 1: install helper; itxn 2:
+    # call helper.authority(); itxn 3: restore main).
+    inner_txns = result.get("inner-txns", [])
+    assert len(inner_txns) == 3, f"expected 3 inner txns, got {len(inner_txns)}"
+    inner_2_logs = inner_txns[1].get("logs", [])
+    assert len(inner_2_logs) == 1, f"itxn 2 should have 1 log, got {len(inner_2_logs)}"
+
     orch_logs = result.get("logs", [])
     assert orch_logs, "no return log from orch.dispatch()"
     raw = base64.b64decode(orch_logs[0])
     assert raw[:4] == bytes.fromhex("151f7c75"), f"bad outer ABI prefix: {raw[:4].hex()}"
-    # ARC4 dynamic byte[]: 2-byte length + bytes
+    # ARC4 dynamic byte[]: 2-byte length + bytes (itxn 2's last_log)
     inner_len = int.from_bytes(raw[4:6], "big")
     inner_log = raw[6:6 + inner_len]
     # inner_log is helper.authority()'s log, also ABI-prefixed
