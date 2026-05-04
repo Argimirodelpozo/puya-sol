@@ -554,23 +554,59 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	// write the modified struct back to their storage.
 	if (!storageParamIndices.empty())
 	{
+		// sub->returnType is either:
+		//   - a WTuple (multi-element augmented return), OR
+		//   - a bare type (void function + exactly 1 storage arg → bare
+		//     storageArgType; one return param + zero storage args isn't
+		//     reachable here because we only enter this branch when
+		//     storageParamIndices is non-empty; one return + zero storage
+		//     args is the void+1 case).
+		// Wrapping a single value in a TupleExpression with the bare
+		// element type as wtype produces invalid AWST (puya rejects
+		// `TupleExpression.wtype` non-WTuple). Branch on shape.
+		bool returnIsTuple =
+			(dynamic_cast<awst::WTuple const*>(sub->returnType) != nullptr);
+
 		std::function<void(awst::Block&)> augmentReturns;
 		augmentReturns = [&](awst::Block& block) {
 			for (auto& stmt: block.body)
 			{
 				if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
 				{
-					auto tuple = std::make_shared<awst::TupleExpression>();
-					tuple->sourceLocation = ret->sourceLocation;
-					tuple->wtype = sub->returnType;
-					if (ret->value)
-						tuple->items.push_back(ret->value);
-					for (size_t idx: storageParamIndices)
+					if (!returnIsTuple)
 					{
-						auto pv = awst::makeVarExpression(sub->args[idx].name, sub->args[idx].wtype, ret->sourceLocation);
-						tuple->items.push_back(std::move(pv));
+						// sub->returnType is a bare type. There must be exactly
+						// one source: either ret->value (if author wrote
+						// `return val;`) OR the single storage arg (if author
+						// wrote bare `return;`). User-written `return val;` in
+						// a void+storage-augmented function isn't valid Solidity,
+						// so we only handle the bare-return case.
+						if (!ret->value && storageParamIndices.size() == 1)
+						{
+							size_t idx = storageParamIndices[0];
+							ret->value = awst::makeVarExpression(
+								sub->args[idx].name, sub->args[idx].wtype,
+								ret->sourceLocation);
+						}
+						// else: leave ret->value as-is; the type-check at the
+						// puya boundary will report the actual mismatch.
 					}
-					ret->value = std::move(tuple);
+					else
+					{
+						auto tuple = std::make_shared<awst::TupleExpression>();
+						tuple->sourceLocation = ret->sourceLocation;
+						tuple->wtype = sub->returnType;
+						if (ret->value)
+							tuple->items.push_back(ret->value);
+						for (size_t idx: storageParamIndices)
+						{
+							auto pv = awst::makeVarExpression(
+								sub->args[idx].name, sub->args[idx].wtype,
+								ret->sourceLocation);
+							tuple->items.push_back(std::move(pv));
+						}
+						ret->value = std::move(tuple);
+					}
 				}
 				if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
 				{

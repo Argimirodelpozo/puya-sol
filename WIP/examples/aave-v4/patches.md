@@ -64,35 +64,20 @@ is observable to integrators that intentionally relied on swallowing.
 | `TokenizationSpokeInstance` | ✅ | 7.4 KB | same fix |
 | `HubConfigurator` | ✅ | 5.7 KB | already passing (also splitter dance demo target) |
 | `SpokeConfigurator` | ✅ | 5.0 KB | already passing |
-| `SpokeInstance` | ❌ | — | hit a puya-side bug after my multi-storage-arg fix landed: `IndexError` in puya's intrinsic simplifier (opt-1) and `'h' format` overflow (opt-0). Needs upstream puya investigation. |
-| `Hub` | ❌ | — | `TupleExpression.wtype` emits `ARC4Struct` (the `Asset` struct from AssetLogic) where puya expects `WTuple` |
+| `SpokeInstance` | ✅ | 22.8 KB | unblocked by puya-side patch (see `../../../puyabug.md`); needs `--uros-splitter` to deploy |
+| `Hub` | ✅ | 20.0 KB | unblocked by [AWSTBuilder.cpp augmentReturns shape fix](../../../src/builder/AWSTBuilder.cpp); needs `--uros-splitter` to deploy |
 | `ERC1967Proxy` | ❌ | — | EVM proxy pattern: delegatecall semantics; should be replaced with native UpdateApplication |
 
 ## Remaining work to ship full AAVE V4
 
-1. **`SpokeInstance` puya backend bugs** (upstream puya). Two
-   distinct crashes:
-   - Optimizer: `IndexError: list index out of range` at
-     `intrinsic_simplification.py:601` (`binary_array[index]`).
-   - With `--optimization-level 0`: `error: 'h' format requires
-     -32768 <= number <= 32767` — somewhere a 16-bit struct.pack is
-     receiving a too-large integer.
-   These are upstream puya bugs, not puya-sol. The compile path
-   through puya-sol is now clean for SpokeInstance.
+1. **Deploy-size for several contracts** — use `--uros-splitter` to
+   fit under the 8 KB AVM cap:
+   - `SpokeInstance`              22.8 KB
+   - `Hub`                        20.0 KB
+   - `AccessManagerEnumerable`     9.0 KB
+   Splitter dance verified end-to-end on `HubConfigurator`.
 
-2. **TupleExpression with struct value** (puya-sol bug, blocks
-   `Hub`). `TupleExpression.wtype` is required to be `WTuple` by
-   puya, but puya-sol emits the struct's `ARC4Struct` wtype directly
-   when a function returns a struct via a tuple destructure. Fix is
-   at the call site building the `TupleExpression` — wrap the struct
-   in a `WTuple([struct])` or emit a `NewStruct` instead.
-
-3. **Deploy-size for Hub (16 KB) and SpokeInstance (17 KB)**: use
-   `--uros-splitter` once compile-side fixes land. Verified
-   end-to-end on `HubConfigurator`. Also `AccessManagerEnumerable` at
-   9 KB needs the splitter.
-
-4. **`ERC1967Proxy`**: AVM has no equivalent of `delegatecall` or
+2. **`ERC1967Proxy`**: AVM has no equivalent of `delegatecall` or
    in-place bytecode replacement during a single txn. Acceptable
    path: drop the proxy pattern entirely for AAVE V4 deployments on
    Algorand, since AVM's UpdateApplication serves the same upgrade
@@ -100,6 +85,6 @@ is observable to integrators that intentionally relied on swallowing.
 
 ## Tally
 
-10 of 13 deployable contracts now compile (was 5 before this session).
-All abstract bases compile too. Remaining 3 fail upstream (`Hub`,
-`SpokeInstance`) or by design (`ERC1967Proxy`).
+12 of 13 deployable contracts now compile (was 5 before this
+session). All abstract bases compile too. Only remaining failure
+is `ERC1967Proxy` — out of scope by design.
