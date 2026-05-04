@@ -135,27 +135,13 @@ class UrosOrchestrator(ARC4Contract):
         else:
             op.Box.replace(Bytes(b"__codebox_1"), offset, data)
 
-    @arc4.abimethod
-    def pad(self, which: UInt64) -> None:
-        """No-op padding method that touches __codebox_<which>. Used by
-        deploy harnesses to pool box read/write budget across a group
-        of app-calls — each ApplicationCall txn that references a box
-        and EXECUTES a box op contributes its 2048/4096 budgets to the
-        group pool. We do a 1-byte box_extract here so the budget is
-        actually contributed."""
-        if which == UInt64(0):
-            _byte = op.Box.extract(Bytes(b"__codebox_0"), UInt64(0), UInt64(1))
-        else:
-            _byte = op.Box.extract(Bytes(b"__codebox_1"), UInt64(0), UInt64(1))
-        assert _byte.length == UInt64(1)
-
-    @arc4.abimethod(allow_actions=("UpdateApplication",))
-    def __delegate_update(self) -> None:
-        """No-op admit branch for the orchestrator's own approval-program
-        swaps. The dance below uses this selector to mark a swap as
-        coming from the orchestrator. Mirror lives on main too — main's
-        __delegate_update accepts the swap iff txn.Sender is this
-        orchestrator's address."""
+    # NOTE: there is intentionally NO __delegate_update on the orch.
+    # The dance only ever UpdateApplications `main` (steps 1 and 3,
+    # never the orch). The splitter already adds __delegate_update to
+    # both main and helper — main admits step 1's swap-in, helper
+    # admits step 3's restore (which fires while main's program IS
+    # the helper). The orch never has its own program updated as
+    # part of the dance, so it doesn't need an admit branch.
 
     @arc4.abimethod
     def dispatch(self) -> Bytes:
