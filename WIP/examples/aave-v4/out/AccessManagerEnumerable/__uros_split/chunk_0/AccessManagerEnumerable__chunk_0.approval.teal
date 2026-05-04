@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.approval_program() -> uint64:
 main:
     intcblock 0 1 32 8 4294967295 281474976710655 18446744073709551615 TMPL_UROS_ORCH_APP_ID
-    bytecblock 0x151f7c75 0x 0x151f7c750000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x00020004000600000000 0x00000000000000000000 0x01 0xffffffffffffffffffffffffffffffffffffffff "_schedules" "_executionId" "_positions" "_roles" 0x00200000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000 "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000 "_targets" "_roleMemberSet" "_roleToTargetSet" "_roleToTargetToSelectorSet" 0x151f7c750000000000000000000000000000000000000000000000000000000000000000 "_adminRolesSet" 0x001100000000000000000000000000000000 0x0000 "_rolesSet" 0x04 0x0000000000000000000000000000000000000000000000000000000100000000 0x0000000000000000000000000000000000000000000000010000000000000000 "_roleAdminToRoleSet" "_targetToSelectorToRole" 0x0020 0x000000000000 "members"
+    bytecblock 0x151f7c75 0x 0x00020004000600000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c750000000000000000 0x01 0xffffffffffffffffffffffffffffffffffffffff 0x00000000000000000000 "_rolesSet" "_schedules" "_roleMemberSet" "_roleToTargetSet" "_executionId" 0x0000000000000000000000000000000000000000000000000000000000000000 "_positions" 0x0000 "_roles" 0x00200000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000 "__ctor_pending" "_targets" "_roleToTargetToSelectorSet" "_adminRolesSet" 0x001100000000000000000000000000000000 0x04 0x0000000000000000000000000000000000000000000000000000000100000000 0x0000000000000000000000000000000000000000000000010000000000000000 "_roleAdminToRoleSet" "_targetToSelectorToRole" 0x0020 0x000000000000 "members"
     pushint 4096
     bzero
     dup
@@ -16,7 +16,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 14 // "__ctor_pending"
+    bytec 19 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -225,7 +225,7 @@ EnumerableSet._add:
     itob
     frame_dig -1
     sha256
-    bytec 10 // "_positions"
+    bytec 14 // "_positions"
     swap
     concat
     dup
@@ -252,7 +252,7 @@ EnumerableSet._remove:
     dup
     frame_dig -1
     sha256
-    bytec 10 // "_positions"
+    bytec 14 // "_positions"
     swap
     concat
     dup
@@ -266,12 +266,12 @@ EnumerableSet._remove:
     bz EnumerableSet._remove_else_body@8
     frame_dig 6
     dup
-    bytec 6 // 0x01
+    bytec 5 // 0x01
     b>=
     assert // underflow
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec 6 // 0x01
+    bytec 5 // 0x01
     b-
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -296,12 +296,12 @@ EnumerableSet._remove:
     extract_uint16 // on error: invalid array length header
     itob
     dup
-    bytec 6 // 0x01
+    bytec 5 // 0x01
     b>=
     assert // underflow
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec 6 // 0x01
+    bytec 5 // 0x01
     b-
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -377,7 +377,7 @@ EnumerableSet._remove:
     replace2 2
     frame_bury -2
     sha256
-    bytec 10 // "_positions"
+    bytec 14 // "_positions"
     swap
     concat
     dup
@@ -460,7 +460,7 @@ EnumerableSet._contains:
     proto 2 2
     frame_dig -1
     sha256
-    bytec 10 // "_positions"
+    bytec 14 // "_positions"
     swap
     concat
     box_get
@@ -489,6 +489,139 @@ EnumerableSet._length:
     extract_uint16 // on error: invalid array length header
     itob
     frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet._at(set: bytes, index: bytes) -> bytes, bytes:
+EnumerableSet._at:
+    proto 2 2
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    frame_dig -2
+    intc_0 // 0
+    extract_uint16
+    frame_dig -2
+    pushint 2
+    extract_uint16
+    frame_dig -2
+    cover 2
+    substring3
+    extract 2 0
+    swap
+    intc_2 // 32
+    *
+    intc_2 // 32
+    extract3 // on error: index access is out of bounds
+    frame_dig -2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet._values(3)(set: bytes, start: bytes, end: bytes) -> bytes, bytes:
+EnumerableSet._values:
+    proto 3 2
+    intc_0 // 0
+    dup
+    frame_dig -3
+    callsub EnumerableSet._length
+    frame_bury -3
+    frame_dig -1
+    swap
+    callsub Math.min
+    frame_bury -1
+    frame_dig -2
+    frame_dig -1
+    callsub Math.min
+    frame_bury -2
+    frame_dig -1
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig -2
+    b-
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    intc_0 // 0
+    itob
+    bytec 15 // 0x0000
+    intc_0 // 0
+
+EnumerableSet._values_while_top@3:
+    intc_3 // 8
+    bzero
+    dup
+    frame_bury 1
+    frame_dig 2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    frame_dig 5
+    >
+    bz EnumerableSet._values_after_while@5
+    frame_dig 4
+    dup
+    intc_0 // 0
+    extract_uint16
+    intc_1 // 1
+    +
+    itob
+    extract 6 0
+    replace2 0
+    bytec 13 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat
+    frame_bury 4
+    frame_dig 5
+    intc_1 // 1
+    +
+    frame_bury 5
+    b EnumerableSet._values_while_top@3
+
+EnumerableSet._values_after_while@5:
+    frame_dig 4
+    frame_bury 0
+
+EnumerableSet._values_while_top@6:
+    frame_dig 3
+    frame_dig 2
+    b<
+    bz EnumerableSet._values_after_while@8
+    frame_dig 1
+    frame_dig 3
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc_2 // 32
+    *
+    pushint 2
+    +
+    frame_dig 0
+    swap
+    bytec 13 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace3 // on error: index access is out of bounds
+    frame_bury 0
+    bytec 5 // 0x01
+    b+
+    frame_bury 3
+    b EnumerableSet._values_while_top@6
+
+EnumerableSet._values_after_while@8:
+    frame_dig 0
+    frame_dig -3
+    frame_bury 1
+    frame_bury 0
     retsub
 
 
@@ -561,9 +694,9 @@ EnumerableSet.length:
     intc_2 // 32
     bzero
     frame_dig -1
-    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffff
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffff
     b&
-    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffff
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffff
     b&
     concat
     dup
@@ -593,9 +726,9 @@ EnumerableSet.length:
     intc_2 // 32
     bzero
     frame_dig -1
-    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffff
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffff
     b&
-    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffff
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffff
     b&
     concat
     dup
@@ -608,6 +741,84 @@ EnumerableSet.length:
     pop
     frame_dig -2
     dup
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet.length(1)_1(set: bytes) -> bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet.length(1)_1:
+    proto 1 2
+    frame_dig -1
+    intc_0 // 0
+    extract_uint16
+    frame_dig -1
+    len
+    frame_dig -1
+    cover 2
+    substring3
+    callsub EnumerableSet._length
+    pop
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet.at(2)_1(set: bytes, index: bytes) -> bytes, bytes:
+EnumerableSet.at:
+    proto 2 2
+    intc_2 // 32
+    bzero
+    frame_dig -2
+    intc_0 // 0
+    extract_uint16
+    frame_dig -2
+    len
+    frame_dig -2
+    cover 2
+    substring3
+    dup
+    frame_dig -1
+    callsub EnumerableSet._at
+    pop
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffff
+    b&
+    dig 2
+    swap
+    concat
+    swap
+    frame_dig -1
+    callsub EnumerableSet._at
+    pop
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffff
+    b&
+    uncover 2
+    swap
+    concat
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    frame_dig -2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet.values(3)_1(set: bytes, start: bytes, end: bytes) -> bytes, bytes:
+EnumerableSet.values:
+    proto 3 2
+    frame_dig -3
+    intc_0 // 0
+    extract_uint16
+    frame_dig -3
+    len
+    frame_dig -3
+    cover 2
+    substring3
+    frame_dig -2
+    frame_dig -1
+    callsub EnumerableSet._values
+    pop
+    load 0
+    store 0
+    frame_dig -3
     retsub
 
 
@@ -636,6 +847,62 @@ EnumerableSet.length:
     pop
     frame_dig -2
     dup
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet.length(1)_2(set: bytes) -> bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet.length(1)_2:
+    proto 1 2
+    frame_dig -1
+    intc_0 // 0
+    extract_uint16
+    frame_dig -1
+    len
+    frame_dig -1
+    cover 2
+    substring3
+    callsub EnumerableSet._length
+    pop
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet.at(2)_2(set: bytes, index: bytes) -> bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet.at(2)_2:
+    proto 2 2
+    frame_dig -2
+    intc_0 // 0
+    extract_uint16
+    frame_dig -2
+    len
+    frame_dig -2
+    cover 2
+    substring3
+    frame_dig -1
+    callsub EnumerableSet._at
+    pop
+    frame_dig -2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet.values(3)_2(set: bytes, start: bytes, end: bytes) -> bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet.values(3)_2:
+    proto 3 2
+    frame_dig -3
+    intc_0 // 0
+    extract_uint16
+    frame_dig -3
+    len
+    frame_dig -3
+    cover 2
+    substring3
+    frame_dig -2
+    frame_dig -1
+    callsub EnumerableSet._values
+    pop
+    load 0
+    store 0
+    frame_dig -3
     retsub
 
 
@@ -748,7 +1015,7 @@ LowLevelCall.returnData:
     bzero
     uncover 3
     uncover 2
-    bytec 15 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 13 // 0x0000000000000000000000000000000000000000000000000000000000000000
     replace3
     dig 2
     pushbytes 0x20
@@ -802,6 +1069,18 @@ Math.max:
     retsub
 
 
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.Math.min(a: bytes, b: bytes) -> bytes:
+Math.min:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b<
+    frame_dig -2
+    frame_dig -1
+    callsub Math.ternary
+    retsub
+
+
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.SafeCast.toUint48(value: bytes) -> uint64:
 SafeCast.toUint48:
     proto 1 1
@@ -832,7 +1111,7 @@ SafeCast.toUint:
     !
     !
     bytec_1 // 0x
-    bytec 6 // 0x01
+    bytec 5 // 0x01
     uncover 2
     select
     swap
@@ -996,7 +1275,7 @@ Time.unpack:
     intc 4 // 4294967295
     &
     frame_dig -1
-    bytec 26 // 0x0000000000000000000000000000000000000000000000000000000100000000
+    bytec 25 // 0x0000000000000000000000000000000000000000000000000000000100000000
     b/
     dig 2
     swap
@@ -1009,7 +1288,7 @@ Time.unpack:
     intc 4 // 4294967295
     &
     frame_dig -1
-    bytec 27 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    bytec 26 // 0x0000000000000000000000000000000000000000000000010000000000000000
     b/
     uncover 3
     swap
@@ -1031,13 +1310,13 @@ Time.pack:
     proto 3 1
     frame_dig -1
     itob
-    bytec 27 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    bytec 26 // 0x0000000000000000000000000000000000000000000000010000000000000000
     b*
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     frame_dig -3
     itob
-    bytec 26 // 0x0000000000000000000000000000000000000000000000000000000100000000
+    bytec 25 // 0x0000000000000000000000000000000000000000000000000000000100000000
     b*
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -1056,49 +1335,49 @@ __postInit:
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    bytec 14 // "__ctor_pending"
+    bytec 19 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec 14 // "__ctor_pending"
+    bytec 19 // "__ctor_pending"
     intc_0 // 0
     app_global_put
-    bytec 16 // "_targets"
+    bytec 20 // "_targets"
     pushint 2
     box_create
     pop
-    bytec 11 // "_roles"
+    bytec 16 // "_roles"
     pushint 2
     box_create
     pop
-    bytec 8 // "_schedules"
+    bytec 9 // "_schedules"
     pushint 2
     box_create
     pop
-    bytec 17 // "_roleMemberSet"
+    bytec 10 // "_roleMemberSet"
     pushint 2
     box_create
     pop
-    bytec 28 // "_roleAdminToRoleSet"
+    bytec 27 // "_roleAdminToRoleSet"
     pushint 2
     box_create
     pop
-    bytec 18 // "_roleToTargetSet"
+    bytec 11 // "_roleToTargetSet"
     pushint 2
     box_create
     pop
-    bytec 29 // "_targetToSelectorToRole"
+    bytec 28 // "_targetToSelectorToRole"
     pushint 2
     box_create
     pop
-    bytec 19 // "_roleToTargetToSelectorSet"
+    bytec 21 // "_roleToTargetToSelectorSet"
     pushint 2
     box_create
     pop
-    bytec 9 // "_executionId"
-    bytec 15 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 12 // "_executionId"
+    bytec 13 // 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     dup
-    bytec 15 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 13 // 0x0000000000000000000000000000000000000000000000000000000000000000
     ==
     !
     assert // AccessManagerInvalidInitialAdmin
@@ -1115,43 +1394,148 @@ __postInit:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.getRole[routing]() -> void:
 getRole:
     txna ApplicationArgs 1
+    dup
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_2 // 0x151f7c750000000000000000
+    txn GroupIndex
+    bz getRole_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getRole_ternary_merge@4:
+    !
+    assert // not payable
+    intc_3 // 8
+    bzero
+    bytec 8 // "_rolesSet"
+    box_get
+    bytec_2 // 0x00020004000600000000
+    cover 2
+    select
+    dig 2
+    dup
+    cover 3
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet.at(2)_2
+    pop
+    dig 1
+    swap
+    concat
+    bytec 8 // "_rolesSet"
+    box_get
+    bytec_2 // 0x00020004000600000000
+    cover 2
+    select
+    uncover 3
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet.at(2)_2
+    pop
+    uncover 2
+    swap
+    concat
+    len
+    intc_3 // 8
+    -
+    intc_3 // 8
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_1 // 1
     return
+
+getRole_ternary_false@3:
+    intc_0 // 0
+    b getRole_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.getRoleCount[routing]() -> void:
 getRoleCount:
-    callsub __uros_orc_guard
+    txn GroupIndex
+    bz getRoleCount_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getRoleCount_ternary_merge@4:
+    !
+    assert // not payable
+    bytec 8 // "_rolesSet"
+    box_get
+    bytec_2 // 0x00020004000600000000
+    cover 2
+    select
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet.length(1)_2
+    pop
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
     bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_1 // 1
     return
+
+getRoleCount_ternary_false@3:
+    intc_0 // 0
+    b getRoleCount_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.getRoles[routing]() -> void:
 getRoles:
     txna ApplicationArgs 1
+    dup
     len
     pushint 64
     ==
     assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
+    dup
     len
     pushint 64
     ==
     assert // invalid number of bytes for arc4.uint512
-    callsub __uros_orc_guard
+    txn GroupIndex
+    bz getRoles_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getRoles_ternary_merge@4:
+    !
+    assert // not payable
+    bytec 8 // "_rolesSet"
+    box_get
+    bytec_2 // 0x00020004000600000000
+    cover 2
+    select
+    dig 2
+    dig 2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet.values(3)_2
+    pop
+    load 0
+    store 0
     bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_1 // 1
     return
+
+getRoles_ternary_false@3:
+    intc_0 // 0
+    b getRoles_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.getAdminRole[routing]() -> void:
@@ -1162,7 +1546,7 @@ getAdminRole:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub __uros_orc_guard
-    bytec_2 // 0x151f7c750000000000000000
+    bytec 4 // 0x151f7c750000000000000000
     log
     intc_1 // 1
     return
@@ -1199,58 +1583,159 @@ getAdminRoles:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.getRoleMember[routing]() -> void:
 getRoleMember:
     txna ApplicationArgs 1
+    dup
     len
     intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
+    btoi
     txna ApplicationArgs 2
+    dup
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec 20 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    txn GroupIndex
+    bz getRoleMember_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getRoleMember_ternary_merge@4:
+    !
+    assert // not payable
+    dig 1
+    itob
+    sha256
+    bytec 10 // "_roleMemberSet"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x00020004000600000000
+    cover 2
+    select
+    dig 1
+    callsub EnumerableSet.at
+    pop
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_1 // 1
     return
+
+getRoleMember_ternary_false@3:
+    intc_0 // 0
+    b getRoleMember_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.getRoleMemberCount[routing]() -> void:
 getRoleMemberCount:
     txna ApplicationArgs 1
+    dup
     len
     intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    callsub __uros_orc_guard
+    btoi
+    txn GroupIndex
+    bz getRoleMemberCount_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getRoleMemberCount_ternary_merge@4:
+    !
+    assert // not payable
+    dup
+    itob
+    sha256
+    bytec 10 // "_roleMemberSet"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x00020004000600000000
+    cover 2
+    select
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet.length(1)_1
+    pop
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
     bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_1 // 1
     return
+
+getRoleMemberCount_ternary_false@3:
+    intc_0 // 0
+    b getRoleMemberCount_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.getRoleMembers[routing]() -> void:
 getRoleMembers:
     txna ApplicationArgs 1
+    dup
     len
     intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
+    btoi
     txna ApplicationArgs 2
+    dup
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
+    dup
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
+    txn GroupIndex
+    bz getRoleMembers_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getRoleMembers_ternary_merge@4:
+    !
+    assert // not payable
+    dig 2
+    itob
+    sha256
+    bytec 10 // "_roleMemberSet"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x00020004000600000000
+    cover 2
+    select
+    dig 2
+    dig 2
+    callsub EnumerableSet.values
+    pop
     bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_1 // 1
     return
+
+getRoleMembers_ternary_false@3:
+    intc_0 // 0
+    b getRoleMembers_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.getRoleOfAdminRole[routing]() -> void:
@@ -1266,7 +1751,7 @@ getRoleOfAdminRole:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub __uros_orc_guard
-    bytec_2 // 0x151f7c750000000000000000
+    bytec 4 // 0x151f7c750000000000000000
     log
     intc_1 // 1
     return
@@ -1313,58 +1798,159 @@ getRolesOfAdminRole:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.getRoleTarget[routing]() -> void:
 getRoleTarget:
     txna ApplicationArgs 1
+    dup
     len
     intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
+    btoi
     txna ApplicationArgs 2
+    dup
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec 20 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    txn GroupIndex
+    bz getRoleTarget_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getRoleTarget_ternary_merge@4:
+    !
+    assert // not payable
+    dig 1
+    itob
+    sha256
+    bytec 11 // "_roleToTargetSet"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x00020004000600000000
+    cover 2
+    select
+    dig 1
+    callsub EnumerableSet.at
+    pop
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_1 // 1
     return
+
+getRoleTarget_ternary_false@3:
+    intc_0 // 0
+    b getRoleTarget_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.getRoleTargetCount[routing]() -> void:
 getRoleTargetCount:
     txna ApplicationArgs 1
+    dup
     len
     intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    callsub __uros_orc_guard
+    btoi
+    txn GroupIndex
+    bz getRoleTargetCount_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getRoleTargetCount_ternary_merge@4:
+    !
+    assert // not payable
+    dup
+    itob
+    sha256
+    bytec 11 // "_roleToTargetSet"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x00020004000600000000
+    cover 2
+    select
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet.length(1)_1
+    pop
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
     bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_1 // 1
     return
+
+getRoleTargetCount_ternary_false@3:
+    intc_0 // 0
+    b getRoleTargetCount_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.getRoleTargets[routing]() -> void:
 getRoleTargets:
     txna ApplicationArgs 1
+    dup
     len
     intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
+    btoi
     txna ApplicationArgs 2
+    dup
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
+    dup
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
+    txn GroupIndex
+    bz getRoleTargets_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getRoleTargets_ternary_merge@4:
+    !
+    assert // not payable
+    dig 2
+    itob
+    sha256
+    bytec 11 // "_roleToTargetSet"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x00020004000600000000
+    cover 2
+    select
+    dig 2
+    dig 2
+    callsub EnumerableSet.values
+    pop
     bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_1 // 1
     return
+
+getRoleTargets_ternary_false@3:
+    intc_0 // 0
+    b getRoleTargets_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.getRoleTargetSelector[routing]() -> void:
@@ -1451,7 +2037,7 @@ ADMIN_ROLE:
 ADMIN_ROLE_ternary_merge@4:
     !
     assert // not payable
-    bytec_2 // 0x151f7c750000000000000000
+    bytec 4 // 0x151f7c750000000000000000
     log
     intc_1 // 1
     return
@@ -1522,7 +2108,7 @@ canCall:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.expiration[routing]() -> void:
 expiration:
     callsub __uros_orc_guard
-    bytec_2 // 0x151f7c750000000000000000
+    bytec 4 // 0x151f7c750000000000000000
     log
     intc_1 // 1
     return
@@ -1531,7 +2117,7 @@ expiration:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.minSetback[routing]() -> void:
 minSetback:
     callsub __uros_orc_guard
-    bytec_2 // 0x151f7c750000000000000000
+    bytec 4 // 0x151f7c750000000000000000
     log
     intc_1 // 1
     return
@@ -1564,7 +2150,7 @@ getTargetFunctionRole:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
     callsub __uros_orc_guard
-    bytec_2 // 0x151f7c750000000000000000
+    bytec 4 // 0x151f7c750000000000000000
     log
     intc_1 // 1
     return
@@ -1578,7 +2164,7 @@ getTargetAdminDelay:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     callsub __uros_orc_guard
-    bytec_2 // 0x151f7c750000000000000000
+    bytec 4 // 0x151f7c750000000000000000
     log
     intc_1 // 1
     return
@@ -1592,7 +2178,7 @@ getRoleAdmin:
     ==
     assert // invalid number of bytes for arc4.uint64
     callsub __uros_orc_guard
-    bytec_2 // 0x151f7c750000000000000000
+    bytec 4 // 0x151f7c750000000000000000
     log
     intc_1 // 1
     return
@@ -1606,7 +2192,7 @@ getRoleGuardian:
     ==
     assert // invalid number of bytes for arc4.uint64
     callsub __uros_orc_guard
-    bytec_2 // 0x151f7c750000000000000000
+    bytec 4 // 0x151f7c750000000000000000
     log
     intc_1 // 1
     return
@@ -1620,7 +2206,7 @@ getRoleGrantDelay:
     ==
     assert // invalid number of bytes for arc4.uint64
     callsub __uros_orc_guard
-    bytec_2 // 0x151f7c750000000000000000
+    bytec 4 // 0x151f7c750000000000000000
     log
     intc_1 // 1
     return
@@ -1639,7 +2225,7 @@ getAccess:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     callsub __uros_orc_guard
-    bytec 20 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
@@ -1899,12 +2485,12 @@ setRoleAdmin_ternary_merge@4:
     dup
     bury 7
     sha256
-    bytec 11 // "_roles"
+    bytec 16 // "_roles"
     swap
     concat
     dup
     box_get
-    bytec 12 // 0x00200000000000000000000000000000000000000000000000000000000000000000
+    bytec 17 // 0x00200000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
@@ -1926,7 +2512,7 @@ setRoleAdmin_ternary_merge@4:
     extract 6 2
     swap
     concat
-    bytec 30 // 0x0020
+    bytec 29 // 0x0020
     dig 7
     dup
     cover 3
@@ -1955,9 +2541,9 @@ setRoleAdmin_ternary_merge@4:
     bz setRoleAdmin_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable._trackAdminRole@10
     dup
     bz setRoleAdmin_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable._trackAdminRole@10
-    bytec 21 // "_adminRolesSet"
+    bytec 22 // "_adminRolesSet"
     box_get
-    bytec 4 // 0x00020004000600000000
+    bytec_2 // 0x00020004000600000000
     cover 2
     select
     dig 1
@@ -1967,19 +2553,19 @@ setRoleAdmin_ternary_merge@4:
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet.add(2)_2
     pop
     bury 1
-    bytec 21 // "_adminRolesSet"
+    bytec 22 // "_adminRolesSet"
     box_del
     pop
-    bytec 21 // "_adminRolesSet"
+    bytec 22 // "_adminRolesSet"
     swap
     box_put
     sha256
-    bytec 28 // "_roleAdminToRoleSet"
+    bytec 27 // "_roleAdminToRoleSet"
     swap
     concat
     dup
     box_get
-    bytec 4 // 0x00020004000600000000
+    bytec_2 // 0x00020004000600000000
     cover 2
     select
     dig 6
@@ -2039,12 +2625,12 @@ setRoleGuardian_ternary_merge@4:
     dup
     itob
     sha256
-    bytec 11 // "_roles"
+    bytec 16 // "_roles"
     swap
     concat
     dup
     box_get
-    bytec 12 // 0x00200000000000000000000000000000000000000000000000000000000000000000
+    bytec 17 // 0x00200000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
@@ -2066,7 +2652,7 @@ setRoleGuardian_ternary_merge@4:
     extract 6 2
     swap
     concat
-    bytec 30 // 0x0020
+    bytec 29 // 0x0020
     uncover 3
     concat
     dig 5
@@ -2146,12 +2732,12 @@ setGrantDelay_ternary_merge@4:
     assert // AccessManagerLockedRole
     itob
     sha256
-    bytec 11 // "_roles"
+    bytec 16 // "_roles"
     swap
     concat
     dup
     box_get
-    bytec 12 // 0x00200000000000000000000000000000000000000000000000000000000000000000
+    bytec 17 // 0x00200000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     extract 18 14
@@ -2161,7 +2747,7 @@ setGrantDelay_ternary_merge@4:
     callsub Time.withUpdate
     popn 2
     box_get
-    bytec 12 // 0x00200000000000000000000000000000000000000000000000000000000000000000
+    bytec 17 // 0x00200000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     extract 18 14
@@ -2287,7 +2873,7 @@ setTargetFunctionRole_while_top@7:
     dig 1
     callsub _trackRole
     sha256
-    bytec 29 // "_targetToSelectorToRole"
+    bytec 28 // "_targetToSelectorToRole"
     swap
     concat
     dup
@@ -2312,12 +2898,12 @@ setTargetFunctionRole_while_top@7:
     dig 5
     concat
     sha256
-    bytec 19 // "_roleToTargetToSelectorSet"
+    bytec 21 // "_roleToTargetToSelectorSet"
     swap
     concat
     dup
     box_get
-    bytec 4 // 0x00020004000600000000
+    bytec_2 // 0x00020004000600000000
     cover 2
     select
     pushint 28
@@ -2341,12 +2927,12 @@ setTargetFunctionRole_while_top@7:
     bz setTargetFunctionRole_after_if_else@14
     dig 6
     sha256
-    bytec 18 // "_roleToTargetSet"
+    bytec 11 // "_roleToTargetSet"
     swap
     concat
     dup
     box_get
-    bytec 4 // 0x00020004000600000000
+    bytec_2 // 0x00020004000600000000
     cover 2
     select
     dig 6
@@ -2368,12 +2954,12 @@ setTargetFunctionRole_after_if_else@14:
     cover 3
     concat
     sha256
-    bytec 19 // "_roleToTargetToSelectorSet"
+    bytec 21 // "_roleToTargetToSelectorSet"
     swap
     concat
     dup
     box_get
-    bytec 4 // 0x00020004000600000000
+    bytec_2 // 0x00020004000600000000
     cover 2
     select
     pushint 28
@@ -2389,12 +2975,12 @@ setTargetFunctionRole_after_if_else@14:
     pop
     box_put
     sha256
-    bytec 18 // "_roleToTargetSet"
+    bytec 11 // "_roleToTargetSet"
     swap
     concat
     dup
     box_get
-    bytec 4 // 0x00020004000600000000
+    bytec_2 // 0x00020004000600000000
     cover 2
     select
     uncover 2
@@ -2413,7 +2999,7 @@ setTargetFunctionRole_after_if_else@16:
 
 setTargetFunctionRole_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable._trackRoleTargetSelector@17:
     dig 9
-    bytec 6 // 0x01
+    bytec 5 // 0x01
     b+
     bury 10
     b setTargetFunctionRole_while_top@7
@@ -2469,12 +3055,12 @@ setTargetAdminDelay_ternary_merge@4:
     dup
     cover 2
     sha256
-    bytec 16 // "_targets"
+    bytec 20 // "_targets"
     swap
     concat
     dup
     box_get
-    bytec 22 // 0x001100000000000000000000000000000000
+    bytec 23 // 0x001100000000000000000000000000000000
     cover 2
     select
     extract 2 14
@@ -2484,7 +3070,7 @@ setTargetAdminDelay_ternary_merge@4:
     callsub Time.withUpdate
     popn 2
     box_get
-    bytec 22 // 0x001100000000000000000000000000000000
+    bytec 23 // 0x001100000000000000000000000000000000
     cover 2
     select
     extract 2 14
@@ -2547,12 +3133,12 @@ setTargetClosed_ternary_merge@4:
     dig 2
     dup
     sha256
-    bytec 16 // "_targets"
+    bytec 20 // "_targets"
     swap
     concat
     dup
     box_get
-    bytec 22 // 0x001100000000000000000000000000000000
+    bytec 23 // 0x001100000000000000000000000000000000
     cover 2
     select
     dup
@@ -2638,11 +3224,11 @@ getNonce_ternary_merge@4:
     assert // not payable
     dup
     sha256
-    bytec 8 // "_schedules"
+    bytec 9 // "_schedules"
     swap
     concat
     box_get
-    bytec 5 // 0x00000000000000000000
+    bytec 7 // 0x00000000000000000000
     cover 2
     select
     pushint 6
@@ -2766,13 +3352,13 @@ schedule_after_if_else@8:
     dup
     bury 8
     sha256
-    bytec 8 // "_schedules"
+    bytec 9 // "_schedules"
     swap
     concat
     dup
     bury 9
     box_get
-    bytec 5 // 0x00000000000000000000
+    bytec 7 // 0x00000000000000000000
     cover 2
     select
     extract 0 6
@@ -2788,7 +3374,7 @@ schedule_after_if_else@11:
     dig 7
     dup
     box_get
-    bytec 5 // 0x00000000000000000000
+    bytec 7 // 0x00000000000000000000
     cover 2
     select
     dup
@@ -2927,7 +3513,7 @@ execute_if_body@6:
 
 execute_after_if_else@7:
     intc_0 // 0
-    bytec 9 // "_executionId"
+    bytec 12 // "_executionId"
     app_global_get_ex
     swap
     bury 8
@@ -2937,7 +3523,7 @@ execute_after_if_else@7:
     dig 4
     swap
     callsub _hashExecutionId
-    bytec 9 // "_executionId"
+    bytec 12 // "_executionId"
     swap
     app_global_put
     txn GroupIndex
@@ -2954,7 +3540,7 @@ execute_ternary_merge@10:
     uncover 2
     callsub Address.functionCallWithValue
     pop
-    bytec 9 // "_executionId"
+    bytec 12 // "_executionId"
     dig 7
     app_global_put
     dig 4
@@ -3019,13 +3605,13 @@ cancel_ternary_merge@4:
     dup
     bury 7
     sha256
-    bytec 8 // "_schedules"
+    bytec 9 // "_schedules"
     swap
     concat
     dup
     bury 8
     box_get
-    bytec 5 // 0x00000000000000000000
+    bytec 7 // 0x00000000000000000000
     cover 2
     select
     extract 0 6
@@ -3046,11 +3632,11 @@ cancel_after_if_else@11:
     dig 4
     dup
     box_get
-    bytec 5 // 0x00000000000000000000
+    bytec 7 // 0x00000000000000000000
     cover 2
     select
     extract 6 4
-    bytec 31 // 0x000000000000
+    bytec 30 // 0x000000000000
     swap
     concat
     swap
@@ -3298,7 +3884,7 @@ multicall_after_for@4:
 multicall_ternary_merge@8:
     !
     assert // not payable
-    bytec 23 // 0x0000
+    bytec 15 // 0x0000
     bury 9
     intc_0 // 0
     bury 6
@@ -3330,7 +3916,7 @@ multicall_while_top@9:
     uncover 3
     uncover 2
     substring3
-    bytec 23 // 0x0000
+    bytec 15 // 0x0000
     concat
     concat
     swap
@@ -3405,7 +3991,7 @@ multicall_while_top@12:
     intc_0 // 0
     uncover 3
     substring3
-    bytec 23 // 0x0000
+    bytec 15 // 0x0000
     concat
     dig 2
     len
@@ -3419,7 +4005,7 @@ multicall_while_top@12:
     callsub _recalculate_head_for_elements_with_byte_length_head
     concat
     bury 8
-    bytec 6 // 0x01
+    bytec 5 // 0x01
     b+
     bury 8
     b multicall_while_top@12
@@ -3479,12 +4065,12 @@ _grantRole:
     assert // AccessManagerLockedRole
     frame_dig -3
     sha256
-    bytec 32 // "members"
+    bytec 31 // "members"
     swap
     concat
     dup
     box_get
-    bytec 13 // 0x0000000000000000000000000000000000000000
+    bytec 18 // 0x0000000000000000000000000000000000000000
     cover 2
     select
     extract 0 6
@@ -3567,7 +4153,7 @@ _grantRole_after_if_else@2:
 _grantRole_else_body@7:
     dup
     box_get
-    bytec 13 // 0x0000000000000000000000000000000000000000
+    bytec 18 // 0x0000000000000000000000000000000000000000
     cover 2
     select
     extract 6 14
@@ -3576,7 +4162,7 @@ _grantRole_else_body@7:
     callsub Time.withUpdate
     popn 2
     box_get
-    bytec 13 // 0x0000000000000000000000000000000000000000
+    bytec 18 // 0x0000000000000000000000000000000000000000
     cover 2
     select
     extract 6 14
@@ -3598,12 +4184,12 @@ _revokeRole:
     assert // AccessManagerLockedRole
     frame_dig -1
     sha256
-    bytec 32 // "members"
+    bytec 31 // "members"
     swap
     concat
     dup
     box_get
-    bytec 13 // 0x0000000000000000000000000000000000000000
+    bytec 18 // 0x0000000000000000000000000000000000000000
     cover 2
     select
     extract 0 6
@@ -3654,9 +4240,9 @@ _trackRole_if_body@2:
     retsub
 
 _trackRole_after_if_else@3:
-    bytec 24 // "_rolesSet"
+    bytec 8 // "_rolesSet"
     box_get
-    bytec 4 // 0x00020004000600000000
+    bytec_2 // 0x00020004000600000000
     cover 2
     select
     frame_dig -1
@@ -3664,10 +4250,10 @@ _trackRole_after_if_else@3:
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet.add(2)_2
     pop
     bury 1
-    bytec 24 // "_rolesSet"
+    bytec 8 // "_rolesSet"
     box_del
     pop
-    bytec 24 // "_rolesSet"
+    bytec 8 // "_rolesSet"
     swap
     box_put
     retsub
@@ -3685,12 +4271,12 @@ _trackRoleMember:
     frame_dig -3
     itob
     sha256
-    bytec 17 // "_roleMemberSet"
+    bytec 10 // "_roleMemberSet"
     swap
     concat
     dup
     box_get
-    bytec 4 // 0x00020004000600000000
+    bytec_2 // 0x00020004000600000000
     cover 2
     select
     frame_dig -2
@@ -3707,12 +4293,12 @@ _trackRoleMember_else_body@2:
     frame_dig -3
     itob
     sha256
-    bytec 17 // "_roleMemberSet"
+    bytec 10 // "_roleMemberSet"
     swap
     concat
     dup
     box_get
-    bytec 4 // 0x00020004000600000000
+    bytec_2 // 0x00020004000600000000
     cover 2
     select
     frame_dig -2
@@ -3745,7 +4331,7 @@ _trackRoleMember_else_body@2:
     ==
     bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.canCall_else_body@7
     intc_0 // 0
-    bytec 9 // "_executionId"
+    bytec 12 // "_executionId"
     app_global_get_ex
     assert // check _executionId exists
     frame_dig -2
@@ -3783,11 +4369,11 @@ _trackRoleMember_else_body@2:
     assert // not payable
     frame_dig -1
     sha256
-    bytec 8 // "_schedules"
+    bytec 9 // "_schedules"
     swap
     concat
     box_get
-    bytec 5 // 0x00000000000000000000
+    bytec 7 // 0x00000000000000000000
     cover 2
     select
     extract 0 6
@@ -3811,12 +4397,12 @@ _consumeScheduledOp:
     proto 1 1
     frame_dig -1
     sha256
-    bytec 8 // "_schedules"
+    bytec 9 // "_schedules"
     swap
     concat
     dup
     box_get
-    bytec 5 // 0x00000000000000000000
+    bytec 7 // 0x00000000000000000000
     cover 2
     select
     dup
@@ -3840,11 +4426,11 @@ _consumeScheduledOp:
     assert // AccessManagerExpired
     dig 1
     box_get
-    bytec 5 // 0x00000000000000000000
+    bytec 7 // 0x00000000000000000000
     cover 2
     select
     extract 6 4
-    bytec 31 // 0x000000000000
+    bytec 30 // 0x000000000000
     swap
     concat
     uncover 2
@@ -3964,7 +4550,7 @@ _getAdminRestrictions:
     frame_dig -1
     len
     itob
-    bytec 25 // 0x04
+    bytec 24 // 0x04
     b<
     bz _getAdminRestrictions_after_if_else@2
     intc_0 // 0
@@ -4070,7 +4656,7 @@ _canCallExtended_else_body@2:
     frame_dig -1
     len
     itob
-    bytec 25 // 0x04
+    bytec 24 // 0x04
     b<
     bz _canCallExtended_ternary_false@4
     intc_0 // 0
@@ -4101,7 +4687,7 @@ _canCallSelf:
     frame_dig -1
     len
     itob
-    bytec 25 // 0x04
+    bytec 24 // 0x04
     b<
     bz _canCallSelf_after_if_else@2
     intc_0 // 0
@@ -4117,7 +4703,7 @@ _canCallSelf_after_if_else@2:
     frame_dig -1
     substring 0 4
     intc_0 // 0
-    bytec 9 // "_executionId"
+    bytec 12 // "_executionId"
     app_global_get_ex
     assert // check _executionId exists
     cover 2
@@ -4175,9 +4761,9 @@ _hashExecutionId:
     intc_2 // 32
     bzero
     frame_dig -2
-    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffff
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffff
     b&
-    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffff
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffff
     b&
     concat
     dup

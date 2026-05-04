@@ -149,6 +149,16 @@ def deploy_contract(
     return client
 
 
+@pytest.fixture(scope="session")
+def orch_app_id(localnet, account):
+    """Session-scoped: deploy a single Uros orchestrator app, fund it,
+    and return its app id. Tests for split contracts use this id when
+    deploying main (TMPL_UROS_ORCH_APP_ID is substituted into the
+    main+chunk TEAL at deploy time)."""
+    from uros_dance import deploy_orchestrator
+    return deploy_orchestrator(localnet.client.algod, account)
+
+
 def deploy_contract_raw(
     localnet: au.AlgorandClient,
     account: SigningAccount,
