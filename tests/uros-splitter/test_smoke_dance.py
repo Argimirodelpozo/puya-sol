@@ -233,7 +233,10 @@ def test_dance_decrements_counter():
     txid = _algod().send_transactions([s1, s2])
     wait_for_confirmation(_algod(), txid, 4)
 
-    # 8. Read main's counter — should be 100 - 10 = 90.
+    # 8. Read main's counter — should be 100 - 10 = 90. Tests that the
+    # dance's revert step actually restored main's bytecode (otherwise
+    # main would still be running helper's program here, where get() is
+    # also stubbed to return 0).
     get_sel = _arc4_selector("get()uint256")
     sp = _algod().suggested_params()
     txn = ApplicationCallTxn(
@@ -250,6 +253,17 @@ def test_dance_decrements_counter():
     assert raw[:4] == bytes.fromhex("151f7c75"), f"bad ABI prefix: {raw[:4].hex()}"
     counter = int.from_bytes(raw[4:36], "big")
     assert counter == 90, f"expected 90, got {counter}"
+
+    # 9. Sanity check: main's program bytes equal the original. Read
+    # the on-chain program via algod and compare.
+    info = _algod().application_info(main_id)
+    on_chain = base64.b64decode(info["params"]["approval-program"])
+    expected = _read_bin(OUT / "Smoke" / "Smoke.approval.bin")
+    assert on_chain == expected, (
+        f"main approval program drift: on-chain {len(on_chain)} B vs "
+        f"expected {len(expected)} B; first-diff at byte "
+        f"{next((i for i, (a, b) in enumerate(zip(on_chain, expected)) if a != b), 'n/a')}"
+    )
 
 
 if __name__ == "__main__":
