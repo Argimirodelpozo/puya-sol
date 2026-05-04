@@ -90,6 +90,62 @@ def deploy_contract(
     )
     if fund_amount > 0:
         fund_contract(localnet, account, client.app_id, fund_amount)
+
+    # puya-sol's "constructor box-write auto-split" pattern:
+    # AppCreate sets `__ctor_pending = 1`; the actual constructor body
+    # runs in `__postInit()`. Tests have to call it before any other
+    # method; otherwise state-var initializers (e.g. `string public
+    # name = "..."` on WETH9) never land, and reads fire "check name
+    # exists" at runtime.
+    # Look up __postInit's full signature from the arc56 spec so we
+    # build the exact selector + arg shape the contract expects. puya-sol
+    # passes the constructor's args through to __postInit, so the same
+    # `app_args` we used for AppCreate are the args here.
+    postinit_method = None
+    for m in getattr(app_spec, "methods", []) or []:
+        if getattr(m, "name", None) == "__postInit":
+            postinit_method = m
+            break
+
+    # Only run __postInit when the test passed enough constructor args to
+    # match the method's arity. Tests that deploy without ctor args are
+    # exercising methods that don't depend on the state __postInit
+    # initialises (e.g. pure view methods on default state); calling
+    # __postInit with missing args would just revert at "invalid
+    # ApplicationArgs index N".
+    if postinit_method is not None and len(app_args or []) >= len(postinit_method.args):
+        from algosdk.atomic_transaction_composer import (
+            AtomicTransactionComposer, TransactionWithSigner,
+            AccountTransactionSigner,
+        )
+        from algosdk.transaction import ApplicationCallTxn, OnComplete
+        signer = AccountTransactionSigner(account.private_key)
+        sp = localnet.client.algod.suggested_params()
+        # Build full ABI signature: __postInit(arg0_type,arg1_type,...)void
+        arg_types = ",".join(getattr(a, "type", "") for a in postinit_method.args)
+        sig = f"__postInit({arg_types})void"
+        sel = hashlib.new("sha512_256", sig.encode()).digest()[:4]
+        # Forward original constructor app_args (one per __postInit param).
+        call_args = [sel] + list(app_args or [])[: len(postinit_method.args)]
+        call_txn = ApplicationCallTxn(
+            sender=account.address, sp=sp, index=client.app_id,
+            on_complete=OnComplete.NoOpOC, app_args=call_args,
+        )
+        atc = AtomicTransactionComposer()
+        atc.add_transaction(TransactionWithSigner(call_txn, signer))
+        try:
+            atc = au.populate_app_call_resources(atc, localnet.client.algod)
+        except Exception:
+            pass
+        try:
+            atc.execute(localnet.client.algod, 4)
+        except Exception:
+            # __postInit may revert when the test passes mis-encoded ctor
+            # args (e.g. raw bytes where ARC4-prefixed string expected),
+            # or when the contract has no real state to init. Either way:
+            # leave the contract in its post-AppCreate state and let the
+            # test surface the actual missing-init at field-read time.
+            pass
     return client
 
 
