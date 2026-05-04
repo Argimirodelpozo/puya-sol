@@ -683,6 +683,49 @@ int main(int _argc, char* _argv[])
 	}
 	logger.info("Wrote: " + optionsPath);
 
+	// ─── --uros-splitter: emit helper AWST + options.json eagerly ────────
+	// Both go to <outputDir>/__uros_split/. Doing this here (before the
+	// noPuya gate) means --no-puya callers can still inspect the AWST
+	// output and run the second puya pass manually if they want.
+	std::string urosHelperDir;
+	std::string urosHelperAwstPath;
+	std::string urosHelperOptionsPath;
+	if (!helperRoots.empty())
+	{
+		urosHelperDir = (fs::path(opts.outputDir) / "__uros_split").string();
+		fs::create_directories(urosHelperDir);
+
+		puyasol::json::AWSTSerializer helperSerializer;
+		auto helperJson = helperSerializer.serialize(helperRoots);
+		urosHelperAwstPath = (fs::path(urosHelperDir) / "awst.json").string();
+		{
+			std::ofstream out(urosHelperAwstPath);
+			out << helperJson.dump(2) << std::endl;
+			logger.info("Wrote: " + urosHelperAwstPath);
+		}
+
+		std::vector<std::string> helperContractNames;
+		for (auto const& r: helperRoots)
+			if (auto const* c = dynamic_cast<puyasol::awst::Contract const*>(r.get()))
+				helperContractNames.push_back(c->id);
+
+		urosHelperOptionsPath = (fs::path(urosHelperDir) / "options.json").string();
+		std::set<std::string> noChildren;
+		if (helperContractNames.size() <= 1)
+		{
+			std::string nm = helperContractNames.empty() ? "" : helperContractNames[0];
+			puyasol::json::OptionsWriter::write(
+				urosHelperOptionsPath, nm, urosHelperDir,
+				opts.optimizationLevel, opts.outputIr, noChildren);
+		}
+		else
+		{
+			puyasol::json::OptionsWriter::writeMultiple(
+				urosHelperOptionsPath, helperContractNames, urosHelperDir,
+				opts.optimizationLevel, opts.outputIr, noChildren);
+		}
+	}
+
 	// Summary
 	if (logger.warningCount() > 0)
 		logger.info(
@@ -751,45 +794,9 @@ int main(int _argc, char* _argv[])
 		{
 			logger.info("Invoking puya backend for --uros-splitter helper...");
 
-			// Helper output goes into a sibling dir so it doesn't stomp main
-			// artifacts. The path lives under the main output dir, e.g.:
-			//   out/__uros_split/awst.json
-			//   out/__uros_split/<Name>__split.approval.bin
-			std::string helperDir = (fs::path(opts.outputDir) / "__uros_split").string();
-			fs::create_directories(helperDir);
-
-			puyasol::json::AWSTSerializer helperSerializer;
-			auto helperJson = helperSerializer.serialize(helperRoots);
-			std::string helperAwstPath = (fs::path(helperDir) / "awst.json").string();
-			{
-				std::ofstream out(helperAwstPath);
-				out << helperJson.dump(2) << std::endl;
-			}
-
-			std::vector<std::string> helperContractNames;
-			for (auto const& r: helperRoots)
-				if (auto const* c = dynamic_cast<puyasol::awst::Contract const*>(r.get()))
-					helperContractNames.push_back(c->id);
-
-			std::string helperOptionsPath = (fs::path(helperDir) / "options.json").string();
-			std::set<std::string> noChildren;  // helper has no `new C()` references
-			if (helperContractNames.size() <= 1)
-			{
-				std::string nm = helperContractNames.empty() ? "" : helperContractNames[0];
-				puyasol::json::OptionsWriter::write(
-					helperOptionsPath, nm, helperDir,
-					opts.optimizationLevel, opts.outputIr, noChildren);
-			}
-			else
-			{
-				puyasol::json::OptionsWriter::writeMultiple(
-					helperOptionsPath, helperContractNames, helperDir,
-					opts.optimizationLevel, opts.outputIr, noChildren);
-			}
-
 			puyasol::runner::PuyaRunner helperRunner;
 			helperRunner.setPuyaPath(opts.puyaPath);
-			int helperExitCode = helperRunner.run(helperAwstPath, helperOptionsPath, opts.logLevel);
+			int helperExitCode = helperRunner.run(urosHelperAwstPath, urosHelperOptionsPath, opts.logLevel);
 			if (helperExitCode != 0)
 			{
 				logger.error("--uros-splitter: helper puya run failed");
@@ -842,8 +849,8 @@ int main(int _argc, char* _argv[])
 			};
 			tmpl["main_approval_hex"] = readHex(fs::path(opts.outputDir) / (mainBareName + ".approval.bin"));
 			tmpl["main_clear_hex"] = readHex(fs::path(opts.outputDir) / (mainBareName + ".clear.bin"));
-			tmpl["helper_approval_hex"] = readHex(fs::path(helperDir) / (helperContractName + ".approval.bin"));
-			tmpl["helper_clear_hex"] = readHex(fs::path(helperDir) / (helperContractName + ".clear.bin"));
+			tmpl["helper_approval_hex"] = readHex(fs::path(urosHelperDir) / (helperContractName + ".approval.bin"));
+			tmpl["helper_clear_hex"] = readHex(fs::path(urosHelperDir) / (helperContractName + ".clear.bin"));
 
 			std::string tmplPath = (fs::path(opts.outputDir) / "deploy.uros.json").string();
 			std::ofstream tf(tmplPath);
