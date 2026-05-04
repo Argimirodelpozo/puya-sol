@@ -479,17 +479,20 @@ abstract contract Spoke is
     Reserve storage reserve = _reserves[reserveId];
     address underlying = reserve.underlying;
     require(underlying != address(0), ReserveNotListed());
-    try
-      IERC20Permit(underlying).permit({
-        owner: onBehalfOf,
-        spender: address(this),
-        value: value,
-        deadline: deadline,
-        v: permitV,
-        r: permitR,
-        s: permitS
-      })
-    {} catch {}
+    // PUYA-SOL PATCH (uros-splitter readiness, AVM port): try/catch is
+    // unsupported on AVM (see WIP/examples/aave-v4/patches.md). Original:
+    //   try IERC20Permit(underlying).permit({...}) {} catch {}
+    // The frontrunning-tolerance swallow can't be replicated without
+    // in-txn revert recovery. Direct call now; caller retries on revert.
+    IERC20Permit(underlying).permit({
+      owner: onBehalfOf,
+      spender: address(this),
+      value: value,
+      deadline: deadline,
+      v: permitV,
+      r: permitR,
+      s: permitS
+    });
   }
 
   /// @inheritdoc ISpoke

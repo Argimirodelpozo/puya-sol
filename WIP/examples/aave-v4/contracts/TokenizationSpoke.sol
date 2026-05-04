@@ -181,17 +181,20 @@ abstract contract TokenizationSpoke is ITokenizationSpoke, ERC20Upgradeable, Int
     bytes32 r,
     bytes32 s
   ) external returns (uint256) {
-    try
-      IERC20Permit(ASSET).permit({
-        owner: msg.sender,
-        spender: address(this),
-        value: assets,
-        deadline: deadline,
-        v: v,
-        r: r,
-        s: s
-      })
-    {} catch {}
+    // PUYA-SOL PATCH (uros-splitter readiness, AVM port): try/catch is
+    // unsupported on AVM (see WIP/examples/aave-v4/patches.md). Original:
+    //   try IERC20Permit(ASSET).permit({...}) {} catch {}
+    // Same frontrunning-tolerance pattern as Spoke.permitReserveUnderlying;
+    // swallow → forward. Caller retries.
+    IERC20Permit(ASSET).permit({
+      owner: msg.sender,
+      spender: address(this),
+      value: assets,
+      deadline: deadline,
+      v: v,
+      r: r,
+      s: s
+    });
     return _executeDeposit({depositor: msg.sender, receiver: receiver, assets: assets});
   }
 

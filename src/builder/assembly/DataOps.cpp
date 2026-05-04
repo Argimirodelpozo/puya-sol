@@ -552,6 +552,11 @@ void AssemblyBuilder::handleRevert(
 	// revert(offset, length) — on AVM, assert(false, "revert")
 	auto stmt = awst::makeExpressionStatement(awst::makeAssert(awst::makeBoolConstant(false, _loc), _loc, "revert"), _loc);
 	_out.push_back(std::move(stmt));
+	// Mark this Yul block as halt-terminated so the assembly-block
+	// epilog skips its `__evm_memory` writeback. assert(false) is a
+	// hard halt; any trailing store would be unreachable code, which
+	// puya's IR validator rejects (see AccessManager / LowLevelCall.bubbleRevert).
+	m_haltEmitted = true;
 }
 
 // ─── Synthetic calldata blob ────────────────────────────────────────────────

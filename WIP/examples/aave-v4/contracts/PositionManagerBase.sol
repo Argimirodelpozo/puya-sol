@@ -55,17 +55,24 @@ abstract contract PositionManagerBase is
   ) external onlyRegisteredSpoke(spoke) {
     ISpoke.PositionManagerUpdate[] memory updates = new ISpoke.PositionManagerUpdate[](1);
     updates[0] = ISpoke.PositionManagerUpdate({positionManager: address(this), approve: approve});
-    try
-      ISpoke(spoke).setUserPositionManagersWithSig(
-        ISpoke.SetUserPositionManagers({
-          onBehalfOf: onBehalfOf,
-          updates: updates,
-          nonce: nonce,
-          deadline: deadline
-        }),
-        signature
-      )
-    {} catch {}
+    // PUYA-SOL PATCH (uros-splitter readiness, AVM port): try/catch is
+    // unsupported on AVM (see WIP/examples/aave-v4/patches.md). Original:
+    //   try ISpoke(spoke).setUserPositionManagersWithSig(...) {} catch {}
+    // Replaced with a direct call. Behavior change: if the inner call
+    // reverts, this txn now reverts too (instead of silently swallowing
+    // the failure). Acceptable for this entrypoint because the caller
+    // can retry with a different signature; the original swallow was
+    // there as a frontrunning-tolerance hint, not a correctness
+    // requirement.
+    ISpoke(spoke).setUserPositionManagersWithSig(
+      ISpoke.SetUserPositionManagers({
+        onBehalfOf: onBehalfOf,
+        updates: updates,
+        nonce: nonce,
+        deadline: deadline
+      }),
+      signature
+    );
   }
 
   /// @inheritdoc IPositionManagerBase
@@ -80,17 +87,23 @@ abstract contract PositionManagerBase is
     bytes32 permitS
   ) external onlyRegisteredSpoke(spoke) {
     address underlying = _getReserveUnderlying(spoke, reserveId);
-    try
-      IERC20Permit(underlying).permit({
-        owner: onBehalfOf,
-        spender: address(this),
-        value: value,
-        deadline: deadline,
-        v: permitV,
-        r: permitR,
-        s: permitS
-      })
-    {} catch {}
+    // PUYA-SOL PATCH (uros-splitter readiness, AVM port): try/catch is
+    // unsupported on AVM (see WIP/examples/aave-v4/patches.md). Original:
+    //   try IERC20Permit(underlying).permit({...}) {} catch {}
+    // The OZ-recommended frontrunning-tolerant pattern was: swallow a
+    // permit revert so a frontrunning attacker who pre-consumed the
+    // permit nonce can't grief this entrypoint. AVM has no in-txn
+    // recovery, so we forward the revert. Caller-side retry is the
+    // recommended mitigation.
+    IERC20Permit(underlying).permit({
+      owner: onBehalfOf,
+      spender: address(this),
+      value: value,
+      deadline: deadline,
+      v: permitV,
+      r: permitR,
+      s: permitS
+    });
   }
 
   /// @inheritdoc IPositionManagerBase
