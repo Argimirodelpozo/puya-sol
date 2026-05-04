@@ -147,10 +147,15 @@ public:
 	ResultT visitTryCatch(TryStatement const& _n) override
 	{
 		auto loc = locOf(_n);
-		Logger::instance().warning(
-			"try/catch stubbed as success path: AVM cannot catch runtime errors,"
-			" catch clauses are dropped — behavior differs from EVM when the try"
-			" call reverts", loc);
+		Logger::instance().error(
+			"try/catch is not supported on AVM. Solidity's try requires at "
+			"least one catch clause, and AVM has no in-transaction revert "
+			"recovery — a failing inner txn aborts the whole outer txn. The "
+			"catch path's user-written logic can't be honored, so silently "
+			"compiling would produce semantically different code. Refactor "
+			"the call site to handle the contract directly (e.g. drop the "
+			"try, or guard with an explicit if-check) before recompiling.",
+			loc);
 
 		ResultT result;
 		auto& bc = m_blk.builderCtx();
