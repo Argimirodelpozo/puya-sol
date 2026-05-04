@@ -135,6 +135,20 @@ class UrosOrchestrator(ARC4Contract):
         else:
             op.Box.replace(Bytes(b"__codebox_1"), offset, data)
 
+    @arc4.abimethod
+    def pad(self, which: UInt64) -> None:
+        """No-op padding method that touches __codebox_<which>. Used by
+        deploy harnesses to pool box read/write budget across a group
+        of app-calls — each ApplicationCall txn that references a box
+        and EXECUTES a box op contributes its 2048/4096 budgets to the
+        group pool. We do a 1-byte box_extract here so the budget is
+        actually contributed."""
+        if which == UInt64(0):
+            _byte = op.Box.extract(Bytes(b"__codebox_0"), UInt64(0), UInt64(1))
+        else:
+            _byte = op.Box.extract(Bytes(b"__codebox_1"), UInt64(0), UInt64(1))
+        assert _byte.length == UInt64(1)
+
     @arc4.abimethod(allow_actions=("UpdateApplication",))
     def __delegate_update(self) -> None:
         """No-op admit branch for the orchestrator's own approval-program
