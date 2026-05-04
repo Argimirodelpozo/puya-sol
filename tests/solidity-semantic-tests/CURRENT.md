@@ -1,4 +1,42 @@
-# Semantic Test Status — v195
+# Semantic Test Status — v202
+
+**Totals**: 1091 PASS / 154 FAIL / 77 (58 compile_err + 19 deploy_err) = **1091/1322 (82.5%)**
+
+Net delta over v200 baseline: +1 PASS. Tests that previously passed via
+the silent-stub success-path of `try/catch` now error out cleanly —
+offset by the mapping-element-array per-leaf-box layout fixing a small
+cluster.
+
+## New since v195
+
+- **`--uros-splitter`** technique for >8 KB contracts. Cleaves named
+  methods out of main into a sidecar contract, runs a 3-itxn
+  approval-program-swap dance per call. End-to-end smoke verified on
+  Smoke.sol (test at `tests/uros-splitter/test_smoke_dance.py`); on
+  tornado-cash Verifier the technique reduces main from 4968 B → 133 B
+  (-97%) by splitting out `verifyProof`. See
+  `memory/uros-splitter.md` for design.
+- **Mapping-element arrays**: per-leaf box layout. `array<mapping>`
+  push/pop now emit the AWST length-only mutation + per-(i,k) box
+  side. Fixes `mappings_array_pop_delete` (0p/2f → 8p/0s).
+- **try/catch**: was silently stubbing the success path; now hard
+  errors. Solidity's grammar requires at least one catch clause, and
+  AVM has no in-transaction recovery — silently compiling produced
+  semantically different code. Refactor sites must drop the try.
+- **--evm-version flag** + multi-source preprocessor: removed AST
+  scanning of EVMVersion directives from the compiler binary; runner
+  now scans .sol headers and passes the version explicitly. Same
+  treatment for compileViaYul.
+
+## Where we are vs prior sessions
+
+- v178 = 1076 (post-refactor floor)
+- v194 = 1089 (+13 chipping at FAIL/compile_err clusters)
+- v200 = 1090
+- v202 = 1091
+- v203 = in flight (running with mapping-array fix + uros-splitter additions)
+
+## v195 reference (preserved below)
 
 **Totals**: 1089 PASS / 176 FAIL / 57 (38 compile_err + 19 deploy_err) = **1089/1322 (82.4%)**
 
