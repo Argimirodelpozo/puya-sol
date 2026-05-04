@@ -1,10 +1,19 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PremiumWrapper.sol.PremiumWrapper.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/PremiumWrapper.sol.PremiumWrapper.approval_program() -> uint64:
 main:
-    intcblock 32 1
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x8000000000000000000000000000000000000000000000000000000000000000
+    intcblock 32 1 0
+    bytecblock 0x8000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -25,30 +34,72 @@ main_calculatePremiumRay_route@4:
     b calculatePremiumRay
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PremiumWrapper.sol.Premium.calculatePremiumRay(premiumShares: bytes, premiumOffsetRay: bytes, drawnIndex: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/PremiumWrapper.sol.Premium.calculatePremiumRay(premiumShares: bytes, premiumOffsetRay: bytes, drawnIndex: bytes) -> bytes:
 Premium.calculatePremiumRay:
     proto 3 1
     frame_dig -3
     frame_dig -1
     b*
+    dup
     callsub SafeCast.toInt256
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    frame_dig -2
+    bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    ==
+    bnz Premium.calculatePremiumRay_bool_true@2
+    frame_dig 0
+    dup
+    callsub SafeCast.toInt256
+    bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    swap
+    callsub SafeCast.toInt256
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     frame_dig -2
     b-
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    ==
+    bz Premium.calculatePremiumRay_bool_false@3
+
+Premium.calculatePremiumRay_bool_true@2:
+    intc_1 // 1
+
+Premium.calculatePremiumRay_bool_merge@4:
+    assert // signed arithmetic overflow
+    frame_dig 0
+    callsub SafeCast.toInt256
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig -2
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     callsub SafeCast.toUint256
+    swap
     retsub
 
+Premium.calculatePremiumRay_bool_false@3:
+    intc_2 // 0
+    b Premium.calculatePremiumRay_bool_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PremiumWrapper.sol.SafeCast.toUint256(value: bytes) -> bytes:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/PremiumWrapper.sol.SafeCast.toUint256(value: bytes) -> bytes:
 SafeCast.toUint256:
     proto 1 1
     frame_dig -1
-    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
-    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     assert // SafeCastOverflowedIntToUint
@@ -56,11 +107,11 @@ SafeCast.toUint256:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PremiumWrapper.sol.SafeCast.toInt256(value: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/PremiumWrapper.sol.SafeCast.toInt256(value: bytes) -> bytes:
 SafeCast.toInt256:
     proto 1 1
     frame_dig -1
-    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b>
     !
     assert // SafeCastOverflowedUintToInt
@@ -68,7 +119,7 @@ SafeCast.toInt256:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PremiumWrapper.sol.PremiumWrapper.calculatePremiumRay[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/PremiumWrapper.sol.PremiumWrapper.calculatePremiumRay[routing]() -> void:
 calculatePremiumRay:
     txna ApplicationArgs 1
     dup
@@ -88,6 +139,19 @@ calculatePremiumRay:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz calculatePremiumRay_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+calculatePremiumRay_ternary_merge@4:
+    !
+    assert // not payable
+    dig 2
+    dig 2
+    dig 2
     callsub Premium.calculatePremiumRay
     dup
     len
@@ -103,3 +167,7 @@ calculatePremiumRay:
     log
     intc_1 // 1
     return
+
+calculatePremiumRay_ternary_false@3:
+    intc_2 // 0
+    b calculatePremiumRay_ternary_merge@4

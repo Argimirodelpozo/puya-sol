@@ -268,6 +268,30 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 				translated = builder::TypeCoercion::implicitNumericCast(
 					std::move(translated), keyWType, m_loc);
 
+			// Side-effect-safe: the biguint key build below references
+			// the index value twice (concat for padding + len() for
+			// the extract3 offset). When the index has side effects
+			// (e.g. `m[--bucket]` → AssignmentExpression), the puya
+			// backend re-emits IR for each reference path even with
+			// SingleEvaluation wrapping (the cache key relies on
+			// post-deserialization equality, which doesn't always
+			// hold for nested AssignmentExpressions).
+			//
+			// Materialise to a fresh local var: the side effect runs
+			// once at the temp-var assignment, and subsequent uses
+			// just read the var. This is the same pattern as
+			// post-increment's `__postinc_` in SolUnaryOperation.
+			if (dynamic_cast<awst::AssignmentExpression const*>(translated.get()))
+			{
+				static int idxTempCounter = 0;
+				std::string tempName = "__sol_idx_" + std::to_string(idxTempCounter++);
+				auto tempVar = awst::makeVarExpression(tempName, translated->wtype, m_loc);
+				auto saveStmt = awst::makeAssignmentStatement(
+					tempVar, std::move(translated), m_loc);
+				m_ctx.prePendingStatements.push_back(std::move(saveStmt));
+				translated = tempVar;
+			}
+
 			std::shared_ptr<awst::Expression> keyBytes;
 			if (keyWType == awst::WType::uint64Type())
 			{

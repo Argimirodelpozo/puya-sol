@@ -1,156 +1,99 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 2 192
-    bytecblock 0x 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 "_owner" 0x01 "_pendingOwner" "_cachedDomainSeparator" "_cachedThis" "_cachedChainId" "_cachedNameHash" "_cachedVersionHash" 0x00 0x0000000000000000000000000000000000000000000000010000000000000000 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f 0x66965e57eafd313c3114e0932efe129eb2a61f8d37a3c43007c4ee5a76b85b7d "_registeredSpokes" "_nonces"
-    intc_1 // 0
-    dupn 3
-    txn ApplicationID
-    bnz main_after_if_else@14
-    bytec_3 // "_owner"
-    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
-    app_global_put
-    bytec 5 // "_pendingOwner"
-    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
-    app_global_put
-    bytec 7 // "_cachedThis"
-    bytec_0 // 0x
-    app_global_put
-    bytec 8 // "_cachedChainId"
-    bytec_0 // 0x
-    app_global_put
-    bytec 9 // "_cachedNameHash"
-    bytec_0 // 0x
-    app_global_put
-    bytec 10 // "_cachedVersionHash"
-    bytec_0 // 0x
-    app_global_put
-    bytec 6 // "_cachedDomainSeparator"
-    bytec_0 // 0x
-    app_global_put
-    txna ApplicationArgs 0
-    dup
-    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
-    ==
-    !
-    assert // OwnableInvalidOwner
-    callsub _transferOwnership(1)
-    bytec 7 // "_cachedThis"
-    global CurrentApplicationAddress
-    app_global_put
-    global CurrentApplicationID
-    itob
-    bytec 8 // "_cachedChainId"
-    swap
-    app_global_put
-    bytec_0 // ""
-    bury 2
-    bytec_0 // ""
-    bnz main_after_if_else@5
-    pushbytes "1"
-    bury 2
-
-main_after_if_else@5:
-    bytec_0 // ""
-    bz main_ternary_false@7
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    bury 4
-
-main_ternary_merge@8:
-    bytec_0 // ""
-    bz main_ternary_false@10
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    bury 1
-
-main_ternary_merge@11:
-    bytec 9 // "_cachedNameHash"
-    dig 4
-    app_global_put
-    bytec 10 // "_cachedVersionHash"
-    dig 1
-    app_global_put
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    bury 3
-    bytec_0 // ""
-    bnz main_after_if_else@13
-    global CurrentApplicationAddress
-    intc_0 // 32
+    intcblock 32 0 1 8 192
+    bytecblock 0x 0x0000000000000000000000000000000000000000000000000000000000000000 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 "_pendingOwner" 0x00 "_owner" "_cachedDomainSeparator" "__ctor_pending" 0x20 "_registeredSpokes" "_cachedThis" "_cachedChainId" "_cachedNameHash" "_cachedVersionHash" 0x0000 0x0000000000000000000000000000000000000000000000010000000000000000 0x1626ba7e00000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffff 0x66965e57eafd313c3114e0932efe129eb2a61f8d37a3c43007c4ee5a76b85b7d 0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f 0x0000000000000000000000000000000000000000000000000000000000000001 "_nonces"
+    pushint 4096
     bzero
     dup
-    dig 6
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 13 // 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f
-    swap
-    concat
-    dig 1
-    dig 4
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    concat
-    swap
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    keccak256
-    bury 3
-
-main_after_if_else@13:
-    bytec 6 // "_cachedDomainSeparator"
-    dig 3
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 9 // "__ctor_pending"
+    intc_2 // 1
     app_global_put
     intc_2 // 1
     return
 
-main_ternary_false@10:
-    dig 1
-    keccak256
-    bury 1
-    b main_ternary_merge@11
-
-main_ternary_false@7:
-    bytec 14 // 0x66965e57eafd313c3114e0932efe129eb2a61f8d37a3c43007c4ee5a76b85b7d
-    bury 4
-    b main_ternary_merge@8
-
-main_after_if_else@14:
+main_after_if_else@2:
     txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
-    pushbytess 0x80b5ce6a 0x26911636 0x0ad9ba06 0x855ffb05 0x0525a797 0x201519ce 0xa7b7af98 0xb82fa298 0x81a94433 0x77004d83 0xac32f1c9 0x3ce7a8fa 0x35d2f814 0x7ab98c5f 0x1bdb1098 0xec6a26df 0xbd0b8e46 0xac302e00 0x2f3b1eaf 0x6debbb09 0xd5ad4516 0xe17bafb4 0xd521d604 0xb1bbb0a8 0x3e2c61e5 // method "supplyWithSig((uint8[32],uint256,uint256,uint8[32],uint256,uint256),byte[])(uint256,uint256)", method "withdrawWithSig((uint8[32],uint256,uint256,uint8[32],uint256,uint256),byte[])(uint256,uint256)", method "borrowWithSig((uint8[32],uint256,uint256,uint8[32],uint256,uint256),byte[])(uint256,uint256)", method "repayWithSig((uint8[32],uint256,uint256,uint8[32],uint256,uint256),byte[])(uint256,uint256)", method "setUsingAsCollateralWithSig((uint8[32],uint256,uint8,uint8[32],uint256,uint256),byte[])void", method "updateUserRiskPremiumWithSig((uint8[32],uint8[32],uint256,uint256),byte[])void", method "updateUserDynamicConfigWithSig((uint8[32],uint8[32],uint256,uint256),byte[])void", method "registerSpoke(address,bool)void", method "setSelfAsUserPositionManagerWithSig(address,address,bool,uint256,uint256,byte[])void", method "permitReserveUnderlying(address,uint256,address,uint256,uint256,uint64,byte[32],byte[32])void", method "renouncePositionManagerRole(address,address)void", method "multicall(byte[])byte[]", method "isSpokeRegistered(address)bool", method "rescueToken(address,address,uint256)void", method "rescueNative(address,uint256)void", method "rescueGuardian()address", method "DOMAIN_SEPARATOR()byte[32]", method "eip712Domain()(byte[1],string,string,uint256,address,byte[32],uint256[])", method "useNonce(uint256)uint256", method "nonces(address,uint256)uint256", method "pendingOwner()address", method "transferOwnership(address)void", method "acceptOwnership()void", method "owner()address", method "renounceOwnership()void"
+    pushbytess 0x990f30ae 0x80efb3eb 0x25e36190 0x31d0485e 0x402c82aa 0x8763543f 0x201519ce 0xa7b7af98 0x157b28f1 0x836ca7c1 0x86eebbd7 0xdae49c89 0xeb936e8c 0x864981f9 0xc054c883 0xb82fa298 0x81a94433 0x77004d83 0xac32f1c9 0x04919a26 0x35d2f814 0x7ab98c5f 0x1bdb1098 0xec6a26df 0xbd0b8e46 0xc86b1832 0xd6d68593 0x4bebf91b 0xd5ad4516 0xe17bafb4 0xd521d604 0xb1bbb0a8 0x3e2c61e5 // method "__postInit(address)void", method "supplyWithSig((uint8[32],uint256,uint256,uint8[32],uint256,uint256),byte[])(uint512,uint512)", method "withdrawWithSig((uint8[32],uint256,uint256,uint8[32],uint256,uint256),byte[])(uint512,uint512)", method "borrowWithSig((uint8[32],uint256,uint256,uint8[32],uint256,uint256),byte[])(uint512,uint512)", method "repayWithSig((uint8[32],uint256,uint256,uint8[32],uint256,uint256),byte[])(uint512,uint512)", method "setUsingAsCollateralWithSig((uint8[32],uint256,bool,uint8[32],uint256,uint256),byte[])void", method "updateUserRiskPremiumWithSig((uint8[32],uint8[32],uint256,uint256),byte[])void", method "updateUserDynamicConfigWithSig((uint8[32],uint8[32],uint256,uint256),byte[])void", method "SUPPLY_TYPEHASH()byte[32]", method "WITHDRAW_TYPEHASH()byte[32]", method "BORROW_TYPEHASH()byte[32]", method "REPAY_TYPEHASH()byte[32]", method "SET_USING_AS_COLLATERAL_TYPEHASH()byte[32]", method "UPDATE_USER_RISK_PREMIUM_TYPEHASH()byte[32]", method "UPDATE_USER_DYNAMIC_CONFIG_TYPEHASH()byte[32]", method "registerSpoke(address,bool)void", method "setSelfAsUserPositionManagerWithSig(address,address,bool,uint256,uint256,byte[])void", method "permitReserveUnderlying(address,uint256,address,uint256,uint256,uint64,byte[32],byte[32])void", method "renouncePositionManagerRole(address,address)void", method "multicall(byte[][])byte[][]", method "isSpokeRegistered(address)bool", method "rescueToken(address,address,uint256)void", method "rescueNative(address,uint256)void", method "rescueGuardian()address", method "DOMAIN_SEPARATOR()byte[32]", method "eip712Domain()(byte[1],string,string,uint512,address,byte[32],uint256[])", method "useNonce(uint192)uint256", method "nonces(address,uint192)uint256", method "pendingOwner()address", method "transferOwnership(address)void", method "acceptOwnership()void", method "owner()address", method "renounceOwnership()void"
     txna ApplicationArgs 0
-    match supplyWithSig withdrawWithSig borrowWithSig repayWithSig setUsingAsCollateralWithSig updateUserRiskPremiumWithSig updateUserDynamicConfigWithSig registerSpoke setSelfAsUserPositionManagerWithSig permitReserveUnderlying renouncePositionManagerRole multicall(1) isSpokeRegistered rescueToken rescueNative rescueGuardian DOMAIN_SEPARATOR eip712Domain useNonce nonces pendingOwner transferOwnership(1) acceptOwnership owner renounceOwnership
+    match __postInit supplyWithSig withdrawWithSig borrowWithSig repayWithSig setUsingAsCollateralWithSig updateUserRiskPremiumWithSig updateUserDynamicConfigWithSig SUPPLY_TYPEHASH WITHDRAW_TYPEHASH BORROW_TYPEHASH REPAY_TYPEHASH SET_USING_AS_COLLATERAL_TYPEHASH UPDATE_USER_RISK_PREMIUM_TYPEHASH UPDATE_USER_DYNAMIC_CONFIG_TYPEHASH registerSpoke setSelfAsUserPositionManagerWithSig permitReserveUnderlying renouncePositionManagerRole multicall isSpokeRegistered rescueToken rescueNative rescueGuardian DOMAIN_SEPARATOR eip712Domain useNonce nonces pendingOwner transferOwnership acceptOwnership owner renounceOwnership
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.Address.sendValue(recipient: bytes, amount: bytes) -> void:
+// _puya_lib.arc4._recalculate_head_for_elements_with_byte_length_head(array_head_and_tail: bytes, length: uint64, start_at_index: uint64) -> bytes:
+_recalculate_head_for_elements_with_byte_length_head:
+    proto 3 1
+    frame_dig -2
+    pushint 2
+    *
+    dup
+    frame_dig -1
+    pushint 2
+    *
+    frame_dig -3
+    dig 1
+    extract_uint16
+    uncover 2
+    swap
+    frame_dig -1
+    select
+    swap
+
+_recalculate_head_for_elements_with_byte_length_head_for_header@1:
+    frame_dig 2
+    frame_dig 0
+    <
+    bz _recalculate_head_for_elements_with_byte_length_head_after_for@4
+    frame_dig 1
+    dup
+    itob
+    extract 6 0
+    frame_dig -3
+    frame_dig 2
+    dup
+    cover 4
+    uncover 2
+    replace3
+    dup
+    frame_bury -3
+    dig 1
+    extract_uint16
+    pushint 2
+    +
+    +
+    frame_bury 1
+    pushint 2
+    +
+    frame_bury 2
+    b _recalculate_head_for_elements_with_byte_length_head_for_header@1
+
+_recalculate_head_for_elements_with_byte_length_head_after_for@4:
+    frame_dig -3
+    frame_bury 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.Address.sendValue(recipient: bytes, amount: bytes) -> void:
 Address.sendValue:
     proto 2 0
-    intc_1 // 0
+    global CurrentApplicationAddress
+    acct_params_get AcctBalance
+    pop
     itob
-    dup
     frame_dig -1
     b<
     !
@@ -164,30 +107,44 @@ Address.sendValue:
 
 Address.sendValue_else_body@4:
     callsub LowLevelCall.returnDataSize
-    frame_dig 0
+    bytec_0 // 0x
     b>
     assert // FailedCall
     b LowLevelCall.bubbleRevert
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.ECDSA.tryRecoverCalldata(hash: bytes, signature: bytes) -> bytes, uint64, bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.ECDSA.tryRecoverCalldata(hash: bytes, signature: bytes) -> bytes, uint64, bytes:
 ECDSA.tryRecoverCalldata:
     proto 2 3
     intc_1 // 0
     frame_dig -1
     len
+    itob
     dup
-    pushint 65
-    ==
+    pushbytes 0x41
+    b==
     bz ECDSA.tryRecoverCalldata_else_body@2
+    load 0
+    intc_0 // 32
+    bzero
     frame_dig -1
     extract 0 32
-    pushint 8
-    bzero
+    dig 1
+    swap
+    concat
+    dup
+    len
     intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 32
+    intc_3 // 8
     bzero
     frame_dig 0
     extract 0 32
+    uncover 3
+    swap
     concat
     dup
     len
@@ -196,12 +153,16 @@ ECDSA.tryRecoverCalldata:
     intc_0 // 32
     extract3
     extract 0 1
+    pushbytes 0xff
+    b&
     concat
     dup
     len
-    pushint 8
+    intc_3 // 8
     -
     extract_uint64
+    uncover 2
+    store 0
     frame_dig -2
     swap
     dig 2
@@ -215,7 +176,6 @@ ECDSA.tryRecoverCalldata_else_body@2:
     intc_0 // 32
     bzero
     frame_dig 1
-    itob
     concat
     dup
     len
@@ -223,34 +183,103 @@ ECDSA.tryRecoverCalldata_else_body@2:
     -
     intc_0 // 32
     extract3
-    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
-    intc_3 // 2
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    pushint 2
     uncover 2
     uncover 4
     uncover 4
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.ECDSA.tryRecover(4)(hash: bytes, v: uint64, r: bytes, s: bytes) -> bytes, uint64, bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.ECDSA.tryRecover(4)(hash: bytes, v: uint64, r: bytes, s: bytes) -> bytes, uint64, bytes:
 ECDSA.tryRecover:
     proto 4 3
+    intc_1 // 0
+    dupn 2
+    bytec_0 // ""
     frame_dig -1
     pushbytes 0x7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0
     b>
     bz ECDSA.tryRecover_after_if_else@2
-    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
     pushint 3
     frame_dig -1
+    frame_bury 2
+    frame_bury 1
+    frame_bury 0
     retsub
 
 ECDSA.tryRecover_after_if_else@2:
-    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    frame_dig -3
+    pushint 27
+    >=
+    dup
+    frame_bury 3
+    bz ECDSA.tryRecover_ternary_false@4
+    frame_dig -3
+    pushint 27
+    -
+
+ECDSA.tryRecover_ternary_merge@5:
+    intc_2 // 1
+    &
+    frame_dig -4
+    swap
+    frame_dig -2
+    frame_dig -1
+    ecdsa_pk_recover Secp256k1
+    frame_bury 1
+    frame_bury 0
+    frame_dig 3
+    bz ECDSA.tryRecover_ternary_false@8
+    frame_dig -3
+    pushint 28
+    <=
+    bz ECDSA.tryRecover_ternary_false@8
+    pushint 12
+    bzero
+    frame_dig 0
+    frame_dig 1
+    concat
+    keccak256
+    extract 12 20
+    concat
+    frame_bury 2
+
+ECDSA.tryRecover_ternary_merge@9:
+    frame_dig 2
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    ==
+    bz ECDSA.tryRecover_after_if_else@11
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
     intc_2 // 1
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    frame_bury 2
+    frame_bury 1
+    frame_bury 0
     retsub
 
+ECDSA.tryRecover_after_if_else@11:
+    frame_dig 2
+    intc_1 // 0
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    frame_bury 2
+    frame_bury 1
+    frame_bury 0
+    retsub
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_0(params: bytes) -> bytes, bytes:
+ECDSA.tryRecover_ternary_false@8:
+    intc_0 // 32
+    bzero
+    frame_bury 2
+    b ECDSA.tryRecover_ternary_merge@9
+
+ECDSA.tryRecover_ternary_false@4:
+    intc_1 // 0
+    b ECDSA.tryRecover_ternary_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_0(params: bytes) -> bytes, bytes:
 EIP712Hash.hash:
     proto 1 2
     frame_dig -1
@@ -258,125 +287,303 @@ EIP712Hash.hash:
     pushbytes 0xe85497eb293c001e8483fe105efadd1d50aa0dadfc0570b27058031dfceab2e6
     swap
     concat
+    intc_0 // 32
+    bzero
     frame_dig -1
     extract 32 32
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
     concat
     frame_dig -1
     extract 64 32
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
     frame_dig -1
     extract 96 32
     concat
     frame_dig -1
     extract 128 32
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
     frame_dig -1
     extract 160 32
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
     keccak256
     frame_dig -1
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_1(params: bytes) -> bytes, bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_1:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_1(params: bytes) -> bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_1:
     proto 1 2
     frame_dig -1
     extract 0 32
     pushbytes 0x0bc73eb58cf4068a29b9593ef18c0d26b3b4453bd2155424a90cb26a22f41d7f
     swap
     concat
+    intc_0 // 32
+    bzero
     frame_dig -1
     extract 32 32
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
     concat
     frame_dig -1
     extract 64 32
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
     frame_dig -1
     extract 96 32
     concat
     frame_dig -1
     extract 128 32
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
     frame_dig -1
     extract 160 32
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
     keccak256
     frame_dig -1
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_2(params: bytes) -> bytes, bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_2:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_2(params: bytes) -> bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_2:
     proto 1 2
     frame_dig -1
     extract 0 32
     pushbytes 0xe248895a233688ba2a70b6f560472dbc27e35ece0d86914f7d43bf2f7df8025b
     swap
     concat
+    intc_0 // 32
+    bzero
     frame_dig -1
     extract 32 32
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
     concat
     frame_dig -1
     extract 64 32
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
     frame_dig -1
     extract 96 32
     concat
     frame_dig -1
     extract 128 32
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
     frame_dig -1
     extract 160 32
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
     keccak256
     frame_dig -1
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_3(params: bytes) -> bytes, bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_3:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_3(params: bytes) -> bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_3:
     proto 1 2
     frame_dig -1
     extract 0 32
     pushbytes 0xd23fe99a7aac398d03952a098faa8889259d062784bd80ea0f159e4af604c045
     swap
     concat
+    intc_0 // 32
+    bzero
     frame_dig -1
     extract 32 32
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
     concat
     frame_dig -1
     extract 64 32
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
     frame_dig -1
     extract 96 32
     concat
     frame_dig -1
     extract 128 32
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
     frame_dig -1
     extract 160 32
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
     keccak256
     frame_dig -1
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_4(params: bytes) -> bytes, bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_4:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_4(params: bytes) -> bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_4:
     proto 1 2
     frame_dig -1
     extract 0 32
     pushbytes 0xd4350e1f25ecd62a35b50e8cd1e00bc34331ae8c728ee4dbb69ecf1023daecf7
     swap
     concat
+    intc_0 // 32
+    bzero
     frame_dig -1
     extract 32 32
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
     concat
     frame_dig -1
-    extract 64 1
-    bytec_0 // 0x
-    b!=
+    pushint 512
+    getbit
+    bytec 6 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
     itob
     concat
     frame_dig -1
@@ -384,17 +591,35 @@ EIP712Hash.hash:
     concat
     frame_dig -1
     extract 97 32
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
     frame_dig -1
     extract 129 32
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
     keccak256
     frame_dig -1
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_5(params: bytes) -> bytes, bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_5:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_5(params: bytes) -> bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_5:
     proto 1 2
     frame_dig -1
     extract 0 32
@@ -404,19 +629,41 @@ EIP712Hash.hash:
     frame_dig -1
     extract 32 32
     concat
+    intc_0 // 32
+    bzero
     frame_dig -1
     extract 64 32
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
     concat
     frame_dig -1
     extract 96 32
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
     keccak256
     frame_dig -1
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_6(params: bytes) -> bytes, bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_6:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_6(params: bytes) -> bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_6:
     proto 1 2
     frame_dig -1
     extract 0 32
@@ -426,38 +673,92 @@ EIP712Hash.hash:
     frame_dig -1
     extract 32 32
     concat
+    intc_0 // 32
+    bzero
     frame_dig -1
     extract 64 32
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
     concat
     frame_dig -1
     extract 96 32
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
     keccak256
     frame_dig -1
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.LowLevelCall.callNoReturn(3)(target: bytes, value: bytes, data: bytes) -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.LowLevelCall.callNoReturn(3)(target: bytes, value: bytes, data: bytes) -> uint64:
 LowLevelCall.callNoReturn:
     proto 3 1
+    load 0
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    bytec 10 // 0x20
+    b+
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dig 2
+    cover 2
+    extract3
+    replace2 0
+    store 0
     intc_2 // 1
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.LowLevelCall.returnDataSize() -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.LowLevelCall.returnDataSize() -> bytes:
 LowLevelCall.returnDataSize:
+    load 0
+    store 0
     bytec_0 // 0x
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.LowLevelCall.bubbleRevert(0)() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.LowLevelCall.bubbleRevert(0)() -> void:
 LowLevelCall.bubbleRevert:
     err // revert
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.MathUtils.min(a: bytes, b: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.MathUtils.min(a: bytes, b: bytes) -> bytes:
 MathUtils.min:
     proto 2 1
+    load 0
     frame_dig -2
     frame_dig -1
     b^
@@ -465,18 +766,20 @@ MathUtils.min:
     frame_dig -1
     b<
     bytec_0 // 0x
-    bytec 4 // 0x01
+    bytec_2 // 0x01
     uncover 2
     select
     b*
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     frame_dig -1
     b^
+    swap
+    store 0
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SafeERC20.safeTransfer(token: bytes, to: bytes, value: bytes) -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SafeERC20.safeTransfer(token: bytes, to: bytes, value: bytes) -> void:
 SafeERC20.safeTransfer:
     proto 3 0
     frame_dig -3
@@ -488,7 +791,7 @@ SafeERC20.safeTransfer:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SafeERC20.safeTransferFrom(token: bytes, from: bytes, to: bytes, value: bytes) -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SafeERC20.safeTransferFrom(token: bytes, from: bytes, to: bytes, value: bytes) -> void:
 SafeERC20.safeTransferFrom:
     proto 4 0
     frame_dig -4
@@ -501,7 +804,7 @@ SafeERC20.safeTransferFrom:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SafeERC20.forceApprove(token: bytes, spender: bytes, value: bytes) -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SafeERC20.forceApprove(token: bytes, spender: bytes, value: bytes) -> void:
 SafeERC20.forceApprove:
     proto 3 0
     frame_dig -3
@@ -529,11 +832,51 @@ SafeERC20.forceApprove_after_if_else@6:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SafeERC20._safeTransfer(token: bytes, to: bytes, value: bytes, bubble: uint64) -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SafeERC20._safeTransfer(token: bytes, to: bytes, value: bytes, bubble: uint64) -> uint64:
 SafeERC20._safeTransfer:
     proto 4 1
+    load 0
+    dup
+    extract 64 32
+    swap
+    intc_0 // 32
+    bzero
+    dup
+    uncover 2
+    pushbytes 0xa9059cbb00000000000000000000000000000000000000000000000000000000
+    replace2 0
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 4
+    swap
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 36
+    dup
+    extract 0 68
+    replace2 0
+    dup
+    intc_2 // 1
+    swap
+    extract 0 32
+    bytec_2 // 0x01
+    b==
     bytec_0 // 0x
-    bytec 4 // 0x01
+    bytec_2 // 0x01
+    uncover 2
+    select
+    bytec_2 // 0x01
+    b&
+    bytec_0 // 0x
+    b==
+    bz SafeERC20._safeTransfer_after_if_else@2
+    bytec_0 // 0x
+    bytec_2 // 0x01
     frame_dig -1
     select
     bytec_0 // 0x
@@ -543,14 +886,74 @@ SafeERC20._safeTransfer:
     !
     assert // revert
     intc_2 // 1
+    frame_bury 3
+
+SafeERC20._safeTransfer_after_if_else@2:
+    frame_dig 1
+    frame_dig 0
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    frame_dig 2
+    swap
+    replace2 64
+    store 0
+    frame_dig 3
+    frame_bury 0
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SafeERC20._safeTransferFrom(token: bytes, from: bytes, to: bytes, value: bytes, bubble: uint64) -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SafeERC20._safeTransferFrom(token: bytes, from: bytes, to: bytes, value: bytes, bubble: uint64) -> uint64:
 SafeERC20._safeTransferFrom:
     proto 5 1
+    load 0
+    dup
+    extract 64 32
+    swap
+    intc_0 // 32
+    bzero
+    dup
+    uncover 2
+    pushbytes 0x23b872dd00000000000000000000000000000000000000000000000000000000
+    replace2 0
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 4
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 36
+    swap
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 68
+    dup
+    extract 0 100
+    replace2 0
+    dup
+    intc_2 // 1
+    swap
+    extract 0 32
+    bytec_2 // 0x01
+    b==
     bytec_0 // 0x
-    bytec 4 // 0x01
+    bytec_2 // 0x01
+    uncover 2
+    select
+    bytec_2 // 0x01
+    b&
+    bytec_0 // 0x
+    b==
+    bz SafeERC20._safeTransferFrom_after_if_else@2
+    bytec_0 // 0x
+    bytec_2 // 0x01
     frame_dig -1
     select
     bytec_0 // 0x
@@ -560,14 +963,74 @@ SafeERC20._safeTransferFrom:
     !
     assert // revert
     intc_2 // 1
+    frame_bury 3
+
+SafeERC20._safeTransferFrom_after_if_else@2:
+    frame_dig 1
+    frame_dig 0
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    frame_dig 2
+    swap
+    replace2 64
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 96
+    store 0
+    frame_dig 3
+    frame_bury 0
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SafeERC20._safeApprove(token: bytes, spender: bytes, value: bytes, bubble: uint64) -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SafeERC20._safeApprove(token: bytes, spender: bytes, value: bytes, bubble: uint64) -> uint64:
 SafeERC20._safeApprove:
     proto 4 1
+    load 0
+    dup
+    extract 64 32
+    swap
+    intc_0 // 32
+    bzero
+    dup
+    uncover 2
+    pushbytes 0x095ea7b300000000000000000000000000000000000000000000000000000000
+    replace2 0
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 4
+    swap
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 36
+    dup
+    extract 0 68
+    replace2 0
+    dup
+    intc_2 // 1
+    swap
+    extract 0 32
+    bytec_2 // 0x01
+    b==
     bytec_0 // 0x
-    bytec 4 // 0x01
+    bytec_2 // 0x01
+    uncover 2
+    select
+    bytec_2 // 0x01
+    b&
+    bytec_0 // 0x
+    b==
+    bz SafeERC20._safeApprove_after_if_else@2
+    bytec_0 // 0x
+    bytec_2 // 0x01
     frame_dig -1
     select
     bytec_0 // 0x
@@ -577,21 +1040,55 @@ SafeERC20._safeApprove:
     !
     assert // revert
     intc_2 // 1
+    frame_bury 3
+
+SafeERC20._safeApprove_after_if_else@2:
+    frame_dig 1
+    frame_dig 0
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    frame_dig 2
+    swap
+    replace2 64
+    store 0
+    frame_dig 3
+    frame_bury 0
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureChecker.isValidSignatureNowCalldata(signer: bytes, hash: bytes, signature: bytes) -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureChecker.isValidSignatureNowCalldata(signer: bytes, hash: bytes, signature: bytes) -> uint64:
 SignatureChecker.isValidSignatureNowCalldata:
     proto 3 1
+    intc_1 // 0
+    frame_dig -3
+    pushint 24
+    extract_uint64
+    app_params_get AppApprovalProgram
+    pop
+    len
+    itob
+    bytec_0 // 0x
+    b==
+    bz SignatureChecker.isValidSignatureNowCalldata_else_body@6
     frame_dig -2
     frame_dig -1
     callsub ECDSA.tryRecoverCalldata
     popn 2
+    frame_bury 0
     frame_dig -2
     frame_dig -1
     callsub ECDSA.tryRecoverCalldata
     pop
     bury 1
+    dup
+    pushint 4
+    <
+    assert // enum out of range
     bnz SignatureChecker.isValidSignatureNowCalldata_bool_false@4
     frame_dig 0
     frame_dig -3
@@ -607,8 +1104,313 @@ SignatureChecker.isValidSignatureNowCalldata_bool_false@4:
     intc_1 // 0
     b SignatureChecker.isValidSignatureNowCalldata_bool_merge@5
 
+SignatureChecker.isValidSignatureNowCalldata_else_body@6:
+    frame_dig -3
+    frame_dig -2
+    frame_dig -1
+    callsub SignatureChecker.isValidERC1271SignatureNow
+    swap
+    retsub
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.supplyWithSig[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureChecker.isValidERC1271SignatureNow(signer: bytes, hash: bytes, signature: bytes) -> uint64:
+SignatureChecker.isValidERC1271SignatureNow:
+    proto 3 1
+    frame_dig -1
+    len
+    itob
+    load 0
+    intc_3 // 8
+    bzero
+    dig 1
+    extract 64 32
+    dup2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    bzero
+    uncover 4
+    dig 2
+    bytec 18 // 0x1626ba7e00000000000000000000000000000000000000000000000000000000
+    replace3
+    dig 3
+    pushbytes 0x04
+    b+
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dig 2
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace3
+    dig 3
+    pushbytes 0x24
+    b+
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000040
+    replace3
+    uncover 3
+    pushbytes 0x44
+    b+
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    uncover 2
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace3
+    uncover 3
+    pushbytes 0x64
+    b+
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dig 1
+    uncover 3
+    uncover 2
+    extract3
+    replace2 0
+    dup
+    extract 0 32
+    bytec 18 // 0x1626ba7e00000000000000000000000000000000000000000000000000000000
+    b==
+    bytec_0 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    bytec_0 // 0x
+    b&
+    bytec_2 // 0x01
+    b&
+    bytec_0 // 0x
+    b!=
+    swap
+    store 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.__postInit[routing]() -> void:
+__postInit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    bytec 9 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 9 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec 11 // "_registeredSpokes"
+    pushint 2
+    box_create
+    pop
+    bytec 7 // "_owner"
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 5 // "_pendingOwner"
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 12 // "_cachedThis"
+    bytec_0 // 0x
+    app_global_put
+    bytec 13 // "_cachedChainId"
+    bytec_0 // 0x
+    app_global_put
+    bytec 14 // "_cachedNameHash"
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec 15 // "_cachedVersionHash"
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec 8 // "_cachedDomainSeparator"
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    intc_0 // 32
+    bzero
+    dig 1
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    ==
+    !
+    assert // OwnableInvalidOwner
+    swap
+    callsub _transferOwnership
+    global CurrentApplicationAddress
+    bytec 19 // 0xffffffffffffffffffffffffffffffffffffffff
+    b&
+    bytec 19 // 0xffffffffffffffffffffffffffffffffffffffff
+    b&
+    bytec 12 // "_cachedThis"
+    swap
+    app_global_put
+    bytec 13 // "_cachedChainId"
+    bytec_2 // 0x01
+    app_global_put
+    bytec 14 // "_cachedNameHash"
+    bytec 20 // 0x66965e57eafd313c3114e0932efe129eb2a61f8d37a3c43007c4ee5a76b85b7d
+    app_global_put
+    bytec 15 // "_cachedVersionHash"
+    bytec 21 // 0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6
+    app_global_put
+    load 0
+    intc_3 // 8
+    bzero
+    dig 1
+    extract 64 32
+    dup2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    uncover 3
+    dig 1
+    bytec 22 // 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f
+    replace3
+    dig 2
+    bytec 10 // 0x20
+    b+
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    bytec 20 // 0x66965e57eafd313c3114e0932efe129eb2a61f8d37a3c43007c4ee5a76b85b7d
+    replace3
+    dig 2
+    pushbytes 0x40
+    b+
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    bytec 21 // 0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6
+    replace3
+    dig 2
+    pushbytes 0x60
+    b+
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    bytec 23 // 0x0000000000000000000000000000000000000000000000000000000000000001
+    replace3
+    uncover 2
+    pushbytes 0x80
+    b+
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dig 3
+    global CurrentApplicationAddress
+    concat
+    dig 4
+    global CurrentApplicationAddress
+    concat
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace3
+    dup
+    uncover 2
+    pushint 160
+    extract3
+    keccak256
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 32
+    swap
+    store 0
+    bytec 8 // "_cachedDomainSeparator"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.supplyWithSig[routing]() -> void:
 supplyWithSig:
     txna ApplicationArgs 1
     dup
@@ -620,23 +1422,34 @@ supplyWithSig:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    txn GroupIndex
+    bz supplyWithSig_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+supplyWithSig_ternary_merge@4:
+    !
+    assert // not payable
     dig 1
+    dup
     extract 0 32
     dup
     callsub _isSpokeRegistered
     assert // SpokeNotRegistered
-    dig 2
+    dig 1
     extract 32 32
-    dig 3
+    dig 2
     extract 96 32
-    uncover 4
+    uncover 3
     callsub EIP712Hash.hash
     dup
     extract 128 32
@@ -646,7 +1459,7 @@ supplyWithSig:
     uncover 4
     uncover 3
     uncover 3
-    uncover 8
+    dig 8
     callsub _verifyAndConsumeIntent
     dig 3
     dig 3
@@ -675,8 +1488,8 @@ supplyWithSig:
     -
     intc_0 // 32
     extract3
-    dig 1
-    uncover 3
+    swap
+    uncover 2
     concat
     dup
     len
@@ -684,7 +1497,7 @@ supplyWithSig:
     -
     intc_0 // 32
     extract3
-    uncover 4
+    uncover 3
     pushint 24
     extract_uint64
     pushint 6
@@ -699,29 +1512,33 @@ supplyWithSig:
     swap
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
-    swap
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     extract 4 32
     itxn LastLog
     extract 36 32
-    swap
-    dig 2
-    b|
-    swap
+    pushint 64
+    bzero
     uncover 2
+    dig 1
+    b|
+    cover 2
     b|
     concat
-    bytec_2 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
 
+supplyWithSig_ternary_false@3:
+    intc_1 // 0
+    b supplyWithSig_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.withdrawWithSig[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.withdrawWithSig[routing]() -> void:
 withdrawWithSig:
     txna ApplicationArgs 1
     dup
@@ -733,24 +1550,35 @@ withdrawWithSig:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    txn GroupIndex
+    bz withdrawWithSig_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+withdrawWithSig_ternary_merge@4:
+    !
+    assert // not payable
     dig 1
+    dup
     extract 0 32
     dup
     callsub _isSpokeRegistered
     assert // SpokeNotRegistered
-    dig 2
+    dig 1
     extract 32 32
-    dig 3
+    dig 2
     extract 96 32
-    uncover 4
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_1
+    uncover 3
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_1
     dup
     extract 128 32
     dig 1
@@ -759,7 +1587,7 @@ withdrawWithSig:
     uncover 4
     uncover 3
     uncover 3
-    uncover 8
+    dig 8
     callsub _verifyAndConsumeIntent
     dig 3
     dig 3
@@ -778,7 +1606,7 @@ withdrawWithSig:
     extract3
     uncover 3
     extract 64 32
-    dig 2
+    uncover 2
     swap
     concat
     dup
@@ -787,7 +1615,7 @@ withdrawWithSig:
     -
     intc_0 // 32
     extract3
-    uncover 5
+    uncover 4
     pushint 24
     extract_uint64
     pushint 6
@@ -802,33 +1630,38 @@ withdrawWithSig:
     swap
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
-    dig 2
+    dig 1
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     extract 4 32
     itxn LastLog
     extract 36 32
+    uncover 2
     uncover 3
-    uncover 4
     dig 2
     callsub SafeERC20.safeTransfer
-    swap
-    dig 2
-    b|
-    swap
+    pushint 64
+    bzero
     uncover 2
+    dig 1
+    b|
+    cover 2
     b|
     concat
-    bytec_2 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
 
+withdrawWithSig_ternary_false@3:
+    intc_1 // 0
+    b withdrawWithSig_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.borrowWithSig[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.borrowWithSig[routing]() -> void:
 borrowWithSig:
     txna ApplicationArgs 1
     dup
@@ -840,24 +1673,35 @@ borrowWithSig:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    txn GroupIndex
+    bz borrowWithSig_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+borrowWithSig_ternary_merge@4:
+    !
+    assert // not payable
     dig 1
+    dup
     extract 0 32
     dup
     callsub _isSpokeRegistered
     assert // SpokeNotRegistered
-    dig 2
+    dig 1
     extract 32 32
-    dig 3
+    dig 2
     extract 96 32
-    uncover 4
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_2
+    uncover 3
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_2
     dup
     extract 128 32
     dig 1
@@ -866,7 +1710,7 @@ borrowWithSig:
     uncover 4
     uncover 3
     uncover 3
-    uncover 8
+    dig 8
     callsub _verifyAndConsumeIntent
     dig 3
     dig 3
@@ -885,7 +1729,7 @@ borrowWithSig:
     extract3
     uncover 3
     extract 64 32
-    dig 2
+    uncover 2
     swap
     concat
     dup
@@ -894,7 +1738,7 @@ borrowWithSig:
     -
     intc_0 // 32
     extract3
-    uncover 5
+    uncover 4
     pushint 24
     extract_uint64
     pushint 6
@@ -909,33 +1753,38 @@ borrowWithSig:
     swap
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
-    dig 2
+    dig 1
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     extract 4 32
     itxn LastLog
     extract 36 32
+    uncover 2
     uncover 3
-    uncover 4
     dig 2
     callsub SafeERC20.safeTransfer
-    swap
-    dig 2
-    b|
-    swap
+    pushint 64
+    bzero
     uncover 2
+    dig 1
+    b|
+    cover 2
     b|
     concat
-    bytec_2 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
 
+borrowWithSig_ternary_false@3:
+    intc_1 // 0
+    b borrowWithSig_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.repayWithSig[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.repayWithSig[routing]() -> void:
 repayWithSig:
     txna ApplicationArgs 1
     dup
@@ -947,24 +1796,35 @@ repayWithSig:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    txn GroupIndex
+    bz repayWithSig_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+repayWithSig_ternary_merge@4:
+    !
+    assert // not payable
     dig 1
+    dup
     extract 0 32
     dup
     callsub _isSpokeRegistered
     assert // SpokeNotRegistered
-    dig 2
+    dig 1
     extract 32 32
-    dig 3
+    dig 2
     extract 96 32
-    uncover 4
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_3
+    uncover 3
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_3
     dup
     extract 128 32
     dig 1
@@ -973,7 +1833,7 @@ repayWithSig:
     uncover 4
     uncover 3
     uncover 3
-    uncover 8
+    dig 8
     callsub _verifyAndConsumeIntent
     dig 3
     dig 3
@@ -1024,7 +1884,7 @@ repayWithSig:
     dig 2
     callsub SafeERC20.forceApprove
     itxn_begin
-    dig 3
+    uncover 3
     swap
     concat
     dup
@@ -1046,29 +1906,33 @@ repayWithSig:
     swap
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
-    swap
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     extract 4 32
     itxn LastLog
     extract 36 32
-    swap
-    dig 2
-    b|
-    swap
+    pushint 64
+    bzero
     uncover 2
+    dig 1
+    b|
+    cover 2
     b|
     concat
-    bytec_2 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
 
+repayWithSig_ternary_false@3:
+    intc_1 // 0
+    b repayWithSig_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.setUsingAsCollateralWithSig[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.setUsingAsCollateralWithSig[routing]() -> void:
 setUsingAsCollateralWithSig:
     txna ApplicationArgs 1
     dup
@@ -1080,21 +1944,32 @@ setUsingAsCollateralWithSig:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    txn GroupIndex
+    bz setUsingAsCollateralWithSig_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+setUsingAsCollateralWithSig_ternary_merge@4:
+    !
+    assert // not payable
     dig 1
+    dup
     extract 0 32
     callsub _isSpokeRegistered
     assert // SpokeNotRegistered
-    dig 1
+    dup
     extract 65 32
-    uncover 2
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_4
+    swap
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_4
     dup
     extract 97 32
     dig 1
@@ -1103,7 +1978,7 @@ setUsingAsCollateralWithSig:
     uncover 4
     uncover 3
     uncover 3
-    uncover 6
+    dig 6
     callsub _verifyAndConsumeIntent
     itxn_begin
     intc_0 // 32
@@ -1118,10 +1993,15 @@ setUsingAsCollateralWithSig:
     intc_0 // 32
     extract3
     dig 1
-    extract 64 1
-    bytec_0 // 0x
-    b!=
-    bytec 11 // 0x00
+    pushint 512
+    getbit
+    bytec 6 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    bytec 6 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1146,8 +2026,12 @@ setUsingAsCollateralWithSig:
     intc_2 // 1
     return
 
+setUsingAsCollateralWithSig_ternary_false@3:
+    intc_1 // 0
+    b setUsingAsCollateralWithSig_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.updateUserRiskPremiumWithSig[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.updateUserRiskPremiumWithSig[routing]() -> void:
 updateUserRiskPremiumWithSig:
     txna ApplicationArgs 1
     dup
@@ -1159,21 +2043,32 @@ updateUserRiskPremiumWithSig:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    txn GroupIndex
+    bz updateUserRiskPremiumWithSig_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+updateUserRiskPremiumWithSig_ternary_merge@4:
+    !
+    assert // not payable
     dig 1
+    dup
     extract 0 32
     callsub _isSpokeRegistered
     assert // SpokeNotRegistered
-    dig 1
+    dup
     extract 32 32
-    uncover 2
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_5
+    swap
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_5
     dup
     extract 64 32
     dig 1
@@ -1182,7 +2077,7 @@ updateUserRiskPremiumWithSig:
     uncover 4
     uncover 3
     uncover 3
-    uncover 5
+    dig 5
     callsub _verifyAndConsumeIntent
     itxn_begin
     dup
@@ -1205,8 +2100,12 @@ updateUserRiskPremiumWithSig:
     intc_2 // 1
     return
 
+updateUserRiskPremiumWithSig_ternary_false@3:
+    intc_1 // 0
+    b updateUserRiskPremiumWithSig_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.updateUserDynamicConfigWithSig[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.updateUserDynamicConfigWithSig[routing]() -> void:
 updateUserDynamicConfigWithSig:
     txna ApplicationArgs 1
     dup
@@ -1218,21 +2117,32 @@ updateUserDynamicConfigWithSig:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    txn GroupIndex
+    bz updateUserDynamicConfigWithSig_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+updateUserDynamicConfigWithSig_ternary_merge@4:
+    !
+    assert // not payable
     dig 1
+    dup
     extract 0 32
     callsub _isSpokeRegistered
     assert // SpokeNotRegistered
-    dig 1
+    dup
     extract 32 32
-    uncover 2
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_6
+    swap
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.EIP712Hash.hash(1)_6
     dup
     extract 64 32
     dig 1
@@ -1241,7 +2151,7 @@ updateUserDynamicConfigWithSig:
     uncover 4
     uncover 3
     uncover 3
-    uncover 5
+    dig 5
     callsub _verifyAndConsumeIntent
     itxn_begin
     dup
@@ -1264,8 +2174,166 @@ updateUserDynamicConfigWithSig:
     intc_2 // 1
     return
 
+updateUserDynamicConfigWithSig_ternary_false@3:
+    intc_1 // 0
+    b updateUserDynamicConfigWithSig_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.registerSpoke[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.SUPPLY_TYPEHASH[routing]() -> void:
+SUPPLY_TYPEHASH:
+    txn GroupIndex
+    bz SUPPLY_TYPEHASH_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+SUPPLY_TYPEHASH_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75e85497eb293c001e8483fe105efadd1d50aa0dadfc0570b27058031dfceab2e6
+    log
+    intc_2 // 1
+    return
+
+SUPPLY_TYPEHASH_ternary_false@3:
+    intc_1 // 0
+    b SUPPLY_TYPEHASH_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.WITHDRAW_TYPEHASH[routing]() -> void:
+WITHDRAW_TYPEHASH:
+    txn GroupIndex
+    bz WITHDRAW_TYPEHASH_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+WITHDRAW_TYPEHASH_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750bc73eb58cf4068a29b9593ef18c0d26b3b4453bd2155424a90cb26a22f41d7f
+    log
+    intc_2 // 1
+    return
+
+WITHDRAW_TYPEHASH_ternary_false@3:
+    intc_1 // 0
+    b WITHDRAW_TYPEHASH_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.BORROW_TYPEHASH[routing]() -> void:
+BORROW_TYPEHASH:
+    txn GroupIndex
+    bz BORROW_TYPEHASH_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+BORROW_TYPEHASH_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75e248895a233688ba2a70b6f560472dbc27e35ece0d86914f7d43bf2f7df8025b
+    log
+    intc_2 // 1
+    return
+
+BORROW_TYPEHASH_ternary_false@3:
+    intc_1 // 0
+    b BORROW_TYPEHASH_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.REPAY_TYPEHASH[routing]() -> void:
+REPAY_TYPEHASH:
+    txn GroupIndex
+    bz REPAY_TYPEHASH_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+REPAY_TYPEHASH_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75d23fe99a7aac398d03952a098faa8889259d062784bd80ea0f159e4af604c045
+    log
+    intc_2 // 1
+    return
+
+REPAY_TYPEHASH_ternary_false@3:
+    intc_1 // 0
+    b REPAY_TYPEHASH_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.SET_USING_AS_COLLATERAL_TYPEHASH[routing]() -> void:
+SET_USING_AS_COLLATERAL_TYPEHASH:
+    txn GroupIndex
+    bz SET_USING_AS_COLLATERAL_TYPEHASH_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+SET_USING_AS_COLLATERAL_TYPEHASH_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75d4350e1f25ecd62a35b50e8cd1e00bc34331ae8c728ee4dbb69ecf1023daecf7
+    log
+    intc_2 // 1
+    return
+
+SET_USING_AS_COLLATERAL_TYPEHASH_ternary_false@3:
+    intc_1 // 0
+    b SET_USING_AS_COLLATERAL_TYPEHASH_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.UPDATE_USER_RISK_PREMIUM_TYPEHASH[routing]() -> void:
+UPDATE_USER_RISK_PREMIUM_TYPEHASH:
+    txn GroupIndex
+    bz UPDATE_USER_RISK_PREMIUM_TYPEHASH_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+UPDATE_USER_RISK_PREMIUM_TYPEHASH_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75915106098e3eee1fbe90aebcbfd68e931c539495af63e24066ebeebb638d3023
+    log
+    intc_2 // 1
+    return
+
+UPDATE_USER_RISK_PREMIUM_TYPEHASH_ternary_false@3:
+    intc_1 // 0
+    b UPDATE_USER_RISK_PREMIUM_TYPEHASH_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.UPDATE_USER_DYNAMIC_CONFIG_TYPEHASH[routing]() -> void:
+UPDATE_USER_DYNAMIC_CONFIG_TYPEHASH:
+    txn GroupIndex
+    bz UPDATE_USER_DYNAMIC_CONFIG_TYPEHASH_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+UPDATE_USER_DYNAMIC_CONFIG_TYPEHASH_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c754a168dd8b32d260d07d6f0be832e23035a65a47f788675b0b02270c68b987886
+    log
+    intc_2 // 1
+    return
+
+UPDATE_USER_DYNAMIC_CONFIG_TYPEHASH_ternary_false@3:
+    intc_1 // 0
+    b UPDATE_USER_DYNAMIC_CONFIG_TYPEHASH_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.registerSpoke[routing]() -> void:
 registerSpoke:
     txna ApplicationArgs 1
     dup
@@ -1274,44 +2342,56 @@ registerSpoke:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
-    dup
+    dupn 2
     len
     intc_2 // 1
     ==
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
+    txn GroupIndex
+    bz registerSpoke_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+registerSpoke_ternary_merge@4:
+    !
+    assert // not payable
     callsub _checkOwner
-    dig 1
-    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    dupn 2
+    intc_2 // 1
+    <=
+    assert // ABI bool validation
+    dig 3
+    dup
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
     assert // InvalidAddress
-    dig 1
-    sha256
-    bytec 15 // "_registeredSpokes"
-    swap
-    concat
-    swap
-    itob
-    swap
-    dig 1
-    box_put
     dup
-    bitlen
-    pushint 8
-    <=
-    assert // overflow
-    extract 7 1
+    sha256
+    bytec 11 // "_registeredSpokes"
+    swap
     concat
-    pushbytes 0xa3eb952d // method "SpokeRegistered(address,bool)"
+    uncover 2
+    itob
+    box_put
+    dig 2
+    concat
+    pushbytes 0xa1903586 // method "SpokeRegistered(uint8[32],bool)"
     swap
     concat
     log
     intc_2 // 1
     return
 
+registerSpoke_ternary_false@3:
+    intc_1 // 0
+    b registerSpoke_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.setSelfAsUserPositionManagerWithSig[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.setSelfAsUserPositionManagerWithSig[routing]() -> void:
 setSelfAsUserPositionManagerWithSig:
     txna ApplicationArgs 1
     dup
@@ -1320,12 +2400,13 @@ setSelfAsUserPositionManagerWithSig:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
+    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 3
-    dup
+    dupn 2
     len
     intc_2 // 1
     ==
@@ -1333,11 +2414,13 @@ setSelfAsUserPositionManagerWithSig:
     intc_1 // 0
     getbit
     txna ApplicationArgs 4
+    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 5
+    dup
     len
     intc_0 // 32
     ==
@@ -1346,34 +2429,79 @@ setSelfAsUserPositionManagerWithSig:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
-    swap
+    dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    swap
+    extract 2 0
+    txn GroupIndex
+    bz setSelfAsUserPositionManagerWithSig_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+setSelfAsUserPositionManagerWithSig_ternary_merge@4:
+    !
+    assert // not payable
+    dig 6
+    dup
     callsub _isSpokeRegistered
     assert // SpokeNotRegistered
-    itob
-    dup
-    bitlen
-    pushint 8
+    dig 4
+    intc_2 // 1
     <=
-    assert // overflow
-    extract 7 1
+    assert // ABI bool validation
     global CurrentApplicationAddress
+    dig 6
+    concat
+    pushbytes 0x00010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    replace2 2 // on error: index access is out of bounds
+    itxn_begin
+    dig 7
+    pushbytes 0x0062
+    concat
+    dig 5
+    concat
+    dig 4
+    concat
     swap
     concat
-    bytec 11 // 0x00
+    dig 2
+    dup
+    len
+    itob
+    extract 6 2
     swap
-    replace2 0 // on error: index access is out of bounds
-    pop
+    concat
+    uncover 2
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x57e9a4c8 // method "setUserPositionManagersWithSig((uint8[32],(uint8[32],bool)[],uint256,uint256),byte[])void"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
     intc_2 // 1
     return
 
+setSelfAsUserPositionManagerWithSig_ternary_false@3:
+    intc_1 // 0
+    b setSelfAsUserPositionManagerWithSig_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.permitReserveUnderlying[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.permitReserveUnderlying[routing]() -> void:
 permitReserveUnderlying:
     txna ApplicationArgs 1
     dup
@@ -1388,45 +2516,125 @@ permitReserveUnderlying:
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
+    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 4
+    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 5
+    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 6
+    dup
     len
-    pushint 8
+    intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
+    btoi
     txna ApplicationArgs 7
+    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 8
+    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    dig 1
+    txn GroupIndex
+    bz permitReserveUnderlying_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+permitReserveUnderlying_ternary_merge@4:
+    !
+    assert // not payable
+    dig 7
+    dup
     callsub _isSpokeRegistered
     assert // SpokeNotRegistered
+    dig 3
+    dup
+    pushint 255
+    <=
+    assert // ABI validation
+    pushint 255
+    &
+    swap
+    dig 8
     callsub _getReserveUnderlying
-    pop
+    itxn_begin
+    global CurrentApplicationAddress
+    intc_0 // 32
+    bzero
+    dup
+    dig 9
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    dig 8
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 4
+    itob
+    uncover 4
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x4a8dd08f // method "permit(address,address,uint256,uint256,uint64,byte[32],byte[32])void"
+    itxn_field ApplicationArgs
+    dig 9
+    itxn_field ApplicationArgs
+    uncover 3
+    itxn_field ApplicationArgs
+    uncover 2
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    dig 1
+    itxn_field ApplicationArgs
+    dup
+    itxn_field ApplicationArgs
+    itxn_submit
     intc_2 // 1
     return
 
+permitReserveUnderlying_ternary_false@3:
+    intc_1 // 0
+    b permitReserveUnderlying_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.renouncePositionManagerRole[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.renouncePositionManagerRole[routing]() -> void:
 renouncePositionManagerRole:
     txna ApplicationArgs 1
     dup
@@ -1440,9 +2648,19 @@ renouncePositionManagerRole:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz renouncePositionManagerRole_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+renouncePositionManagerRole_ternary_merge@4:
+    !
+    assert // not payable
     callsub _checkOwner
     itxn_begin
-    swap
+    dig 1
     pushint 24
     extract_uint64
     pushint 6
@@ -1454,80 +2672,240 @@ renouncePositionManagerRole:
     itxn_field ApplicationID
     pushbytes 0xbed378e8 // method "renouncePositionManagerRole(address)void"
     itxn_field ApplicationArgs
+    dup
     itxn_field ApplicationArgs
     itxn_submit
     intc_2 // 1
     return
 
+renouncePositionManagerRole_ternary_false@3:
+    intc_1 // 0
+    b renouncePositionManagerRole_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.multicall(1)[routing]() -> void:
-multicall(1):
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.multicall[routing]() -> void:
+multicall:
+    intc_1 // 0
+    dupn 2
+    bytec_0 // ""
     txna ApplicationArgs 1
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
-    +
-    dig 1
-    len
-    ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    extract 2 0
-    bytec_0 // ""
-    swap
-    len
     dup
-    bzero
-    bytec_0 // 0x
+    cover 2
+    pushint 2
+    *
+    swap
+    dup
+    len
+    swap
+    extract 2 0
+    intc_1 // 0
 
-multicall(1)_while_top@4:
-    dig 2
-    itob
-    dig 1
-    b>
-    bz multicall(1)_after_while@6
+multicall_for_header@1:
+    dup
+    dig 5
+    <
+    bz multicall_after_for@4
+    dupn 2
+    pushint 2
+    *
     dig 3
-    !
-    !
-    assert // revert
-    pushint 8
-    bzero
+    dup
+    uncover 2
+    extract_uint16 // on error: invalid array encoding
+    dup
+    dig 7
+    dup
+    cover 4
+    ==
+    assert // invalid tail pointer for (len+(len+uint8[])[])
     dig 1
+    len
+    substring3
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    +
+    bury 5
+    intc_2 // 1
+    +
+    bury 1
+    b multicall_for_header@1
+
+multicall_after_for@4:
+    dig 3
+    pushint 2
+    +
+    dig 3
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint8>>
+    txn GroupIndex
+    bz multicall_ternary_false@7
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+multicall_ternary_merge@8:
+    !
+    assert // not payable
+    txn GroupIndex
+    bz multicall_ternary_false@13
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+multicall_ternary_merge@14:
+    !
+    assert // not payable
+    bytec 16 // 0x0000
+    bury 9
+    intc_1 // 0
+    bury 6
+
+multicall_while_top@15:
+    dig 5
+    dig 5
+    <
+    bz multicall_after_while@17
+    dig 8
+    dup
+    intc_1 // 0
+    extract_uint16
+    dup
+    pushint 2
+    *
+    pushint 2
+    +
+    dig 2
+    pushint 2
+    dig 2
+    substring3
+    pushint 2
+    bzero
+    concat
+    dig 3
+    len
+    uncover 4
+    uncover 3
+    uncover 2
+    substring3
+    bytec 16 // 0x0000
+    concat
+    concat
+    swap
+    intc_2 // 1
+    +
+    dup
+    itob
+    extract 6 0
+    cover 2
+    intc_1 // 0
+    callsub _recalculate_head_for_elements_with_byte_length_head
+    concat
+    dig 6
+    intc_2 // 1
+    +
+    bury 7
+    bury 9
+    b multicall_while_top@15
+
+multicall_after_while@17:
+    bytec_0 // 0x
+    bury 8
+    dig 8
+    bury 7
+
+multicall_while_top@18:
+    dig 4
+    itob
+    dig 8
+    b>
+    bz multicall_after_while@20
+    load 0
+    store 0
+    intc_3 // 8
+    bzero
+    dig 8
     dup
     cover 2
     concat
     dup
     len
-    pushint 8
+    intc_3 // 8
     -
     extract_uint64
-    dig 3
-    swap
-    bytec_0 // 0x
-    replace3
-    bury 3
-    bytec 4 // 0x01
-    b+
-    bury 1
-    b multicall(1)_while_top@4
-
-multicall(1)_after_while@6:
-    dig 1
+    dig 8
     dup
-    len
-    itob
-    extract 6 2
+    cover 2
+    intc_1 // 0
+    extract_uint16
+    dig 1
+    >
+    assert // index out of bounds
+    dig 1
+    substring 0 2
+    dup
+    btoi
+    uncover 3
+    extract 2 0
+    dig 3
+    pushint 2
+    *
+    dig 1
     swap
+    extract_uint16
+    dup2
+    extract_uint16
+    dig 1
+    +
+    pushint 2
+    +
+    dig 2
+    intc_1 // 0
+    uncover 3
+    substring3
+    bytec 16 // 0x0000
     concat
-    bytec_2 // 0x151f7c75
+    dig 2
+    len
+    uncover 3
+    uncover 3
+    uncover 2
+    substring3
+    concat
     swap
+    uncover 3
+    callsub _recalculate_head_for_elements_with_byte_length_head
+    concat
+    bury 8
+    bytec_2 // 0x01
+    b+
+    bury 8
+    b multicall_while_top@18
+
+multicall_after_while@20:
+    bytec 4 // 0x151f7c75
+    dig 7
     concat
     log
     intc_2 // 1
     return
 
+multicall_ternary_false@13:
+    intc_1 // 0
+    b multicall_ternary_merge@14
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.isSpokeRegistered[routing]() -> void:
+multicall_ternary_false@7:
+    intc_1 // 0
+    b multicall_ternary_merge@8
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.isSpokeRegistered[routing]() -> void:
 isSpokeRegistered:
     txna ApplicationArgs 1
     dup
@@ -1535,20 +2913,35 @@ isSpokeRegistered:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz isSpokeRegistered_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+isSpokeRegistered_ternary_merge@4:
+    !
+    assert // not payable
+    dup
     callsub _isSpokeRegistered
-    bytec 11 // 0x00
+    bytec 6 // 0x00
     intc_1 // 0
     uncover 2
     setbit
-    bytec_2 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
 
+isSpokeRegistered_ternary_false@3:
+    intc_1 // 0
+    b isSpokeRegistered_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.rescueToken[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.rescueToken[routing]() -> void:
 rescueToken:
     txna ApplicationArgs 1
     dup
@@ -1568,13 +2961,30 @@ rescueToken:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz rescueToken_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+rescueToken_ternary_merge@4:
+    !
+    assert // not payable
     callsub _checkRescueGuardian
+    dig 2
+    dig 2
+    dig 2
     callsub SafeERC20.safeTransfer
     intc_2 // 1
     return
 
+rescueToken_ternary_false@3:
+    intc_1 // 0
+    b rescueToken_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.rescueNative[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.rescueNative[routing]() -> void:
 rescueNative:
     txna ApplicationArgs 1
     dup
@@ -1588,107 +2998,138 @@ rescueNative:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz rescueNative_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+rescueNative_ternary_merge@4:
+    !
+    assert // not payable
     callsub _checkRescueGuardian
+    dup2
     callsub Address.sendValue
     intc_2 // 1
     return
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.rescueGuardian[routing]() -> void:
-rescueGuardian:
+rescueNative_ternary_false@3:
     intc_1 // 0
-    bytec_3 // "_owner"
-    app_global_get_ex
-    assert // check _owner exists
-    bytec_2 // 0x151f7c75
+    b rescueNative_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.rescueGuardian[routing]() -> void:
+rescueGuardian:
+    txn GroupIndex
+    bz rescueGuardian_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+rescueGuardian_ternary_merge@4:
+    !
+    assert // not payable
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.owner
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
 
+rescueGuardian_ternary_false@3:
+    intc_1 // 0
+    b rescueGuardian_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.DOMAIN_SEPARATOR[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.DOMAIN_SEPARATOR[routing]() -> void:
 DOMAIN_SEPARATOR:
     intc_1 // 0
-    bytec_0 // ""
-    bz DOMAIN_SEPARATOR_else_body@3
+    txn GroupIndex
+    bz DOMAIN_SEPARATOR_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+DOMAIN_SEPARATOR_ternary_merge@4:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 8 // "_cachedDomainSeparator"
+    app_global_get_ex
+    swap
+    bury 2
+    assert // check _cachedDomainSeparator exists
+    callsub _cachedDomainSeparatorInvalidated
+    bz DOMAIN_SEPARATOR_after_if_else@9
     callsub _buildDomainSeparator
     bury 1
 
-DOMAIN_SEPARATOR_after_if_else@6:
-    bytec_2 // 0x151f7c75
+DOMAIN_SEPARATOR_after_if_else@9:
+    bytec 4 // 0x151f7c75
     dig 1
     concat
     log
     intc_2 // 1
     return
 
-DOMAIN_SEPARATOR_else_body@3:
+DOMAIN_SEPARATOR_ternary_false@3:
     intc_1 // 0
-    bytec 6 // "_cachedDomainSeparator"
-    app_global_get_ex
-    swap
-    bury 2
-    assert // check _cachedDomainSeparator exists
-    callsub _cachedDomainSeparatorInvalidated
-    bz DOMAIN_SEPARATOR_after_if_else@6
-    callsub _buildDomainSeparator
-    bury 1
-    b DOMAIN_SEPARATOR_after_if_else@6
+    b DOMAIN_SEPARATOR_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.eip712Domain[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.eip712Domain[routing]() -> void:
 eip712Domain:
-    bytec_0 // ""
-    intc_1 // 0
-    global CurrentApplicationID
-    itob
+    txn GroupIndex
+    bz eip712Domain_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+eip712Domain_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x0f0087009900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001
     global CurrentApplicationAddress
-    intc_0 // 32
-    bzero
-    uncover 2
-    b|
-    pushbytes 0x0f00670079
-    swap
     concat
-    swap
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000009c00105369676e6174757265476174657761790001310000
     concat
-    swap
-    concat
-    swap
-    loads
-    dup
-    len
-    intc_0 // 32
-    /
-    itob
-    extract 6 2
-    swap
-    concat
-    swap
-    pushbytes 0x007c00105369676e617475726547617465776179000131
-    concat
-    swap
-    concat
-    bytec_2 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
 
+eip712Domain_ternary_false@3:
+    intc_1 // 0
+    b eip712Domain_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.useNonce[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.useNonce[routing]() -> void:
 useNonce:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    pushint 24
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint192
+    txn GroupIndex
+    bz useNonce_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+useNonce_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    swap
+    dig 1
     callsub _useNonce
     dup
     len
@@ -1698,15 +3139,19 @@ useNonce:
     intc_0 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
 
+useNonce_ternary_false@3:
+    intc_1 // 0
+    b useNonce_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.nonces[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.nonces[routing]() -> void:
 nonces:
     txna ApplicationArgs 1
     dup
@@ -1717,13 +3162,25 @@ nonces:
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    pushint 24
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint192
+    txn GroupIndex
+    bz nonces_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+nonces_ternary_merge@4:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
     dup
     dig 2
+    dup
+    cover 2
     concat
     dup
     len
@@ -1731,11 +3188,11 @@ nonces:
     -
     intc_0 // 32
     extract3
-    uncover 3
+    dig 4
     swap
     concat
     sha256
-    bytec 16 // "_nonces"
+    bytec 24 // "_nonces"
     swap
     concat
     box_get
@@ -1745,9 +3202,11 @@ nonces:
     swap
     uncover 2
     select
-    uncover 2
-    bytec 12 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    swap
+    bytec 17 // 0x0000000000000000000000000000000000000000000000010000000000000000
     b*
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     swap
     itob
     b|
@@ -1757,21 +3216,22 @@ nonces:
     <=
     assert // overflow
     b|
-    bytec_2 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.pendingOwner[routing]() -> void:
-pendingOwner:
+nonces_ternary_false@3:
     intc_1 // 0
-    bytec 5 // "_pendingOwner"
-    app_global_get_ex
-    assert // check _pendingOwner exists
-    bytec_2 // 0x151f7c75
+    b nonces_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.pendingOwner[routing]() -> void:
+pendingOwner:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.pendingOwner
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -1779,55 +3239,76 @@ pendingOwner:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.transferOwnership(1)[routing]() -> void:
-transferOwnership(1):
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.transferOwnership[routing]() -> void:
+transferOwnership:
     txna ApplicationArgs 1
     dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz transferOwnership_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+transferOwnership_ternary_merge@4:
+    !
+    assert // not payable
     callsub _checkOwner
     bytec 5 // "_pendingOwner"
     dig 1
+    dup
+    cover 2
     app_global_put
-    intc_1 // 0
-    bytec_3 // "_owner"
-    app_global_get_ex
-    assert // check _owner exists
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.owner
     swap
     concat
-    pushbytes 0x2424ff2a // method "OwnershipTransferStarted(address,address)"
+    pushbytes 0x8e5a7987 // method "OwnershipTransferStarted(uint8[32],uint8[32])"
     swap
     concat
     log
     intc_2 // 1
     return
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.acceptOwnership[routing]() -> void:
-acceptOwnership:
-    txn Sender
+transferOwnership_ternary_false@3:
     intc_1 // 0
-    bytec 5 // "_pendingOwner"
-    app_global_get_ex
-    assert // check _pendingOwner exists
+    b transferOwnership_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.acceptOwnership[routing]() -> void:
+acceptOwnership:
+    txn GroupIndex
+    bz acceptOwnership_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+acceptOwnership_ternary_merge@4:
+    !
+    assert // not payable
+    txn Sender
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.pendingOwner
     dig 1
     !=
     !
     assert // OwnableUnauthorizedAccount
-    callsub _transferOwnership(1)
+    callsub _transferOwnership
     intc_2 // 1
     return
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.owner[routing]() -> void:
-owner:
+acceptOwnership_ternary_false@3:
     intc_1 // 0
-    bytec_3 // "_owner"
-    app_global_get_ex
-    assert // check _owner exists
-    bytec_2 // 0x151f7c75
+    b acceptOwnership_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.owner[routing]() -> void:
+owner:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.owner
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -1835,21 +3316,35 @@ owner:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.renounceOwnership[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.renounceOwnership[routing]() -> void:
 renounceOwnership:
+    txn GroupIndex
+    bz renounceOwnership_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+renounceOwnership_ternary_merge@4:
+    !
+    assert // not payable
     callsub _checkOwner
-    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
-    callsub _transferOwnership(1)
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    callsub _transferOwnership
     intc_2 // 1
     return
 
+renounceOwnership_ternary_false@3:
+    intc_1 // 0
+    b renounceOwnership_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway._isSpokeRegistered(spoke: bytes) -> uint64:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway._isSpokeRegistered(spoke: bytes) -> uint64:
 _isSpokeRegistered:
     proto 1 1
     frame_dig -1
     sha256
-    bytec 15 // "_registeredSpokes"
+    bytec 11 // "_registeredSpokes"
     swap
     concat
     box_get
@@ -1862,7 +3357,7 @@ _isSpokeRegistered:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway._getReserveUnderlying(spoke: bytes, reserveId: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway._getReserveUnderlying(spoke: bytes, reserveId: bytes) -> bytes:
 _getReserveUnderlying:
     proto 2 1
     itxn_begin
@@ -1886,7 +3381,7 @@ _getReserveUnderlying:
     intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    pushbytes 0x0c77be35 // method "getReserve(uint256)struct Reserve"
+    pushbytes 0x8e35ff7e // method "getReserve(uint256)(uint8[32],uint8[32],uint16,uint8,uint24,uint8,uint32)"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
@@ -1895,19 +3390,16 @@ _getReserveUnderlying:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway._checkRescueGuardian() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway._checkRescueGuardian() -> void:
 _checkRescueGuardian:
-    intc_1 // 0
-    bytec_3 // "_owner"
-    app_global_get_ex
-    assert // check _owner exists
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.owner
     txn Sender
     ==
     assert // OnlyRescueGuardian
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway._verifyAndConsumeIntent(signer: bytes, intentHash: bytes, nonce: bytes, deadline: bytes, signature: bytes) -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway._verifyAndConsumeIntent(signer: bytes, intentHash: bytes, nonce: bytes, deadline: bytes, signature: bytes) -> void:
 _verifyAndConsumeIntent:
     proto 5 0
     global LatestTimestamp
@@ -1915,19 +3407,66 @@ _verifyAndConsumeIntent:
     frame_dig -2
     b<=
     assert // InvalidSignature
-    bytec_0 // ""
-    bz _verifyAndConsumeIntent_else_body@3
+    intc_1 // 0
+    bytec 8 // "_cachedDomainSeparator"
+    app_global_get_ex
+    assert // check _cachedDomainSeparator exists
+    callsub _cachedDomainSeparatorInvalidated
+    bz _verifyAndConsumeIntent_after_if_else@5
     callsub _buildDomainSeparator
-    pop
+    frame_bury 0
 
-_verifyAndConsumeIntent_after_if_else@6:
+_verifyAndConsumeIntent_after_if_else@5:
+    load 0
+    intc_0 // 32
+    bzero
+    swap
+    pushbytes 0x0000000000000000000000000000000000000000000000001901000000000000
+    replace2 0
+    dig 1
+    frame_dig 0
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 26
+    dig 1
+    frame_dig -4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 58
+    dup
+    extract 24 64
+    keccak256
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 32
+    swap
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 58
+    store 0
     frame_dig -5
-    pushbytes 0xad3228b676f7d3cd4284a5443f17f1962b36e491b30a40b2405849e597ba5fb5
+    swap
     frame_dig -1
     callsub SignatureChecker.isValidSignatureNowCalldata
     assert // InvalidSignature
     frame_dig -3
-    bytec 12 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    bytec 17 // 0x0000000000000000000000000000000000000000000000010000000000000000
     b/
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffff
     b&
@@ -1939,117 +3478,175 @@ _verifyAndConsumeIntent_after_if_else@6:
     assert // InvalidAccountNonce
     retsub
 
-_verifyAndConsumeIntent_else_body@3:
-    intc_1 // 0
-    bytec 6 // "_cachedDomainSeparator"
-    app_global_get_ex
-    bury 1
-    assert // check _cachedDomainSeparator exists
-    callsub _cachedDomainSeparatorInvalidated
-    bz _verifyAndConsumeIntent_after_if_else@6
-    callsub _buildDomainSeparator
-    pop
-    b _verifyAndConsumeIntent_after_if_else@6
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway._buildDomainSeparator() -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway._buildDomainSeparator() -> bytes:
 _buildDomainSeparator:
-    proto 0 1
     intc_1 // 0
-    bytec_0 // ""
-    bz _buildDomainSeparator_else_body@2
-    bytec 14 // 0x66965e57eafd313c3114e0932efe129eb2a61f8d37a3c43007c4ee5a76b85b7d
-    frame_bury 0
-    pushbytes 0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6
-
-_buildDomainSeparator_after_if_else@3:
-    global CurrentApplicationAddress
-    intc_0 // 32
-    bzero
-    dup
-    frame_dig 0
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 13 // 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f
-    swap
-    concat
-    dig 1
-    uncover 4
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    concat
-    swap
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    keccak256
-    swap
-    retsub
-
-_buildDomainSeparator_else_body@2:
-    intc_1 // 0
-    bytec 9 // "_cachedNameHash"
+    bytec 14 // "_cachedNameHash"
     app_global_get_ex
-    swap
-    frame_bury 0
     assert // check _cachedNameHash exists
     intc_1 // 0
-    bytec 10 // "_cachedVersionHash"
+    bytec 15 // "_cachedVersionHash"
     app_global_get_ex
     assert // check _cachedVersionHash exists
-    b _buildDomainSeparator_after_if_else@3
+    load 0
+    intc_3 // 8
+    bzero
+    dig 1
+    extract 64 32
+    dup2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    bzero
+    uncover 4
+    dig 2
+    bytec 22 // 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f
+    replace3
+    dig 3
+    bytec 10 // 0x20
+    b+
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dig 2
+    uncover 8
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace3
+    dig 3
+    pushbytes 0x40
+    b+
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dig 2
+    uncover 7
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace3
+    dig 3
+    pushbytes 0x60
+    b+
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    bytec 23 // 0x0000000000000000000000000000000000000000000000000000000000000001
+    replace3
+    uncover 3
+    pushbytes 0x80
+    b+
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 4
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dig 2
+    global CurrentApplicationAddress
+    concat
+    dig 3
+    global CurrentApplicationAddress
+    concat
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace3
+    dup
+    uncover 3
+    pushint 160
+    extract3
+    keccak256
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 32
+    swap
+    store 0
+    retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway._cachedDomainSeparatorInvalidated() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway._cachedDomainSeparatorInvalidated() -> uint64:
 _cachedDomainSeparatorInvalidated:
     intc_1 // 0
-    bytec 8 // "_cachedChainId"
+    bytec 13 // "_cachedChainId"
     app_global_get_ex
     assert // check _cachedChainId exists
     intc_1 // 0
-    bytec 7 // "_cachedThis"
+    bytec 12 // "_cachedThis"
     app_global_get_ex
     assert // check _cachedThis exists
-    intc_1 // 0
-    itob
-    uncover 2
+    load 0
+    bytec_2 // 0x01
+    uncover 3
     b==
     bytec_0 // 0x
-    bytec 4 // 0x01
+    bytec_2 // 0x01
     uncover 2
     select
     global CurrentApplicationAddress
-    uncover 2
+    uncover 3
     b==
     bytec_0 // 0x
-    bytec 4 // 0x01
+    bytec_2 // 0x01
     uncover 2
     select
     b&
     bytec_0 // 0x
     b==
+    swap
+    store 0
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway._useNonce(owner: bytes, key: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway._useNonce(owner: bytes, key: bytes) -> bytes:
 _useNonce:
     proto 2 1
     intc_0 // 32
@@ -2066,7 +3663,7 @@ _useNonce:
     swap
     concat
     sha256
-    bytec 16 // "_nonces"
+    bytec 24 // "_nonces"
     swap
     concat
     dup
@@ -2077,21 +3674,49 @@ _useNonce:
     swap
     uncover 2
     select
+    dup
     intc_2 // 1
     +
     itob
+    uncover 2
     swap
-    dig 1
     box_put
     frame_dig -1
-    bytec 12 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    bytec 17 // 0x0000000000000000000000000000000000000000000000010000000000000000
     b*
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    swap
+    itob
     b|
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway._transferOwnership(1)(newOwner: bytes) -> void:
-_transferOwnership(1):
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.pendingOwner() -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.pendingOwner:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.pendingOwner_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.pendingOwner_ternary_merge@3:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 5 // "_pendingOwner"
+    app_global_get_ex
+    assert // check _pendingOwner exists
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.pendingOwner_ternary_false@2:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.pendingOwner_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway._transferOwnership(newOwner: bytes) -> void:
+_transferOwnership:
     proto 1 0
     intc_1 // 0
     bytec 5 // "_pendingOwner"
@@ -2099,30 +3724,50 @@ _transferOwnership(1):
     bury 1
     assert // check _pendingOwner exists
     bytec 5 // "_pendingOwner"
-    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     intc_1 // 0
-    bytec_3 // "_owner"
+    bytec 7 // "_owner"
     app_global_get_ex
     assert // check _owner exists
-    bytec_3 // "_owner"
+    bytec 7 // "_owner"
     frame_dig -1
     app_global_put
     frame_dig -1
     concat
-    pushbytes 0x9a223efb // method "OwnershipTransferred(address,address)"
+    pushbytes 0x62668fcc // method "OwnershipTransferred(uint8[32],uint8[32])"
     swap
     concat
     log
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway._checkOwner() -> void:
-_checkOwner:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.owner() -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.owner:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.owner_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.owner_ternary_merge@3:
+    !
+    assert // not payable
     intc_1 // 0
-    bytec_3 // "_owner"
+    bytec 7 // "_owner"
     app_global_get_ex
     assert // check _owner exists
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.owner_ternary_false@2:
+    intc_1 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.owner_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway._checkOwner() -> void:
+_checkOwner:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SignatureGateway.sol.SignatureGateway.owner
     txn Sender
     !=
     !

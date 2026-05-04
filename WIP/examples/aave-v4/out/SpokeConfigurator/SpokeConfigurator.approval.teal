@@ -1,27 +1,36 @@
 #pragma version 10
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.approval_program() -> uint64:
 main:
-    intcblock 32 0 6 1
-    bytecblock 0x1a1108cd "_authority" 0x151f7c75 0xa2edeea1 0x7c290086 0x01 "_consumingSchedule" 0x7928523f 0xfa51a873 0x9278df35 0xbe9de0d8 0xffffffffffffffffffffffffffffffff 0x6b0984d1
+    intcblock 0 32 1 6 4294967295 65535
+    bytecblock 0x00 0x0adaeb3e 0xcf96950a 0x151f7c75 0xe9e592c6 "_authority" "_consumingSchedule" 0x55f583a9 0x661c53c8 0x5a21d376 0x0000000000000000000000000000000000000000000000000000000000000000 0xffffffff 0x01 0xa9eafcea 0x8cd154d1 0xffffffffffffffffffffffffffffffff 0x6b0984d1
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "_authority"
-    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    txna ApplicationArgs 0
+    bytec 5 // "_authority"
+    bytec 10 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     app_global_put
     bytec 6 // "_consumingSchedule"
-    intc_1 // 0
+    intc_0 // 0
     app_global_put
-    txna ApplicationArgs 0
-    bytec_1 // "_authority"
+    bytec 5 // "_authority"
     dig 1
     app_global_put
-    pushbytes 0xbf31f9d2 // method "AuthorityUpdated(address)"
+    bytec 14 // method "AuthorityUpdated(uint8[32])"
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -30,41 +39,87 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x9403f3c7 0x26e14f6e 0x73024a44 0x9e0537f6 0x35de987f 0xf19ab56e 0xb70b5752 0xdddbaa7b 0xc36bf12a 0xd60c33ae 0x7e062bdd 0x3af762f5 0x770c9734 0x0c18eb33 0x5ab07561 0x363bf2bf 0x400fae5d 0xd5aaa470 0x16e08956 0x44d1abd8 0xc63f958f 0xe6aadc0c 0xa730b921 0xbf95b5b4 0xece59dd4 0xcdda4ea6 0xcd513da5 // method "updateReservePriceSource(address,uint256,address)void", method "updateLiquidationTargetHealthFactor(address,uint256)void", method "updateHealthFactorForMaxBonus(address,uint256)void", method "updateLiquidationBonusFactor(address,uint256)void", method "updateLiquidationConfig(address,(uint256,uint64,uint64))void", method "addReserve(address,address,uint256,address,(uint64,uint8,uint8,uint8,uint8),(uint64,uint64,uint64))uint256", method "updatePaused(address,uint256,bool)void", method "updateFrozen(address,uint256,bool)void", method "updateBorrowable(address,uint256,bool)void", method "updateReceiveSharesEnabled(address,uint256,bool)void", method "updateCollateralRisk(address,uint256,uint256)void", method "addCollateralFactor(address,uint256,uint64)uint64", method "updateCollateralFactor(address,uint256,uint64,uint64)void", method "addMaxLiquidationBonus(address,uint256,uint256)uint64", method "updateMaxLiquidationBonus(address,uint256,uint64,uint256)void", method "addLiquidationFee(address,uint256,uint256)uint64", method "updateLiquidationFee(address,uint256,uint64,uint256)void", method "addDynamicReserveConfig(address,uint256,(uint64,uint64,uint64))uint64", method "updateDynamicReserveConfig(address,uint256,uint64,(uint64,uint64,uint64))void", method "pauseAllReserves(address)void", method "freezeAllReserves(address)void", method "pauseReserve(address,uint256)void", method "freezeReserve(address,uint256)void", method "updatePositionManager(address,address,bool)void", method "authority()address", method "setAuthority(address)void", method "isConsumingScheduledOp()byte[4]"
+    pushbytess 0x9403f3c7 0x26e14f6e 0x73024a44 0x9e0537f6 0x31bcfb7c 0x976a35d7 0xb70b5752 0xdddbaa7b 0xc36bf12a 0xd60c33ae 0x7e062bdd 0x3af762f5 0x770c9734 0x0c18eb33 0x5ab07561 0x363bf2bf 0x400fae5d 0x23488fc2 0x3eb3689e 0x44d1abd8 0xc63f958f 0xe6aadc0c 0xa730b921 0xbf95b5b4 0xece59dd4 0xcdda4ea6 0xcd513da5 // method "updateReservePriceSource(address,uint256,address)void", method "updateLiquidationTargetHealthFactor(address,uint256)void", method "updateHealthFactorForMaxBonus(address,uint256)void", method "updateLiquidationBonusFactor(address,uint256)void", method "updateLiquidationConfig(address,(uint128,uint64,uint16))void", method "addReserve(address,address,uint256,address,(uint24,bool,bool,bool,bool),(uint16,uint32,uint16))uint512", method "updatePaused(address,uint256,bool)void", method "updateFrozen(address,uint256,bool)void", method "updateBorrowable(address,uint256,bool)void", method "updateReceiveSharesEnabled(address,uint256,bool)void", method "updateCollateralRisk(address,uint256,uint256)void", method "addCollateralFactor(address,uint256,uint64)uint64", method "updateCollateralFactor(address,uint256,uint64,uint64)void", method "addMaxLiquidationBonus(address,uint256,uint256)uint64", method "updateMaxLiquidationBonus(address,uint256,uint64,uint256)void", method "addLiquidationFee(address,uint256,uint256)uint64", method "updateLiquidationFee(address,uint256,uint64,uint256)void", method "addDynamicReserveConfig(address,uint256,(uint16,uint32,uint16))uint64", method "updateDynamicReserveConfig(address,uint256,uint64,(uint16,uint32,uint16))void", method "pauseAllReserves(address)void", method "freezeAllReserves(address)void", method "pauseReserve(address,uint256)void", method "freezeReserve(address,uint256)void", method "updatePositionManager(address,address,bool)void", method "authority()address", method "setAuthority(address)void", method "isConsumingScheduledOp()byte[4]"
     txna ApplicationArgs 0
     match updateReservePriceSource updateLiquidationTargetHealthFactor updateHealthFactorForMaxBonus updateLiquidationBonusFactor updateLiquidationConfig addReserve updatePaused updateFrozen updateBorrowable updateReceiveSharesEnabled updateCollateralRisk addCollateralFactor updateCollateralFactor addMaxLiquidationBonus updateMaxLiquidationBonus addLiquidationFee updateLiquidationFee addDynamicReserveConfig updateDynamicReserveConfig pauseAllReserves freezeAllReserves pauseReserve freezeReserve updatePositionManager authority setAuthority isConsumingScheduledOp
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.AuthorityUtils.canCallWithDelay(authority: bytes, caller: bytes, target: bytes, selector: bytes) -> uint64, uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.AuthorityUtils.canCallWithDelay(authority: bytes, caller: bytes, target: bytes, selector: bytes) -> uint64, uint64:
 AuthorityUtils.canCallWithDelay:
     proto 4 2
-    intc_1 // 0
+    load 0
+    pushint 8
+    bzero
+    swap
+    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 0
+    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 32
     dup
+    extract 0 32
+    pushbytes 0x
+    b!=
+    dig 1
+    extract 32 32
+    bytec 11 // 0xffffffff
+    b&
+    dig 3
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    pushint 8
+    extract3
+    dup
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000100000000
+    b/
+    pushbytes 0x
+    b==
+    pushbytes 0x
+    bytec 12 // 0x01
+    uncover 2
+    select
+    b*
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 11 // 0xffffffff
+    b&
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    uncover 2
+    store 0
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SafeCast.toUint128(value: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SafeCast.toUint128(value: bytes) -> bytes:
 SafeCast.toUint128:
     proto 1 1
     frame_dig -1
-    bytec 11 // 0xffffffffffffffffffffffffffffffff
+    bytec 15 // 0xffffffffffffffffffffffffffffffff
     b>
     !
     assert // SafeCastOverflowedUintDowncast
     frame_dig -1
-    bytec 11 // 0xffffffffffffffffffffffffffffffff
+    bytec 15 // 0xffffffffffffffffffffffffffffffff
     b&
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SafeCast.toUint64(value: bytes) -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SafeCast.toUint64(value: bytes) -> uint64:
 SafeCast.toUint64:
     proto 1 1
-    pushint 18446744073709551615
-    itob
     frame_dig -1
-    b<
+    pushbytes 0xffffffffffffffff
+    b>
     !
     assert // SafeCastOverflowedUintDowncast
     pushint 8
@@ -79,13 +134,12 @@ SafeCast.toUint64:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SafeCast.toUint32(value: bytes) -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SafeCast.toUint32(value: bytes) -> uint64:
 SafeCast.toUint32:
     proto 1 1
-    pushint 4294967295
-    itob
     frame_dig -1
-    b<
+    bytec 11 // 0xffffffff
+    b>
     !
     assert // SafeCastOverflowedUintDowncast
     pushint 8
@@ -97,16 +151,17 @@ SafeCast.toUint32:
     pushint 8
     -
     extract_uint64
+    intc 4 // 4294967295
+    &
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SafeCast.toUint24(value: bytes) -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SafeCast.toUint24(value: bytes) -> uint64:
 SafeCast.toUint24:
     proto 1 1
-    pushint 16777215
-    itob
     frame_dig -1
-    b<
+    pushbytes 0xffffff
+    b>
     !
     assert // SafeCastOverflowedUintDowncast
     pushint 8
@@ -118,16 +173,17 @@ SafeCast.toUint24:
     pushint 8
     -
     extract_uint64
+    pushint 16777215
+    &
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SafeCast.toUint16(value: bytes) -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SafeCast.toUint16(value: bytes) -> uint64:
 SafeCast.toUint16:
     proto 1 1
-    pushint 65535
-    itob
     frame_dig -1
-    b<
+    pushbytes 0xffff
+    b>
     !
     assert // SafeCastOverflowedUintDowncast
     pushint 8
@@ -139,107 +195,134 @@ SafeCast.toUint16:
     pushint 8
     -
     extract_uint64
+    intc 5 // 65535
+    &
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateReservePriceSource[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateReservePriceSource[routing]() -> void:
 updateReservePriceSource:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz updateReservePriceSource_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+updateReservePriceSource_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
     itxn_begin
-    intc_0 // 32
+    intc_1 // 32
     bzero
-    uncover 2
+    dig 2
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
-    uncover 2
+    dig 3
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
     pushbytes 0xefa724d0 // method "updateReservePriceSource(uint256,address)void"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
+    dup
     itxn_field ApplicationArgs
     itxn_submit
-    intc_3 // 1
+    intc_2 // 1
     return
 
+updateReservePriceSource_ternary_false@3:
+    intc_0 // 0
+    b updateReservePriceSource_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateLiquidationTargetHealthFactor[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateLiquidationTargetHealthFactor[routing]() -> void:
 updateLiquidationTargetHealthFactor:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz updateLiquidationTargetHealthFactor_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+updateLiquidationTargetHealthFactor_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
     itxn_begin
-    swap
+    dig 1
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec 10 // method "getLiquidationConfig()struct LiquidationConfig"
+    bytec 13 // method "getLiquidationConfig()(uint128,uint64,uint16)"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     dup
-    extract 36 8
+    extract 20 8
     swap
-    extract 44 8
-    uncover 3
+    extract 28 2
+    dig 3
     callsub SafeCast.toUint128
     dup
     len
-    intc_0 // 32
+    pushint 16
     <=
     assert // overflow
-    intc_0 // 32
+    pushint 16
     bzero
     b|
     uncover 2
@@ -247,761 +330,1023 @@ updateLiquidationTargetHealthFactor:
     swap
     concat
     itxn_begin
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     swap
     itxn_field ApplicationID
-    bytec 7 // method "updateLiquidationConfig(struct LiquidationConfig)void"
+    bytec 7 // method "updateLiquidationConfig((uint128,uint64,uint16))void"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
-    intc_3 // 1
+    intc_2 // 1
     return
 
+updateLiquidationTargetHealthFactor_ternary_false@3:
+    intc_0 // 0
+    b updateLiquidationTargetHealthFactor_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateHealthFactorForMaxBonus[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateHealthFactorForMaxBonus[routing]() -> void:
 updateHealthFactorForMaxBonus:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz updateHealthFactorForMaxBonus_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+updateHealthFactorForMaxBonus_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
     itxn_begin
-    swap
+    dig 1
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec 10 // method "getLiquidationConfig()struct LiquidationConfig"
+    bytec 13 // method "getLiquidationConfig()(uint128,uint64,uint16)"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
-    uncover 2
+    dig 2
     callsub SafeCast.toUint64
     itob
     dig 1
-    extract 44 8
+    extract 28 2
     uncover 2
-    extract 4 32
+    extract 4 16
     uncover 2
     concat
     swap
     concat
     itxn_begin
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     swap
     itxn_field ApplicationID
-    bytec 7 // method "updateLiquidationConfig(struct LiquidationConfig)void"
+    bytec 7 // method "updateLiquidationConfig((uint128,uint64,uint16))void"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
-    intc_3 // 1
+    intc_2 // 1
     return
 
+updateHealthFactorForMaxBonus_ternary_false@3:
+    intc_0 // 0
+    b updateHealthFactorForMaxBonus_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateLiquidationBonusFactor[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateLiquidationBonusFactor[routing]() -> void:
 updateLiquidationBonusFactor:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz updateLiquidationBonusFactor_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+updateLiquidationBonusFactor_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
     itxn_begin
-    swap
+    dig 1
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec 10 // method "getLiquidationConfig()struct LiquidationConfig"
+    bytec 13 // method "getLiquidationConfig()(uint128,uint64,uint16)"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     dup
-    extract 36 8
-    uncover 3
+    extract 20 8
+    dig 3
     callsub SafeCast.toUint16
     itob
+    dup
+    bitlen
+    pushint 16
+    <=
+    assert // overflow
+    extract 6 2
     uncover 2
-    extract 4 32
+    extract 4 16
     uncover 2
     concat
     swap
     concat
     itxn_begin
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     swap
     itxn_field ApplicationID
-    bytec 7 // method "updateLiquidationConfig(struct LiquidationConfig)void"
+    bytec 7 // method "updateLiquidationConfig((uint128,uint64,uint16))void"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
-    intc_3 // 1
+    intc_2 // 1
     return
 
+updateLiquidationBonusFactor_ternary_false@3:
+    intc_0 // 0
+    b updateLiquidationBonusFactor_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateLiquidationConfig[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateLiquidationConfig[routing]() -> void:
 updateLiquidationConfig:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    pushint 48
+    pushint 26
     ==
     assert // invalid number of bytes for LiquidationConfig
+    txn GroupIndex
+    bz updateLiquidationConfig_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+updateLiquidationConfig_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
     itxn_begin
-    swap
+    dig 1
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 7 // method "updateLiquidationConfig(struct LiquidationConfig)void"
+    bytec 7 // method "updateLiquidationConfig((uint128,uint64,uint16))void"
     itxn_field ApplicationArgs
+    dup
     itxn_field ApplicationArgs
     itxn_submit
-    intc_3 // 1
+    intc_2 // 1
     return
 
+updateLiquidationConfig_ternary_false@3:
+    intc_0 // 0
+    b updateLiquidationConfig_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.addReserve[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.addReserve[routing]() -> void:
 addReserve:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 3
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 5
     dup
     len
-    pushint 12
+    pushint 4
     ==
     assert // invalid number of bytes for ReserveConfig
     txna ApplicationArgs 6
     dup
     len
-    pushint 24
+    pushint 8
     ==
     assert // invalid number of bytes for DynamicReserveConfig
+    txn GroupIndex
+    bz addReserve_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+addReserve_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
     itxn_begin
-    intc_0 // 32
+    intc_1 // 32
     bzero
-    dup
-    uncover 5
+    dig 4
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
-    uncover 6
+    dig 6
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    pushbytes 0xeace8a85 // method "addReserve(address,uint256,address,struct ReserveConfig,struct DynamicReserveConfig)uint256"
+    pushbytes 0xc7ca6f51 // method "addReserve(address,uint256,address,(uint24,bool,bool,bool,bool),(uint16,uint32,uint16))uint256"
     itxn_field ApplicationArgs
-    uncover 5
+    dig 5
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
-    uncover 3
+    dig 2
     itxn_field ApplicationArgs
-    uncover 2
+    dig 1
     itxn_field ApplicationArgs
-    swap
+    dup
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     extract 4 0
     dup
     len
-    intc_0 // 32
+    pushint 64
     <=
     assert // overflow
+    pushint 64
+    bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
+addReserve_ternary_false@3:
+    intc_0 // 0
+    b addReserve_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updatePaused[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updatePaused[routing]() -> void:
 updatePaused:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
-    dup
+    dupn 2
     len
-    intc_3 // 1
+    intc_2 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    intc_1 // 0
+    intc_0 // 0
     getbit
+    txn GroupIndex
+    bz updatePaused_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+updatePaused_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
+    dup
+    intc_2 // 1
+    <=
+    assert // ABI bool validation
     itxn_begin
-    intc_0 // 32
+    intc_1 // 32
     bzero
-    uncover 2
+    dig 3
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
-    uncover 2
+    dig 4
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec_3 // method "getReserveConfig(uint256)struct ReserveConfig"
+    bytec_1 // method "getReserveConfig(uint256)(uint24,bool,bool,bool,bool)"
     itxn_field ApplicationArgs
     dig 1
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     dup
-    extract 14 1
-    dig 1
-    extract 4 8
-    dig 2
-    extract 13 1
-    uncover 6
-    itob
+    extract 4 0
     dup
-    bitlen
-    pushint 8
-    <=
-    assert // overflow
-    extract 7 1
-    uncover 4
-    extract 15 1
+    pushint 26
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    uncover 2
+    extract 4 3
+    dig 2
+    pushint 25
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
     uncover 3
+    pushint 27
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
     uncover 2
-    concat
-    uncover 2
-    concat
-    uncover 2
-    concat
+    setbit
     swap
+    intc_0 // 0
+    getbit
+    dig 7
+    intc_2 // 1
+    uncover 2
+    setbit
+    uncover 3
+    intc_0 // 0
+    getbit
+    pushint 2
+    swap
+    setbit
+    swap
+    intc_0 // 0
+    getbit
+    pushint 3
+    swap
+    setbit
     concat
     itxn_begin
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     swap
     itxn_field ApplicationID
-    bytec_0 // method "updateReserveConfig(uint256,struct ReserveConfig)void"
+    bytec_2 // method "updateReserveConfig(uint256,(uint24,bool,bool,bool,bool))void"
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
-    intc_3 // 1
+    intc_2 // 1
     return
 
+updatePaused_ternary_false@3:
+    intc_0 // 0
+    b updatePaused_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateFrozen[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateFrozen[routing]() -> void:
 updateFrozen:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    intc_3 // 1
+    intc_2 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    intc_1 // 0
+    intc_0 // 0
     getbit
+    txn GroupIndex
+    bz updateFrozen_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+updateFrozen_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
+    dupn 2
+    intc_2 // 1
+    <=
+    assert // ABI bool validation
     itxn_begin
-    intc_0 // 32
+    intc_1 // 32
     bzero
-    uncover 2
+    dig 3
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
-    uncover 2
+    dig 4
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec_3 // method "getReserveConfig(uint256)struct ReserveConfig"
+    bytec_1 // method "getReserveConfig(uint256)(uint24,bool,bool,bool,bool)"
     itxn_field ApplicationArgs
     dig 1
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     dup
-    extract 14 1
-    dig 1
-    extract 4 8
-    uncover 5
-    itob
+    extract 4 0
     dup
-    bitlen
-    pushint 8
-    <=
-    assert // overflow
-    extract 7 1
-    dig 3
-    extract 12 1
-    uncover 4
-    extract 15 1
+    pushint 26
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    uncover 2
+    extract 4 3
+    dig 2
+    pushint 24
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
     uncover 3
+    pushint 27
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
     uncover 2
-    concat
-    uncover 2
-    concat
-    uncover 2
-    concat
+    setbit
     swap
+    intc_2 // 1
+    uncover 7
+    setbit
+    uncover 3
+    intc_0 // 0
+    getbit
+    pushint 2
+    swap
+    setbit
+    swap
+    intc_0 // 0
+    getbit
+    pushint 3
+    swap
+    setbit
     concat
     itxn_begin
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     swap
     itxn_field ApplicationID
-    bytec_0 // method "updateReserveConfig(uint256,struct ReserveConfig)void"
+    bytec_2 // method "updateReserveConfig(uint256,(uint24,bool,bool,bool,bool))void"
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
-    intc_3 // 1
+    intc_2 // 1
     return
 
+updateFrozen_ternary_false@3:
+    intc_0 // 0
+    b updateFrozen_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateBorrowable[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateBorrowable[routing]() -> void:
 updateBorrowable:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    intc_3 // 1
+    intc_2 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    intc_1 // 0
+    intc_0 // 0
     getbit
+    txn GroupIndex
+    bz updateBorrowable_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+updateBorrowable_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
+    dupn 2
+    intc_2 // 1
+    <=
+    assert // ABI bool validation
     itxn_begin
-    intc_0 // 32
+    intc_1 // 32
     bzero
-    uncover 2
+    dig 3
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
-    uncover 2
+    dig 4
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec_3 // method "getReserveConfig(uint256)struct ReserveConfig"
+    bytec_1 // method "getReserveConfig(uint256)(uint24,bool,bool,bool,bool)"
     itxn_field ApplicationArgs
     dig 1
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
-    uncover 3
-    itob
     dup
-    bitlen
-    pushint 8
-    <=
-    assert // overflow
-    extract 7 1
-    dig 1
-    extract 4 8
-    dig 2
-    extract 13 1
-    dig 3
-    extract 12 1
-    uncover 4
-    extract 15 1
-    uncover 3
-    uncover 2
-    concat
-    uncover 2
-    concat
-    uncover 2
-    concat
+    extract 4 0
     swap
+    extract 4 3
+    dig 1
+    pushint 25
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    dig 2
+    pushint 24
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    uncover 3
+    pushint 27
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    uncover 2
+    intc_0 // 0
+    getbit
+    uncover 2
+    intc_2 // 1
+    uncover 2
+    setbit
+    pushint 2
+    uncover 6
+    setbit
+    swap
+    intc_0 // 0
+    getbit
+    pushint 3
+    swap
+    setbit
     concat
     itxn_begin
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     swap
     itxn_field ApplicationID
-    bytec_0 // method "updateReserveConfig(uint256,struct ReserveConfig)void"
+    bytec_2 // method "updateReserveConfig(uint256,(uint24,bool,bool,bool,bool))void"
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
-    intc_3 // 1
+    intc_2 // 1
     return
 
+updateBorrowable_ternary_false@3:
+    intc_0 // 0
+    b updateBorrowable_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateReceiveSharesEnabled[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateReceiveSharesEnabled[routing]() -> void:
 updateReceiveSharesEnabled:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    intc_3 // 1
+    intc_2 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    intc_1 // 0
+    intc_0 // 0
     getbit
+    txn GroupIndex
+    bz updateReceiveSharesEnabled_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+updateReceiveSharesEnabled_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
+    dupn 2
+    intc_2 // 1
+    <=
+    assert // ABI bool validation
     itxn_begin
-    intc_0 // 32
+    intc_1 // 32
     bzero
-    uncover 2
+    dig 3
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
-    uncover 2
+    dig 4
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec_3 // method "getReserveConfig(uint256)struct ReserveConfig"
+    bytec_1 // method "getReserveConfig(uint256)(uint24,bool,bool,bool,bool)"
     itxn_field ApplicationArgs
     dig 1
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     dup
-    extract 14 1
-    dig 1
-    extract 4 8
-    dig 2
-    extract 13 1
-    uncover 3
-    extract 12 1
-    uncover 6
-    itob
+    extract 4 0
     dup
-    bitlen
-    pushint 8
-    <=
-    assert // overflow
-    extract 7 1
+    pushint 26
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    uncover 2
+    extract 4 3
+    dig 2
+    pushint 25
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
     uncover 3
+    pushint 24
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
     uncover 2
-    concat
-    uncover 2
-    concat
-    uncover 2
-    concat
+    setbit
     swap
+    intc_0 // 0
+    getbit
+    intc_2 // 1
+    swap
+    setbit
+    uncover 2
+    intc_0 // 0
+    getbit
+    pushint 2
+    swap
+    setbit
+    pushint 3
+    uncover 5
+    setbit
     concat
     itxn_begin
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     swap
     itxn_field ApplicationID
-    bytec_0 // method "updateReserveConfig(uint256,struct ReserveConfig)void"
+    bytec_2 // method "updateReserveConfig(uint256,(uint24,bool,bool,bool,bool))void"
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
-    intc_3 // 1
+    intc_2 // 1
     return
 
+updateReceiveSharesEnabled_ternary_false@3:
+    intc_0 // 0
+    b updateReceiveSharesEnabled_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateCollateralRisk[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateCollateralRisk[routing]() -> void:
 updateCollateralRisk:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz updateCollateralRisk_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+updateCollateralRisk_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
     itxn_begin
-    intc_0 // 32
+    intc_1 // 32
     bzero
-    uncover 2
+    dig 2
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
-    uncover 2
+    dig 3
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec_3 // method "getReserveConfig(uint256)struct ReserveConfig"
+    bytec_1 // method "getReserveConfig(uint256)(uint24,bool,bool,bool,bool)"
     itxn_field ApplicationArgs
     dig 1
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
+    extract 4 0
     dup
-    extract 14 1
-    uncover 4
+    pushint 26
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    dig 4
     callsub SafeCast.toUint24
     itob
+    dup
+    bitlen
+    pushint 24
+    <=
+    assert // overflow
+    extract 5 3
     dig 2
-    extract 13 1
+    pushint 25
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
     dig 3
-    extract 12 1
+    pushint 24
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
     uncover 4
-    extract 15 1
+    pushint 27
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    uncover 2
+    intc_0 // 0
+    getbit
+    uncover 2
+    intc_2 // 1
+    uncover 2
+    setbit
     uncover 3
-    uncover 2
-    concat
-    uncover 2
-    concat
-    uncover 2
-    concat
+    intc_0 // 0
+    getbit
+    pushint 2
     swap
+    setbit
+    swap
+    intc_0 // 0
+    getbit
+    pushint 3
+    swap
+    setbit
     concat
     itxn_begin
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     swap
     itxn_field ApplicationID
-    bytec_0 // method "updateReserveConfig(uint256,struct ReserveConfig)void"
+    bytec_2 // method "updateReserveConfig(uint256,(uint24,bool,bool,bool,bool))void"
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
-    intc_3 // 1
+    intc_2 // 1
     return
 
+updateCollateralRisk_ternary_false@3:
+    intc_0 // 0
+    b updateCollateralRisk_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.addCollateralFactor[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.addCollateralFactor[routing]() -> void:
 addCollateralFactor:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
@@ -1010,36 +1355,56 @@ addCollateralFactor:
     pushint 8
     ==
     assert // invalid number of bytes for arc4.uint64
+    btoi
+    txn GroupIndex
+    bz addCollateralFactor_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+addCollateralFactor_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
+    dupn 2
+    intc 5 // 65535
+    <=
+    assert // ABI validation
+    intc 5 // 65535
+    &
     itxn_begin
-    intc_0 // 32
+    intc_1 // 32
     bzero
-    dig 2
+    dig 3
+    dup
+    cover 2
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
-    dig 3
+    dig 5
+    dup
     uncover 3
     callsub _getReserveLastDynamicConfigKey
     itob
-    uncover 3
+    swap
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec 4 // method "getDynamicReserveConfig(uint256,uint64)struct DynamicReserveConfig"
+    bytec 4 // method "getDynamicReserveConfig(uint256,uint64)(uint16,uint32,uint16)"
     itxn_field ApplicationArgs
     dig 2
     itxn_field ApplicationArgs
@@ -1047,25 +1412,33 @@ addCollateralFactor:
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
+    uncover 3
+    itob
     dup
-    extract 20 8
-    swap
-    extract 12 8
-    uncover 4
+    bitlen
+    pushint 16
+    <=
+    assert // overflow
+    extract 6 2
+    dig 1
+    extract 10 2
+    uncover 2
+    extract 6 4
+    uncover 2
     swap
     concat
     swap
     concat
     itxn_begin
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     swap
     itxn_field ApplicationID
-    bytec 8 // method "addDynamicReserveConfig(uint256,struct DynamicReserveConfig)uint64"
+    bytec 8 // method "addDynamicReserveConfig(uint256,(uint16,uint32,uint16))uint64"
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
@@ -1074,27 +1447,33 @@ addCollateralFactor:
     itxn LastLog
     extract 4 0
     btoi
+    intc 4 // 4294967295
+    &
     itob
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
+addCollateralFactor_ternary_false@3:
+    intc_0 // 0
+    b addCollateralFactor_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateCollateralFactor[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateCollateralFactor[routing]() -> void:
 updateCollateralFactor:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
@@ -1110,34 +1489,59 @@ updateCollateralFactor:
     pushint 8
     ==
     assert // invalid number of bytes for arc4.uint64
+    btoi
+    txn GroupIndex
+    bz updateCollateralFactor_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+updateCollateralFactor_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
+    dig 1
+    dup
+    intc 4 // 4294967295
+    <=
+    assert // ABI validation
+    intc 4 // 4294967295
+    &
+    dig 1
+    dup
+    intc 5 // 65535
+    <=
+    assert // ABI validation
+    intc 5 // 65535
+    &
     itxn_begin
-    intc_0 // 32
+    intc_1 // 32
     bzero
-    uncover 3
+    dig 5
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     uncover 2
     itob
-    uncover 3
+    dig 6
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec 4 // method "getDynamicReserveConfig(uint256,uint64)struct DynamicReserveConfig"
+    bytec 4 // method "getDynamicReserveConfig(uint256,uint64)(uint16,uint32,uint16)"
     itxn_field ApplicationArgs
     dig 2
     itxn_field ApplicationArgs
@@ -1145,25 +1549,33 @@ updateCollateralFactor:
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
+    uncover 4
+    itob
     dup
-    extract 20 8
-    swap
-    extract 12 8
-    uncover 5
+    bitlen
+    pushint 16
+    <=
+    assert // overflow
+    extract 6 2
+    dig 1
+    extract 10 2
+    uncover 2
+    extract 6 4
+    uncover 2
     swap
     concat
     swap
     concat
     itxn_begin
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     swap
     itxn_field ApplicationID
-    bytec 9 // method "updateDynamicReserveConfig(uint256,uint64,struct DynamicReserveConfig)void"
+    bytec 9 // method "updateDynamicReserveConfig(uint256,uint64,(uint16,uint32,uint16))void"
     itxn_field ApplicationArgs
     uncover 2
     itxn_field ApplicationArgs
@@ -1171,60 +1583,77 @@ updateCollateralFactor:
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
-    intc_3 // 1
+    intc_2 // 1
     return
 
+updateCollateralFactor_ternary_false@3:
+    intc_0 // 0
+    b updateCollateralFactor_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.addMaxLiquidationBonus[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.addMaxLiquidationBonus[routing]() -> void:
 addMaxLiquidationBonus:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz addMaxLiquidationBonus_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+addMaxLiquidationBonus_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
     itxn_begin
-    intc_0 // 32
+    intc_1 // 32
     bzero
     dig 2
+    dup
+    cover 2
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
-    dig 3
+    dig 4
+    dup
     uncover 3
     callsub _getReserveLastDynamicConfigKey
     itob
-    uncover 3
+    swap
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec 4 // method "getDynamicReserveConfig(uint256,uint64)struct DynamicReserveConfig"
+    bytec 4 // method "getDynamicReserveConfig(uint256,uint64)(uint16,uint32,uint16)"
     itxn_field ApplicationArgs
     dig 2
     itxn_field ApplicationArgs
@@ -1233,27 +1662,33 @@ addMaxLiquidationBonus:
     itxn_submit
     itxn LastLog
     dup
-    extract 4 8
+    extract 4 2
     swap
-    extract 20 8
-    uncover 4
+    extract 10 2
+    dig 4
     callsub SafeCast.toUint32
     itob
+    dup
+    bitlen
+    intc_1 // 32
+    <=
+    assert // overflow
+    extract 4 4
     uncover 2
     swap
     concat
     swap
     concat
     itxn_begin
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     swap
     itxn_field ApplicationID
-    bytec 8 // method "addDynamicReserveConfig(uint256,struct DynamicReserveConfig)uint64"
+    bytec 8 // method "addDynamicReserveConfig(uint256,(uint16,uint32,uint16))uint64"
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
@@ -1262,27 +1697,33 @@ addMaxLiquidationBonus:
     itxn LastLog
     extract 4 0
     btoi
+    intc 4 // 4294967295
+    &
     itob
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
+addMaxLiquidationBonus_ternary_false@3:
+    intc_0 // 0
+    b addMaxLiquidationBonus_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateMaxLiquidationBonus[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateMaxLiquidationBonus[routing]() -> void:
 updateMaxLiquidationBonus:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
@@ -1295,37 +1736,54 @@ updateMaxLiquidationBonus:
     txna ApplicationArgs 4
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz updateMaxLiquidationBonus_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+updateMaxLiquidationBonus_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
+    dig 1
+    dup
+    intc 4 // 4294967295
+    <=
+    assert // ABI validation
+    intc 4 // 4294967295
+    &
     itxn_begin
-    intc_0 // 32
+    intc_1 // 32
     bzero
-    uncover 3
+    dig 4
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
-    uncover 2
+    swap
     itob
-    uncover 3
+    dig 5
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec 4 // method "getDynamicReserveConfig(uint256,uint64)struct DynamicReserveConfig"
+    bytec 4 // method "getDynamicReserveConfig(uint256,uint64)(uint16,uint32,uint16)"
     itxn_field ApplicationArgs
     dig 2
     itxn_field ApplicationArgs
@@ -1334,27 +1792,33 @@ updateMaxLiquidationBonus:
     itxn_submit
     itxn LastLog
     dup
-    extract 4 8
+    extract 4 2
     swap
-    extract 20 8
-    uncover 5
+    extract 10 2
+    dig 5
     callsub SafeCast.toUint32
     itob
+    dup
+    bitlen
+    intc_1 // 32
+    <=
+    assert // overflow
+    extract 4 4
     uncover 2
     swap
     concat
     swap
     concat
     itxn_begin
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     swap
     itxn_field ApplicationID
-    bytec 9 // method "updateDynamicReserveConfig(uint256,uint64,struct DynamicReserveConfig)void"
+    bytec 9 // method "updateDynamicReserveConfig(uint256,uint64,(uint16,uint32,uint16))void"
     itxn_field ApplicationArgs
     uncover 2
     itxn_field ApplicationArgs
@@ -1362,60 +1826,77 @@ updateMaxLiquidationBonus:
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
-    intc_3 // 1
+    intc_2 // 1
     return
 
+updateMaxLiquidationBonus_ternary_false@3:
+    intc_0 // 0
+    b updateMaxLiquidationBonus_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.addLiquidationFee[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.addLiquidationFee[routing]() -> void:
 addLiquidationFee:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz addLiquidationFee_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+addLiquidationFee_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
     itxn_begin
-    intc_0 // 32
+    intc_1 // 32
     bzero
     dig 2
+    dup
+    cover 2
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
-    dig 3
+    dig 4
+    dup
     uncover 3
     callsub _getReserveLastDynamicConfigKey
     itob
-    uncover 3
+    swap
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec 4 // method "getDynamicReserveConfig(uint256,uint64)struct DynamicReserveConfig"
+    bytec 4 // method "getDynamicReserveConfig(uint256,uint64)(uint16,uint32,uint16)"
     itxn_field ApplicationArgs
     dig 2
     itxn_field ApplicationArgs
@@ -1424,27 +1905,33 @@ addLiquidationFee:
     itxn_submit
     itxn LastLog
     dup
-    extract 4 8
-    uncover 4
+    extract 4 2
+    dig 4
     callsub SafeCast.toUint16
     itob
+    dup
+    bitlen
+    pushint 16
+    <=
+    assert // overflow
+    extract 6 2
     uncover 2
-    extract 12 8
+    extract 6 4
     uncover 2
     swap
     concat
     swap
     concat
     itxn_begin
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     swap
     itxn_field ApplicationID
-    bytec 8 // method "addDynamicReserveConfig(uint256,struct DynamicReserveConfig)uint64"
+    bytec 8 // method "addDynamicReserveConfig(uint256,(uint16,uint32,uint16))uint64"
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
@@ -1453,27 +1940,33 @@ addLiquidationFee:
     itxn LastLog
     extract 4 0
     btoi
+    intc 4 // 4294967295
+    &
     itob
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
+addLiquidationFee_ternary_false@3:
+    intc_0 // 0
+    b addLiquidationFee_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateLiquidationFee[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateLiquidationFee[routing]() -> void:
 updateLiquidationFee:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
@@ -1486,37 +1979,54 @@ updateLiquidationFee:
     txna ApplicationArgs 4
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz updateLiquidationFee_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+updateLiquidationFee_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
+    dig 1
+    dup
+    intc 4 // 4294967295
+    <=
+    assert // ABI validation
+    intc 4 // 4294967295
+    &
     itxn_begin
-    intc_0 // 32
+    intc_1 // 32
     bzero
-    uncover 3
+    dig 4
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
-    uncover 2
+    swap
     itob
-    uncover 3
+    dig 5
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec 4 // method "getDynamicReserveConfig(uint256,uint64)struct DynamicReserveConfig"
+    bytec 4 // method "getDynamicReserveConfig(uint256,uint64)(uint16,uint32,uint16)"
     itxn_field ApplicationArgs
     dig 2
     itxn_field ApplicationArgs
@@ -1525,27 +2035,33 @@ updateLiquidationFee:
     itxn_submit
     itxn LastLog
     dup
-    extract 4 8
-    uncover 5
+    extract 4 2
+    dig 5
     callsub SafeCast.toUint16
     itob
+    dup
+    bitlen
+    pushint 16
+    <=
+    assert // overflow
+    extract 6 2
     uncover 2
-    extract 12 8
+    extract 6 4
     uncover 2
     swap
     concat
     swap
     concat
     itxn_begin
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     swap
     itxn_field ApplicationID
-    bytec 9 // method "updateDynamicReserveConfig(uint256,uint64,struct DynamicReserveConfig)void"
+    bytec 9 // method "updateDynamicReserveConfig(uint256,uint64,(uint16,uint32,uint16))void"
     itxn_field ApplicationArgs
     uncover 2
     itxn_field ApplicationArgs
@@ -1553,83 +2069,104 @@ updateLiquidationFee:
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
-    intc_3 // 1
+    intc_2 // 1
     return
 
+updateLiquidationFee_ternary_false@3:
+    intc_0 // 0
+    b updateLiquidationFee_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.addDynamicReserveConfig[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.addDynamicReserveConfig[routing]() -> void:
 addDynamicReserveConfig:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    pushint 24
+    pushint 8
     ==
     assert // invalid number of bytes for DynamicReserveConfig
+    txn GroupIndex
+    bz addDynamicReserveConfig_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+addDynamicReserveConfig_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
     itxn_begin
-    intc_0 // 32
+    intc_1 // 32
     bzero
-    uncover 2
+    dig 2
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
-    uncover 2
+    dig 3
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 8 // method "addDynamicReserveConfig(uint256,struct DynamicReserveConfig)uint64"
+    bytec 8 // method "addDynamicReserveConfig(uint256,(uint16,uint32,uint16))uint64"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
+    dup
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     extract 4 0
     btoi
+    intc 4 // 4294967295
+    &
     itob
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
+addDynamicReserveConfig_ternary_false@3:
+    intc_0 // 0
+    b addDynamicReserveConfig_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateDynamicReserveConfig[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updateDynamicReserveConfig[routing]() -> void:
 updateDynamicReserveConfig:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
@@ -1642,531 +2179,843 @@ updateDynamicReserveConfig:
     txna ApplicationArgs 4
     dup
     len
-    pushint 24
+    pushint 8
     ==
     assert // invalid number of bytes for DynamicReserveConfig
+    txn GroupIndex
+    bz updateDynamicReserveConfig_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+updateDynamicReserveConfig_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
+    dig 1
+    dup
+    intc 4 // 4294967295
+    <=
+    assert // ABI validation
+    intc 4 // 4294967295
+    &
     itxn_begin
-    intc_0 // 32
+    intc_1 // 32
     bzero
-    uncover 3
+    dig 4
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
-    uncover 2
+    swap
     itob
-    uncover 3
+    dig 5
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 9 // method "updateDynamicReserveConfig(uint256,uint64,struct DynamicReserveConfig)void"
+    bytec 9 // method "updateDynamicReserveConfig(uint256,uint64,(uint16,uint32,uint16))void"
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
+    dup
     itxn_field ApplicationArgs
     itxn_submit
-    intc_3 // 1
+    intc_2 // 1
     return
 
+updateDynamicReserveConfig_ternary_false@3:
+    intc_0 // 0
+    b updateDynamicReserveConfig_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.pauseAllReserves[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.pauseAllReserves[routing]() -> void:
 pauseAllReserves:
+    intc_0 // 0
+    dup
+    pushbytes ""
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz pauseAllReserves_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+pauseAllReserves_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
     itxn_begin
+    dup
     pushint 24
     extract_uint64
     dup
-    intc_2 // 6
+    bury 3
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 12 // method "getReserveCount()uint256"
+    bytec 16 // method "getReserveCount()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     extract 4 0
-    intc_1 // 0
+    bury 4
+    intc_0 // 0
     itob
+    bury 3
 
-pauseAllReserves_while_top@3:
-    dup
+pauseAllReserves_while_top@8:
     dig 2
+    dig 4
     b<
-    bz pauseAllReserves_after_while@6
-    itxn LastLog
-    dup
-    extract 14 1
-    dig 1
-    extract 4 8
-    dig 2
-    extract 13 1
-    uncover 3
-    extract 15 1
-    uncover 2
-    bytec 5 // 0x01
-    concat
-    uncover 2
-    concat
-    uncover 2
-    concat
-    swap
-    concat
+    bz pauseAllReserves_after_while@12
     itxn_begin
-    intc_0 // 32
+    intc_1 // 32
     bzero
-    dig 2
+    dig 3
     dup
     cover 2
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
-    dig 5
+    dig 3
+    dup
+    cover 2
     itxn_field ApplicationID
-    bytec_0 // method "updateReserveConfig(uint256,struct ReserveConfig)void"
+    bytec_1 // method "getReserveConfig(uint256)(uint24,bool,bool,bool,bool)"
     itxn_field ApplicationArgs
+    dup
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    extract 4 0
+    dup
+    pushint 26
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    uncover 2
+    extract 4 3
+    dig 2
+    pushint 25
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    uncover 3
+    pushint 27
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    swap
+    intc_0 // 0
+    getbit
+    pushbytes 0x80
+    intc_2 // 1
+    uncover 2
+    setbit
+    uncover 3
+    intc_0 // 0
+    getbit
+    pushint 2
+    swap
+    setbit
+    swap
+    intc_0 // 0
+    getbit
+    pushint 3
+    swap
+    setbit
+    concat
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    uncover 2
+    itxn_field ApplicationID
+    bytec_2 // method "updateReserveConfig(uint256,(uint24,bool,bool,bool,bool))void"
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
     itxn_submit
-    bytec 5 // 0x01
+    bytec 12 // 0x01
     b+
-    bury 1
-    b pauseAllReserves_while_top@3
+    bury 3
+    b pauseAllReserves_while_top@8
 
-pauseAllReserves_after_while@6:
-    intc_3 // 1
+pauseAllReserves_after_while@12:
+    intc_2 // 1
     return
 
+pauseAllReserves_ternary_false@3:
+    intc_0 // 0
+    b pauseAllReserves_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.freezeAllReserves[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.freezeAllReserves[routing]() -> void:
 freezeAllReserves:
+    intc_0 // 0
+    dup
+    pushbytes ""
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz freezeAllReserves_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+freezeAllReserves_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
     itxn_begin
+    dup
     pushint 24
     extract_uint64
     dup
-    intc_2 // 6
+    bury 3
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 12 // method "getReserveCount()uint256"
+    bytec 16 // method "getReserveCount()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     extract 4 0
-    intc_1 // 0
+    bury 4
+    intc_0 // 0
     itob
+    bury 3
 
-freezeAllReserves_while_top@3:
-    dup
+freezeAllReserves_while_top@8:
     dig 2
+    dig 4
     b<
-    bz freezeAllReserves_after_while@6
-    itxn LastLog
-    dup
-    extract 14 1
-    dig 1
-    extract 4 8
-    dig 2
-    extract 12 1
-    uncover 3
-    extract 15 1
-    cover 2
-    concat
-    bytec 5 // 0x01
-    concat
-    uncover 2
-    concat
-    swap
-    concat
+    bz freezeAllReserves_after_while@12
     itxn_begin
-    intc_0 // 32
+    intc_1 // 32
     bzero
-    dig 2
+    dig 3
     dup
     cover 2
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
-    dig 5
+    dig 3
+    dup
+    cover 2
     itxn_field ApplicationID
-    bytec_0 // method "updateReserveConfig(uint256,struct ReserveConfig)void"
+    bytec_1 // method "getReserveConfig(uint256)(uint24,bool,bool,bool,bool)"
     itxn_field ApplicationArgs
+    dup
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    extract 4 0
+    dup
+    pushint 26
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    uncover 2
+    extract 4 3
+    dig 2
+    pushint 24
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    uncover 3
+    pushint 27
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    swap
+    intc_2 // 1
+    dup
+    setbit
+    uncover 3
+    intc_0 // 0
+    getbit
+    pushint 2
+    swap
+    setbit
+    swap
+    intc_0 // 0
+    getbit
+    pushint 3
+    swap
+    setbit
+    concat
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    uncover 2
+    itxn_field ApplicationID
+    bytec_2 // method "updateReserveConfig(uint256,(uint24,bool,bool,bool,bool))void"
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
     itxn_submit
-    bytec 5 // 0x01
+    bytec 12 // 0x01
     b+
-    bury 1
-    b freezeAllReserves_while_top@3
+    bury 3
+    b freezeAllReserves_while_top@8
 
-freezeAllReserves_after_while@6:
-    intc_3 // 1
+freezeAllReserves_after_while@12:
+    intc_2 // 1
     return
 
+freezeAllReserves_ternary_false@3:
+    intc_0 // 0
+    b freezeAllReserves_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.pauseReserve[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.pauseReserve[routing]() -> void:
 pauseReserve:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz pauseReserve_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+pauseReserve_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
     itxn_begin
-    intc_0 // 32
+    intc_1 // 32
     bzero
-    swap
+    dig 1
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
-    swap
+    dig 2
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec_3 // method "getReserveConfig(uint256)struct ReserveConfig"
+    bytec_1 // method "getReserveConfig(uint256)(uint24,bool,bool,bool,bool)"
     itxn_field ApplicationArgs
     dig 1
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     dup
-    extract 14 1
-    dig 1
-    extract 4 8
+    extract 4 0
+    dup
+    pushint 26
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    uncover 2
+    extract 4 3
     dig 2
-    extract 13 1
+    pushint 25
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
     uncover 3
-    extract 15 1
+    pushint 27
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
     uncover 2
-    bytec 5 // 0x01
-    concat
-    uncover 2
-    concat
-    uncover 2
-    concat
+    setbit
     swap
+    intc_0 // 0
+    getbit
+    pushbytes 0x80
+    intc_2 // 1
+    uncover 2
+    setbit
+    uncover 3
+    intc_0 // 0
+    getbit
+    pushint 2
+    swap
+    setbit
+    swap
+    intc_0 // 0
+    getbit
+    pushint 3
+    swap
+    setbit
     concat
     itxn_begin
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     swap
     itxn_field ApplicationID
-    bytec_0 // method "updateReserveConfig(uint256,struct ReserveConfig)void"
+    bytec_2 // method "updateReserveConfig(uint256,(uint24,bool,bool,bool,bool))void"
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
-    intc_3 // 1
+    intc_2 // 1
     return
 
+pauseReserve_ternary_false@3:
+    intc_0 // 0
+    b pauseReserve_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.freezeReserve[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.freezeReserve[routing]() -> void:
 freezeReserve:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz freezeReserve_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+freezeReserve_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
     itxn_begin
-    intc_0 // 32
+    intc_1 // 32
     bzero
-    swap
+    dig 1
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
-    swap
+    dig 2
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec_3 // method "getReserveConfig(uint256)struct ReserveConfig"
+    bytec_1 // method "getReserveConfig(uint256)(uint24,bool,bool,bool,bool)"
     itxn_field ApplicationArgs
     dig 1
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     dup
-    extract 14 1
-    dig 1
-    extract 4 8
-    dig 2
-    extract 12 1
-    uncover 3
-    extract 15 1
-    cover 2
-    concat
-    bytec 5 // 0x01
-    concat
+    extract 4 0
+    dup
+    pushint 26
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
     uncover 2
-    concat
+    setbit
+    uncover 2
+    extract 4 3
+    dig 2
+    pushint 24
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    uncover 3
+    pushint 27
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
     swap
+    intc_2 // 1
+    dup
+    setbit
+    uncover 3
+    intc_0 // 0
+    getbit
+    pushint 2
+    swap
+    setbit
+    swap
+    intc_0 // 0
+    getbit
+    pushint 3
+    swap
+    setbit
     concat
     itxn_begin
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     swap
     itxn_field ApplicationID
-    bytec_0 // method "updateReserveConfig(uint256,struct ReserveConfig)void"
+    bytec_2 // method "updateReserveConfig(uint256,(uint24,bool,bool,bool,bool))void"
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
-    intc_3 // 1
+    intc_2 // 1
     return
 
+freezeReserve_ternary_false@3:
+    intc_0 // 0
+    b freezeReserve_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updatePositionManager[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.updatePositionManager[routing]() -> void:
 updatePositionManager:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 3
     dup
     len
-    intc_3 // 1
+    intc_2 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    intc_1 // 0
+    intc_0 // 0
     getbit
+    txn GroupIndex
+    bz updatePositionManager_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+updatePositionManager_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    txna ApplicationArgs 0
+    callsub _msgData
     callsub _checkCanCall
+    dupn 2
+    intc_2 // 1
+    <=
+    assert // ABI bool validation
     itxn_begin
-    pushbytes 0x00
-    intc_1 // 0
+    bytec_0 // 0x00
+    intc_0 // 0
     uncover 2
     setbit
-    uncover 2
+    dig 3
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
     pushbytes 0x62a0be8b // method "updatePositionManager(address,bool)void"
     itxn_field ApplicationArgs
-    swap
+    dig 2
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
-    intc_3 // 1
+    intc_2 // 1
     return
 
+updatePositionManager_ternary_false@3:
+    intc_0 // 0
+    b updatePositionManager_ternary_merge@4
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.authority[routing]() -> void:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.authority[routing]() -> void:
 authority:
-    intc_1 // 0
-    bytec_1 // "_authority"
-    app_global_get_ex
-    assert // check _authority exists
-    bytec_2 // 0x151f7c75
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.authority
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.setAuthority[routing]() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.setAuthority[routing]() -> void:
 setAuthority:
     txna ApplicationArgs 1
+    dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz setAuthority_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+setAuthority_ternary_merge@4:
+    !
+    assert // not payable
     txn Sender
-    intc_1 // 0
-    bytec_1 // "_authority"
-    app_global_get_ex
-    assert // check _authority exists
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.authority
     !=
     !
     assert // AccessManagedUnauthorized
-    err // AccessManagedInvalidAuthority
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.isConsumingScheduledOp[routing]() -> void:
-isConsumingScheduledOp:
-    intc_1 // 0
-    bytec 6 // "_consumingSchedule"
-    app_global_get_ex
-    assert // check _consumingSchedule exists
-    bz isConsumingScheduledOp_ternary_false@3
+    dupn 2
+    pushint 24
+    extract_uint64
+    app_params_get AppApprovalProgram
+    pop
+    len
+    itob
     pushbytes 0x
-
-isConsumingScheduledOp_ternary_merge@4:
-    bytec_2 // 0x151f7c75
+    b==
+    !
+    assert // AccessManagedInvalidAuthority
+    bytec 5 // "_authority"
+    dig 1
+    app_global_put
+    bytec 14 // method "AuthorityUpdated(uint8[32])"
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
-isConsumingScheduledOp_ternary_false@3:
+setAuthority_ternary_false@3:
+    intc_0 // 0
+    b setAuthority_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.isConsumingScheduledOp[routing]() -> void:
+isConsumingScheduledOp:
+    txn GroupIndex
+    bz isConsumingScheduledOp_ternary_false@3
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+isConsumingScheduledOp_ternary_merge@4:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 6 // "_consumingSchedule"
+    app_global_get_ex
+    assert // check _consumingSchedule exists
+    bz isConsumingScheduledOp_ternary_false@6
+    pushbytes 0x8fb36037
+
+isConsumingScheduledOp_ternary_merge@7:
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+isConsumingScheduledOp_ternary_false@6:
     pushbytes 0x00000000
+    b isConsumingScheduledOp_ternary_merge@7
+
+isConsumingScheduledOp_ternary_false@3:
+    intc_0 // 0
     b isConsumingScheduledOp_ternary_merge@4
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator._getReserveLastDynamicConfigKey(spoke: bytes, reserveId: bytes) -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator._getReserveLastDynamicConfigKey(spoke: bytes, reserveId: bytes) -> uint64:
 _getReserveLastDynamicConfigKey:
     proto 2 1
     itxn_begin
-    intc_0 // 32
+    intc_1 // 32
     bzero
     frame_dig -1
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     frame_dig -2
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    pushbytes 0x0c77be35 // method "getReserve(uint256)struct Reserve"
+    pushbytes 0x8e35ff7e // method "getReserve(uint256)(uint8[32],uint8[32],uint16,uint8,uint24,uint8,uint32)"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
-    pushint 100
-    extract_uint64
+    pushint 75
+    extract_uint32
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator._checkCanCall(caller: bytes, data: bytes) -> void:
-_checkCanCall:
-    proto 2 0
-    intc_1 // 0
-    bytec_1 // "_authority"
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.authority() -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.authority:
+    txn GroupIndex
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.authority_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.authority_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 5 // "_authority"
     app_global_get_ex
     assert // check _authority exists
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.authority_ternary_false@2:
+    intc_0 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.authority_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator._checkCanCall(caller: bytes, data: bytes) -> void:
+_checkCanCall:
+    proto 2 0
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.authority
     global CurrentApplicationAddress
     frame_dig -1
     substring 0 4
@@ -2177,10 +3026,7 @@ _checkCanCall:
     callsub AuthorityUtils.canCallWithDelay
     pop
     swap
-    intc_1 // 0
-    bytec_1 // "_authority"
-    app_global_get_ex
-    assert // check _authority exists
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.authority
     frame_dig -2
     global CurrentApplicationAddress
     uncover 3
@@ -2191,32 +3037,303 @@ _checkCanCall:
     frame_dig 0
     assert // AccessManagedUnauthorized
     bytec 6 // "_consumingSchedule"
-    intc_3 // 1
+    intc_2 // 1
     app_global_put
     itxn_begin
-    intc_1 // 0
-    bytec_1 // "_authority"
-    app_global_get_ex
-    assert // check _authority exists
+    frame_dig -1
+    len
+    itob
+    extract 6 2
+    frame_dig -1
+    concat
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator.authority
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
     pushbytes 0x669ac04b // method "consumeScheduledOp(address,byte[])void"
     itxn_field ApplicationArgs
     frame_dig -2
     itxn_field ApplicationArgs
-    frame_dig -1
     itxn_field ApplicationArgs
     itxn_submit
     bytec 6 // "_consumingSchedule"
-    intc_1 // 0
+    intc_0 // 0
     app_global_put
 
 _checkCanCall_after_if_else@6:
     retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol.SpokeConfigurator._msgData() -> bytes:
+_msgData:
+    proto 0 1
+    intc_0 // 0
+    dupn 14
+    txn NumAppArgs
+    bz _msgData_ternary_false@50
+    txn NumAppArgs
+    bz _msgData_ternary_false@3
+    txna ApplicationArgs 0
+    frame_bury 0
+
+_msgData_ternary_merge@4:
+    txn NumAppArgs
+    intc_2 // 1
+    >
+    bz _msgData_ternary_false@6
+    txna ApplicationArgs 1
+
+_msgData_ternary_merge@7:
+    frame_dig 0
+    swap
+    concat
+    frame_bury 13
+    txn NumAppArgs
+    pushint 2
+    >
+    bz _msgData_ternary_false@9
+    txna ApplicationArgs 2
+
+_msgData_ternary_merge@10:
+    frame_dig 13
+    swap
+    concat
+    frame_bury 14
+    txn NumAppArgs
+    pushint 3
+    >
+    bz _msgData_ternary_false@12
+    txna ApplicationArgs 3
+
+_msgData_ternary_merge@13:
+    frame_dig 14
+    swap
+    concat
+    frame_bury 1
+    txn NumAppArgs
+    pushint 4
+    >
+    bz _msgData_ternary_false@15
+    txna ApplicationArgs 4
+
+_msgData_ternary_merge@16:
+    frame_dig 1
+    swap
+    concat
+    frame_bury 2
+    txn NumAppArgs
+    pushint 5
+    >
+    bz _msgData_ternary_false@18
+    txna ApplicationArgs 5
+
+_msgData_ternary_merge@19:
+    frame_dig 2
+    swap
+    concat
+    frame_bury 3
+    txn NumAppArgs
+    intc_3 // 6
+    >
+    bz _msgData_ternary_false@21
+    txna ApplicationArgs 6
+
+_msgData_ternary_merge@22:
+    frame_dig 3
+    swap
+    concat
+    frame_bury 4
+    txn NumAppArgs
+    pushint 7
+    >
+    bz _msgData_ternary_false@24
+    txna ApplicationArgs 7
+
+_msgData_ternary_merge@25:
+    frame_dig 4
+    swap
+    concat
+    frame_bury 5
+    txn NumAppArgs
+    pushint 8
+    >
+    bz _msgData_ternary_false@27
+    txna ApplicationArgs 8
+
+_msgData_ternary_merge@28:
+    frame_dig 5
+    swap
+    concat
+    frame_bury 6
+    txn NumAppArgs
+    pushint 9
+    >
+    bz _msgData_ternary_false@30
+    txna ApplicationArgs 9
+
+_msgData_ternary_merge@31:
+    frame_dig 6
+    swap
+    concat
+    frame_bury 7
+    txn NumAppArgs
+    pushint 10
+    >
+    bz _msgData_ternary_false@33
+    txna ApplicationArgs 10
+
+_msgData_ternary_merge@34:
+    frame_dig 7
+    swap
+    concat
+    frame_bury 8
+    txn NumAppArgs
+    pushint 11
+    >
+    bz _msgData_ternary_false@36
+    txna ApplicationArgs 11
+
+_msgData_ternary_merge@37:
+    frame_dig 8
+    swap
+    concat
+    frame_bury 9
+    txn NumAppArgs
+    pushint 12
+    >
+    bz _msgData_ternary_false@39
+    txna ApplicationArgs 12
+
+_msgData_ternary_merge@40:
+    frame_dig 9
+    swap
+    concat
+    frame_bury 10
+    txn NumAppArgs
+    pushint 13
+    >
+    bz _msgData_ternary_false@42
+    txna ApplicationArgs 13
+
+_msgData_ternary_merge@43:
+    frame_dig 10
+    swap
+    concat
+    frame_bury 11
+    txn NumAppArgs
+    pushint 14
+    >
+    bz _msgData_ternary_false@45
+    txna ApplicationArgs 14
+
+_msgData_ternary_merge@46:
+    frame_dig 11
+    swap
+    concat
+    frame_bury 12
+    txn NumAppArgs
+    pushint 15
+    >
+    bz _msgData_ternary_false@48
+    txna ApplicationArgs 15
+
+_msgData_ternary_merge@49:
+    frame_dig 12
+    swap
+    concat
+
+_msgData_ternary_merge@51:
+    frame_bury 0
+    retsub
+
+_msgData_ternary_false@48:
+    intc_0 // 0
+    bzero
+    b _msgData_ternary_merge@49
+
+_msgData_ternary_false@45:
+    intc_0 // 0
+    bzero
+    b _msgData_ternary_merge@46
+
+_msgData_ternary_false@42:
+    intc_0 // 0
+    bzero
+    b _msgData_ternary_merge@43
+
+_msgData_ternary_false@39:
+    intc_0 // 0
+    bzero
+    b _msgData_ternary_merge@40
+
+_msgData_ternary_false@36:
+    intc_0 // 0
+    bzero
+    b _msgData_ternary_merge@37
+
+_msgData_ternary_false@33:
+    intc_0 // 0
+    bzero
+    b _msgData_ternary_merge@34
+
+_msgData_ternary_false@30:
+    intc_0 // 0
+    bzero
+    b _msgData_ternary_merge@31
+
+_msgData_ternary_false@27:
+    intc_0 // 0
+    bzero
+    b _msgData_ternary_merge@28
+
+_msgData_ternary_false@24:
+    intc_0 // 0
+    bzero
+    b _msgData_ternary_merge@25
+
+_msgData_ternary_false@21:
+    intc_0 // 0
+    bzero
+    b _msgData_ternary_merge@22
+
+_msgData_ternary_false@18:
+    intc_0 // 0
+    bzero
+    b _msgData_ternary_merge@19
+
+_msgData_ternary_false@15:
+    intc_0 // 0
+    bzero
+    b _msgData_ternary_merge@16
+
+_msgData_ternary_false@12:
+    intc_0 // 0
+    bzero
+    b _msgData_ternary_merge@13
+
+_msgData_ternary_false@9:
+    intc_0 // 0
+    bzero
+    b _msgData_ternary_merge@10
+
+_msgData_ternary_false@6:
+    intc_0 // 0
+    bzero
+    b _msgData_ternary_merge@7
+
+_msgData_ternary_false@3:
+    intc_0 // 0
+    bzero
+    frame_bury 0
+    b _msgData_ternary_merge@4
+
+_msgData_ternary_false@50:
+    intc_0 // 0
+    bzero
+    b _msgData_ternary_merge@51

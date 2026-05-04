@@ -212,20 +212,21 @@ def test_isUsingAsCollateralOrBorrowing_slot1(localnet, account):
     _send(p, "setUsingAsCollateral", 255, False)
 
 
-# puya-sol codegen bug: lowering of `self.map[--bucket]` emits TWO `b-`
-# ops in collateralCount/borrowCount loop bodies. The first computes
-# bucket-1 (used as box key), the second pops bucket-1 from the stack
-# and subtracts again, producing bucket-2 — when bucket=1 the result
-# is -1, tripping "byte math would have negative result". Affects all
-# reserveCounts ≥ 128. Tests below xfail until puya-sol fixes its
-# pre-decrement-in-subscript codegen.
-_PSM_BUCKET_LOOP_XFAIL = pytest.mark.xfail(
-    reason="puya-sol --bucket-in-subscript double-b- codegen bug",
+# Separate bug from the now-fixed `map[--bucket]` issue: the assembly
+# block in isolateCollateralUntil/isolateBorrowingUntil computes
+# `shr(sub(256, shl(1, mod(reserveCount, 128))), MASK)`. When
+# reserveCount is exactly a bucket boundary (128, 256, ...), the
+# expression simplifies to `shr(256, MASK)` — EVM returns 0, but AVM
+# `b>>` doesn't have the same well-defined behaviour for shift ≥ bit
+# width. The mask comes back non-zero, so the boundary bucket's bits
+# leak into the count. Affects exactly-on-boundary reserveCounts.
+_BOUNDARY_SHR_XFAIL = pytest.mark.xfail(
+    reason="AVM b>> by 256 doesn't return 0 like EVM shr — boundary mask leak",
     strict=True,
 )
 
 
-@_PSM_BUCKET_LOOP_XFAIL
+@_BOUNDARY_SHR_XFAIL
 def test_collateralCount(localnet, account):
     """Mirrors upstream test_collateralCount() — exercises:
     boundary reserveIds, ignoring bits past reserveCount, and that
@@ -251,7 +252,6 @@ def test_collateralCount(localnet, account):
     assert _call(p, "collateralCount", 343) == 4
 
 
-@_PSM_BUCKET_LOOP_XFAIL
 def test_collateralCount_ignoresInvalidBits(localnet, account):
     p = _fresh(localnet, account)
     _send(p, "setUsingAsCollateral", 127, True)
@@ -270,7 +270,7 @@ def test_collateralCount_ignoresInvalidBits(localnet, account):
     assert _call(p, "collateralCount", 600) == 6
 
 
-@_PSM_BUCKET_LOOP_XFAIL
+@_BOUNDARY_SHR_XFAIL
 def test_borrowCount(localnet, account):
     p = _fresh(localnet, account)
     _send(p, "setBorrowing", 127, True)
@@ -292,7 +292,6 @@ def test_borrowCount(localnet, account):
     assert _call(p, "borrowCount", 343) == 4
 
 
-@_PSM_BUCKET_LOOP_XFAIL
 def test_borrowCount_ignoresInvalidBits(localnet, account):
     p = _fresh(localnet, account)
     _send(p, "setBorrowing", 127, True)
