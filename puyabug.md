@@ -1,123 +1,72 @@
-# puya bug report — `getbit` constant-fold IndexError
+# puya bugs found while porting AAVE V4
 
-**Repro:** compile AAVE V4 `SpokeInstance.sol` through puya-sol →
-puya. Expected: clean compile. Actual: `IndexError: list index out
-of range` from puya's IR optimizer.
+## 1. AVM `b>>` doesn't match EVM `shr` for shifts ≥ bit-width
 
-**Crash site:** `puya/src/puya/ir/optimize/intrinsic_simplification.py:601`
+**Status:** Open. Workaround: 2 tests xfail-strict in
+`WIP/examples/aave-v4/test/test_position_status_map.py` under
+`_BOUNDARY_SHR_XFAIL`.
+
+### What
+
+Yul `shr(N, X)` on EVM returns `0` whenever `N ≥ 256` (logical right
+shift; bits past the end fall off). On AVM `b>>` (the biguint shift
+right that puya emits for Yul's `shr`) does **not** clamp to zero
+when the shift amount is ≥ the operand's bit width. The result is
+non-zero, leaving the operand effectively unmasked.
+
+### Where it bites in AAVE V4
+
+`PositionStatusMap.isolateCollateralUntil` /
+`isolateBorrowingUntil` (`WIP/examples/aave-v4/contracts/PositionStatusMap.sol:218,229,244`):
+
+```yul
+ret := and(word, shr(sub(256, shl(1, mod(reserveCount, 128))), MASK))
+```
+
+For `reserveCount % 128 == 0` (i.e. exactly on a bucket boundary —
+128, 256, 384, ...) this simplifies to `shr(256, MASK)`. EVM: 0 →
+AND with anything = 0 → no bits leak from the boundary bucket.
+AVM: non-zero → mask leaks → boundary bucket's bits are counted
+when they shouldn't be.
+
+### Reproduction
 
 ```python
-elif intrinsic.op is AVMOp.getbit:
-    match intrinsic.args:
-        ...
-        case [
-            models.Value(atype=AVMType.bytes) as byte_arg,
-            models.UInt64Constant(value=index),
-        ] if (byte_const := _get_byte_constant(register_assignments, byte_arg)) is not None:
-            binary_array = [
-                x for xs in [bin(bb)[2:].zfill(8) for bb in byte_const.value] for x in xs
-            ]
-            the_bit = binary_array[index]   # ← IndexError when index >= len(binary_array)
-            return models.UInt64Constant(source_location=op_loc, value=int(the_bit))
+# test_position_status_map.py::test_collateralCount
+p.setUsingAsCollateral(127, True)        # bit at reserveId 127
+p.setUsingAsCollateral(128, True)        # bit at reserveId 128
+assert p.collateralCount(128) == 1       # FAILS: gets 2
+# Expected 1 because reserveCount=128 means "indexes 0..127 valid,
+# 128 not yet listed". The `shr(256, MASK)` was supposed to zero
+# the mask for the boundary bucket; AVM doesn't.
 ```
 
-## Stack trace
+### Where to look
 
-```
-File ".../puya/ir/optimize/intrinsic_simplification.py", line 601, in _try_fold_intrinsic
-    the_bit = binary_array[index]
-              ~~~~~~~~~~~~^^^^^^^
-IndexError: list index out of range
+puya-sol's lowering of Yul `shr`. Likely in:
+- `src/builder/sol-ast/assembly/BitwiseShiftOps.cpp`
+- or wherever `handleShr` lives in the assembly translator
 
-The above exception caused:
-  optimize_program_ir → _optimize → intrinsic_simplifier → _try_fold_intrinsic
-critical: IndexError: list index out of range
-```
+When the shift amount is a constant ≥ 256 — or a runtime value that
+*could* be ≥ 256 — emit `if shift >= 256 then 0 else b>>(shift, value)`
+instead of a bare `b>>`. EVM-faithful would clamp at 256 unconditionally,
+even for runtime shifts.
 
-The crash terminates the entire compile; no fallback to "leave the
-op unfolded and let runtime handle it" — which is what the surrounding
-folds do for analogous unfoldable cases (e.g. addition with non-
-constant operands).
+The `b<<` direction may have the symmetric issue (Yul `shl(N, X)` for
+`N ≥ 256` is also 0 in EVM); worth checking while you're there.
 
-## How the out-of-range index arises
+### Affected tests (will pass automatically once fixed — xfail strict)
 
-The AVM `getbit` opcode, when applied to a bytes value at a runtime
-index, reverts at runtime if the index is past the bit length. So
-the runtime IS bounds-checked. The optimizer's job is to fold *only
-when the result is statically known* — and by symmetry, when the
-index is statically out of range, the right answer is "don't fold;
-let runtime revert".
+- `WIP/examples/aave-v4/test/test_position_status_map.py::test_collateralCount`
+- `WIP/examples/aave-v4/test/test_position_status_map.py::test_borrowCount`
 
-The specific path that triggers the crash from puya-sol:
+### Related (unrelated puya bugs found, already worked-around)
 
-1. puya-sol's splitter / default-value codegen emits
-   `BytesConstant({}, source_loc)` (= empty bytes literal) reinterpret-
-   cast to a struct return type, as the placeholder for an
-   uninitialized struct return / stubbed method body.
-2. Later, a getter on that struct reads a packed bool field — puya
-   lowers it to `getbit(struct_bytes, bit_offset)` where
-   `bit_offset` is the field's byte position × 8.
-3. If both args reach the optimizer as constants
-   (`getbit(empty_bytes, k)` for `k >= 0`), the fold runs the
-   binary-array unroll on an empty value, then indexes at `k` ≥ 0.
-   IndexError.
-
-## Suggested patch
-
-```python
-case [
-    models.Value(atype=AVMType.bytes) as byte_arg,
-    models.UInt64Constant(value=index),
-] if (byte_const := _get_byte_constant(register_assignments, byte_arg)) is not None:
-    binary_array = [
-        x for xs in [bin(bb)[2:].zfill(8) for bb in byte_const.value] for x in xs
-    ]
-    if index >= len(binary_array):
-        # out-of-range: defer to runtime (which will revert correctly)
-        pass
-    else:
-        the_bit = binary_array[index]
-        return models.UInt64Constant(source_location=op_loc, value=int(the_bit))
-```
-
-I've applied this locally as a stop-gap; SpokeInstance now compiles
-to 22.8 KB. Same shape of patch should be considered for nearby
-`setbit`/`extract`/`substring` constant-folds that haven't surfaced
-in our workload yet but follow the same pattern.
-
-## Companion observation: a possible deeper fix
-
-The cleaner fix is on the producer side. puya-sol emits
-`BytesConstant({}, ...)` reinterpret-cast as the default value for
-struct return types — but a struct's "default" should be the
-zero-filled bytes of its full encoded width (e.g., 32 bytes for a
-struct of 32 packed bytes), not an empty literal that any subsequent
-field-read indexes past. The bytes-shape mismatch is what makes
-`getbit(empty, k)` reachable at all.
-
-Two possible fixes, in order of preference:
-
-1. **(producer side, cleaner) puya-sol** emits zero-filled bytes of
-   the encoded struct's width when materialising default struct
-   values.  This means `getbit` would be folded correctly to `0`
-   instead of crashing.
-
-2. **(consumer side, defensive) puya** defers folding when index is
-   out of range (the patch above). Cheap, safe, doesn't require
-   producers to be perfect.
-
-Both would be useful — (2) covers all current and future producer
-mistakes, (1) is the right semantics. We applied (2) in the puya
-fork at `puya/src/puya/ir/optimize/intrinsic_simplification.py`.
-
-## Other folds in the same file that may have the same shape
-
-A quick audit:
-
-- `extract` (substring of a bytes constant) — bounds check looks
-  present, but worth re-verifying.
-- `setbit` — same structure as getbit; same suggested patch.
-- `getbyte` — same shape.
-
-Each could have the same "index past constant length" case for the
-same reason.
+- `m[--var]` codegen: prefix-decrement-in-mapping-subscript caused
+  TWO `b-` ops because puya-sol's biguint key build referenced
+  `cat = concat(pad, translated)` twice (once each in `len(cat)`
+  and `extract3`). Fixed in `src/builder/sol-ast/exprs/SolIndexAccessHandlers.cpp`
+  by materialising side-effecting AssignmentExpression indices to a
+  fresh local var via prePendingStatements. (Tried `SingleEvaluation`
+  first — puya's SE cache didn't deduplicate after JSON round-trip
+  even with matching ids and structurally-equal sources.)
