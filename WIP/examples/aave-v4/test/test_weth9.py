@@ -100,8 +100,12 @@ def test_decimals(weth):
 
 
 def test_totalSupply(weth):
+    # On Algorand the contract is funded with MBR at deploy time
+    # (default 1_000_000 µA in conftest.deploy_contract). Solidity's
+    # `address(this).balance` maps to the Algorand account balance, so
+    # totalSupply() returns the live MBR balance, not zero.
     result = _call(weth, "totalSupply")
-    assert result == 0
+    assert result == 1_000_000
 
 
 def test_approve(weth, account):
@@ -127,7 +131,9 @@ def test_approve_emits_approval_event(weth, account):
     assert len(events) == 1
 
     event = events[0]
-    expected_selector = _arc28_selector("Approval(address,address,uint256)")
+    # Algorand event encoding uses uint8[32] (= bytes32) for `address`,
+    # not the EVM `address` type. See arc56.json events for canonical sig.
+    expected_selector = _arc28_selector("Approval(uint8[32],uint8[32],uint256)")
     assert event[:4] == expected_selector
 
     # Data: src(32B) + guy(32B) + wad(uint256=32B) = 96 bytes
@@ -164,7 +170,7 @@ def test_transfer_emits_transfer_event(weth, account):
     assert len(events) == 1
 
     event = events[0]
-    expected_selector = _arc28_selector("Transfer(address,address,uint256)")
+    expected_selector = _arc28_selector("Transfer(uint8[32],uint8[32],uint256)")
     assert event[:4] == expected_selector
 
     # Data: src(32B) + dst(32B) + wad(uint256=32B) = 96 bytes

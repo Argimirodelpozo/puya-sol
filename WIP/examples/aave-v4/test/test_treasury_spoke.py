@@ -173,7 +173,8 @@ def test_transferOwnership_emits_event(spoke, account):
     result = _call_with_result(spoke, "transferOwnership", account.address)
     events = _extract_events(result.confirmation)
     assert len(events) >= 1
-    selector = _arc28_selector("OwnershipTransferStarted(address,address)")
+    # Algorand event encoding: address → uint8[32] (bytes32). See arc56.json.
+    selector = _arc28_selector("OwnershipTransferStarted(uint8[32],uint8[32])")
     event = next(e for e in events if e[:4] == selector)
     # Data contains two ARC4-encoded addresses (32 bytes each)
     data = event[4:]

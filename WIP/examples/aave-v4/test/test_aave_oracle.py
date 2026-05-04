@@ -42,7 +42,12 @@ def _call(client, method, *args, boxes=None):
 @pytest.fixture(scope="module")
 def oracle(localnet, account):
     decimals = 8
-    description = b"Aave Oracle"
+    description_raw = b"Aave Oracle"
+    # __postInit(uint64 decimals, string description) — ARC4 `string` is
+    # encoded as a 2-byte BE length prefix + the UTF-8 bytes. Without
+    # the prefix the constructor's storage write copies a length read
+    # from random data and the field assertion fails on read.
+    description = len(description_raw).to_bytes(2, "big") + description_raw
     return deploy_contract(
         localnet, account, "AaveOracle",
         app_args=[decimals.to_bytes(8, "big"), description],

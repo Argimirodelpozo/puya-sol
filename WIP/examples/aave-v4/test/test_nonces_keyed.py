@@ -78,13 +78,15 @@ def test_useNonce_increments(nonces, account):
     composite = _composite_key(_account_key(account.address), _biguint_key(key))
     box_key = _mapping_box_key("_nonces", composite)
     box = _box_ref(nonces.app_id, box_key)
-    # First use: returns packed(key=42, nonce) — nonce starts at 0
-    # Note: post-increment for mappings returns incremented value (known limitation)
+    # First use: returns packed(key=42, nonce_BEFORE_increment) — the
+    # standard EIP-2612 useNonce semantics: read the current nonce
+    # (= 0 on first use), then increment. So the call returns
+    # `(key << 64) | 0`, and the stored nonce afterwards is 1.
+    # (An earlier puya-sol revision inverted this to post-increment;
+    # the current version is correct.)
     result = _call(nonces, "useNonce", key, boxes=[box])
-    # packed = (key << 64) | nonce
     packed_key = key * (2**64)
-    assert result == packed_key + 1  # nonce=1 due to post-increment bug
-    # After use, nonce should be 1
+    assert result == packed_key + 0
     result2 = _call(nonces, "nonces", account.address, key, boxes=[box])
     assert result2 == packed_key + 1
 
