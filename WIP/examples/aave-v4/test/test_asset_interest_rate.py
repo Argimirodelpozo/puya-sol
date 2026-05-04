@@ -230,7 +230,6 @@ def test_setInterestRateData_emits_event(strategy):
     assert slope2 == 6000
 
 
-@pytest.mark.xfail(reason="b* arg type mismatch: uint64 vs biguint in TEAL")
 def test_calculateInterestRate_zero_drawn(strategy):
     """When drawn=0, rate should be the base rate."""
     client, asset_id = strategy
@@ -238,7 +237,6 @@ def test_calculateInterestRate_zero_drawn(strategy):
     assert result == _bps_to_ray(200)  # base rate in RAY
 
 
-@pytest.mark.xfail(reason="b* arg type mismatch: uint64 vs biguint in TEAL")
 def test_calculateInterestRate_at_kink(strategy):
     """At optimal usage ratio (80%), rate = base + slope1."""
     client, asset_id = strategy
@@ -251,7 +249,6 @@ def test_calculateInterestRate_at_kink(strategy):
     assert abs(result - expected) < RAY // 10**4  # within 0.01%
 
 
-@pytest.mark.xfail(reason="b* arg type mismatch: uint64 vs biguint in TEAL")
 def test_calculateInterestRate_at_max(strategy):
     """At 100% utilization, rate = base + slope1 + slope2."""
     client, asset_id = strategy

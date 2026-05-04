@@ -124,7 +124,6 @@ def test_add_negative_twos_complement(math):
     assert _call(math, "add", 100, neg_30) == 70
 
 
-@pytest.mark.xfail(reason="AVM uses wrapping subtraction for int256 negation; underflow not detected")
 def test_add_negative_underflow(math):
     """add(0, -50) should revert."""
     neg_50 = UINT256_MAX + 1 - 50
@@ -148,14 +147,12 @@ def test_uncheckedAdd_zero(math):
     assert _call(math, "uncheckedAdd", 0, 0) == 0
 
 
-@pytest.mark.xfail(reason="AVM biguint is arbitrary-precision; unchecked wrapping not supported")
 def test_uncheckedAdd_overflow(math):
     """uncheckedAdd wraps on overflow (mod 2^256)."""
     result = _call(math, "uncheckedAdd", UINT256_MAX, 1)
     assert result == 0
 
 
-@pytest.mark.xfail(reason="AVM biguint is arbitrary-precision; unchecked wrapping not supported")
 def test_uncheckedAdd_overflow_large(math):
     result = _call(math, "uncheckedAdd", UINT256_MAX, UINT256_MAX)
     assert result == UINT256_MAX - 1
@@ -181,7 +178,6 @@ def test_signedSub_a_lt_b(math):
     assert result == expected
 
 
-@pytest.mark.xfail(reason="SafeCast int256 overflow not enforced on AVM biguint")
 def test_signedSub_overflow(math):
     """Values > INT256_MAX should revert (SafeCast overflow)."""
     big = INT256_MAX + 1
