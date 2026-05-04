@@ -1,6 +1,10 @@
-# Semantic Test Status — v202
+# Semantic Test Status — v205
 
 **Totals**: 1091 PASS / 154 FAIL / 77 (58 compile_err + 19 deploy_err) = **1091/1322 (82.5%)**
+
+v205 confirms v202's number is stable through the `--uros-splitter`
+additions. The splitter is no-op when its flag isn't present, so this
+run is a regression sentinel — no test moved.
 
 Net delta over v200 baseline: +1 PASS. Tests that previously passed via
 the silent-stub success-path of `try/catch` now error out cleanly —
@@ -36,9 +40,10 @@ cluster.
 - v202 = 1091
 - v203 = polluted (mid-run rebuild → "Text file busy" on most invocations)
 - v204 = polluted (same cause)
-- v205 = in flight (with --uros-splitter wired in; main contract output
-  unchanged in the no-flag path, so this run is a regression sentinel
-  for the splitter additions)
+- v205 = 1091 — identical to v202 test-by-test, confirming
+  `--uros-splitter` additions are inert in the no-flag path. Splitter
+  is wired in (8 commits f5bf4ad29..b37df6eac) and verified
+  end-to-end on a localnet dance test.
 
 ## v195 reference (preserved below)
 
