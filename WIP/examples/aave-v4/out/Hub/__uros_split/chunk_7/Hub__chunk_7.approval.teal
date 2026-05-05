@@ -1808,15 +1808,15 @@ reportDeficit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.eliminateDeficit[routing]() -> void:
 eliminateDeficit:
-    intc_2 // 0
-    dupn 4
     txna ApplicationArgs 1
-    dup
+    dupn 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
+    dup
+    cover 2
     dup
     len
     intc_0 // 32
@@ -1824,25 +1824,23 @@ eliminateDeficit:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
+    cover 3
+    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz eliminateDeficit_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-eliminateDeficit_ternary_merge@4:
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    pushbytes "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
     intc_0 // 32
     bzero
     dup
-    bury 5
-    dig 3
+    cover 4
+    uncover 3
     concat
     dup
     len
@@ -1851,14 +1849,14 @@ eliminateDeficit_ternary_merge@4:
     intc_0 // 32
     extract3
     dup
-    bury 6
+    cover 3
     dup
     sha256
     pushbytes "_assets"
     swap
     concat
     dup
-    bury 9
+    cover 4
     dup
     box_get
     bytec 11 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1867,30 +1865,29 @@ eliminateDeficit_ternary_merge@4:
     callsub AssetLogic.accrue
     pop
     box_put
-    dig 1
+    swap
     concat
     sha256
     bytec_3 // "_spokes"
     swap
     concat
     dup
-    bury 7
+    cover 2
     box_get
     bytec 4 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     extract 84 25
     dup
-    bury 9
+    cover 2
     callsub WadRayMath.fromRayUp
-    dig 2
-    b>
-    bz eliminateDeficit_ternary_false@8
-    dig 1
+    b<
+    bz eliminateDeficit_ternary_false@5
+    dig 6
     callsub WadRayMath.toRay
 
-eliminateDeficit_ternary_merge@9:
-    dig 7
+eliminateDeficit_ternary_merge@6:
+    dig 3
     dup
     box_get
     bytec 11 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -2006,7 +2003,7 @@ eliminateDeficit_ternary_merge@9:
     bytec 5 // "__og_sender"
     app_global_get_ex
     pop
-    dig 9
+    dig 8
     dup
     uncover 2
     concat
@@ -2349,7 +2346,7 @@ eliminateDeficit_ternary_merge@9:
     dig 3
     swap
     box_put
-    dig 9
+    dig 5
     dup
     box_get
     bytec 4 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -2438,7 +2435,7 @@ eliminateDeficit_ternary_merge@9:
     bytec 11 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
-    dig 6
+    dig 11
     dup
     cover 3
     callsub AssetLogic.updateDrawnRate
@@ -2456,7 +2453,7 @@ eliminateDeficit_ternary_merge@9:
     <=
     assert // overflow
     uncover 3
-    dig 7
+    dig 8
     dup
     cover 2
     b|
@@ -2472,7 +2469,7 @@ eliminateDeficit_ternary_merge@9:
     uncover 5
     uncover 4
     concat
-    dig 5
+    dig 10
     concat
     swap
     concat
@@ -2495,13 +2492,9 @@ eliminateDeficit_ternary_merge@9:
     intc_1 // 1
     return
 
-eliminateDeficit_ternary_false@8:
-    dig 7
-    b eliminateDeficit_ternary_merge@9
-
-eliminateDeficit_ternary_false@3:
-    intc_2 // 0
-    b eliminateDeficit_ternary_merge@4
+eliminateDeficit_ternary_false@5:
+    dup
+    b eliminateDeficit_ternary_merge@6
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.refreshPremium[routing]() -> void:

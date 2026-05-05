@@ -545,11 +545,83 @@ std::shared_ptr<awst::Expression> patchMsgSenderExpr(
 		awst::WType::accountType(), ic->sourceLocation);
 }
 
-/// Apply all chunk-side patches to a chunk method body.
+/// Pass 3 rewriter: detect the canonical `msg.value` AST shape and
+/// replace it with a read of main's __og_value global.
+///
+/// puya-sol lowers `msg.value` to:
+///
+///     ConditionalExpression<uint64>(
+///       cond=NumericCompare(IntrinsicCall("txn", GroupIndex) > 0),
+///       trueExpr=IntrinsicCall("gtxns", Amount, GroupIndex - 1),
+///       falseExpr=IntegerConstant("0"))
+///
+/// The whole conditional is then wrapped in an Itob+ReinterpretCast to
+/// biguint by the caller; we replace just the inner Conditional and let
+/// the outer wrapping convert our uint64 read to biguint as before.
+///
+/// Strict AST match — any user code that happens to write the same
+/// ternary by hand would also be rewritten, but that pattern is the
+/// puya-sol lowering of msg.value specifically. It's rare for hand-
+/// written Solidity to express msg.value any other way.
+std::shared_ptr<awst::Expression> patchMsgValueExpr(
+	awst::Expression const& _e)
+{
+	auto const* cond = dynamic_cast<awst::ConditionalExpression const*>(&_e);
+	if (!cond) return nullptr;
+	if (cond->wtype != awst::WType::uint64Type()) return nullptr;
+
+	// Condition: txn GroupIndex > 0
+	auto const* nc = dynamic_cast<awst::NumericComparisonExpression const*>(
+		cond->condition.get());
+	if (!nc || nc->op != awst::NumericComparison::Gt) return nullptr;
+	{
+		auto const* lhs = dynamic_cast<awst::IntrinsicCall const*>(nc->lhs.get());
+		if (!lhs || lhs->opCode != "txn" || lhs->immediates.empty())
+			return nullptr;
+		auto const* imm = std::get_if<std::string>(&lhs->immediates[0]);
+		if (!imm || *imm != "GroupIndex") return nullptr;
+	}
+	{
+		auto const* rhs = dynamic_cast<awst::IntegerConstant const*>(nc->rhs.get());
+		if (!rhs || rhs->value != "0") return nullptr;
+	}
+
+	// trueExpr: gtxns Amount (GroupIndex - 1) — accept any stack arg
+	// because we don't want a tight-coupled match on the (GroupIndex - 1)
+	// expression's exact shape.
+	{
+		auto const* gtxns = dynamic_cast<awst::IntrinsicCall const*>(
+			cond->trueExpr.get());
+		if (!gtxns || gtxns->opCode != "gtxns" || gtxns->immediates.empty())
+			return nullptr;
+		auto const* imm = std::get_if<std::string>(&gtxns->immediates[0]);
+		if (!imm || *imm != "Amount") return nullptr;
+	}
+
+	// falseExpr: IntegerConstant("0")
+	{
+		auto const* fc = dynamic_cast<awst::IntegerConstant const*>(
+			cond->falseExpr.get());
+		if (!fc || fc->value != "0") return nullptr;
+	}
+
+	return makeMainGlobalRead(
+		kOgValueKey, awst::WType::uint64Type(),
+		awst::WType::uint64Type(), cond->sourceLocation);
+}
+
+/// Apply all chunk-side patches to a chunk method body. Single walker
+/// invocation per method — combined predicate ensures each Expression
+/// slot only gets visited once.
 void patchChunkMethodBody(awst::ContractMethod& _m)
 {
 	if (!_m.body) return;
-	walkBlock(*_m.body, patchMsgSenderExpr);
+	auto fn = [](awst::Expression const& e) -> std::shared_ptr<awst::Expression> {
+		if (auto r = patchMsgSenderExpr(e)) return r;
+		if (auto r = patchMsgValueExpr(e)) return r;
+		return nullptr;
+	};
+	walkBlock(*_m.body, fn);
 }
 
 /// Forwarding stub body for main: inner-calls the orch with the

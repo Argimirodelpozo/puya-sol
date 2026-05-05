@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.approval_program() -> uint64:
 main:
     intcblock 32 1 TMPL_UROS_MAIN_APP_ID 0 278
-    bytecblock 0x151f7c75 0x "__og_sender" 0x010000000000000000000000000000000000000000000000000000000000000000 "_spokes" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x01 0xffffffffffffffffffffffffffffff 0x033b2e3c9fd0803ce8000000 0x8000000000000000000000000000000000000000000000000000000000000000 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c750000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffff 0x00 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "_assets" 0x151f7c750000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffff "_assetCount" 0x151f7c7500 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x151f7c75 0x "__og_sender" 0x010000000000000000000000000000000000000000000000000000000000000000 "_spokes" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x01 0xffffffffffffffffffffffffffffff 0x033b2e3c9fd0803ce8000000 0x8000000000000000000000000000000000000000000000000000000000000000 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c750000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffff 0x00 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "__og_value" "_assets" 0x151f7c750000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffff "_assetCount" 0x151f7c7500 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -43,7 +43,7 @@ main_isConsumingScheduledOp_route@71:
     return
 
 main_authority_route@69:
-    bytec 16 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    bytec 17 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
@@ -814,7 +814,7 @@ PercentageMath.percentMulDown:
     bytec_1 // 0x
     b!=
     bz PercentageMath.percentMulDown_ternary_false@2
-    bytec 17 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 18 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     frame_dig -1
     b/
 
@@ -940,12 +940,12 @@ SafeCast.toUint120:
 SafeCast.toUint96:
     proto 1 1
     frame_dig -1
-    bytec 18 // 0xffffffffffffffffffffffff
+    bytec 19 // 0xffffffffffffffffffffffff
     b>
     !
     assert // SafeCastOverflowedUintDowncast
     frame_dig -1
-    bytec 18 // 0xffffffffffffffffffffffff
+    bytec 19 // 0xffffffffffffffffffffffff
     b&
     retsub
 
@@ -1100,7 +1100,7 @@ WadRayMath.rayMulUp:
     bytec_1 // 0x
     b!=
     bz WadRayMath.rayMulUp_ternary_false@2
-    bytec 17 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 18 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     frame_dig -1
     b/
 
@@ -1478,22 +1478,16 @@ reportDeficit:
     pushint 96
     ==
     assert // invalid number of bytes for PremiumDelta
-    txn GroupIndex
-    bz reportDeficit_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-reportDeficit_ternary_merge@4:
+    intc_2 // TMPL_UROS_MAIN_APP_ID
+    bytec 15 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
     intc_0 // 32
     bzero
     dup
     dig 4
-    dup
-    cover 2
     concat
     dup
     len
@@ -1503,7 +1497,7 @@ reportDeficit_ternary_merge@4:
     extract3
     dup
     sha256
-    bytec 15 // "_assets"
+    bytec 16 // "_assets"
     swap
     concat
     dup
@@ -1515,12 +1509,10 @@ reportDeficit_ternary_merge@4:
     pop
     dup2
     box_put
-    dig 5
-    dup
-    cover 5
+    dig 4
     extract 64 32
     swap
-    dig 8
+    uncover 6
     callsub AssetLogic.toDrawnSharesDown
     pop
     callsub SafeCast.toUint120
@@ -2193,7 +2185,7 @@ reportDeficit_ternary_merge@4:
     bytec 10 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
-    dig 4
+    dig 6
     callsub AssetLogic.updateDrawnRate
     pop
     uncover 3
@@ -2204,7 +2196,7 @@ reportDeficit_ternary_merge@4:
     intc_0 // 32
     <=
     assert // overflow
-    dig 4
+    dig 2
     b|
     dig 1
     len
@@ -2212,13 +2204,13 @@ reportDeficit_ternary_merge@4:
     <=
     assert // overflow
     swap
-    uncover 4
+    uncover 2
     b|
     intc_2 // TMPL_UROS_MAIN_APP_ID
     bytec_2 // "__og_sender"
     app_global_get_ex
     pop
-    uncover 3
+    uncover 4
     swap
     concat
     dig 1
@@ -2237,10 +2229,6 @@ reportDeficit_ternary_merge@4:
     log
     intc_1 // 1
     return
-
-reportDeficit_ternary_false@3:
-    intc_3 // 0
-    b reportDeficit_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.eliminateDeficit[routing]() -> void:
@@ -2333,28 +2321,22 @@ sweep:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz sweep_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-sweep_ternary_merge@4:
+    intc_2 // TMPL_UROS_MAIN_APP_ID
+    bytec 15 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
     intc_3 // 0
-    bytec 19 // "_assetCount"
+    bytec 20 // "_assetCount"
     app_global_get_ex
     assert // check _assetCount exists
     dig 2
-    dup
-    uncover 2
-    b<
+    b>
     assert // AssetNotListed
     intc_0 // 32
     bzero
-    dig 1
+    dig 2
     concat
     dup
     len
@@ -2363,7 +2345,7 @@ sweep_ternary_merge@4:
     intc_0 // 32
     extract3
     sha256
-    bytec 15 // "_assets"
+    bytec 16 // "_assets"
     swap
     concat
     dup
@@ -2375,9 +2357,7 @@ sweep_ternary_merge@4:
     pop
     dup
     extract 0 15
-    dig 4
-    dup
-    cover 3
+    dig 3
     dig 1
     b<=
     assert // InsufficientLiquidity
@@ -2402,7 +2382,7 @@ sweep_ternary_merge@4:
     dig 9
     extract 145 5
     uncover 9
-    dig 11
+    dig 12
     callsub MathUtils.uncheckedSub
     callsub SafeCast.toUint120
     dup
@@ -2464,7 +2444,7 @@ sweep_ternary_merge@4:
     concat
     dup
     extract 46 15
-    dig 3
+    dig 4
     callsub SafeCast.toUint120
     b+
     dup
@@ -2546,13 +2526,12 @@ sweep_ternary_merge@4:
     concat
     swap
     concat
-    dig 2
-    dig 1
+    dup2
     box_put
     dig 3
     callsub AssetLogic.updateDrawnRate
     pop
-    uncover 2
+    swap
     dig 1
     box_put
     extract 150 32
@@ -2578,10 +2557,6 @@ sweep_ternary_merge@4:
     intc_1 // 1
     return
 
-sweep_ternary_false@3:
-    intc_3 // 0
-    b sweep_ternary_merge@4
-
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.reclaim[routing]() -> void:
 reclaim:
@@ -2597,28 +2572,22 @@ reclaim:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz reclaim_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-reclaim_ternary_merge@4:
+    intc_2 // TMPL_UROS_MAIN_APP_ID
+    bytec 15 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
     intc_3 // 0
-    bytec 19 // "_assetCount"
+    bytec 20 // "_assetCount"
     app_global_get_ex
     assert // check _assetCount exists
     dig 2
-    dup
-    uncover 2
-    b<
+    b>
     assert // AssetNotListed
     intc_0 // 32
     bzero
-    dig 1
+    dig 2
     concat
     dup
     len
@@ -2627,7 +2596,7 @@ reclaim_ternary_merge@4:
     intc_0 // 32
     extract3
     sha256
-    bytec 15 // "_assets"
+    bytec 16 // "_assets"
     swap
     concat
     dup
@@ -2639,9 +2608,7 @@ reclaim_ternary_merge@4:
     pop
     dup
     extract 0 15
-    dig 4
-    dup
-    cover 3
+    dig 3
     b+
     itxn_begin
     global CurrentApplicationAddress
@@ -2746,14 +2713,14 @@ reclaim_ternary_merge@4:
     concat
     dup
     extract 46 15
-    dig 3
+    dig 4
     callsub SafeCast.toUint120
     dig 1
     b<=
     assert // underflow
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    dig 3
+    dig 4
     callsub SafeCast.toUint120
     b-
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -2837,14 +2804,11 @@ reclaim_ternary_merge@4:
     concat
     swap
     concat
-    dig 2
-    dig 1
+    dup2
     box_put
     dig 3
     callsub AssetLogic.updateDrawnRate
     pop
-    uncover 2
-    swap
     box_put
     intc_2 // TMPL_UROS_MAIN_APP_ID
     bytec_2 // "__og_sender"
@@ -2862,10 +2826,6 @@ reclaim_ternary_merge@4:
     intc_1 // 1
     return
 
-reclaim_ternary_false@3:
-    intc_3 // 0
-    b reclaim_ternary_merge@4
-
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.isUnderlyingListed[routing]() -> void:
 isUnderlyingListed:
@@ -2874,7 +2834,7 @@ isUnderlyingListed:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    bytec 20 // 0x151f7c7500
+    bytec 21 // 0x151f7c7500
     log
     intc_1 // 1
     return
@@ -3148,7 +3108,7 @@ getAssetPremiumData:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec 21 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 22 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
@@ -3378,7 +3338,7 @@ getSpokePremiumData:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    bytec 21 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 22 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
@@ -3414,7 +3374,7 @@ isSpokeListed:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    bytec 20 // 0x151f7c7500
+    bytec 21 // 0x151f7c7500
     log
     intc_1 // 1
     return
@@ -3432,7 +3392,7 @@ getSpokeAddress:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec 16 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    bytec 17 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return

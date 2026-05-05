@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x 0x01 "_spokes" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000002 0x8000000000000000000000000000000000000000000000000000000000000000 0x033b2e3c9fd0803ce8000000 0x151f7c750000000000000000 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c750000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffff 0x0f4240 0x151f7c7500 "_assetToSpokes" 0x00020004000600000000
+    intcblock 32 1 0 TMPL_UROS_MAIN_APP_ID
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x "__og_value" 0x01 "_spokes" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000002 0x8000000000000000000000000000000000000000000000000000000000000000 0x033b2e3c9fd0803ce8000000 0x151f7c750000000000000000 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c750000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffff 0x0f4240 0x151f7c7500 "_assetToSpokes" 0x00020004000600000000
     pushint 4096
     bzero
     dup
@@ -43,31 +43,31 @@ main_isConsumingScheduledOp_route@71:
     return
 
 main_authority_route@69:
-    bytec 11 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    bytec 12 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
 
 main_MAX_RISK_PREMIUM_THRESHOLD_route@68:
-    bytec 9 // 0x151f7c750000000000000000
+    bytec 10 // 0x151f7c750000000000000000
     log
     intc_1 // 1
     return
 
 main_MAX_ALLOWED_SPOKE_CAP_route@67:
-    bytec 9 // 0x151f7c750000000000000000
+    bytec 10 // 0x151f7c750000000000000000
     log
     intc_1 // 1
     return
 
 main_MIN_ALLOWED_UNDERLYING_DECIMALS_route@66:
-    bytec 9 // 0x151f7c750000000000000000
+    bytec 10 // 0x151f7c750000000000000000
     log
     intc_1 // 1
     return
 
 main_MAX_ALLOWED_UNDERLYING_DECIMALS_route@65:
-    bytec 9 // 0x151f7c750000000000000000
+    bytec 10 // 0x151f7c750000000000000000
     log
     intc_1 // 1
     return
@@ -322,7 +322,7 @@ EnumerableSet._length:
     intc_2 // 0
     extract_uint16
     frame_dig -1
-    intc_3 // 2
+    pushint 2
     extract_uint16
     frame_dig -1
     cover 2
@@ -350,7 +350,7 @@ EnumerableSet._at:
     intc_2 // 0
     extract_uint16
     frame_dig -2
-    intc_3 // 2
+    pushint 2
     extract_uint16
     frame_dig -2
     cover 2
@@ -399,7 +399,7 @@ EnumerableSet.at:
     frame_dig -1
     callsub EnumerableSet._at
     pop
-    bytec 13 // 0xffffffffffffffffffffffffffffffffffffffff
+    bytec 14 // 0xffffffffffffffffffffffffffffffffffffffff
     b&
     dig 2
     swap
@@ -408,7 +408,7 @@ EnumerableSet.at:
     frame_dig -1
     callsub EnumerableSet._at
     pop
-    bytec 13 // 0xffffffffffffffffffffffffffffffffffffffff
+    bytec 14 // 0xffffffffffffffffffffffffffffffffffffffff
     b&
     uncover 2
     swap
@@ -430,7 +430,7 @@ Math.mul512:
     frame_dig -1
     b*
     dup
-    bytec 12 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 13 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b%
     swap
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -448,7 +448,7 @@ Math.mul512:
     dig 2
     b<
     bytec_2 // 0x
-    bytec_3 // 0x01
+    bytec 4 // 0x01
     uncover 2
     select
     b-
@@ -532,7 +532,7 @@ Math.mulDiv_after_if_else@4:
     cover 3
     b>
     bytec_2 // 0x
-    bytec_3 // 0x01
+    bytec 4 // 0x01
     uncover 2
     select
     b-
@@ -590,7 +590,7 @@ Math.mulDiv_ternary_merge@10:
     b/
 
 Math.mulDiv_ternary_merge@13:
-    bytec_3 // 0x01
+    bytec 4 // 0x01
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -614,7 +614,7 @@ Math.mulDiv_ternary_merge@13:
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000002
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000002
     swap
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -627,7 +627,7 @@ Math.mulDiv_ternary_merge@13:
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000002
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000002
     swap
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -640,7 +640,7 @@ Math.mulDiv_ternary_merge@13:
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000002
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000002
     swap
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -653,7 +653,7 @@ Math.mulDiv_ternary_merge@13:
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000002
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000002
     swap
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -666,7 +666,7 @@ Math.mulDiv_ternary_merge@13:
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000002
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000002
     swap
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -679,7 +679,7 @@ Math.mulDiv_ternary_merge@13:
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000002
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000002
     swap
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -750,7 +750,7 @@ Math.unsignedRoundsUp:
     frame_dig -1
     pushint 255
     &
-    intc_3 // 2
+    pushint 2
     %
     intc_1 // 1
     ==
@@ -783,7 +783,7 @@ MathUtils.calculateLinearInterest:
     b%
     pushbytes 0x01e13380
     b/
-    bytec 8 // 0x033b2e3c9fd0803ce8000000
+    bytec 9 // 0x033b2e3c9fd0803ce8000000
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -806,14 +806,14 @@ PercentageMath.percentMulDown:
     bytec_2 // 0x
     b==
     bytec_2 // 0x
-    bytec_3 // 0x01
+    bytec 4 // 0x01
     uncover 2
     select
     frame_dig -1
     bytec_2 // 0x
     b!=
     bz PercentageMath.percentMulDown_ternary_false@2
-    bytec 12 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 13 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     frame_dig -1
     b/
 
@@ -822,7 +822,7 @@ PercentageMath.percentMulDown_ternary_merge@3:
     b<
     !
     bytec_2 // 0x
-    bytec_3 // 0x01
+    bytec 4 // 0x01
     uncover 2
     select
     frame_dig 1
@@ -856,11 +856,11 @@ Premium.calculatePremiumRay:
     b*
     dup
     callsub SafeCast.toInt256
-    bytec 7 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 8 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     frame_dig -2
-    bytec 7 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 8 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     ==
@@ -868,7 +868,7 @@ Premium.calculatePremiumRay:
     frame_dig 0
     dup
     callsub SafeCast.toInt256
-    bytec 7 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 8 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     swap
@@ -879,7 +879,7 @@ Premium.calculatePremiumRay:
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 7 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 8 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     ==
@@ -911,9 +911,9 @@ Premium.calculatePremiumRay_bool_false@3:
 SafeCast.toUint256:
     proto 1 1
     frame_dig -1
-    bytec 7 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 8 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
-    bytec 7 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 8 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     assert // SafeCastOverflowedIntToUint
@@ -941,7 +941,7 @@ SafeCast.toUint:
     !
     !
     bytec_2 // 0x
-    bytec_3 // 0x01
+    bytec 4 // 0x01
     uncover 2
     select
     swap
@@ -953,10 +953,10 @@ SafeCast.toUint:
 SharesMath.toAssetsDown:
     proto 3 1
     frame_dig -2
-    bytec 14 // 0x0f4240
+    bytec 15 // 0x0f4240
     b+
     frame_dig -1
-    bytec 14 // 0x0f4240
+    bytec 15 // 0x0f4240
     b+
     frame_dig -3
     cover 2
@@ -973,14 +973,14 @@ WadRayMath.rayMulUp:
     bytec_2 // 0x
     b==
     bytec_2 // 0x
-    bytec_3 // 0x01
+    bytec 4 // 0x01
     uncover 2
     select
     frame_dig -1
     bytec_2 // 0x
     b!=
     bz WadRayMath.rayMulUp_ternary_false@2
-    bytec 12 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 13 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     frame_dig -1
     b/
 
@@ -989,7 +989,7 @@ WadRayMath.rayMulUp_ternary_merge@3:
     b<
     !
     bytec_2 // 0x
-    bytec_3 // 0x01
+    bytec 4 // 0x01
     uncover 2
     select
     frame_dig 1
@@ -1004,15 +1004,15 @@ WadRayMath.rayMulUp_ternary_merge@3:
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    bytec 8 // 0x033b2e3c9fd0803ce8000000
+    bytec 9 // 0x033b2e3c9fd0803ce8000000
     b/
     swap
-    bytec 8 // 0x033b2e3c9fd0803ce8000000
+    bytec 9 // 0x033b2e3c9fd0803ce8000000
     b%
     bytec_2 // 0x
     b>
     bytec_2 // 0x
-    bytec_3 // 0x01
+    bytec 4 // 0x01
     uncover 2
     select
     b+
@@ -1033,15 +1033,15 @@ WadRayMath.fromRayUp:
     proto 1 1
     load 0
     frame_dig -1
-    bytec 8 // 0x033b2e3c9fd0803ce8000000
+    bytec 9 // 0x033b2e3c9fd0803ce8000000
     b/
     frame_dig -1
-    bytec 8 // 0x033b2e3c9fd0803ce8000000
+    bytec 9 // 0x033b2e3c9fd0803ce8000000
     b%
     bytec_2 // 0x
     b>
     bytec_2 // 0x
-    bytec_3 // 0x01
+    bytec 4 // 0x01
     uncover 2
     select
     b+
@@ -1089,13 +1089,13 @@ addAsset:
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
     swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    bytec 10 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 11 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
@@ -1117,7 +1117,7 @@ updateAssetConfig:
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
     swap
     len
@@ -1180,7 +1180,7 @@ setInterestRateData:
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
     swap
     len
@@ -1197,7 +1197,7 @@ mintFeeShares:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec 10 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 11 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
@@ -1330,7 +1330,7 @@ eliminateDeficit:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    bytec 10 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 11 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
@@ -1428,7 +1428,7 @@ isUnderlyingListed:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    bytec 15 // 0x151f7c7500
+    bytec 16 // 0x151f7c7500
     log
     intc_1 // 1
     return
@@ -1807,20 +1807,16 @@ getSpokeCount:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz getSpokeCount_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-getSpokeCount_ternary_merge@4:
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec_3 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
     intc_0 // 32
     bzero
     dup
-    dig 2
+    uncover 2
     concat
     dup
     len
@@ -1829,11 +1825,11 @@ getSpokeCount_ternary_merge@4:
     intc_0 // 32
     extract3
     sha256
-    bytec 16 // "_assetToSpokes"
+    bytec 17 // "_assetToSpokes"
     swap
     concat
     box_get
-    bytec 17 // 0x00020004000600000000
+    bytec 18 // 0x00020004000600000000
     cover 2
     select
     callsub EnumerableSet.length
@@ -1851,10 +1847,6 @@ getSpokeCount_ternary_merge@4:
     intc_1 // 1
     return
 
-getSpokeCount_ternary_false@3:
-    intc_2 // 0
-    b getSpokeCount_ternary_merge@4
-
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.getSpokeAddedAssets[routing]() -> void:
 getSpokeAddedAssets:
@@ -1870,20 +1862,16 @@ getSpokeAddedAssets:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz getSpokeAddedAssets_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-getSpokeAddedAssets_ternary_merge@4:
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec_3 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
     intc_0 // 32
     bzero
     dup
-    dig 3
+    uncover 3
     concat
     dup
     len
@@ -1901,14 +1889,14 @@ getSpokeAddedAssets_ternary_merge@4:
     cover 2
     select
     swap
-    dig 3
+    uncover 3
     concat
     sha256
-    bytec 4 // "_spokes"
+    bytec 5 // "_spokes"
     swap
     concat
     box_get
-    bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     extract 55 15
@@ -1927,10 +1915,6 @@ getSpokeAddedAssets_ternary_merge@4:
     intc_1 // 1
     return
 
-getSpokeAddedAssets_ternary_false@3:
-    intc_2 // 0
-    b getSpokeAddedAssets_ternary_merge@4
-
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.getSpokeAddedShares[routing]() -> void:
 getSpokeAddedShares:
@@ -1946,20 +1930,16 @@ getSpokeAddedShares:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz getSpokeAddedShares_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-getSpokeAddedShares_ternary_merge@4:
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec_3 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
     intc_0 // 32
     bzero
     dup
-    dig 3
+    uncover 3
     concat
     dup
     len
@@ -1967,14 +1947,14 @@ getSpokeAddedShares_ternary_merge@4:
     -
     intc_0 // 32
     extract3
-    dig 2
+    uncover 2
     concat
     sha256
-    bytec 4 // "_spokes"
+    bytec 5 // "_spokes"
     swap
     concat
     box_get
-    bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     extract 55 15
@@ -1985,10 +1965,6 @@ getSpokeAddedShares_ternary_merge@4:
     log
     intc_1 // 1
     return
-
-getSpokeAddedShares_ternary_false@3:
-    intc_2 // 0
-    b getSpokeAddedShares_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.getSpokeOwed[routing]() -> void:
@@ -2003,24 +1979,16 @@ getSpokeOwed:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz getSpokeOwed_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-getSpokeOwed_ternary_merge@4:
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec_3 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
-    bytec 10 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 11 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
-
-getSpokeOwed_ternary_false@3:
-    intc_2 // 0
-    b getSpokeOwed_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.getSpokeTotalOwed[routing]() -> void:
@@ -2035,24 +2003,16 @@ getSpokeTotalOwed:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz getSpokeTotalOwed_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-getSpokeTotalOwed_ternary_merge@4:
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec_3 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
-    bytec 11 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    bytec 12 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
-
-getSpokeTotalOwed_ternary_false@3:
-    intc_2 // 0
-    b getSpokeTotalOwed_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.getSpokePremiumRay[routing]() -> void:
@@ -2067,24 +2027,16 @@ getSpokePremiumRay:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz getSpokePremiumRay_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-getSpokePremiumRay_ternary_merge@4:
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec_3 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
-    bytec 11 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    bytec 12 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
-
-getSpokePremiumRay_ternary_false@3:
-    intc_2 // 0
-    b getSpokePremiumRay_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.getSpokeDrawnShares[routing]() -> void:
@@ -2101,20 +2053,16 @@ getSpokeDrawnShares:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz getSpokeDrawnShares_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-getSpokeDrawnShares_ternary_merge@4:
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec_3 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
     intc_0 // 32
     bzero
     dup
-    dig 3
+    uncover 3
     concat
     dup
     len
@@ -2122,14 +2070,14 @@ getSpokeDrawnShares_ternary_merge@4:
     -
     intc_0 // 32
     extract3
-    dig 2
+    uncover 2
     concat
     sha256
-    bytec 4 // "_spokes"
+    bytec 5 // "_spokes"
     swap
     concat
     box_get
-    bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     extract 0 15
@@ -2140,10 +2088,6 @@ getSpokeDrawnShares_ternary_merge@4:
     log
     intc_1 // 1
     return
-
-getSpokeDrawnShares_ternary_false@3:
-    intc_2 // 0
-    b getSpokeDrawnShares_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.getSpokePremiumData[routing]() -> void:
@@ -2160,19 +2104,15 @@ getSpokePremiumData:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz getSpokePremiumData_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-getSpokePremiumData_ternary_merge@4:
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec_3 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
     intc_0 // 32
     bzero
-    dig 2
+    uncover 2
     concat
     dup
     len
@@ -2180,14 +2120,14 @@ getSpokePremiumData_ternary_merge@4:
     -
     intc_0 // 32
     extract3
-    dig 1
+    swap
     concat
     sha256
-    bytec 4 // "_spokes"
+    bytec 5 // "_spokes"
     swap
     concat
     box_get
-    bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
@@ -2209,10 +2149,6 @@ getSpokePremiumData_ternary_merge@4:
     intc_1 // 1
     return
 
-getSpokePremiumData_ternary_false@3:
-    intc_2 // 0
-    b getSpokePremiumData_ternary_merge@4
-
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.getSpokeDeficitRay[routing]() -> void:
 getSpokeDeficitRay:
@@ -2228,20 +2164,16 @@ getSpokeDeficitRay:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz getSpokeDeficitRay_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-getSpokeDeficitRay_ternary_merge@4:
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec_3 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
     intc_0 // 32
     bzero
     dup
-    dig 3
+    uncover 3
     concat
     dup
     len
@@ -2249,14 +2181,14 @@ getSpokeDeficitRay_ternary_merge@4:
     -
     intc_0 // 32
     extract3
-    dig 2
+    uncover 2
     concat
     sha256
-    bytec 4 // "_spokes"
+    bytec 5 // "_spokes"
     swap
     concat
     box_get
-    bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     extract 84 25
@@ -2267,10 +2199,6 @@ getSpokeDeficitRay_ternary_merge@4:
     log
     intc_1 // 1
     return
-
-getSpokeDeficitRay_ternary_false@3:
-    intc_2 // 0
-    b getSpokeDeficitRay_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.isSpokeListed[routing]() -> void:
@@ -2285,7 +2213,7 @@ isSpokeListed:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    bytec 15 // 0x151f7c7500
+    bytec 16 // 0x151f7c7500
     log
     intc_1 // 1
     return
@@ -2305,19 +2233,15 @@ getSpokeAddress:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz getSpokeAddress_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-getSpokeAddress_ternary_merge@4:
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec_3 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
     intc_0 // 32
     bzero
-    dig 2
+    uncover 2
     concat
     dup
     len
@@ -2326,14 +2250,14 @@ getSpokeAddress_ternary_merge@4:
     intc_0 // 32
     extract3
     sha256
-    bytec 16 // "_assetToSpokes"
+    bytec 17 // "_assetToSpokes"
     swap
     concat
     box_get
-    bytec 17 // 0x00020004000600000000
+    bytec 18 // 0x00020004000600000000
     cover 2
     select
-    dig 1
+    swap
     callsub EnumerableSet.at
     pop
     bytec_1 // 0x151f7c75
@@ -2342,10 +2266,6 @@ getSpokeAddress_ternary_merge@4:
     log
     intc_1 // 1
     return
-
-getSpokeAddress_ternary_false@3:
-    intc_2 // 0
-    b getSpokeAddress_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.getSpoke[routing]() -> void:
@@ -2362,14 +2282,10 @@ getSpoke:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz getSpoke_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-getSpoke_ternary_merge@4:
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec_3 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
     load 0
@@ -2386,7 +2302,7 @@ getSpoke_ternary_merge@4:
     store 0
     intc_0 // 32
     bzero
-    dig 2
+    uncover 2
     concat
     dup
     len
@@ -2394,14 +2310,14 @@ getSpoke_ternary_merge@4:
     -
     intc_0 // 32
     extract3
-    dig 1
+    swap
     concat
     sha256
-    bytec 4 // "_spokes"
+    bytec 5 // "_spokes"
     swap
     concat
     box_get
-    bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     bytec_1 // 0x151f7c75
@@ -2410,10 +2326,6 @@ getSpoke_ternary_merge@4:
     log
     intc_1 // 1
     return
-
-getSpoke_ternary_false@3:
-    intc_2 // 0
-    b getSpoke_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.getSpokeConfig[routing]() -> void:
@@ -2430,14 +2342,10 @@ getSpokeConfig:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz getSpokeConfig_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-getSpokeConfig_ternary_merge@4:
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec_3 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
     load 0
@@ -2454,7 +2362,7 @@ getSpokeConfig_ternary_merge@4:
     store 0
     intc_0 // 32
     bzero
-    dig 2
+    uncover 2
     concat
     dup
     len
@@ -2462,14 +2370,14 @@ getSpokeConfig_ternary_merge@4:
     -
     intc_0 // 32
     extract3
-    dig 1
+    swap
     concat
     sha256
-    bytec 4 // "_spokes"
+    bytec 5 // "_spokes"
     swap
     concat
     box_get
-    bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
@@ -2511,10 +2419,6 @@ getSpokeConfig_ternary_merge@4:
     log
     intc_1 // 1
     return
-
-getSpokeConfig_ternary_false@3:
-    intc_2 // 0
-    b getSpokeConfig_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.setAuthority[routing]() -> void:

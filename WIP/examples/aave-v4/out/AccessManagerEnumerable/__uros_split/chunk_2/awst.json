@@ -100646,7 +100646,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
                       "line": 7276,
@@ -100660,63 +100660,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "NumericComparisonExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                        "line": 7276,
-                        "end_line": 7360,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
-                      },
-                      "lhs": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                          "line": 7276,
-                          "end_line": 7360,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "txn",
-                        "immediates": [
-                          "GroupIndex"
-                        ],
-                        "stack_args": []
-                      },
-                      "operator": ">",
-                      "rhs": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                          "line": 7276,
-                          "end_line": 7360,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
-                    },
-                    "true_expr": {
+                    "base": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
@@ -100727,17 +100671,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      "op_code": "gtxns",
-                      "immediates": [
-                        "Amount"
-                      ],
+                      "op_code": "app_global_get_ex",
+                      "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "UInt64BinaryOperation",
+                          "_type": "TemplateVar",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
                             "line": 7276,
@@ -100751,67 +100707,30 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                              "line": 7276,
-                              "end_line": 7360,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "op_code": "txn",
-                            "immediates": [
-                              "GroupIndex"
-                            ],
-                            "stack_args": []
+                          "name": "TMPL_UROS_MAIN_APP_ID"
+                        },
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
+                            "line": 7276,
+                            "end_line": 7360,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "op": "-",
-                          "right": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                              "line": 7276,
-                              "end_line": 7360,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 1,
-                            "teal_alias": null
-                          }
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "Ute!$Uv^<^b!7",
+                          "encoding": "utf8"
                         }
                       ]
                     },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                        "line": 7276,
-                        "end_line": 7360,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "index": 0
                   },
                   "operator": "==",
                   "rhs": {
@@ -101003,7 +100922,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
                       "line": 7397,
@@ -101017,63 +100936,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "NumericComparisonExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                        "line": 7397,
-                        "end_line": 7480,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
-                      },
-                      "lhs": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                          "line": 7397,
-                          "end_line": 7480,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "txn",
-                        "immediates": [
-                          "GroupIndex"
-                        ],
-                        "stack_args": []
-                      },
-                      "operator": ">",
-                      "rhs": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                          "line": 7397,
-                          "end_line": 7480,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
-                    },
-                    "true_expr": {
+                    "base": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
@@ -101084,17 +100947,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      "op_code": "gtxns",
-                      "immediates": [
-                        "Amount"
-                      ],
+                      "op_code": "app_global_get_ex",
+                      "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "UInt64BinaryOperation",
+                          "_type": "TemplateVar",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
                             "line": 7397,
@@ -101108,67 +100983,30 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                              "line": 7397,
-                              "end_line": 7480,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "op_code": "txn",
-                            "immediates": [
-                              "GroupIndex"
-                            ],
-                            "stack_args": []
+                          "name": "TMPL_UROS_MAIN_APP_ID"
+                        },
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
+                            "line": 7397,
+                            "end_line": 7480,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "op": "-",
-                          "right": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                              "line": 7397,
-                              "end_line": 7480,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 1,
-                            "teal_alias": null
-                          }
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "Ute!$Uv^<^b!7",
+                          "encoding": "utf8"
                         }
                       ]
                     },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                        "line": 7397,
-                        "end_line": 7480,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "index": 0
                   },
                   "operator": "==",
                   "rhs": {
@@ -101378,7 +101216,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
                       "line": 7517,
@@ -101392,63 +101230,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "NumericComparisonExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                        "line": 7517,
-                        "end_line": 7633,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
-                      },
-                      "lhs": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                          "line": 7517,
-                          "end_line": 7633,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "txn",
-                        "immediates": [
-                          "GroupIndex"
-                        ],
-                        "stack_args": []
-                      },
-                      "operator": ">",
-                      "rhs": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                          "line": 7517,
-                          "end_line": 7633,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
-                    },
-                    "true_expr": {
+                    "base": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
@@ -101459,17 +101241,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      "op_code": "gtxns",
-                      "immediates": [
-                        "Amount"
-                      ],
+                      "op_code": "app_global_get_ex",
+                      "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "UInt64BinaryOperation",
+                          "_type": "TemplateVar",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
                             "line": 7517,
@@ -101483,67 +101277,30 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                              "line": 7517,
-                              "end_line": 7633,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "op_code": "txn",
-                            "immediates": [
-                              "GroupIndex"
-                            ],
-                            "stack_args": []
+                          "name": "TMPL_UROS_MAIN_APP_ID"
+                        },
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
+                            "line": 7517,
+                            "end_line": 7633,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "op": "-",
-                          "right": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                              "line": 7517,
-                              "end_line": 7633,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 1,
-                            "teal_alias": null
-                          }
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "Ute!$Uv^<^b!7",
+                          "encoding": "utf8"
                         }
                       ]
                     },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                        "line": 7517,
-                        "end_line": 7633,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "index": 0
                   },
                   "operator": "==",
                   "rhs": {
@@ -102003,7 +101760,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
                       "line": 7670,
@@ -102017,63 +101774,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "NumericComparisonExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                        "line": 7670,
-                        "end_line": 7840,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
-                      },
-                      "lhs": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                          "line": 7670,
-                          "end_line": 7840,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "txn",
-                        "immediates": [
-                          "GroupIndex"
-                        ],
-                        "stack_args": []
-                      },
-                      "operator": ">",
-                      "rhs": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                          "line": 7670,
-                          "end_line": 7840,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
-                    },
-                    "true_expr": {
+                    "base": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
@@ -102084,17 +101785,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      "op_code": "gtxns",
-                      "immediates": [
-                        "Amount"
-                      ],
+                      "op_code": "app_global_get_ex",
+                      "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "UInt64BinaryOperation",
+                          "_type": "TemplateVar",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
                             "line": 7670,
@@ -102108,67 +101821,30 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                              "line": 7670,
-                              "end_line": 7840,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "op_code": "txn",
-                            "immediates": [
-                              "GroupIndex"
-                            ],
-                            "stack_args": []
+                          "name": "TMPL_UROS_MAIN_APP_ID"
+                        },
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
+                            "line": 7670,
+                            "end_line": 7840,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "op": "-",
-                          "right": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                              "line": 7670,
-                              "end_line": 7840,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 1,
-                            "teal_alias": null
-                          }
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "Ute!$Uv^<^b!7",
+                          "encoding": "utf8"
                         }
                       ]
                     },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                        "line": 7670,
-                        "end_line": 7840,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "index": 0
                   },
                   "operator": "==",
                   "rhs": {
@@ -102461,7 +102137,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
                       "line": 7877,
@@ -102475,63 +102151,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "NumericComparisonExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                        "line": 7877,
-                        "end_line": 8010,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
-                      },
-                      "lhs": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                          "line": 7877,
-                          "end_line": 8010,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "txn",
-                        "immediates": [
-                          "GroupIndex"
-                        ],
-                        "stack_args": []
-                      },
-                      "operator": ">",
-                      "rhs": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                          "line": 7877,
-                          "end_line": 8010,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
-                    },
-                    "true_expr": {
+                    "base": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
@@ -102542,17 +102162,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      "op_code": "gtxns",
-                      "immediates": [
-                        "Amount"
-                      ],
+                      "op_code": "app_global_get_ex",
+                      "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "UInt64BinaryOperation",
+                          "_type": "TemplateVar",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
                             "line": 7877,
@@ -102566,67 +102198,30 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                              "line": 7877,
-                              "end_line": 8010,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "op_code": "txn",
-                            "immediates": [
-                              "GroupIndex"
-                            ],
-                            "stack_args": []
+                          "name": "TMPL_UROS_MAIN_APP_ID"
+                        },
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
+                            "line": 7877,
+                            "end_line": 8010,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "op": "-",
-                          "right": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                              "line": 7877,
-                              "end_line": 8010,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 1,
-                            "teal_alias": null
-                          }
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "Ute!$Uv^<^b!7",
+                          "encoding": "utf8"
                         }
                       ]
                     },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                        "line": 7877,
-                        "end_line": 8010,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "index": 0
                   },
                   "operator": "==",
                   "rhs": {
@@ -103129,7 +102724,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
                       "line": 8047,
@@ -103143,63 +102738,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "NumericComparisonExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                        "line": 8047,
-                        "end_line": 8159,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
-                      },
-                      "lhs": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                          "line": 8047,
-                          "end_line": 8159,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "txn",
-                        "immediates": [
-                          "GroupIndex"
-                        ],
-                        "stack_args": []
-                      },
-                      "operator": ">",
-                      "rhs": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                          "line": 8047,
-                          "end_line": 8159,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
-                    },
-                    "true_expr": {
+                    "base": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
@@ -103210,17 +102749,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      "op_code": "gtxns",
-                      "immediates": [
-                        "Amount"
-                      ],
+                      "op_code": "app_global_get_ex",
+                      "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "UInt64BinaryOperation",
+                          "_type": "TemplateVar",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
                             "line": 8047,
@@ -103234,67 +102785,30 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                              "line": 8047,
-                              "end_line": 8159,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "op_code": "txn",
-                            "immediates": [
-                              "GroupIndex"
-                            ],
-                            "stack_args": []
+                          "name": "TMPL_UROS_MAIN_APP_ID"
+                        },
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
+                            "line": 8047,
+                            "end_line": 8159,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "op": "-",
-                          "right": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                              "line": 8047,
-                              "end_line": 8159,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 1,
-                            "teal_alias": null
-                          }
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "Ute!$Uv^<^b!7",
+                          "encoding": "utf8"
                         }
                       ]
                     },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                        "line": 8047,
-                        "end_line": 8159,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "index": 0
                   },
                   "operator": "==",
                   "rhs": {
@@ -103781,7 +103295,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
                       "line": 8196,
@@ -103795,63 +103309,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "NumericComparisonExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                        "line": 8196,
-                        "end_line": 8314,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
-                      },
-                      "lhs": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                          "line": 8196,
-                          "end_line": 8314,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "txn",
-                        "immediates": [
-                          "GroupIndex"
-                        ],
-                        "stack_args": []
-                      },
-                      "operator": ">",
-                      "rhs": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                          "line": 8196,
-                          "end_line": 8314,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
-                    },
-                    "true_expr": {
+                    "base": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
@@ -103862,17 +103320,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      "op_code": "gtxns",
-                      "immediates": [
-                        "Amount"
-                      ],
+                      "op_code": "app_global_get_ex",
+                      "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "UInt64BinaryOperation",
+                          "_type": "TemplateVar",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
                             "line": 8196,
@@ -103886,67 +103356,30 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                              "line": 8196,
-                              "end_line": 8314,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "op_code": "txn",
-                            "immediates": [
-                              "GroupIndex"
-                            ],
-                            "stack_args": []
+                          "name": "TMPL_UROS_MAIN_APP_ID"
+                        },
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
+                            "line": 8196,
+                            "end_line": 8314,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "op": "-",
-                          "right": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                              "line": 8196,
-                              "end_line": 8314,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 1,
-                            "teal_alias": null
-                          }
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "Ute!$Uv^<^b!7",
+                          "encoding": "utf8"
                         }
                       ]
                     },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                        "line": 8196,
-                        "end_line": 8314,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "index": 0
                   },
                   "operator": "==",
                   "rhs": {
@@ -104433,7 +103866,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
                       "line": 8351,
@@ -104447,63 +103880,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "NumericComparisonExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                        "line": 8351,
-                        "end_line": 8479,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
-                      },
-                      "lhs": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                          "line": 8351,
-                          "end_line": 8479,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "txn",
-                        "immediates": [
-                          "GroupIndex"
-                        ],
-                        "stack_args": []
-                      },
-                      "operator": ">",
-                      "rhs": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                          "line": 8351,
-                          "end_line": 8479,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
-                    },
-                    "true_expr": {
+                    "base": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
@@ -104514,17 +103891,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      "op_code": "gtxns",
-                      "immediates": [
-                        "Amount"
-                      ],
+                      "op_code": "app_global_get_ex",
+                      "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "UInt64BinaryOperation",
+                          "_type": "TemplateVar",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
                             "line": 8351,
@@ -104538,67 +103927,30 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                              "line": 8351,
-                              "end_line": 8479,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "op_code": "txn",
-                            "immediates": [
-                              "GroupIndex"
-                            ],
-                            "stack_args": []
+                          "name": "TMPL_UROS_MAIN_APP_ID"
+                        },
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
+                            "line": 8351,
+                            "end_line": 8479,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "op": "-",
-                          "right": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                              "line": 8351,
-                              "end_line": 8479,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 1,
-                            "teal_alias": null
-                          }
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "Ute!$Uv^<^b!7",
+                          "encoding": "utf8"
                         }
                       ]
                     },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                        "line": 8351,
-                        "end_line": 8479,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "index": 0
                   },
                   "operator": "==",
                   "rhs": {
@@ -105191,7 +104543,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
                       "line": 8516,
@@ -105205,63 +104557,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "NumericComparisonExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                        "line": 8516,
-                        "end_line": 8914,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
-                      },
-                      "lhs": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                          "line": 8516,
-                          "end_line": 8914,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "txn",
-                        "immediates": [
-                          "GroupIndex"
-                        ],
-                        "stack_args": []
-                      },
-                      "operator": ">",
-                      "rhs": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                          "line": 8516,
-                          "end_line": 8914,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
-                    },
-                    "true_expr": {
+                    "base": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
@@ -105272,17 +104568,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      "op_code": "gtxns",
-                      "immediates": [
-                        "Amount"
-                      ],
+                      "op_code": "app_global_get_ex",
+                      "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "UInt64BinaryOperation",
+                          "_type": "TemplateVar",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
                             "line": 8516,
@@ -105296,67 +104604,30 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                              "line": 8516,
-                              "end_line": 8914,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "op_code": "txn",
-                            "immediates": [
-                              "GroupIndex"
-                            ],
-                            "stack_args": []
+                          "name": "TMPL_UROS_MAIN_APP_ID"
+                        },
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
+                            "line": 8516,
+                            "end_line": 8914,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "op": "-",
-                          "right": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                              "line": 8516,
-                              "end_line": 8914,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 1,
-                            "teal_alias": null
-                          }
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "Ute!$Uv^<^b!7",
+                          "encoding": "utf8"
                         }
                       ]
                     },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                        "line": 8516,
-                        "end_line": 8914,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "index": 0
                   },
                   "operator": "==",
                   "rhs": {
@@ -107475,7 +106746,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
                       "line": 8951,
@@ -107489,63 +106760,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "NumericComparisonExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                        "line": 8951,
-                        "end_line": 9327,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
-                      },
-                      "lhs": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                          "line": 8951,
-                          "end_line": 9327,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "txn",
-                        "immediates": [
-                          "GroupIndex"
-                        ],
-                        "stack_args": []
-                      },
-                      "operator": ">",
-                      "rhs": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                          "line": 8951,
-                          "end_line": 9327,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
-                    },
-                    "true_expr": {
+                    "base": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
@@ -107556,17 +106771,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      "op_code": "gtxns",
-                      "immediates": [
-                        "Amount"
-                      ],
+                      "op_code": "app_global_get_ex",
+                      "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "UInt64BinaryOperation",
+                          "_type": "TemplateVar",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
                             "line": 8951,
@@ -107580,67 +106807,30 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                              "line": 8951,
-                              "end_line": 9327,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "op_code": "txn",
-                            "immediates": [
-                              "GroupIndex"
-                            ],
-                            "stack_args": []
+                          "name": "TMPL_UROS_MAIN_APP_ID"
+                        },
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
+                            "line": 8951,
+                            "end_line": 9327,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "op": "-",
-                          "right": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                              "line": 8951,
-                              "end_line": 9327,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 1,
-                            "teal_alias": null
-                          }
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "Ute!$Uv^<^b!7",
+                          "encoding": "utf8"
                         }
                       ]
                     },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol",
-                        "line": 8951,
-                        "end_line": 9327,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "index": 0
                   },
                   "operator": "==",
                   "rhs": {

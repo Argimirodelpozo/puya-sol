@@ -92195,7 +92195,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                       "line": 20838,
@@ -92209,63 +92209,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "NumericComparisonExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 20838,
-                        "end_line": 20960,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
-                      },
-                      "lhs": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 20838,
-                          "end_line": 20960,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "txn",
-                        "immediates": [
-                          "GroupIndex"
-                        ],
-                        "stack_args": []
-                      },
-                      "operator": ">",
-                      "rhs": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 20838,
-                          "end_line": 20960,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
-                    },
-                    "true_expr": {
+                    "base": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
@@ -92276,17 +92220,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      "op_code": "gtxns",
-                      "immediates": [
-                        "Amount"
-                      ],
+                      "op_code": "app_global_get_ex",
+                      "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "UInt64BinaryOperation",
+                          "_type": "TemplateVar",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                             "line": 20838,
@@ -92300,67 +92256,30 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 20838,
-                              "end_line": 20960,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "op_code": "txn",
-                            "immediates": [
-                              "GroupIndex"
-                            ],
-                            "stack_args": []
+                          "name": "TMPL_UROS_MAIN_APP_ID"
+                        },
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
+                            "line": 20838,
+                            "end_line": 20960,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "op": "-",
-                          "right": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 20838,
-                              "end_line": 20960,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 1,
-                            "teal_alias": null
-                          }
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "Ute!$Uv^<^b!7",
+                          "encoding": "utf8"
                         }
                       ]
                     },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 20838,
-                        "end_line": 20960,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "index": 0
                   },
                   "operator": "==",
                   "rhs": {
@@ -93236,7 +93155,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                       "line": 20991,
@@ -93250,63 +93169,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "NumericComparisonExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 20991,
-                        "end_line": 21173,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
-                      },
-                      "lhs": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 20991,
-                          "end_line": 21173,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "txn",
-                        "immediates": [
-                          "GroupIndex"
-                        ],
-                        "stack_args": []
-                      },
-                      "operator": ">",
-                      "rhs": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 20991,
-                          "end_line": 21173,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
-                    },
-                    "true_expr": {
+                    "base": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
@@ -93317,17 +93180,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      "op_code": "gtxns",
-                      "immediates": [
-                        "Amount"
-                      ],
+                      "op_code": "app_global_get_ex",
+                      "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "UInt64BinaryOperation",
+                          "_type": "TemplateVar",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                             "line": 20991,
@@ -93341,67 +93216,30 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 20991,
-                              "end_line": 21173,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "op_code": "txn",
-                            "immediates": [
-                              "GroupIndex"
-                            ],
-                            "stack_args": []
+                          "name": "TMPL_UROS_MAIN_APP_ID"
+                        },
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
+                            "line": 20991,
+                            "end_line": 21173,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "op": "-",
-                          "right": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 20991,
-                              "end_line": 21173,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 1,
-                            "teal_alias": null
-                          }
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "Ute!$Uv^<^b!7",
+                          "encoding": "utf8"
                         }
                       ]
                     },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 20991,
-                        "end_line": 21173,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "index": 0
                   },
                   "operator": "==",
                   "rhs": {
@@ -95074,7 +94912,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                       "line": 21204,
@@ -95088,63 +94926,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "NumericComparisonExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 21204,
-                        "end_line": 21350,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
-                      },
-                      "lhs": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 21204,
-                          "end_line": 21350,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "txn",
-                        "immediates": [
-                          "GroupIndex"
-                        ],
-                        "stack_args": []
-                      },
-                      "operator": ">",
-                      "rhs": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 21204,
-                          "end_line": 21350,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
-                    },
-                    "true_expr": {
+                    "base": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
@@ -95155,17 +94937,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      "op_code": "gtxns",
-                      "immediates": [
-                        "Amount"
-                      ],
+                      "op_code": "app_global_get_ex",
+                      "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "UInt64BinaryOperation",
+                          "_type": "TemplateVar",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                             "line": 21204,
@@ -95179,67 +94973,30 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 21204,
-                              "end_line": 21350,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "op_code": "txn",
-                            "immediates": [
-                              "GroupIndex"
-                            ],
-                            "stack_args": []
+                          "name": "TMPL_UROS_MAIN_APP_ID"
+                        },
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
+                            "line": 21204,
+                            "end_line": 21350,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "op": "-",
-                          "right": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 21204,
-                              "end_line": 21350,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 1,
-                            "teal_alias": null
-                          }
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "Ute!$Uv^<^b!7",
+                          "encoding": "utf8"
                         }
                       ]
                     },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 21204,
-                        "end_line": 21350,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "index": 0
                   },
                   "operator": "==",
                   "rhs": {
@@ -96167,7 +95924,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                       "line": 21381,
@@ -96181,63 +95938,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "NumericComparisonExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 21381,
-                        "end_line": 21667,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
-                      },
-                      "lhs": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 21381,
-                          "end_line": 21667,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "txn",
-                        "immediates": [
-                          "GroupIndex"
-                        ],
-                        "stack_args": []
-                      },
-                      "operator": ">",
-                      "rhs": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 21381,
-                          "end_line": 21667,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
-                    },
-                    "true_expr": {
+                    "base": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
@@ -96248,17 +95949,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      "op_code": "gtxns",
-                      "immediates": [
-                        "Amount"
-                      ],
+                      "op_code": "app_global_get_ex",
+                      "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "UInt64BinaryOperation",
+                          "_type": "TemplateVar",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                             "line": 21381,
@@ -96272,67 +95985,30 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 21381,
-                              "end_line": 21667,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "op_code": "txn",
-                            "immediates": [
-                              "GroupIndex"
-                            ],
-                            "stack_args": []
+                          "name": "TMPL_UROS_MAIN_APP_ID"
+                        },
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
+                            "line": 21381,
+                            "end_line": 21667,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "op": "-",
-                          "right": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 21381,
-                              "end_line": 21667,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 1,
-                            "teal_alias": null
-                          }
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "Ute!$Uv^<^b!7",
+                          "encoding": "utf8"
                         }
                       ]
                     },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 21381,
-                        "end_line": 21667,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "index": 0
                   },
                   "operator": "==",
                   "rhs": {
@@ -99397,7 +99073,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                       "line": 21698,
@@ -99411,63 +99087,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "NumericComparisonExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 21698,
-                        "end_line": 21979,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
-                      },
-                      "lhs": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 21698,
-                          "end_line": 21979,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "txn",
-                        "immediates": [
-                          "GroupIndex"
-                        ],
-                        "stack_args": []
-                      },
-                      "operator": ">",
-                      "rhs": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 21698,
-                          "end_line": 21979,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
-                    },
-                    "true_expr": {
+                    "base": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
@@ -99478,17 +99098,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      "op_code": "gtxns",
-                      "immediates": [
-                        "Amount"
-                      ],
+                      "op_code": "app_global_get_ex",
+                      "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "UInt64BinaryOperation",
+                          "_type": "TemplateVar",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                             "line": 21698,
@@ -99502,67 +99134,30 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 21698,
-                              "end_line": 21979,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "op_code": "txn",
-                            "immediates": [
-                              "GroupIndex"
-                            ],
-                            "stack_args": []
+                          "name": "TMPL_UROS_MAIN_APP_ID"
+                        },
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
+                            "line": 21698,
+                            "end_line": 21979,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "op": "-",
-                          "right": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 21698,
-                              "end_line": 21979,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 1,
-                            "teal_alias": null
-                          }
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "Ute!$Uv^<^b!7",
+                          "encoding": "utf8"
                         }
                       ]
                     },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 21698,
-                        "end_line": 21979,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "index": 0
                   },
                   "operator": "==",
                   "rhs": {
@@ -102586,7 +102181,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                       "line": 22010,
@@ -102600,63 +102195,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "NumericComparisonExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 22010,
-                        "end_line": 22260,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
-                      },
-                      "lhs": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 22010,
-                          "end_line": 22260,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "txn",
-                        "immediates": [
-                          "GroupIndex"
-                        ],
-                        "stack_args": []
-                      },
-                      "operator": ">",
-                      "rhs": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 22010,
-                          "end_line": 22260,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
-                    },
-                    "true_expr": {
+                    "base": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
@@ -102667,17 +102206,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      "op_code": "gtxns",
-                      "immediates": [
-                        "Amount"
-                      ],
+                      "op_code": "app_global_get_ex",
+                      "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "UInt64BinaryOperation",
+                          "_type": "TemplateVar",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                             "line": 22010,
@@ -102691,67 +102242,30 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 22010,
-                              "end_line": 22260,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "op_code": "txn",
-                            "immediates": [
-                              "GroupIndex"
-                            ],
-                            "stack_args": []
+                          "name": "TMPL_UROS_MAIN_APP_ID"
+                        },
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
+                            "line": 22010,
+                            "end_line": 22260,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "op": "-",
-                          "right": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 22010,
-                              "end_line": 22260,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 1,
-                            "teal_alias": null
-                          }
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "Ute!$Uv^<^b!7",
+                          "encoding": "utf8"
                         }
                       ]
                     },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 22010,
-                        "end_line": 22260,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "index": 0
                   },
                   "operator": "==",
                   "rhs": {
@@ -104387,7 +103901,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                       "line": 22291,
@@ -104401,63 +103915,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "NumericComparisonExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 22291,
-                        "end_line": 22437,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
-                      },
-                      "lhs": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 22291,
-                          "end_line": 22437,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "txn",
-                        "immediates": [
-                          "GroupIndex"
-                        ],
-                        "stack_args": []
-                      },
-                      "operator": ">",
-                      "rhs": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 22291,
-                          "end_line": 22437,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
-                    },
-                    "true_expr": {
+                    "base": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
@@ -104468,17 +103926,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      "op_code": "gtxns",
-                      "immediates": [
-                        "Amount"
-                      ],
+                      "op_code": "app_global_get_ex",
+                      "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "UInt64BinaryOperation",
+                          "_type": "TemplateVar",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                             "line": 22291,
@@ -104492,67 +103962,30 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 22291,
-                              "end_line": 22437,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "op_code": "txn",
-                            "immediates": [
-                              "GroupIndex"
-                            ],
-                            "stack_args": []
+                          "name": "TMPL_UROS_MAIN_APP_ID"
+                        },
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
+                            "line": 22291,
+                            "end_line": 22437,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "op": "-",
-                          "right": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 22291,
-                              "end_line": 22437,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 1,
-                            "teal_alias": null
-                          }
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "Ute!$Uv^<^b!7",
+                          "encoding": "utf8"
                         }
                       ]
                     },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 22291,
-                        "end_line": 22437,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "index": 0
                   },
                   "operator": "==",
                   "rhs": {
@@ -105474,7 +104907,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                       "line": 22468,
@@ -105488,63 +104921,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "NumericComparisonExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 22468,
-                        "end_line": 22711,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
-                      },
-                      "lhs": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 22468,
-                          "end_line": 22711,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "txn",
-                        "immediates": [
-                          "GroupIndex"
-                        ],
-                        "stack_args": []
-                      },
-                      "operator": ">",
-                      "rhs": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 22468,
-                          "end_line": 22711,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
-                    },
-                    "true_expr": {
+                    "base": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
@@ -105555,17 +104932,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      "op_code": "gtxns",
-                      "immediates": [
-                        "Amount"
-                      ],
+                      "op_code": "app_global_get_ex",
+                      "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "UInt64BinaryOperation",
+                          "_type": "TemplateVar",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                             "line": 22468,
@@ -105579,67 +104968,30 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 22468,
-                              "end_line": 22711,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "op_code": "txn",
-                            "immediates": [
-                              "GroupIndex"
-                            ],
-                            "stack_args": []
+                          "name": "TMPL_UROS_MAIN_APP_ID"
+                        },
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
+                            "line": 22468,
+                            "end_line": 22711,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "op": "-",
-                          "right": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 22468,
-                              "end_line": 22711,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 1,
-                            "teal_alias": null
-                          }
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "Ute!$Uv^<^b!7",
+                          "encoding": "utf8"
                         }
                       ]
                     },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 22468,
-                        "end_line": 22711,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "index": 0
                   },
                   "operator": "==",
                   "rhs": {
@@ -107208,7 +106560,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                       "line": 22742,
@@ -107222,63 +106574,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "NumericComparisonExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 22742,
-                        "end_line": 22886,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
-                      },
-                      "lhs": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 22742,
-                          "end_line": 22886,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "txn",
-                        "immediates": [
-                          "GroupIndex"
-                        ],
-                        "stack_args": []
-                      },
-                      "operator": ">",
-                      "rhs": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 22742,
-                          "end_line": 22886,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
-                    },
-                    "true_expr": {
+                    "base": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
@@ -107289,17 +106585,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      "op_code": "gtxns",
-                      "immediates": [
-                        "Amount"
-                      ],
+                      "op_code": "app_global_get_ex",
+                      "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "UInt64BinaryOperation",
+                          "_type": "TemplateVar",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                             "line": 22742,
@@ -107313,67 +106621,30 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 22742,
-                              "end_line": 22886,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "op_code": "txn",
-                            "immediates": [
-                              "GroupIndex"
-                            ],
-                            "stack_args": []
+                          "name": "TMPL_UROS_MAIN_APP_ID"
+                        },
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
+                            "line": 22742,
+                            "end_line": 22886,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "op": "-",
-                          "right": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 22742,
-                              "end_line": 22886,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 1,
-                            "teal_alias": null
-                          }
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "Ute!$Uv^<^b!7",
+                          "encoding": "utf8"
                         }
                       ]
                     },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 22742,
-                        "end_line": 22886,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "index": 0
                   },
                   "operator": "==",
                   "rhs": {
@@ -108411,7 +107682,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                       "line": 23081,
@@ -108425,63 +107696,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "NumericComparisonExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 23081,
-                        "end_line": 23221,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
-                      },
-                      "lhs": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 23081,
-                          "end_line": 23221,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "txn",
-                        "immediates": [
-                          "GroupIndex"
-                        ],
-                        "stack_args": []
-                      },
-                      "operator": ">",
-                      "rhs": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 23081,
-                          "end_line": 23221,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
-                    },
-                    "true_expr": {
+                    "base": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
@@ -108492,17 +107707,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      "op_code": "gtxns",
-                      "immediates": [
-                        "Amount"
-                      ],
+                      "op_code": "app_global_get_ex",
+                      "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "UInt64BinaryOperation",
+                          "_type": "TemplateVar",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                             "line": 23081,
@@ -108516,67 +107743,30 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 23081,
-                              "end_line": 23221,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "op_code": "txn",
-                            "immediates": [
-                              "GroupIndex"
-                            ],
-                            "stack_args": []
+                          "name": "TMPL_UROS_MAIN_APP_ID"
+                        },
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
+                            "line": 23081,
+                            "end_line": 23221,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "op": "-",
-                          "right": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 23081,
-                              "end_line": 23221,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 1,
-                            "teal_alias": null
-                          }
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "Ute!$Uv^<^b!7",
+                          "encoding": "utf8"
                         }
                       ]
                     },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 23081,
-                        "end_line": 23221,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "index": 0
                   },
                   "operator": "==",
                   "rhs": {
@@ -109598,7 +108788,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                       "line": 23248,
@@ -109612,63 +108802,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "NumericComparisonExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 23248,
-                        "end_line": 23380,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
-                      },
-                      "lhs": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 23248,
-                          "end_line": 23380,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "txn",
-                        "immediates": [
-                          "GroupIndex"
-                        ],
-                        "stack_args": []
-                      },
-                      "operator": ">",
-                      "rhs": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 23248,
-                          "end_line": 23380,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
-                    },
-                    "true_expr": {
+                    "base": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
@@ -109679,17 +108813,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      "op_code": "gtxns",
-                      "immediates": [
-                        "Amount"
-                      ],
+                      "op_code": "app_global_get_ex",
+                      "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "UInt64BinaryOperation",
+                          "_type": "TemplateVar",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                             "line": 23248,
@@ -109703,67 +108849,30 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 23248,
-                              "end_line": 23380,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "op_code": "txn",
-                            "immediates": [
-                              "GroupIndex"
-                            ],
-                            "stack_args": []
+                          "name": "TMPL_UROS_MAIN_APP_ID"
+                        },
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
+                            "line": 23248,
+                            "end_line": 23380,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "op": "-",
-                          "right": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 23248,
-                              "end_line": 23380,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 1,
-                            "teal_alias": null
-                          }
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "Ute!$Uv^<^b!7",
+                          "encoding": "utf8"
                         }
                       ]
                     },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 23248,
-                        "end_line": 23380,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "index": 0
                   },
                   "operator": "==",
                   "rhs": {
@@ -110971,7 +110080,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                       "line": 23407,
@@ -110985,63 +110094,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "NumericComparisonExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 23407,
-                        "end_line": 23822,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
-                      },
-                      "lhs": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 23407,
-                          "end_line": 23822,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "txn",
-                        "immediates": [
-                          "GroupIndex"
-                        ],
-                        "stack_args": []
-                      },
-                      "operator": ">",
-                      "rhs": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                          "line": 23407,
-                          "end_line": 23822,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
-                    },
-                    "true_expr": {
+                    "base": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
@@ -111052,17 +110105,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      "op_code": "gtxns",
-                      "immediates": [
-                        "Amount"
-                      ],
+                      "op_code": "app_global_get_ex",
+                      "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "UInt64BinaryOperation",
+                          "_type": "TemplateVar",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
                             "line": 23407,
@@ -111076,67 +110141,30 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 23407,
-                              "end_line": 23822,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "op_code": "txn",
-                            "immediates": [
-                              "GroupIndex"
-                            ],
-                            "stack_args": []
+                          "name": "TMPL_UROS_MAIN_APP_ID"
+                        },
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
+                            "line": 23407,
+                            "end_line": 23822,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "op": "-",
-                          "right": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                              "line": 23407,
-                              "end_line": 23822,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 1,
-                            "teal_alias": null
-                          }
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "Ute!$Uv^<^b!7",
+                          "encoding": "utf8"
                         }
                       ]
                     },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol",
-                        "line": 23407,
-                        "end_line": 23822,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "index": 0
                   },
                   "operator": "==",
                   "rhs": {

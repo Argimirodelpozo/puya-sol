@@ -143,6 +143,17 @@ def _substitute_orch_id(teal: str, orch_id: int) -> str:
     return teal.replace("TMPL_UROS_ORCH_APP_ID", str(orch_id))
 
 
+def _substitute_main_id(teal: str, main_id: int) -> str:
+    """Chunks reference TMPL_UROS_MAIN_APP_ID for cross-app reads of
+    main's __og_sender / __og_value globals (Pass 2/3 of the splitter).
+    Substituted at deploy time after main has been created."""
+    return teal.replace("TMPL_UROS_MAIN_APP_ID", str(main_id))
+
+
+def _substitute_uros_ids(teal: str, orch_id: int, main_id: int) -> str:
+    return _substitute_main_id(_substitute_orch_id(teal, orch_id), main_id)
+
+
 def _compile_teal(algod: AlgodClient, teal: str) -> bytes:
     return base64.b64decode(algod.compile(teal)["result"])
 
@@ -308,7 +319,9 @@ def deploy_split_app(
     except Exception:
         app_spec = None
 
-    # 1. Substitute orch_id into main + chunk TEAL.
+    # 1. Substitute orch_id into main TEAL and compile. Main itself
+    # doesn't reference TMPL_UROS_MAIN_APP_ID — only chunks do — so we
+    # can compile main's bytecode now without knowing main_id.
     main_teal = (contract_dir / f"{name}.approval.teal").read_text()
     main_clear_teal = (contract_dir / f"{name}.clear.teal").read_text()
     main_approval = _compile_teal(algod, _substitute_orch_id(main_teal, orch_id))
@@ -317,26 +330,6 @@ def deploy_split_app(
     # Read storage default bytes (already compiled by compile_orchestrator).
     storage_default = (STORAGE_OUT / "UrosStorage.approval.bin").read_bytes()
     storage_clear = (STORAGE_OUT / "UrosStorage.clear.bin").read_bytes()
-
-    # Build chunks list (with TEAL substitution + full ABI sigs).
-    chunks_with_full_sigs = []
-    for ci, c in enumerate(deploy_tmpl["chunks"]):
-        chunk_teal = (contract_dir / "__uros_split" / f"chunk_{ci}"
-                      / f"{c['name']}.approval.teal").read_text()
-        chunk_bytes = _compile_teal(algod, _substitute_orch_id(chunk_teal, orch_id))
-        full_sigs = []
-        for mname in c["methods"]:
-            m = method_signatures.get(mname)
-            if m is None:
-                raise AssertionError(
-                    f"split method '{mname}' not in arc56 for {name}")
-            arg_types = ",".join(a.get("type", "") for a in m.get("args", []))
-            ret = (m.get("returns") or {}).get("type") or "void"
-            full_sigs.append(f"{mname}({arg_types}){ret}")
-        chunks_with_full_sigs.append({
-            **c, "approval_hex": chunk_bytes.hex(),
-            "full_sigs": full_sigs,
-        })
 
     # 2. Deploy __storage WITH MAIN'S BYTECODE so AppCreate runs the
     # user contract's state-var inits.
@@ -376,11 +369,9 @@ def deploy_split_app(
     wait_for_confirmation(algod,
         algod.send_transaction(txn.sign(sender.private_key)), 4)
 
-    # 5. orch setup (set_storage + boxes + chunks + selectors).
-    _setup_orch_with_chunks(algod, sender, orch_id, storage_id,
-                            storage_default, chunks_with_full_sigs)
-
-    # 6. Deploy main as a separate app (for user-direct calls).
+    # 5. Deploy main BEFORE compiling chunks. Chunks reference main's
+    # app id via TMPL_UROS_MAIN_APP_ID for cross-app reads of __og_sender
+    # / __og_value, so we need main_id known before chunk TEAL compiles.
     sp = algod.suggested_params()
     txn = ApplicationCreateTxn(
         sender=sender.address, sp=sp,
@@ -394,7 +385,34 @@ def deploy_split_app(
     main_id = int(wait_for_confirmation(algod, txid, 4)["application-index"])
     _fund(algod, sender, _app_addr(main_id), 1_000_000)
 
-    # 7. main.__postInit dance, routes through orch to __storage.
+    # 6. Build chunks list. Now substitute BOTH orch_id AND main_id —
+    # the chunk's app_global_get_ex(MAIN, "__og_sender") read needs
+    # main's real app id baked in.
+    chunks_with_full_sigs = []
+    for ci, c in enumerate(deploy_tmpl["chunks"]):
+        chunk_teal = (contract_dir / "__uros_split" / f"chunk_{ci}"
+                      / f"{c['name']}.approval.teal").read_text()
+        chunk_bytes = _compile_teal(
+            algod, _substitute_uros_ids(chunk_teal, orch_id, main_id))
+        full_sigs = []
+        for mname in c["methods"]:
+            m = method_signatures.get(mname)
+            if m is None:
+                raise AssertionError(
+                    f"split method '{mname}' not in arc56 for {name}")
+            arg_types = ",".join(a.get("type", "") for a in m.get("args", []))
+            ret = (m.get("returns") or {}).get("type") or "void"
+            full_sigs.append(f"{mname}({arg_types}){ret}")
+        chunks_with_full_sigs.append({
+            **c, "approval_hex": chunk_bytes.hex(),
+            "full_sigs": full_sigs,
+        })
+
+    # 7. orch setup (set_storage + boxes + chunks + selectors).
+    _setup_orch_with_chunks(algod, sender, orch_id, storage_id,
+                            storage_default, chunks_with_full_sigs)
+
+    # 8. main.__postInit dance, routes through orch to __storage.
     if app_args and app_spec is not None:
         _call_postinit_via_dance(algod, sender, main_id, orch_id, storage_id,
                                  app_spec, list(app_args))

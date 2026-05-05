@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.approval_program() -> uint64:
 main:
-    intcblock 1 32 8 0
-    bytecblock 0x151f7c75 0x151f7c750000000000000000 0x00020004000600000000 "_adminRolesSet" 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c750000000000000000000000000000000000000000000000000000000000000000 "_roleAdminToRoleSet" "_roleToTargetToSelectorSet" 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75000000000000000000
+    intcblock 1 32 8 0 TMPL_UROS_MAIN_APP_ID
+    bytecblock 0x151f7c75 0x151f7c750000000000000000 0x00020004000600000000 "__og_value" "_adminRolesSet" 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c750000000000000000000000000000000000000000000000000000000000000000 "_roleAdminToRoleSet" "_roleToTargetToSelectorSet" 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75000000000000000000
     pushint 4096
     bzero
     dup
@@ -142,11 +142,11 @@ EnumerableSet._values:
     callsub Math.min
     frame_bury -2
     frame_dig -1
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     frame_dig -2
     b-
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     intc_3 // 0
     itob
@@ -177,7 +177,7 @@ EnumerableSet._values_while_top@3:
     itob
     extract 6 0
     replace2 0
-    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
     frame_bury 4
     frame_dig 5
@@ -211,7 +211,7 @@ EnumerableSet._values_while_top@6:
     +
     frame_dig 0
     swap
-    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000000
     replace3 // on error: index access is out of bounds
     frame_bury 0
     pushbytes 0x01
@@ -348,7 +348,7 @@ Math.ternary:
     frame_dig -3
     callsub SafeCast.toUint
     b*
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     frame_dig -1
     b^
@@ -432,32 +432,26 @@ getAdminRole:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz getAdminRole_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-getAdminRole_ternary_merge@4:
+    intc 4 // TMPL_UROS_MAIN_APP_ID
+    bytec_3 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
     intc_2 // 8
     bzero
-    bytec_3 // "_adminRolesSet"
+    bytec 4 // "_adminRolesSet"
     box_get
     bytec_2 // 0x00020004000600000000
     cover 2
     select
     dig 2
-    dup
-    cover 3
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet.at(2)_2
     pop
     dig 1
     swap
     concat
-    bytec_3 // "_adminRolesSet"
+    bytec 4 // "_adminRolesSet"
     box_get
     bytec_2 // 0x00020004000600000000
     cover 2
@@ -480,24 +474,16 @@ getAdminRole_ternary_merge@4:
     intc_0 // 1
     return
 
-getAdminRole_ternary_false@3:
-    intc_3 // 0
-    b getAdminRole_ternary_merge@4
-
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.getAdminRoleCount[routing]() -> void:
 getAdminRoleCount:
-    txn GroupIndex
-    bz getAdminRoleCount_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-getAdminRoleCount_ternary_merge@4:
+    intc 4 // TMPL_UROS_MAIN_APP_ID
+    bytec_3 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
-    bytec_3 // "_adminRolesSet"
+    bytec 4 // "_adminRolesSet"
     box_get
     bytec_2 // 0x00020004000600000000
     cover 2
@@ -519,10 +505,6 @@ getAdminRoleCount_ternary_merge@4:
     intc_0 // 1
     return
 
-getAdminRoleCount_ternary_false@3:
-    intc_3 // 0
-    b getAdminRoleCount_ternary_merge@4
-
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.getAdminRoles[routing]() -> void:
 getAdminRoles:
@@ -538,23 +520,18 @@ getAdminRoles:
     pushint 64
     ==
     assert // invalid number of bytes for arc4.uint512
-    txn GroupIndex
-    bz getAdminRoles_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-getAdminRoles_ternary_merge@4:
+    intc 4 // TMPL_UROS_MAIN_APP_ID
+    bytec_3 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
-    bytec_3 // "_adminRolesSet"
+    bytec 4 // "_adminRolesSet"
     box_get
     bytec_2 // 0x00020004000600000000
     cover 2
     select
-    dig 2
-    dig 2
+    cover 2
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet.values(3)_2
     pop
     load 0
@@ -565,10 +542,6 @@ getAdminRoles_ternary_merge@4:
     log
     intc_0 // 1
     return
-
-getAdminRoles_ternary_false@3:
-    intc_3 // 0
-    b getAdminRoles_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.getRoleMember[routing]() -> void:
@@ -583,7 +556,7 @@ getRoleMember:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec 5 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
@@ -640,22 +613,18 @@ getRoleOfAdminRole:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz getRoleOfAdminRole_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-getRoleOfAdminRole_ternary_merge@4:
+    intc 4 // TMPL_UROS_MAIN_APP_ID
+    bytec_3 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
     intc_2 // 8
     bzero
-    dig 2
+    uncover 2
     itob
     sha256
-    bytec 6 // "_roleAdminToRoleSet"
+    bytec 7 // "_roleAdminToRoleSet"
     swap
     concat
     dup
@@ -664,11 +633,9 @@ getRoleOfAdminRole_ternary_merge@4:
     cover 2
     select
     dig 3
-    dup
-    cover 3
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet.at(2)_2
     pop
-    dig 3
+    dig 2
     swap
     concat
     swap
@@ -676,7 +643,7 @@ getRoleOfAdminRole_ternary_merge@4:
     bytec_2 // 0x00020004000600000000
     cover 2
     select
-    uncover 2
+    uncover 3
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet.at(2)_2
     pop
     uncover 2
@@ -694,10 +661,6 @@ getRoleOfAdminRole_ternary_merge@4:
     intc_0 // 1
     return
 
-getRoleOfAdminRole_ternary_false@3:
-    intc_3 // 0
-    b getRoleOfAdminRole_ternary_merge@4
-
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.getRoleOfAdminRoleCount[routing]() -> void:
 getRoleOfAdminRoleCount:
@@ -708,20 +671,15 @@ getRoleOfAdminRoleCount:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    txn GroupIndex
-    bz getRoleOfAdminRoleCount_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-getRoleOfAdminRoleCount_ternary_merge@4:
+    intc 4 // TMPL_UROS_MAIN_APP_ID
+    bytec_3 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
-    dup
     itob
     sha256
-    bytec 6 // "_roleAdminToRoleSet"
+    bytec 7 // "_roleAdminToRoleSet"
     swap
     concat
     box_get
@@ -745,10 +703,6 @@ getRoleOfAdminRoleCount_ternary_merge@4:
     intc_0 // 1
     return
 
-getRoleOfAdminRoleCount_ternary_false@3:
-    intc_3 // 0
-    b getRoleOfAdminRoleCount_ternary_merge@4
-
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.getRolesOfAdminRole[routing]() -> void:
 getRolesOfAdminRole:
@@ -771,28 +725,23 @@ getRolesOfAdminRole:
     pushint 64
     ==
     assert // invalid number of bytes for arc4.uint512
-    txn GroupIndex
-    bz getRolesOfAdminRole_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-getRolesOfAdminRole_ternary_merge@4:
+    intc 4 // TMPL_UROS_MAIN_APP_ID
+    bytec_3 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
-    dig 2
+    uncover 2
     itob
     sha256
-    bytec 6 // "_roleAdminToRoleSet"
+    bytec 7 // "_roleAdminToRoleSet"
     swap
     concat
     box_get
     bytec_2 // 0x00020004000600000000
     cover 2
     select
-    dig 2
-    dig 2
+    cover 2
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.EnumerableSet.values(3)_2
     pop
     load 0
@@ -803,10 +752,6 @@ getRolesOfAdminRole_ternary_merge@4:
     log
     intc_0 // 1
     return
-
-getRolesOfAdminRole_ternary_false@3:
-    intc_3 // 0
-    b getRolesOfAdminRole_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.getRoleTarget[routing]() -> void:
@@ -821,7 +766,7 @@ getRoleTarget:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec 5 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
@@ -884,29 +829,25 @@ getRoleTargetSelector:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz getRoleTargetSelector_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-getRoleTargetSelector_ternary_merge@4:
+    intc 4 // TMPL_UROS_MAIN_APP_ID
+    bytec_3 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
-    dig 2
+    uncover 2
     itob
-    dig 2
+    uncover 2
     concat
     sha256
-    bytec 7 // "_roleToTargetToSelectorSet"
+    bytec 8 // "_roleToTargetToSelectorSet"
     swap
     concat
     box_get
     bytec_2 // 0x00020004000600000000
     cover 2
     select
-    dig 1
+    swap
     callsub EnumerableSet.at
     pop
     extract 0 4
@@ -916,10 +857,6 @@ getRoleTargetSelector_ternary_merge@4:
     log
     intc_0 // 1
     return
-
-getRoleTargetSelector_ternary_false@3:
-    intc_3 // 0
-    b getRoleTargetSelector_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.getRoleTargetSelectorCount[routing]() -> void:
@@ -937,22 +874,18 @@ getRoleTargetSelectorCount:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz getRoleTargetSelectorCount_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-getRoleTargetSelectorCount_ternary_merge@4:
+    intc 4 // TMPL_UROS_MAIN_APP_ID
+    bytec_3 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
-    dig 1
+    swap
     itob
-    dig 1
+    swap
     concat
     sha256
-    bytec 7 // "_roleToTargetToSelectorSet"
+    bytec 8 // "_roleToTargetToSelectorSet"
     swap
     concat
     box_get
@@ -975,10 +908,6 @@ getRoleTargetSelectorCount_ternary_merge@4:
     log
     intc_0 // 1
     return
-
-getRoleTargetSelectorCount_ternary_false@3:
-    intc_3 // 0
-    b getRoleTargetSelectorCount_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.getRoleTargetSelectors[routing]() -> void:
@@ -1008,30 +937,25 @@ getRoleTargetSelectors:
     pushint 64
     ==
     assert // invalid number of bytes for arc4.uint512
-    txn GroupIndex
-    bz getRoleTargetSelectors_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-getRoleTargetSelectors_ternary_merge@4:
+    intc 4 // TMPL_UROS_MAIN_APP_ID
+    bytec_3 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
-    dig 3
+    uncover 3
     itob
-    dig 3
+    uncover 3
     concat
     sha256
-    bytec 7 // "_roleToTargetToSelectorSet"
+    bytec 8 // "_roleToTargetToSelectorSet"
     swap
     concat
     box_get
     bytec_2 // 0x00020004000600000000
     cover 2
     select
-    dig 2
-    dig 2
+    cover 2
     callsub EnumerableSet.values
     pop
     load 0
@@ -1042,10 +966,6 @@ getRoleTargetSelectors_ternary_merge@4:
     log
     intc_0 // 1
     return
-
-getRoleTargetSelectors_ternary_false@3:
-    intc_3 // 0
-    b getRoleTargetSelectors_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManagerEnumerable.canCall[routing]() -> void:
@@ -1065,7 +985,7 @@ canCall:
     pushint 4
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
-    bytec 9 // 0x151f7c75000000000000000000
+    bytec 10 // 0x151f7c75000000000000000000
     log
     intc_0 // 1
     return
@@ -1166,7 +1086,7 @@ getAccess:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    bytec 5 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
@@ -1184,7 +1104,7 @@ hasRole:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    bytec 9 // 0x151f7c75000000000000000000
+    bytec 10 // 0x151f7c75000000000000000000
     log
     intc_0 // 1
     return

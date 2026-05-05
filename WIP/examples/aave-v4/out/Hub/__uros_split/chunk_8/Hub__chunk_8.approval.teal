@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 8
+    intcblock 32 1 0 8 TMPL_UROS_MAIN_APP_ID
     bytecblock 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c750000000000000000 0x 0x35a9e214 0x151f7c750000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffff 0xffffffffffffffffffffffff "_assetCount" 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c7500 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
@@ -152,9 +152,8 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.addAsset[routing]() -> void:
 addAsset:
-    intc_2 // 0
     txna ApplicationArgs 1
-    dup
+    dupn 2
     len
     intc_0 // 32
     ==
@@ -168,12 +167,14 @@ addAsset:
     btoi
     txna ApplicationArgs 3
     dup
+    cover 3
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 4
     dup
+    cover 3
     len
     intc_0 // 32
     ==
@@ -189,54 +190,49 @@ addAsset:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    txn GroupIndex
-    bz addAsset_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-addAsset_ternary_merge@4:
+    cover 2
+    intc 4 // TMPL_UROS_MAIN_APP_ID
+    pushbytes "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
-    dig 3
     dup
     pushint 255
     <=
     assert // ABI validation
     pushint 255
     &
-    bury 4
+    swap
     intc_0 // 32
     bzero
-    bury 6
+    swap
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    !=
+    bz addAsset_bool_false@7
     dig 4
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
-    bz addAsset_bool_false@10
-    dig 2
+    bz addAsset_bool_false@7
+    dig 3
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
-    bz addAsset_bool_false@10
-    dig 1
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    !=
-    bz addAsset_bool_false@10
+    bz addAsset_bool_false@7
     intc_1 // 1
 
-addAsset_bool_merge@11:
+addAsset_bool_merge@8:
     assert // InvalidAddress
     pushint 6
-    dig 4
+    dig 2
     <=
-    bz addAsset_bool_false@14
-    dig 3
+    bz addAsset_bool_false@11
+    dig 1
     pushint 18
     <=
-    bz addAsset_bool_false@14
+    bz addAsset_bool_false@11
     intc_1 // 1
 
-addAsset_bool_merge@15:
+addAsset_bool_merge@12:
     assert // InvalidAssetDecimals
     intc_2 // 0
     bytec 8 // "_assetCount"
@@ -248,7 +244,7 @@ addAsset_bool_merge@15:
     bytec 8 // "_assetCount"
     swap
     app_global_put
-    dig 5
+    dig 6
     dup
     cover 2
     sha256
@@ -261,7 +257,7 @@ addAsset_bool_merge@15:
     dig 1
     box_put
     itxn_begin
-    dig 7
+    dig 2
     dup
     cover 3
     dig 1
@@ -272,14 +268,14 @@ addAsset_bool_merge@15:
     -
     intc_0 // 32
     extract3
-    dig 4
+    dig 6
     dup
     len
     itob
     extract 6 2
     swap
     concat
-    dig 6
+    dig 8
     dup
     cover 3
     pushint 24
@@ -328,7 +324,7 @@ addAsset_bool_merge@15:
     itob
     pushint 15
     bzero
-    dig 12
+    dig 10
     itob
     dup
     bitlen
@@ -382,7 +378,7 @@ addAsset_bool_merge@15:
     concat
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
-    dig 11
+    dig 13
     dup
     cover 3
     concat
@@ -459,17 +455,13 @@ addAsset_bool_merge@15:
     intc_1 // 1
     return
 
-addAsset_bool_false@14:
+addAsset_bool_false@11:
     intc_2 // 0
-    b addAsset_bool_merge@15
+    b addAsset_bool_merge@12
 
-addAsset_bool_false@10:
+addAsset_bool_false@7:
     intc_2 // 0
-    b addAsset_bool_merge@11
-
-addAsset_ternary_false@3:
-    intc_2 // 0
-    b addAsset_ternary_merge@4
+    b addAsset_bool_merge@8
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.updateAssetConfig[routing]() -> void:

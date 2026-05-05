@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 278
-    bytecblock 0x151f7c75 0x 0x010000000000000000000000000000000000000000000000000000000000000000 0x01 0x8000000000000000000000000000000000000000000000000000000000000000 0x033b2e3c9fd0803ce8000000 0x151f7c750000000000000000 0xffffffffffffffffffffffffffffff 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x35a9e214 0x151f7c750000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffff "_assetCount" 0x151f7c7500 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    intcblock 32 1 0 278 TMPL_UROS_MAIN_APP_ID
+    bytecblock 0x151f7c75 0x 0x010000000000000000000000000000000000000000000000000000000000000000 0x01 0x8000000000000000000000000000000000000000000000000000000000000000 0x033b2e3c9fd0803ce8000000 0x151f7c750000000000000000 0xffffffffffffffffffffffffffffff 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x35a9e214 0x151f7c750000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffff "__og_value" "_assetCount" 0x151f7c7500 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -1211,28 +1211,22 @@ updateSpokeConfig:
     pushint 14
     ==
     assert // invalid number of bytes for SpokeConfig
-    txn GroupIndex
-    bz updateSpokeConfig_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-updateSpokeConfig_ternary_merge@4:
+    intc 4 // TMPL_UROS_MAIN_APP_ID
+    bytec 14 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
     intc_2 // 0
-    bytec 14 // "_assetCount"
+    bytec 15 // "_assetCount"
     app_global_get_ex
     assert // check _assetCount exists
     dig 2
-    dup
-    uncover 2
-    b<
+    b>
     assert // AssetNotListed
     intc_0 // 32
     bzero
-    swap
+    uncover 2
     concat
     dup
     len
@@ -1248,16 +1242,12 @@ updateSpokeConfig_ternary_merge@4:
     pushbytes 0x00020004000600000000
     cover 2
     select
-    dig 1
+    swap
     callsub EnumerableSet.contains
     pop
     assert // SpokeNotListed
     intc_1 // 1
     return
-
-updateSpokeConfig_ternary_false@3:
-    intc_2 // 0
-    b updateSpokeConfig_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.setInterestRateData[routing]() -> void:
@@ -1279,28 +1269,22 @@ setInterestRateData:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    txn GroupIndex
-    bz setInterestRateData_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-setInterestRateData_ternary_merge@4:
+    intc 4 // TMPL_UROS_MAIN_APP_ID
+    bytec 14 // "__og_value"
+    app_global_get_ex
+    pop
     !
     assert // not payable
     intc_2 // 0
-    bytec 14 // "_assetCount"
+    bytec 15 // "_assetCount"
     app_global_get_ex
     assert // check _assetCount exists
     dig 2
-    dup
-    uncover 2
-    b<
+    b>
     assert // AssetNotListed
     intc_0 // 32
     bzero
-    dig 1
+    dig 2
     concat
     dup
     len
@@ -1323,12 +1307,11 @@ setInterestRateData_ternary_merge@4:
     dup2
     box_put
     itxn_begin
-    dig 4
-    dup
+    dig 3
     len
     itob
     extract 6 2
-    swap
+    uncover 4
     concat
     dig 1
     extract 182 32
@@ -1353,10 +1336,6 @@ setInterestRateData_ternary_merge@4:
     box_put
     intc_1 // 1
     return
-
-setInterestRateData_ternary_false@3:
-    intc_2 // 0
-    b setInterestRateData_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.mintFeeShares[routing]() -> void:
@@ -1597,7 +1576,7 @@ isUnderlyingListed:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    bytec 15 // 0x151f7c7500
+    bytec 16 // 0x151f7c7500
     log
     intc_1 // 1
     return
@@ -1871,7 +1850,7 @@ getAssetPremiumData:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec 16 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 17 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
@@ -2101,7 +2080,7 @@ getSpokePremiumData:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    bytec 16 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 17 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
@@ -2137,7 +2116,7 @@ isSpokeListed:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    bytec 15 // 0x151f7c7500
+    bytec 16 // 0x151f7c7500
     log
     intc_1 // 1
     return
