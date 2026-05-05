@@ -77,7 +77,23 @@ def test_get_reserve_source_unset(oracle):
     assert result == ZERO_ADDR
 
 
-@pytest.mark.xfail(reason="setSpoke requires authority inner txn (AccessManaged)")
+@pytest.mark.xfail(
+    reason=(
+        "Needs a real SpokeInstance deployed via uros split+dance: "
+        "(1) bin-pack SpokeInstance's 58 methods into chunks (~6-8 "
+        "groups under 8 KB each, similar to Hub's SPLIT_GROUPS), "
+        "(2) deploy SpokeInstance via deploy_split_app with oracle's "
+        "address as the constructor arg, (3) call initialize(authority) "
+        "with a deployed AccessManager. Then test_set_spoke can pass "
+        "spoke.main_id (in convention form) to oracle.setSpoke. The "
+        "ISpoke(spoke).ORACLE() == address(this) check inside setSpoke "
+        "is satisfied because SpokeInstance's ORACLE getter on main "
+        "returns the address it was constructed with. Address-equality "
+        "bridge in SolAddressBuilder handles the convention/hash form "
+        "comparison. Deferred — significant test-infra work that's "
+        "orthogonal to the splitter passes."
+    )
+)
 def test_set_spoke(oracle, account):
     """setSpoke should update the spoke address."""
     _call(oracle, "setSpoke", account.address)
@@ -85,7 +101,22 @@ def test_set_spoke(oracle, account):
     assert result == account.address
 
 
-@pytest.mark.xfail(reason="setReserveSource requires authority inner txn (AccessManaged)")
+@pytest.mark.xfail(
+    reason=(
+        "Same SpokeInstance setup as test_set_spoke, plus: the call "
+        "to oracle.setReserveSource has to come FROM the spoke (not "
+        "the user) so msg.sender == SPOKE inside the oracle. So the "
+        "test would route via spoke.updateReservePriceSource which "
+        "does the inner call internally. That method has the "
+        "`restricted` modifier — needs AccessManager-granted role "
+        "for the calling user. Multi-contract orchestration: deploy "
+        "AccessManager, deploy SpokeInstance with authority=AccessManager, "
+        "call AccessManager.grantRole(user, role) for the right role, "
+        "then user calls spoke.updateReservePriceSource which inner-"
+        "calls oracle.setReserveSource. Plus a deployed AggregatorV3 "
+        "(UnitPriceFeed) for the targetSource.decimals() check."
+    )
+)
 def test_set_reserve_source(oracle, account):
     """setReserveSource should store a price source for a reserve."""
     reserve_id = 1
@@ -96,7 +127,14 @@ def test_set_reserve_source(oracle, account):
     assert result == account.address
 
 
-@pytest.mark.xfail(reason="requires authority + UnitPriceFeed inner txn")
+@pytest.mark.xfail(
+    reason=(
+        "Same SpokeInstance + AccessManager + role grant setup as "
+        "test_set_reserve_source. Once that's wired, this test deploys "
+        "UnitPriceFeed (already exists), routes through "
+        "spoke.updateReservePriceSource(reserveId=2, priceSource=feed)."
+    )
+)
 def test_get_reserve_price_with_unit_feed(oracle, localnet, account):
     """Set up a UnitPriceFeed as price source and verify assignment."""
     feed = deploy_contract(
