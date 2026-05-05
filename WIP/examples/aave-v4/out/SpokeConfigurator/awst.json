@@ -3524,7 +3524,7 @@
                                       "immutable": true
                                     },
                                     "lhs": {
-                                      "_type": "BigUIntBinaryOperation",
+                                      "_type": "ConditionalExpression",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
                                         "line": 1231,
@@ -3538,8 +3538,8 @@
                                         "name": "biguint",
                                         "immutable": true
                                       },
-                                      "left": {
-                                        "_type": "ReinterpretCast",
+                                      "condition": {
+                                        "_type": "NumericComparisonExpression",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
                                           "line": 1231,
@@ -3550,11 +3550,30 @@
                                         },
                                         "wtype": {
                                           "_type": "WType",
-                                          "name": "biguint",
+                                          "name": "bool",
                                           "immutable": true
                                         },
-                                        "expr": {
-                                          "_type": "IntrinsicCall",
+                                        "lhs": {
+                                          "_type": "IntegerConstant",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                            "line": 1235,
+                                            "end_line": 1237,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "value": 32,
+                                          "teal_alias": null
+                                        },
+                                        "operator": "<",
+                                        "rhs": {
+                                          "_type": "IntegerConstant",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
                                             "line": 1231,
@@ -3564,37 +3583,16 @@
                                             "end_column": null
                                           },
                                           "wtype": {
-                                            "_type": "BytesWType",
-                                            "name": "bytes",
-                                            "immutable": true,
-                                            "length": null
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
                                           },
-                                          "op_code": "itob",
-                                          "immediates": [],
-                                          "stack_args": [
-                                            {
-                                              "_type": "VarExpression",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                "line": 1239,
-                                                "end_line": 1244,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "WType",
-                                                "name": "uint64",
-                                                "immutable": true
-                                              },
-                                              "name": "delay"
-                                            }
-                                          ]
+                                          "value": 256,
+                                          "teal_alias": null
                                         }
                                       },
-                                      "op": "//",
-                                      "right": {
-                                        "_type": "ReinterpretCast",
+                                      "true_expr": {
+                                        "_type": "BigUIntBinaryOperation",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
                                           "line": 1231,
@@ -3608,8 +3606,8 @@
                                           "name": "biguint",
                                           "immutable": true
                                         },
-                                        "expr": {
-                                          "_type": "IntrinsicCall",
+                                        "left": {
+                                          "_type": "ReinterpretCast",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
                                             "line": 1231,
@@ -3619,74 +3617,35 @@
                                             "end_column": null
                                           },
                                           "wtype": {
-                                            "_type": "BytesWType",
-                                            "name": "bytes",
-                                            "immutable": true,
-                                            "length": null
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
                                           },
-                                          "op_code": "setbit",
-                                          "immediates": [],
-                                          "stack_args": [
-                                            {
-                                              "_type": "IntrinsicCall",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                "line": 1231,
-                                                "end_line": 1245,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "BytesWType",
-                                                "name": "bytes",
-                                                "immutable": true,
-                                                "length": null
-                                              },
-                                              "op_code": "bzero",
-                                              "immediates": [],
-                                              "stack_args": [
-                                                {
-                                                  "_type": "IntegerConstant",
-                                                  "source_location": {
-                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                    "line": 1231,
-                                                    "end_line": 1245,
-                                                    "comment_lines": 0,
-                                                    "column": null,
-                                                    "end_column": null
-                                                  },
-                                                  "wtype": {
-                                                    "_type": "WType",
-                                                    "name": "uint64",
-                                                    "immutable": true
-                                                  },
-                                                  "value": 32,
-                                                  "teal_alias": null
-                                                }
-                                              ]
+                                          "expr": {
+                                            "_type": "IntrinsicCall",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                              "line": 1231,
+                                              "end_line": 1245,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
                                             },
-                                            {
-                                              "_type": "UInt64BinaryOperation",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                "line": 1231,
-                                                "end_line": 1245,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "WType",
-                                                "name": "uint64",
-                                                "immutable": true
-                                              },
-                                              "left": {
-                                                "_type": "IntegerConstant",
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "op_code": "itob",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
+                                                "_type": "VarExpression",
                                                 "source_location": {
                                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                  "line": 1231,
-                                                  "end_line": 1245,
+                                                  "line": 1239,
+                                                  "end_line": 1244,
                                                   "comment_lines": 0,
                                                   "column": null,
                                                   "end_column": null
@@ -3696,11 +3655,86 @@
                                                   "name": "uint64",
                                                   "immutable": true
                                                 },
-                                                "value": 255,
-                                                "teal_alias": null
+                                                "name": "delay"
+                                              }
+                                            ]
+                                          }
+                                        },
+                                        "op": "//",
+                                        "right": {
+                                          "_type": "ReinterpretCast",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                            "line": 1231,
+                                            "end_line": 1245,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "expr": {
+                                            "_type": "IntrinsicCall",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                              "line": 1231,
+                                              "end_line": 1245,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "op_code": "setbit",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
+                                                "_type": "IntrinsicCall",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                  "line": 1231,
+                                                  "end_line": 1245,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                },
+                                                "op_code": "bzero",
+                                                "immediates": [],
+                                                "stack_args": [
+                                                  {
+                                                    "_type": "IntegerConstant",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                      "line": 1231,
+                                                      "end_line": 1245,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "WType",
+                                                      "name": "uint64",
+                                                      "immutable": true
+                                                    },
+                                                    "value": 32,
+                                                    "teal_alias": null
+                                                  }
+                                                ]
                                               },
-                                              "op": "-",
-                                              "right": {
+                                              {
                                                 "_type": "UInt64BinaryOperation",
                                                 "source_location": {
                                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
@@ -3716,314 +3750,6 @@
                                                   "immutable": true
                                                 },
                                                 "left": {
-                                                  "_type": "IntrinsicCall",
-                                                  "source_location": {
-                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                    "line": 1231,
-                                                    "end_line": 1245,
-                                                    "comment_lines": 0,
-                                                    "column": null,
-                                                    "end_column": null
-                                                  },
-                                                  "wtype": {
-                                                    "_type": "WType",
-                                                    "name": "uint64",
-                                                    "immutable": true
-                                                  },
-                                                  "op_code": "btoi",
-                                                  "immediates": [],
-                                                  "stack_args": [
-                                                    {
-                                                      "_type": "IntrinsicCall",
-                                                      "source_location": {
-                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                        "line": 1231,
-                                                        "end_line": 1245,
-                                                        "comment_lines": 0,
-                                                        "column": null,
-                                                        "end_column": null
-                                                      },
-                                                      "wtype": {
-                                                        "_type": "BytesWType",
-                                                        "name": "bytes",
-                                                        "immutable": true,
-                                                        "length": null
-                                                      },
-                                                      "op_code": "extract3",
-                                                      "immediates": [],
-                                                      "stack_args": [
-                                                        {
-                                                          "_type": "IntrinsicCall",
-                                                          "source_location": {
-                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                            "line": 1231,
-                                                            "end_line": 1245,
-                                                            "comment_lines": 0,
-                                                            "column": null,
-                                                            "end_column": null
-                                                          },
-                                                          "wtype": {
-                                                            "_type": "BytesWType",
-                                                            "name": "bytes",
-                                                            "immutable": true,
-                                                            "length": null
-                                                          },
-                                                          "op_code": "concat",
-                                                          "immediates": [],
-                                                          "stack_args": [
-                                                            {
-                                                              "_type": "IntrinsicCall",
-                                                              "source_location": {
-                                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                "line": 1231,
-                                                                "end_line": 1245,
-                                                                "comment_lines": 0,
-                                                                "column": null,
-                                                                "end_column": null
-                                                              },
-                                                              "wtype": {
-                                                                "_type": "BytesWType",
-                                                                "name": "bytes",
-                                                                "immutable": true,
-                                                                "length": null
-                                                              },
-                                                              "op_code": "bzero",
-                                                              "immediates": [],
-                                                              "stack_args": [
-                                                                {
-                                                                  "_type": "IntegerConstant",
-                                                                  "source_location": {
-                                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                    "line": 1231,
-                                                                    "end_line": 1245,
-                                                                    "comment_lines": 0,
-                                                                    "column": null,
-                                                                    "end_column": null
-                                                                  },
-                                                                  "wtype": {
-                                                                    "_type": "WType",
-                                                                    "name": "uint64",
-                                                                    "immutable": true
-                                                                  },
-                                                                  "value": 8,
-                                                                  "teal_alias": null
-                                                                }
-                                                              ]
-                                                            },
-                                                            {
-                                                              "_type": "ReinterpretCast",
-                                                              "source_location": {
-                                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                "line": 1231,
-                                                                "end_line": 1245,
-                                                                "comment_lines": 0,
-                                                                "column": null,
-                                                                "end_column": null
-                                                              },
-                                                              "wtype": {
-                                                                "_type": "BytesWType",
-                                                                "name": "bytes",
-                                                                "immutable": true,
-                                                                "length": null
-                                                              },
-                                                              "expr": {
-                                                                "_type": "IntegerConstant",
-                                                                "source_location": {
-                                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                  "line": 1235,
-                                                                  "end_line": 1237,
-                                                                  "comment_lines": 0,
-                                                                  "column": null,
-                                                                  "end_column": null
-                                                                },
-                                                                "wtype": {
-                                                                  "_type": "WType",
-                                                                  "name": "biguint",
-                                                                  "immutable": true
-                                                                },
-                                                                "value": 32,
-                                                                "teal_alias": null
-                                                              }
-                                                            }
-                                                          ]
-                                                        },
-                                                        {
-                                                          "_type": "IntrinsicCall",
-                                                          "source_location": {
-                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                            "line": 1231,
-                                                            "end_line": 1245,
-                                                            "comment_lines": 0,
-                                                            "column": null,
-                                                            "end_column": null
-                                                          },
-                                                          "wtype": {
-                                                            "_type": "WType",
-                                                            "name": "uint64",
-                                                            "immutable": true
-                                                          },
-                                                          "op_code": "-",
-                                                          "immediates": [],
-                                                          "stack_args": [
-                                                            {
-                                                              "_type": "IntrinsicCall",
-                                                              "source_location": {
-                                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                "line": 1231,
-                                                                "end_line": 1245,
-                                                                "comment_lines": 0,
-                                                                "column": null,
-                                                                "end_column": null
-                                                              },
-                                                              "wtype": {
-                                                                "_type": "WType",
-                                                                "name": "uint64",
-                                                                "immutable": true
-                                                              },
-                                                              "op_code": "len",
-                                                              "immediates": [],
-                                                              "stack_args": [
-                                                                {
-                                                                  "_type": "IntrinsicCall",
-                                                                  "source_location": {
-                                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                    "line": 1231,
-                                                                    "end_line": 1245,
-                                                                    "comment_lines": 0,
-                                                                    "column": null,
-                                                                    "end_column": null
-                                                                  },
-                                                                  "wtype": {
-                                                                    "_type": "BytesWType",
-                                                                    "name": "bytes",
-                                                                    "immutable": true,
-                                                                    "length": null
-                                                                  },
-                                                                  "op_code": "concat",
-                                                                  "immediates": [],
-                                                                  "stack_args": [
-                                                                    {
-                                                                      "_type": "IntrinsicCall",
-                                                                      "source_location": {
-                                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                        "line": 1231,
-                                                                        "end_line": 1245,
-                                                                        "comment_lines": 0,
-                                                                        "column": null,
-                                                                        "end_column": null
-                                                                      },
-                                                                      "wtype": {
-                                                                        "_type": "BytesWType",
-                                                                        "name": "bytes",
-                                                                        "immutable": true,
-                                                                        "length": null
-                                                                      },
-                                                                      "op_code": "bzero",
-                                                                      "immediates": [],
-                                                                      "stack_args": [
-                                                                        {
-                                                                          "_type": "IntegerConstant",
-                                                                          "source_location": {
-                                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                            "line": 1231,
-                                                                            "end_line": 1245,
-                                                                            "comment_lines": 0,
-                                                                            "column": null,
-                                                                            "end_column": null
-                                                                          },
-                                                                          "wtype": {
-                                                                            "_type": "WType",
-                                                                            "name": "uint64",
-                                                                            "immutable": true
-                                                                          },
-                                                                          "value": 8,
-                                                                          "teal_alias": null
-                                                                        }
-                                                                      ]
-                                                                    },
-                                                                    {
-                                                                      "_type": "ReinterpretCast",
-                                                                      "source_location": {
-                                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                        "line": 1231,
-                                                                        "end_line": 1245,
-                                                                        "comment_lines": 0,
-                                                                        "column": null,
-                                                                        "end_column": null
-                                                                      },
-                                                                      "wtype": {
-                                                                        "_type": "BytesWType",
-                                                                        "name": "bytes",
-                                                                        "immutable": true,
-                                                                        "length": null
-                                                                      },
-                                                                      "expr": {
-                                                                        "_type": "IntegerConstant",
-                                                                        "source_location": {
-                                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                          "line": 1235,
-                                                                          "end_line": 1237,
-                                                                          "comment_lines": 0,
-                                                                          "column": null,
-                                                                          "end_column": null
-                                                                        },
-                                                                        "wtype": {
-                                                                          "_type": "WType",
-                                                                          "name": "biguint",
-                                                                          "immutable": true
-                                                                        },
-                                                                        "value": 32,
-                                                                        "teal_alias": null
-                                                                      }
-                                                                    }
-                                                                  ]
-                                                                }
-                                                              ]
-                                                            },
-                                                            {
-                                                              "_type": "IntegerConstant",
-                                                              "source_location": {
-                                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                "line": 1231,
-                                                                "end_line": 1245,
-                                                                "comment_lines": 0,
-                                                                "column": null,
-                                                                "end_column": null
-                                                              },
-                                                              "wtype": {
-                                                                "_type": "WType",
-                                                                "name": "uint64",
-                                                                "immutable": true
-                                                              },
-                                                              "value": 8,
-                                                              "teal_alias": null
-                                                            }
-                                                          ]
-                                                        },
-                                                        {
-                                                          "_type": "IntegerConstant",
-                                                          "source_location": {
-                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                            "line": 1231,
-                                                            "end_line": 1245,
-                                                            "comment_lines": 0,
-                                                            "column": null,
-                                                            "end_column": null
-                                                          },
-                                                          "wtype": {
-                                                            "_type": "WType",
-                                                            "name": "uint64",
-                                                            "immutable": true
-                                                          },
-                                                          "value": 8,
-                                                          "teal_alias": null
-                                                        }
-                                                      ]
-                                                    }
-                                                  ]
-                                                },
-                                                "op": "%",
-                                                "right": {
                                                   "_type": "IntegerConstant",
                                                   "source_location": {
                                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
@@ -4038,31 +3764,392 @@
                                                     "name": "uint64",
                                                     "immutable": true
                                                   },
-                                                  "value": 256,
+                                                  "value": 255,
                                                   "teal_alias": null
+                                                },
+                                                "op": "-",
+                                                "right": {
+                                                  "_type": "UInt64BinaryOperation",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                    "line": 1231,
+                                                    "end_line": 1245,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "uint64",
+                                                    "immutable": true
+                                                  },
+                                                  "left": {
+                                                    "_type": "IntrinsicCall",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                      "line": 1231,
+                                                      "end_line": 1245,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "WType",
+                                                      "name": "uint64",
+                                                      "immutable": true
+                                                    },
+                                                    "op_code": "btoi",
+                                                    "immediates": [],
+                                                    "stack_args": [
+                                                      {
+                                                        "_type": "IntrinsicCall",
+                                                        "source_location": {
+                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                          "line": 1231,
+                                                          "end_line": 1245,
+                                                          "comment_lines": 0,
+                                                          "column": null,
+                                                          "end_column": null
+                                                        },
+                                                        "wtype": {
+                                                          "_type": "BytesWType",
+                                                          "name": "bytes",
+                                                          "immutable": true,
+                                                          "length": null
+                                                        },
+                                                        "op_code": "extract3",
+                                                        "immediates": [],
+                                                        "stack_args": [
+                                                          {
+                                                            "_type": "IntrinsicCall",
+                                                            "source_location": {
+                                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                              "line": 1231,
+                                                              "end_line": 1245,
+                                                              "comment_lines": 0,
+                                                              "column": null,
+                                                              "end_column": null
+                                                            },
+                                                            "wtype": {
+                                                              "_type": "BytesWType",
+                                                              "name": "bytes",
+                                                              "immutable": true,
+                                                              "length": null
+                                                            },
+                                                            "op_code": "concat",
+                                                            "immediates": [],
+                                                            "stack_args": [
+                                                              {
+                                                                "_type": "IntrinsicCall",
+                                                                "source_location": {
+                                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                  "line": 1231,
+                                                                  "end_line": 1245,
+                                                                  "comment_lines": 0,
+                                                                  "column": null,
+                                                                  "end_column": null
+                                                                },
+                                                                "wtype": {
+                                                                  "_type": "BytesWType",
+                                                                  "name": "bytes",
+                                                                  "immutable": true,
+                                                                  "length": null
+                                                                },
+                                                                "op_code": "bzero",
+                                                                "immediates": [],
+                                                                "stack_args": [
+                                                                  {
+                                                                    "_type": "IntegerConstant",
+                                                                    "source_location": {
+                                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                      "line": 1231,
+                                                                      "end_line": 1245,
+                                                                      "comment_lines": 0,
+                                                                      "column": null,
+                                                                      "end_column": null
+                                                                    },
+                                                                    "wtype": {
+                                                                      "_type": "WType",
+                                                                      "name": "uint64",
+                                                                      "immutable": true
+                                                                    },
+                                                                    "value": 8,
+                                                                    "teal_alias": null
+                                                                  }
+                                                                ]
+                                                              },
+                                                              {
+                                                                "_type": "ReinterpretCast",
+                                                                "source_location": {
+                                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                  "line": 1231,
+                                                                  "end_line": 1245,
+                                                                  "comment_lines": 0,
+                                                                  "column": null,
+                                                                  "end_column": null
+                                                                },
+                                                                "wtype": {
+                                                                  "_type": "BytesWType",
+                                                                  "name": "bytes",
+                                                                  "immutable": true,
+                                                                  "length": null
+                                                                },
+                                                                "expr": {
+                                                                  "_type": "IntegerConstant",
+                                                                  "source_location": {
+                                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                    "line": 1235,
+                                                                    "end_line": 1237,
+                                                                    "comment_lines": 0,
+                                                                    "column": null,
+                                                                    "end_column": null
+                                                                  },
+                                                                  "wtype": {
+                                                                    "_type": "WType",
+                                                                    "name": "biguint",
+                                                                    "immutable": true
+                                                                  },
+                                                                  "value": 32,
+                                                                  "teal_alias": null
+                                                                }
+                                                              }
+                                                            ]
+                                                          },
+                                                          {
+                                                            "_type": "IntrinsicCall",
+                                                            "source_location": {
+                                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                              "line": 1231,
+                                                              "end_line": 1245,
+                                                              "comment_lines": 0,
+                                                              "column": null,
+                                                              "end_column": null
+                                                            },
+                                                            "wtype": {
+                                                              "_type": "WType",
+                                                              "name": "uint64",
+                                                              "immutable": true
+                                                            },
+                                                            "op_code": "-",
+                                                            "immediates": [],
+                                                            "stack_args": [
+                                                              {
+                                                                "_type": "IntrinsicCall",
+                                                                "source_location": {
+                                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                  "line": 1231,
+                                                                  "end_line": 1245,
+                                                                  "comment_lines": 0,
+                                                                  "column": null,
+                                                                  "end_column": null
+                                                                },
+                                                                "wtype": {
+                                                                  "_type": "WType",
+                                                                  "name": "uint64",
+                                                                  "immutable": true
+                                                                },
+                                                                "op_code": "len",
+                                                                "immediates": [],
+                                                                "stack_args": [
+                                                                  {
+                                                                    "_type": "IntrinsicCall",
+                                                                    "source_location": {
+                                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                      "line": 1231,
+                                                                      "end_line": 1245,
+                                                                      "comment_lines": 0,
+                                                                      "column": null,
+                                                                      "end_column": null
+                                                                    },
+                                                                    "wtype": {
+                                                                      "_type": "BytesWType",
+                                                                      "name": "bytes",
+                                                                      "immutable": true,
+                                                                      "length": null
+                                                                    },
+                                                                    "op_code": "concat",
+                                                                    "immediates": [],
+                                                                    "stack_args": [
+                                                                      {
+                                                                        "_type": "IntrinsicCall",
+                                                                        "source_location": {
+                                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                          "line": 1231,
+                                                                          "end_line": 1245,
+                                                                          "comment_lines": 0,
+                                                                          "column": null,
+                                                                          "end_column": null
+                                                                        },
+                                                                        "wtype": {
+                                                                          "_type": "BytesWType",
+                                                                          "name": "bytes",
+                                                                          "immutable": true,
+                                                                          "length": null
+                                                                        },
+                                                                        "op_code": "bzero",
+                                                                        "immediates": [],
+                                                                        "stack_args": [
+                                                                          {
+                                                                            "_type": "IntegerConstant",
+                                                                            "source_location": {
+                                                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                              "line": 1231,
+                                                                              "end_line": 1245,
+                                                                              "comment_lines": 0,
+                                                                              "column": null,
+                                                                              "end_column": null
+                                                                            },
+                                                                            "wtype": {
+                                                                              "_type": "WType",
+                                                                              "name": "uint64",
+                                                                              "immutable": true
+                                                                            },
+                                                                            "value": 8,
+                                                                            "teal_alias": null
+                                                                          }
+                                                                        ]
+                                                                      },
+                                                                      {
+                                                                        "_type": "ReinterpretCast",
+                                                                        "source_location": {
+                                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                          "line": 1231,
+                                                                          "end_line": 1245,
+                                                                          "comment_lines": 0,
+                                                                          "column": null,
+                                                                          "end_column": null
+                                                                        },
+                                                                        "wtype": {
+                                                                          "_type": "BytesWType",
+                                                                          "name": "bytes",
+                                                                          "immutable": true,
+                                                                          "length": null
+                                                                        },
+                                                                        "expr": {
+                                                                          "_type": "IntegerConstant",
+                                                                          "source_location": {
+                                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                            "line": 1235,
+                                                                            "end_line": 1237,
+                                                                            "comment_lines": 0,
+                                                                            "column": null,
+                                                                            "end_column": null
+                                                                          },
+                                                                          "wtype": {
+                                                                            "_type": "WType",
+                                                                            "name": "biguint",
+                                                                            "immutable": true
+                                                                          },
+                                                                          "value": 32,
+                                                                          "teal_alias": null
+                                                                        }
+                                                                      }
+                                                                    ]
+                                                                  }
+                                                                ]
+                                                              },
+                                                              {
+                                                                "_type": "IntegerConstant",
+                                                                "source_location": {
+                                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                  "line": 1231,
+                                                                  "end_line": 1245,
+                                                                  "comment_lines": 0,
+                                                                  "column": null,
+                                                                  "end_column": null
+                                                                },
+                                                                "wtype": {
+                                                                  "_type": "WType",
+                                                                  "name": "uint64",
+                                                                  "immutable": true
+                                                                },
+                                                                "value": 8,
+                                                                "teal_alias": null
+                                                              }
+                                                            ]
+                                                          },
+                                                          {
+                                                            "_type": "IntegerConstant",
+                                                            "source_location": {
+                                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                              "line": 1231,
+                                                              "end_line": 1245,
+                                                              "comment_lines": 0,
+                                                              "column": null,
+                                                              "end_column": null
+                                                            },
+                                                            "wtype": {
+                                                              "_type": "WType",
+                                                              "name": "uint64",
+                                                              "immutable": true
+                                                            },
+                                                            "value": 8,
+                                                            "teal_alias": null
+                                                          }
+                                                        ]
+                                                      }
+                                                    ]
+                                                  },
+                                                  "op": "%",
+                                                  "right": {
+                                                    "_type": "IntegerConstant",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                      "line": 1231,
+                                                      "end_line": 1245,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "WType",
+                                                      "name": "uint64",
+                                                      "immutable": true
+                                                    },
+                                                    "value": 256,
+                                                    "teal_alias": null
+                                                  }
                                                 }
+                                              },
+                                              {
+                                                "_type": "IntegerConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                  "line": 1231,
+                                                  "end_line": 1245,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "value": 1,
+                                                "teal_alias": null
                                               }
-                                            },
-                                            {
-                                              "_type": "IntegerConstant",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                "line": 1231,
-                                                "end_line": 1245,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "WType",
-                                                "name": "uint64",
-                                                "immutable": true
-                                              },
-                                              "value": 1,
-                                              "teal_alias": null
-                                            }
-                                          ]
+                                            ]
+                                          }
                                         }
+                                      },
+                                      "false_expr": {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                          "line": 1231,
+                                          "end_line": 1245,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "value": 0,
+                                        "teal_alias": null
                                       }
                                     },
                                     "operator": "==",
@@ -4407,7 +4494,7 @@
                                               "immutable": true
                                             },
                                             "lhs": {
-                                              "_type": "BigUIntBinaryOperation",
+                                              "_type": "ConditionalExpression",
                                               "source_location": {
                                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
                                                 "line": 1231,
@@ -4421,8 +4508,8 @@
                                                 "name": "biguint",
                                                 "immutable": true
                                               },
-                                              "left": {
-                                                "_type": "ReinterpretCast",
+                                              "condition": {
+                                                "_type": "NumericComparisonExpression",
                                                 "source_location": {
                                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
                                                   "line": 1231,
@@ -4433,11 +4520,30 @@
                                                 },
                                                 "wtype": {
                                                   "_type": "WType",
-                                                  "name": "biguint",
+                                                  "name": "bool",
                                                   "immutable": true
                                                 },
-                                                "expr": {
-                                                  "_type": "IntrinsicCall",
+                                                "lhs": {
+                                                  "_type": "IntegerConstant",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                    "line": 1235,
+                                                    "end_line": 1237,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "biguint",
+                                                    "immutable": true
+                                                  },
+                                                  "value": 32,
+                                                  "teal_alias": null
+                                                },
+                                                "operator": "<",
+                                                "rhs": {
+                                                  "_type": "IntegerConstant",
                                                   "source_location": {
                                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
                                                     "line": 1231,
@@ -4447,37 +4553,16 @@
                                                     "end_column": null
                                                   },
                                                   "wtype": {
-                                                    "_type": "BytesWType",
-                                                    "name": "bytes",
-                                                    "immutable": true,
-                                                    "length": null
+                                                    "_type": "WType",
+                                                    "name": "biguint",
+                                                    "immutable": true
                                                   },
-                                                  "op_code": "itob",
-                                                  "immediates": [],
-                                                  "stack_args": [
-                                                    {
-                                                      "_type": "VarExpression",
-                                                      "source_location": {
-                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                        "line": 1239,
-                                                        "end_line": 1244,
-                                                        "comment_lines": 0,
-                                                        "column": null,
-                                                        "end_column": null
-                                                      },
-                                                      "wtype": {
-                                                        "_type": "WType",
-                                                        "name": "uint64",
-                                                        "immutable": true
-                                                      },
-                                                      "name": "delay"
-                                                    }
-                                                  ]
+                                                  "value": 256,
+                                                  "teal_alias": null
                                                 }
                                               },
-                                              "op": "//",
-                                              "right": {
-                                                "_type": "ReinterpretCast",
+                                              "true_expr": {
+                                                "_type": "BigUIntBinaryOperation",
                                                 "source_location": {
                                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
                                                   "line": 1231,
@@ -4491,8 +4576,8 @@
                                                   "name": "biguint",
                                                   "immutable": true
                                                 },
-                                                "expr": {
-                                                  "_type": "IntrinsicCall",
+                                                "left": {
+                                                  "_type": "ReinterpretCast",
                                                   "source_location": {
                                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
                                                     "line": 1231,
@@ -4502,74 +4587,35 @@
                                                     "end_column": null
                                                   },
                                                   "wtype": {
-                                                    "_type": "BytesWType",
-                                                    "name": "bytes",
-                                                    "immutable": true,
-                                                    "length": null
+                                                    "_type": "WType",
+                                                    "name": "biguint",
+                                                    "immutable": true
                                                   },
-                                                  "op_code": "setbit",
-                                                  "immediates": [],
-                                                  "stack_args": [
-                                                    {
-                                                      "_type": "IntrinsicCall",
-                                                      "source_location": {
-                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                        "line": 1231,
-                                                        "end_line": 1245,
-                                                        "comment_lines": 0,
-                                                        "column": null,
-                                                        "end_column": null
-                                                      },
-                                                      "wtype": {
-                                                        "_type": "BytesWType",
-                                                        "name": "bytes",
-                                                        "immutable": true,
-                                                        "length": null
-                                                      },
-                                                      "op_code": "bzero",
-                                                      "immediates": [],
-                                                      "stack_args": [
-                                                        {
-                                                          "_type": "IntegerConstant",
-                                                          "source_location": {
-                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                            "line": 1231,
-                                                            "end_line": 1245,
-                                                            "comment_lines": 0,
-                                                            "column": null,
-                                                            "end_column": null
-                                                          },
-                                                          "wtype": {
-                                                            "_type": "WType",
-                                                            "name": "uint64",
-                                                            "immutable": true
-                                                          },
-                                                          "value": 32,
-                                                          "teal_alias": null
-                                                        }
-                                                      ]
+                                                  "expr": {
+                                                    "_type": "IntrinsicCall",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                      "line": 1231,
+                                                      "end_line": 1245,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
                                                     },
-                                                    {
-                                                      "_type": "UInt64BinaryOperation",
-                                                      "source_location": {
-                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                        "line": 1231,
-                                                        "end_line": 1245,
-                                                        "comment_lines": 0,
-                                                        "column": null,
-                                                        "end_column": null
-                                                      },
-                                                      "wtype": {
-                                                        "_type": "WType",
-                                                        "name": "uint64",
-                                                        "immutable": true
-                                                      },
-                                                      "left": {
-                                                        "_type": "IntegerConstant",
+                                                    "wtype": {
+                                                      "_type": "BytesWType",
+                                                      "name": "bytes",
+                                                      "immutable": true,
+                                                      "length": null
+                                                    },
+                                                    "op_code": "itob",
+                                                    "immediates": [],
+                                                    "stack_args": [
+                                                      {
+                                                        "_type": "VarExpression",
                                                         "source_location": {
                                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                          "line": 1231,
-                                                          "end_line": 1245,
+                                                          "line": 1239,
+                                                          "end_line": 1244,
                                                           "comment_lines": 0,
                                                           "column": null,
                                                           "end_column": null
@@ -4579,11 +4625,86 @@
                                                           "name": "uint64",
                                                           "immutable": true
                                                         },
-                                                        "value": 255,
-                                                        "teal_alias": null
+                                                        "name": "delay"
+                                                      }
+                                                    ]
+                                                  }
+                                                },
+                                                "op": "//",
+                                                "right": {
+                                                  "_type": "ReinterpretCast",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                    "line": 1231,
+                                                    "end_line": 1245,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "biguint",
+                                                    "immutable": true
+                                                  },
+                                                  "expr": {
+                                                    "_type": "IntrinsicCall",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                      "line": 1231,
+                                                      "end_line": 1245,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "BytesWType",
+                                                      "name": "bytes",
+                                                      "immutable": true,
+                                                      "length": null
+                                                    },
+                                                    "op_code": "setbit",
+                                                    "immediates": [],
+                                                    "stack_args": [
+                                                      {
+                                                        "_type": "IntrinsicCall",
+                                                        "source_location": {
+                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                          "line": 1231,
+                                                          "end_line": 1245,
+                                                          "comment_lines": 0,
+                                                          "column": null,
+                                                          "end_column": null
+                                                        },
+                                                        "wtype": {
+                                                          "_type": "BytesWType",
+                                                          "name": "bytes",
+                                                          "immutable": true,
+                                                          "length": null
+                                                        },
+                                                        "op_code": "bzero",
+                                                        "immediates": [],
+                                                        "stack_args": [
+                                                          {
+                                                            "_type": "IntegerConstant",
+                                                            "source_location": {
+                                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                              "line": 1231,
+                                                              "end_line": 1245,
+                                                              "comment_lines": 0,
+                                                              "column": null,
+                                                              "end_column": null
+                                                            },
+                                                            "wtype": {
+                                                              "_type": "WType",
+                                                              "name": "uint64",
+                                                              "immutable": true
+                                                            },
+                                                            "value": 32,
+                                                            "teal_alias": null
+                                                          }
+                                                        ]
                                                       },
-                                                      "op": "-",
-                                                      "right": {
+                                                      {
                                                         "_type": "UInt64BinaryOperation",
                                                         "source_location": {
                                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
@@ -4599,314 +4720,6 @@
                                                           "immutable": true
                                                         },
                                                         "left": {
-                                                          "_type": "IntrinsicCall",
-                                                          "source_location": {
-                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                            "line": 1231,
-                                                            "end_line": 1245,
-                                                            "comment_lines": 0,
-                                                            "column": null,
-                                                            "end_column": null
-                                                          },
-                                                          "wtype": {
-                                                            "_type": "WType",
-                                                            "name": "uint64",
-                                                            "immutable": true
-                                                          },
-                                                          "op_code": "btoi",
-                                                          "immediates": [],
-                                                          "stack_args": [
-                                                            {
-                                                              "_type": "IntrinsicCall",
-                                                              "source_location": {
-                                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                "line": 1231,
-                                                                "end_line": 1245,
-                                                                "comment_lines": 0,
-                                                                "column": null,
-                                                                "end_column": null
-                                                              },
-                                                              "wtype": {
-                                                                "_type": "BytesWType",
-                                                                "name": "bytes",
-                                                                "immutable": true,
-                                                                "length": null
-                                                              },
-                                                              "op_code": "extract3",
-                                                              "immediates": [],
-                                                              "stack_args": [
-                                                                {
-                                                                  "_type": "IntrinsicCall",
-                                                                  "source_location": {
-                                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                    "line": 1231,
-                                                                    "end_line": 1245,
-                                                                    "comment_lines": 0,
-                                                                    "column": null,
-                                                                    "end_column": null
-                                                                  },
-                                                                  "wtype": {
-                                                                    "_type": "BytesWType",
-                                                                    "name": "bytes",
-                                                                    "immutable": true,
-                                                                    "length": null
-                                                                  },
-                                                                  "op_code": "concat",
-                                                                  "immediates": [],
-                                                                  "stack_args": [
-                                                                    {
-                                                                      "_type": "IntrinsicCall",
-                                                                      "source_location": {
-                                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                        "line": 1231,
-                                                                        "end_line": 1245,
-                                                                        "comment_lines": 0,
-                                                                        "column": null,
-                                                                        "end_column": null
-                                                                      },
-                                                                      "wtype": {
-                                                                        "_type": "BytesWType",
-                                                                        "name": "bytes",
-                                                                        "immutable": true,
-                                                                        "length": null
-                                                                      },
-                                                                      "op_code": "bzero",
-                                                                      "immediates": [],
-                                                                      "stack_args": [
-                                                                        {
-                                                                          "_type": "IntegerConstant",
-                                                                          "source_location": {
-                                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                            "line": 1231,
-                                                                            "end_line": 1245,
-                                                                            "comment_lines": 0,
-                                                                            "column": null,
-                                                                            "end_column": null
-                                                                          },
-                                                                          "wtype": {
-                                                                            "_type": "WType",
-                                                                            "name": "uint64",
-                                                                            "immutable": true
-                                                                          },
-                                                                          "value": 8,
-                                                                          "teal_alias": null
-                                                                        }
-                                                                      ]
-                                                                    },
-                                                                    {
-                                                                      "_type": "ReinterpretCast",
-                                                                      "source_location": {
-                                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                        "line": 1231,
-                                                                        "end_line": 1245,
-                                                                        "comment_lines": 0,
-                                                                        "column": null,
-                                                                        "end_column": null
-                                                                      },
-                                                                      "wtype": {
-                                                                        "_type": "BytesWType",
-                                                                        "name": "bytes",
-                                                                        "immutable": true,
-                                                                        "length": null
-                                                                      },
-                                                                      "expr": {
-                                                                        "_type": "IntegerConstant",
-                                                                        "source_location": {
-                                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                          "line": 1235,
-                                                                          "end_line": 1237,
-                                                                          "comment_lines": 0,
-                                                                          "column": null,
-                                                                          "end_column": null
-                                                                        },
-                                                                        "wtype": {
-                                                                          "_type": "WType",
-                                                                          "name": "biguint",
-                                                                          "immutable": true
-                                                                        },
-                                                                        "value": 32,
-                                                                        "teal_alias": null
-                                                                      }
-                                                                    }
-                                                                  ]
-                                                                },
-                                                                {
-                                                                  "_type": "IntrinsicCall",
-                                                                  "source_location": {
-                                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                    "line": 1231,
-                                                                    "end_line": 1245,
-                                                                    "comment_lines": 0,
-                                                                    "column": null,
-                                                                    "end_column": null
-                                                                  },
-                                                                  "wtype": {
-                                                                    "_type": "WType",
-                                                                    "name": "uint64",
-                                                                    "immutable": true
-                                                                  },
-                                                                  "op_code": "-",
-                                                                  "immediates": [],
-                                                                  "stack_args": [
-                                                                    {
-                                                                      "_type": "IntrinsicCall",
-                                                                      "source_location": {
-                                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                        "line": 1231,
-                                                                        "end_line": 1245,
-                                                                        "comment_lines": 0,
-                                                                        "column": null,
-                                                                        "end_column": null
-                                                                      },
-                                                                      "wtype": {
-                                                                        "_type": "WType",
-                                                                        "name": "uint64",
-                                                                        "immutable": true
-                                                                      },
-                                                                      "op_code": "len",
-                                                                      "immediates": [],
-                                                                      "stack_args": [
-                                                                        {
-                                                                          "_type": "IntrinsicCall",
-                                                                          "source_location": {
-                                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                            "line": 1231,
-                                                                            "end_line": 1245,
-                                                                            "comment_lines": 0,
-                                                                            "column": null,
-                                                                            "end_column": null
-                                                                          },
-                                                                          "wtype": {
-                                                                            "_type": "BytesWType",
-                                                                            "name": "bytes",
-                                                                            "immutable": true,
-                                                                            "length": null
-                                                                          },
-                                                                          "op_code": "concat",
-                                                                          "immediates": [],
-                                                                          "stack_args": [
-                                                                            {
-                                                                              "_type": "IntrinsicCall",
-                                                                              "source_location": {
-                                                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                                "line": 1231,
-                                                                                "end_line": 1245,
-                                                                                "comment_lines": 0,
-                                                                                "column": null,
-                                                                                "end_column": null
-                                                                              },
-                                                                              "wtype": {
-                                                                                "_type": "BytesWType",
-                                                                                "name": "bytes",
-                                                                                "immutable": true,
-                                                                                "length": null
-                                                                              },
-                                                                              "op_code": "bzero",
-                                                                              "immediates": [],
-                                                                              "stack_args": [
-                                                                                {
-                                                                                  "_type": "IntegerConstant",
-                                                                                  "source_location": {
-                                                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                                    "line": 1231,
-                                                                                    "end_line": 1245,
-                                                                                    "comment_lines": 0,
-                                                                                    "column": null,
-                                                                                    "end_column": null
-                                                                                  },
-                                                                                  "wtype": {
-                                                                                    "_type": "WType",
-                                                                                    "name": "uint64",
-                                                                                    "immutable": true
-                                                                                  },
-                                                                                  "value": 8,
-                                                                                  "teal_alias": null
-                                                                                }
-                                                                              ]
-                                                                            },
-                                                                            {
-                                                                              "_type": "ReinterpretCast",
-                                                                              "source_location": {
-                                                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                                "line": 1231,
-                                                                                "end_line": 1245,
-                                                                                "comment_lines": 0,
-                                                                                "column": null,
-                                                                                "end_column": null
-                                                                              },
-                                                                              "wtype": {
-                                                                                "_type": "BytesWType",
-                                                                                "name": "bytes",
-                                                                                "immutable": true,
-                                                                                "length": null
-                                                                              },
-                                                                              "expr": {
-                                                                                "_type": "IntegerConstant",
-                                                                                "source_location": {
-                                                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                                  "line": 1235,
-                                                                                  "end_line": 1237,
-                                                                                  "comment_lines": 0,
-                                                                                  "column": null,
-                                                                                  "end_column": null
-                                                                                },
-                                                                                "wtype": {
-                                                                                  "_type": "WType",
-                                                                                  "name": "biguint",
-                                                                                  "immutable": true
-                                                                                },
-                                                                                "value": 32,
-                                                                                "teal_alias": null
-                                                                              }
-                                                                            }
-                                                                          ]
-                                                                        }
-                                                                      ]
-                                                                    },
-                                                                    {
-                                                                      "_type": "IntegerConstant",
-                                                                      "source_location": {
-                                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                        "line": 1231,
-                                                                        "end_line": 1245,
-                                                                        "comment_lines": 0,
-                                                                        "column": null,
-                                                                        "end_column": null
-                                                                      },
-                                                                      "wtype": {
-                                                                        "_type": "WType",
-                                                                        "name": "uint64",
-                                                                        "immutable": true
-                                                                      },
-                                                                      "value": 8,
-                                                                      "teal_alias": null
-                                                                    }
-                                                                  ]
-                                                                },
-                                                                {
-                                                                  "_type": "IntegerConstant",
-                                                                  "source_location": {
-                                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                                    "line": 1231,
-                                                                    "end_line": 1245,
-                                                                    "comment_lines": 0,
-                                                                    "column": null,
-                                                                    "end_column": null
-                                                                  },
-                                                                  "wtype": {
-                                                                    "_type": "WType",
-                                                                    "name": "uint64",
-                                                                    "immutable": true
-                                                                  },
-                                                                  "value": 8,
-                                                                  "teal_alias": null
-                                                                }
-                                                              ]
-                                                            }
-                                                          ]
-                                                        },
-                                                        "op": "%",
-                                                        "right": {
                                                           "_type": "IntegerConstant",
                                                           "source_location": {
                                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
@@ -4921,31 +4734,392 @@
                                                             "name": "uint64",
                                                             "immutable": true
                                                           },
-                                                          "value": 256,
+                                                          "value": 255,
                                                           "teal_alias": null
+                                                        },
+                                                        "op": "-",
+                                                        "right": {
+                                                          "_type": "UInt64BinaryOperation",
+                                                          "source_location": {
+                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                            "line": 1231,
+                                                            "end_line": 1245,
+                                                            "comment_lines": 0,
+                                                            "column": null,
+                                                            "end_column": null
+                                                          },
+                                                          "wtype": {
+                                                            "_type": "WType",
+                                                            "name": "uint64",
+                                                            "immutable": true
+                                                          },
+                                                          "left": {
+                                                            "_type": "IntrinsicCall",
+                                                            "source_location": {
+                                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                              "line": 1231,
+                                                              "end_line": 1245,
+                                                              "comment_lines": 0,
+                                                              "column": null,
+                                                              "end_column": null
+                                                            },
+                                                            "wtype": {
+                                                              "_type": "WType",
+                                                              "name": "uint64",
+                                                              "immutable": true
+                                                            },
+                                                            "op_code": "btoi",
+                                                            "immediates": [],
+                                                            "stack_args": [
+                                                              {
+                                                                "_type": "IntrinsicCall",
+                                                                "source_location": {
+                                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                  "line": 1231,
+                                                                  "end_line": 1245,
+                                                                  "comment_lines": 0,
+                                                                  "column": null,
+                                                                  "end_column": null
+                                                                },
+                                                                "wtype": {
+                                                                  "_type": "BytesWType",
+                                                                  "name": "bytes",
+                                                                  "immutable": true,
+                                                                  "length": null
+                                                                },
+                                                                "op_code": "extract3",
+                                                                "immediates": [],
+                                                                "stack_args": [
+                                                                  {
+                                                                    "_type": "IntrinsicCall",
+                                                                    "source_location": {
+                                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                      "line": 1231,
+                                                                      "end_line": 1245,
+                                                                      "comment_lines": 0,
+                                                                      "column": null,
+                                                                      "end_column": null
+                                                                    },
+                                                                    "wtype": {
+                                                                      "_type": "BytesWType",
+                                                                      "name": "bytes",
+                                                                      "immutable": true,
+                                                                      "length": null
+                                                                    },
+                                                                    "op_code": "concat",
+                                                                    "immediates": [],
+                                                                    "stack_args": [
+                                                                      {
+                                                                        "_type": "IntrinsicCall",
+                                                                        "source_location": {
+                                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                          "line": 1231,
+                                                                          "end_line": 1245,
+                                                                          "comment_lines": 0,
+                                                                          "column": null,
+                                                                          "end_column": null
+                                                                        },
+                                                                        "wtype": {
+                                                                          "_type": "BytesWType",
+                                                                          "name": "bytes",
+                                                                          "immutable": true,
+                                                                          "length": null
+                                                                        },
+                                                                        "op_code": "bzero",
+                                                                        "immediates": [],
+                                                                        "stack_args": [
+                                                                          {
+                                                                            "_type": "IntegerConstant",
+                                                                            "source_location": {
+                                                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                              "line": 1231,
+                                                                              "end_line": 1245,
+                                                                              "comment_lines": 0,
+                                                                              "column": null,
+                                                                              "end_column": null
+                                                                            },
+                                                                            "wtype": {
+                                                                              "_type": "WType",
+                                                                              "name": "uint64",
+                                                                              "immutable": true
+                                                                            },
+                                                                            "value": 8,
+                                                                            "teal_alias": null
+                                                                          }
+                                                                        ]
+                                                                      },
+                                                                      {
+                                                                        "_type": "ReinterpretCast",
+                                                                        "source_location": {
+                                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                          "line": 1231,
+                                                                          "end_line": 1245,
+                                                                          "comment_lines": 0,
+                                                                          "column": null,
+                                                                          "end_column": null
+                                                                        },
+                                                                        "wtype": {
+                                                                          "_type": "BytesWType",
+                                                                          "name": "bytes",
+                                                                          "immutable": true,
+                                                                          "length": null
+                                                                        },
+                                                                        "expr": {
+                                                                          "_type": "IntegerConstant",
+                                                                          "source_location": {
+                                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                            "line": 1235,
+                                                                            "end_line": 1237,
+                                                                            "comment_lines": 0,
+                                                                            "column": null,
+                                                                            "end_column": null
+                                                                          },
+                                                                          "wtype": {
+                                                                            "_type": "WType",
+                                                                            "name": "biguint",
+                                                                            "immutable": true
+                                                                          },
+                                                                          "value": 32,
+                                                                          "teal_alias": null
+                                                                        }
+                                                                      }
+                                                                    ]
+                                                                  },
+                                                                  {
+                                                                    "_type": "IntrinsicCall",
+                                                                    "source_location": {
+                                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                      "line": 1231,
+                                                                      "end_line": 1245,
+                                                                      "comment_lines": 0,
+                                                                      "column": null,
+                                                                      "end_column": null
+                                                                    },
+                                                                    "wtype": {
+                                                                      "_type": "WType",
+                                                                      "name": "uint64",
+                                                                      "immutable": true
+                                                                    },
+                                                                    "op_code": "-",
+                                                                    "immediates": [],
+                                                                    "stack_args": [
+                                                                      {
+                                                                        "_type": "IntrinsicCall",
+                                                                        "source_location": {
+                                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                          "line": 1231,
+                                                                          "end_line": 1245,
+                                                                          "comment_lines": 0,
+                                                                          "column": null,
+                                                                          "end_column": null
+                                                                        },
+                                                                        "wtype": {
+                                                                          "_type": "WType",
+                                                                          "name": "uint64",
+                                                                          "immutable": true
+                                                                        },
+                                                                        "op_code": "len",
+                                                                        "immediates": [],
+                                                                        "stack_args": [
+                                                                          {
+                                                                            "_type": "IntrinsicCall",
+                                                                            "source_location": {
+                                                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                              "line": 1231,
+                                                                              "end_line": 1245,
+                                                                              "comment_lines": 0,
+                                                                              "column": null,
+                                                                              "end_column": null
+                                                                            },
+                                                                            "wtype": {
+                                                                              "_type": "BytesWType",
+                                                                              "name": "bytes",
+                                                                              "immutable": true,
+                                                                              "length": null
+                                                                            },
+                                                                            "op_code": "concat",
+                                                                            "immediates": [],
+                                                                            "stack_args": [
+                                                                              {
+                                                                                "_type": "IntrinsicCall",
+                                                                                "source_location": {
+                                                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                                  "line": 1231,
+                                                                                  "end_line": 1245,
+                                                                                  "comment_lines": 0,
+                                                                                  "column": null,
+                                                                                  "end_column": null
+                                                                                },
+                                                                                "wtype": {
+                                                                                  "_type": "BytesWType",
+                                                                                  "name": "bytes",
+                                                                                  "immutable": true,
+                                                                                  "length": null
+                                                                                },
+                                                                                "op_code": "bzero",
+                                                                                "immediates": [],
+                                                                                "stack_args": [
+                                                                                  {
+                                                                                    "_type": "IntegerConstant",
+                                                                                    "source_location": {
+                                                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                                      "line": 1231,
+                                                                                      "end_line": 1245,
+                                                                                      "comment_lines": 0,
+                                                                                      "column": null,
+                                                                                      "end_column": null
+                                                                                    },
+                                                                                    "wtype": {
+                                                                                      "_type": "WType",
+                                                                                      "name": "uint64",
+                                                                                      "immutable": true
+                                                                                    },
+                                                                                    "value": 8,
+                                                                                    "teal_alias": null
+                                                                                  }
+                                                                                ]
+                                                                              },
+                                                                              {
+                                                                                "_type": "ReinterpretCast",
+                                                                                "source_location": {
+                                                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                                  "line": 1231,
+                                                                                  "end_line": 1245,
+                                                                                  "comment_lines": 0,
+                                                                                  "column": null,
+                                                                                  "end_column": null
+                                                                                },
+                                                                                "wtype": {
+                                                                                  "_type": "BytesWType",
+                                                                                  "name": "bytes",
+                                                                                  "immutable": true,
+                                                                                  "length": null
+                                                                                },
+                                                                                "expr": {
+                                                                                  "_type": "IntegerConstant",
+                                                                                  "source_location": {
+                                                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                                    "line": 1235,
+                                                                                    "end_line": 1237,
+                                                                                    "comment_lines": 0,
+                                                                                    "column": null,
+                                                                                    "end_column": null
+                                                                                  },
+                                                                                  "wtype": {
+                                                                                    "_type": "WType",
+                                                                                    "name": "biguint",
+                                                                                    "immutable": true
+                                                                                  },
+                                                                                  "value": 32,
+                                                                                  "teal_alias": null
+                                                                                }
+                                                                              }
+                                                                            ]
+                                                                          }
+                                                                        ]
+                                                                      },
+                                                                      {
+                                                                        "_type": "IntegerConstant",
+                                                                        "source_location": {
+                                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                          "line": 1231,
+                                                                          "end_line": 1245,
+                                                                          "comment_lines": 0,
+                                                                          "column": null,
+                                                                          "end_column": null
+                                                                        },
+                                                                        "wtype": {
+                                                                          "_type": "WType",
+                                                                          "name": "uint64",
+                                                                          "immutable": true
+                                                                        },
+                                                                        "value": 8,
+                                                                        "teal_alias": null
+                                                                      }
+                                                                    ]
+                                                                  },
+                                                                  {
+                                                                    "_type": "IntegerConstant",
+                                                                    "source_location": {
+                                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                                      "line": 1231,
+                                                                      "end_line": 1245,
+                                                                      "comment_lines": 0,
+                                                                      "column": null,
+                                                                      "end_column": null
+                                                                    },
+                                                                    "wtype": {
+                                                                      "_type": "WType",
+                                                                      "name": "uint64",
+                                                                      "immutable": true
+                                                                    },
+                                                                    "value": 8,
+                                                                    "teal_alias": null
+                                                                  }
+                                                                ]
+                                                              }
+                                                            ]
+                                                          },
+                                                          "op": "%",
+                                                          "right": {
+                                                            "_type": "IntegerConstant",
+                                                            "source_location": {
+                                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                              "line": 1231,
+                                                              "end_line": 1245,
+                                                              "comment_lines": 0,
+                                                              "column": null,
+                                                              "end_column": null
+                                                            },
+                                                            "wtype": {
+                                                              "_type": "WType",
+                                                              "name": "uint64",
+                                                              "immutable": true
+                                                            },
+                                                            "value": 256,
+                                                            "teal_alias": null
+                                                          }
                                                         }
+                                                      },
+                                                      {
+                                                        "_type": "IntegerConstant",
+                                                        "source_location": {
+                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                          "line": 1231,
+                                                          "end_line": 1245,
+                                                          "comment_lines": 0,
+                                                          "column": null,
+                                                          "end_column": null
+                                                        },
+                                                        "wtype": {
+                                                          "_type": "WType",
+                                                          "name": "uint64",
+                                                          "immutable": true
+                                                        },
+                                                        "value": 1,
+                                                        "teal_alias": null
                                                       }
-                                                    },
-                                                    {
-                                                      "_type": "IntegerConstant",
-                                                      "source_location": {
-                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
-                                                        "line": 1231,
-                                                        "end_line": 1245,
-                                                        "comment_lines": 0,
-                                                        "column": null,
-                                                        "end_column": null
-                                                      },
-                                                      "wtype": {
-                                                        "_type": "WType",
-                                                        "name": "uint64",
-                                                        "immutable": true
-                                                      },
-                                                      "value": 1,
-                                                      "teal_alias": null
-                                                    }
-                                                  ]
+                                                    ]
+                                                  }
                                                 }
+                                              },
+                                              "false_expr": {
+                                                "_type": "IntegerConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeConfigurator.sol",
+                                                  "line": 1231,
+                                                  "end_line": 1245,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "biguint",
+                                                  "immutable": true
+                                                },
+                                                "value": 0,
+                                                "teal_alias": null
                                               }
                                             },
                                             "operator": "==",

@@ -527,14 +527,42 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 	{
 		if (m_isBigUInt)
 		{
-			// ~x for biguint: use BytesUnaryOperation via ReinterpretCast
+			// ~x for biguint: pad bytes to 32 before BitInvert.
+			// Without padding, a biguint like `1 << 65` encodes
+			// minimally as 9 bytes; ~9-byte = 9-byte; ANDing that
+			// with a 32-byte map word right-aligns and silently
+			// clears the high 23 bytes' bits — corrupts mask.
+			// Pattern: extract last 32 bytes of `bzero(32) || biguint`.
 			auto toBytes = awst::makeReinterpretCast(resolve(), awst::WType::bytesType(), _loc);
+
+			auto padWidth = awst::makeIntegerConstant("32", _loc);
+			auto bzeroCall = awst::makeIntrinsicCall(
+				"bzero", awst::WType::bytesType(), _loc);
+			bzeroCall->stackArgs.push_back(std::move(padWidth));
+			auto cat = awst::makeIntrinsicCall(
+				"concat", awst::WType::bytesType(), _loc);
+			cat->stackArgs.push_back(std::move(bzeroCall));
+			cat->stackArgs.push_back(std::move(toBytes));
+			auto lenCall = awst::makeIntrinsicCall(
+				"len", awst::WType::uint64Type(), _loc);
+			lenCall->stackArgs.push_back(cat);
+			auto thirtyTwo = awst::makeIntegerConstant("32", _loc);
+			auto offset = awst::makeIntrinsicCall(
+				"-", awst::WType::uint64Type(), _loc);
+			offset->stackArgs.push_back(std::move(lenCall));
+			offset->stackArgs.push_back(thirtyTwo);
+			auto thirtyTwo2 = awst::makeIntegerConstant("32", _loc);
+			auto extract = awst::makeIntrinsicCall(
+				"extract3", awst::WType::bytesType(), _loc);
+			extract->stackArgs.push_back(std::move(cat));
+			extract->stackArgs.push_back(std::move(offset));
+			extract->stackArgs.push_back(std::move(thirtyTwo2));
 
 			auto invert = std::make_shared<awst::BytesUnaryOperation>();
 			invert->sourceLocation = _loc;
 			invert->wtype = awst::WType::bytesType();
 			invert->op = awst::BytesUnaryOperator::BitInvert;
-			invert->expr = std::move(toBytes);
+			invert->expr = std::move(extract);
 
 			auto cast = awst::makeReinterpretCast(std::move(invert), awst::WType::biguintType(), _loc);
 			return wrap(std::move(cast));

@@ -174,18 +174,36 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleShl(
 	awst::SourceLocation const& _loc
 )
 {
-	// shl(shift, value) → value * 2^shift
+	// shl(shift, value) → value * 2^shift  IF shift < 256 ELSE 0
 	// NOTE: Yul shl argument order is (shift, value), NOT (value, shift)
+	//
+	// EVM semantics (EIP-145): shl returns 0 when `shift >= 256` —
+	// not `value << (shift mod 256)`. Symmetric to handleShr above.
 	if (_args.size() != 2)
 	{
 		Logger::instance().error("shl requires 2 arguments", _loc);
 		return nullptr;
 	}
-	auto power = buildPowerOf2(_args[0], _loc);
+	auto shift = ensureBiguint(_args[0], _loc);
+	auto value = _args[1];
+	auto power = buildPowerOf2(shift, _loc);
 	auto product = makeBigUIntBinOp(
-		_args[1], awst::BigUIntBinaryOperator::Mult, std::move(power), _loc
+		value, awst::BigUIntBinaryOperator::Mult, std::move(power), _loc
 	);
-	return wrapMod256(std::move(product), _loc);
+	auto wrapped = wrapMod256(std::move(product), _loc);
+	auto twoFiftySix = awst::makeIntegerConstant(
+		"256", _loc, awst::WType::biguintType());
+	auto cond = awst::makeNumericCompare(
+		shift, awst::NumericComparison::Lt, std::move(twoFiftySix), _loc);
+	auto zero = awst::makeIntegerConstant(
+		"0", _loc, awst::WType::biguintType());
+	auto cexpr = std::make_shared<awst::ConditionalExpression>();
+	cexpr->sourceLocation = _loc;
+	cexpr->wtype = awst::WType::biguintType();
+	cexpr->condition = std::move(cond);
+	cexpr->trueExpr = std::move(wrapped);
+	cexpr->falseExpr = std::move(zero);
+	return cexpr;
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleShr(
@@ -193,17 +211,39 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleShr(
 	awst::SourceLocation const& _loc
 )
 {
-	// shr(shift, value) → value / 2^shift
+	// shr(shift, value) → value / 2^shift  IF shift < 256 ELSE 0
 	// NOTE: Yul shr argument order is (shift, value), NOT (value, shift)
+	//
+	// EVM semantics (EIP-145): shr returns 0 when `shift >= 256` —
+	// this is NOT `value >> (shift mod 256)`. AVM `b>>` doesn't have
+	// the same clamping, so we wrap the result in a conditional.
+	// See WIP/examples/aave-v4/contracts/PositionStatusMap.sol:223
+	// — `shr(sub(256, ...), MASK)` simplifies to `shr(256, MASK)` at
+	// bucket boundaries and must return 0.
 	if (_args.size() != 2)
 	{
 		Logger::instance().error("shr requires 2 arguments", _loc);
 		return nullptr;
 	}
-	auto power = buildPowerOf2(_args[0], _loc);
-	return makeBigUIntBinOp(
-		_args[1], awst::BigUIntBinaryOperator::FloorDiv, std::move(power), _loc
+	auto shift = ensureBiguint(_args[0], _loc);
+	auto value = _args[1];
+	auto power = buildPowerOf2(shift, _loc);
+	auto divResult = makeBigUIntBinOp(
+		value, awst::BigUIntBinaryOperator::FloorDiv, std::move(power), _loc
 	);
+	auto twoFiftySix = awst::makeIntegerConstant(
+		"256", _loc, awst::WType::biguintType());
+	auto cond = awst::makeNumericCompare(
+		shift, awst::NumericComparison::Lt, std::move(twoFiftySix), _loc);
+	auto zero = awst::makeIntegerConstant(
+		"0", _loc, awst::WType::biguintType());
+	auto cexpr = std::make_shared<awst::ConditionalExpression>();
+	cexpr->sourceLocation = _loc;
+	cexpr->wtype = awst::WType::biguintType();
+	cexpr->condition = std::move(cond);
+	cexpr->trueExpr = std::move(divResult);
+	cexpr->falseExpr = std::move(zero);
+	return cexpr;
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleByte(

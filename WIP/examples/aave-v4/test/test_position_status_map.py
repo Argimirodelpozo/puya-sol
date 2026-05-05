@@ -226,7 +226,6 @@ _BOUNDARY_SHR_XFAIL = pytest.mark.xfail(
 )
 
 
-@_BOUNDARY_SHR_XFAIL
 def test_collateralCount(localnet, account):
     """Mirrors upstream test_collateralCount() — exercises:
     boundary reserveIds, ignoring bits past reserveCount, and that
@@ -270,7 +269,6 @@ def test_collateralCount_ignoresInvalidBits(localnet, account):
     assert _call(p, "collateralCount", 600) == 6
 
 
-@_BOUNDARY_SHR_XFAIL
 def test_borrowCount(localnet, account):
     p = _fresh(localnet, account)
     _send(p, "setBorrowing", 127, True)
