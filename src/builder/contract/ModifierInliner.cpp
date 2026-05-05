@@ -169,8 +169,7 @@ void ContractBuilder::inlineModifiers(
 		}
 
 		// Translate modifier body, replacing `_` (PlaceholderStatement) with the original body
-		auto modBody = std::make_shared<awst::Block>();
-		modBody->sourceLocation = makeLoc(modDef->location());
+		auto modBody = awst::makeBlock(makeLoc(modDef->location()));
 
 		if (modDef->body().statements().empty())
 			continue;
@@ -247,8 +246,7 @@ void ContractBuilder::inlineModifiers(
 		// Named return vars must be initialized before the modifier body so
 		// that multiple `_;` invocations (e.g. in loops) share the same
 		// variable rather than re-initializing it each time.
-		auto placeholderBody = std::make_shared<awst::Block>();
-		placeholderBody->sourceLocation = _body->sourceLocation;
+		auto placeholderBody = awst::makeBlock(_body->sourceLocation);
 		std::shared_ptr<awst::Statement> deferredReturn;
 
 		// Track which named return vars have already been hoisted (only hoist
@@ -402,8 +400,7 @@ void ContractBuilder::inlineModifiers(
 			// Helper: create if(flag) break;
 			auto makeFlagCheck = [&]() -> std::shared_ptr<awst::Statement> {
 				auto cond = awst::makeVarExpression(flagName, awst::WType::boolType(), flagLoc);
-				auto branchBody = std::make_shared<awst::Block>();
-				branchBody->sourceLocation = flagLoc;
+				auto branchBody = awst::makeBlock(flagLoc);
 				branchBody->body.push_back(makeBreak());
 				return awst::makeIfElse(
 					std::move(cond), std::move(branchBody), nullptr, flagLoc);
@@ -420,8 +417,7 @@ void ContractBuilder::inlineModifiers(
 					if (dynamic_cast<awst::ReturnStatement*>(s.get()))
 					{
 						// Replace return with { flag=true; break; }
-						auto block = std::make_shared<awst::Block>();
-						block->sourceLocation = s->sourceLocation;
+						auto block = awst::makeBlock(s->sourceLocation);
 						block->body.push_back(makeFlagSet());
 						block->body.push_back(makeBreak());
 						s = std::move(block);
@@ -481,8 +477,7 @@ void ContractBuilder::inlineModifiers(
 			wrapperLoop->sourceLocation = flagLoc;
 			wrapperLoop->condition = awst::makeBoolConstant(true, flagLoc);
 
-			auto loopBody = std::make_shared<awst::Block>();
-			loopBody->sourceLocation = flagLoc;
+			auto loopBody = awst::makeBlock(flagLoc);
 			for (auto& stmt: translatedModBody->body)
 				loopBody->body.push_back(std::move(stmt));
 			loopBody->body.push_back(makeBreak()); // always exit after one pass
@@ -599,8 +594,7 @@ void ContractBuilder::buildModifierChain(
 		modSub.pure = _method.pure;
 
 		// Build modifier body block
-		auto modBody = std::make_shared<awst::Block>();
-		modBody->sourceLocation = modSub.sourceLocation;
+		auto modBody = awst::makeBlock(modSub.sourceLocation);
 
 		// Evaluate modifier arguments → bind to local vars via paramRemaps
 		auto const* args = modInvocation->arguments();
@@ -633,8 +627,7 @@ void ContractBuilder::buildModifierChain(
 
 		// Set placeholder body: at `_;`, call the next subroutine
 		// Build a block that calls nextSubName and assigns return value
-		auto placeholderBlock = std::make_shared<awst::Block>();
-		placeholderBlock->sourceLocation = modSub.sourceLocation;
+		auto placeholderBlock = awst::makeBlock(modSub.sourceLocation);
 
 		// Determine return variable name for this modifier sub
 		std::string retVarName;
@@ -749,8 +742,7 @@ void ContractBuilder::buildModifierChain(
 	}
 
 	// Step 3: Replace _method.body with a call to the outermost modifier subroutine
-	auto entryBody = std::make_shared<awst::Block>();
-	entryBody->sourceLocation = _method.sourceLocation;
+	auto entryBody = awst::makeBlock(_method.sourceLocation);
 
 	// Initialize named return vars to zero
 	for (auto const& rp: _func.returnParameters())

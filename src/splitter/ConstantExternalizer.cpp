@@ -589,8 +589,7 @@ awst::ContractMethod ConstantExternalizer::buildLoadConstantsMethod(
 	method.memberName = "__load_constants";
 	method.pure = false;
 
-	auto body = std::make_shared<awst::Block>();
-	body->sourceLocation = _loc;
+	auto body = awst::makeBlock(_loc);
 
 	// Build box key as BytesConstant
 	auto makeBoxKey = [&]() -> std::shared_ptr<awst::BytesConstant>

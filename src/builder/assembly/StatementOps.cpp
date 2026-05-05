@@ -70,8 +70,7 @@ void AssemblyBuilder::buildStatement(
 					// Original IfElse path for non-revert if-bodies
 					auto cond = ensureBool(buildExpression(*_node.condition), loc);
 
-					auto ifBlock = std::make_shared<awst::Block>();
-					ifBlock->sourceLocation = loc;
+					auto ifBlock = awst::makeBlock(loc);
 					for (auto const& innerStmt: _node.body.statements)
 						buildStatement(innerStmt, ifBlock->body);
 
@@ -94,8 +93,7 @@ void AssemblyBuilder::buildStatement(
 				auto* savedPost = m_forLoopPost;
 				m_forLoopPost = &_node.post.statements;
 
-				auto body = std::make_shared<awst::Block>();
-				body->sourceLocation = loc;
+				auto body = awst::makeBlock(loc);
 				for (auto const& bodyStmt: _node.body.statements)
 					buildStatement(bodyStmt, body->body);
 				// Post statements at end of body (normal iteration path)
@@ -199,16 +197,14 @@ void AssemblyBuilder::buildStatement(
 				{
 					if (!yulCase.value)
 					{
-						auto caseBlock = std::make_shared<awst::Block>();
-						caseBlock->sourceLocation = makeLoc(yulCase.debugData);
+						auto caseBlock = awst::makeBlock(makeLoc(yulCase.debugData));
 						for (auto const& stmt: yulCase.body.statements)
 							buildStatement(stmt, caseBlock->body);
 						switchNode->defaultCase = std::move(caseBlock);
 					}
 					else
 					{
-						auto caseBlock = std::make_shared<awst::Block>();
-						caseBlock->sourceLocation = makeLoc(yulCase.debugData);
+						auto caseBlock = awst::makeBlock(makeLoc(yulCase.debugData));
 						for (auto const& stmt: yulCase.body.statements)
 							buildStatement(stmt, caseBlock->body);
 
@@ -1065,8 +1061,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 
 		loop->condition = awst::makeBoolConstant(true, _loc);
 
-		auto block = std::make_shared<awst::Block>();
-		block->sourceLocation = _loc;
+		auto block = awst::makeBlock(_loc);
 		block->body = std::move(bodyStmts);
 
 		auto exit = std::make_shared<awst::LoopExit>();

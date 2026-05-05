@@ -35,8 +35,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolIfStatement::toAwst()
 	auto buildBranch = [&](Statement const& body) -> std::shared_ptr<awst::Block> {
 		if (auto const* block = dynamic_cast<Block const*>(&body))
 			return buildBlock(m_blk, *block);
-		auto syntheticBlock = std::make_shared<awst::Block>();
-		syntheticBlock->sourceLocation = m_blk.makeLoc(body.location());
+		auto syntheticBlock = awst::makeBlock(m_blk.makeLoc(body.location()));
 		auto translated = buildStatement(m_blk, body);
 		if (translated) syntheticBlock->body.push_back(std::move(translated));
 		return syntheticBlock;
@@ -70,8 +69,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 		loop->sourceLocation = m_loc;
 		loop->condition = awst::makeBoolConstant(true, m_loc);
 
-		auto body = std::make_shared<awst::Block>();
-		body->sourceLocation = m_blk.makeLoc(m_node.body().location());
+		auto body = awst::makeBlock(m_blk.makeLoc(m_node.body().location()));
 
 		auto cond = bc.build(m_node.condition());
 		auto notCond = std::make_shared<awst::Not>();
@@ -79,8 +77,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 		notCond->wtype = awst::WType::boolType();
 		notCond->expr = std::move(cond);
 
-		auto breakBlock = std::make_shared<awst::Block>();
-		breakBlock->sourceLocation = m_loc;
+		auto breakBlock = awst::makeBlock(m_loc);
 		breakBlock->body.push_back(std::make_shared<awst::LoopExit>());
 
 		auto ifBreak = awst::makeIfElse(notCond, breakBlock, nullptr, m_loc);
@@ -138,8 +135,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 			loop->loopBody = buildBlock(bodyBlk, *block);
 		else
 		{
-			auto body = std::make_shared<awst::Block>();
-			body->sourceLocation = m_blk.makeLoc(m_node.body().location());
+			auto body = awst::makeBlock(m_blk.makeLoc(m_node.body().location()));
 			auto translated = buildStatement(bodyBlk, m_node.body());
 			if (translated) body->body.push_back(std::move(translated));
 			loop->loopBody = body;
@@ -158,8 +154,7 @@ SolForStatement::SolForStatement(
 
 std::vector<std::shared_ptr<awst::Statement>> SolForStatement::toAwst()
 {
-	auto outerBlock = std::make_shared<awst::Block>();
-	outerBlock->sourceLocation = m_loc;
+	auto outerBlock = awst::makeBlock(m_loc);
 
 	if (m_node.initializationExpression())
 	{
@@ -185,8 +180,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolForStatement::toAwst()
 	auto bodyBlk = m_blk.withLoop(loopCtx);
 	auto blkGuard = m_blk.builderCtx().pushScopeRaii(&bodyBlk);
 
-	auto loopBody = std::make_shared<awst::Block>();
-	loopBody->sourceLocation = m_loc;
+	auto loopBody = awst::makeBlock(m_loc);
 
 	if (auto const* block = dynamic_cast<Block const*>(&m_node.body()))
 	{

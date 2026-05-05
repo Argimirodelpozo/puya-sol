@@ -83,8 +83,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					auto createStmt = awst::makeExpressionStatement(
 						std::move(createCall), m_loc);
 
-					auto ifBranch = std::make_shared<awst::Block>();
-					ifBranch->sourceLocation = m_loc;
+					auto ifBranch = awst::makeBlock(m_loc);
 					ifBranch->body.push_back(std::move(createStmt));
 
 					m_ctx.prePendingStatements.push_back(awst::makeIfElse(

@@ -150,8 +150,7 @@ awst::ContractMethod ContractBuilder::buildClearProgram(
 	method.cref = m_sourceFile + "." + _contractName;
 	method.memberName = "clear_state_program";
 
-	auto body = std::make_shared<awst::Block>();
-	body->sourceLocation = method.sourceLocation;
+	auto body = awst::makeBlock(method.sourceLocation);
 
 	// return true
 	auto ret = awst::makeReturnStatement(awst::makeBoolConstant(true, method.sourceLocation), method.sourceLocation);

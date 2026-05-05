@@ -996,8 +996,7 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 		bodyStmts.push_back(awst::makeReturnStatement(nullptr, loc));
 	}
 
-	auto block = std::make_shared<awst::Block>();
-	block->sourceLocation = loc;
+	auto block = awst::makeBlock(loc);
 	block->body = std::move(bodyStmts);
 
 	auto sub = std::make_shared<awst::Subroutine>();

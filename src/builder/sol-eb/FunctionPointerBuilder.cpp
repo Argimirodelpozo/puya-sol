@@ -739,12 +739,10 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		}
 
 		// Body: switch(__funcptr_id) { case ID1: return func1(args); ... }
-		auto body = std::make_shared<awst::Block>();
-		body->sourceLocation = _loc;
+		auto body = awst::makeBlock(_loc);
 
 		// Build if/else chain (innermost = default: assert false)
-		auto defaultBlock = std::make_shared<awst::Block>();
-		defaultBlock->sourceLocation = _loc;
+		auto defaultBlock = awst::makeBlock(_loc);
 		{
 			// assert(false) — invalid function pointer ID
 			auto stmt = awst::makeExpressionStatement(awst::makeAssert(
@@ -764,8 +762,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 			auto cmp = awst::makeNumericCompare(std::move(idVar), awst::NumericComparison::Eq, std::move(idConst), _loc);
 
 			// If branch: call the actual function and return result
-			auto ifBlock = std::make_shared<awst::Block>();
-			ifBlock->sourceLocation = _loc;
+			auto ifBlock = awst::makeBlock(_loc);
 			{
 				auto call = std::make_shared<awst::SubroutineCallExpression>();
 				call->sourceLocation = _loc;
@@ -853,8 +850,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 			auto ifElse = awst::makeIfElse(
 				std::move(cmp), std::move(ifBlock), std::move(elseBlock), _loc);
 
-			auto newElse = std::make_shared<awst::Block>();
-			newElse->sourceLocation = _loc;
+			auto newElse = awst::makeBlock(_loc);
 			newElse->body.push_back(std::move(ifElse));
 			elseBlock = std::move(newElse);
 		}
@@ -909,11 +905,9 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 				selToId.args.push_back(selArg);
 			}
 
-			auto selBody = std::make_shared<awst::Block>();
-			selBody->sourceLocation = _loc;
+			auto selBody = awst::makeBlock(_loc);
 
-			auto selDefault = std::make_shared<awst::Block>();
-			selDefault->sourceLocation = _loc;
+			auto selDefault = awst::makeBlock(_loc);
 			{
 				auto stmt = awst::makeExpressionStatement(awst::makeAssert(
 					awst::makeBoolConstant(false, _loc), _loc,
@@ -942,16 +936,14 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 				cmp->rhs = std::move(methodConst);
 				cmp->op = awst::EqualityComparison::Eq;
 
-				auto thenBlock = std::make_shared<awst::Block>();
-				thenBlock->sourceLocation = _loc;
+				auto thenBlock = awst::makeBlock(_loc);
 				thenBlock->body.push_back(awst::makeReturnStatement(
 					awst::makeIntegerConstant(std::to_string(entry->id), _loc), _loc));
 
 				auto ifElse = awst::makeIfElse(
 					std::move(cmp), std::move(thenBlock), std::move(selElse), _loc);
 
-				auto newElse = std::make_shared<awst::Block>();
-				newElse->sourceLocation = _loc;
+				auto newElse = awst::makeBlock(_loc);
 				newElse->body.push_back(std::move(ifElse));
 				selElse = std::move(newElse);
 			}

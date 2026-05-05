@@ -107,8 +107,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			}
 
 			// Build body: return value
-			auto body = std::make_shared<awst::Block>();
-			body->sourceLocation = loc;
+			auto body = awst::makeBlock(loc);
 
 			std::shared_ptr<awst::Expression> readExpr;
 			if (var->isConstant())

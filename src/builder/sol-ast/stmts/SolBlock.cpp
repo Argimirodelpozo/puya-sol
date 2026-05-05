@@ -103,16 +103,14 @@ public:
 		auto const* loop = m_blk.enclosingLoop;
 		if (loop && loop->forLoopPost)
 		{
-			auto block = std::make_shared<awst::Block>();
-			block->sourceLocation = loc;
+			auto block = awst::makeBlock(loc);
 			block->body.push_back(loop->forLoopPost);
 			block->body.push_back(std::make_shared<awst::LoopContinue>());
 			return {block};
 		}
 		if (loop && loop->doWhileCondBreak)
 		{
-			auto block = std::make_shared<awst::Block>();
-			block->sourceLocation = loc;
+			auto block = awst::makeBlock(loc);
 			block->body.push_back(loop->doWhileCondBreak);
 			block->body.push_back(std::make_shared<awst::LoopContinue>());
 			return {block};
@@ -135,8 +133,7 @@ public:
 		// on the current block context.
 		if (m_blk.placeholderBody)
 		{
-			auto block = std::make_shared<awst::Block>();
-			block->sourceLocation = locOf(_n);
+			auto block = awst::makeBlock(locOf(_n));
 			for (auto const& s: m_blk.placeholderBody->body)
 				block->body.push_back(s);
 			return {block};
@@ -250,8 +247,7 @@ private:
 
 std::shared_ptr<awst::Block> SolBlock::toAwstBlock()
 {
-	auto awstBlock = std::make_shared<awst::Block>();
-	awstBlock->sourceLocation = m_loc;
+	auto awstBlock = awst::makeBlock(m_loc);
 
 	bool const wasUnchecked = m_blk.unchecked;
 	if (m_block.unchecked())
@@ -308,8 +304,7 @@ std::shared_ptr<awst::Statement> buildStatement(
 	auto results = buildStatementMulti(_blk, _stmt);
 	if (results.size() == 1) return results[0];
 	if (results.empty()) return nullptr;
-	auto block = std::make_shared<awst::Block>();
-	block->sourceLocation = _blk.makeLoc(_stmt.location());
+	auto block = awst::makeBlock(_blk.makeLoc(_stmt.location()));
 	for (auto& s: results)
 		if (s) block->body.push_back(std::move(s));
 	return block;

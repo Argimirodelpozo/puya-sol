@@ -354,8 +354,7 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 				loop->condition = std::move(cond);
 			}
 
-			auto body = std::make_shared<awst::Block>();
-			body->sourceLocation = _loc;
+			auto body = awst::makeBlock(_loc);
 
 			// In unchecked mode, Solidity wraps exponentiation modulo 2^256
 			// so that huge exponents (e.g. 2**1113) don't overflow biguint.
@@ -378,8 +377,7 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 					makeBinOp(makeVar(resultVar), awst::BigUIntBinaryOperator::Mult, makeVar(baseVar));
 				product = wrapMod256(std::move(product));
 
-				auto ifBlock = std::make_shared<awst::Block>();
-				ifBlock->sourceLocation = _loc;
+				auto ifBlock = awst::makeBlock(_loc);
 				ifBlock->body.push_back(makeAssign(resultVar, std::move(product)));
 
 				body->body.push_back(awst::makeIfElse(

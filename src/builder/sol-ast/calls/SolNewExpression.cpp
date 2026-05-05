@@ -113,8 +113,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 			auto cond = awst::makeNumericCompare(idxVar, awst::NumericComparison::Lt, sizeExpr, m_loc);
 			loop->condition = cond;
 
-			auto loopBody = std::make_shared<awst::Block>();
-			loopBody->sourceLocation = m_loc;
+			auto loopBody = awst::makeBlock(m_loc);
 
 			// extend with default
 			auto defaultElem = builder::StorageMapper::makeDefaultValue(elemType, m_loc);

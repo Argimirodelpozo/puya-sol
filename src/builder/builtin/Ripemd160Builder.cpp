@@ -123,13 +123,6 @@ std::shared_ptr<Statement> assignStmt(
 	return makeAssignmentStatement(std::move(target), std::move(value), loc);
 }
 
-std::shared_ptr<Block> makeBlock(SourceLocation const& loc)
-{
-	auto b = std::make_shared<Block>();
-	b->sourceLocation = loc;
-	return b;
-}
-
 std::shared_ptr<Expression> bytesLen(std::shared_ptr<Expression> b, SourceLocation const& loc)
 {
 	auto call = makeIntrinsicCall("len", WType::uint64Type(), loc);

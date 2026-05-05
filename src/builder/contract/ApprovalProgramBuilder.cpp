@@ -254,8 +254,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 	method.cref = m_sourceFile + "." + _contractName;
 	method.memberName = "approval_program";
 
-	auto body = std::make_shared<awst::Block>();
-	body->sourceLocation = method.sourceLocation;
+	auto body = awst::makeBlock(method.sourceLocation);
 
 	// Detect if the constructor needs auto-split into __postInit. Triggered
 	// by box state-var writes (direct or transitive), `new C()` deployments,
@@ -274,8 +273,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 		auto isCreate = awst::makeNumericCompare(appIdCheck, awst::NumericComparison::Eq, zero, method.sourceLocation);
 
-		auto createBlock = std::make_shared<awst::Block>();
-		createBlock->sourceLocation = method.sourceLocation;
+		auto createBlock = awst::makeBlock(method.sourceLocation);
 
 		// Helper: emit state variable initialization statements for one contract's state vars.
 		// Initializes global state variables with explicit initializers or zero/default values.
@@ -804,8 +802,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				setFunctionContext(paramContext, postInit.returnType);
 			}
 
-			auto postInitBody = std::make_shared<awst::Block>();
-			postInitBody->sourceLocation = method.sourceLocation;
+			auto postInitBody = awst::makeBlock(method.sourceLocation);
 
 			// Guard: assert(__ctor_pending == 1)
 			auto readPending = awst::makeIntrinsicCall("app_global_get", awst::WType::uint64Type(), method.sourceLocation);
@@ -1442,8 +1439,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 			auto isBareCall = awst::makeNumericCompare(std::move(numAppArgs), awst::NumericComparison::Eq, std::move(zero), method.sourceLocation);
 
-			auto bareBlock = std::make_shared<awst::Block>();
-			bareBlock->sourceLocation = method.sourceLocation;
+			auto bareBlock = awst::makeBlock(method.sourceLocation);
 			if (receiveFunc)
 				bareBlock->body.push_back(makeCall("__receive", receiveFunc, true));
 			else if (fallbackFunc)
@@ -1479,8 +1475,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			notMatch->wtype = awst::WType::boolType();
 			notMatch->expr = std::move(matchVarRead);
 
-			auto dispatchBlock = std::make_shared<awst::Block>();
-			dispatchBlock->sourceLocation = method.sourceLocation;
+			auto dispatchBlock = awst::makeBlock(method.sourceLocation);
 			dispatchBlock->body.push_back(makeCall("__fallback", fallbackFunc, false));
 
 			// Set __did_match = true so the approval returns true.

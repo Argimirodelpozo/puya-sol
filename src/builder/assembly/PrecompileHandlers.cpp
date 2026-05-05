@@ -389,8 +389,7 @@ void AssemblyBuilder::handleModExpRT(
 	loop->sourceLocation = _loc;
 	loop->condition = awst::makeNumericCompare(makeVar(expVar), awst::NumericComparison::Gt, makeConst("0"), _loc);
 
-	auto body = std::make_shared<awst::Block>();
-	body->sourceLocation = _loc;
+	auto body = awst::makeBlock(_loc);
 
 	{
 		auto expAnd1 = makeBigUIntBinOp(
@@ -400,8 +399,7 @@ void AssemblyBuilder::handleModExpRT(
 			makeVar(resultVar), awst::BigUIntBinaryOperator::Mult, makeVar(baseVar), _loc);
 		auto modResult = makeBigUIntBinOp(
 			std::move(product), awst::BigUIntBinaryOperator::Mod, makeVar(modVar), _loc);
-		auto ifBlock = std::make_shared<awst::Block>();
-		ifBlock->sourceLocation = _loc;
+		auto ifBlock = awst::makeBlock(_loc);
 		ifBlock->body.push_back(makeAssign(resultVar, std::move(modResult)));
 		body->body.push_back(awst::makeIfElse(
 			std::move(isOdd), std::move(ifBlock), nullptr, _loc));

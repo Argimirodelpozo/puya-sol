@@ -1267,8 +1267,7 @@ std::shared_ptr<awst::Block> FunctionInliner::deepCopyBlock(
 {
 	if (!_block)
 		return nullptr;
-	auto n = std::make_shared<awst::Block>();
-	n->sourceLocation = _block->sourceLocation;
+	auto n = awst::makeBlock(_block->sourceLocation);
 	n->label = _block->label;
 	n->comment = _block->comment;
 	for (auto const& stmt: _block->body)
@@ -1324,8 +1323,7 @@ std::shared_ptr<awst::Statement> FunctionInliner::deepCopyStmt(
 	if (type == "Block")
 	{
 		auto& src = static_cast<awst::Block const&>(*_stmt);
-		auto n = std::make_shared<awst::Block>();
-		n->sourceLocation = src.sourceLocation;
+		auto n = awst::makeBlock(src.sourceLocation);
 		n->label = src.label;
 		n->comment = src.comment;
 		for (auto const& s: src.body)

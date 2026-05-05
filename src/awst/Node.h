@@ -862,6 +862,14 @@ struct Block: Statement
 	std::optional<std::string> comment;
 };
 
+// Empty Block at `loc`. Caller appends to `body`.
+inline std::shared_ptr<Block> makeBlock(SourceLocation loc)
+{
+	auto node = std::make_shared<Block>();
+	node->sourceLocation = std::move(loc);
+	return node;
+}
+
 struct ExpressionStatement: Statement
 {
 	std::string nodeType() const override { return "ExpressionStatement"; }

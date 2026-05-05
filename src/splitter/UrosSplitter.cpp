@@ -102,8 +102,7 @@ std::shared_ptr<awst::Expression> makeDefaultValue(
 std::shared_ptr<awst::Block> makeStubBody(
 	awst::WType const* _ret, awst::SourceLocation const& _loc)
 {
-	auto block = std::make_shared<awst::Block>();
-	block->sourceLocation = _loc;
+	auto block = awst::makeBlock(_loc);
 	auto retVal = makeDefaultValue(_ret, _loc);
 	auto ret = awst::makeReturnStatement(std::move(retVal), _loc);
 	block->body.push_back(std::move(ret));
@@ -329,8 +328,7 @@ std::shared_ptr<awst::Block> makeForwardingStubBody(
 	awst::ContractMethod const& _m,
 	awst::SourceLocation const& _loc)
 {
-	auto block = std::make_shared<awst::Block>();
-	block->sourceLocation = _loc;
+	auto block = awst::makeBlock(_loc);
 
 	// Build the inner-txn ApplicationArgs tuple.
 	auto argsTuple = std::make_shared<awst::TupleExpression>();
@@ -470,8 +468,7 @@ awst::ContractMethod makeDelegateUpdateMethod(
 	m.cref = _cref;
 	m.memberName = "__delegate_update";
 
-	auto block = std::make_shared<awst::Block>();
-	block->sourceLocation = _loc;
+	auto block = awst::makeBlock(_loc);
 	block->body.push_back(awst::makeReturnStatement(nullptr, _loc));
 	m.body = block;
 

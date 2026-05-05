@@ -652,8 +652,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynArrayPadSmallElems
 	loop->sourceLocation = _loc;
 	loop->condition = awst::makeNumericCompare(iVar, awst::NumericComparison::Lt, nVar, _loc);
 
-	auto body = std::make_shared<awst::Block>();
-	body->sourceLocation = _loc;
+	auto body = awst::makeBlock(_loc);
 
 	// elem_off = 2 + i*sz
 	auto iScaled = awst::makeUInt64BinOp(
@@ -758,8 +757,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynArrayDynElems(
 	auto loop = std::make_shared<awst::WhileLoop>();
 	loop->sourceLocation = _loc;
 	loop->condition = awst::makeNumericCompare(iVar, awst::NumericComparison::Lt, nVar, _loc);
-	auto body = std::make_shared<awst::Block>();
-	body->sourceLocation = _loc;
+	auto body = awst::makeBlock(_loc);
 
 	// inner_arc4_off = extract_uint16(arr_b, 2 + i*2)
 	std::string innArcOffName = "__abi_dynelem_iaoff_" + suffix;
@@ -795,8 +793,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynArrayDynElems(
 			u64Const("1", _loc), _loc);
 		auto cond = awst::makeNumericCompare(iPlus1, awst::NumericComparison::Lt, nVar, _loc);
 
-		auto thenBlock = std::make_shared<awst::Block>();
-		thenBlock->sourceLocation = _loc;
+		auto thenBlock = awst::makeBlock(_loc);
 		auto iPlus1Again = awst::makeUInt64BinOp(iVar, awst::UInt64BinaryOperator::Add,
 			u64Const("1", _loc), _loc);
 		auto i1X2 = awst::makeUInt64BinOp(std::move(iPlus1Again),
@@ -929,8 +926,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeStaticArrayDynElems(
 	loop->sourceLocation = _loc;
 	loop->condition = awst::makeNumericCompare(iVar, awst::NumericComparison::Lt,
 		u64Const(std::to_string(_n), _loc), _loc);
-	auto body = std::make_shared<awst::Block>();
-	body->sourceLocation = _loc;
+	auto body = awst::makeBlock(_loc);
 
 	// inner_arc4_off = extract_uint16(arr_b, i*2)
 	std::string innArcOffName = "__abi_sadyn_iaoff_" + suffix;
@@ -959,8 +955,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeStaticArrayDynElems(
 			u64Const("1", _loc), _loc);
 		auto cond = awst::makeNumericCompare(iPlus1,
 			awst::NumericComparison::Lt, u64Const(std::to_string(_n), _loc), _loc);
-		auto thenBlock = std::make_shared<awst::Block>();
-		thenBlock->sourceLocation = _loc;
+		auto thenBlock = awst::makeBlock(_loc);
 		auto i1 = awst::makeUInt64BinOp(iVar, awst::UInt64BinaryOperator::Add,
 			u64Const("1", _loc), _loc);
 		auto i1X2 = awst::makeUInt64BinOp(std::move(i1),

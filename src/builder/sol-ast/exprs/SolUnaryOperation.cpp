@@ -134,8 +134,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 
 			auto assignTmp = awst::makeAssignmentStatement(tmpVar, std::move(mod), m_loc);
 
-			auto ifBody = std::make_shared<awst::Block>();
-			ifBody->sourceLocation = m_loc;
+			auto ifBody = awst::makeBlock(m_loc);
 			ifBody->body.push_back(std::move(assignTmp));
 
 			m_ctx.prePendingStatements.push_back(awst::makeIfElse(

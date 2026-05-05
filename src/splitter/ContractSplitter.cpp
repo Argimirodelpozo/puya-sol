@@ -853,8 +853,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 					// so the orchestrator's __finish method can read the result via gloads.
 					if (method.returnType != awst::WType::voidType() && method.body)
 					{
-						auto newBody = std::make_shared<awst::Block>();
-						newBody->sourceLocation = method.body->sourceLocation;
+						auto newBody = awst::makeBlock(method.body->sourceLocation);
 						for (auto const& stmt: method.body->body)
 						{
 							if (stmt && stmt->nodeType() == "ReturnStatement")
@@ -973,8 +972,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 		}
 
 		// Build method body: call the subroutine and return its result
-		auto body = std::make_shared<awst::Block>();
-		body->sourceLocation = sub->sourceLocation;
+		auto body = awst::makeBlock(sub->sourceLocation);
 
 		auto callExpr = std::make_shared<awst::SubroutineCallExpression>();
 		callExpr->sourceLocation = sub->sourceLocation;
@@ -1183,8 +1181,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 		bareCreate.cref = helper->id;
 		bareCreate.memberName = "__bare_create__";
 
-		auto body = std::make_shared<awst::Block>();
-		body->sourceLocation = loc;
+		auto body = awst::makeBlock(loc);
 		auto ret = awst::makeReturnStatement(nullptr, loc);
 		body->body.push_back(ret);
 		bareCreate.body = body;
@@ -1214,8 +1211,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 			awst::SubroutineArgument{"s", loc, awst::WType::bytesType()},
 		};
 
-		auto body = std::make_shared<awst::Block>();
-		body->sourceLocation = loc;
+		auto body = awst::makeBlock(loc);
 
 		auto makeIntrinsic = [&](
 			std::string op,
@@ -1284,8 +1280,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 
 	// Build approval program with ARC4 router
 	{
-		auto body = std::make_shared<awst::Block>();
-		body->sourceLocation = loc;
+		auto body = awst::makeBlock(loc);
 
 		auto routerExpr = std::make_shared<awst::ARC4Router>();
 		routerExpr->sourceLocation = loc;
@@ -1414,8 +1409,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 			entry.documentation = method.documentation;
 			entry.arc4MethodConfig = method.arc4MethodConfig;
 
-			auto body = std::make_shared<awst::Block>();
-			body->sourceLocation = loc;
+			auto body = awst::makeBlock(loc);
 
 			// 1. assert(app_global_get("f") == "") — flag must be clear
 			{
@@ -1496,8 +1490,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 			finish.cref = orch->id;
 			finish.memberName = finishName;
 
-			auto body = std::make_shared<awst::Block>();
-			body->sourceLocation = loc;
+			auto body = awst::makeBlock(loc);
 
 			// 1. assert(app_global_get("f") != "") — flag must be set
 			{
@@ -1581,8 +1574,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 		bareCreate.cref = orch->id;
 		bareCreate.memberName = "__bare_create__";
 
-		auto body = std::make_shared<awst::Block>();
-		body->sourceLocation = loc;
+		auto body = awst::makeBlock(loc);
 
 		// Initialize "f" flag to empty bytes so app_global_get returns bytes, not uint64
 		{
@@ -1613,8 +1605,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 		authMethod.cref = orch->id;
 		authMethod.memberName = "__auth__";
 
-		auto body = std::make_shared<awst::Block>();
-		body->sourceLocation = loc;
+		auto body = awst::makeBlock(loc);
 		auto ret = awst::makeReturnStatement(nullptr, loc);
 		body->body.push_back(ret);
 		authMethod.body = body;
@@ -1632,8 +1623,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 
 	// Approval program: ARC4 router (same as helpers)
 	{
-		auto body = std::make_shared<awst::Block>();
-		body->sourceLocation = loc;
+		auto body = awst::makeBlock(loc);
 
 		auto routerExpr = std::make_shared<awst::ARC4Router>();
 		routerExpr->sourceLocation = loc;
@@ -1762,8 +1752,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 				entry.documentation = method.documentation;
 				entry.arc4MethodConfig = method.arc4MethodConfig;
 
-				auto body = std::make_shared<awst::Block>();
-				body->sourceLocation = loc;
+				auto body = awst::makeBlock(loc);
 
 				// assert(app_global_get("f") == "")
 				{
@@ -1833,8 +1822,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 				finish.cref = orch->id;
 				finish.memberName = finishName;
 
-				auto body = std::make_shared<awst::Block>();
-				body->sourceLocation = loc;
+				auto body = awst::makeBlock(loc);
 
 				// assert(app_global_get("f") != "")
 				{
@@ -1923,8 +1911,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 		bareCreate.cref = orch->id;
 		bareCreate.memberName = "__bare_create__";
 
-		auto body = std::make_shared<awst::Block>();
-		body->sourceLocation = loc;
+		auto body = awst::makeBlock(loc);
 
 		if (hasDelegated)
 		{
@@ -1966,8 +1953,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 		authMethod.cref = orch->id;
 		authMethod.memberName = "__auth__";
 
-		auto body = std::make_shared<awst::Block>();
-		body->sourceLocation = loc;
+		auto body = awst::makeBlock(loc);
 		auto ret = awst::makeReturnStatement(nullptr, loc);
 		body->body.push_back(ret);
 		authMethod.body = body;
@@ -1985,8 +1971,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 
 	// Approval program: ARC4 router
 	{
-		auto body = std::make_shared<awst::Block>();
-		body->sourceLocation = loc;
+		auto body = awst::makeBlock(loc);
 
 		auto routerExpr = std::make_shared<awst::ARC4Router>();
 		routerExpr->sourceLocation = loc;
@@ -2129,8 +2114,7 @@ std::shared_ptr<awst::Block> ContractSplitter::buildStubBody(
 	awst::WType const* _returnType
 )
 {
-	auto body = std::make_shared<awst::Block>();
-	body->sourceLocation = _loc;
+	auto body = awst::makeBlock(_loc);
 
 	auto ret = awst::makeReturnStatement(nullptr, _loc);
 
@@ -2205,8 +2189,7 @@ std::vector<std::shared_ptr<awst::Statement>> ContractSplitter::buildValidationB
 	auto orchId = makeIntrinsic("app_global_get", {}, {makeBytesKey("o")}, awst::WType::uint64Type());
 	auto outerCond = makeNumericCmp(orchId, awst::NumericComparison::Gt, makeUint64("0"));
 
-	auto outerBody = std::make_shared<awst::Block>();
-	outerBody->sourceLocation = _loc;
+	auto outerBody = awst::makeBlock(_loc);
 
 	// 1. assert(global GroupSize >= 2)
 	{
@@ -2242,8 +2225,7 @@ std::vector<std::shared_ptr<awst::Statement>> ContractSplitter::buildValidationB
 		auto prevChunkId = makeIntrinsic("app_global_get", {}, {makeBytesKey("p")}, awst::WType::uint64Type());
 		auto cond = makeNumericCmp(prevChunkId, awst::NumericComparison::Gt, makeUint64("0"));
 
-		auto ifBody = std::make_shared<awst::Block>();
-		ifBody->sourceLocation = _loc;
+		auto ifBody = awst::makeBlock(_loc);
 
 		// assert(gtxns (txn GroupIndex - 1) ApplicationID == app_global_get("p"))
 		{
@@ -2292,8 +2274,7 @@ awst::ContractMethod ContractSplitter::buildClearProgram(
 	clearProg.memberName = "clear_state_program";
 	clearProg.returnType = awst::WType::boolType();
 
-	auto body = std::make_shared<awst::Block>();
-	body->sourceLocation = _loc;
+	auto body = awst::makeBlock(_loc);
 
 	auto returnStmt = awst::makeReturnStatement(awst::makeBoolConstant(true, _loc), _loc);
 	body->body.push_back(returnStmt);

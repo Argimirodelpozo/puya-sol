@@ -399,8 +399,7 @@ std::vector<std::shared_ptr<awst::Subroutine>> FunctionSplitter::splitFunction(
 		}
 
 		// Body: slice of original statements
-		auto body = std::make_shared<awst::Block>();
-		body->sourceLocation = _func->sourceLocation;
+		auto body = awst::makeBlock(_func->sourceLocation);
 		for (size_t i = chunkRanges[c].first; i < chunkRanges[c].second; ++i)
 			body->body.push_back(stmts[i]);
 
@@ -449,8 +448,7 @@ std::vector<std::shared_ptr<awst::Subroutine>> FunctionSplitter::splitFunction(
 
 	// ─── Rewrite original function to call chunks ────────────────────────
 
-	auto newBody = std::make_shared<awst::Block>();
-	newBody->sourceLocation = _func->sourceLocation;
+	auto newBody = awst::makeBlock(_func->sourceLocation);
 
 	for (size_t c = 0; c < chunks.size(); ++c)
 	{
@@ -1431,8 +1429,7 @@ void FunctionSplitter::convertToValueBasedIO(
 
 	// ── Rebuild parent dispatch with writeback ───────────────────────────
 
-	auto newBody = std::make_shared<awst::Block>();
-	newBody->sourceLocation = _parent->sourceLocation;
+	auto newBody = awst::makeBlock(_parent->sourceLocation);
 
 	// Build ref-param-filtered arg list for parent call construction
 	std::vector<awst::SubroutineArgument> parentNonRefArgs;

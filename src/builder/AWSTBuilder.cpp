@@ -774,8 +774,7 @@ void AWSTBuilder::translateContracts(
 				dummy.memberName = "__dummy";
 				dummy.returnType = awst::WType::boolType();
 
-				auto body = std::make_shared<awst::Block>();
-				body->sourceLocation = dummy.sourceLocation;
+				auto body = awst::makeBlock(dummy.sourceLocation);
 				auto ret = awst::makeReturnStatement(awst::makeBoolConstant(true, dummy.sourceLocation), dummy.sourceLocation);
 				body->body.push_back(ret);
 				dummy.body = body;

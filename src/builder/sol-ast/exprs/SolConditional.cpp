@@ -106,8 +106,7 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 		std::string tempName = "__cond_" + std::to_string(s_counter++);
 		auto resultType = e->wtype ? e->wtype : awst::WType::biguintType();
 
-		auto trueBlock = std::make_shared<awst::Block>();
-		trueBlock->sourceLocation = m_loc;
+		auto trueBlock = awst::makeBlock(m_loc);
 		for (auto& s: trueSideEffects)
 			trueBlock->body.push_back(std::move(s));
 		{
@@ -116,8 +115,7 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 				awst::makeAssignmentStatement(target, e->trueExpr, m_loc));
 		}
 
-		auto falseBlock = std::make_shared<awst::Block>();
-		falseBlock->sourceLocation = m_loc;
+		auto falseBlock = awst::makeBlock(m_loc);
 		for (auto& s: falseSideEffects)
 			falseBlock->body.push_back(std::move(s));
 		{

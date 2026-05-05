@@ -56,15 +56,13 @@ void ContractBuilder::buildStorageDispatch(
 		slotArg.sourceLocation = loc;
 		readSub.args.push_back(slotArg);
 
-		auto body = std::make_shared<awst::Block>();
-		body->sourceLocation = loc;
+		auto body = awst::makeBlock(loc);
 
 		// Build if/else chain for known slots
 		// Start from innermost (default case) and wrap outward
 		// Default: read from global state using slot key "s" + itob(slot)
 		// This supports dynamic slot-based storage references (assembly .slot)
-		auto defaultBlock = std::make_shared<awst::Block>();
-		defaultBlock->sourceLocation = loc;
+		auto defaultBlock = awst::makeBlock(loc);
 		{
 			// Use a single large box "__dyn_storage" for all dynamic slots.
 			// Each slot occupies 32 bytes at offset (slot % 256) * 32.
@@ -112,8 +110,7 @@ void ContractBuilder::buildStorageDispatch(
 			auto cmp = awst::makeNumericCompare(slotVar, awst::NumericComparison::Eq, makeUint64(std::to_string(sv.slot)), loc);
 
 			// If branch: return app_global_get(varName) as biguint
-			auto ifBlock = std::make_shared<awst::Block>();
-			ifBlock->sourceLocation = loc;
+			auto ifBlock = awst::makeBlock(loc);
 			{
 				auto get = awst::makeIntrinsicCall("app_global_get", awst::WType::bytesType(), loc);
 				get->stackArgs.push_back(makeBytes(sv.name));
@@ -140,8 +137,7 @@ void ContractBuilder::buildStorageDispatch(
 			auto ifElse = awst::makeIfElse(
 				std::move(cmp), std::move(ifBlock), std::move(elseBlock), loc);
 
-			auto newElse = std::make_shared<awst::Block>();
-			newElse->sourceLocation = loc;
+			auto newElse = awst::makeBlock(loc);
 			newElse->body.push_back(std::move(ifElse));
 			elseBlock = std::move(newElse);
 		}
@@ -176,12 +172,10 @@ void ContractBuilder::buildStorageDispatch(
 		valArg.sourceLocation = loc;
 		writeSub.args.push_back(valArg);
 
-		auto body = std::make_shared<awst::Block>();
-		body->sourceLocation = loc;
+		auto body = awst::makeBlock(loc);
 
 		// Build if/else chain for known slots
-		auto defaultBlock = std::make_shared<awst::Block>();
-		defaultBlock->sourceLocation = loc;
+		auto defaultBlock = awst::makeBlock(loc);
 		// Default: write to global state using slot key "s" + itob(slot)
 		{
 			// Build key: concat("s", itob(__slot))
@@ -251,8 +245,7 @@ void ContractBuilder::buildStorageDispatch(
 
 			auto cmp = awst::makeNumericCompare(slotVar, awst::NumericComparison::Eq, makeUint64(std::to_string(sv.slot)), loc);
 
-			auto ifBlock = std::make_shared<awst::Block>();
-			ifBlock->sourceLocation = loc;
+			auto ifBlock = awst::makeBlock(loc);
 			{
 				// app_global_put(varName, pad32(value_as_bytes))
 				// Pad to 32 bytes to match EVM slot semantics
@@ -285,8 +278,7 @@ void ContractBuilder::buildStorageDispatch(
 			auto ifElse = awst::makeIfElse(
 				std::move(cmp), std::move(ifBlock), std::move(elseBlock), loc);
 
-			auto newElse = std::make_shared<awst::Block>();
-			newElse->sourceLocation = loc;
+			auto newElse = awst::makeBlock(loc);
 			newElse->body.push_back(std::move(ifElse));
 			elseBlock = std::move(newElse);
 		}
