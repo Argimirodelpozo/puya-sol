@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol.AaveOracle.approval_program() -> uint64:
 main:
-    intcblock 0 1 32 2
-    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 "SPOKE" "_sources" "DECIMALS" "__ctor_pending" "DESCRIPTION" "DEPLOYER" 0x8000000000000000000000000000000000000000000000000000000000000000
+    intcblock 0 1 32 24
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 "SPOKE" 0x151f7c75 "_sources" "DECIMALS" "__ctor_pending" "DESCRIPTION" "DEPLOYER" 0x8000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -47,7 +47,7 @@ __postInit:
     dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
@@ -61,7 +61,7 @@ __postInit:
     intc_0 // 0
     app_global_put
     bytec_3 // "_sources"
-    intc_3 // 2
+    pushint 2
     box_create
     pop
     bytec 4 // "DECIMALS"
@@ -70,7 +70,7 @@ __postInit:
     bytec 6 // "DESCRIPTION"
     pushbytes 0x
     app_global_put
-    bytec_2 // "SPOKE"
+    bytec_1 // "SPOKE"
     bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     app_global_put
     bytec 7 // "DEPLOYER"
@@ -110,21 +110,37 @@ setSpoke_ternary_merge@4:
     app_global_get_ex
     assert // check DEPLOYER exists
     ==
+    bnz setSpoke_bool_true@6
+    intc_3 // 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_0 // 0
+    bytec 7 // "DEPLOYER"
+    app_global_get_ex
+    assert // check DEPLOYER exists
+    ==
+    bz setSpoke_bool_false@7
+
+setSpoke_bool_true@6:
+    intc_1 // 1
+
+setSpoke_bool_merge@8:
     assert // OnlyDeployer
     dupn 2
     bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
     assert // InvalidAddress
     intc_0 // 0
-    bytec_2 // "SPOKE"
+    bytec_1 // "SPOKE"
     app_global_get_ex
     assert // check SPOKE exists
     bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     ==
     assert // SpokeAlreadySet
     itxn_begin
-    dup
-    pushint 24
+    intc_3 // 24
     extract_uint64
     pushint 6
     itxn_field TypeEnum
@@ -136,13 +152,30 @@ setSpoke_ternary_merge@4:
     pushbytes 0x93a95ce5 // method "ORACLE()address"
     itxn_field ApplicationArgs
     itxn_submit
+    global CurrentApplicationAddress
     itxn LastLog
     extract 4 0
-    global CurrentApplicationAddress
     ==
+    bnz setSpoke_bool_true@11
+    intc_3 // 24
+    bzero
+    global CurrentApplicationID
+    itob
+    concat
+    itxn LastLog
+    extract 4 0
+    ==
+    bz setSpoke_bool_false@12
+
+setSpoke_bool_true@11:
+    intc_1 // 1
+
+setSpoke_bool_merge@13:
     assert // OracleMismatch
-    bytec_2 // "SPOKE"
+    bytec_1 // "SPOKE"
     dig 1
+    dup
+    cover 2
     app_global_put
     pushbytes 0x6b666041 // method "SetSpoke(uint8[32])"
     swap
@@ -150,6 +183,14 @@ setSpoke_ternary_merge@4:
     log
     intc_1 // 1
     return
+
+setSpoke_bool_false@12:
+    intc_0 // 0
+    b setSpoke_bool_merge@13
+
+setSpoke_bool_false@7:
+    intc_0 // 0
+    b setSpoke_bool_merge@8
 
 setSpoke_ternary_false@3:
     intc_0 // 0
@@ -182,14 +223,31 @@ setReserveSource_ternary_merge@4:
     assert // not payable
     txn Sender
     intc_0 // 0
-    bytec_2 // "SPOKE"
+    bytec_1 // "SPOKE"
     app_global_get_ex
     assert // check SPOKE exists
     ==
+    bnz setReserveSource_bool_true@6
+    intc_3 // 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_0 // 0
+    bytec_1 // "SPOKE"
+    app_global_get_ex
+    assert // check SPOKE exists
+    ==
+    bz setReserveSource_bool_false@7
+
+setReserveSource_bool_true@6:
+    intc_1 // 1
+
+setReserveSource_bool_merge@8:
     assert // OnlySpoke
     itxn_begin
     dupn 2
-    pushint 24
+    intc_3 // 24
     extract_uint64
     pushint 6
     itxn_field TypeEnum
@@ -240,6 +298,10 @@ setReserveSource_ternary_merge@4:
     intc_1 // 1
     return
 
+setReserveSource_bool_false@7:
+    intc_0 // 0
+    b setReserveSource_bool_merge@8
+
 setReserveSource_ternary_false@3:
     intc_0 // 0
     b setReserveSource_ternary_merge@4
@@ -273,7 +335,7 @@ getReservePrice_ternary_merge@4:
     intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -298,7 +360,7 @@ getReservesPrices:
     cover 2
     intc_2 // 32
     *
-    intc_3 // 2
+    pushint 2
     +
     swap
     len
@@ -385,7 +447,7 @@ getReservesPrices_while_top@8:
     bzero
     b|
     swap
-    intc_3 // 2
+    pushint 2
     +
     dig 6
     swap
@@ -398,7 +460,7 @@ getReservesPrices_while_top@8:
     b getReservesPrices_while_top@8
 
 getReservesPrices_after_while@10:
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     dig 4
     concat
     log
@@ -446,7 +508,7 @@ getReserveSource_ternary_merge@4:
     bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -475,7 +537,7 @@ DECIMALS_ternary_merge@4:
     app_global_get_ex
     assert // check DECIMALS exists
     itob
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -509,7 +571,7 @@ DESCRIPTION_ternary_merge@4:
     extract 6 2
     swap
     concat
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -534,10 +596,10 @@ SPOKE_ternary_merge@4:
     !
     assert // not payable
     intc_0 // 0
-    bytec_2 // "SPOKE"
+    bytec_1 // "SPOKE"
     app_global_get_ex
     assert // check SPOKE exists
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -575,7 +637,7 @@ _getSourcePrice:
     !=
     assert // InvalidSource
     itxn_begin
-    pushint 24
+    intc_3 // 24
     extract_uint64
     pushint 6
     itxn_field TypeEnum

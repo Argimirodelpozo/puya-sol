@@ -1962,7 +1962,7 @@
                   "immutable": true
                 },
                 "condition": {
-                  "_type": "BytesComparisonExpression",
+                  "_type": "BooleanBinaryOperation",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
                     "line": 1276,
@@ -1976,33 +1976,11 @@
                     "name": "bool",
                     "immutable": true
                   },
-                  "lhs": {
-                    "_type": "IntrinsicCall",
+                  "left": {
+                    "_type": "BytesComparisonExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
                       "line": 1276,
-                      "end_line": 1286,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "account",
-                      "immutable": true
-                    },
-                    "op_code": "txn",
-                    "immediates": [
-                      "Sender"
-                    ],
-                    "stack_args": []
-                  },
-                  "operator": "==",
-                  "rhs": {
-                    "_type": "AppStateExpression",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
-                      "line": 1290,
                       "end_line": 1298,
                       "comment_lines": 0,
                       "column": null,
@@ -2010,11 +1988,33 @@
                     },
                     "wtype": {
                       "_type": "WType",
-                      "name": "account",
+                      "name": "bool",
                       "immutable": true
                     },
-                    "key": {
-                      "_type": "BytesConstant",
+                    "lhs": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                        "line": 1276,
+                        "end_line": 1286,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "account",
+                        "immutable": true
+                      },
+                      "op_code": "txn",
+                      "immediates": [
+                        "Sender"
+                      ],
+                      "stack_args": []
+                    },
+                    "operator": "==",
+                    "rhs": {
+                      "_type": "AppStateExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
                         "line": 1290,
@@ -2025,13 +2025,200 @@
                       },
                       "wtype": {
                         "_type": "WType",
-                        "name": "state_key",
+                        "name": "account",
                         "immutable": true
                       },
-                      "value": "L`6_cPgzA$",
-                      "encoding": "utf8"
+                      "key": {
+                        "_type": "BytesConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                          "line": 1290,
+                          "end_line": 1298,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "state_key",
+                          "immutable": true
+                        },
+                        "value": "L`6_cPgzA$",
+                        "encoding": "utf8"
+                      },
+                      "exists_assertion_message": "check DEPLOYER exists"
+                    }
+                  },
+                  "op": "or",
+                  "right": {
+                    "_type": "BytesComparisonExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                      "line": 1276,
+                      "end_line": 1298,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
                     },
-                    "exists_assertion_message": "check DEPLOYER exists"
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "bool",
+                      "immutable": true
+                    },
+                    "lhs": {
+                      "_type": "ReinterpretCast",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                        "line": 1276,
+                        "end_line": 1298,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "account",
+                        "immutable": true
+                      },
+                      "expr": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                          "line": 1276,
+                          "end_line": 1298,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "concat",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                              "line": 1276,
+                              "end_line": 1298,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "bzero",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                                  "line": 1276,
+                                  "end_line": 1298,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 24,
+                                "teal_alias": null
+                              }
+                            ]
+                          },
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                              "line": 1276,
+                              "end_line": 1298,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "itob",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                                  "line": 1276,
+                                  "end_line": 1298,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "op_code": "global",
+                                "immediates": [
+                                  "CallerApplicationID"
+                                ],
+                                "stack_args": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    "operator": "==",
+                    "rhs": {
+                      "_type": "AppStateExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                        "line": 1290,
+                        "end_line": 1298,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "account",
+                        "immutable": true
+                      },
+                      "key": {
+                        "_type": "BytesConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                          "line": 1290,
+                          "end_line": 1298,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "state_key",
+                          "immutable": true
+                        },
+                        "value": "L`6_cPgzA$",
+                        "encoding": "utf8"
+                      },
+                      "exists_assertion_message": "check DEPLOYER exists"
+                    }
                   }
                 },
                 "error_message": "OnlyDeployer",
@@ -3210,7 +3397,7 @@
                   "immutable": true
                 },
                 "condition": {
-                  "_type": "BytesComparisonExpression",
+                  "_type": "BooleanBinaryOperation",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
                     "line": 1434,
@@ -3224,23 +3411,45 @@
                     "name": "bool",
                     "immutable": true
                   },
-                  "lhs": {
-                    "_type": "ReinterpretCast",
+                  "left": {
+                    "_type": "BytesComparisonExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
                       "line": 1434,
-                      "end_line": 1456,
+                      "end_line": 1473,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
                     },
                     "wtype": {
                       "_type": "WType",
-                      "name": "account",
+                      "name": "bool",
                       "immutable": true
                     },
-                    "expr": {
+                    "lhs": {
                       "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                        "line": 1468,
+                        "end_line": 1472,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "account",
+                        "immutable": true
+                      },
+                      "op_code": "global",
+                      "immediates": [
+                        "CurrentApplicationAddress"
+                      ],
+                      "stack_args": []
+                    },
+                    "operator": "==",
+                    "rhs": {
+                      "_type": "ReinterpretCast",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
                         "line": 1434,
@@ -3250,63 +3459,255 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "BytesWType",
-                        "name": "bytes",
-                        "immutable": true,
-                        "length": null
+                        "_type": "WType",
+                        "name": "account",
+                        "immutable": true
                       },
-                      "op_code": "extract",
-                      "immediates": [
-                        4,
-                        0
-                      ],
-                      "stack_args": [
-                        {
-                          "_type": "IntrinsicCall",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
-                            "line": 1434,
-                            "end_line": 1456,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "op_code": "itxn",
-                          "immediates": [
-                            "LastLog"
-                          ],
-                          "stack_args": []
-                        }
-                      ]
+                      "expr": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                          "line": 1434,
+                          "end_line": 1456,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "extract",
+                        "immediates": [
+                          4,
+                          0
+                        ],
+                        "stack_args": [
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                              "line": 1434,
+                              "end_line": 1456,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "itxn",
+                            "immediates": [
+                              "LastLog"
+                            ],
+                            "stack_args": []
+                          }
+                        ]
+                      }
                     }
                   },
-                  "operator": "==",
-                  "rhs": {
-                    "_type": "IntrinsicCall",
+                  "op": "or",
+                  "right": {
+                    "_type": "BytesComparisonExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
-                      "line": 1468,
-                      "end_line": 1472,
+                      "line": 1434,
+                      "end_line": 1473,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
                     },
                     "wtype": {
                       "_type": "WType",
-                      "name": "account",
+                      "name": "bool",
                       "immutable": true
                     },
-                    "op_code": "global",
-                    "immediates": [
-                      "CurrentApplicationAddress"
-                    ],
-                    "stack_args": []
+                    "lhs": {
+                      "_type": "ReinterpretCast",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                        "line": 1434,
+                        "end_line": 1473,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "account",
+                        "immutable": true
+                      },
+                      "expr": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                          "line": 1434,
+                          "end_line": 1473,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "concat",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                              "line": 1434,
+                              "end_line": 1473,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "bzero",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                                  "line": 1434,
+                                  "end_line": 1473,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 24,
+                                "teal_alias": null
+                              }
+                            ]
+                          },
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                              "line": 1434,
+                              "end_line": 1473,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "itob",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                                  "line": 1434,
+                                  "end_line": 1473,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "op_code": "global",
+                                "immediates": [
+                                  "CurrentApplicationID"
+                                ],
+                                "stack_args": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    "operator": "==",
+                    "rhs": {
+                      "_type": "ReinterpretCast",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                        "line": 1434,
+                        "end_line": 1456,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "account",
+                        "immutable": true
+                      },
+                      "expr": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                          "line": 1434,
+                          "end_line": 1456,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "extract",
+                        "immediates": [
+                          4,
+                          0
+                        ],
+                        "stack_args": [
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                              "line": 1434,
+                              "end_line": 1456,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "itxn",
+                            "immediates": [
+                              "LastLog"
+                            ],
+                            "stack_args": []
+                          }
+                        ]
+                      }
+                    }
                   }
                 },
                 "error_message": "OracleMismatch",
@@ -3927,7 +4328,7 @@
                   "immutable": true
                 },
                 "condition": {
-                  "_type": "BytesComparisonExpression",
+                  "_type": "BooleanBinaryOperation",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
                     "line": 1660,
@@ -3941,33 +4342,11 @@
                     "name": "bool",
                     "immutable": true
                   },
-                  "lhs": {
-                    "_type": "IntrinsicCall",
+                  "left": {
+                    "_type": "BytesComparisonExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
                       "line": 1660,
-                      "end_line": 1670,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "account",
-                      "immutable": true
-                    },
-                    "op_code": "txn",
-                    "immediates": [
-                      "Sender"
-                    ],
-                    "stack_args": []
-                  },
-                  "operator": "==",
-                  "rhs": {
-                    "_type": "AppStateExpression",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
-                      "line": 1674,
                       "end_line": 1679,
                       "comment_lines": 0,
                       "column": null,
@@ -3975,11 +4354,33 @@
                     },
                     "wtype": {
                       "_type": "WType",
-                      "name": "account",
+                      "name": "bool",
                       "immutable": true
                     },
-                    "key": {
-                      "_type": "BytesConstant",
+                    "lhs": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                        "line": 1660,
+                        "end_line": 1670,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "account",
+                        "immutable": true
+                      },
+                      "op_code": "txn",
+                      "immediates": [
+                        "Sender"
+                      ],
+                      "stack_args": []
+                    },
+                    "operator": "==",
+                    "rhs": {
+                      "_type": "AppStateExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
                         "line": 1674,
@@ -3990,13 +4391,200 @@
                       },
                       "wtype": {
                         "_type": "WType",
-                        "name": "state_key",
+                        "name": "account",
                         "immutable": true
                       },
-                      "value": "Q&3M!MF",
-                      "encoding": "utf8"
+                      "key": {
+                        "_type": "BytesConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                          "line": 1674,
+                          "end_line": 1679,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "state_key",
+                          "immutable": true
+                        },
+                        "value": "Q&3M!MF",
+                        "encoding": "utf8"
+                      },
+                      "exists_assertion_message": "check SPOKE exists"
+                    }
+                  },
+                  "op": "or",
+                  "right": {
+                    "_type": "BytesComparisonExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                      "line": 1660,
+                      "end_line": 1679,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
                     },
-                    "exists_assertion_message": "check SPOKE exists"
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "bool",
+                      "immutable": true
+                    },
+                    "lhs": {
+                      "_type": "ReinterpretCast",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                        "line": 1660,
+                        "end_line": 1679,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "account",
+                        "immutable": true
+                      },
+                      "expr": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                          "line": 1660,
+                          "end_line": 1679,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "concat",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                              "line": 1660,
+                              "end_line": 1679,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "bzero",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                                  "line": 1660,
+                                  "end_line": 1679,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 24,
+                                "teal_alias": null
+                              }
+                            ]
+                          },
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                              "line": 1660,
+                              "end_line": 1679,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "itob",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                                  "line": 1660,
+                                  "end_line": 1679,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "op_code": "global",
+                                "immediates": [
+                                  "CallerApplicationID"
+                                ],
+                                "stack_args": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    "operator": "==",
+                    "rhs": {
+                      "_type": "AppStateExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                        "line": 1674,
+                        "end_line": 1679,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "account",
+                        "immutable": true
+                      },
+                      "key": {
+                        "_type": "BytesConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol",
+                          "line": 1674,
+                          "end_line": 1679,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "state_key",
+                          "immutable": true
+                        },
+                        "value": "Q&3M!MF",
+                        "encoding": "utf8"
+                      },
+                      "exists_assertion_message": "check SPOKE exists"
+                    }
                   }
                 },
                 "error_message": "OnlySpoke",
