@@ -1306,12 +1306,11 @@ std::shared_ptr<awst::Statement> FunctionInliner::deepCopyStmt(
 	if (type == "IfElse")
 	{
 		auto& src = static_cast<awst::IfElse const&>(*_stmt);
-		auto n = std::make_shared<awst::IfElse>();
-		n->sourceLocation = src.sourceLocation;
-		n->condition = deepCopyExpr(src.condition);
-		n->ifBranch = deepCopyBlock(src.ifBranch);
-		n->elseBranch = deepCopyBlock(src.elseBranch);
-		return n;
+		return awst::makeIfElse(
+			deepCopyExpr(src.condition),
+			deepCopyBlock(src.ifBranch),
+			deepCopyBlock(src.elseBranch),
+			src.sourceLocation);
 	}
 	if (type == "WhileLoop")
 	{

@@ -68,17 +68,15 @@ void AssemblyBuilder::buildStatement(
 				else
 				{
 					// Original IfElse path for non-revert if-bodies
-					auto ifElse = std::make_shared<awst::IfElse>();
-					ifElse->sourceLocation = loc;
-					ifElse->condition = ensureBool(buildExpression(*_node.condition), loc);
+					auto cond = ensureBool(buildExpression(*_node.condition), loc);
 
 					auto ifBlock = std::make_shared<awst::Block>();
 					ifBlock->sourceLocation = loc;
 					for (auto const& innerStmt: _node.body.statements)
 						buildStatement(innerStmt, ifBlock->body);
-					ifElse->ifBranch = std::move(ifBlock);
 
-					_out.push_back(std::move(ifElse));
+					_out.push_back(awst::makeIfElse(
+						std::move(cond), std::move(ifBlock), nullptr, loc));
 				}
 			}
 			else if constexpr (std::is_same_v<T, solidity::yul::ForLoop>)

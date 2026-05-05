@@ -808,11 +808,8 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynArrayDynElems(
 			awst::UInt64BinaryOperator::Add, std::move(nxtArcOff), _loc);
 		thenBlock->body.push_back(assignFresh(innEndVar, std::move(nxtStart), _loc));
 
-		auto ifStmt = std::make_shared<awst::IfElse>();
-		ifStmt->sourceLocation = _loc;
-		ifStmt->condition = std::move(cond);
-		ifStmt->ifBranch = std::move(thenBlock);
-		body->body.push_back(std::move(ifStmt));
+		body->body.push_back(awst::makeIfElse(
+			std::move(cond), std::move(thenBlock), nullptr, _loc));
 	}
 
 	// inner_size = inner_end - inner_start
@@ -970,11 +967,8 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeStaticArrayDynElems(
 			awst::UInt64BinaryOperator::Mult, u64Const("2", _loc), _loc);
 		auto nxtArcOff = bytesExtractU16(arrVar, std::move(i1X2), _loc);
 		thenBlock->body.push_back(assignFresh(innEndVar, std::move(nxtArcOff), _loc));
-		auto ifStmt = std::make_shared<awst::IfElse>();
-		ifStmt->sourceLocation = _loc;
-		ifStmt->condition = std::move(cond);
-		ifStmt->ifBranch = std::move(thenBlock);
-		body->body.push_back(std::move(ifStmt));
+		body->body.push_back(awst::makeIfElse(
+			std::move(cond), std::move(thenBlock), nullptr, _loc));
 	}
 
 	// inner_size = inner_end - inner_start

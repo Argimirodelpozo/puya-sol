@@ -83,10 +83,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 		breakBlock->sourceLocation = m_loc;
 		breakBlock->body.push_back(std::make_shared<awst::LoopExit>());
 
-		auto ifBreak = std::make_shared<awst::IfElse>();
-		ifBreak->sourceLocation = m_loc;
-		ifBreak->condition = notCond;
-		ifBreak->ifBranch = breakBlock;
+		auto ifBreak = awst::makeIfElse(notCond, breakBlock, nullptr, m_loc);
 
 		LoopContext loopCtx;
 		loopCtx.doWhileCondBreak = ifBreak;

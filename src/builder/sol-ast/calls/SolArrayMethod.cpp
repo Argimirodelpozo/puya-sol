@@ -87,12 +87,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					ifBranch->sourceLocation = m_loc;
 					ifBranch->body.push_back(std::move(createStmt));
 
-					auto ifElse = std::make_shared<awst::IfElse>();
-					ifElse->sourceLocation = m_loc;
-					ifElse->condition = std::move(notExists);
-					ifElse->ifBranch = std::move(ifBranch);
-					ifElse->elseBranch = nullptr;
-					m_ctx.prePendingStatements.push_back(std::move(ifElse));
+					m_ctx.prePendingStatements.push_back(awst::makeIfElse(
+						std::move(notExists), std::move(ifBranch), nullptr, m_loc));
 				};
 
 				if (memberName == "push" && !m_call.arguments().empty())

@@ -904,6 +904,22 @@ struct IfElse: Statement
 	std::shared_ptr<Block> elseBranch; // nullable
 };
 
+// `if (condition) ifBranch else elseBranch` — IfElse is a Statement,
+// elseBranch may be null.
+inline std::shared_ptr<IfElse> makeIfElse(
+	std::shared_ptr<Expression> condition,
+	std::shared_ptr<Block> ifBranch,
+	std::shared_ptr<Block> elseBranch,
+	SourceLocation loc)
+{
+	auto node = std::make_shared<IfElse>();
+	node->sourceLocation = std::move(loc);
+	node->condition = std::move(condition);
+	node->ifBranch = std::move(ifBranch);
+	node->elseBranch = std::move(elseBranch);
+	return node;
+}
+
 struct WhileLoop: Statement
 {
 	std::string nodeType() const override { return "WhileLoop"; }

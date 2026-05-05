@@ -850,11 +850,8 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 				}
 			}
 
-			auto ifElse = std::make_shared<awst::IfElse>();
-			ifElse->sourceLocation = _loc;
-			ifElse->condition = std::move(cmp);
-			ifElse->ifBranch = std::move(ifBlock);
-			ifElse->elseBranch = std::move(elseBlock);
+			auto ifElse = awst::makeIfElse(
+				std::move(cmp), std::move(ifBlock), std::move(elseBlock), _loc);
 
 			auto newElse = std::make_shared<awst::Block>();
 			newElse->sourceLocation = _loc;
@@ -950,11 +947,8 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 				thenBlock->body.push_back(awst::makeReturnStatement(
 					awst::makeIntegerConstant(std::to_string(entry->id), _loc), _loc));
 
-				auto ifElse = std::make_shared<awst::IfElse>();
-				ifElse->sourceLocation = _loc;
-				ifElse->condition = std::move(cmp);
-				ifElse->ifBranch = std::move(thenBlock);
-				ifElse->elseBranch = std::move(selElse);
+				auto ifElse = awst::makeIfElse(
+					std::move(cmp), std::move(thenBlock), std::move(selElse), _loc);
 
 				auto newElse = std::make_shared<awst::Block>();
 				newElse->sourceLocation = _loc;

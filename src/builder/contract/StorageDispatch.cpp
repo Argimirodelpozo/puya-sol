@@ -137,11 +137,8 @@ void ContractBuilder::buildStorageDispatch(
 				ifBlock->body.push_back(std::move(ret));
 			}
 
-			auto ifElse = std::make_shared<awst::IfElse>();
-			ifElse->sourceLocation = loc;
-			ifElse->condition = std::move(cmp);
-			ifElse->ifBranch = std::move(ifBlock);
-			ifElse->elseBranch = std::move(elseBlock);
+			auto ifElse = awst::makeIfElse(
+				std::move(cmp), std::move(ifBlock), std::move(elseBlock), loc);
 
 			auto newElse = std::make_shared<awst::Block>();
 			newElse->sourceLocation = loc;
@@ -285,11 +282,8 @@ void ContractBuilder::buildStorageDispatch(
 				ifBlock->body.push_back(std::move(ret));
 			}
 
-			auto ifElse = std::make_shared<awst::IfElse>();
-			ifElse->sourceLocation = loc;
-			ifElse->condition = std::move(cmp);
-			ifElse->ifBranch = std::move(ifBlock);
-			ifElse->elseBranch = std::move(elseBlock);
+			auto ifElse = awst::makeIfElse(
+				std::move(cmp), std::move(ifBlock), std::move(elseBlock), loc);
 
 			auto newElse = std::make_shared<awst::Block>();
 			newElse->sourceLocation = loc;

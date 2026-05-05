@@ -382,12 +382,8 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 				ifBlock->sourceLocation = _loc;
 				ifBlock->body.push_back(makeAssign(resultVar, std::move(product)));
 
-				auto ifStmt = std::make_shared<awst::IfElse>();
-				ifStmt->sourceLocation = _loc;
-				ifStmt->condition = std::move(isOdd);
-				ifStmt->ifBranch = std::move(ifBlock);
-
-				body->body.push_back(std::move(ifStmt));
+				body->body.push_back(awst::makeIfElse(
+					std::move(isOdd), std::move(ifBlock), nullptr, _loc));
 			}
 
 			// exp = exp / 2

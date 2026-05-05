@@ -138,11 +138,8 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			ifBody->sourceLocation = m_loc;
 			ifBody->body.push_back(std::move(assignTmp));
 
-			auto ifElse = std::make_shared<awst::IfElse>();
-			ifElse->sourceLocation = m_loc;
-			ifElse->condition = std::move(isNonZero);
-			ifElse->ifBranch = std::move(ifBody);
-			m_ctx.prePendingStatements.push_back(std::move(ifElse));
+			m_ctx.prePendingStatements.push_back(awst::makeIfElse(
+				std::move(isNonZero), std::move(ifBody), nullptr, m_loc));
 
 			negated = tmpVar;
 		}

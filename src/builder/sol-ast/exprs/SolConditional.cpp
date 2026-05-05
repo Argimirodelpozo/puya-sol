@@ -126,12 +126,8 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 				awst::makeAssignmentStatement(target, e->falseExpr, m_loc));
 		}
 
-		auto ifElse = std::make_shared<awst::IfElse>();
-		ifElse->sourceLocation = m_loc;
-		ifElse->condition = e->condition;
-		ifElse->ifBranch = std::move(trueBlock);
-		ifElse->elseBranch = std::move(falseBlock);
-		m_ctx.prePendingStatements.push_back(std::move(ifElse));
+		m_ctx.prePendingStatements.push_back(awst::makeIfElse(
+			e->condition, std::move(trueBlock), std::move(falseBlock), m_loc));
 
 		return awst::makeVarExpression(tempName, resultType, m_loc);
 	}

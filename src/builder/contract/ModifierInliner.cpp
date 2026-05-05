@@ -405,11 +405,8 @@ void ContractBuilder::inlineModifiers(
 				auto branchBody = std::make_shared<awst::Block>();
 				branchBody->sourceLocation = flagLoc;
 				branchBody->body.push_back(makeBreak());
-				auto ifStmt = std::make_shared<awst::IfElse>();
-				ifStmt->sourceLocation = flagLoc;
-				ifStmt->condition = std::move(cond);
-				ifStmt->ifBranch = std::move(branchBody);
-				return ifStmt;
+				return awst::makeIfElse(
+					std::move(cond), std::move(branchBody), nullptr, flagLoc);
 			};
 
 			// Replace ReturnStatement → { flag=true; break; }

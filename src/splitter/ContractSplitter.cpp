@@ -2273,18 +2273,10 @@ std::vector<std::shared_ptr<awst::Statement>> ContractSplitter::buildValidationB
 			));
 		}
 
-		auto ifElse = std::make_shared<awst::IfElse>();
-		ifElse->sourceLocation = _loc;
-		ifElse->condition = cond;
-		ifElse->ifBranch = ifBody;
-		outerBody->body.push_back(ifElse);
+		outerBody->body.push_back(awst::makeIfElse(cond, ifBody, nullptr, _loc));
 	}
 
-	auto outerIf = std::make_shared<awst::IfElse>();
-	outerIf->sourceLocation = _loc;
-	outerIf->condition = outerCond;
-	outerIf->ifBranch = outerBody;
-	stmts.push_back(outerIf);
+	stmts.push_back(awst::makeIfElse(outerCond, outerBody, nullptr, _loc));
 
 	return stmts;
 }

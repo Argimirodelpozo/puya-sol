@@ -403,11 +403,8 @@ void AssemblyBuilder::handleModExpRT(
 		auto ifBlock = std::make_shared<awst::Block>();
 		ifBlock->sourceLocation = _loc;
 		ifBlock->body.push_back(makeAssign(resultVar, std::move(modResult)));
-		auto ifStmt = std::make_shared<awst::IfElse>();
-		ifStmt->sourceLocation = _loc;
-		ifStmt->condition = std::move(isOdd);
-		ifStmt->ifBranch = std::move(ifBlock);
-		body->body.push_back(std::move(ifStmt));
+		body->body.push_back(awst::makeIfElse(
+			std::move(isOdd), std::move(ifBlock), nullptr, _loc));
 	}
 
 	body->body.push_back(makeAssign(expVar,

@@ -1327,12 +1327,8 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			body->body.push_back(std::move(fmpStmt));
 		}
 
-		auto ifCreate = std::make_shared<awst::IfElse>();
-		ifCreate->sourceLocation = method.sourceLocation;
-		ifCreate->condition = isCreate;
-		ifCreate->ifBranch = createBlock;
-
-		body->body.push_back(ifCreate);
+		body->body.push_back(awst::makeIfElse(
+			isCreate, createBlock, nullptr, method.sourceLocation));
 	}
 
 	// Transient state vars live in scratch slot TRANSIENT_SLOT (packed blob,
@@ -1454,11 +1450,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				bareBlock->body.push_back(makeCall("__fallback", fallbackFunc, true));
 			bareBlock->body.push_back(makeReturnTrue());
 
-			auto ifBare = std::make_shared<awst::IfElse>();
-			ifBare->sourceLocation = method.sourceLocation;
-			ifBare->condition = std::move(isBareCall);
-			ifBare->ifBranch = std::move(bareBlock);
-			body->body.push_back(std::move(ifBare));
+			body->body.push_back(awst::makeIfElse(
+				std::move(isBareCall), std::move(bareBlock), nullptr,
+				method.sourceLocation));
 		}
 
 		// Step 2: Non-bare call — run the ARC4 router.
@@ -1495,11 +1489,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			auto assignTrue = awst::makeAssignmentStatement(std::move(matchVarWrite), makeTrueLit(), method.sourceLocation);
 			dispatchBlock->body.push_back(std::move(assignTrue));
 
-			auto ifNoMatch = std::make_shared<awst::IfElse>();
-			ifNoMatch->sourceLocation = method.sourceLocation;
-			ifNoMatch->condition = std::move(notMatch);
-			ifNoMatch->ifBranch = std::move(dispatchBlock);
-			body->body.push_back(std::move(ifNoMatch));
+			body->body.push_back(awst::makeIfElse(
+				std::move(notMatch), std::move(dispatchBlock), nullptr,
+				method.sourceLocation));
 		}
 
 		// Step 4: return __did_match_routing
