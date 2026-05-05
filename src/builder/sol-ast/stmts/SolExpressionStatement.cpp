@@ -221,13 +221,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 							std::shared_ptr<awst::Expression> result;
 							if (dstLen > srcLen)
 							{
-								auto padSize = awst::makeIntegerConstant(std::to_string(dstLen - srcLen), m_loc);
-								auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
-								pad->stackArgs.push_back(std::move(padSize));
-								auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
-								cat->stackArgs.push_back(std::move(toBytes));
-								cat->stackArgs.push_back(std::move(pad));
-								result = std::move(cat);
+								result = awst::makeRightPad(std::move(toBytes), dstLen - srcLen, m_loc);
 							}
 							else
 							{
@@ -293,13 +287,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 								std::shared_ptr<awst::Expression> widened;
 								if (dstLen > srcLen)
 								{
-									auto padSize = awst::makeIntegerConstant(std::to_string(dstLen - srcLen), m_loc);
-									auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
-									pad->stackArgs.push_back(std::move(padSize));
-									auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
-									cat->stackArgs.push_back(std::move(toBytes));
-									cat->stackArgs.push_back(std::move(pad));
-									widened = std::move(cat);
+									widened = awst::makeRightPad(std::move(toBytes), dstLen - srcLen, m_loc);
 								}
 								else
 								{

@@ -423,15 +423,8 @@ std::shared_ptr<awst::Expression> SolAssignment::handleBytesElementAssignment(
 	// Coerce value to single byte
 	if (_value->wtype == awst::WType::uint64Type())
 	{
-		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
-		itob->stackArgs.push_back(std::move(_value));
-		auto seven = awst::makeIntegerConstant("7", m_loc);
-		auto one = awst::makeIntegerConstant("1", m_loc);
-		auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
-		extract->stackArgs.push_back(std::move(itob));
-		extract->stackArgs.push_back(std::move(seven));
-		extract->stackArgs.push_back(std::move(one));
-		_value = std::move(extract);
+		auto itob = awst::makeItob(std::move(_value), m_loc);
+		_value = awst::makeExtract(std::move(itob), 7, 1, m_loc);
 	}
 	else if (_value->wtype && _value->wtype->kind() == awst::WTypeKind::Bytes
 		&& _value->wtype != awst::WType::bytesType())

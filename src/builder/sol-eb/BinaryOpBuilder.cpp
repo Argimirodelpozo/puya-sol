@@ -51,9 +51,7 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 				auto toBytes = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), _loc);
 				expr = std::move(toBytes);
 			}
-			auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-			btoi->stackArgs.push_back(std::move(expr));
-			operand = std::move(btoi);
+			operand = awst::makeBtoi(std::move(expr), _loc);
 		}
 	};
 
@@ -82,11 +80,8 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 				return;
 			}
 
-			auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-			itob->stackArgs.push_back(std::move(operand));
-
-			auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
-			operand = std::move(cast);
+			auto itob = awst::makeItob(std::move(operand), _loc);
+			operand = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
 		}
 	};
 
@@ -247,10 +242,7 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 			auto shiftAmt = TypeCoercion::implicitNumericCast(std::move(_right), awst::WType::uint64Type(), _loc);
 
 			// bzero(32) — 256-bit zero buffer
-			auto thirtyTwo = awst::makeIntegerConstant("32", _loc);
-
-			auto bzero = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-			bzero->stackArgs.push_back(std::move(thirtyTwo));
+			auto bzero = awst::makeBzero(32, _loc);
 
 			// 255 - n: setbit uses MSB-first ordering, so bit (255-n) = 2^n
 			auto twoFiftyFive = awst::makeIntegerConstant("255", _loc);

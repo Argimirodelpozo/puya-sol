@@ -90,10 +90,8 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		auto operand = std::move(_operand);
 		if (operand->wtype == awst::WType::uint64Type())
 		{
-			auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
-			itob->stackArgs.push_back(std::move(operand));
-			auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
-			operand = std::move(cast);
+			auto itob = awst::makeItob(std::move(operand), m_loc);
+			operand = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 		}
 
 		// Mask to N bits first (uint64 two's complement may be wider)
@@ -161,19 +159,11 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		if (bits <= 64)
 		{
 			auto castBytes = awst::makeReinterpretCast(std::move(negated), awst::WType::bytesType(), m_loc);
-
-			auto eight = awst::makeIntegerConstant("8", m_loc);
-			auto bz = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
-			bz->stackArgs.push_back(eight);
-			auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
-			cat->stackArgs.push_back(std::move(bz));
-			cat->stackArgs.push_back(std::move(castBytes));
-			auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), m_loc);
-			lenCall->stackArgs.push_back(cat);
-			auto eight2 = awst::makeIntegerConstant("8", m_loc);
+			auto cat = awst::makeLeftPad(std::move(castBytes), 8, m_loc);
+			auto lenCall = awst::makeLen(cat, m_loc);
 			auto start = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), m_loc);
 			start->stackArgs.push_back(std::move(lenCall));
-			start->stackArgs.push_back(eight2);
+			start->stackArgs.push_back(awst::makeIntegerConstant("8", m_loc));
 			auto extract = awst::makeIntrinsicCall("extract_uint64", awst::WType::uint64Type(), m_loc);
 			extract->stackArgs.push_back(cat);
 			extract->stackArgs.push_back(std::move(start));
@@ -404,10 +394,8 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 			auto val = std::move(base);
 			if (val->wtype == awst::WType::uint64Type())
 			{
-				auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
-				itob->stackArgs.push_back(std::move(val));
-				auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
-				val = std::move(cast);
+				auto itob = awst::makeItob(std::move(val), m_loc);
+				val = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 			}
 
 			// Mask to N bits
@@ -466,18 +454,11 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 			if (signedBits <= 64)
 			{
 				auto castBytes = awst::makeReinterpretCast(std::move(mod), awst::WType::bytesType(), m_loc);
-				auto eight = awst::makeIntegerConstant("8", m_loc);
-				auto bz = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
-				bz->stackArgs.push_back(eight);
-				auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
-				cat->stackArgs.push_back(std::move(bz));
-				cat->stackArgs.push_back(std::move(castBytes));
-				auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), m_loc);
-				lenCall->stackArgs.push_back(cat);
-				auto eight2 = awst::makeIntegerConstant("8", m_loc);
+				auto cat = awst::makeLeftPad(std::move(castBytes), 8, m_loc);
+				auto lenCall = awst::makeLen(cat, m_loc);
 				auto start = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), m_loc);
 				start->stackArgs.push_back(std::move(lenCall));
-				start->stackArgs.push_back(eight2);
+				start->stackArgs.push_back(awst::makeIntegerConstant("8", m_loc));
 				auto extract = awst::makeIntrinsicCall("extract_uint64", awst::WType::uint64Type(), m_loc);
 				extract->stackArgs.push_back(cat);
 				extract->stackArgs.push_back(std::move(start));

@@ -44,9 +44,7 @@ void AssemblyBuilder::handleEcRecover(
 
 	// Cast biguint → bytes → btoi → uint64
 	auto vBytes = awst::makeReinterpretCast(std::move(vMinus27), awst::WType::bytesType(), _loc);
-
-	auto recoveryId = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-	recoveryId->stackArgs.push_back(std::move(vBytes));
+	auto recoveryId = awst::makeBtoi(std::move(vBytes), _loc);
 
 	// 3. Call ecdsa_pk_recover Secp256k1
 	// Returns (bytes, bytes) — pubkey_x and pubkey_y, each 32 bytes
@@ -88,31 +86,16 @@ void AssemblyBuilder::handleEcRecover(
 	pubkeyY->index = 1;
 
 	// 5. concat(pubkey_x, pubkey_y) → 64 bytes
-	auto pubkeyConcat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-	pubkeyConcat->stackArgs.push_back(std::move(pubkeyX));
-	pubkeyConcat->stackArgs.push_back(std::move(pubkeyY));
+	auto pubkeyConcat = awst::makeConcat(std::move(pubkeyX), std::move(pubkeyY), _loc);
 
 	// 6. keccak256(concat) → 32 bytes
-	auto hash = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), _loc);
-	hash->stackArgs.push_back(std::move(pubkeyConcat));
+	auto hash = awst::makeKeccak256(std::move(pubkeyConcat), _loc);
 
 	// 7. extract3(hash, 12, 20) → last 20 bytes (Ethereum address)
-	auto off12 = awst::makeIntegerConstant("12", _loc);
-	auto len20 = awst::makeIntegerConstant("20", _loc);
-
-	auto addr = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	addr->stackArgs.push_back(std::move(hash));
-	addr->stackArgs.push_back(std::move(off12));
-	addr->stackArgs.push_back(std::move(len20));
+	auto addr = awst::makeExtract(std::move(hash), 12, 20, _loc);
 
 	// 8. Left-pad to 32 bytes: concat(bzero(12), addr)
-	auto pad12 = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-	auto twelve = awst::makeIntegerConstant("12", _loc);
-	pad12->stackArgs.push_back(std::move(twelve));
-
-	auto paddedAddr = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-	paddedAddr->stackArgs.push_back(std::move(pad12));
-	paddedAddr->stackArgs.push_back(std::move(addr));
+	auto paddedAddr = awst::makeLeftPad(std::move(addr), 12, _loc);
 
 	// 9. Cast to biguint and store
 	auto addrBiguint = awst::makeReinterpretCast(std::move(paddedAddr), awst::WType::biguintType(), _loc);

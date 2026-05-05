@@ -358,8 +358,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						varName, awst::WType::bytesType(), kind, loc);
 
 					// len - 1
-					auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), loc);
-					lenCall->stackArgs.push_back(readVal);
+					auto lenCall = awst::makeLen(readVal, loc);
 
 					auto one = awst::makeIntegerConstant("1", loc);
 					auto newLen = awst::makeUInt64BinOp(std::move(lenCall), awst::UInt64BinaryOperator::Sub, std::move(one), loc);
@@ -819,8 +818,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMemoryArray(
 			auto byteVal = val;
 			if (byteVal->wtype == awst::WType::uint64Type())
 			{
-				auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
-				itob->stackArgs.push_back(std::move(byteVal));
+				auto itob = awst::makeItob(std::move(byteVal), m_loc);
 
 				auto seven = awst::makeIntegerConstant("7", m_loc);
 				auto one = awst::makeIntegerConstant("1", m_loc);
@@ -934,8 +932,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMappingElementArrayLengt
 	// least 2 bytes when the box exists, "exists implies len>=2" — guard
 	// with a `len(box) > 0` ternary to avoid extract_uint16 on an empty.
 	auto bytes = boxRead();
-	auto lenOfBytes = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), m_loc);
-	lenOfBytes->stackArgs.push_back(bytes);
+	auto lenOfBytes = awst::makeLen(bytes, m_loc);
 	auto isNonEmpty = awst::makeNumericCompare(
 		std::move(lenOfBytes),
 		awst::NumericComparison::Gt,
@@ -960,8 +957,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMappingElementArrayLengt
 		std::move(delta), m_loc);
 
 	// 2-byte big-endian = extract3(itob(new_len), 6, 2)
-	auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
-	itob->stackArgs.push_back(std::move(newLen));
+	auto itob = awst::makeItob(std::move(newLen), m_loc);
 	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 	extract->stackArgs.push_back(std::move(itob));
 	extract->stackArgs.push_back(awst::makeIntegerConstant("6", m_loc));

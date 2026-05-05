@@ -72,13 +72,11 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgsHeadTail(
 			headParts.push_back(toPackedBytes(_ctx, std::move(expr), solType, false, _loc));
 			continue;
 		}
-		auto offsetItob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-		offsetItob->stackArgs.push_back(currentOffset);
+		auto offsetItob = awst::makeItob(currentOffset, _loc);
 		headParts.push_back(leftPadBytes(std::move(offsetItob), 32, _loc));
 
 		auto tail = encodeDynamicTail(_ctx, std::move(expr), solType, _loc);
-		auto tailLen = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
-		tailLen->stackArgs.push_back(tail);
+		auto tailLen = awst::makeLen(tail, _loc);
 
 		auto newOffset = std::make_shared<awst::UInt64BinaryOperation>();
 		newOffset->sourceLocation = _loc;
@@ -108,13 +106,8 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::uint64FromAbiWord(
 	awst::SourceLocation const& _loc)
 {
 	// Last 8 bytes of a 32-byte word: extract(_word32, 24, 8) → btoi
-	auto last8 = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-	last8->immediates = {24, 8};
-	last8->stackArgs.push_back(std::move(_word32));
-
-	auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-	btoi->stackArgs.push_back(std::move(last8));
-	return btoi;
+	auto last8 = awst::makeExtract(std::move(_word32), 24, 8, _loc);
+	return awst::makeBtoi(std::move(last8), _loc);
 }
 
 // ── decodeAbiValue: decode one value from EVM ABI bytes ──
@@ -228,8 +221,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 				elemBytes->stackArgs.push_back(std::move(byteCount));
 
 				// arc4Header = extract3(itob(elemCount), 6, 2) — uint16 BE length
-				auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-				itob->stackArgs.push_back(std::move(elemCount));
+				auto itob = awst::makeItob(std::move(elemCount), _loc);
 				auto header = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 				header->stackArgs.push_back(std::move(itob));
 				header->stackArgs.push_back(awst::makeIntegerConstant("6", _loc));
@@ -298,8 +290,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::rightPadTo32(
 	// Actually simpler: concat(expr, bzero(31)), then extract first ((len + 31) / 32 * 32) bytes
 
 	// len = len(expr)
-	auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
-	lenCall->stackArgs.push_back(_expr);
+	auto lenCall = awst::makeLen(_expr, _loc);
 
 	// padded_len = ((len + 31) / 32) * 32
 	auto len31 = std::make_shared<awst::UInt64BinaryOperation>();
@@ -324,12 +315,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::rightPadTo32(
 	paddedLen->right = awst::makeIntegerConstant("32", _loc);
 
 	// concat(expr, bzero(31)) — ensure enough zeros for any padding
-	auto zeros = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-	zeros->stackArgs.push_back(awst::makeIntegerConstant("31", _loc));
-
-	auto padded = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-	padded->stackArgs.push_back(std::move(_expr));
-	padded->stackArgs.push_back(std::move(zeros));
+	auto padded = awst::makeRightPad(std::move(_expr), 31, _loc);
 
 	// extract3(padded, 0, paddedLen)
 	auto result = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
@@ -368,11 +354,8 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 			}
 
 			// length as 32-byte uint256
-			auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
-			lenCall->stackArgs.push_back(bytesExpr);
-
-			auto lenItob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-			lenItob->stackArgs.push_back(std::move(lenCall));
+			auto lenCall = awst::makeLen(bytesExpr, _loc);
+			auto lenItob = awst::makeItob(std::move(lenCall), _loc);
 			auto lenPadded = leftPadBytes(std::move(lenItob), 32, _loc);
 
 			// data right-padded to 32-byte boundary
@@ -457,8 +440,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 				auto arrayExpr = _expr;
 				auto asBytes = awst::makeReinterpretCast(arrayExpr, awst::WType::bytesType(), _loc);
 
-				auto rawLen = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
-				rawLen->stackArgs.push_back(asBytes);
+				auto rawLen = awst::makeLen(asBytes, _loc);
 
 				auto two = awst::makeIntegerConstant("2", _loc);
 
@@ -468,8 +450,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 
 				auto lenExpr = awst::makeUInt64BinOp(std::move(contentBytes), awst::UInt64BinaryOperator::FloorDiv, std::move(elemSize), _loc);
 
-				auto lenItob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-				lenItob->stackArgs.push_back(std::move(lenExpr));
+				auto lenItob = awst::makeItob(std::move(lenExpr), _loc);
 				auto lenPadded = leftPadBytes(std::move(lenItob), 32, _loc);
 
 				auto stripHeader = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
@@ -582,13 +563,11 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 					headParts.push_back(toPackedBytes(_ctx, std::move(fieldValue), fieldSolType, false, _loc));
 				else
 				{
-					auto offItob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-					offItob->stackArgs.push_back(currentOffset);
+					auto offItob = awst::makeItob(currentOffset, _loc);
 					headParts.push_back(leftPadBytes(std::move(offItob), 32, _loc));
 
 					auto tail = encodeDynamicTail(_ctx, std::move(fieldValue), fieldSolType, _loc);
-					auto tailLen = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
-					tailLen->stackArgs.push_back(tail);
+					auto tailLen = awst::makeLen(tail, _loc);
 
 					auto newOffset = std::make_shared<awst::UInt64BinaryOperation>();
 					newOffset->sourceLocation = _loc;

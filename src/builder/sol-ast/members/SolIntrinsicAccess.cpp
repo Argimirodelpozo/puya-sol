@@ -112,10 +112,8 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		cond->falseExpr = std::move(zeroVal);
 
 		// Promote to biguint
-		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
-		itob->stackArgs.push_back(std::move(cond));
-		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
-		return cast;
+		auto itob = awst::makeItob(std::move(cond), m_loc);
+		return awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 	}
 
 	// msg.sig → first 4 bytes of msg.data. In ARC4 routing the selector is
@@ -161,16 +159,12 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 			auto slotBytes = awst::makeIntrinsicCall("txna", awst::WType::bytesType(), m_loc);
 			slotBytes->immediates = {std::string("ApplicationArgs"), slot};
 
-			auto bzeroSize = awst::makeIntegerConstant("0", m_loc);
-			auto emptyBytes = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
-			emptyBytes->stackArgs.push_back(std::move(bzeroSize));
-
 			auto slotChoice = std::make_shared<awst::ConditionalExpression>();
 			slotChoice->sourceLocation = m_loc;
 			slotChoice->wtype = awst::WType::bytesType();
 			slotChoice->condition = std::move(slotPresent);
 			slotChoice->trueExpr = std::move(slotBytes);
-			slotChoice->falseExpr = std::move(emptyBytes);
+			slotChoice->falseExpr = awst::makeBzero(0, m_loc);
 
 			if (!calldataConcat)
 			{
@@ -185,9 +179,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 			}
 		}
 
-		auto bzeroSize2 = awst::makeIntegerConstant("0", m_loc);
-		auto emptyAll = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
-		emptyAll->stackArgs.push_back(std::move(bzeroSize2));
+		auto emptyAll = awst::makeBzero(0, m_loc);
 
 		auto cond = std::make_shared<awst::ConditionalExpression>();
 		cond->sourceLocation = m_loc;

@@ -624,11 +624,8 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	{
 		auto varA = awst::makeVarExpression(_func.parameters()[0]->name(), m_typeMapper.map(_func.parameters()[0]->type()), loc);
 		auto varB = awst::makeVarExpression(_func.parameters()[1]->name(), m_typeMapper.map(_func.parameters()[1]->type()), loc);
-		auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), loc);
-		concat->stackArgs.push_back(std::move(varA));
-		concat->stackArgs.push_back(std::move(varB));
-		auto hash = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), loc);
-		hash->stackArgs.push_back(std::move(concat));
+		auto concat = awst::makeConcat(std::move(varA), std::move(varB), loc);
+		auto hash = awst::makeKeccak256(std::move(concat), loc);
 		auto cast = awst::makeReinterpretCast(std::move(hash), sub->returnType, loc);
 		auto ret = awst::makeReturnStatement(std::move(cast), loc);
 		sub->body->body.push_back(std::move(ret));

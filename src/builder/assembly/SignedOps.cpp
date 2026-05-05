@@ -25,8 +25,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTload(
 
 	// Convert slot to uint64 offset: slot * 32
 	auto slotBytes = awst::makeReinterpretCast(std::move(slot), awst::WType::bytesType(), _loc);
-	auto slotU64 = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-	slotU64->stackArgs.push_back(std::move(slotBytes));
+	auto slotU64 = awst::makeBtoi(std::move(slotBytes), _loc);
 
 	auto thirtyTwo = awst::makeIntegerConstant("32", _loc);
 
@@ -63,8 +62,7 @@ void AssemblyBuilder::handleTstore(
 
 	// Convert slot to uint64 offset: slot * 32
 	auto slotBytes = awst::makeReinterpretCast(std::move(slot), awst::WType::bytesType(), _loc);
-	auto slotU64 = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-	slotU64->stackArgs.push_back(std::move(slotBytes));
+	auto slotU64 = awst::makeBtoi(std::move(slotBytes), _loc);
 
 	auto thirtyTwo = awst::makeIntegerConstant("32", _loc);
 
@@ -73,12 +71,8 @@ void AssemblyBuilder::handleTstore(
 	// Convert value to 32 bytes: b| with bzero(32)
 	auto valueBytes = awst::makeReinterpretCast(std::move(value), awst::WType::bytesType(), _loc);
 
-	auto zeros = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-	auto sz = awst::makeIntegerConstant("32", _loc);
-	zeros->stackArgs.push_back(std::move(sz));
-
 	auto padded = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), _loc);
-	padded->stackArgs.push_back(std::move(zeros));
+	padded->stackArgs.push_back(awst::makeBzero(32, _loc));
 	padded->stackArgs.push_back(std::move(valueBytes));
 
 	// replace3(load TRANSIENT_SLOT, offset, padded_value)

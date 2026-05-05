@@ -308,11 +308,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 
 	// bytes.length → len intrinsic
 	if (base->wtype == awst::WType::bytesType())
-	{
-		auto e = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), m_loc);
-		e->stackArgs.push_back(std::move(base));
-		return e;
-	}
+		return awst::makeLen(std::move(base), m_loc);
 
 	// array.length → ArrayLength node
 	auto e = std::make_shared<awst::ArrayLength>();

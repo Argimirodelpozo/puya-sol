@@ -23,131 +23,8 @@ using njson = nlohmann::ordered_json;
 namespace
 {
 
-/// ABI selector for the orchestrator's `dispatch()byte[]` method.
-/// sha512_256("dispatch()byte[]")[:4] = 0x617da41d.
-constexpr uint8_t DISPATCH_SELECTOR[4] = {0x61, 0x7d, 0xa4, 0x1d};
-
 /// AVM TypeEnum constant for ApplicationCall (`appl`).
-constexpr int APPL_TYPE_ENUM = 6;
 constexpr int TXN_TYPE_APPL = 6;
-
-/// Build `txn GroupIndex` reading the current txn's group index.
-std::shared_ptr<awst::IntrinsicCall> txnGroupIndex(awst::SourceLocation const& _loc)
-{
-	auto n = awst::makeIntrinsicCall("txn", awst::WType::uint64Type(), _loc);
-	n->immediates = {std::string("GroupIndex")};
-	return n;
-}
-
-/// Build `txn GroupIndex + 1` (uint64).
-std::shared_ptr<awst::Expression> nextGroupIndex(awst::SourceLocation const& _loc)
-{
-	return awst::makeUInt64BinOp(
-		txnGroupIndex(_loc),
-		awst::UInt64BinaryOperator::Add,
-		awst::makeIntegerConstant("1", _loc, awst::WType::uint64Type()),
-		_loc);
-}
-
-/// Build the four "the orc" guard assertions and prepend them to a stub
-/// body. Each split method's stub validates that the IMMEDIATELY-NEXT
-/// transaction in the group is `<TMPL_UROS_ORCH_APP_ID>.dispatch()` —
-/// otherwise the call reverts. Without this guard, calling a stubbed
-/// method directly would silently return a default value, fooling the
-/// caller into thinking a state mutation occurred.
-///
-/// Asserts emitted, in order:
-///   1. `Txn.GroupIndex + 1 < Global.GroupSize`        (next txn exists)
-///   2. `gtxn[next].TypeEnum == 6 (appl)`              (next is app call)
-///   3. `gtxn[next].ApplicationID == TMPL_UROS_ORCH_APP_ID`
-///                                                     (the right orch)
-///   4. `gtxn[next].ApplicationArgs[0] == 0x617da41d`  (calling dispatch)
-std::vector<std::shared_ptr<awst::Statement>> makeOrcGuardStatements(
-	awst::SourceLocation const& _loc)
-{
-	using awst::makeIntrinsicCall;
-	using awst::makeIntegerConstant;
-	using awst::makeNumericCompare;
-	using awst::makeAssert;
-	using awst::makeExpressionStatement;
-
-	std::vector<std::shared_ptr<awst::Statement>> guards;
-
-	// 1. next_idx < Global.GroupSize
-	{
-		auto groupSize = makeIntrinsicCall("global", awst::WType::uint64Type(), _loc);
-		groupSize->immediates = {std::string("GroupSize")};
-		auto cond = makeNumericCompare(
-			nextGroupIndex(_loc),
-			awst::NumericComparison::Lt,
-			std::move(groupSize),
-			_loc);
-		guards.push_back(makeExpressionStatement(
-			makeAssert(std::move(cond), _loc, std::string("uros: no orch txn after stub")),
-			_loc));
-	}
-
-	// 2. gtxns TypeEnum == 6 (appl)
-	{
-		auto typeEnum = makeIntrinsicCall("gtxns", awst::WType::uint64Type(), _loc);
-		typeEnum->immediates = {std::string("TypeEnum")};
-		typeEnum->stackArgs.push_back(nextGroupIndex(_loc));
-		auto cond = makeNumericCompare(
-			std::move(typeEnum),
-			awst::NumericComparison::Eq,
-			makeIntegerConstant(std::to_string(APPL_TYPE_ENUM), _loc, awst::WType::uint64Type()),
-			_loc);
-		guards.push_back(makeExpressionStatement(
-			makeAssert(std::move(cond), _loc, std::string("uros: next txn not appl")),
-			_loc));
-	}
-
-	// 3. gtxns ApplicationID == TemplateVar(UROS_ORCH_APP_ID)
-	{
-		auto appId = makeIntrinsicCall("gtxns", awst::WType::uint64Type(), _loc);
-		appId->immediates = {std::string("ApplicationID")};
-		appId->stackArgs.push_back(nextGroupIndex(_loc));
-
-		auto orchTmpl = std::make_shared<awst::TemplateVar>();
-		orchTmpl->sourceLocation = _loc;
-		orchTmpl->wtype = awst::WType::uint64Type();
-		// puya doesn't prepend template_vars_prefix to TemplateVar.name
-		// — it expects the full prefixed key, then matches against
-		// options.template_variables (which IS prefix-prepended). So we
-		// store the fully-qualified "TMPL_UROS_ORCH_APP_ID" here.
-		orchTmpl->name = "TMPL_UROS_ORCH_APP_ID";
-
-		auto cond = makeNumericCompare(
-			std::move(appId), awst::NumericComparison::Eq, std::move(orchTmpl), _loc);
-		guards.push_back(makeExpressionStatement(
-			makeAssert(std::move(cond), _loc, std::string("uros: wrong orch app")),
-			_loc));
-	}
-
-	// 4. gtxnsa ApplicationArgs 0 == 0x617da41d (dispatch selector)
-	{
-		auto appArg0 = makeIntrinsicCall("gtxnsa", awst::WType::bytesType(), _loc);
-		appArg0->immediates = {std::string("ApplicationArgs"), 0};
-		appArg0->stackArgs.push_back(nextGroupIndex(_loc));
-
-		std::vector<uint8_t> selBytes(
-			DISPATCH_SELECTOR, DISPATCH_SELECTOR + sizeof(DISPATCH_SELECTOR));
-		auto selConst = awst::makeBytesConstant(std::move(selBytes), _loc);
-
-		auto cmp = std::make_shared<awst::BytesComparisonExpression>();
-		cmp->sourceLocation = _loc;
-		cmp->wtype = awst::WType::boolType();
-		cmp->lhs = std::move(appArg0);
-		cmp->op = awst::EqualityComparison::Eq;
-		cmp->rhs = std::move(selConst);
-
-		guards.push_back(makeExpressionStatement(
-			makeAssert(std::move(cmp), _loc, std::string("uros: not dispatch selector")),
-			_loc));
-	}
-
-	return guards;
-}
 
 // Forward decl — needed because makeDefaultValue recurses into struct
 // fields, which themselves can be any wtype.
@@ -214,33 +91,6 @@ std::shared_ptr<awst::Expression> makeDefaultValue(
 	// the canonical "zero" for those types.
 	auto bc = awst::makeBytesConstant(std::vector<uint8_t>{}, _loc);
 	return awst::makeReinterpretCast(std::move(bc), _t, _loc);
-}
-
-/// Name of the shared orc-guard helper method. Each split contract
-/// (main + every chunk) gets a private instance method by this name
-/// that performs the 4 orc-guards. Stubbed methods call into it
-/// instead of inlining all 4 guards — collapses ~150B of guard code
-/// per stub down to a ~10B callsub. For AME this saves ~3 KB on main.
-constexpr char ORC_GUARD_NAME[] = "__uros_orc_guard";
-
-awst::ContractMethod makeOrcGuardMethod(
-	std::string const& _cref, awst::SourceLocation const& _loc)
-{
-	awst::ContractMethod m;
-	m.sourceLocation = _loc;
-	m.cref = _cref;
-	m.memberName = ORC_GUARD_NAME;
-	m.returnType = awst::WType::voidType();
-	// arc4MethodConfig stays nullopt — not exposed via ABI dispatch.
-	auto block = std::make_shared<awst::Block>();
-	block->sourceLocation = _loc;
-	for (auto& g : makeOrcGuardStatements(_loc))
-		block->body.push_back(std::move(g));
-	// Bare `return;` to satisfy puya's terminator requirement on
-	// void-returning subroutines.
-	block->body.push_back(awst::makeReturnStatement(nullptr, _loc));
-	m.body = std::move(block);
-	return m;
 }
 
 /// Stub body for chunks' non-group methods: just return the type's
@@ -370,11 +220,7 @@ std::shared_ptr<awst::Expression> decodeScalarAt(
 	if (_t == awst::WType::biguintType())
 		return awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
 	if (_t == awst::WType::uint64Type())
-	{
-		auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-		btoi->stackArgs.push_back(std::move(extract));
-		return btoi;
-	}
+		return awst::makeBtoi(std::move(extract), _loc);
 	if (_t == awst::WType::boolType())
 	{
 		auto getbit = awst::makeIntrinsicCall("getbit", awst::WType::uint64Type(), _loc);
@@ -412,11 +258,7 @@ std::shared_ptr<awst::Expression> decodeFromBytes(
 	if (_ret == awst::WType::biguintType())
 		return awst::makeReinterpretCast(std::move(_bytes), awst::WType::biguintType(), _loc);
 	if (_ret == awst::WType::uint64Type())
-	{
-		auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-		btoi->stackArgs.push_back(std::move(_bytes));
-		return btoi;
-	}
+		return awst::makeBtoi(std::move(_bytes), _loc);
 	if (_ret == awst::WType::boolType())
 	{
 		auto getbit = awst::makeIntrinsicCall("getbit", awst::WType::uint64Type(), _loc);

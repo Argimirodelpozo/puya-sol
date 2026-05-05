@@ -79,11 +79,8 @@ std::shared_ptr<awst::Expression> BuiltinCallableRegistry::promoteToBigUInt(
 	if (_expr->wtype == awst::WType::biguintType())
 		return _expr;
 
-	auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-	itob->stackArgs.push_back(std::move(_expr));
-
-	auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
-	return cast;
+	auto itob = awst::makeItob(std::move(_expr), _loc);
+	return awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
 }
 
 static void emitModByZeroCheck(
@@ -333,25 +330,13 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	pubkeyConcat->stackArgs.push_back(std::move(pubkeyY));
 
 	// keccak256(pubkey) → 32 bytes
-	auto hash = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), _loc);
-	hash->stackArgs.push_back(std::move(pubkeyConcat));
+	auto hash = awst::makeKeccak256(std::move(pubkeyConcat), _loc);
 
 	// extract3(hash, 12, 20) → last 20 bytes = Ethereum address
-	auto off12 = awst::makeIntegerConstant("12", _loc);
-	auto len20 = awst::makeIntegerConstant("20", _loc);
-	auto addr20 = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	addr20->stackArgs.push_back(std::move(hash));
-	addr20->stackArgs.push_back(std::move(off12));
-	addr20->stackArgs.push_back(std::move(len20));
+	auto addr20 = awst::makeExtract(std::move(hash), 12, 20, _loc);
 
 	// Left-pad to 32 bytes: concat(bzero(12), addr20) → bytes32 form
-	auto pad12 = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-	auto twelve = awst::makeIntegerConstant("12", _loc);
-	pad12->stackArgs.push_back(std::move(twelve));
-
-	auto paddedAddr = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-	paddedAddr->stackArgs.push_back(std::move(pad12));
-	paddedAddr->stackArgs.push_back(std::move(addr20));
+	auto paddedAddr = awst::makeLeftPad(std::move(addr20), 12, _loc);
 
 	// Solidity's ecrecover returns address(0) when v is not 27 or 28
 	// (EVM precompile returns empty data for malformed input; Solidity
@@ -372,15 +357,12 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 		return andOp;
 	};
 
-	auto zero32 = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-	zero32->stackArgs.push_back(mkU64("32"));
-
 	auto maskedAddr = std::make_shared<awst::ConditionalExpression>();
 	maskedAddr->sourceLocation = _loc;
 	maskedAddr->wtype = awst::WType::bytesType();
 	maskedAddr->condition = isValidV();
 	maskedAddr->trueExpr = std::move(paddedAddr);
-	maskedAddr->falseExpr = std::move(zero32);
+	maskedAddr->falseExpr = awst::makeBzero(32, _loc);
 
 	// Cast to account type (address return type)
 	auto addrCast = awst::makeReinterpretCast(std::move(maskedAddr), awst::WType::accountType(), _loc);

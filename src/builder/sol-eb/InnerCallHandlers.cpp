@@ -63,16 +63,7 @@ std::shared_ptr<awst::IntrinsicCall> InnerCallHandlers::makeConcat(
 std::shared_ptr<awst::Expression> InnerCallHandlers::leftPadToN(
 	std::shared_ptr<awst::Expression> _expr, int _n, awst::SourceLocation const& _loc)
 {
-	auto padding = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-	padding->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(_n), _loc));
-
-	auto padded = makeConcat(std::move(padding), std::move(_expr), _loc);
-
-	auto paddedLen = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
-	paddedLen->stackArgs.push_back(padded);
-
-	auto offset = awst::makeUInt64BinOp(std::move(paddedLen), awst::UInt64BinaryOperator::Sub, awst::makeIntegerConstant(std::to_string(_n), _loc), _loc);
-
+	auto padded = awst::makeLeftPad(std::move(_expr), _n, _loc);
 	return makeExtract(std::move(padded), 0, _n, _loc);
 	// FIXME: should use dynamic extract3(padded, offset, N) — but for now
 	// the actual FunctionCallBuilder code uses this pattern. Let's match it.
@@ -109,15 +100,9 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::addressToAppId(
 		bytesExpr = std::move(toBytes);
 	}
 
-	auto extract = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-	extract->immediates = {24, 8};
-	extract->stackArgs.push_back(std::move(bytesExpr));
-
-	auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-	btoi->stackArgs.push_back(std::move(extract));
-
-	auto cast = awst::makeReinterpretCast(std::move(btoi), awst::WType::applicationType(), _loc);
-	return cast;
+	auto extract = awst::makeExtract(std::move(bytesExpr), 24, 8, _loc);
+	auto btoi = awst::makeBtoi(std::move(extract), _loc);
+	return awst::makeReinterpretCast(std::move(btoi), awst::WType::applicationType(), _loc);
 }
 
 std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
@@ -128,28 +113,12 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 		return _arg;
 
 	if (wtype == awst::WType::uint64Type())
-	{
-		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-		itob->stackArgs.push_back(std::move(_arg));
-		return itob;
-	}
+		return awst::makeItob(std::move(_arg), _loc);
 
 	if (wtype == awst::WType::biguintType())
 	{
 		auto cast = awst::makeReinterpretCast(std::move(_arg), awst::WType::bytesType(), _loc);
-
-		auto zeros = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-		zeros->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
-
-		auto padded = makeConcat(std::move(zeros), std::move(cast), _loc);
-
-		auto paddedLen = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
-		paddedLen->stackArgs.push_back(padded);
-
-		auto offset = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), _loc);
-		offset->stackArgs.push_back(std::move(paddedLen));
-		offset->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
-
+		auto padded = awst::makeLeftPad(std::move(cast), 32, _loc);
 		return makeExtract(std::move(padded), 0, 0, _loc);
 		// FIXME: should be extract3(padded, offset, 32) with dynamic offset
 		// For now, replicate the pattern from FunctionCallBuilder.
@@ -440,9 +409,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 										dataBytes = awst::makeReinterpretCast(std::move(call), awst::WType::bytesType(), _loc);
 									else if (retType == awst::WType::uint64Type())
 									{
-										auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-										itob->stackArgs.push_back(std::move(call));
-										dataBytes = std::move(itob);
+										dataBytes = awst::makeItob(std::move(call), _loc);
 									}
 									else if (retType == awst::WType::bytesType()
 										|| retType->kind() == awst::WTypeKind::Bytes)

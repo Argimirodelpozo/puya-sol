@@ -276,8 +276,7 @@ std::shared_ptr<awst::Expression> StorageMapper::biguintSlotToBtoi(
 	auto castToBytes = awst::makeReinterpretCast(_slotExpr, awst::WType::bytesType(), _loc);
 
 	// len(castToBytes)
-	auto lenOp = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
-	lenOp->stackArgs.push_back(castToBytes);
+	auto lenOp = awst::makeLen(castToBytes, _loc);
 
 	// len - 8
 	auto sub8 = std::make_shared<awst::UInt64BinaryOperation>();
@@ -296,10 +295,7 @@ std::shared_ptr<awst::Expression> StorageMapper::biguintSlotToBtoi(
 	last8->stackArgs.push_back(std::move(eight2));
 
 	// btoi(last8)
-	auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-	btoi->stackArgs.push_back(std::move(last8));
-
-	return btoi;
+	return awst::makeBtoi(std::move(last8), _loc);
 }
 
 } // namespace puyasol::builder

@@ -112,9 +112,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 			}
 			else if (retType == awst::WType::uint64Type())
 			{
-				auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-				itob->stackArgs.push_back(std::move(call));
-				dataBytes = std::move(itob);
+				dataBytes = awst::makeItob(std::move(call), _loc);
 			}
 			else if (retType == awst::WType::bytesType()
 				|| (retType && retType->kind() == awst::WTypeKind::Bytes))
@@ -337,8 +335,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 		auto msgHash = makeExtract(_inputData, 0, 32, _loc);
 		// recovery_id = v - 27, taken as uint64 from last byte of v-word
 		auto vByte = makeExtract(_inputData, 63, 1, _loc);
-		auto vInt = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-		vInt->stackArgs.push_back(std::move(vByte));
+		auto vInt = awst::makeBtoi(std::move(vByte), _loc);
 		auto recoveryId = awst::makeUInt64BinOp(
 			std::move(vInt), awst::UInt64BinaryOperator::Sub,
 			awst::makeIntegerConstant("27", _loc), _loc);
@@ -375,15 +372,12 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 		pubkeyY->index = 1;
 
 		auto pubkeyConcat = makeConcat(std::move(pubkeyX), std::move(pubkeyY), _loc);
-		auto hash = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), _loc);
-		hash->stackArgs.push_back(std::move(pubkeyConcat));
+		auto hash = awst::makeKeccak256(std::move(pubkeyConcat), _loc);
 
 		// extract last 20 bytes (offset 12)
 		auto addr20 = makeExtract(std::move(hash), 12, 20, _loc);
 		// Left-pad to 32 bytes: concat(bzero(12), addr20)
-		auto pad12 = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-		pad12->stackArgs.push_back(awst::makeIntegerConstant("12", _loc));
-		resultBytes = makeConcat(std::move(pad12), std::move(addr20), _loc);
+		resultBytes = awst::makeLeftPad(std::move(addr20), 12, _loc);
 		break;
 	}
 	case 6: // ecAdd
@@ -443,13 +437,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 		boolToInt->stackArgs.push_back(awst::makeIntegerConstant("1", _loc));
 		boolToInt->stackArgs.push_back(std::move(ecCall));
 
-		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-		itob->stackArgs.push_back(std::move(boolToInt));
-
-		auto padding = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-		padding->stackArgs.push_back(awst::makeIntegerConstant("24", _loc));
-
-		resultBytes = makeConcat(std::move(padding), std::move(itob), _loc);
+		auto itob = awst::makeItob(std::move(boolToInt), _loc);
+		resultBytes = awst::makeLeftPad(std::move(itob), 24, _loc);
 		break;
 	}
 	default:

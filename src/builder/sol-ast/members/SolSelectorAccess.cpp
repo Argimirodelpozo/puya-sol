@@ -16,17 +16,12 @@ using namespace solidity::frontend;
 std::shared_ptr<awst::Expression> SolSelectorAccess::makeSelectorExpr(std::string const& _sig)
 {
 	auto sigConst = awst::makeUtf8BytesConstant(_sig, m_loc);
-
-	auto keccak = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), m_loc);
-	keccak->stackArgs.push_back(std::move(sigConst));
-
-	auto zero = awst::makeIntegerConstant("0", m_loc);
-	auto four = awst::makeIntegerConstant("4", m_loc);
+	auto keccak = awst::makeKeccak256(std::move(sigConst), m_loc);
 
 	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 	extract->stackArgs.push_back(std::move(keccak));
-	extract->stackArgs.push_back(std::move(zero));
-	extract->stackArgs.push_back(std::move(four));
+	extract->stackArgs.push_back(awst::makeIntegerConstant("0", m_loc));
+	extract->stackArgs.push_back(awst::makeIntegerConstant("4", m_loc));
 	return extract;
 }
 
@@ -207,9 +202,7 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 			if (base && base->wtype == awst::WType::bytesType())
 			{
 				// selector is bytes 8..12 of the 12-byte encoding.
-				auto extract = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), m_loc);
-				extract->immediates = {8, 4};
-				extract->stackArgs.push_back(std::move(base));
+				auto extract = awst::makeExtract(std::move(base), 8, 4, m_loc);
 
 				auto* targetType = m_ctx.typeMapper.map(m_memberAccess.annotation().type);
 				return awst::makeReinterpretCast(
@@ -223,19 +216,14 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 
 	Logger::instance().debug("selector: " + sig, m_loc);
 
-	auto keccak = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), m_loc);
-	keccak->stackArgs.push_back(awst::makeUtf8BytesConstant(sig, m_loc));
+	auto keccak = awst::makeKeccak256(awst::makeUtf8BytesConstant(sig, m_loc), m_loc);
 
 	auto* targetType = m_ctx.typeMapper.map(m_memberAccess.annotation().type);
 	auto const* bytesWType = dynamic_cast<awst::BytesWType const*>(targetType);
 	if (bytesWType && bytesWType->length().has_value() && *bytesWType->length() == 4)
 	{
-		auto extract = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), m_loc);
-		extract->immediates = {0, 4};
-		extract->stackArgs.push_back(std::move(keccak));
-
-		auto padded = awst::makeReinterpretCast(std::move(extract), targetType, m_loc);
-		return padded;
+		auto extract = awst::makeExtract(std::move(keccak), 0, 4, m_loc);
+		return awst::makeReinterpretCast(std::move(extract), targetType, m_loc);
 	}
 	else if (targetType != awst::WType::bytesType())
 	{

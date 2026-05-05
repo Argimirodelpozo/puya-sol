@@ -64,10 +64,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 				// Ensure index is biguint for slot arithmetic
 				if (indexExpr && indexExpr->wtype == awst::WType::uint64Type())
 				{
-					auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
-					itob->stackArgs.push_back(std::move(indexExpr));
-					auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
-					indexExpr = std::move(cast);
+					auto itob = awst::makeItob(std::move(indexExpr), m_loc);
+					indexExpr = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 				}
 
 				// slot_var holds the base slot (biguint)
@@ -121,8 +119,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 					auto castToBytes = awst::makeReinterpretCast(std::move(add), awst::WType::bytesType(), m_loc);
 
 					// Safe truncate biguint to uint64: extract last 8 bytes then btoi
-					auto lenOp = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), m_loc);
-					lenOp->stackArgs.push_back(castToBytes);
+					auto lenOp = awst::makeLen(castToBytes, m_loc);
 					auto sub8 = std::make_shared<awst::UInt64BinaryOperation>();
 					sub8->sourceLocation = m_loc;
 					sub8->wtype = awst::WType::uint64Type();
@@ -135,8 +132,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 					last8->stackArgs.push_back(std::move(sub8));
 					auto eight2 = awst::makeIntegerConstant("8", m_loc);
 					last8->stackArgs.push_back(std::move(eight2));
-					auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), m_loc);
-					btoi->stackArgs.push_back(std::move(last8));
+					auto btoi = awst::makeBtoi(std::move(last8), m_loc);
 
 					auto call = std::make_shared<awst::SubroutineCallExpression>();
 					call->sourceLocation = m_loc;
@@ -170,10 +166,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 					// Ensure index is biguint
 					if (indexExpr->wtype == awst::WType::uint64Type())
 					{
-						auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
-						itob->stackArgs.push_back(std::move(indexExpr));
-						auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
-						indexExpr = std::move(cast);
+						auto itob = awst::makeItob(std::move(indexExpr), m_loc);
+						indexExpr = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 					}
 
 					auto add = awst::makeBigUIntBinOp(std::move(baseExpr), awst::BigUIntBinaryOperator::Add, std::move(indexExpr), m_loc);
@@ -188,8 +182,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 						last8->immediates = {24, 8};
 						last8->stackArgs.push_back(std::move(castToBytes));
 
-						auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), m_loc);
-						btoi->stackArgs.push_back(std::move(last8));
+						auto btoi = awst::makeBtoi(std::move(last8), m_loc);
 
 						auto call = std::make_shared<awst::SubroutineCallExpression>();
 						call->sourceLocation = m_loc;
@@ -276,9 +269,7 @@ std::shared_ptr<awst::Expression> SolIndexRangeAccess::toAwst()
 	{
 		// Default end for substring3: byte-count via `len` intrinsic,
 		// preserving pre-existing full-slice semantics.
-		auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), m_loc);
-		lenCall->stackArgs.push_back(base);
-		end = std::move(lenCall);
+		end = awst::makeLen(base, m_loc);
 	}
 
 	start = builder::TypeCoercion::implicitNumericCast(
@@ -413,8 +404,7 @@ std::shared_ptr<awst::Expression> SolIndexRangeAccess::toAwst()
 
 			auto diff = awst::makeUInt64BinOp(
 				mkEnd(), awst::UInt64BinaryOperator::Sub, mkStart(), m_loc);
-			auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
-			itob->stackArgs.push_back(std::move(diff));
+			auto itob = awst::makeItob(std::move(diff), m_loc);
 
 			auto lenHdr = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 			lenHdr->stackArgs.push_back(std::move(itob));

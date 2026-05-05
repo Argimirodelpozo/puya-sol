@@ -28,15 +28,8 @@ public:
 std::shared_ptr<awst::Expression> AbiEncoderBuilder::leftPadBytes(
 	std::shared_ptr<awst::Expression> _expr, int _n, awst::SourceLocation const& _loc)
 {
-	auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-	pad->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(_n), _loc));
-
-	auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-	cat->stackArgs.push_back(std::move(pad));
-	cat->stackArgs.push_back(std::move(_expr));
-
-	auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
-	lenCall->stackArgs.push_back(cat);
+	auto cat = awst::makeLeftPad(std::move(_expr), _n, _loc);
+	auto lenCall = awst::makeLen(cat, _loc);
 
 	auto offset = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), _loc);
 	offset->stackArgs.push_back(std::move(lenCall));
@@ -113,8 +106,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::toPackedBytes(
 	}
 	else if (_expr->wtype == awst::WType::uint64Type())
 	{
-		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-		itob->stackArgs.push_back(std::move(_expr));
+		auto itob = awst::makeItob(std::move(_expr), _loc);
 		// For non-packed (abi.encode), pad to 32-byte ABI word
 		bytesExpr = _isPacked ? std::move(itob) : leftPadBytes(std::move(itob), 32, _loc);
 	}
@@ -136,9 +128,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::toPackedBytes(
 		boolToInt->stackArgs.push_back(awst::makeIntegerConstant("1", _loc));
 		boolToInt->stackArgs.push_back(std::move(_expr));
 
-		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-		itob->stackArgs.push_back(std::move(boolToInt));
-		bytesExpr = std::move(itob);
+		bytesExpr = awst::makeItob(std::move(boolToInt), _loc);
 	}
 	else
 	{
@@ -187,22 +177,14 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgAsARC4Bytes(
 		if (len > 0 && len < 32)
 		{
 			auto asBytes = awst::makeReinterpretCast(std::move(_argExpr), awst::WType::bytesType(), _loc);
-			auto padSize = awst::makeIntegerConstant(std::to_string(32 - len), _loc);
-			auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-			pad->stackArgs.push_back(std::move(padSize));
-			auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-			cat->stackArgs.push_back(std::move(asBytes));
-			cat->stackArgs.push_back(std::move(pad));
-			return cat;
+			return awst::makeRightPad(std::move(asBytes), 32 - len, _loc);
 		}
 		return _argExpr;
 	}
 	if (wtype == awst::WType::uint64Type())
 	{
 		// Solidity ABI: all integers are 32-byte big-endian
-		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-		itob->stackArgs.push_back(std::move(_argExpr));
-		return leftPadBytes(std::move(itob), 32, _loc);
+		return leftPadBytes(awst::makeItob(std::move(_argExpr), _loc), 32, _loc);
 	}
 	if (wtype == awst::WType::biguintType())
 	{
@@ -478,8 +460,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeCall(
 			std::shared_ptr<awst::Expression> bytesN;
 			if (expr->wtype == awst::WType::uint64Type())
 			{
-				auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-				itob->stackArgs.push_back(std::move(expr));
+				auto itob = awst::makeItob(std::move(expr), _loc);
 				if (n <= 8)
 				{
 					// Take last n bytes of the 8-byte itob result.
@@ -494,13 +475,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeCall(
 				else
 				{
 					// n > 8: left-pad itob to n bytes.
-					auto padSize = awst::makeIntegerConstant(std::to_string(n - 8), _loc);
-					auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-					pad->stackArgs.push_back(std::move(padSize));
-					auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-					cat->stackArgs.push_back(std::move(pad));
-					cat->stackArgs.push_back(std::move(itob));
-					bytesN = std::move(cat);
+					bytesN = awst::makeLeftPad(std::move(itob), n - 8, _loc);
 				}
 			}
 			else if (expr->wtype == awst::WType::biguintType())
@@ -523,15 +498,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeCall(
 
 			// Right-pad bytesN to 32 bytes.
 			if (n < 32)
-			{
-				auto padSize = awst::makeIntegerConstant(std::to_string(32 - n), _loc);
-				auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-				pad->stackArgs.push_back(std::move(padSize));
-				auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-				cat->stackArgs.push_back(std::move(bytesN));
-				cat->stackArgs.push_back(std::move(pad));
-				encoded = std::move(cat);
-			}
+				encoded = awst::makeRightPad(std::move(bytesN), 32 - n, _loc);
 			else
 				encoded = std::move(bytesN);
 		}
@@ -571,9 +538,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeWithSelector(
 		std::shared_ptr<awst::Expression> asBytes = selector;
 		if (selector->wtype == awst::WType::uint64Type())
 		{
-			auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-			itob->stackArgs.push_back(std::move(selector));
-			asBytes = std::move(itob);
+			asBytes = awst::makeItob(std::move(selector), _loc);
 		}
 		else if (selector->wtype == awst::WType::biguintType())
 		{
@@ -582,16 +547,9 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeWithSelector(
 		}
 
 		// Left-pad to ≥4 bytes then extract the last 4 bytes.
-		auto bzeroSize = awst::makeIntegerConstant("4", _loc);
-		auto zeros = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-		zeros->stackArgs.push_back(std::move(bzeroSize));
+		auto cat = awst::makeLeftPad(std::move(asBytes), 4, _loc);
 
-		auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-		cat->stackArgs.push_back(std::move(zeros));
-		cat->stackArgs.push_back(std::move(asBytes));
-
-		auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
-		lenCall->stackArgs.push_back(cat);
+		auto lenCall = awst::makeLen(cat, _loc);
 
 		auto four = awst::makeIntegerConstant("4", _loc);
 
@@ -632,13 +590,8 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeWithSignature(
 	// has a native keccak256 opcode so we emit it directly. For literal
 	// signatures we still call keccak256 at runtime — we could fold at compile
 	// time but runtime keeps the code simpler and fits in the 700-op budget.
-	auto hash = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), _loc);
-	hash->stackArgs.push_back(std::move(sigExpr));
-
-	auto extract4 = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-	extract4->immediates = {0, 4};
-	extract4->stackArgs.push_back(std::move(hash));
-	parts.push_back(std::move(extract4));
+	auto hash = awst::makeKeccak256(std::move(sigExpr), _loc);
+	parts.push_back(awst::makeExtract(std::move(hash), 0, 4, _loc));
 
 	if (args.size() == 1)
 		return std::make_unique<GenericAbiResult>(_ctx, concatByteExprs(std::move(parts), _loc));
@@ -672,8 +625,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 			auto toBytes = awst::makeReinterpretCast(std::move(bytesExpr), awst::WType::bytesType(), _loc);
 			bytesExpr = std::move(toBytes);
 		}
-		auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-		btoi->stackArgs.push_back(std::move(bytesExpr));
+		auto btoi = awst::makeBtoi(std::move(bytesExpr), _loc);
 
 		auto zero = awst::makeIntegerConstant("0", _loc);
 		auto cmp = awst::makeNumericCompare(std::move(btoi), awst::NumericComparison::Ne, std::move(zero), _loc);
@@ -853,13 +805,11 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncode(
 		else
 		{
 			// Head: offset as 32-byte big-endian
-			auto offsetItob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-			offsetItob->stackArgs.push_back(currentTailOffset);
+			auto offsetItob = awst::makeItob(currentTailOffset, _loc);
 			headParts.push_back(leftPadBytes(std::move(offsetItob), 32, _loc));
 
 			// Update running offset: currentTailOffset += len(tail_i)
-			auto tailLen = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
-			tailLen->stackArgs.push_back(argInfos[i].tailPart);
+			auto tailLen = awst::makeLen(argInfos[i].tailPart, _loc);
 
 			auto newOffset = std::make_shared<awst::UInt64BinaryOperation>();
 			newOffset->sourceLocation = _loc;

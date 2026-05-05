@@ -393,32 +393,19 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					std::shared_ptr<awst::Expression> keyBytes;
 					if (argRef->wtype == awst::WType::uint64Type())
 					{
-						auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), loc);
-						itob->stackArgs.push_back(std::move(argRef));
-						keyBytes = std::move(itob);
+						keyBytes = awst::makeItob(std::move(argRef), loc);
 					}
 					else if (argRef->wtype == awst::WType::biguintType())
 					{
 						// Normalize biguint to exactly 32 bytes before hashing.
 						auto reinterpret = awst::makeReinterpretCast(std::move(argRef), awst::WType::bytesType(), loc);
 
-						auto padWidth = awst::makeIntegerConstant("32", loc);
-
-						auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), loc);
-						pad->stackArgs.push_back(std::move(padWidth));
-
-						auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), loc);
-						cat->stackArgs.push_back(std::move(pad));
-						cat->stackArgs.push_back(std::move(reinterpret));
-
-						auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), loc);
-						lenCall->stackArgs.push_back(cat);
-
-						auto width32 = awst::makeIntegerConstant("32", loc);
+						auto cat = awst::makeLeftPad(std::move(reinterpret), 32, loc);
+						auto lenCall = awst::makeLen(cat, loc);
 
 						auto offset = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), loc);
 						offset->stackArgs.push_back(std::move(lenCall));
-						offset->stackArgs.push_back(std::move(width32));
+						offset->stackArgs.push_back(awst::makeIntegerConstant("32", loc));
 
 						auto width32b = awst::makeIntegerConstant("32", loc);
 

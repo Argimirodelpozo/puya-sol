@@ -119,16 +119,10 @@ void ContractBuilder::buildStorageDispatch(
 				get->stackArgs.push_back(makeBytes(sv.name));
 
 				// Pad to 32 bytes: concat(bzero(32), value), take last 32
-				auto bz = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), loc);
-				bz->stackArgs.push_back(makeUint64("32"));
-
-				auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), loc);
-				cat->stackArgs.push_back(std::move(bz));
-				cat->stackArgs.push_back(std::move(get));
+				auto cat = awst::makeLeftPad(std::move(get), 32, loc);
 
 				// Extract last 32 bytes
-				auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), loc);
-				lenCall->stackArgs.push_back(cat);
+				auto lenCall = awst::makeLen(cat, loc);
 
 				auto sub = awst::makeUInt64BinOp(std::move(lenCall), awst::UInt64BinaryOperator::Sub, makeUint64("32"), loc);
 
@@ -195,9 +189,8 @@ void ContractBuilder::buildStorageDispatch(
 		{
 			// Build key: concat("s", itob(__slot))
 			auto prefix = makeBytes("s");
-			auto slotItob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), loc);
 			auto slotVar = awst::makeVarExpression("__slot", awst::WType::uint64Type(), loc);
-			slotItob->stackArgs.push_back(std::move(slotVar));
+			auto slotItob = awst::makeItob(std::move(slotVar), loc);
 
 			auto key = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), loc);
 			key->stackArgs.push_back(std::move(prefix));
@@ -219,15 +212,9 @@ void ContractBuilder::buildStorageDispatch(
 			auto valBytes = awst::makeReinterpretCast(std::move(valueVar), awst::WType::bytesType(), loc);
 
 			// Pad to 32 bytes
-			auto bz = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), loc);
-			bz->stackArgs.push_back(makeUint64("32"));
+			auto cat = awst::makeLeftPad(std::move(valBytes), 32, loc);
 
-			auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), loc);
-			cat->stackArgs.push_back(std::move(bz));
-			cat->stackArgs.push_back(std::move(valBytes));
-
-			auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), loc);
-			lenCall->stackArgs.push_back(cat);
+			auto lenCall = awst::makeLen(cat, loc);
 
 			auto sub32 = awst::makeUInt64BinOp(std::move(lenCall), awst::UInt64BinaryOperator::Sub, makeUint64("32"), loc);
 
@@ -277,15 +264,8 @@ void ContractBuilder::buildStorageDispatch(
 				auto cast = awst::makeReinterpretCast(std::move(valueVar), awst::WType::bytesType(), loc);
 
 				// concat(bzero(32), bytes) → take last 32 bytes
-				auto bz = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), loc);
-				bz->stackArgs.push_back(makeUint64("32"));
-
-				auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), loc);
-				cat->stackArgs.push_back(std::move(bz));
-				cat->stackArgs.push_back(std::move(cast));
-
-				auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), loc);
-				lenCall->stackArgs.push_back(cat);
+				auto cat = awst::makeLeftPad(std::move(cast), 32, loc);
+				auto lenCall = awst::makeLen(cat, loc);
 
 				auto sub32 = awst::makeUInt64BinOp(std::move(lenCall), awst::UInt64BinaryOperator::Sub, makeUint64("32"), loc);
 

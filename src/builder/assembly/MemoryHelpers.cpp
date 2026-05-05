@@ -37,16 +37,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::padTo32Bytes(
 {
 	auto cast = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
 
-	auto zeroBytes = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-	auto sz = awst::makeIntegerConstant("32", _loc);
-	zeroBytes->stackArgs.push_back(sz);
-
-	auto concatPad = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-	concatPad->stackArgs.push_back(std::move(zeroBytes));
-	concatPad->stackArgs.push_back(std::move(cast));
-
-	auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
-	lenCall->stackArgs.push_back(concatPad);
+	auto concatPad = awst::makeLeftPad(std::move(cast), 32, _loc);
+	auto lenCall = awst::makeLen(concatPad, _loc);
 
 	auto n32 = awst::makeIntegerConstant("32", _loc);
 

@@ -152,10 +152,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 			if (paramIt != m_locals.end())
 			{
 				auto paramVar = awst::makeVarExpression(baseName, paramIt->second, loc);
-
-				auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), loc);
-				lenCall->stackArgs.push_back(std::move(paramVar));
-				return lenCall;
+				return awst::makeLen(std::move(paramVar), loc);
 			}
 		}
 		else if (suffix == "selector")
@@ -237,16 +234,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 		{
 			// Right-pad to 32 bytes: concat(value, bzero(32 - N)), reinterpret as biguint
 			int padLen = 32 - *bwt->length();
-			auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), loc);
-			auto padSize = awst::makeIntegerConstant(std::to_string(padLen), loc);
-			pad->stackArgs.push_back(std::move(padSize));
-
-			auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), loc);
-			cat->stackArgs.push_back(std::move(node));
-			cat->stackArgs.push_back(std::move(pad));
-
-			auto cast = awst::makeReinterpretCast(std::move(cat), awst::WType::biguintType(), loc);
-			return cast;
+			auto cat = awst::makeRightPad(std::move(node), padLen, loc);
+			return awst::makeReinterpretCast(std::move(cat), awst::WType::biguintType(), loc);
 		}
 	}
 
@@ -395,8 +384,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		bytesOut->base = std::move(appParamsGet);
 		bytesOut->index = 0;
 
-		auto hash = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), loc);
-		hash->stackArgs.push_back(std::move(bytesOut));
+		auto hash = awst::makeKeccak256(std::move(bytesOut), loc);
 
 		auto hashBigUint = awst::makeReinterpretCast(std::move(hash), awst::WType::biguintType(), loc);
 
@@ -416,10 +404,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		}
 		else if (addrExpr->wtype == awst::WType::uint64Type())
 		{
-			auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), loc);
-			itob->stackArgs.push_back(std::move(addrExpr));
-			auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), loc);
-			addrExpr = std::move(cast);
+			auto itob = awst::makeItob(std::move(addrExpr), loc);
+			addrExpr = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), loc);
 		}
 		// Compute three-way: addr == 0 → 0, 0 < addr ≤ 100 → keccak256(""),
 		// else → keccak256(this.approval). EVM convention: precompile
@@ -547,10 +533,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		auto round = awst::makeIntrinsicCall("global", awst::WType::uint64Type(), loc);
 		round->immediates = {std::string("Round")};
 		// Convert to biguint (EVM returns uint256)
-		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), loc);
-		itob->stackArgs.push_back(std::move(round));
-		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), loc);
-		return cast;
+		auto itob = awst::makeItob(std::move(round), loc);
+		return awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), loc);
 	}
 	if (funcName == "selfbalance")
 	{
@@ -561,10 +545,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		appAddr->immediates = {std::string("CurrentApplicationAddress")};
 		auto bal = awst::makeIntrinsicCall("balance", awst::WType::uint64Type(), loc);
 		bal->stackArgs.push_back(std::move(appAddr));
-		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), loc);
-		itob->stackArgs.push_back(std::move(bal));
-		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), loc);
-		return cast;
+		auto itob = awst::makeItob(std::move(bal), loc);
+		return awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), loc);
 	}
 	if (funcName == "coinbase" || funcName == "gasprice" || funcName == "basefee"
 		|| funcName == "blobbasefee")
@@ -621,9 +603,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		// Ensure operand is bytes-like so bitlen sees the full u256 width.
 		if (x->wtype == awst::WType::uint64Type())
 		{
-			auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), loc);
-			itob->stackArgs.push_back(std::move(x));
-			x = std::move(itob);
+			x = awst::makeItob(std::move(x), loc);
 		}
 		else if (x->wtype == awst::WType::biguintType())
 		{
@@ -639,11 +619,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		auto sub = awst::makeUInt64BinOp(std::move(c256), awst::UInt64BinaryOperator::Sub, std::move(bitlen), loc);
 
 		// Yul returns a 256-bit value; promote to biguint.
-		auto itob2 = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), loc);
-		itob2->stackArgs.push_back(std::move(sub));
-
-		auto cast = awst::makeReinterpretCast(std::move(itob2), awst::WType::biguintType(), loc);
-		return cast;
+		auto itob2 = awst::makeItob(std::move(sub), loc);
+		return awst::makeReinterpretCast(std::move(itob2), awst::WType::biguintType(), loc);
 	}
 	if (funcName == "calldataload")
 		return handleCalldataload(args, loc);
@@ -731,9 +708,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		if (m_useSyntheticCalldata)
 		{
 			auto blob = awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), loc);
-			auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), loc);
-			lenCall->stackArgs.push_back(std::move(blob));
-			return lenCall;
+			return awst::makeLen(std::move(blob), loc);
 		}
 		Logger::instance().warning("calldatasize() has no AVM equivalent, returning 0", loc);
 		auto zero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());

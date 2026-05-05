@@ -545,8 +545,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				{
 					// Constructor args come as 32-byte big-endian (EVM ABI encoding).
 					// Extract last 8 bytes, then btoi to native uint64/bool.
-					auto len = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), method.sourceLocation);
-					len->stackArgs.push_back(readArg);
+					auto len = awst::makeLen(readArg, method.sourceLocation);
 
 					auto eight = awst::makeIntegerConstant("8", method.sourceLocation);
 
@@ -1279,14 +1278,10 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			unsigned blobBytes = m_transientStorage.blobSize();
 			if (blobBytes < AssemblyBuilder::SLOT_SIZE)
 				blobBytes = AssemblyBuilder::SLOT_SIZE;
-			auto blobSize = awst::makeIntegerConstant(std::to_string(blobBytes), method.sourceLocation);
-
-			auto bzeroCall = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), method.sourceLocation);
-			bzeroCall->stackArgs.push_back(std::move(blobSize));
 
 			auto storeOp = awst::makeIntrinsicCall("store", awst::WType::voidType(), method.sourceLocation);
 			storeOp->immediates = {AssemblyBuilder::TRANSIENT_SLOT};
-			storeOp->stackArgs.push_back(std::move(bzeroCall));
+			storeOp->stackArgs.push_back(awst::makeBzero(blobBytes, method.sourceLocation));
 
 			auto exprStmt = awst::makeExpressionStatement(std::move(storeOp), method.sourceLocation);
 			body->body.push_back(std::move(exprStmt));
@@ -1298,14 +1293,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		// Each app call gets fresh scratch space, so we must initialize on every call.
 		// store 0, bzero(4096) — pre-allocate a 4KB memory blob
 		{
-			auto blobSize = awst::makeIntegerConstant(std::to_string(AssemblyBuilder::SLOT_SIZE), method.sourceLocation);
-
-			auto bzeroCall = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), method.sourceLocation);
-			bzeroCall->stackArgs.push_back(std::move(blobSize));
-
 			auto storeOp = awst::makeIntrinsicCall("store", awst::WType::voidType(), method.sourceLocation);
 			storeOp->immediates = {AssemblyBuilder::MEMORY_SLOT_FIRST};
-			storeOp->stackArgs.push_back(std::move(bzeroCall));
+			storeOp->stackArgs.push_back(awst::makeBzero(AssemblyBuilder::SLOT_SIZE, method.sourceLocation));
 
 			auto exprStmt = awst::makeExpressionStatement(std::move(storeOp), method.sourceLocation);
 			body->body.push_back(std::move(exprStmt));

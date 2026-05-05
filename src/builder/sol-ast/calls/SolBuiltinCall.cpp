@@ -160,8 +160,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		}
 
 		// h1 = keccak256(id)
-		auto h1 = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), m_loc);
-		h1->stackArgs.push_back(idExpr);
+		auto h1 = awst::makeKeccak256(idExpr, m_loc);
 
 		// h1_int = biguint(h1)
 		auto h1Int = awst::makeReinterpretCast(std::move(h1), awst::WType::biguintType(), m_loc);
@@ -174,21 +173,15 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		// minus1_bytes = 32-byte big-endian via b|(sub, bzero(32))
 		auto minusBytesCast = awst::makeReinterpretCast(std::move(sub), awst::WType::bytesType(), m_loc);
 
-		auto padLen = awst::makeIntegerConstant("32", m_loc);
-
-		auto padBytes = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
-		padBytes->stackArgs.push_back(std::move(padLen));
-
 		auto minus1Bytes = std::make_shared<awst::BytesBinaryOperation>();
 		minus1Bytes->sourceLocation = m_loc;
 		minus1Bytes->wtype = awst::WType::bytesType();
-		minus1Bytes->left = std::move(padBytes);
+		minus1Bytes->left = awst::makeBzero(32, m_loc);
 		minus1Bytes->op = awst::BytesBinaryOperator::BitOr;
 		minus1Bytes->right = std::move(minusBytesCast);
 
 		// h2 = keccak256(minus1_bytes)
-		auto h2 = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), m_loc);
-		h2->stackArgs.push_back(std::move(minus1Bytes));
+		auto h2 = awst::makeKeccak256(std::move(minus1Bytes), m_loc);
 
 		// Top 31 bytes of h2
 		auto top31Start = awst::makeIntegerConstant("0", m_loc);

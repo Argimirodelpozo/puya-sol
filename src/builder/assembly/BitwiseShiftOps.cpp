@@ -91,41 +91,23 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildPowerOf2(
 
 		// Safe btoi: extract last 8 bytes to avoid btoi overflow (> 8 bytes fails)
 		// Pattern: concat(bzero(8), bytes) → extract3(result, len-8, 8) → btoi
-		auto eight = awst::makeIntegerConstant("8", _loc);
-
-		auto bzeroCall = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-		bzeroCall->stackArgs.push_back(eight);
-
-		auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-		cat->stackArgs.push_back(std::move(bzeroCall));
-		cat->stackArgs.push_back(std::move(cast));
-
-		auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
-		lenCall->stackArgs.push_back(cat);
-
-		auto eight2 = awst::makeIntegerConstant("8", _loc);
+		auto cat = awst::makeLeftPad(std::move(cast), 8, _loc);
+		auto lenCall = awst::makeLen(cat, _loc);
 
 		auto start = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), _loc);
 		start->stackArgs.push_back(std::move(lenCall));
-		start->stackArgs.push_back(eight2);
-
-		auto eight3 = awst::makeIntegerConstant("8", _loc);
+		start->stackArgs.push_back(awst::makeIntegerConstant("8", _loc));
 
 		auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 		extract->stackArgs.push_back(cat);
 		extract->stackArgs.push_back(std::move(start));
-		extract->stackArgs.push_back(eight3);
+		extract->stackArgs.push_back(awst::makeIntegerConstant("8", _loc));
 
-		auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-		btoi->stackArgs.push_back(std::move(extract));
-		shiftAmt = std::move(btoi);
+		shiftAmt = awst::makeBtoi(std::move(extract), _loc);
 	}
 
 	// bzero(32) — 256-bit zero buffer
-	auto thirtyTwo = awst::makeIntegerConstant("32", _loc);
-
-	auto bzero = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-	bzero->stackArgs.push_back(std::move(thirtyTwo));
+	auto bzero = awst::makeBzero(32, _loc);
 
 	// Clamp shift amount to 0..255 — EVM shifts mod 256 implicitly,
 	// but puya optimizer may strip wrapMod256 from intermediates

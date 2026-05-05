@@ -68,15 +68,9 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 				bytesExpr = std::move(toBytes);
 			}
 
-			auto extract = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), m_loc);
-			extract->immediates = {24, 8};
-			extract->stackArgs.push_back(std::move(bytesExpr));
-
-			auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), m_loc);
-			btoi->stackArgs.push_back(std::move(extract));
-
-			auto castId = awst::makeReinterpretCast(std::move(btoi), awst::WType::applicationType(), m_loc);
-			appId = std::move(castId);
+			auto extract = awst::makeExtract(std::move(bytesExpr), 24, 8, m_loc);
+			auto btoi = awst::makeBtoi(std::move(extract), m_loc);
+			appId = awst::makeReinterpretCast(std::move(btoi), awst::WType::applicationType(), m_loc);
 		}
 
 		auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
@@ -196,11 +190,9 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 					bal->base = std::move(acctParams);
 					bal->index = 0;
 
-					auto itobBal = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
-					itobBal->stackArgs.push_back(std::move(bal));
-					auto biguintBal = awst::makeReinterpretCast(
+					auto itobBal = awst::makeItob(std::move(bal), m_loc);
+					return awst::makeReinterpretCast(
 						std::move(itobBal), awst::WType::biguintType(), m_loc);
-					return biguintBal;
 				}
 			}
 		}
@@ -223,11 +215,8 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 		balanceVal->index = 0;
 
 		// Solidity returns uint256 for balance — promote uint64 → biguint
-		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
-		itob->stackArgs.push_back(std::move(balanceVal));
-
-		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
-		return cast;
+		auto itob = awst::makeItob(std::move(balanceVal), m_loc);
+		return awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 	}
 
 	if (member == "codehash")
@@ -293,8 +282,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 				bytesOut->base = std::move(appParamsGet);
 				bytesOut->index = 0;
 
-				auto hash = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), m_loc);
-				hash->stackArgs.push_back(std::move(bytesOut));
+				auto hash = awst::makeKeccak256(std::move(bytesOut), m_loc);
 
 				if (m_wtype && m_wtype != awst::WType::bytesType())
 				{

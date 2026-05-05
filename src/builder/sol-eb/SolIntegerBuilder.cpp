@@ -50,11 +50,8 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::promoteToBigUInt(
 	}
 
 	// itob → ReinterpretCast to biguint
-	auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-	itob->stackArgs.push_back(std::move(_expr));
-
-	auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
-	return cast;
+	auto itob = awst::makeItob(std::move(_expr), _loc);
+	return awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -433,11 +430,8 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 				auto masked = awst::makeUInt64BinOp(operand, awst::UInt64BinaryOperator::BitAnd, std::move(maskConst), _loc);
 
 				// Promote to biguint for comparison
-				auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-				itob->stackArgs.push_back(std::move(masked));
-
-				auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
-				cmpOperand = std::move(cast);
+				auto itob = awst::makeItob(std::move(masked), _loc);
+				cmpOperand = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
 			}
 
 			auto halfConst = awst::makeIntegerConstant(halfNStr, _loc, awst::WType::biguintType());
@@ -457,15 +451,9 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			// first so `~` produces a 256-bit result.
 			auto castToBytes = awst::makeReinterpretCast(std::move(operand), awst::WType::bytesType(), _loc);
 
-			auto bzero32 = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-			bzero32->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
+			auto concatPad = awst::makeLeftPad(std::move(castToBytes), 32, _loc);
 
-			auto concatPad = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-			concatPad->stackArgs.push_back(std::move(bzero32));
-			concatPad->stackArgs.push_back(std::move(castToBytes));
-
-			auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
-			lenCall->stackArgs.push_back(concatPad);
+			auto lenCall = awst::makeLen(concatPad, _loc);
 
 			auto startOff = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), _loc);
 			startOff->stackArgs.push_back(std::move(lenCall));
@@ -499,8 +487,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 		// (0 - operand would underflow in uint64 for positive operands)
 		{
 			// Promote to biguint: itob → ReinterpretCast
-			auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-			itob->stackArgs.push_back(std::move(operand));
+			auto itob = awst::makeItob(std::move(operand), _loc);
 
 			auto castBiguint = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
 
@@ -535,17 +522,8 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			// Pattern: extract last 32 bytes of `bzero(32) || biguint`.
 			auto toBytes = awst::makeReinterpretCast(resolve(), awst::WType::bytesType(), _loc);
 
-			auto padWidth = awst::makeIntegerConstant("32", _loc);
-			auto bzeroCall = awst::makeIntrinsicCall(
-				"bzero", awst::WType::bytesType(), _loc);
-			bzeroCall->stackArgs.push_back(std::move(padWidth));
-			auto cat = awst::makeIntrinsicCall(
-				"concat", awst::WType::bytesType(), _loc);
-			cat->stackArgs.push_back(std::move(bzeroCall));
-			cat->stackArgs.push_back(std::move(toBytes));
-			auto lenCall = awst::makeIntrinsicCall(
-				"len", awst::WType::uint64Type(), _loc);
-			lenCall->stackArgs.push_back(cat);
+			auto cat = awst::makeLeftPad(std::move(toBytes), 32, _loc);
+			auto lenCall = awst::makeLen(cat, _loc);
 			auto thirtyTwo = awst::makeIntegerConstant("32", _loc);
 			auto offset = awst::makeIntrinsicCall(
 				"-", awst::WType::uint64Type(), _loc);
@@ -666,10 +644,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildBigUIntShift(
 	awst::SourceLocation const& _loc)
 {
 	// bzero(32)
-	auto thirtyTwo = awst::makeIntegerConstant("32", _loc);
-
-	auto bzero = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-	bzero->stackArgs.push_back(std::move(thirtyTwo));
+	auto bzero = awst::makeBzero(32, _loc);
 
 	// 255 - n
 	auto twoFiftyFive = awst::makeIntegerConstant("255", _loc);

@@ -295,31 +295,17 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 			std::shared_ptr<awst::Expression> keyBytes;
 			if (keyWType == awst::WType::uint64Type())
 			{
-				auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
-				itob->stackArgs.push_back(std::move(translated));
-				keyBytes = std::move(itob);
+				keyBytes = awst::makeItob(std::move(translated), m_loc);
 			}
 			else if (keyWType == awst::WType::biguintType())
 			{
 				auto reinterpret = awst::makeReinterpretCast(std::move(translated), awst::WType::bytesType(), m_loc);
-
-				auto padWidth = awst::makeIntegerConstant("32", m_loc);
-
-				auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
-				pad->stackArgs.push_back(std::move(padWidth));
-
-				auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
-				cat->stackArgs.push_back(std::move(pad));
-				cat->stackArgs.push_back(std::move(reinterpret));
-
-				auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), m_loc);
-				lenCall->stackArgs.push_back(cat);
-
-				auto width2 = awst::makeIntegerConstant("32", m_loc);
+				auto cat = awst::makeLeftPad(std::move(reinterpret), 32, m_loc);
+				auto lenCall = awst::makeLen(cat, m_loc);
 
 				auto offset = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), m_loc);
 				offset->stackArgs.push_back(std::move(lenCall));
-				offset->stackArgs.push_back(std::move(width2));
+				offset->stackArgs.push_back(awst::makeIntegerConstant("32", m_loc));
 
 				auto width3 = awst::makeIntegerConstant("32", m_loc);
 

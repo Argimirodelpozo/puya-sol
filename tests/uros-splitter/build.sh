@@ -31,10 +31,16 @@ ORCH_APP_ID="${UROS_ORCH_APP_ID:-0}"
 echo
 echo "=== compiling orchestrator template ==="
 cp "$REPO_ROOT/src/splitter/uros_orchestrator.py" "$OUT/orch.py"
-"$PUYAPY" "$OUT/orch.py" --out-dir "$OUT/Orchestrator" --output-bytecode
+"$PUYAPY" "$OUT/orch.py" --out-dir "$OUT/Orchestrator" --output-bytecode --target-avm-version 10
+
+echo
+echo "=== compiling __storage default template ==="
+cp "$REPO_ROOT/src/splitter/uros_storage.py" "$OUT/storage.py"
+"$PUYAPY" "$OUT/storage.py" --out-dir "$OUT/Storage" --output-bytecode --target-avm-version 10
 
 echo
 echo "=== sizes ==="
 ls -l "$OUT/Smoke/Smoke.approval.bin" \
       "$OUT/Smoke/__uros_split/chunk_0/Smoke__chunk_0.approval.bin" \
-      "$OUT/Orchestrator/UrosOrchestrator.approval.bin"
+      "$OUT/Orchestrator/UrosOrchestrator.approval.bin" \
+      "$OUT/Storage/UrosStorage.approval.bin"

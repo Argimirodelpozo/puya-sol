@@ -169,16 +169,11 @@ void AssemblyBuilder::buildStatement(
 					// uint512 mapping) but the case constants below are 32
 					// bytes. Pattern: b| bzero(32) → ensures at least 32
 					// bytes, then extract the last 32.
-					auto bzero32 = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), loc);
-					auto size32 = awst::makeIntegerConstant("32", loc);
-					bzero32->stackArgs.push_back(size32);
-
 					auto bor = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), loc);
-					bor->stackArgs.push_back(std::move(bzero32));
+					bor->stackArgs.push_back(awst::makeBzero(32, loc));
 					bor->stackArgs.push_back(std::move(cast));
 
-					auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), loc);
-					lenCall->stackArgs.push_back(bor);
+					auto lenCall = awst::makeLen(bor, loc);
 
 					auto minus = std::make_shared<awst::UInt64BinaryOperation>();
 					minus->sourceLocation = loc;

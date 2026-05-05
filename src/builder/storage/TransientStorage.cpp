@@ -180,8 +180,7 @@ std::shared_ptr<awst::Expression> TransientStorage::buildRead(
 		unsigned readSize = sz <= 8 ? sz : 8;
 		// For uint64 stored as 8 bytes, just extract those bytes.
 		auto raw = extractBytes(absByte, readSize, _loc);
-		auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-		btoi->stackArgs.push_back(std::move(raw));
+		auto btoi = awst::makeBtoi(std::move(raw), _loc);
 		// Bool: compare to 0 to produce a proper bool-typed expression
 		// (btoi returns uint64; callers like `!lock` require bool).
 		if (_type == awst::WType::boolType())
@@ -208,12 +207,7 @@ std::shared_ptr<awst::Expression> TransientStorage::buildRead(
 	if (_type == awst::WType::accountType() && sz < 32)
 	{
 		auto raw = extractBytes(absByte, sz, _loc);
-		auto prefix = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-		auto prefLen = awst::makeIntegerConstant(std::to_string(32 - sz), _loc);
-		prefix->stackArgs.push_back(std::move(prefLen));
-		auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-		cat->stackArgs.push_back(std::move(prefix));
-		cat->stackArgs.push_back(std::move(raw));
+		auto cat = awst::makeLeftPad(std::move(raw), 32 - sz, _loc);
 		return awst::makeReinterpretCast(std::move(cat), awst::WType::accountType(), _loc);
 	}
 
@@ -243,26 +237,17 @@ namespace
 		if (isUint64 || isBool)
 		{
 			// itob produces 8 big-endian bytes.
-			auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-			itob->stackArgs.push_back(std::move(_value));
+			auto itob = awst::makeItob(std::move(_value), _loc);
 			if (byteSize >= 8)
 			{
 				// Left-pad with bzero(byteSize - 8) to reach full width.
-				auto prefix = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-				auto prefLen = awst::makeIntegerConstant(std::to_string(byteSize - 8), _loc);
-				prefix->stackArgs.push_back(std::move(prefLen));
-				auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-				cat->stackArgs.push_back(std::move(prefix));
-				cat->stackArgs.push_back(std::move(itob));
-				raw = std::move(cat);
+				raw = awst::makeLeftPad(std::move(itob), byteSize - 8, _loc);
 			}
 			else
 			{
 				// Truncate: take the last `byteSize` bytes of the 8-byte itob result.
-				auto ext = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-				ext->immediates = {static_cast<int>(8 - byteSize), static_cast<int>(byteSize)};
-				ext->stackArgs.push_back(std::move(itob));
-				raw = std::move(ext);
+				raw = awst::makeExtract(std::move(itob),
+					static_cast<int>(8 - byteSize), static_cast<int>(byteSize), _loc);
 			}
 		}
 		else if (_value->wtype == awst::WType::biguintType())
@@ -272,16 +257,11 @@ namespace
 			// max(len(a), len(b)); biguint ≤ 32 bytes so result is 32).
 			// Then extract the trailing `byteSize` bytes at compile-time offset.
 			auto bytesView = awst::makeReinterpretCast(std::move(_value), awst::WType::bytesType(), _loc);
-			auto zeros = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-			auto sz = awst::makeIntegerConstant("32", _loc);
-			zeros->stackArgs.push_back(std::move(sz));
 			auto padded = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), _loc);
-			padded->stackArgs.push_back(std::move(zeros));
+			padded->stackArgs.push_back(awst::makeBzero(32, _loc));
 			padded->stackArgs.push_back(std::move(bytesView));
-			auto ext = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-			ext->immediates = {static_cast<int>(32 - byteSize), static_cast<int>(byteSize)};
-			ext->stackArgs.push_back(std::move(padded));
-			raw = std::move(ext);
+			raw = awst::makeExtract(std::move(padded),
+				static_cast<int>(32 - byteSize), static_cast<int>(byteSize), _loc);
 		}
 		else if (_value->wtype == awst::WType::accountType() && byteSize < 32)
 		{

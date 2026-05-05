@@ -536,6 +536,41 @@ inline std::shared_ptr<IntrinsicCall> makeExtract(
 	return node;
 }
 
+// `bzero(count)` → `count` zero bytes.
+inline std::shared_ptr<IntrinsicCall> makeBzero(int count, SourceLocation loc)
+{
+	auto countExpr = makeIntegerConstant(std::to_string(count), loc);
+	auto node = makeIntrinsicCall("bzero", WType::bytesType(), std::move(loc));
+	node->stackArgs.push_back(std::move(countExpr));
+	return node;
+}
+
+// `concat(bzero(padBytes), value)` — zero-extend `value` on the left to
+// produce a `padBytes + len(value)` byte result.
+inline std::shared_ptr<IntrinsicCall> makeLeftPad(
+	std::shared_ptr<Expression> value, int padBytes, SourceLocation loc)
+{
+	auto pad = makeBzero(padBytes, loc);
+	return makeConcat(std::move(pad), std::move(value), std::move(loc));
+}
+
+// `concat(value, bzero(padBytes))` — zero-extend `value` on the right.
+inline std::shared_ptr<IntrinsicCall> makeRightPad(
+	std::shared_ptr<Expression> value, int padBytes, SourceLocation loc)
+{
+	auto pad = makeBzero(padBytes, loc);
+	return makeConcat(std::move(value), std::move(pad), std::move(loc));
+}
+
+// `keccak256(bytes)` → 32-byte hash.
+inline std::shared_ptr<IntrinsicCall> makeKeccak256(
+	std::shared_ptr<Expression> input, SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("keccak256", WType::bytesType(), std::move(loc));
+	node->stackArgs.push_back(std::move(input));
+	return node;
+}
+
 struct FieldExpression: Expression
 {
 	std::string nodeType() const override { return "FieldExpression"; }

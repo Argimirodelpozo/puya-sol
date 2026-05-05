@@ -47,11 +47,9 @@ std::shared_ptr<awst::Expression> leftPadBytes(
 	unsigned _targetBytes,
 	awst::SourceLocation const& _loc)
 {
-	auto bzero = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-	bzero->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(_targetBytes), _loc));
 	auto orOp = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), _loc);
 	orOp->stackArgs.push_back(std::move(_bytes));
-	orOp->stackArgs.push_back(std::move(bzero));
+	orOp->stackArgs.push_back(awst::makeBzero(_targetBytes, _loc));
 	return orOp;
 }
 
@@ -353,18 +351,13 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 			if (addr->wtype == awst::WType::applicationType())
 			{
 				auto toU64 = awst::makeReinterpretCast(std::move(addr), awst::WType::uint64Type(), _loc);
-				auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-				itob->stackArgs.push_back(std::move(toU64));
-				appIdBytes = std::move(itob);
+				appIdBytes = awst::makeItob(std::move(toU64), _loc);
 			}
 			else
 			{
 				if (addr->wtype != awst::WType::bytesType())
 					addr = awst::makeReinterpretCast(std::move(addr), awst::WType::bytesType(), _loc);
-				auto extract = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-				extract->immediates = {24, 8};
-				extract->stackArgs.push_back(std::move(addr));
-				appIdBytes = std::move(extract);
+				appIdBytes = awst::makeExtract(std::move(addr), 24, 8, _loc);
 			}
 
 			// Store the target's ARC4 method selector in the selector slot.
@@ -529,17 +522,11 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 			auto readLog = awst::makeIntrinsicCall("itxn", awst::WType::bytesType(), _loc);
 			readLog->immediates = {std::string("LastLog")};
 			// extract(readLog, 4, 0) — strip the 4-byte ARC4 return prefix.
-			auto strip = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-			strip->immediates = {4, 0};
-			strip->stackArgs.push_back(std::move(readLog));
+			auto strip = awst::makeExtract(std::move(readLog), 4, 0, _loc);
 			if (retType == awst::WType::bytesType() || retType == awst::WType::voidType())
 				return strip;
 			if (retType == awst::WType::uint64Type())
-			{
-				auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-				btoi->stackArgs.push_back(std::move(strip));
-				return btoi;
-			}
+				return awst::makeBtoi(std::move(strip), _loc);
 			if (retType == awst::WType::boolType())
 			{
 				// ARC4 bool: byte 0's top bit set → true.

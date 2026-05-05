@@ -81,19 +81,11 @@ public:
 			fnPtr = std::move(cast);
 		}
 		// Extract first 8 bytes = appId (big-endian uint64).
-		auto appIdBytes = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), m_loc);
-		appIdBytes->immediates = {0, 8};
-		appIdBytes->stackArgs.push_back(std::move(fnPtr));
+		auto appIdBytes = awst::makeExtract(std::move(fnPtr), 0, 8, m_loc);
 		// Left-pad to 32 bytes to form an address.
-		auto padSize = awst::makeIntegerConstant("24", m_loc);
-		auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
-		pad->stackArgs.push_back(std::move(padSize));
-		auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
-		cat->stackArgs.push_back(std::move(pad));
-		cat->stackArgs.push_back(std::move(appIdBytes));
+		auto cat = awst::makeLeftPad(std::move(appIdBytes), 24, m_loc);
 		// Reinterpret as account for assignment to an address-typed target.
-		auto accCast = awst::makeReinterpretCast(std::move(cat), awst::WType::accountType(), m_loc);
-		return accCast;
+		return awst::makeReinterpretCast(std::move(cat), awst::WType::accountType(), m_loc);
 	}
 };
 

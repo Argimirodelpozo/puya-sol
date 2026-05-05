@@ -250,12 +250,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::toAwst()
 			// Pad on the left to ensure we always have at least N bytes,
 			// then take the LAST N bytes via substring3(b, len(b)-N, len(b)).
 			// concat(bzero(N), b) gives len ≥ N regardless of biguint width.
-			auto padN = awst::makeIntrinsicCall("bzero", bytesT, m_loc);
-			padN->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(n), m_loc));
-
-			auto padded = awst::makeIntrinsicCall("concat", bytesT, m_loc);
-			padded->stackArgs.push_back(std::move(padN));
-			padded->stackArgs.push_back(asBytes);
+			auto padded = awst::makeLeftPad(asBytes, n, m_loc);
 			// Pin the padded result to a local so we can read len() once.
 			static int shCounter = 0;
 			std::string varName = "__bytes_shift_" + std::to_string(shCounter++);
@@ -263,8 +258,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::toAwst()
 			m_ctx.prePendingStatements.push_back(
 				awst::makeAssignmentStatement(var, std::move(padded), m_loc));
 
-			auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), m_loc);
-			lenCall->stackArgs.push_back(var);
+			auto lenCall = awst::makeLen(var, m_loc);
 
 			auto nConst = awst::makeIntegerConstant(std::to_string(n), m_loc);
 			auto start = awst::makeUInt64BinOp(
@@ -328,10 +322,8 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 		-> std::shared_ptr<awst::Expression> {
 		if (expr->wtype == awst::WType::biguintType())
 			return expr;
-		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
-		itob->stackArgs.push_back(std::move(expr));
-		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
-		return cast;
+		auto itob = awst::makeItob(std::move(expr), m_loc);
+		return awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 	};
 
 	_left = ensureBiguint(std::move(_left));
@@ -403,10 +395,8 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 			-> std::shared_ptr<awst::Expression> {
 			if (val->wtype == awst::WType::biguintType())
 				return val;
-			auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
-			itob->stackArgs.push_back(val);
-			auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
-			return cast;
+			auto itob = awst::makeItob(val, m_loc);
+			return awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 		};
 
 		// isNeg: val >= half  ↔  NOT (val < half)
@@ -547,23 +537,12 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 		auto cast = awst::makeReinterpretCast(std::move(rawResult), awst::WType::bytesType(), m_loc);
 
 		// concat(bzero(8), bytes) then extract last 8 bytes → btoi
-		auto eight = awst::makeIntegerConstant("8", m_loc);
-
-		auto bz = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
-		bz->stackArgs.push_back(eight);
-
-		auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
-		cat->stackArgs.push_back(std::move(bz));
-		cat->stackArgs.push_back(std::move(cast));
-
-		auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), m_loc);
-		lenCall->stackArgs.push_back(cat);
-
-		auto eight2 = awst::makeIntegerConstant("8", m_loc);
+		auto cat = awst::makeLeftPad(std::move(cast), 8, m_loc);
+		auto lenCall = awst::makeLen(cat, m_loc);
 
 		auto start = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), m_loc);
 		start->stackArgs.push_back(std::move(lenCall));
-		start->stackArgs.push_back(eight2);
+		start->stackArgs.push_back(awst::makeIntegerConstant("8", m_loc));
 
 		auto extract = awst::makeIntrinsicCall("extract_uint64", awst::WType::uint64Type(), m_loc);
 		extract->stackArgs.push_back(cat);
@@ -605,10 +584,8 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 	// Ensure base is biguint
 	if (_base->wtype == awst::WType::uint64Type())
 	{
-		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
-		itob->stackArgs.push_back(std::move(_base));
-		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
-		_base = std::move(cast);
+		auto itob = awst::makeItob(std::move(_base), m_loc);
+		_base = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 	}
 
 	// Mask base to N bits
@@ -637,10 +614,8 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 	// Ensure exp is biguint
 	if (_exp->wtype == awst::WType::uint64Type())
 	{
-		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
-		itob->stackArgs.push_back(std::move(_exp));
-		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
-		_exp = std::move(cast);
+		auto itob = awst::makeItob(std::move(_exp), m_loc);
+		_exp = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 	}
 
 	// Compute abs(base) ^ exp using the standard buildBinaryOp (unsigned exp)
@@ -755,10 +730,8 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 		-> std::shared_ptr<awst::Expression> {
 		if (expr->wtype == awst::WType::biguintType())
 			return expr;
-		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
-		itob->stackArgs.push_back(std::move(expr));
-		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
-		return cast;
+		auto itob = awst::makeItob(std::move(expr), m_loc);
+		return awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 	};
 
 	_left = ensureBiguint(std::move(_left));
@@ -896,18 +869,11 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 	{
 		auto castBytes = awst::makeReinterpretCast(std::move(finalResult), awst::WType::bytesType(), m_loc);
 
-		auto eight = awst::makeIntegerConstant("8", m_loc);
-		auto bz = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
-		bz->stackArgs.push_back(eight);
-		auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
-		cat->stackArgs.push_back(std::move(bz));
-		cat->stackArgs.push_back(std::move(castBytes));
-		auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), m_loc);
-		lenCall->stackArgs.push_back(cat);
-		auto eight2 = awst::makeIntegerConstant("8", m_loc);
+		auto cat = awst::makeLeftPad(std::move(castBytes), 8, m_loc);
+		auto lenCall = awst::makeLen(cat, m_loc);
 		auto start = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), m_loc);
 		start->stackArgs.push_back(std::move(lenCall));
-		start->stackArgs.push_back(eight2);
+		start->stackArgs.push_back(awst::makeIntegerConstant("8", m_loc));
 		auto extract = awst::makeIntrinsicCall("extract_uint64", awst::WType::uint64Type(), m_loc);
 		extract->stackArgs.push_back(cat);
 		extract->stackArgs.push_back(std::move(start));

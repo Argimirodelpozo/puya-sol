@@ -138,8 +138,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryHandleBytesMemoryRead(
 
 	auto offsetBytes = awst::makeReinterpretCast(offsetExpr, awst::WType::bytesType(), _loc);
 
-	auto offsetU64 = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-	offsetU64->stackArgs.push_back(std::move(offsetBytes));
+	auto offsetU64 = awst::makeBtoi(std::move(offsetBytes), _loc);
 
 	// Length: 32 bytes
 	auto lenArg = awst::makeIntegerConstant("32", _loc);
@@ -222,8 +221,7 @@ bool AssemblyBuilder::tryHandleBytesMemoryWrite(
 	auto varRef = awst::makeVarExpression(varName, varType, _loc);
 
 	// len(x)
-	auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
-	lenCall->stackArgs.push_back(varRef);
+	auto lenCall = awst::makeLen(varRef, _loc);
 
 	// pad32(value) — get the 32 bytes representation
 	auto padded = padTo32Bytes(ensureBiguint(valueExpr, _loc), _loc);

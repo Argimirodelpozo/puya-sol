@@ -23,11 +23,8 @@ std::shared_ptr<awst::Expression> TypeCoercion::implicitNumericCast(
 	// uint64 → biguint: itob then reinterpret as biguint
 	if (_expr->wtype == awst::WType::uint64Type() && _targetType == awst::WType::biguintType())
 	{
-		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-		itob->stackArgs.push_back(std::move(_expr));
-
-		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
-		return cast;
+		auto itob = awst::makeItob(std::move(_expr), _loc);
+		return awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
 	}
 
 	// biguint → uint64: safely extract lower 64 bits
@@ -38,20 +35,11 @@ std::shared_ptr<awst::Expression> TypeCoercion::implicitNumericCast(
 		// reinterpret biguint → bytes
 		auto toBytes = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
 
-		// bzero(8) — 8 zero bytes padding
-		auto eight = awst::makeIntegerConstant("8", _loc);
-
-		auto padding = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-		padding->stackArgs.push_back(std::move(eight));
-
-		// concat(padding, bytes) → padded
-		auto padded = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-		padded->stackArgs.push_back(std::move(padding));
-		padded->stackArgs.push_back(std::move(toBytes));
+		// concat(bzero(8), bytes) → padded
+		auto padded = awst::makeLeftPad(std::move(toBytes), 8, _loc);
 
 		// len(padded) → paddedLen
-		auto paddedLen = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
-		paddedLen->stackArgs.push_back(padded);
+		auto paddedLen = awst::makeLen(padded, _loc);
 
 		// paddedLen - 8 → offset
 		auto eight2 = awst::makeIntegerConstant("8", _loc);
@@ -67,9 +55,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::implicitNumericCast(
 		extract->stackArgs.push_back(std::move(eight3));
 
 		// btoi(last8) → uint64
-		auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-		btoi->stackArgs.push_back(std::move(extract));
-		return btoi;
+		return awst::makeBtoi(std::move(extract), _loc);
 	}
 
 	// String / bytes constant → fixed-size bytes[N]: right-pad to N bytes.
@@ -372,16 +358,10 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeZeroBytesRuntime(
 	awst::WType const* _targetType,
 	awst::SourceLocation const& _loc)
 {
-	auto size = awst::makeIntegerConstant(std::to_string(_n), _loc);
-
-	auto bzero = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-	bzero->stackArgs.push_back(std::move(size));
-
+	auto bzero = awst::makeBzero(_n, _loc);
 	if (_targetType == awst::WType::bytesType())
 		return bzero;
-
-	auto cast = awst::makeReinterpretCast(std::move(bzero), _targetType, _loc);
-	return cast;
+	return awst::makeReinterpretCast(std::move(bzero), _targetType, _loc);
 }
 
 std::shared_ptr<awst::Expression> TypeCoercion::prependArc4LengthHeader(
@@ -736,17 +716,8 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 					int64_t diffBytes = diffElems * elemSize;
 
 					auto srcBytes = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
-
-					auto padSize = awst::makeIntegerConstant(std::to_string(diffBytes), _loc);
-					auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-					pad->stackArgs.push_back(std::move(padSize));
-
-					auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-					cat->stackArgs.push_back(std::move(srcBytes));
-					cat->stackArgs.push_back(std::move(pad));
-
-					auto cast = awst::makeReinterpretCast(std::move(cat), _targetType, _loc);
-					return cast;
+					auto cat = awst::makeRightPad(std::move(srcBytes), diffBytes, _loc);
+					return awst::makeReinterpretCast(std::move(cat), _targetType, _loc);
 				}
 			}
 
@@ -859,18 +830,9 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 					if (sourceWidth > 0 && sourceWidth < targetWidth)
 					{
 						auto srcBytes = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
-
 						int padBytes = targetWidth - sourceWidth;
-						auto padSize = awst::makeIntegerConstant(std::to_string(padBytes), _loc);
-						auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-						pad->stackArgs.push_back(std::move(padSize));
-
-						auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-						cat->stackArgs.push_back(std::move(srcBytes));
-						cat->stackArgs.push_back(std::move(pad));
-
-						auto cast = awst::makeReinterpretCast(std::move(cat), _targetType, _loc);
-						return cast;
+						auto cat = awst::makeRightPad(std::move(srcBytes), padBytes, _loc);
+						return awst::makeReinterpretCast(std::move(cat), _targetType, _loc);
 					}
 				}
 			}
@@ -905,20 +867,9 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 		&& _expr->wtype == awst::WType::applicationType())
 	{
 		auto idBytes = awst::makeReinterpretCast(std::move(_expr), awst::WType::uint64Type(), _loc);
-
-		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-		itob->stackArgs.push_back(std::move(idBytes));
-
-		auto padSize = awst::makeIntegerConstant("24", _loc);
-		auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-		pad->stackArgs.push_back(std::move(padSize));
-
-		auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-		cat->stackArgs.push_back(std::move(pad));
-		cat->stackArgs.push_back(std::move(itob));
-
-		auto accountCast = awst::makeReinterpretCast(std::move(cat), _targetType, _loc);
-		return accountCast;
+		auto itob = awst::makeItob(std::move(idBytes), _loc);
+		auto cat = awst::makeLeftPad(std::move(itob), 24, _loc);
+		return awst::makeReinterpretCast(std::move(cat), _targetType, _loc);
 	}
 
 	// account → application: extract last 8 bytes (app_id) via btoi
@@ -927,16 +878,9 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 		&& _expr->wtype == awst::WType::accountType())
 	{
 		auto toBytes = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
-
-		auto extract = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-		extract->immediates = {24, 8};
-		extract->stackArgs.push_back(std::move(toBytes));
-
-		auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-		btoi->stackArgs.push_back(std::move(extract));
-
-		auto appIdCast = awst::makeReinterpretCast(std::move(btoi), _targetType, _loc);
-		return appIdCast;
+		auto extract = awst::makeExtract(std::move(toBytes), 24, 8, _loc);
+		auto btoi = awst::makeBtoi(std::move(extract), _loc);
+		return awst::makeReinterpretCast(std::move(btoi), _targetType, _loc);
 	}
 
 	// uint64 → bool (0/non-0)

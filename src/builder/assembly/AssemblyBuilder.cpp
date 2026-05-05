@@ -374,15 +374,8 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::emitFreeMemoryBum
 		std::move(extractFmp), awst::UInt64BinaryOperator::Add,
 		std::move(sizeConst), _loc);
 
-	auto itobNew = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-	itobNew->stackArgs.push_back(std::move(newFmp));
-
-	auto pad24 = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-	pad24->stackArgs.push_back(awst::makeIntegerConstant("24", _loc));
-
-	auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-	concat->stackArgs.push_back(std::move(pad24));
-	concat->stackArgs.push_back(std::move(itobNew));
+	auto itobNew = awst::makeItob(std::move(newFmp), _loc);
+	auto concat = awst::makeLeftPad(std::move(itobNew), 24, _loc);
 
 	auto blobRead2 = awst::makeVarExpression(blobTmp, awst::WType::bytesType(), _loc);
 	auto offset40 = awst::makeIntegerConstant("64", _loc);
@@ -889,23 +882,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::safeBtoi(
 	// This handles biguint values > 8 bytes from b&/b|/b^ padding.
 	auto cast = awst::makeReinterpretCast(std::move(_biguintExpr), awst::WType::bytesType(), _loc);
 
-	auto eight = awst::makeIntegerConstant("8", _loc);
-
-	auto bzeroCall = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-	bzeroCall->stackArgs.push_back(eight);
-
-	auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-	cat->stackArgs.push_back(std::move(bzeroCall));
-	cat->stackArgs.push_back(std::move(cast));
-
-	auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
-	lenCall->stackArgs.push_back(cat);
-
-	auto eight2 = awst::makeIntegerConstant("8", _loc);
+	auto cat = awst::makeLeftPad(std::move(cast), 8, _loc);
+	auto lenCall = awst::makeLen(cat, _loc);
 
 	auto start = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), _loc);
 	start->stackArgs.push_back(std::move(lenCall));
-	start->stackArgs.push_back(eight2);
+	start->stackArgs.push_back(awst::makeIntegerConstant("8", _loc));
 
 	auto extractU64 = awst::makeIntrinsicCall("extract_uint64", awst::WType::uint64Type(), _loc);
 	extractU64->stackArgs.push_back(cat);

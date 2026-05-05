@@ -124,8 +124,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 		// Zero-argument event: raw log with 4-byte ARC-28 selector
 		auto sigBytes = awst::makeUtf8BytesConstant(eventSignature, m_loc);
 
-		auto hash = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), m_loc);
-		hash->stackArgs.push_back(std::move(sigBytes));
+		auto hash = awst::makeKeccak256(std::move(sigBytes), m_loc);
 
 		auto zero = awst::makeIntegerConstant("0", m_loc);
 		auto four = awst::makeIntegerConstant("4", m_loc);

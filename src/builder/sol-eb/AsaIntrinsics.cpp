@@ -36,8 +36,7 @@ std::shared_ptr<awst::Expression> uint64ToBigUInt(
 	std::shared_ptr<awst::Expression> _expr,
 	awst::SourceLocation const& _loc)
 {
-	auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-	itob->stackArgs.push_back(std::move(_expr));
+	auto itob = awst::makeItob(std::move(_expr), _loc);
 	return awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
 }
 
@@ -75,9 +74,7 @@ std::shared_ptr<awst::Expression> bigUIntToUint64(
 	extract->stackArgs.push_back(awst::makeIntegerConstant("24", _loc));
 	extract->stackArgs.push_back(awst::makeIntegerConstant("8", _loc));
 
-	auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-	btoi->stackArgs.push_back(std::move(extract));
-	return btoi;
+	return awst::makeBtoi(std::move(extract), _loc);
 }
 
 /// `global CurrentApplicationAddress` as account-typed expr.
