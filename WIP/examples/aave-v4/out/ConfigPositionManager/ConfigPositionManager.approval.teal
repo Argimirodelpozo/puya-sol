@@ -1293,6 +1293,18 @@ getConfigPermissions:
 getConfigPermissions_ternary_merge@4:
     !
     assert // not payable
+    load 0
+    pushint 24
+    bzero
+    dig 1
+    pushint 88
+    extract_uint64
+    intc_0 // 1
+    +
+    itob
+    concat
+    replace2 64
+    store 0
     dig 2
     dig 1
     dig 3
@@ -1434,7 +1446,7 @@ setSelfAsUserPositionManagerWithSig_ternary_merge@4:
     global CurrentApplicationAddress
     dig 6
     concat
-    pushbytes 0x00010000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x0001000000000000000000000000000000000000000000000000000000000000000000
     swap
     replace2 2 // on error: index access is out of bounds
     itxn_begin
@@ -2623,11 +2635,29 @@ _isSpokeRegistered:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/ConfigPositionManager.sol.ConfigPositionManager._checkRescueGuardian() -> void:
 _checkRescueGuardian:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/ConfigPositionManager.sol.ConfigPositionManager.owner
     txn Sender
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/ConfigPositionManager.sol.ConfigPositionManager.owner
     ==
+    bnz _checkRescueGuardian_bool_true@2
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/ConfigPositionManager.sol.ConfigPositionManager.owner
+    ==
+    bz _checkRescueGuardian_bool_false@3
+
+_checkRescueGuardian_bool_true@2:
+    intc_0 // 1
+
+_checkRescueGuardian_bool_merge@4:
     assert // OnlyRescueGuardian
     retsub
+
+_checkRescueGuardian_bool_false@3:
+    intc_1 // 0
+    b _checkRescueGuardian_bool_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/ConfigPositionManager.sol.ConfigPositionManager.pendingOwner() -> bytes:

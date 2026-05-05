@@ -70,3 +70,86 @@ The `b<<` direction may have the symmetric issue (Yul `shl(N, X)` for
   fresh local var via prePendingStatements. (Tried `SingleEvaluation`
   first — puya's SE cache didn't deduplicate after JSON round-trip
   even with matching ids and structurally-equal sources.)
+
+---
+
+## 2. Default `NewStruct` with `arc4.bool` fields emits `getbit("", 0)`
+
+**Status:** Open in puya. Worked-around in puya-sol by emitting a
+zero-filled `BytesConstant` directly for fixed-size ARC4Struct
+defaults, sidestepping puya's broken encoder.
+
+### What
+
+Puya's encoder for a literal `NewStruct{...}` whose fields include
+`arc4.bool` packs consecutive bools into bits via `setbit` on a
+running bytes buffer — but starts the buffer as the **empty
+BytesConstant** `bytec_1 // 0x` instead of `bzero(1)` (or whatever
+the correct byte width is for the bool group). The first bool's
+encoding therefore emits
+
+```
+bytec_1 // 0x        ; running buffer = ""
+intc_2 // 0          ; bit index 0
+getbit               ; getbit("", 0) — ALWAYS errors at runtime
+bytec_1 // 0x        ; ""
+intc_1 // 1          ; bit index 1
+uncover 2; setbit    ; setbit("", 1, prev) — also errors
+```
+
+`getbit` and `setbit` reject byte-string indices past the slice's
+length, so any execution path that constructs the struct default
+panics with `getbit index beyond byteslice`.
+
+### Where it bites in AAVE V4
+
+Hub's box-backed mappings of `SpokeData` and `Asset` (which both
+carry consecutive `bool active; bool halted;` fields). Any view
+method that reads from an uninitialized mapping entry — e.g.
+`Hub.getSpokeAddedAssets` / `Hub.getSpokeAddedShares` from
+`TreasurySpoke.getSuppliedAmount` etc. — triggers the StateGet
+default path, instantiates a default `SpokeData`, and crashes
+during the encoder.
+
+The chunked TEAL for `getSpokeAddedShares` shows it clearly
+(`WIP/examples/aave-v4/out/Hub/__uros_split/chunk_1/Hub__chunk_1.approval.teal:1987-2001`):
+
+```
+bytec_1 // 0x
+intc_2 // 0
+getbit                ; <- crashes here on any unset _spokes box
+bytec_1 // 0x
+intc_1 // 1
+uncover 2
+setbit
+bytec 5  // 73 zero bytes
+swap; concat
+bytec 6  // 25 zero bytes
+concat
+swap
+box_get
+select
+```
+
+### Workaround in puya-sol
+
+`src/builder/sol-types/TypeCoercion.cpp` — `makeDefaultValue` for
+`ARC4Struct` now mirrors the `ARC4StaticArray` path: when the
+struct is fixed-size (no dynamic-length fields), emit a
+`BytesConstant` of zeros at the encoded width (with the struct
+type as wtype) instead of a `NewStruct`. Also extends
+`computeEncodedElementSize` to account for ARC4 bool packing
+(consecutive `arc4.bool` fields share a byte; `ceil(N/8)`).
+
+This keeps the encoded bytes identical to what puya *should* have
+produced, but skips puya's struct-encoder entirely for the all-zero
+case. Dynamic-size structs still go through `NewStruct` and remain
+exposed to the bug — none of AAVE V4's mapping value types are
+dynamic, so this covers the hot path.
+
+### Suggested upstream fix
+
+In puya's ARC4 struct encoder, initialize the running bool-pack
+buffer as `bzero(ceil(group_size / 8))` instead of an empty bytes
+constant, so the first `getbit`/`setbit` operates on a valid byte
+index.

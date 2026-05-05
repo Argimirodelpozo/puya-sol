@@ -10738,6 +10738,18 @@ getReserveConfig:
 getReserveConfig_ternary_merge@4:
     !
     assert // not payable
+    load 0
+    pushint 24
+    bzero
+    dig 1
+    pushint 88
+    extract_uint64
+    pushint 4
+    +
+    itob
+    concat
+    replace2 64
+    store 0
     bytec 4 // "_reserves"
     dig 1
     callsub SpokeUtils.get

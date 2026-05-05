@@ -5902,7 +5902,7 @@
                   "immutable": true
                 },
                 "condition": {
-                  "_type": "BytesComparisonExpression",
+                  "_type": "BooleanBinaryOperation",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
                     "line": 1617,
@@ -5916,23 +5916,45 @@
                     "name": "bool",
                     "immutable": true
                   },
-                  "lhs": {
-                    "_type": "AppStateExpression",
+                  "left": {
+                    "_type": "BytesComparisonExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
                       "line": 1617,
-                      "end_line": 1620,
+                      "end_line": 1634,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
                     },
                     "wtype": {
                       "_type": "WType",
-                      "name": "account",
+                      "name": "bool",
                       "immutable": true
                     },
-                    "key": {
-                      "_type": "BytesConstant",
+                    "lhs": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
+                        "line": 1624,
+                        "end_line": 1634,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "account",
+                        "immutable": true
+                      },
+                      "op_code": "txn",
+                      "immediates": [
+                        "Sender"
+                      ],
+                      "stack_args": []
+                    },
+                    "operator": "==",
+                    "rhs": {
+                      "_type": "AppStateExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
                         "line": 1617,
@@ -5943,20 +5965,36 @@
                       },
                       "wtype": {
                         "_type": "WType",
-                        "name": "state_key",
+                        "name": "account",
                         "immutable": true
                       },
-                      "value": "NL4}",
-                      "encoding": "utf8"
-                    },
-                    "exists_assertion_message": "check HUB exists"
+                      "key": {
+                        "_type": "BytesConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
+                          "line": 1617,
+                          "end_line": 1620,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "state_key",
+                          "immutable": true
+                        },
+                        "value": "NL4}",
+                        "encoding": "utf8"
+                      },
+                      "exists_assertion_message": "check HUB exists"
+                    }
                   },
-                  "operator": "==",
-                  "rhs": {
-                    "_type": "IntrinsicCall",
+                  "op": "or",
+                  "right": {
+                    "_type": "BytesComparisonExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                      "line": 1624,
+                      "line": 1617,
                       "end_line": 1634,
                       "comment_lines": 0,
                       "column": null,
@@ -5964,14 +6002,163 @@
                     },
                     "wtype": {
                       "_type": "WType",
-                      "name": "account",
+                      "name": "bool",
                       "immutable": true
                     },
-                    "op_code": "txn",
-                    "immediates": [
-                      "Sender"
-                    ],
-                    "stack_args": []
+                    "lhs": {
+                      "_type": "ReinterpretCast",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
+                        "line": 1617,
+                        "end_line": 1634,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "account",
+                        "immutable": true
+                      },
+                      "expr": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
+                          "line": 1617,
+                          "end_line": 1634,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "concat",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
+                              "line": 1617,
+                              "end_line": 1634,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "bzero",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
+                                  "line": 1617,
+                                  "end_line": 1634,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 24,
+                                "teal_alias": null
+                              }
+                            ]
+                          },
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
+                              "line": 1617,
+                              "end_line": 1634,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "itob",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
+                                  "line": 1617,
+                                  "end_line": 1634,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "op_code": "global",
+                                "immediates": [
+                                  "CallerApplicationID"
+                                ],
+                                "stack_args": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    "operator": "==",
+                    "rhs": {
+                      "_type": "AppStateExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
+                        "line": 1617,
+                        "end_line": 1620,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "account",
+                        "immutable": true
+                      },
+                      "key": {
+                        "_type": "BytesConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
+                          "line": 1617,
+                          "end_line": 1620,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "state_key",
+                          "immutable": true
+                        },
+                        "value": "NL4}",
+                        "encoding": "utf8"
+                      },
+                      "exists_assertion_message": "check HUB exists"
+                    }
                   }
                 },
                 "error_message": "OnlyHub",
@@ -9757,7 +9944,7 @@
                   "exists_assertion_message": null
                 },
                 "default": {
-                  "_type": "NewStruct",
+                  "_type": "BytesConstant",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
                     "line": 2563,
@@ -9809,92 +9996,8 @@
                     "source_location": null,
                     "desc": null
                   },
-                  "values": {
-                    "baseVariableBorrowRate": {
-                      "_type": "BytesConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                        "line": 2563,
-                        "end_line": 2589,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "ARC4UIntN",
-                        "name": "arc4.uint32",
-                        "immutable": true,
-                        "n": 32,
-                        "arc4_alias": null,
-                        "source_location": null
-                      },
-                      "value": "00000",
-                      "encoding": "base16"
-                    },
-                    "optimalUsageRatio": {
-                      "_type": "BytesConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                        "line": 2563,
-                        "end_line": 2589,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "ARC4UIntN",
-                        "name": "arc4.uint16",
-                        "immutable": true,
-                        "n": 16,
-                        "arc4_alias": null,
-                        "source_location": null
-                      },
-                      "value": "000",
-                      "encoding": "base16"
-                    },
-                    "variableRateSlope1": {
-                      "_type": "BytesConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                        "line": 2563,
-                        "end_line": 2589,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "ARC4UIntN",
-                        "name": "arc4.uint32",
-                        "immutable": true,
-                        "n": 32,
-                        "arc4_alias": null,
-                        "source_location": null
-                      },
-                      "value": "00000",
-                      "encoding": "base16"
-                    },
-                    "variableRateSlope2": {
-                      "_type": "BytesConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                        "line": 2563,
-                        "end_line": 2589,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "ARC4UIntN",
-                        "name": "arc4.uint32",
-                        "immutable": true,
-                        "n": 32,
-                        "arc4_alias": null,
-                        "source_location": null
-                      },
-                      "value": "00000",
-                      "encoding": "base16"
-                    }
-                  }
+                  "value": "000000000000000000",
+                  "encoding": "base16"
                 }
               }
             }
@@ -10781,7 +10884,7 @@
                               "exists_assertion_message": null
                             },
                             "default": {
-                              "_type": "NewStruct",
+                              "_type": "BytesConstant",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
                                 "line": 2735,
@@ -10833,92 +10936,8 @@
                                 "source_location": null,
                                 "desc": null
                               },
-                              "values": {
-                                "baseVariableBorrowRate": {
-                                  "_type": "BytesConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                                    "line": 2735,
-                                    "end_line": 2761,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint32",
-                                    "immutable": true,
-                                    "n": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "value": "00000",
-                                  "encoding": "base16"
-                                },
-                                "optimalUsageRatio": {
-                                  "_type": "BytesConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                                    "line": 2735,
-                                    "end_line": 2761,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint16",
-                                    "immutable": true,
-                                    "n": 16,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "value": "000",
-                                  "encoding": "base16"
-                                },
-                                "variableRateSlope1": {
-                                  "_type": "BytesConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                                    "line": 2735,
-                                    "end_line": 2761,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint32",
-                                    "immutable": true,
-                                    "n": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "value": "00000",
-                                  "encoding": "base16"
-                                },
-                                "variableRateSlope2": {
-                                  "_type": "BytesConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                                    "line": 2735,
-                                    "end_line": 2761,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint32",
-                                    "immutable": true,
-                                    "n": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "value": "00000",
-                                  "encoding": "base16"
-                                }
-                              }
+                              "value": "000000000000000000",
+                              "encoding": "base16"
                             }
                           },
                           "name": "optimalUsageRatio"
@@ -11814,7 +11833,7 @@
                               "exists_assertion_message": null
                             },
                             "default": {
-                              "_type": "NewStruct",
+                              "_type": "BytesConstant",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
                                 "line": 2930,
@@ -11866,92 +11885,8 @@
                                 "source_location": null,
                                 "desc": null
                               },
-                              "values": {
-                                "baseVariableBorrowRate": {
-                                  "_type": "BytesConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                                    "line": 2930,
-                                    "end_line": 2956,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint32",
-                                    "immutable": true,
-                                    "n": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "value": "00000",
-                                  "encoding": "base16"
-                                },
-                                "optimalUsageRatio": {
-                                  "_type": "BytesConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                                    "line": 2930,
-                                    "end_line": 2956,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint16",
-                                    "immutable": true,
-                                    "n": 16,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "value": "000",
-                                  "encoding": "base16"
-                                },
-                                "variableRateSlope1": {
-                                  "_type": "BytesConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                                    "line": 2930,
-                                    "end_line": 2956,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint32",
-                                    "immutable": true,
-                                    "n": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "value": "00000",
-                                  "encoding": "base16"
-                                },
-                                "variableRateSlope2": {
-                                  "_type": "BytesConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                                    "line": 2930,
-                                    "end_line": 2956,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint32",
-                                    "immutable": true,
-                                    "n": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "value": "00000",
-                                  "encoding": "base16"
-                                }
-                              }
+                              "value": "000000000000000000",
+                              "encoding": "base16"
                             }
                           },
                           "name": "baseVariableBorrowRate"
@@ -12847,7 +12782,7 @@
                               "exists_assertion_message": null
                             },
                             "default": {
-                              "_type": "NewStruct",
+                              "_type": "BytesConstant",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
                                 "line": 3126,
@@ -12899,92 +12834,8 @@
                                 "source_location": null,
                                 "desc": null
                               },
-                              "values": {
-                                "baseVariableBorrowRate": {
-                                  "_type": "BytesConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                                    "line": 3126,
-                                    "end_line": 3152,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint32",
-                                    "immutable": true,
-                                    "n": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "value": "00000",
-                                  "encoding": "base16"
-                                },
-                                "optimalUsageRatio": {
-                                  "_type": "BytesConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                                    "line": 3126,
-                                    "end_line": 3152,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint16",
-                                    "immutable": true,
-                                    "n": 16,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "value": "000",
-                                  "encoding": "base16"
-                                },
-                                "variableRateSlope1": {
-                                  "_type": "BytesConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                                    "line": 3126,
-                                    "end_line": 3152,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint32",
-                                    "immutable": true,
-                                    "n": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "value": "00000",
-                                  "encoding": "base16"
-                                },
-                                "variableRateSlope2": {
-                                  "_type": "BytesConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                                    "line": 3126,
-                                    "end_line": 3152,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint32",
-                                    "immutable": true,
-                                    "n": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "value": "00000",
-                                  "encoding": "base16"
-                                }
-                              }
+                              "value": "000000000000000000",
+                              "encoding": "base16"
                             }
                           },
                           "name": "variableRateSlope1"
@@ -13880,7 +13731,7 @@
                               "exists_assertion_message": null
                             },
                             "default": {
-                              "_type": "NewStruct",
+                              "_type": "BytesConstant",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
                                 "line": 3318,
@@ -13932,92 +13783,8 @@
                                 "source_location": null,
                                 "desc": null
                               },
-                              "values": {
-                                "baseVariableBorrowRate": {
-                                  "_type": "BytesConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                                    "line": 3318,
-                                    "end_line": 3344,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint32",
-                                    "immutable": true,
-                                    "n": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "value": "00000",
-                                  "encoding": "base16"
-                                },
-                                "optimalUsageRatio": {
-                                  "_type": "BytesConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                                    "line": 3318,
-                                    "end_line": 3344,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint16",
-                                    "immutable": true,
-                                    "n": 16,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "value": "000",
-                                  "encoding": "base16"
-                                },
-                                "variableRateSlope1": {
-                                  "_type": "BytesConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                                    "line": 3318,
-                                    "end_line": 3344,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint32",
-                                    "immutable": true,
-                                    "n": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "value": "00000",
-                                  "encoding": "base16"
-                                },
-                                "variableRateSlope2": {
-                                  "_type": "BytesConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                                    "line": 3318,
-                                    "end_line": 3344,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint32",
-                                    "immutable": true,
-                                    "n": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "value": "00000",
-                                  "encoding": "base16"
-                                }
-                              }
+                              "value": "000000000000000000",
+                              "encoding": "base16"
                             }
                           },
                           "name": "variableRateSlope2"
@@ -14893,7 +14660,7 @@
                         "exists_assertion_message": null
                       },
                       "default": {
-                        "_type": "NewStruct",
+                        "_type": "BytesConstant",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
                           "line": 3519,
@@ -14945,92 +14712,8 @@
                           "source_location": null,
                           "desc": null
                         },
-                        "values": {
-                          "baseVariableBorrowRate": {
-                            "_type": "BytesConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                              "line": 3519,
-                              "end_line": 3545,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint32",
-                              "immutable": true,
-                              "n": 32,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "value": "00000",
-                            "encoding": "base16"
-                          },
-                          "optimalUsageRatio": {
-                            "_type": "BytesConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                              "line": 3519,
-                              "end_line": 3545,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint16",
-                              "immutable": true,
-                              "n": 16,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "value": "000",
-                            "encoding": "base16"
-                          },
-                          "variableRateSlope1": {
-                            "_type": "BytesConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                              "line": 3519,
-                              "end_line": 3545,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint32",
-                              "immutable": true,
-                              "n": 32,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "value": "00000",
-                            "encoding": "base16"
-                          },
-                          "variableRateSlope2": {
-                            "_type": "BytesConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                              "line": 3519,
-                              "end_line": 3545,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint32",
-                              "immutable": true,
-                              "n": 32,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "value": "00000",
-                            "encoding": "base16"
-                          }
-                        }
+                        "value": "000000000000000000",
+                        "encoding": "base16"
                       }
                     },
                     "name": "baseVariableBorrowRate"
@@ -15477,7 +15160,7 @@
                         "exists_assertion_message": null
                       },
                       "default": {
-                        "_type": "NewStruct",
+                        "_type": "BytesConstant",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
                           "line": 3577,
@@ -15529,92 +15212,8 @@
                           "source_location": null,
                           "desc": null
                         },
-                        "values": {
-                          "baseVariableBorrowRate": {
-                            "_type": "BytesConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                              "line": 3577,
-                              "end_line": 3603,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint32",
-                              "immutable": true,
-                              "n": 32,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "value": "00000",
-                            "encoding": "base16"
-                          },
-                          "optimalUsageRatio": {
-                            "_type": "BytesConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                              "line": 3577,
-                              "end_line": 3603,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint16",
-                              "immutable": true,
-                              "n": 16,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "value": "000",
-                            "encoding": "base16"
-                          },
-                          "variableRateSlope1": {
-                            "_type": "BytesConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                              "line": 3577,
-                              "end_line": 3603,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint32",
-                              "immutable": true,
-                              "n": 32,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "value": "00000",
-                            "encoding": "base16"
-                          },
-                          "variableRateSlope2": {
-                            "_type": "BytesConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                              "line": 3577,
-                              "end_line": 3603,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint32",
-                              "immutable": true,
-                              "n": 32,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "value": "00000",
-                            "encoding": "base16"
-                          }
-                        }
+                        "value": "000000000000000000",
+                        "encoding": "base16"
                       }
                     },
                     "name": "variableRateSlope1"
@@ -16203,7 +15802,7 @@
                         "exists_assertion_message": null
                       },
                       "default": {
-                        "_type": "NewStruct",
+                        "_type": "BytesConstant",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
                           "line": 3631,
@@ -16255,92 +15854,8 @@
                           "source_location": null,
                           "desc": null
                         },
-                        "values": {
-                          "baseVariableBorrowRate": {
-                            "_type": "BytesConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                              "line": 3631,
-                              "end_line": 3657,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint32",
-                              "immutable": true,
-                              "n": 32,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "value": "00000",
-                            "encoding": "base16"
-                          },
-                          "optimalUsageRatio": {
-                            "_type": "BytesConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                              "line": 3631,
-                              "end_line": 3657,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint16",
-                              "immutable": true,
-                              "n": 16,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "value": "000",
-                            "encoding": "base16"
-                          },
-                          "variableRateSlope1": {
-                            "_type": "BytesConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                              "line": 3631,
-                              "end_line": 3657,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint32",
-                              "immutable": true,
-                              "n": 32,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "value": "00000",
-                            "encoding": "base16"
-                          },
-                          "variableRateSlope2": {
-                            "_type": "BytesConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                              "line": 3631,
-                              "end_line": 3657,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint32",
-                              "immutable": true,
-                              "n": 32,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "value": "00000",
-                            "encoding": "base16"
-                          }
-                        }
+                        "value": "000000000000000000",
+                        "encoding": "base16"
                       }
                     },
                     "name": "variableRateSlope2"
@@ -17708,7 +17223,7 @@
                   "exists_assertion_message": null
                 },
                 "default": {
-                  "_type": "NewStruct",
+                  "_type": "BytesConstant",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
                     "line": 3947,
@@ -17760,92 +17275,8 @@
                     "source_location": null,
                     "desc": null
                   },
-                  "values": {
-                    "baseVariableBorrowRate": {
-                      "_type": "BytesConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                        "line": 3947,
-                        "end_line": 3973,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "ARC4UIntN",
-                        "name": "arc4.uint32",
-                        "immutable": true,
-                        "n": 32,
-                        "arc4_alias": null,
-                        "source_location": null
-                      },
-                      "value": "00000",
-                      "encoding": "base16"
-                    },
-                    "optimalUsageRatio": {
-                      "_type": "BytesConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                        "line": 3947,
-                        "end_line": 3973,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "ARC4UIntN",
-                        "name": "arc4.uint16",
-                        "immutable": true,
-                        "n": 16,
-                        "arc4_alias": null,
-                        "source_location": null
-                      },
-                      "value": "000",
-                      "encoding": "base16"
-                    },
-                    "variableRateSlope1": {
-                      "_type": "BytesConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                        "line": 3947,
-                        "end_line": 3973,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "ARC4UIntN",
-                        "name": "arc4.uint32",
-                        "immutable": true,
-                        "n": 32,
-                        "arc4_alias": null,
-                        "source_location": null
-                      },
-                      "value": "00000",
-                      "encoding": "base16"
-                    },
-                    "variableRateSlope2": {
-                      "_type": "BytesConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol",
-                        "line": 3947,
-                        "end_line": 3973,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "ARC4UIntN",
-                        "name": "arc4.uint32",
-                        "immutable": true,
-                        "n": 32,
-                        "arc4_alias": null,
-                        "source_location": null
-                      },
-                      "value": "00000",
-                      "encoding": "base16"
-                    }
-                  }
+                  "value": "000000000000000000",
+                  "encoding": "base16"
                 }
               }
             },

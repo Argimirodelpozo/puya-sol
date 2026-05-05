@@ -2513,10 +2513,20 @@ multicall_ternary_false@7:
     retsub
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManager.canCall_else_body@5:
-    frame_dig -3
     global CurrentApplicationAddress
+    frame_dig -3
     ==
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManager.canCall_else_body@7
+    bnz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManager.canCall_if_body@7
+    pushint 24
+    bzero
+    global CurrentApplicationID
+    itob
+    concat
+    frame_dig -3
+    ==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManager.canCall_else_body@8
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManager.canCall_if_body@7:
     intc_0 // 0
     bytec 7 // "_executionId"
     app_global_get_ex
@@ -2530,7 +2540,7 @@ multicall_ternary_false@7:
     uncover 3
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManager.canCall_else_body@7:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManager.canCall_else_body@8:
     frame_dig -2
     frame_dig -1
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManager.getTargetFunctionRole
@@ -2543,24 +2553,24 @@ multicall_ternary_false@7:
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManager.hasRole
     frame_bury 0
     pop
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManager.canCall_ternary_false@9
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManager.canCall_ternary_false@10
     frame_dig 0
     dup
     !
     frame_bury 1
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManager.canCall_ternary_merge@10:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManager.canCall_ternary_merge@11:
     frame_dig 1
     swap
     uncover 3
     uncover 3
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManager.canCall_ternary_false@9:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManager.canCall_ternary_false@10:
     intc_0 // 0
     frame_bury 1
     intc_0 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManager.canCall_ternary_merge@10
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManager.canCall_ternary_merge@11
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManager.canCall_ternary_false@2:
     intc_0 // 0
@@ -3409,34 +3419,44 @@ _getAdminRestrictions_after_if_else@15:
 _canCallExtended:
     proto 3 2
     bytec_1 // ""
-    frame_dig -2
     global CurrentApplicationAddress
+    frame_dig -2
     ==
-    bz _canCallExtended_else_body@2
+    bnz _canCallExtended_if_body@2
+    pushint 24
+    bzero
+    global CurrentApplicationID
+    itob
+    concat
+    frame_dig -2
+    ==
+    bz _canCallExtended_else_body@3
+
+_canCallExtended_if_body@2:
     frame_dig -3
     frame_dig -1
     callsub _canCallSelf
     uncover 2
     retsub
 
-_canCallExtended_else_body@2:
+_canCallExtended_else_body@3:
     frame_dig -1
     len
     itob
     bytec 17 // 0x04
     b<
-    bz _canCallExtended_ternary_false@4
+    bz _canCallExtended_ternary_false@5
     intc_0 // 0
     frame_bury 0
     intc_0 // 0
 
-_canCallExtended_ternary_merge@5:
+_canCallExtended_ternary_merge@6:
     frame_dig 0
     swap
     uncover 2
     retsub
 
-_canCallExtended_ternary_false@4:
+_canCallExtended_ternary_false@5:
     frame_dig -1
     substring 0 4
     frame_dig -3
@@ -3445,7 +3465,7 @@ _canCallExtended_ternary_false@4:
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManager.canCall
     swap
     frame_bury 0
-    b _canCallExtended_ternary_merge@5
+    b _canCallExtended_ternary_merge@6
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManager._canCallSelf(caller: bytes, data: bytes) -> uint64, uint64:
@@ -3466,10 +3486,20 @@ _canCallSelf:
     retsub
 
 _canCallSelf_after_if_else@2:
-    frame_dig -2
     global CurrentApplicationAddress
+    frame_dig -2
     ==
-    bz _canCallSelf_after_if_else@4
+    bnz _canCallSelf_if_body@4
+    pushint 24
+    bzero
+    global CurrentApplicationID
+    itob
+    concat
+    frame_dig -2
+    ==
+    bz _canCallSelf_after_if_else@5
+
+_canCallSelf_if_body@4:
     global CurrentApplicationAddress
     frame_dig -1
     substring 0 4
@@ -3485,7 +3515,7 @@ _canCallSelf_after_if_else@2:
     frame_bury 0
     retsub
 
-_canCallSelf_after_if_else@4:
+_canCallSelf_after_if_else@5:
     frame_dig -1
     callsub _getAdminRestrictions
     popn 2
@@ -3498,17 +3528,17 @@ _canCallSelf_after_if_else@4:
     callsub _getAdminRestrictions
     frame_bury 1
     popn 2
-    bnz _canCallSelf_after_if_else@7
+    bnz _canCallSelf_after_if_else@8
     global CurrentApplicationAddress
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManager.isTargetClosed
-    bz _canCallSelf_after_if_else@7
+    bz _canCallSelf_after_if_else@8
     intc_0 // 0
     dup
     frame_bury 1
     frame_bury 0
     retsub
 
-_canCallSelf_after_if_else@7:
+_canCallSelf_after_if_else@8:
     frame_dig 2
     dup
     frame_dig -2
@@ -3519,14 +3549,14 @@ _canCallSelf_after_if_else@7:
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AccessManagerEnumerable.sol.AccessManager.hasRole
     frame_bury 0
     pop
-    bnz _canCallSelf_after_if_else@9
+    bnz _canCallSelf_after_if_else@10
     intc_0 // 0
     dup
     frame_bury 1
     frame_bury 0
     retsub
 
-_canCallSelf_after_if_else@9:
+_canCallSelf_after_if_else@10:
     intc_3 // 8
     bzero
     frame_dig 1

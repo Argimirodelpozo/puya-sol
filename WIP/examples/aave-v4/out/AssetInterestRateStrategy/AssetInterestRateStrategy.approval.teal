@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2 4294967295
-    bytecblock 0x "_interestRateData" 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x0000000000000000000000000000 0x01 0x033b2e3c9fd0803ce8000000 "HUB" "__ctor_pending" 0x152d02c7e14af6800000
+    bytecblock 0x "_interestRateData" 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x0000000000000000000000000000 0x01 "HUB" 0x033b2e3c9fd0803ce8000000 "__ctor_pending" 0x152d02c7e14af6800000
     pushint 4096
     bzero
     dup
@@ -73,10 +73,10 @@ WadRayMath.rayMulUp_ternary_merge@3:
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    bytec 6 // 0x033b2e3c9fd0803ce8000000
+    bytec 7 // 0x033b2e3c9fd0803ce8000000
     b/
     swap
-    bytec 6 // 0x033b2e3c9fd0803ce8000000
+    bytec 7 // 0x033b2e3c9fd0803ce8000000
     b%
     bytec_0 // 0x
     b>
@@ -124,7 +124,7 @@ WadRayMath.rayDivUp:
     !
     assert // revert
     frame_dig -2
-    bytec 6 // 0x033b2e3c9fd0803ce8000000
+    bytec 7 // 0x033b2e3c9fd0803ce8000000
     b*
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -215,7 +215,7 @@ __postInit:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
     assert // InvalidAddress
-    bytec 7 // "HUB"
+    bytec 6 // "HUB"
     swap
     app_global_put
     intc_1 // 1
@@ -252,12 +252,29 @@ setInterestRateData:
 setInterestRateData_ternary_merge@4:
     !
     assert // not payable
+    txn Sender
     intc_2 // 0
-    bytec 7 // "HUB"
+    bytec 6 // "HUB"
     app_global_get_ex
     assert // check HUB exists
-    txn Sender
     ==
+    bnz setInterestRateData_bool_true@6
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_2 // 0
+    bytec 6 // "HUB"
+    app_global_get_ex
+    assert // check HUB exists
+    ==
+    bz setInterestRateData_bool_false@7
+
+setInterestRateData_bool_true@6:
+    intc_1 // 1
+
+setInterestRateData_bool_merge@8:
     assert // OnlyHub
     dup
     extract 2 32
@@ -270,14 +287,14 @@ setInterestRateData_ternary_merge@4:
     bury 4
     pushbytes 0x64
     b>=
-    bz setInterestRateData_bool_false@7
+    bz setInterestRateData_bool_false@11
     dig 2
     pushbytes 0x26ac
     b<=
-    bz setInterestRateData_bool_false@7
+    bz setInterestRateData_bool_false@11
     intc_1 // 1
 
-setInterestRateData_bool_merge@8:
+setInterestRateData_bool_merge@12:
     assert // InvalidOptimalUsageRatio
     dig 3
     dup
@@ -330,7 +347,7 @@ setInterestRateData_bool_merge@8:
     swap
     itob
     intc_2 // 0
-    bytec 7 // "HUB"
+    bytec 6 // "HUB"
     app_global_get_ex
     assert // check HUB exists
     uncover 4
@@ -354,6 +371,10 @@ setInterestRateData_bool_merge@8:
     log
     intc_1 // 1
     return
+
+setInterestRateData_bool_false@11:
+    intc_2 // 0
+    b setInterestRateData_bool_merge@12
 
 setInterestRateData_bool_false@7:
     intc_2 // 0
@@ -852,7 +873,7 @@ calculateInterestRate_else_body@8:
     cover 2
     b>=
     assert // underflow
-    bytec 6 // 0x033b2e3c9fd0803ce8000000
+    bytec 7 // 0x033b2e3c9fd0803ce8000000
     dig 1
     b>=
     assert // underflow
@@ -971,7 +992,7 @@ HUB_ternary_merge@4:
     !
     assert // not payable
     intc_2 // 0
-    bytec 7 // "HUB"
+    bytec 6 // "HUB"
     app_global_get_ex
     assert // check HUB exists
     bytec_3 // 0x151f7c75

@@ -1867,7 +1867,7 @@ setSelfAsUserPositionManagerWithSig_ternary_merge@4:
     global CurrentApplicationAddress
     dig 6
     concat
-    pushbytes 0x00010000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x0001000000000000000000000000000000000000000000000000000000000000000000
     swap
     replace2 2 // on error: index access is out of bounds
     itxn_begin
@@ -2988,11 +2988,29 @@ _getReserveUnderlying:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/TakerPositionManager.sol.TakerPositionManager._checkRescueGuardian() -> void:
 _checkRescueGuardian:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/TakerPositionManager.sol.TakerPositionManager.owner
     txn Sender
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/TakerPositionManager.sol.TakerPositionManager.owner
     ==
+    bnz _checkRescueGuardian_bool_true@2
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/TakerPositionManager.sol.TakerPositionManager.owner
+    ==
+    bz _checkRescueGuardian_bool_false@3
+
+_checkRescueGuardian_bool_true@2:
+    intc_2 // 1
+
+_checkRescueGuardian_bool_merge@4:
     assert // OnlyRescueGuardian
     retsub
+
+_checkRescueGuardian_bool_false@3:
+    intc_1 // 0
+    b _checkRescueGuardian_bool_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/TakerPositionManager.sol.TakerPositionManager._verifyAndConsumeIntent(signer: bytes, intentHash: bytes, nonce: bytes, deadline: bytes, signature: bytes) -> void:

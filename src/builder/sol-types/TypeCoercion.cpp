@@ -279,9 +279,35 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 		return tuple;
 	}
 
-	// ARC4Struct → NewStruct with field defaults (recursive)
+	// ARC4Struct → BytesConstant of zeros at the encoded width (preferred)
+	// or NewStruct with field defaults (fallback for dynamic structs).
+	//
+	// Why prefer the BytesConstant: puya's NewStruct encoder has a bug
+	// when one or more fields are arc4.bool. The encoder packs consecutive
+	// bools into bits via setbit on a running bytes buffer, but starts
+	// from `bytec_1 // 0x` (empty bytes) instead of bzero(1). The first
+	// getbit/setbit then errors with "index beyond byteslice", which makes
+	// every default-struct read on a mapping that contains bool fields
+	// (Hub.SpokeData, Hub.Asset, etc.) panic at runtime. By emitting the
+	// zero-filled bytes literal at the correct encoded size we skip puya's
+	// encoder entirely for the all-zero case — what comes out is what puya
+	// *should* have produced for an all-zero default. See puyabug.md §2.
 	if (_type->kind() == awst::WTypeKind::ARC4Struct)
 	{
+		int encodedSize = computeEncodedElementSize(_type);
+		if (encodedSize > 0)
+		{
+			if (encodedSize > kLargeBytesRuntimeThreshold)
+				return makeZeroBytesRuntime(encodedSize, _type, _loc);
+			return awst::makeBytesConstant(
+				std::vector<uint8_t>(static_cast<size_t>(encodedSize), 0),
+				_loc, awst::BytesEncoding::Base16, _type);
+		}
+
+		// Dynamic-size struct (a field has variable encoding). Fall back
+		// to NewStruct + recursive defaults; if that struct also contains
+		// bools at a dynamic offset, this path will still hit the puya
+		// bug. None of AAVE V4's mapping value types reach here today.
 		auto const* structType = static_cast<awst::ARC4Struct const*>(_type);
 		auto expr = std::make_shared<awst::NewStruct>();
 		expr->sourceLocation = _loc;
@@ -541,15 +567,36 @@ int TypeCoercion::computeEncodedElementSize(awst::WType const* _type)
 		return static_cast<awst::ARC4UFixedNxM const*>(_type)->n() / 8;
 	case awst::WTypeKind::ARC4Struct:
 	{
+		// ARC4 packs consecutive `arc4.bool` fields into shared bytes
+		// (8 bools per byte). All other fields are byte-aligned. Walk
+		// the field list, accumulating bool runs and flushing them as
+		// `ceil(run_length / 8)` bytes whenever a non-bool field
+		// interrupts the run (or at the end). If any non-bool field
+		// is dynamic (size 0), the whole struct is dynamic.
 		auto const* structType = static_cast<awst::ARC4Struct const*>(_type);
 		int total = 0;
+		int boolRun = 0;
+		auto flushBoolRun = [&]() {
+			if (boolRun > 0)
+			{
+				total += (boolRun + 7) / 8;
+				boolRun = 0;
+			}
+		};
 		for (auto const& [name, fieldType]: structType->fields())
 		{
+			if (fieldType == awst::WType::arc4BoolType())
+			{
+				boolRun++;
+				continue;
+			}
+			flushBoolRun();
 			int fieldSize = computeEncodedElementSize(fieldType);
 			if (fieldSize == 0)
 				return 0;
 			total += fieldSize;
 		}
+		flushBoolRun();
 		return total;
 	}
 	case awst::WTypeKind::ARC4StaticArray:

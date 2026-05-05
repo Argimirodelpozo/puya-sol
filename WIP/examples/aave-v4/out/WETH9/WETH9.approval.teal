@@ -725,10 +725,18 @@ allowance_ternary_false@3:
     frame_dig -1
     b>=
     assert
-    frame_dig -3
     txn Sender
-    !=
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/WETH9.sol.WETH9.transferFrom_after_if_else@6
+    frame_dig -3
+    ==
+    bnz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/WETH9.sol.WETH9.transferFrom_after_if_else@7
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    frame_dig -3
+    ==
+    bnz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/WETH9.sol.WETH9.transferFrom_after_if_else@7
     frame_dig -3
     txn Sender
     concat
@@ -742,7 +750,7 @@ allowance_ternary_false@3:
     select
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b!=
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/WETH9.sol.WETH9.transferFrom_after_if_else@6
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/WETH9.sol.WETH9.transferFrom_after_if_else@7
     frame_dig -3
     txn Sender
     concat
@@ -801,7 +809,7 @@ allowance_ternary_false@3:
     swap
     box_put
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/WETH9.sol.WETH9.transferFrom_after_if_else@6:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/WETH9.sol.WETH9.transferFrom_after_if_else@7:
     frame_dig 0
     dup
     box_get
