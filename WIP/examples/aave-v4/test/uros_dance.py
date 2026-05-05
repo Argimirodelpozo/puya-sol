@@ -150,8 +150,33 @@ def _substitute_main_id(teal: str, main_id: int) -> str:
     return teal.replace("TMPL_UROS_MAIN_APP_ID", str(main_id))
 
 
-def _substitute_uros_ids(teal: str, orch_id: int, main_id: int) -> str:
-    return _substitute_main_id(_substitute_orch_id(teal, orch_id), main_id)
+def _substitute_storage_id(teal: str, storage_id: int) -> str:
+    """Main's stub references TMPL_UROS_STORAGE_APP_ID for the
+    pay-forward shim — when the user's call carries a paired pay txn,
+    main forwards the value to __storage's address (computed at
+    runtime via app_params_get(STORAGE_APP_ID, AppAddress)).
+    Substituted at deploy time after __storage is created."""
+    return teal.replace("TMPL_UROS_STORAGE_APP_ID", str(storage_id))
+
+
+def _substitute_main_uros_ids(teal: str, orch_id: int, storage_id: int) -> str:
+    """Apply the substitutions main's TEAL needs (orch_id + storage_id).
+    Main doesn't reference TMPL_UROS_MAIN_APP_ID — only chunks do."""
+    return _substitute_storage_id(
+        _substitute_orch_id(teal, orch_id), storage_id)
+
+
+def _substitute_chunk_uros_ids(
+    teal: str, orch_id: int, main_id: int, storage_id: int
+) -> str:
+    """Chunks substitute all three: orch (for orc-guards if any),
+    main (for og_sender/og_value reads), storage (in case any chunk
+    method's emitted code references it — currently none do, but the
+    template var is declared in chunk options.json for safety)."""
+    return _substitute_storage_id(
+        _substitute_main_id(_substitute_orch_id(teal, orch_id), main_id),
+        storage_id,
+    )
 
 
 def _compile_teal(algod: AlgodClient, teal: str) -> bytes:
@@ -319,25 +344,31 @@ def deploy_split_app(
     except Exception:
         app_spec = None
 
-    # 1. Substitute orch_id into main TEAL and compile. Main itself
-    # doesn't reference TMPL_UROS_MAIN_APP_ID — only chunks do — so we
-    # can compile main's bytecode now without knowing main_id.
+    # 1. Read main TEAL. Substitution is split across steps because of
+    # a chicken-and-egg: main references TMPL_UROS_STORAGE_APP_ID for
+    # the pay-forward shim, but __storage is deployed by AppCreate'ing
+    # with main's bytecode itself. So we compile main twice:
+    #   v1: storage_id placeholder (0) — used for __storage's AppCreate.
+    #       The shim never runs during AppCreate so the placeholder
+    #       value doesn't matter. State schema is identical to v2.
+    #   v2: real storage_id — used for main's own AppCreate (step 5).
     main_teal = (contract_dir / f"{name}.approval.teal").read_text()
     main_clear_teal = (contract_dir / f"{name}.clear.teal").read_text()
-    main_approval = _compile_teal(algod, _substitute_orch_id(main_teal, orch_id))
     main_clear = _compile_teal(algod, main_clear_teal)
+    main_approval_v1 = _compile_teal(
+        algod, _substitute_main_uros_ids(main_teal, orch_id, 0))
 
     # Read storage default bytes (already compiled by compile_orchestrator).
     storage_default = (STORAGE_OUT / "UrosStorage.approval.bin").read_bytes()
     storage_clear = (STORAGE_OUT / "UrosStorage.clear.bin").read_bytes()
 
-    # 2. Deploy __storage WITH MAIN'S BYTECODE so AppCreate runs the
+    # 2. Deploy __storage WITH MAIN'S BYTECODE (v1) so AppCreate runs the
     # user contract's state-var inits.
     sp = algod.suggested_params()
     txn = ApplicationCreateTxn(
         sender=sender.address, sp=sp,
         on_complete=OnComplete.NoOpOC,
-        approval_program=main_approval, clear_program=main_clear,
+        approval_program=main_approval_v1, clear_program=main_clear,
         global_schema=StateSchema(num_uints=16, num_byte_slices=16),
         local_schema=StateSchema(num_uints=0, num_byte_slices=0),
         app_args=app_args or [], extra_pages=3,
@@ -369,14 +400,17 @@ def deploy_split_app(
     wait_for_confirmation(algod,
         algod.send_transaction(txn.sign(sender.private_key)), 4)
 
-    # 5. Deploy main BEFORE compiling chunks. Chunks reference main's
-    # app id via TMPL_UROS_MAIN_APP_ID for cross-app reads of __og_sender
-    # / __og_value, so we need main_id known before chunk TEAL compiles.
+    # 5. Compile main_v2 (with real storage_id substituted) and deploy
+    # main BEFORE compiling chunks. Chunks reference main's app id via
+    # TMPL_UROS_MAIN_APP_ID for cross-app reads of __og_sender /
+    # __og_value, so we need main_id known before chunk TEAL compiles.
+    main_approval_v2 = _compile_teal(
+        algod, _substitute_main_uros_ids(main_teal, orch_id, storage_id))
     sp = algod.suggested_params()
     txn = ApplicationCreateTxn(
         sender=sender.address, sp=sp,
         on_complete=OnComplete.NoOpOC,
-        approval_program=main_approval, clear_program=main_clear,
+        approval_program=main_approval_v2, clear_program=main_clear,
         global_schema=StateSchema(num_uints=16, num_byte_slices=16),
         local_schema=StateSchema(num_uints=0, num_byte_slices=0),
         app_args=app_args or [], extra_pages=3,
@@ -403,15 +437,16 @@ def deploy_split_app(
     # wait_for_confirmation(algod,
     #     algod.send_transaction(txn.sign(sender.private_key)), 4)
 
-    # 6. Build chunks list. Now substitute BOTH orch_id AND main_id —
-    # the chunk's app_global_get_ex(MAIN, "__og_sender") read needs
-    # main's real app id baked in.
+    # 6. Build chunks list. Substitute orch_id, main_id, AND storage_id
+    # — the chunk's app_global_get_ex(MAIN, ...) needs main, and any
+    # pay-forward / storage-aware emit in chunks would need storage too.
     chunks_with_full_sigs = []
     for ci, c in enumerate(deploy_tmpl["chunks"]):
         chunk_teal = (contract_dir / "__uros_split" / f"chunk_{ci}"
                       / f"{c['name']}.approval.teal").read_text()
         chunk_bytes = _compile_teal(
-            algod, _substitute_uros_ids(chunk_teal, orch_id, main_id))
+            algod, _substitute_chunk_uros_ids(
+                chunk_teal, orch_id, main_id, storage_id))
         full_sigs = []
         for mname in c["methods"]:
             m = method_signatures.get(mname)

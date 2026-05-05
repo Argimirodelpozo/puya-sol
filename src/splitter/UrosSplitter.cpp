@@ -331,6 +331,12 @@ std::shared_ptr<awst::Expression> decodeFromBytes(
 constexpr char const* kOgSenderKey = "__og_sender";
 constexpr char const* kOgValueKey = "__og_value";
 
+// Template-var names baked into chunk and main TEAL by puya. The deploy
+// harness substitutes them at deploy time once the real app ids are
+// known. See uros_dance.py::_substitute_*.
+constexpr char const* kMainAppIdTmpl = "TMPL_UROS_MAIN_APP_ID";
+constexpr char const* kStorageAppIdTmpl = "TMPL_UROS_STORAGE_APP_ID";
+
 /// Build an AssignmentStatement that writes `_value` into main's
 /// app-global slot named `_keyName`. The target is an AppStateExpression
 /// keyed by a UTF-8 BytesConstant of the slot name.
@@ -389,6 +395,181 @@ std::shared_ptr<awst::Expression> makeMsgValueUint64Expr(
 	return awst::makeConditional(
 		std::move(hasPay), std::move(amount), std::move(zeroVal),
 		awst::WType::uint64Type(), _loc);
+}
+
+/// Build `app_params_get(STORAGE_APP_ID, AppAddress) . value` — runtime
+/// expression yielding __storage's hash-form address. Used by the
+/// pay-forward shim in main's stub: when the user's call to main is
+/// paired with a pay txn, main forwards that value to __storage so
+/// __storage holds the funds (chunks running on __storage then have
+/// access to them via plain Receiver=address(this) inner pays).
+std::shared_ptr<awst::Expression> makeStorageAddressExpr(
+	awst::SourceLocation const& _loc)
+{
+	auto storageTmpl = std::make_shared<awst::TemplateVar>();
+	storageTmpl->sourceLocation = _loc;
+	storageTmpl->wtype = awst::WType::uint64Type();
+	storageTmpl->name = kStorageAppIdTmpl;
+
+	auto* tupleType = makeOwnedType<awst::WTuple>(
+		std::vector<awst::WType const*>{
+			awst::WType::accountType(), awst::WType::boolType()},
+		std::nullopt);
+
+	auto get = awst::makeIntrinsicCall(
+		"app_params_get", tupleType, _loc);
+	get->immediates = {std::string("AppAddress")};
+	get->stackArgs.push_back(std::move(storageTmpl));
+
+	return awst::makeTupleItem(
+		get, 0, awst::WType::accountType(), _loc);
+}
+
+/// Memberids for the synthetic helpers on every main contract. All are
+/// called via SubroutineCallExpression(InstanceMethodTarget) from each
+/// forwarding stub. Without these, inlining the bodies per-stub blows
+/// main's bytecode past the 8 KB AVM cap on contracts with many split
+/// methods (AccessManagerEnumerable: 40+ stubs).
+constexpr char const* kForwardValueMethodName = "__uros_forward_value";
+constexpr char const* kOgSetupMethodName = "__uros_og_setup";
+constexpr char const* kOgCleanupMethodName = "__uros_og_cleanup";
+
+// Forward declarations — these helpers are defined further down but
+// referenced by makeOgSetupBody / makeOgCleanupBody below.
+std::vector<std::shared_ptr<awst::Statement>> makeOgSetupStmts(
+	awst::SourceLocation const& _loc);
+std::vector<std::shared_ptr<awst::Statement>> makeOgCleanupStmts(
+	awst::SourceLocation const& _loc);
+
+/// Body of __uros_forward_value (called via callsub from every stub):
+///
+///     uint64 amount = msg.value          // ternary on GroupIndex
+///     if (amount > 0) {
+///         itxn pay
+///           Receiver = __storage.app_address
+///           Amount   = amount
+///           Fee      = 0
+///         itxn_submit
+///     }
+///
+/// Sender defaults to main (= currentApp). Result: the user's paired
+/// pay txn lands on main, main forwards it to __storage, __storage
+/// has the funds. Chunks issuing payments later draw from __storage's
+/// own balance (Sender = __storage = currentApp inside the chunk),
+/// no rekey needed.
+std::shared_ptr<awst::Block> makeForwardValueBody(
+	awst::SourceLocation const& _loc)
+{
+	auto block = awst::makeBlock(_loc);
+
+	// amount := msg.value-uint64
+	auto amountVar = awst::makeVarExpression(
+		"__amount", awst::WType::uint64Type(), _loc);
+	block->body.push_back(awst::makeAssignmentStatement(
+		amountVar, makeMsgValueUint64Expr(_loc), _loc));
+
+	// itxn pay: Receiver=__storage.address, Amount=amount, Fee=0
+	static awst::WInnerTransactionFields s_payFieldsType(1);
+	auto create = std::make_shared<awst::CreateInnerTransaction>();
+	create->sourceLocation = _loc;
+	create->wtype = &s_payFieldsType;
+	create->fields["TypeEnum"] = awst::makeIntegerConstant("1", _loc);
+	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
+	create->fields["Receiver"] = makeStorageAddressExpr(_loc);
+	create->fields["Amount"] = amountVar;
+
+	static awst::WInnerTransaction s_payTxnType(1);
+	auto submit = awst::makeSubmitInnerTransaction(&s_payTxnType, _loc);
+	submit->itxns.push_back(std::move(create));
+
+	auto submitBlock = awst::makeBlock(_loc);
+	submitBlock->body.push_back(awst::makeExpressionStatement(submit, _loc));
+
+	auto cond = awst::makeNumericCompare(
+		amountVar, awst::NumericComparison::Gt,
+		awst::makeIntegerConstant("0", _loc), _loc);
+	block->body.push_back(awst::makeIfElse(
+		std::move(cond), std::move(submitBlock), nullptr, _loc));
+
+	block->body.push_back(awst::makeReturnStatement(nullptr, _loc));
+	return block;
+}
+
+/// Helper for building an internal-only ContractMethod with a body
+/// supplied by `_bodyBuilder`. No ARC4 method config — the method is
+/// callable only via SubroutineCallExpression(InstanceMethodTarget),
+/// not through the outer ABI router.
+awst::ContractMethod makeInternalHelperMethod(
+	std::string const& _cref, std::string const& _name,
+	std::shared_ptr<awst::Block> _body, awst::SourceLocation const& _loc)
+{
+	awst::ContractMethod m;
+	m.sourceLocation = _loc;
+	m.cref = _cref;
+	m.memberName = _name;
+	m.returnType = awst::WType::voidType();
+	m.body = std::move(_body);
+	return m;
+}
+
+/// Build the synthetic `__uros_forward_value() void` ContractMethod on
+/// main. Called via callsub from every forwarding stub.
+awst::ContractMethod makeForwardValueMethod(
+	std::string const& _cref, awst::SourceLocation const& _loc)
+{
+	return makeInternalHelperMethod(
+		_cref, kForwardValueMethodName, makeForwardValueBody(_loc), _loc);
+}
+
+/// Body of __uros_og_setup(): write Txn.Sender → __og_sender,
+/// msg.value-uint64 → __og_value. Inlining these per-stub adds ~12
+/// bytes per stub × 40+ stubs on AccessManagerEnumerable, blowing
+/// the 8 KB cap.
+std::shared_ptr<awst::Block> makeOgSetupBody(
+	awst::SourceLocation const& _loc)
+{
+	auto block = awst::makeBlock(_loc);
+	for (auto& s : makeOgSetupStmts(_loc))
+		block->body.push_back(std::move(s));
+	block->body.push_back(awst::makeReturnStatement(nullptr, _loc));
+	return block;
+}
+
+/// Body of __uros_og_cleanup(): write zero address → __og_sender,
+/// 0 → __og_value. Mirror of og_setup; same dedup motivation.
+std::shared_ptr<awst::Block> makeOgCleanupBody(
+	awst::SourceLocation const& _loc)
+{
+	auto block = awst::makeBlock(_loc);
+	for (auto& s : makeOgCleanupStmts(_loc))
+		block->body.push_back(std::move(s));
+	block->body.push_back(awst::makeReturnStatement(nullptr, _loc));
+	return block;
+}
+
+awst::ContractMethod makeOgSetupMethod(
+	std::string const& _cref, awst::SourceLocation const& _loc)
+{
+	return makeInternalHelperMethod(
+		_cref, kOgSetupMethodName, makeOgSetupBody(_loc), _loc);
+}
+
+awst::ContractMethod makeOgCleanupMethod(
+	std::string const& _cref, awst::SourceLocation const& _loc)
+{
+	return makeInternalHelperMethod(
+		_cref, kOgCleanupMethodName, makeOgCleanupBody(_loc), _loc);
+}
+
+/// One-statement callsub to a named internal helper on main.
+std::shared_ptr<awst::Statement> makeInternalCallsubStmt(
+	std::string const& _name, awst::SourceLocation const& _loc)
+{
+	auto call = std::make_shared<awst::SubroutineCallExpression>();
+	call->sourceLocation = _loc;
+	call->wtype = awst::WType::voidType();
+	call->target = awst::InstanceMethodTarget{_name};
+	return awst::makeExpressionStatement(std::move(call), _loc);
 }
 
 /// Setup statements: write Txn.Sender → __og_sender, msg.value →
@@ -489,8 +670,6 @@ void appendOgGlobalsToContract(
 // rewrites address(this) reads to main's actual app address via
 // TMPL_UROS_MAIN_ADDR so balance() and downstream comparisons see the
 // user-facing identity.
-
-constexpr char const* kMainAppIdTmpl = "TMPL_UROS_MAIN_APP_ID";
 
 /// Build `app_global_get_ex(MAIN_ID_TMPL, key) . value` reinterpreted as
 /// the requested wtype. Returns the value half of the (value, exists)
@@ -712,6 +891,17 @@ std::shared_ptr<awst::Expression> patchInnerPaySenderExpr(
 /// Apply all chunk-side patches to a chunk method body. Single walker
 /// invocation per method — combined predicate ensures each Expression
 /// slot only gets visited once.
+///
+/// Pass 5 (patchInnerPaySenderExpr) is INTENTIONALLY NOT INCLUDED: it
+/// only made sense in the rekey-main-to-storage design, which we
+/// abandoned because rekeying main strips it of authority over its
+/// own account (AVM `authForSender` checks `account.AuthAddr ==
+/// issuingAppAddr`, which fails for main's own outbound itxns post-
+/// rekey). With the current pay-forward shim in main's stub, the
+/// user's pay txn is forwarded to __storage at the start of every
+/// call, so chunks issuing payments naturally use Sender=__storage
+/// (the default — chunks run on __storage, so currentApp.address is
+/// __storage's address) and __storage has the funds.
 void patchChunkMethodBody(awst::ContractMethod& _m)
 {
 	if (!_m.body) return;
@@ -719,7 +909,6 @@ void patchChunkMethodBody(awst::ContractMethod& _m)
 		if (auto r = patchMsgSenderExpr(e)) return r;
 		if (auto r = patchMsgValueExpr(e)) return r;
 		if (auto r = patchAddressThisExpr(e)) return r;
-		if (auto r = patchInnerPaySenderExpr(e)) return r;
 		return nullptr;
 	};
 	walkBlock(*_m.body, fn);
@@ -750,10 +939,15 @@ std::shared_ptr<awst::Block> makeForwardingStubBody(
 {
 	auto block = awst::makeBlock(_loc);
 
-	// Pass 1 setup: write user identity / value into main's globals so
-	// chunks running on __storage can read them via app_global_get_ex.
-	for (auto& s : makeOgSetupStmts(_loc))
-		block->body.push_back(std::move(s));
+	// Pay-forward + og_setup are factored to internal callsub'd
+	// helpers on main (kForwardValueMethodName, kOgSetupMethodName).
+	// Inlining the bodies per-stub blew main's bytecode past the 8 KB
+	// cap on contracts with many split methods (AccessManagerEnumerable
+	// has 40+).
+	block->body.push_back(makeInternalCallsubStmt(
+		kForwardValueMethodName, _loc));
+	block->body.push_back(makeInternalCallsubStmt(
+		kOgSetupMethodName, _loc));
 
 	// Build the inner-txn ApplicationArgs tuple.
 	auto argsTuple = std::make_shared<awst::TupleExpression>();
@@ -868,8 +1062,8 @@ std::shared_ptr<awst::Block> makeForwardingStubBody(
 	block->body.push_back(awst::makeAssignmentStatement(
 		retVar, std::move(decoded), _loc));
 
-	for (auto& s : makeOgCleanupStmts(_loc))
-		block->body.push_back(std::move(s));
+	block->body.push_back(makeInternalCallsubStmt(
+		kOgCleanupMethodName, _loc));
 
 	block->body.push_back(awst::makeReturnStatement(std::move(retVar), _loc));
 	return block;
@@ -1128,7 +1322,18 @@ UrosSplitter::Result UrosSplitter::split(
 	mainContract->methods.push_back(
 		makeDelegateUpdateMethod(primary->id, primary->sourceLocation));
 	mainContract->methods.push_back(
-		makeRekeyToStorageMethod(primary->id, primary->sourceLocation));
+		makeForwardValueMethod(primary->id, primary->sourceLocation));
+	mainContract->methods.push_back(
+		makeOgSetupMethod(primary->id, primary->sourceLocation));
+	mainContract->methods.push_back(
+		makeOgCleanupMethod(primary->id, primary->sourceLocation));
+	// __rekey_to_storage(address)void was scaffolded for the abandoned
+	// rekey design (rekey breaks main's own outbound itxns; see commit
+	// b8c328316). Dropped from main's surface to save ~150 bytes of
+	// ABI router + body. The C++ helper makeRekeyToStorageMethod is
+	// kept defined for the rare case someone wants to bring it back
+	// (and the new design would need to relocate main's stub-issued
+	// itxns somehow first).
 
 	// Pass 1 of the og_sender / og_value plumbing: declare the two
 	// app-global slots on main so puya emits the right state schema.
@@ -1270,17 +1475,23 @@ std::vector<UrosSplitter::ChunkPaths> UrosSplitter::emitChunkAwsts(
 
 		p.optionsPath = (fs::path(p.dir) / "options.json").string();
 		std::set<std::string> noChildren;
-		// Chunks reference two template vars:
+		// Chunks reference three template vars:
 		//   * TMPL_UROS_ORCH_APP_ID — orc-guards on stubbed methods (kept
 		//     for compat with old splits, even now that we use a 3-app
 		//     architecture).
 		//   * TMPL_UROS_MAIN_APP_ID — chunk-side reads of main's
-		//     __og_sender / __og_value globals (Pass 2/3 of the rewriter).
-		// Both are declared as integer template vars; the deploy harness
-		// substitutes them with the real app ids at deploy time.
+		//     __og_sender / __og_value globals (Pass 2/3) and main's
+		//     address (Pass 4).
+		//   * TMPL_UROS_STORAGE_APP_ID — declared for symmetry with main's
+		//     pay-forward shim. Chunks don't currently reference it but
+		//     the declaration prevents puya from rejecting any future
+		//     chunk emit that does.
+		// All declared as integer template vars; the deploy harness
+		// substitutes with real app ids at deploy time.
 		std::map<std::string, int64_t> chunkTemplateVars;
 		chunkTemplateVars["UROS_ORCH_APP_ID"] = _orchAppId;
 		chunkTemplateVars["UROS_MAIN_APP_ID"] = 0;
+		chunkTemplateVars["UROS_STORAGE_APP_ID"] = 0;
 		if (chunkContractNames.size() <= 1)
 		{
 			std::string nm = chunkContractNames.empty() ? "" : chunkContractNames[0];

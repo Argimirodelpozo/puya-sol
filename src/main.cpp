@@ -756,7 +756,15 @@ int main(int _argc, char* _argv[])
 	// — the deploy harness substitutes the real orchestrator app id.
 	std::map<std::string, int64_t> intTemplateVars;
 	if (!splitResult.chunks.empty())
+	{
 		intTemplateVars["UROS_ORCH_APP_ID"] = opts.urosOrchAppId;
+		// Main's stub has a pay-forward shim that issues an inner pay
+		// to __storage's address (computed at runtime via
+		// app_params_get(STORAGE_APP_ID, AppAddress)). Default 0 here
+		// is a placeholder — the deploy harness substitutes the real
+		// __storage app id once it's deployed.
+		intTemplateVars["UROS_STORAGE_APP_ID"] = 0;
+	}
 	if (contractNames.size() <= 1)
 	{
 		std::string contractName = contractNames.empty() ? "" : contractNames[0];
