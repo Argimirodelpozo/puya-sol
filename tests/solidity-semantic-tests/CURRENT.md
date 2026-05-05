@@ -1,11 +1,12 @@
-# Semantic Test Status — v209
+# Semantic Test Status — v210
 
 **Totals**: 1092 PASS / 155 FAIL / 75 (56 compile_err + 19 deploy_err) = **1092/1322 (82.6%)**
 
-v209 is the regression sentinel for the `makeConditional` helper
-(commit 377921e01) on top of the AWST-helper / dead-code refactor
-(commit fc84eb803). Result is **test-identical to v208** — every
-per-test outcome matches.
+v210 is the regression sentinel for the `makeIfElse` helper
+(commit 0890e044d). Result is **test-identical to v209** —
+which was test-identical to v208. The whole helper-refactor stack
+(fc84eb803 + 377921e01 + 0890e044d) holds 1092 PASS without
+movement.
 
 v208 vs v207: **+1 PASS / -1 FAIL** from `mapping_contract_key_getter`
 stabilising 25p/2f → 27p/0s. Most plausibly a localnet flake settling
@@ -65,6 +66,11 @@ of the semantic suite, so v208/v209 also reconfirm that surface.
   to 1 (the holdout is in SolConditional.cpp where the condition
   builds incrementally with side-effect handling). 19 files,
   -147 lines. Test-identical to v208.
+- v210 = 1092 — sentinel for the `makeIfElse` helper
+  (0890e044d). 21/23 IfElse construction sites collapsed; the 2
+  holdouts are in StatementOps.cpp and SolControlFlow.cpp where the
+  if-body builds incrementally between condition evaluation and
+  branch finalisation. 16 files, -48 lines. Test-identical to v209.
 
 ## v195 reference (preserved below)
 
