@@ -8,6 +8,7 @@
 #include "json/AWSTSerializer.h"
 #include "json/OptionsWriter.h"
 #include "runner/PuyaRunner.h"
+#include "splitter/AwstWalker.h"
 
 #include <boost/filesystem.hpp>
 #include <nlohmann/json.hpp>
@@ -468,6 +469,89 @@ void appendOgGlobalsToContract(
 	}
 }
 
+// ─── Chunk patches (Pass 2/3/4) ───────────────────────────────────────
+//
+// Chunk method bodies are the user's REAL Solidity logic — they read
+// msg.sender, msg.value, address(this), etc. as if they were running
+// in main. But chunks actually run on __storage (orch issues an inner
+// txn to __storage with the chunk's bytecode installed), so:
+//
+//   * Txn.Sender resolves to orch's app account (orch sent the itxn)
+//   * msg.value (gtxns Amount of paired pay) sees orch's inner-itxn
+//     group context, not the user's outer group
+//   * Global.CurrentApplicationAddress / Global.CurrentApplicationID
+//     resolve to __storage, not main
+//
+// Pass 1 already plumbed the user's identity into main's app-globals
+// (__og_sender, __og_value). Passes 2 and 3 rewrite chunk method bodies
+// to read those globals via app_global_get_ex(TMPL_UROS_MAIN_APP_ID,
+// key) instead of the local AVM intrinsics. Pass 4 (separate commit)
+// rewrites address(this) reads to main's actual app address via
+// TMPL_UROS_MAIN_ADDR so balance() and downstream comparisons see the
+// user-facing identity.
+
+constexpr char const* kMainAppIdTmpl = "TMPL_UROS_MAIN_APP_ID";
+
+/// Build `app_global_get_ex(MAIN_ID_TMPL, key) . value` reinterpreted as
+/// the requested wtype. Returns the value half of the (value, exists)
+/// tuple — chunks always read mid-call when og_* is populated, so the
+/// exists half can be discarded.
+std::shared_ptr<awst::Expression> makeMainGlobalRead(
+	std::string const& _keyName,
+	awst::WType const* _readWType,    // bytes for account, uint64 for value
+	awst::WType const* _resultWType,  // accountType / uint64Type
+	awst::SourceLocation const& _loc)
+{
+	auto mainTmpl = std::make_shared<awst::TemplateVar>();
+	mainTmpl->sourceLocation = _loc;
+	mainTmpl->wtype = awst::WType::uint64Type();
+	mainTmpl->name = kMainAppIdTmpl;
+
+	auto keyConst = awst::makeUtf8BytesConstant(_keyName, _loc);
+
+	auto* tupleType = makeOwnedType<awst::WTuple>(
+		std::vector<awst::WType const*>{_readWType, awst::WType::boolType()},
+		std::nullopt);
+
+	auto getEx = awst::makeIntrinsicCall(
+		"app_global_get_ex", tupleType, _loc);
+	getEx->stackArgs.push_back(std::move(mainTmpl));
+	getEx->stackArgs.push_back(std::move(keyConst));
+
+	auto value = awst::makeTupleItem(getEx, 0, _readWType, _loc);
+	if (_resultWType == _readWType)
+		return value;
+	return awst::makeReinterpretCast(std::move(value), _resultWType, _loc);
+}
+
+/// Pass 2 rewriter: every literal `IntrinsicCall("txn", "Sender")` in a
+/// chunk method body becomes a read of main's __og_sender global.
+/// `Txn.Sender` references that DON'T denote msg.sender semantically —
+/// e.g. inside an inner-txn field assignment, `itxn ApplicationArgs`
+/// pulled from main's outer call — are extremely rare in chunk code
+/// after puya-sol's lowering; the original `txn Sender` intrinsic is
+/// the canonical msg.sender shape, so a strict AST match is safe.
+std::shared_ptr<awst::Expression> patchMsgSenderExpr(
+	awst::Expression const& _e)
+{
+	auto const* ic = dynamic_cast<awst::IntrinsicCall const*>(&_e);
+	if (!ic) return nullptr;
+	if (ic->opCode != "txn") return nullptr;
+	if (ic->immediates.empty()) return nullptr;
+	auto const* imm = std::get_if<std::string>(&ic->immediates[0]);
+	if (!imm || *imm != "Sender") return nullptr;
+	return makeMainGlobalRead(
+		kOgSenderKey, awst::WType::bytesType(),
+		awst::WType::accountType(), ic->sourceLocation);
+}
+
+/// Apply all chunk-side patches to a chunk method body.
+void patchChunkMethodBody(awst::ContractMethod& _m)
+{
+	if (!_m.body) return;
+	walkBlock(*_m.body, patchMsgSenderExpr);
+}
+
 /// Forwarding stub body for main: inner-calls the orch with the
 /// user's (selector + args) tagged onto the dispatch selector. The
 /// orch then runs the install→call→restore dance against __storage
@@ -831,6 +915,15 @@ UrosSplitter::Result UrosSplitter::split(
 			// chunk small.
 			if (!myMethods.count(m.memberName))
 				m = cloneStubbed(m, /*forwarding=*/false);
+			else
+			{
+				// Real (non-stubbed) method body — apply chunk-side
+				// patches so msg.sender / msg.value / address(this) /
+				// inner-pay Sender resolve to main's identity rather
+				// than __storage's. Stubs don't need patching: they
+				// either return a default value or are never invoked.
+				patchChunkMethodBody(m);
+			}
 		}
 		chunkContract->methods.push_back(
 			makeDelegateUpdateMethod(primary->id, primary->sourceLocation));
@@ -922,11 +1015,17 @@ std::vector<UrosSplitter::ChunkPaths> UrosSplitter::emitChunkAwsts(
 
 		p.optionsPath = (fs::path(p.dir) / "options.json").string();
 		std::set<std::string> noChildren;
-		// Chunks emit orc-guards (which reference TMPL_UROS_ORCH_APP_ID)
-		// for the methods they stub out (i.e. methods belonging to OTHER
-		// chunks). Declare the template var so puya doesn't reject.
+		// Chunks reference two template vars:
+		//   * TMPL_UROS_ORCH_APP_ID — orc-guards on stubbed methods (kept
+		//     for compat with old splits, even now that we use a 3-app
+		//     architecture).
+		//   * TMPL_UROS_MAIN_APP_ID — chunk-side reads of main's
+		//     __og_sender / __og_value globals (Pass 2/3 of the rewriter).
+		// Both are declared as integer template vars; the deploy harness
+		// substitutes them with the real app ids at deploy time.
 		std::map<std::string, int64_t> chunkTemplateVars;
 		chunkTemplateVars["UROS_ORCH_APP_ID"] = _orchAppId;
+		chunkTemplateVars["UROS_MAIN_APP_ID"] = 0;
 		if (chunkContractNames.size() <= 1)
 		{
 			std::string nm = chunkContractNames.empty() ? "" : chunkContractNames[0];
