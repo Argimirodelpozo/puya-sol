@@ -427,9 +427,7 @@ std::vector<std::shared_ptr<awst::Subroutine>> FunctionSplitter::splitFunction(
 				}
 				else
 				{
-					auto tuple = std::make_shared<awst::TupleExpression>();
-					tuple->sourceLocation = _func->sourceLocation;
-					tuple->wtype = chunk->returnType;
+					auto tuple = awst::makeTupleExpression(chunk->returnType, _func->sourceLocation);
 					for (auto const& lv: liveOut)
 					{
 						auto var = awst::makeVarExpression(lv.name, lv.wtype, _func->sourceLocation);
@@ -1377,9 +1375,7 @@ void FunctionSplitter::convertToValueBasedIO(
 				for (auto& ei: evalItems)
 					allItems.push_back(ei);
 
-				auto newTuple = std::make_shared<awst::TupleExpression>();
-				newTuple->sourceLocation = chunk->sourceLocation;
-				newTuple->wtype = chunk->returnType;
+				auto newTuple = awst::makeTupleExpression(chunk->returnType, chunk->sourceLocation);
 				newTuple->items = std::move(allItems);
 				retStmt->value = newTuple;
 			}
@@ -1392,9 +1388,7 @@ void FunctionSplitter::convertToValueBasedIO(
 				}
 				else
 				{
-					auto newTuple = std::make_shared<awst::TupleExpression>();
-					newTuple->sourceLocation = chunk->sourceLocation;
-					newTuple->wtype = chunk->returnType;
+					auto newTuple = awst::makeTupleExpression(chunk->returnType, chunk->sourceLocation);
 					newTuple->items = std::move(evalItems);
 					retStmt->value = newTuple;
 				}
@@ -1410,9 +1404,7 @@ void FunctionSplitter::convertToValueBasedIO(
 			}
 			else
 			{
-				auto newTuple = std::make_shared<awst::TupleExpression>();
-				newTuple->sourceLocation = chunk->sourceLocation;
-				newTuple->wtype = chunk->returnType;
+				auto newTuple = awst::makeTupleExpression(chunk->returnType, chunk->sourceLocation);
 				newTuple->items = std::move(evalItems);
 				ret->value = newTuple;
 			}
@@ -2188,9 +2180,7 @@ std::shared_ptr<awst::Expression> FunctionSplitter::buildDefault(
 		auto const* tupleType = dynamic_cast<awst::WTuple const*>(_type);
 		if (tupleType)
 		{
-			auto tuple = std::make_shared<awst::TupleExpression>();
-			tuple->sourceLocation = _loc;
-			tuple->wtype = _type;
+			auto tuple = awst::makeTupleExpression(_type, _loc);
 			for (auto const* elemType: tupleType->types())
 				tuple->items.push_back(buildDefault(elemType, _loc));
 			return tuple;
@@ -2226,9 +2216,7 @@ void FunctionSplitter::rewriteInnerReturns(
 			auto var = awst::makeVarExpression(_liveOut[0].name, _liveOut[0].wtype, _loc);
 			return var;
 		}
-		auto tuple = std::make_shared<awst::TupleExpression>();
-		tuple->sourceLocation = _loc;
-		tuple->wtype = _chunkReturnType;
+		auto tuple = awst::makeTupleExpression(_chunkReturnType, _loc);
 		for (auto const& lv: _liveOut)
 		{
 			auto var = awst::makeVarExpression(lv.name, lv.wtype, _loc);

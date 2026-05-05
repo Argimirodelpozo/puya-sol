@@ -180,9 +180,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleSelfdestruct(
 		create->fields["CloseRemainderTo"] = std::move(beneficiary);
 
 		static awst::WInnerTransaction s_payTxnType(1);
-		auto submit = std::make_shared<awst::SubmitInnerTransaction>();
-		submit->sourceLocation = _loc;
-		submit->wtype = &s_payTxnType;
+		auto submit = awst::makeSubmitInnerTransaction(&s_payTxnType, _loc);
 		submit->itxns.push_back(std::move(create));
 
 		auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);

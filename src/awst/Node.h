@@ -643,6 +643,16 @@ struct TupleExpression: Expression
 	std::vector<std::shared_ptr<Expression>> items;
 };
 
+// Empty TupleExpression with location and wtype set; caller fills items.
+inline std::shared_ptr<TupleExpression> makeTupleExpression(
+	WType const* wtype, SourceLocation loc)
+{
+	auto node = std::make_shared<TupleExpression>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	return node;
+}
+
 struct TupleItemExpression: Expression
 {
 	std::string nodeType() const override { return "TupleItemExpression"; }
@@ -795,6 +805,16 @@ struct NewArray: Expression
 	std::vector<std::shared_ptr<Expression>> values;
 };
 
+// Empty NewArray with location and wtype set; caller fills values.
+inline std::shared_ptr<NewArray> makeNewArray(
+	WType const* wtype, SourceLocation loc)
+{
+	auto node = std::make_shared<NewArray>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	return node;
+}
+
 struct ArrayLength: Expression
 {
 	std::string nodeType() const override { return "ArrayLength"; }
@@ -920,6 +940,16 @@ struct SubmitInnerTransaction: Expression
 	std::string nodeType() const override { return "SubmitInnerTransaction"; }
 	std::vector<std::shared_ptr<Expression>> itxns;
 };
+
+// Empty SubmitInnerTransaction with location and wtype set; caller fills itxns.
+inline std::shared_ptr<SubmitInnerTransaction> makeSubmitInnerTransaction(
+	WType const* wtype, SourceLocation loc)
+{
+	auto node = std::make_shared<SubmitInnerTransaction>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	return node;
+}
 
 struct InnerTransactionField: Expression
 {

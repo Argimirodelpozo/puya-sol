@@ -162,9 +162,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					);
 
 					auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(storedWType);
-					auto tuple = std::make_shared<awst::TupleExpression>();
-					tuple->sourceLocation = loc;
-					tuple->wtype = getter.returnType;
+					auto tuple = awst::makeTupleExpression(getter.returnType, loc);
 
 					for (auto const& member: solStructType->members(nullptr))
 					{
@@ -256,9 +254,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				if (solStructElem && solReturnTypes.size() > 1)
 				{
 					auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(elemARC4);
-					auto tuple = std::make_shared<awst::TupleExpression>();
-					tuple->sourceLocation = loc;
-					tuple->wtype = getter.returnType;
+					auto tuple = awst::makeTupleExpression(getter.returnType, loc);
 
 					for (auto const& member: solStructElem->members(nullptr))
 					{
@@ -474,9 +470,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					{
 						// indexed returns the full ARC4Struct; extract fields.
 						std::shared_ptr<awst::Expression> fullStruct = std::move(indexed);
-						auto tuple = std::make_shared<awst::TupleExpression>();
-						tuple->sourceLocation = loc;
-						tuple->wtype = getter.returnType;
+						auto tuple = awst::makeTupleExpression(getter.returnType, loc);
 
 						// Get the ARC4Struct type's field types for FieldExpression
 						auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(fullStruct->wtype);

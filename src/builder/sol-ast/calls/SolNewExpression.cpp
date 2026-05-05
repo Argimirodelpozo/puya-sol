@@ -45,9 +45,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 	else if (auto* arc4Dyn = dynamic_cast<awst::ARC4DynamicArray const*>(resultType))
 		elemType = arc4Dyn->elementType();
 
-	auto e = std::make_shared<awst::NewArray>();
-	e->sourceLocation = m_loc;
-	e->wtype = resultType;
+	auto e = awst::makeNewArray(resultType, m_loc);
 
 	if (!m_call.arguments().empty() && elemType)
 	{
@@ -117,9 +115,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 
 			// extend with default
 			auto defaultElem = builder::StorageMapper::makeDefaultValue(elemType, m_loc);
-			auto singleArr = std::make_shared<awst::NewArray>();
-			singleArr->sourceLocation = m_loc;
-			singleArr->wtype = resultType;
+			auto singleArr = awst::makeNewArray(resultType, m_loc);
 			singleArr->values.push_back(std::move(defaultElem));
 
 			auto extend = std::make_shared<awst::ArrayExtend>();
@@ -335,9 +331,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 
 			// Submit the inner transaction
 			static awst::WInnerTransaction s_applTxnType(6);
-			auto submit = std::make_shared<awst::SubmitInnerTransaction>();
-			submit->sourceLocation = m_loc;
-			submit->wtype = &s_applTxnType;
+			auto submit = awst::makeSubmitInnerTransaction(&s_applTxnType, m_loc);
 			submit->itxns.push_back(std::move(create));
 
 			auto submitStmt = awst::makeExpressionStatement(std::move(submit), m_loc);
@@ -418,9 +412,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				fundCreate->fields["Amount"] = std::move(totalFundAmount);
 
 				static awst::WInnerTransaction s_fundTxnType(1);
-				auto fundSubmit = std::make_shared<awst::SubmitInnerTransaction>();
-				fundSubmit->sourceLocation = m_loc;
-				fundSubmit->wtype = &s_fundTxnType;
+				auto fundSubmit = awst::makeSubmitInnerTransaction(&s_fundTxnType, m_loc);
 				fundSubmit->itxns.push_back(std::move(fundCreate));
 
 				auto fundStmt = awst::makeExpressionStatement(std::move(fundSubmit), m_loc);
@@ -520,9 +512,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 
 				// Submit as a group so the PaymentTxn is visible to __postInit's msg.value.
 				static awst::WInnerTransaction s_payApplGroupType(1);
-				auto postSubmit = std::make_shared<awst::SubmitInnerTransaction>();
-				postSubmit->sourceLocation = m_loc;
-				postSubmit->wtype = &s_payApplGroupType;
+				auto postSubmit = awst::makeSubmitInnerTransaction(&s_payApplGroupType, m_loc);
 				postSubmit->itxns.push_back(std::move(payTxn));
 				postSubmit->itxns.push_back(std::move(postCall));
 

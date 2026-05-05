@@ -671,9 +671,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 			auto offset = awst::makeIntegerConstant(std::to_string(i * 32), _loc);
 			items.push_back(decodeAbiValue(_ctx, dataExpr, std::move(offset), components[i], _loc));
 		}
-		auto tuple = std::make_shared<awst::TupleExpression>();
-		tuple->sourceLocation = _loc;
-		tuple->wtype = targetType;
+		auto tuple = awst::makeTupleExpression(targetType, _loc);
 		tuple->items = std::move(items);
 		return std::make_unique<GenericAbiResult>(_ctx, std::move(tuple));
 	}

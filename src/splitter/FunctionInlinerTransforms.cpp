@@ -1131,9 +1131,7 @@ std::shared_ptr<awst::Expression> FunctionInliner::deepCopyExpr(
 	if (type == "TupleExpression")
 	{
 		auto& src = static_cast<awst::TupleExpression const&>(*_expr);
-		auto n = std::make_shared<awst::TupleExpression>();
-		n->sourceLocation = src.sourceLocation;
-		n->wtype = src.wtype;
+		auto n = awst::makeTupleExpression(src.wtype, src.sourceLocation);
 		for (auto const& item: src.items)
 			n->items.push_back(deepCopyExpr(item));
 		return n;
@@ -1141,9 +1139,7 @@ std::shared_ptr<awst::Expression> FunctionInliner::deepCopyExpr(
 	if (type == "NewArray")
 	{
 		auto& src = static_cast<awst::NewArray const&>(*_expr);
-		auto n = std::make_shared<awst::NewArray>();
-		n->sourceLocation = src.sourceLocation;
-		n->wtype = src.wtype;
+		auto n = awst::makeNewArray(src.wtype, src.sourceLocation);
 		for (auto const& v: src.values)
 			n->values.push_back(deepCopyExpr(v));
 		return n;
@@ -1161,9 +1157,7 @@ std::shared_ptr<awst::Expression> FunctionInliner::deepCopyExpr(
 	if (type == "SubmitInnerTransaction")
 	{
 		auto& src = static_cast<awst::SubmitInnerTransaction const&>(*_expr);
-		auto n = std::make_shared<awst::SubmitInnerTransaction>();
-		n->sourceLocation = src.sourceLocation;
-		n->wtype = src.wtype;
+		auto n = awst::makeSubmitInnerTransaction(src.wtype, src.sourceLocation);
 		for (auto const& itxn: src.itxns)
 			n->itxns.push_back(deepCopyExpr(itxn));
 		return n;

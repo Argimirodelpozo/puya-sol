@@ -238,9 +238,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
 				bytesSource = std::move(toBytes);
 			}
 
-			auto arr = std::make_shared<awst::NewArray>();
-			arr->sourceLocation = m_loc;
-			arr->wtype = _targetType;
+			auto arr = awst::makeNewArray(_targetType, m_loc);
 			for (int i = 0; i < *arrSize; ++i)
 			{
 				auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
@@ -266,9 +264,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
 			}
 			return arr;
 		}
-		auto arr = std::make_shared<awst::NewArray>();
-		arr->sourceLocation = m_loc;
-		arr->wtype = _targetType;
+		auto arr = awst::makeNewArray(_targetType, m_loc);
 		return arr;
 	}
 

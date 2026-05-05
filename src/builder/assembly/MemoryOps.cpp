@@ -431,9 +431,7 @@ void AssemblyBuilder::handleReturn(
 			"assembly return produces scalar but function returns array; "
 			"returning empty array (EVM memory layout not translatable)", _loc
 		);
-		auto emptyArr = std::make_shared<awst::NewArray>();
-		emptyArr->sourceLocation = _loc;
-		emptyArr->wtype = m_returnType;
+		auto emptyArr = awst::makeNewArray(m_returnType, _loc);
 		returnValue = std::move(emptyArr);
 	}
 

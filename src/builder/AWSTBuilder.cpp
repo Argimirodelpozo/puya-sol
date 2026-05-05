@@ -593,9 +593,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 					}
 					else
 					{
-						auto tuple = std::make_shared<awst::TupleExpression>();
-						tuple->sourceLocation = ret->sourceLocation;
-						tuple->wtype = sub->returnType;
+						auto tuple = awst::makeTupleExpression(sub->returnType, ret->sourceLocation);
 						if (ret->value)
 							tuple->items.push_back(ret->value);
 						for (size_t idx: storageParamIndices)
@@ -654,9 +652,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			}
 			else
 			{
-				auto tuple = std::make_shared<awst::TupleExpression>();
-				tuple->sourceLocation = loc;
-				tuple->wtype = sub->returnType;
+				auto tuple = awst::makeTupleExpression(sub->returnType, loc);
 				for (size_t idx: storageParamIndices)
 					tuple->items.push_back(awst::makeVarExpression(sub->args[idx].name, sub->args[idx].wtype, loc));
 				implicitReturn->value = std::move(tuple);

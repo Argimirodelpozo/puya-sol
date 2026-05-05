@@ -179,9 +179,7 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaCreate(
 	create->fields["ConfigAssetFreeze"] = currentAppAddress(_loc);
 
 	static awst::WInnerTransaction s_acfgTxnType(3);
-	auto submit = std::make_shared<awst::SubmitInnerTransaction>();
-	submit->sourceLocation = _loc;
-	submit->wtype = &s_acfgTxnType;
+	auto submit = awst::makeSubmitInnerTransaction(&s_acfgTxnType, _loc);
 	submit->itxns.push_back(std::move(create));
 
 	auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);
@@ -346,9 +344,7 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaTransfer(
 	create->fields["AssetAmount"] = std::move(amount);
 
 	static awst::WInnerTransaction s_axferTxnType(4);
-	auto submit = std::make_shared<awst::SubmitInnerTransaction>();
-	submit->sourceLocation = _loc;
-	submit->wtype = &s_axferTxnType;
+	auto submit = awst::makeSubmitInnerTransaction(&s_axferTxnType, _loc);
 	submit->itxns.push_back(std::move(create));
 
 	auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);

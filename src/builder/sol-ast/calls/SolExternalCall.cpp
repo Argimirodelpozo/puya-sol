@@ -236,9 +236,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 	awst::WType const* _returnType)
 {
 	static awst::WInnerTransaction s_applTxnType(TxnTypeAppl);
-	auto submit = std::make_shared<awst::SubmitInnerTransaction>();
-	submit->sourceLocation = m_loc;
-	submit->wtype = &s_applTxnType;
+	auto submit = awst::makeSubmitInnerTransaction(&s_applTxnType, m_loc);
 	submit->itxns.push_back(std::move(_create));
 
 	// For void returns
@@ -293,9 +291,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 		singleBytes->source = std::move(stripPrefix);
 		singleBytes->id = 0;
 
-		auto tuple = std::make_shared<awst::TupleExpression>();
-		tuple->sourceLocation = m_loc;
-		tuple->wtype = _returnType;
+		auto tuple = awst::makeTupleExpression(_returnType, m_loc);
 
 		int offset = 0;
 		for (size_t i = 0; i < tupleType->types().size(); ++i)

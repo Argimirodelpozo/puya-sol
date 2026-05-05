@@ -73,9 +73,7 @@ std::shared_ptr<awst::Expression> makeDefaultValue(
 	// WTuple). Build a TupleExpression with each component's default.
 	if (auto const* tup = dynamic_cast<awst::WTuple const*>(_t))
 	{
-		auto te = std::make_shared<awst::TupleExpression>();
-		te->sourceLocation = _loc;
-		te->wtype = _t;
+		auto te = awst::makeTupleExpression(_t, _loc);
 		for (auto const* ft : tup->types())
 		{
 			auto fv = makeDefaultValue(ft, _loc);
@@ -285,9 +283,7 @@ std::shared_ptr<awst::Expression> decodeFromBytes(
 		static int seCounter = 0;
 		singleBytes->id = ++seCounter;
 
-		auto tuple = std::make_shared<awst::TupleExpression>();
-		tuple->sourceLocation = _loc;
-		tuple->wtype = _ret;
+		auto tuple = awst::makeTupleExpression(_ret, _loc);
 
 		int offset = 0;
 		for (auto const* fieldType : tup->types())
@@ -396,9 +392,7 @@ std::shared_ptr<awst::Block> makeForwardingStubBody(
 	// Wrap in SubmitInnerTransaction.
 	static awst::WInnerTransaction s_applTxnType(
 		static_cast<int>(TXN_TYPE_APPL));
-	auto submit = std::make_shared<awst::SubmitInnerTransaction>();
-	submit->sourceLocation = _loc;
-	submit->wtype = &s_applTxnType;
+	auto submit = awst::makeSubmitInnerTransaction(&s_applTxnType, _loc);
 	submit->itxns.push_back(std::move(create));
 
 	// Void return: just submit and return.

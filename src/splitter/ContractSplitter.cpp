@@ -2041,9 +2041,7 @@ static std::shared_ptr<awst::Expression> buildDefaultExpression(
 		auto const* tupleType = dynamic_cast<awst::WTuple const*>(_type);
 		if (tupleType)
 		{
-			auto tuple = std::make_shared<awst::TupleExpression>();
-			tuple->sourceLocation = _loc;
-			tuple->wtype = _type;
+			auto tuple = awst::makeTupleExpression(_type, _loc);
 			for (auto const* elemType: tupleType->types())
 				tuple->items.push_back(buildDefaultExpression(_loc, elemType));
 			return tuple;
@@ -2068,9 +2066,7 @@ static std::shared_ptr<awst::Expression> buildDefaultExpression(
 			}
 			else
 			{
-				auto tuple = std::make_shared<awst::TupleExpression>();
-				tuple->sourceLocation = _loc;
-				tuple->wtype = _type;
+				auto tuple = awst::makeTupleExpression(_type, _loc);
 				for (auto const* elemType: tupleType->types())
 					tuple->items.push_back(buildDefaultExpression(_loc, elemType));
 				return tuple;
@@ -2082,9 +2078,7 @@ static std::shared_ptr<awst::Expression> buildDefaultExpression(
 		auto const* ra = dynamic_cast<awst::ReferenceArray const*>(_type);
 		if (ra)
 		{
-			auto arr = std::make_shared<awst::NewArray>();
-			arr->sourceLocation = _loc;
-			arr->wtype = _type;
+			auto arr = awst::makeNewArray(_type, _loc);
 			// For fixed-size arrays, populate with default elements
 			if (ra->arraySize().has_value())
 			{

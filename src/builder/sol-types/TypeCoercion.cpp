@@ -273,9 +273,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 	if (_type->kind() == awst::WTypeKind::WTuple)
 	{
 		auto const* tupleType = static_cast<awst::WTuple const*>(_type);
-		auto tuple = std::make_shared<awst::TupleExpression>();
-		tuple->sourceLocation = _loc;
-		tuple->wtype = _type;
+		auto tuple = awst::makeTupleExpression(_type, _loc);
 		for (auto const* componentType: tupleType->types())
 			tuple->items.push_back(makeDefaultValue(componentType, _loc));
 		return tuple;
@@ -297,9 +295,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 	if (_type->kind() == awst::WTypeKind::ReferenceArray)
 	{
 		auto const* refArr = static_cast<awst::ReferenceArray const*>(_type);
-		auto arr = std::make_shared<awst::NewArray>();
-		arr->sourceLocation = _loc;
-		arr->wtype = _type;
+		auto arr = awst::makeNewArray(_type, _loc);
 		if (refArr->arraySize().has_value())
 		{
 			for (int64_t i = 0; i < refArr->arraySize().value(); ++i)
@@ -727,9 +723,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 					? awst::WType::uint64Type()
 					: awst::WType::biguintType();
 
-				auto widened = std::make_shared<awst::NewArray>();
-				widened->sourceLocation = _loc;
-				widened->wtype = _targetType;
+				auto widened = awst::makeNewArray(_targetType, _loc);
 				for (auto const& elem : newArr->values)
 				{
 					// Decode narrow ARC4 → uint64 (narrow types always ≤ 64 bits here)

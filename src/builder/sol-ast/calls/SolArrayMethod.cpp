@@ -89,9 +89,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					auto val = buildExpr(*m_call.arguments()[0]);
 					auto encoded = awst::makeARC4Encode(std::move(val), elemType, m_loc);
 
-					auto singleArr = std::make_shared<awst::NewArray>();
-					singleArr->sourceLocation = m_loc;
-					singleArr->wtype = arrWType;
+					auto singleArr = awst::makeNewArray(arrWType, m_loc);
 					singleArr->values.push_back(std::move(encoded));
 
 					auto e = std::make_shared<awst::ArrayExtend>();
@@ -116,9 +114,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					else
 						elem = builder::TypeCoercion::makeDefaultValue(elemType, m_loc);
 
-					auto singleArr = std::make_shared<awst::NewArray>();
-					singleArr->sourceLocation = m_loc;
-					singleArr->wtype = arrWType;
+					auto singleArr = awst::makeNewArray(arrWType, m_loc);
 					singleArr->values.push_back(std::move(elem));
 
 					auto e = std::make_shared<awst::ArrayExtend>();
@@ -207,9 +203,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 								auto val = buildExpr(*m_call.arguments()[0]);
 								auto encoded = awst::makeARC4Encode(std::move(val), elemType, m_loc);
 
-								auto singleArr = std::make_shared<awst::NewArray>();
-								singleArr->sourceLocation = m_loc;
-								singleArr->wtype = arrWType;
+								auto singleArr = awst::makeNewArray(arrWType, m_loc);
 								singleArr->values.push_back(std::move(encoded));
 
 								auto e = std::make_shared<awst::ArrayExtend>();
@@ -233,9 +227,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 								else
 									elem = builder::TypeCoercion::makeDefaultValue(elemType, m_loc);
 
-								auto singleArr = std::make_shared<awst::NewArray>();
-								singleArr->sourceLocation = m_loc;
-								singleArr->wtype = arrWType;
+								auto singleArr = awst::makeNewArray(arrWType, m_loc);
 								singleArr->values.push_back(std::move(elem));
 
 								auto e = std::make_shared<awst::ArrayExtend>();
@@ -576,9 +568,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 			val = builder::TypeCoercion::makeDefaultValue(elemType, loc);
 		}
 
-		auto singleArr = std::make_shared<awst::NewArray>();
-		singleArr->sourceLocation = loc;
-		singleArr->wtype = rawFieldType;
+		auto singleArr = awst::makeNewArray(rawFieldType, loc);
 		singleArr->values.push_back(std::move(val));
 
 		auto extend = std::make_shared<awst::ArrayExtend>();
@@ -649,9 +639,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 	boxExpr->existsAssertionMessage = std::nullopt;
 
 	// StateGet wrapper for reads (returns empty array if box missing)
-	auto emptyArr = std::make_shared<awst::NewArray>();
-	emptyArr->sourceLocation = m_loc;
-	emptyArr->wtype = arrWType;
+	auto emptyArr = awst::makeNewArray(arrWType, m_loc);
 
 	auto stateGet = awst::makeStateGet(boxExpr, emptyArr, arrWType, m_loc);
 
@@ -663,9 +651,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 
 		auto encoded = awst::makeARC4Encode(std::move(val), elemType, m_loc);
 
-		auto singleArr = std::make_shared<awst::NewArray>();
-		singleArr->sourceLocation = m_loc;
-		singleArr->wtype = arrWType;
+		auto singleArr = awst::makeNewArray(arrWType, m_loc);
 		singleArr->values.push_back(std::move(encoded));
 
 		auto e = std::make_shared<awst::ArrayExtend>();
@@ -698,9 +684,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 			elem = builder::TypeCoercion::makeDefaultValue(elemType, m_loc);
 		}
 
-		auto singleArr = std::make_shared<awst::NewArray>();
-		singleArr->sourceLocation = m_loc;
-		singleArr->wtype = arrWType;
+		auto singleArr = awst::makeNewArray(arrWType, m_loc);
 		singleArr->values.push_back(std::move(elem));
 
 		auto e = std::make_shared<awst::ArrayExtend>();
@@ -802,9 +786,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMemoryArray(
 					val = std::move(encode);
 				}
 			}
-			auto singleArr = std::make_shared<awst::NewArray>();
-			singleArr->sourceLocation = m_loc;
-			singleArr->wtype = baseWtype;
+			auto singleArr = awst::makeNewArray(baseWtype, m_loc);
 			singleArr->values.push_back(std::move(val));
 
 			auto e = std::make_shared<awst::ArrayExtend>();

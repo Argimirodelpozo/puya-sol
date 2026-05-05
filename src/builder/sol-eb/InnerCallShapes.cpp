@@ -185,9 +185,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 
 	// Submit
 	static awst::WInnerTransaction s_applTxnType(TxnTypeAppl);
-	auto submit = std::make_shared<awst::SubmitInnerTransaction>();
-	submit->sourceLocation = _loc;
-	submit->wtype = &s_applTxnType;
+	auto submit = awst::makeSubmitInnerTransaction(&s_applTxnType, _loc);
 	submit->itxns.push_back(std::move(create));
 
 	auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);
@@ -295,9 +293,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	create->fields["ApplicationArgs"] = std::move(argsTuple);
 
 	static awst::WInnerTransaction s_applTxnType(TxnTypeAppl);
-	auto submit = std::make_shared<awst::SubmitInnerTransaction>();
-	submit->sourceLocation = _loc;
-	submit->wtype = &s_applTxnType;
+	auto submit = awst::makeSubmitInnerTransaction(&s_applTxnType, _loc);
 	submit->itxns.push_back(std::move(create));
 
 	auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);

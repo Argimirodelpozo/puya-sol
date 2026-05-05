@@ -512,9 +512,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 
 		// Submit + read LastLog (strip 4-byte ARC4 return prefix)
 		static awst::WInnerTransaction s_applTxnType(6);
-		auto submit = std::make_shared<awst::SubmitInnerTransaction>();
-		submit->sourceLocation = _loc;
-		submit->wtype = &s_applTxnType;
+		auto submit = awst::makeSubmitInnerTransaction(&s_applTxnType, _loc);
 		submit->itxns.push_back(std::move(create));
 
 		// Read itxn LastLog and coerce the ARC4-prefixed bytes to retType.

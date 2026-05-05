@@ -31,9 +31,7 @@ std::shared_ptr<awst::Expression> SolAssignment::buildTupleWithUpdatedField(
 	auto const& names = *tupleType->names();
 	auto const& types = tupleType->types();
 
-	auto tuple = std::make_shared<awst::TupleExpression>();
-	tuple->sourceLocation = m_loc;
-	tuple->wtype = _base->wtype;
+	auto tuple = awst::makeTupleExpression(_base->wtype, m_loc);
 
 	for (size_t i = 0; i < names.size(); ++i)
 	{

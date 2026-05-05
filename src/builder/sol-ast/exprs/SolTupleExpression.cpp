@@ -29,9 +29,7 @@ std::shared_ptr<awst::Expression> SolTupleExpression::toAwst()
 		else if (auto const* arc4Dyn = dynamic_cast<awst::ARC4DynamicArray const*>(wtype))
 			elementType = arc4Dyn->elementType();
 
-		auto e = std::make_shared<awst::NewArray>();
-		e->sourceLocation = m_loc;
-		e->wtype = wtype;
+		auto e = awst::makeNewArray(wtype, m_loc);
 		for (auto const& comp: m_tuple.components())
 		{
 			if (comp)

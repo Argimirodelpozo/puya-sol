@@ -25,9 +25,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::makeBoolBytesTuple(
 	std::shared_ptr<awst::Expression> _data,
 	awst::SourceLocation const& _loc)
 {
-	auto tuple = std::make_shared<awst::TupleExpression>();
-	tuple->sourceLocation = _loc;
-	tuple->wtype = &s_boolBytesType;
+	auto tuple = awst::makeTupleExpression(&s_boolBytesType, _loc);
 	tuple->items.push_back(awst::makeBoolConstant(_success, _loc));
 	tuple->items.push_back(std::move(_data));
 	return tuple;
@@ -236,9 +234,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleTransfer(
 {
 	auto create = buildPaymentTransaction(_ctx, std::move(_receiver), std::move(_amount), _loc);
 	static awst::WInnerTransaction s_payTxnType(TxnTypePay);
-	auto submit = std::make_shared<awst::SubmitInnerTransaction>();
-	submit->sourceLocation = _loc;
-	submit->wtype = &s_payTxnType;
+	auto submit = awst::makeSubmitInnerTransaction(&s_payTxnType, _loc);
 	submit->itxns.push_back(std::move(create));
 
 	auto stmt = awst::makeExpressionStatement(submit, _loc);
@@ -254,9 +250,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleSend(
 {
 	auto create = buildPaymentTransaction(_ctx, std::move(_receiver), std::move(_amount), _loc);
 	static awst::WInnerTransaction s_payTxnType(TxnTypePay);
-	auto submit = std::make_shared<awst::SubmitInnerTransaction>();
-	submit->sourceLocation = _loc;
-	submit->wtype = &s_payTxnType;
+	auto submit = awst::makeSubmitInnerTransaction(&s_payTxnType, _loc);
 	submit->itxns.push_back(std::move(create));
 
 	auto stmt = awst::makeExpressionStatement(submit, _loc);
@@ -271,9 +265,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithValue(
 {
 	auto create = buildPaymentTransaction(_ctx, std::move(_receiver), std::move(_amount), _loc);
 	static awst::WInnerTransaction s_payTxnType(TxnTypePay);
-	auto submit = std::make_shared<awst::SubmitInnerTransaction>();
-	submit->sourceLocation = _loc;
-	submit->wtype = &s_payTxnType;
+	auto submit = awst::makeSubmitInnerTransaction(&s_payTxnType, _loc);
 	submit->itxns.push_back(std::move(create));
 
 	auto stmt = awst::makeExpressionStatement(submit, _loc);
@@ -644,9 +636,7 @@ void InnerCallHandlers::fundCreatedApp(
 	// Build and submit inner payment
 	auto create = buildPaymentTransaction(_ctx, std::move(receiver), std::move(_amount), _loc);
 	static awst::WInnerTransaction s_payTxnType(TxnTypePay);
-	auto submit = std::make_shared<awst::SubmitInnerTransaction>();
-	submit->sourceLocation = _loc;
-	submit->wtype = &s_payTxnType;
+	auto submit = awst::makeSubmitInnerTransaction(&s_payTxnType, _loc);
 	submit->itxns.push_back(std::move(create));
 
 	auto stmt = awst::makeExpressionStatement(std::move(submit), _loc);
