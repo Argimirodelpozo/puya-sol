@@ -1,16 +1,17 @@
-# Semantic Test Status — v213
+# Semantic Test Status — v214
 
 **Totals**: 1092 PASS / 155 FAIL / 75 (56 compile_err + 19 deploy_err) = **1092/1322 (82.6%)**
 
-v213 is the regression sentinel for the
-`makeFieldExpression / makeIndexExpression / makeTupleItem`
-helpers (commit d32e8fae8). Test-identical to v208-v212. The
-full helper-refactor stack (fc84eb803 + 377921e01 + 0890e044d +
-ae92119be + 43266783c + d32e8fae8) holds 1092 PASS through six
-refactor commits.
+v214 is the regression sentinel for the
+`makeVoidConstant / makeBoolBinOp / makeStateGet` helpers (commit
+687cc89e6). Test-identical to v208-v213.
+
+Seven sentinel runs in a row hold 1092 PASS through the full
+helper-refactor stack (fc84eb803 + 377921e01 + 0890e044d +
+ae92119be + 43266783c + d32e8fae8 + 687cc89e6).
 
 Cumulative source reduction across the refactor stack:
-~1455 LOC across the AWST construction surface — every helper
+~1623 LOC across the AWST construction surface — every helper
 expansion produces byte-identical AWST nodes to the inlined form.
 
 v208 vs v207: **+1 PASS / -1 FAIL** from `mapping_contract_key_getter`
@@ -92,6 +93,11 @@ of the semantic suite, so v208/v209 also reconfirm that surface.
   regex sweep: 21/22 FieldExpression, 13/16 IndexExpression,
   30/31 TupleItemExpression. 26 files, -217 lines.
   Test-identical to v212.
+- v214 = 1092 — sentinel for the
+  `makeVoidConstant / makeBoolBinOp / makeStateGet` helpers
+  (687cc89e6). 60 sites collapsed across 29 files via regex sweep:
+  26 VoidConstant, 17 BooleanBinaryOperation, 17 StateGet.
+  30 files, -168 lines. Test-identical to v213.
 
 ## v195 reference (preserved below)
 
