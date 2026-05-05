@@ -632,10 +632,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 						{
 							if (ret->value)
 							{
-								auto encode = std::make_shared<awst::ARC4Encode>();
-								encode->sourceLocation = ret->value->sourceLocation;
-								encode->wtype = arc4RetType;
-								encode->value = std::move(ret->value);
+								auto encode = awst::makeARC4Encode(std::move(ret->value), arc4RetType, ret->value->sourceLocation);
 								ret->value = std::move(encode);
 							}
 						}
@@ -688,10 +685,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					{
 						if (ret->value && ret->value->wtype == awst::WType::biguintType())
 						{
-							auto encode = std::make_shared<awst::ARC4Encode>();
-							encode->sourceLocation = ret->value->sourceLocation;
-							encode->wtype = arc4RetType;
-							encode->value = std::move(ret->value);
+							auto encode = awst::makeARC4Encode(std::move(ret->value), arc4RetType, ret->value->sourceLocation);
 							ret->value = std::move(encode);
 						}
 					}
@@ -760,10 +754,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 						if (tuple->items[i]->wtype == awst::WType::biguintType()
 							&& arc4Types[i]->kind() == awst::WTypeKind::ARC4UIntN)
 						{
-							auto encode = std::make_shared<awst::ARC4Encode>();
-							encode->sourceLocation = tuple->items[i]->sourceLocation;
-							encode->wtype = arc4Types[i];
-							encode->value = std::move(tuple->items[i]);
+							auto encode = awst::makeARC4Encode(std::move(tuple->items[i]), arc4Types[i], tuple->items[i]->sourceLocation);
 							tuple->items[i] = std::move(encode);
 						}
 					}
@@ -819,10 +810,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 									if (subTupleType->types()[i] == awst::WType::biguintType()
 										&& arc4Types[i]->kind() == awst::WTypeKind::ARC4UIntN)
 									{
-										auto encode = std::make_shared<awst::ARC4Encode>();
-										encode->sourceLocation = assign->sourceLocation;
-										encode->wtype = arc4Types[i];
-										encode->value = std::move(item);
+										auto encode = awst::makeARC4Encode(std::move(item), arc4Types[i], assign->sourceLocation);
 										newTuple->items.push_back(std::move(encode));
 									}
 									else
@@ -867,10 +855,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				awst::SourceLocation const& loc) -> std::shared_ptr<awst::Expression> {
 				if (val->wtype != awst::WType::biguintType())
 					return val;
-				auto encode = std::make_shared<awst::ARC4Encode>();
-				encode->sourceLocation = loc;
-				encode->wtype = arc4SignedType;
-				encode->value = std::move(val);
+				auto encode = awst::makeARC4Encode(std::move(val), arc4SignedType, loc);
 				return encode;
 			};
 
@@ -1044,10 +1029,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				}
 				else
 				{
-					auto decode = std::make_shared<awst::ARC4Decode>();
-					decode->sourceLocation = pd.loc;
-					decode->wtype = pd.nativeType;
-					decode->value = std::move(arc4Var);
+					auto decode = awst::makeARC4Decode(std::move(arc4Var), pd.nativeType, pd.loc);
 					decodeExpr = std::move(decode);
 				}
 
@@ -1275,10 +1257,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 						continue;
 					if (a.value->wtype != awst::WType::biguintType())
 						continue;
-					auto enc = std::make_shared<awst::ARC4Encode>();
-					enc->sourceLocation = a.value->sourceLocation;
-					enc->wtype = pd.arc4Type;
-					enc->value = std::move(a.value);
+					auto enc = awst::makeARC4Encode(std::move(a.value), pd.arc4Type, a.value->sourceLocation);
 					a.value = std::move(enc);
 				}
 			});

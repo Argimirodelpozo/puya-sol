@@ -78,10 +78,7 @@ std::shared_ptr<awst::Expression> SolStructConstruction::toAwst()
 							std::move(it->second), awst::WType::bytesType(), m_loc);
 					it->second = std::move(asBytes);
 				}
-				auto encode = std::make_shared<awst::ARC4Encode>();
-				encode->sourceLocation = m_loc;
-				encode->wtype = ftype;
-				encode->value = std::move(it->second);
+				auto encode = awst::makeARC4Encode(std::move(it->second), ftype, m_loc);
 				it->second = std::move(encode);
 			}
 		}

@@ -275,10 +275,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 				std::shared_ptr<awst::Expression> elemVal = std::move(elemExpr);
 				if (elemVal->wtype && elemVal->wtype->kind() == awst::WTypeKind::ARC4UIntN)
 				{
-					auto decode = std::make_shared<awst::ARC4Decode>();
-					decode->sourceLocation = m_loc;
-					decode->wtype = awst::WType::biguintType();
-					decode->value = std::move(elemVal);
+					auto decode = awst::makeARC4Decode(std::move(elemVal), awst::WType::biguintType(), m_loc);
 					elemVal = std::move(decode);
 				}
 				else if (elemVal->wtype == awst::WType::uint64Type())
@@ -547,10 +544,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 			if (!sameShape)
 			{
 				value = builder::TypeCoercion::stringToBytes(std::move(value), m_loc);
-				auto encode = std::make_shared<awst::ARC4Encode>();
-				encode->sourceLocation = m_loc;
-				encode->wtype = target->wtype;
-				encode->value = std::move(value);
+				auto encode = awst::makeARC4Encode(std::move(value), target->wtype, m_loc);
 				value = std::move(encode);
 			}
 		}

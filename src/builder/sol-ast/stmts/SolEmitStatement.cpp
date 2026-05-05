@@ -107,10 +107,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 			arc4Value = std::move(translated);
 		else
 		{
-			auto encode = std::make_shared<awst::ARC4Encode>();
-			encode->sourceLocation = m_loc;
-			encode->wtype = arc4Type;
-			encode->value = std::move(translated);
+			auto encode = awst::makeARC4Encode(std::move(translated), arc4Type, m_loc);
 			arc4Value = std::move(encode);
 		}
 

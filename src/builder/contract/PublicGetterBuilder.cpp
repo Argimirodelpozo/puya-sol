@@ -188,10 +188,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 						auto* nativeType = m_typeMapper.map(member.type);
 						if (arc4FieldType && arc4FieldType != nativeType)
 						{
-							auto decode = std::make_shared<awst::ARC4Decode>();
-							decode->sourceLocation = loc;
-							decode->wtype = nativeType;
-							decode->value = std::move(fieldExpr);
+							auto decode = awst::makeARC4Decode(std::move(fieldExpr), nativeType, loc);
 							tuple->items.push_back(std::move(decode));
 						}
 						else
@@ -285,10 +282,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 						auto* nativeFieldType = m_typeMapper.map(member.type);
 						if (arc4FieldType && arc4FieldType != nativeFieldType)
 						{
-							auto decode = std::make_shared<awst::ARC4Decode>();
-							decode->sourceLocation = loc;
-							decode->wtype = nativeFieldType;
-							decode->value = std::move(fieldExpr);
+							auto decode = awst::makeARC4Decode(std::move(fieldExpr), nativeFieldType, loc);
 							tuple->items.push_back(std::move(decode));
 						}
 						else
@@ -300,10 +294,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				{
 					if (elemARC4 != nativeElem && elemARC4->name() != nativeElem->name())
 					{
-						auto decode = std::make_shared<awst::ARC4Decode>();
-						decode->sourceLocation = loc;
-						decode->wtype = nativeElem;
-						decode->value = std::move(result);
+						auto decode = awst::makeARC4Decode(std::move(result), nativeElem, loc);
 						result = std::move(decode);
 					}
 
@@ -514,10 +505,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 							auto* nativeType = m_typeMapper.map(member.type);
 							if (arc4FieldType && arc4FieldType != nativeType)
 							{
-								auto decode = std::make_shared<awst::ARC4Decode>();
-								decode->sourceLocation = loc;
-								decode->wtype = nativeType;
-								decode->value = std::move(fieldExpr);
+								auto decode = awst::makeARC4Decode(std::move(fieldExpr), nativeType, loc);
 								tuple->items.push_back(std::move(decode));
 							}
 							else
@@ -542,10 +530,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 						if (arc4Elem && (getter.returnType == awst::WType::uint64Type()
 							|| getter.returnType == awst::WType::biguintType()))
 						{
-							auto decode = std::make_shared<awst::ARC4Decode>();
-							decode->sourceLocation = loc;
-							decode->wtype = getter.returnType;
-							decode->value = std::move(readExpr);
+							auto decode = awst::makeARC4Decode(std::move(readExpr), getter.returnType, loc);
 							readExpr = std::move(decode);
 						}
 					}
@@ -611,10 +596,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 
 					auto arc4Var = awst::makeVarExpression(arc4Name, arc4Type, loc);
 
-					auto decode = std::make_shared<awst::ARC4Decode>();
-					decode->sourceLocation = loc;
-					decode->wtype = awst::WType::biguintType();
-					decode->value = std::move(arc4Var);
+					auto decode = awst::makeARC4Decode(std::move(arc4Var), awst::WType::biguintType(), loc);
 
 					auto target = awst::makeVarExpression(origName, awst::WType::biguintType(), loc);
 
@@ -665,10 +647,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					for (auto& stmt : stmts) {
 						if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get())) {
 							if (ret->value && ret->value->wtype == awst::WType::biguintType()) {
-								auto encode = std::make_shared<awst::ARC4Encode>();
-								encode->sourceLocation = ret->value->sourceLocation;
-								encode->wtype = arc4RetType;
-								encode->value = std::move(ret->value);
+								auto encode = awst::makeARC4Encode(std::move(ret->value), arc4RetType, ret->value->sourceLocation);
 								ret->value = std::move(encode);
 							}
 						} else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get())) {

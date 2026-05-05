@@ -548,10 +548,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 				std::shared_ptr<awst::Expression> fieldValue = fieldExpr;
 				if (arc4FieldType && arc4FieldType != fieldNativeType)
 				{
-					auto decode = std::make_shared<awst::ARC4Decode>();
-					decode->sourceLocation = _loc;
-					decode->wtype = fieldNativeType;
-					decode->value = std::move(fieldValue);
+					auto decode = awst::makeARC4Decode(std::move(fieldValue), fieldNativeType, _loc);
 					fieldValue = std::move(decode);
 				}
 

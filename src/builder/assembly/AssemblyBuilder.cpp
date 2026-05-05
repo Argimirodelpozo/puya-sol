@@ -631,10 +631,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::accessFlatElement(
 		if (innerSize == 1)
 		{
 			// For leaf ARC4 elements (like arc4.uint256), decode to native biguint
-			auto decode = std::make_shared<awst::ARC4Decode>();
-			decode->sourceLocation = _loc;
-			decode->wtype = awst::WType::biguintType();
-			decode->value = indexExpr;
+			auto decode = awst::makeARC4Decode(indexExpr, awst::WType::biguintType(), _loc);
 			return decode;
 		}
 

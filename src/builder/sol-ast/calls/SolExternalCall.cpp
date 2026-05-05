@@ -173,10 +173,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 
 		if (arc4ArrayType)
 		{
-			auto encode = std::make_shared<awst::ARC4Encode>();
-			encode->sourceLocation = m_loc;
-			encode->wtype = arc4ArrayType;
-			encode->value = std::move(_argExpr);
+			auto encode = awst::makeARC4Encode(std::move(_argExpr), arc4ArrayType, m_loc);
 
 			auto rcast = awst::makeReinterpretCast(std::move(encode), awst::WType::bytesType(), m_loc);
 			return rcast;

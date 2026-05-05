@@ -582,10 +582,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					}
 					else
 					{
-						auto decode = std::make_shared<awst::ARC4Decode>();
-						decode->sourceLocation = method.sourceLocation;
-						decode->wtype = paramType;
-						decode->value = std::move(cast);
+						auto decode = awst::makeARC4Decode(std::move(cast), paramType, method.sourceLocation);
 						paramVal = std::move(decode);
 					}
 				}
@@ -832,10 +829,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			{
 				auto arc4Var = awst::makeVarExpression(decode.arc4Name, decode.arc4Type, method.sourceLocation);
 
-				auto decodeExpr = std::make_shared<awst::ARC4Decode>();
-				decodeExpr->sourceLocation = method.sourceLocation;
-				decodeExpr->wtype = decode.origType;
-				decodeExpr->value = std::move(arc4Var);
+				auto decodeExpr = awst::makeARC4Decode(std::move(arc4Var), decode.origType, method.sourceLocation);
 
 				auto target = awst::makeVarExpression(decode.origName, decode.origType, method.sourceLocation);
 

@@ -80,10 +80,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	bool needsDecode = rawElemType != elemType && rawElemType->name() != elemType->name();
 	if (needsDecode)
 	{
-		auto decode = std::make_shared<awst::ARC4Decode>();
-		decode->sourceLocation = m_loc;
-		decode->wtype = rawElemType;
-		decode->value = std::move(indexExpr);
+		auto decode = awst::makeARC4Decode(std::move(indexExpr), rawElemType, m_loc);
 		return decode;
 	}
 	return indexExpr;
@@ -461,10 +458,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 		}
 		if (elemIsArc4 && expectedIsNative)
 		{
-			auto decode = std::make_shared<awst::ARC4Decode>();
-			decode->sourceLocation = m_loc;
-			decode->wtype = expectedType;
-			decode->value = std::move(e);
+			auto decode = awst::makeARC4Decode(std::move(e), expectedType, m_loc);
 			return decode;
 		}
 	}
@@ -666,10 +660,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 	bool needsDecode = rawElemType != arc4ElemType && rawElemType->name() != arc4ElemType->name();
 	if (needsDecode)
 	{
-		auto decode = std::make_shared<awst::ARC4Decode>();
-		decode->sourceLocation = m_loc;
-		decode->wtype = rawElemType;
-		decode->value = std::move(indexExpr);
+		auto decode = awst::makeARC4Decode(std::move(indexExpr), rawElemType, m_loc);
 		return decode;
 	}
 	return indexExpr;

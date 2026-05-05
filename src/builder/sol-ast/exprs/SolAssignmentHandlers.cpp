@@ -301,10 +301,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 			if (targetIsArc4)
 			{
 				assignValue = builder::TypeCoercion::stringToBytes(std::move(assignValue), m_loc);
-				auto encode = std::make_shared<awst::ARC4Encode>();
-				encode->sourceLocation = m_loc;
-				encode->wtype = assignTarget->wtype;
-				encode->value = std::move(assignValue);
+				auto encode = awst::makeARC4Encode(std::move(assignValue), assignTarget->wtype, m_loc);
 				assignValue = std::move(encode);
 			}
 			else
@@ -330,10 +327,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 		if (assignTarget->wtype != assignValue->wtype
 			&& assignTarget->wtype->kind() == awst::WTypeKind::ARC4StaticArray)
 		{
-			auto enc = std::make_shared<awst::ARC4Encode>();
-			enc->sourceLocation = m_loc;
-			enc->wtype = assignTarget->wtype;
-			enc->value = std::move(assignValue);
+			auto enc = awst::makeARC4Encode(std::move(assignValue), assignTarget->wtype, m_loc);
 			assignValue = std::move(enc);
 		}
 
@@ -492,10 +486,7 @@ std::shared_ptr<awst::Expression> SolAssignment::buildStructFieldBytesWrite(
 	std::shared_ptr<awst::Expression> encodedValue = std::move(_newBytes);
 	if (arc4FieldType && encodedValue->wtype != arc4FieldType)
 	{
-		auto encode = std::make_shared<awst::ARC4Encode>();
-		encode->sourceLocation = m_loc;
-		encode->wtype = arc4FieldType;
-		encode->value = std::move(encodedValue);
+		auto encode = awst::makeARC4Encode(std::move(encodedValue), arc4FieldType, m_loc);
 		encodedValue = std::move(encode);
 	}
 
@@ -604,10 +595,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 	if (op != Token::Assign)
 	{
 		auto currentField = awst::makeFieldExpression(readBase, fieldName, _fieldExpr->wtype, m_loc);
-		auto decoded = std::make_shared<awst::ARC4Decode>();
-		decoded->sourceLocation = m_loc;
-		decoded->wtype = m_ctx.typeMapper.map(m_assignment.leftHandSide().annotation().type);
-		decoded->value = std::move(currentField);
+		auto decoded = awst::makeARC4Decode(std::move(currentField), m_ctx.typeMapper.map(m_assignment.leftHandSide().annotation().type), m_loc);
 		auto* solType = m_assignment.leftHandSide().annotation().type;
 		auto builderResult = eb::AssignmentHelper::tryComputeCompoundValue(
 			m_ctx, op, solType, decoded, _value, m_loc);
@@ -630,10 +618,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 		if (nativeType && _value->wtype != nativeType)
 			_value = builder::TypeCoercion::coerceForAssignment(std::move(_value), nativeType, m_loc);
 
-		auto encode = std::make_shared<awst::ARC4Encode>();
-		encode->sourceLocation = m_loc;
-		encode->wtype = arc4FieldType;
-		encode->value = std::move(_value);
+		auto encode = awst::makeARC4Encode(std::move(_value), arc4FieldType, m_loc);
 		_value = std::move(encode);
 	}
 
@@ -783,10 +768,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 			extractBase = std::move(fe);
 		}
 		auto fieldExtract = awst::makeFieldExpression(std::move(extractBase), fieldName, arc4FieldType, m_loc);
-		auto decode = std::make_shared<awst::ARC4Decode>();
-		decode->sourceLocation = m_loc;
-		decode->wtype = m_ctx.typeMapper.map(m_assignment.annotation().type);
-		decode->value = std::move(fieldExtract);
+		auto decode = awst::makeARC4Decode(std::move(fieldExtract), m_ctx.typeMapper.map(m_assignment.annotation().type), m_loc);
 		return decode;
 	}
 	return e;

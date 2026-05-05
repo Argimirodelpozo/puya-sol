@@ -83,10 +83,7 @@ std::shared_ptr<awst::Expression> SolTupleExpression::toAwst()
 						if (arc4uint && arc4uint->n() < 64 && val->wtype == awst::WType::uint64Type())
 						{
 							// Encode uint64 → arc4.uint64, then ReinterpretCast to arc4.uintN
-							auto fullEncode = std::make_shared<awst::ARC4Encode>();
-							fullEncode->sourceLocation = m_loc;
-							fullEncode->wtype = m_ctx.typeMapper.createType<awst::ARC4UIntN>(64);
-							fullEncode->value = std::move(val);
+							auto fullEncode = awst::makeARC4Encode(std::move(val), m_ctx.typeMapper.createType<awst::ARC4UIntN>(64), m_loc);
 
 							// Extract last N/8 bytes
 							auto startConst = awst::makeIntegerConstant(std::to_string(8 - arc4uint->n() / 8), m_loc);
@@ -103,10 +100,7 @@ std::shared_ptr<awst::Expression> SolTupleExpression::toAwst()
 						}
 						else
 						{
-							auto encode = std::make_shared<awst::ARC4Encode>();
-							encode->sourceLocation = m_loc;
-							encode->wtype = elementType;
-							encode->value = std::move(val);
+							auto encode = awst::makeARC4Encode(std::move(val), elementType, m_loc);
 							val = std::move(encode);
 						}
 					}

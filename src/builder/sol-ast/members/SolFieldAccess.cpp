@@ -30,10 +30,7 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 		auto* nativeType = m_ctx.typeMapper.map(m_memberAccess.annotation().type);
 		if (arc4FieldType && arc4FieldType != nativeType)
 		{
-			auto decode = std::make_shared<awst::ARC4Decode>();
-			decode->sourceLocation = m_loc;
-			decode->wtype = nativeType;
-			decode->value = std::move(field);
+			auto decode = awst::makeARC4Decode(std::move(field), nativeType, m_loc);
 			return decode;
 		}
 		return field;

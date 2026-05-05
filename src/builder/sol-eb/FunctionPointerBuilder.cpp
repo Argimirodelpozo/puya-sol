@@ -799,10 +799,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 					if (arc4Type && arc4Type != var->wtype)
 					{
 						// Public target: wrap native → ARC4 type
-						auto encode = std::make_shared<awst::ARC4Encode>();
-						encode->sourceLocation = _loc;
-						encode->wtype = arc4Type;
-						encode->value = std::move(var);
+						auto encode = awst::makeARC4Encode(std::move(var), arc4Type, _loc);
 
 						arg.name = "__arc4_" + paramName;
 						arg.value = std::move(encode);
@@ -827,10 +824,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 					// If target is public and returns ARC4, decode back to biguint
 					if (isPublic && retValue->wtype != dispatch.returnType)
 					{
-						auto decode = std::make_shared<awst::ARC4Decode>();
-						decode->sourceLocation = _loc;
-						decode->wtype = dispatch.returnType;
-						decode->value = std::move(retValue);
+						auto decode = awst::makeARC4Decode(std::move(retValue), dispatch.returnType, _loc);
 						retValue = std::move(decode);
 					}
 					auto ret = awst::makeReturnStatement(std::move(retValue), _loc);

@@ -647,18 +647,12 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 				std::shared_ptr<awst::Expression> bodyBytes;
 				for (auto const& elem : newArr->values)
 				{
-					auto decode = std::make_shared<awst::ARC4Decode>();
-					decode->sourceLocation = _loc;
-					decode->wtype = awst::WType::uint64Type();
-					decode->value = elem;
+					auto decode = awst::makeARC4Decode(elem, awst::WType::uint64Type(), _loc);
 					std::shared_ptr<awst::Expression> nativeVal = std::move(decode);
 					if (widerNative != awst::WType::uint64Type())
 						nativeVal = implicitNumericCast(std::move(nativeVal), widerNative, _loc);
 
-					auto encode = std::make_shared<awst::ARC4Encode>();
-					encode->sourceLocation = _loc;
-					encode->wtype = dynArr->elementType();
-					encode->value = std::move(nativeVal);
+					auto encode = awst::makeARC4Encode(std::move(nativeVal), dynArr->elementType(), _loc);
 
 					auto encBytes = awst::makeReinterpretCast(std::move(encode), awst::WType::bytesType(), _loc);
 
@@ -739,19 +733,13 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 				for (auto const& elem : newArr->values)
 				{
 					// Decode narrow ARC4 → uint64 (narrow types always ≤ 64 bits here)
-					auto decode = std::make_shared<awst::ARC4Decode>();
-					decode->sourceLocation = _loc;
-					decode->wtype = awst::WType::uint64Type();
-					decode->value = elem;
+					auto decode = awst::makeARC4Decode(elem, awst::WType::uint64Type(), _loc);
 
 					std::shared_ptr<awst::Expression> nativeVal = std::move(decode);
 					if (widerNative != awst::WType::uint64Type())
 						nativeVal = implicitNumericCast(std::move(nativeVal), widerNative, _loc);
 
-					auto encode = std::make_shared<awst::ARC4Encode>();
-					encode->sourceLocation = _loc;
-					encode->wtype = targetStat->elementType();
-					encode->value = std::move(nativeVal);
+					auto encode = awst::makeARC4Encode(std::move(nativeVal), targetStat->elementType(), _loc);
 					widened->values.push_back(std::move(encode));
 				}
 				return widened;

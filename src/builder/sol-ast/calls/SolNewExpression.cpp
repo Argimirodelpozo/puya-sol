@@ -252,10 +252,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 						if (intT && !intT->isSigned())
 							bits = intT->numBits();
 						auto* arc4T = m_ctx.typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
-						auto encode = std::make_shared<awst::ARC4Encode>();
-						encode->sourceLocation = m_loc;
-						encode->wtype = arc4T;
-						encode->value = std::move(argVal);
+						auto encode = awst::makeARC4Encode(std::move(argVal), arc4T, m_loc);
 						argVal = std::move(encode);
 					}
 					else if (argVal->wtype == awst::WType::uint64Type())
@@ -264,10 +261,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 						auto const* intT = dynamic_cast<IntegerType const*>(paramSolType);
 						if (intT) bits = intT->numBits();
 						auto* arc4T = m_ctx.typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
-						auto encode = std::make_shared<awst::ARC4Encode>();
-						encode->sourceLocation = m_loc;
-						encode->wtype = arc4T;
-						encode->value = std::move(argVal);
+						auto encode = awst::makeARC4Encode(std::move(argVal), arc4T, m_loc);
 						argVal = std::move(encode);
 					}
 					else if (argVal->wtype == awst::WType::boolType())

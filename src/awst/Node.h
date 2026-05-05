@@ -701,6 +701,28 @@ struct ARC4Decode: Expression
 	std::shared_ptr<Expression> value;
 };
 
+// Wrap an expression in an ARC4Encode (native → ARC4-encoded bytes).
+inline std::shared_ptr<ARC4Encode> makeARC4Encode(
+	std::shared_ptr<Expression> value, WType const* wtype, SourceLocation loc)
+{
+	auto node = std::make_shared<ARC4Encode>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->value = std::move(value);
+	return node;
+}
+
+// Wrap an expression in an ARC4Decode (ARC4-encoded bytes → native).
+inline std::shared_ptr<ARC4Decode> makeARC4Decode(
+	std::shared_ptr<Expression> value, WType const* wtype, SourceLocation loc)
+{
+	auto node = std::make_shared<ARC4Decode>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->value = std::move(value);
+	return node;
+}
+
 struct ARC4FromBytes: Expression
 {
 	std::string nodeType() const override { return "ARC4FromBytes"; }

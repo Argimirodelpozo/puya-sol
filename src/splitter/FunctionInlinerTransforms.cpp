@@ -842,19 +842,13 @@ std::shared_ptr<awst::Expression> FunctionInliner::deepCopyExpr(
 	if (type == "ARC4Encode")
 	{
 		auto& src = static_cast<awst::ARC4Encode const&>(*_expr);
-		auto n = std::make_shared<awst::ARC4Encode>();
-		n->sourceLocation = src.sourceLocation;
-		n->wtype = src.wtype;
-		n->value = deepCopyExpr(src.value);
+		auto n = awst::makeARC4Encode(deepCopyExpr(src.value), src.wtype, src.sourceLocation);
 		return n;
 	}
 	if (type == "ARC4Decode")
 	{
 		auto& src = static_cast<awst::ARC4Decode const&>(*_expr);
-		auto n = std::make_shared<awst::ARC4Decode>();
-		n->sourceLocation = src.sourceLocation;
-		n->wtype = src.wtype;
-		n->value = deepCopyExpr(src.value);
+		auto n = awst::makeARC4Decode(deepCopyExpr(src.value), src.wtype, src.sourceLocation);
 		return n;
 	}
 	if (type == "ReinterpretCast")

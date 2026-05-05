@@ -683,10 +683,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 					auto field = awst::makeFieldExpression(std::move(baseExpr), _memberAccess.memberName(), arc4FieldType ? arc4FieldType : ptrNativeType, m_loc);
 					if (arc4FieldType && arc4FieldType != ptrNativeType)
 					{
-						auto decode = std::make_shared<awst::ARC4Decode>();
-						decode->sourceLocation = m_loc;
-						decode->wtype = ptrNativeType;
-						decode->value = std::move(field);
+						auto decode = awst::makeARC4Decode(std::move(field), ptrNativeType, m_loc);
 						ptrExpr = std::move(decode);
 					}
 					else
@@ -794,10 +791,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::toAwst()
 						|| srcKind->kind() == awst::WTypeKind::ARC4StaticArray);
 				if (srcIsArc4)
 				{
-					auto decode = std::make_shared<awst::ARC4Decode>();
-					decode->sourceLocation = m_loc;
-					decode->wtype = wantedType;
-					decode->value = std::move(ptrExpr);
+					auto decode = awst::makeARC4Decode(std::move(ptrExpr), wantedType, m_loc);
 					ptrExpr = std::move(decode);
 				}
 			}

@@ -87,10 +87,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				{
 					emitEnsureBox();
 					auto val = buildExpr(*m_call.arguments()[0]);
-					auto encoded = std::make_shared<awst::ARC4Encode>();
-					encoded->sourceLocation = m_loc;
-					encoded->wtype = elemType;
-					encoded->value = std::move(val);
+					auto encoded = awst::makeARC4Encode(std::move(val), elemType, m_loc);
 
 					auto singleArr = std::make_shared<awst::NewArray>();
 					singleArr->sourceLocation = m_loc;
@@ -113,10 +110,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					{
 						auto coerced = builder::TypeCoercion::coerceForAssignment(
 							std::move(m_ctx.pendingArrayPushValue), rawElemType, m_loc);
-						auto encoded = std::make_shared<awst::ARC4Encode>();
-						encoded->sourceLocation = m_loc;
-						encoded->wtype = elemType;
-						encoded->value = std::move(coerced);
+						auto encoded = awst::makeARC4Encode(std::move(coerced), elemType, m_loc);
 						elem = std::move(encoded);
 					}
 					else
@@ -167,10 +161,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					popExpr->wtype = elemType;
 					popExpr->base = baseAwst;
 
-					auto decode = std::make_shared<awst::ARC4Decode>();
-					decode->sourceLocation = m_loc;
-					decode->wtype = rawElemType;
-					decode->value = std::move(popExpr);
+					auto decode = awst::makeARC4Decode(std::move(popExpr), rawElemType, m_loc);
 					return decode;
 				}
 			}
@@ -214,10 +205,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 							if (memberName == "push" && !m_call.arguments().empty())
 							{
 								auto val = buildExpr(*m_call.arguments()[0]);
-								auto encoded = std::make_shared<awst::ARC4Encode>();
-								encoded->sourceLocation = m_loc;
-								encoded->wtype = elemType;
-								encoded->value = std::move(val);
+								auto encoded = awst::makeARC4Encode(std::move(val), elemType, m_loc);
 
 								auto singleArr = std::make_shared<awst::NewArray>();
 								singleArr->sourceLocation = m_loc;
@@ -239,10 +227,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 								{
 									auto coerced = builder::TypeCoercion::coerceForAssignment(
 										std::move(m_ctx.pendingArrayPushValue), rawElemType, m_loc);
-									auto encoded = std::make_shared<awst::ARC4Encode>();
-									encoded->sourceLocation = m_loc;
-									encoded->wtype = elemType;
-									encoded->value = std::move(coerced);
+									auto encoded = awst::makeARC4Encode(std::move(coerced), elemType, m_loc);
 									elem = std::move(encoded);
 								}
 								else
@@ -274,10 +259,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 								popExpr->wtype = elemType;
 								popExpr->base = aliasExpr;
 
-								auto decode = std::make_shared<awst::ARC4Decode>();
-								decode->sourceLocation = m_loc;
-								decode->wtype = rawElemType;
-								decode->value = std::move(popExpr);
+								auto decode = awst::makeARC4Decode(std::move(popExpr), rawElemType, m_loc);
 								return decode;
 							}
 						}
@@ -584,10 +566,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 					std::move(val), elemType, loc);
 				if (val->wtype != elemType)
 				{
-					auto encode = std::make_shared<awst::ARC4Encode>();
-					encode->sourceLocation = loc;
-					encode->wtype = elemType;
-					encode->value = std::move(val);
+					auto encode = awst::makeARC4Encode(std::move(val), elemType, loc);
 					val = std::move(encode);
 				}
 			}
@@ -682,10 +661,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 	{
 		auto val = buildExpr(*m_call.arguments()[0]);
 
-		auto encoded = std::make_shared<awst::ARC4Encode>();
-		encoded->sourceLocation = m_loc;
-		encoded->wtype = elemType;
-		encoded->value = std::move(val);
+		auto encoded = awst::makeARC4Encode(std::move(val), elemType, m_loc);
 
 		auto singleArr = std::make_shared<awst::NewArray>();
 		singleArr->sourceLocation = m_loc;
@@ -714,10 +690,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 		{
 			auto coerced = builder::TypeCoercion::coerceForAssignment(
 				std::move(m_ctx.pendingArrayPushValue), rawElemType, m_loc);
-			auto encoded = std::make_shared<awst::ARC4Encode>();
-			encoded->sourceLocation = m_loc;
-			encoded->wtype = elemType;
-			encoded->value = std::move(coerced);
+			auto encoded = awst::makeARC4Encode(std::move(coerced), elemType, m_loc);
 			elem = std::move(encoded);
 		}
 		else
@@ -752,10 +725,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 		popExpr->wtype = elemType;
 		popExpr->base = writeExpr;
 
-		auto decode = std::make_shared<awst::ARC4Decode>();
-		decode->sourceLocation = m_loc;
-		decode->wtype = rawElemType;
-		decode->value = std::move(popExpr);
+		auto decode = awst::makeARC4Decode(std::move(popExpr), rawElemType, m_loc);
 		return decode;
 	}
 
@@ -828,10 +798,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMemoryArray(
 				// ARC4Encode if still mismatched (native → ARC4)
 				if (val->wtype != elemType)
 				{
-					auto encode = std::make_shared<awst::ARC4Encode>();
-					encode->sourceLocation = m_loc;
-					encode->wtype = elemType;
-					encode->value = std::move(val);
+					auto encode = awst::makeARC4Encode(std::move(val), elemType, m_loc);
 					val = std::move(encode);
 				}
 			}

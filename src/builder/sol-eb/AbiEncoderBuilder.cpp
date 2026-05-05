@@ -220,10 +220,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgAsARC4Bytes(
 
 		if (arc4ArrayType)
 		{
-			auto encode = std::make_shared<awst::ARC4Encode>();
-			encode->sourceLocation = _loc;
-			encode->wtype = arc4ArrayType;
-			encode->value = std::move(_argExpr);
+			auto encode = awst::makeARC4Encode(std::move(_argExpr), arc4ArrayType, _loc);
 
 			auto cast = awst::makeReinterpretCast(std::move(encode), awst::WType::bytesType(), _loc);
 			return cast;
@@ -377,10 +374,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 			}
 			else
 			{
-				auto encode = std::make_shared<awst::ARC4Encode>();
-				encode->sourceLocation = _loc;
-				encode->wtype = awst::WType::bytesType();
-				encode->value = std::move(arrayExpr);
+				auto encode = awst::makeARC4Encode(std::move(arrayExpr), awst::WType::bytesType(), _loc);
 				return std::shared_ptr<awst::Expression>(std::move(encode));
 			}
 		}

@@ -56,10 +56,7 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 	std::shared_ptr<awst::Expression> result = std::move(e);
 	if (needsDecode)
 	{
-		auto decode = std::make_shared<awst::ARC4Decode>();
-		decode->sourceLocation = _loc;
-		decode->wtype = expectedType;
-		decode->value = std::move(result);
+		auto decode = awst::makeARC4Decode(std::move(result), expectedType, _loc);
 		result = std::move(decode);
 	}
 
