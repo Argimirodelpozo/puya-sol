@@ -199,11 +199,7 @@ std::shared_ptr<awst::Expression> StorageMapper::createStateRead(
 
 		auto defaultVal = makeDefaultValue(_type, _loc);
 
-		auto stateGet = std::make_shared<awst::StateGet>();
-		stateGet->sourceLocation = _loc;
-		stateGet->wtype = _type;
-		stateGet->field = boxExpr;
-		stateGet->defaultValue = defaultVal;
+		auto stateGet = awst::makeStateGet(boxExpr, defaultVal, _type, _loc);
 		return stateGet;
 	}
 	default:

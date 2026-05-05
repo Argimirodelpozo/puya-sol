@@ -424,12 +424,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 			auto sameSignResult = awst::makeNumericCompare(aNeg, awst::NumericComparison::Eq, rNeg, m_loc);
 
 			// OR: either different input signs or result has same sign as a
-			auto noOverflow = std::make_shared<awst::BooleanBinaryOperation>();
-			noOverflow->sourceLocation = m_loc;
-			noOverflow->wtype = awst::WType::boolType();
-			noOverflow->left = std::move(diffSigns);
-			noOverflow->op = awst::BinaryBooleanOperator::Or;
-			noOverflow->right = std::move(sameSignResult);
+			auto noOverflow = awst::makeBoolBinOp(std::move(diffSigns), awst::BinaryBooleanOperator::Or, std::move(sameSignResult), m_loc);
 			overflowCond = std::move(noOverflow);
 		}
 		else if (_op == Token::Sub || _op == Token::AssignSub)
@@ -444,12 +439,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 
 			auto sameSignResult = awst::makeNumericCompare(aNeg, awst::NumericComparison::Eq, rNeg, m_loc);
 
-			auto noOverflow = std::make_shared<awst::BooleanBinaryOperation>();
-			noOverflow->sourceLocation = m_loc;
-			noOverflow->wtype = awst::WType::boolType();
-			noOverflow->left = std::move(sameSigns);
-			noOverflow->op = awst::BinaryBooleanOperator::Or;
-			noOverflow->right = std::move(sameSignResult);
+			auto noOverflow = awst::makeBoolBinOp(std::move(sameSigns), awst::BinaryBooleanOperator::Or, std::move(sameSignResult), m_loc);
 			overflowCond = std::move(noOverflow);
 		}
 		else // mul
@@ -500,12 +490,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 			// Also handle b == 0 (no overflow, result is 0)
 			auto bZero = awst::makeNumericCompare(_right, awst::NumericComparison::Eq, makeBiguintConst("0"), m_loc);
 
-			auto noOverflow = std::make_shared<awst::BooleanBinaryOperation>();
-			noOverflow->sourceLocation = m_loc;
-			noOverflow->wtype = awst::WType::boolType();
-			noOverflow->left = std::move(bZero);
-			noOverflow->op = awst::BinaryBooleanOperator::Or;
-			noOverflow->right = std::move(rangeCheck);
+			auto noOverflow = awst::makeBoolBinOp(std::move(bZero), awst::BinaryBooleanOperator::Or, std::move(rangeCheck), m_loc);
 
 			overflowCond = std::move(noOverflow);
 		}
@@ -613,12 +598,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 		auto expIsOdd = awst::makeNumericCompare(std::move(expMod2), awst::NumericComparison::Ne, makeBiguintConst("0"), m_loc);
 
 		// resultNeg = baseNeg && expIsOdd
-		auto resultNeg = std::make_shared<awst::BooleanBinaryOperation>();
-		resultNeg->sourceLocation = m_loc;
-		resultNeg->wtype = awst::WType::boolType();
-		resultNeg->left = baseNeg;
-		resultNeg->op = awst::BinaryBooleanOperator::And;
-		resultNeg->right = std::move(expIsOdd);
+		auto resultNeg = awst::makeBoolBinOp(baseNeg, awst::BinaryBooleanOperator::And, std::move(expIsOdd), m_loc);
 
 		// If resultNeg: absResult <= half, else: absResult < half
 		auto ltHalf = awst::makeNumericCompare(absResult, awst::NumericComparison::Lt, makeBiguintConst(halfNStr), m_loc);
@@ -637,12 +617,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 	// If base was negative and exp is odd, negate result: (pow2N - absResult) mod pow2N
 	auto expMod2_2 = awst::makeBigUIntBinOp(_exp, awst::BigUIntBinaryOperator::Mod, makeBiguintConst("2"), m_loc);
 	auto expOdd2 = awst::makeNumericCompare(std::move(expMod2_2), awst::NumericComparison::Ne, makeBiguintConst("0"), m_loc);
-	auto shouldNeg = std::make_shared<awst::BooleanBinaryOperation>();
-	shouldNeg->sourceLocation = m_loc;
-	shouldNeg->wtype = awst::WType::boolType();
-	shouldNeg->left = baseNeg;
-	shouldNeg->op = awst::BinaryBooleanOperator::And;
-	shouldNeg->right = std::move(expOdd2);
+	auto shouldNeg = awst::makeBoolBinOp(baseNeg, awst::BinaryBooleanOperator::And, std::move(expOdd2), m_loc);
 
 	auto negResult = awst::makeBigUIntBinOp(makeBiguintConst(pow2NStr), awst::BigUIntBinaryOperator::Sub, absResult, m_loc);
 	auto negMod = awst::makeBigUIntBinOp(std::move(negResult), awst::BigUIntBinaryOperator::Mod, makeBiguintConst(pow2NStr), m_loc);
@@ -650,12 +625,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 	// absResult == 0 → don't negate
 	auto resZero = awst::makeNumericCompare(absResult, awst::NumericComparison::Eq, makeBiguintConst("0"), m_loc);
 	auto notZero = awst::makeNot(std::move(resZero), m_loc);
-	auto doNeg = std::make_shared<awst::BooleanBinaryOperation>();
-	doNeg->sourceLocation = m_loc;
-	doNeg->wtype = awst::WType::boolType();
-	doNeg->left = std::move(shouldNeg);
-	doNeg->op = awst::BinaryBooleanOperator::And;
-	doNeg->right = std::move(notZero);
+	auto doNeg = awst::makeBoolBinOp(std::move(shouldNeg), awst::BinaryBooleanOperator::And, std::move(notZero), m_loc);
 
 	return awst::makeConditional(
 		std::move(doNeg), std::move(negMod), std::move(absResult),
@@ -756,12 +726,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 
 		auto yIsNeg1 = awst::makeNumericCompare(_right, awst::NumericComparison::Eq, makeBiguintConst(minusOneOss.str()), m_loc);
 
-		auto bothTrue = std::make_shared<awst::BooleanBinaryOperation>();
-		bothTrue->sourceLocation = m_loc;
-		bothTrue->wtype = awst::WType::boolType();
-		bothTrue->left = std::move(xIsMin);
-		bothTrue->op = awst::BinaryBooleanOperator::And;
-		bothTrue->right = std::move(yIsNeg1);
+		auto bothTrue = awst::makeBoolBinOp(std::move(xIsMin), awst::BinaryBooleanOperator::And, std::move(yIsNeg1), m_loc);
 
 		auto notBoth = awst::makeNot(std::move(bothTrue), m_loc);
 
@@ -802,12 +767,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 	// Also need result == 0 check: don't negate 0
 	auto resultIsZero = awst::makeNumericCompare(unsignedResult, awst::NumericComparison::Eq, makeBiguintConst("0"), m_loc);
 
-	auto needNeg = std::make_shared<awst::BooleanBinaryOperation>();
-	needNeg->sourceLocation = m_loc;
-	needNeg->wtype = awst::WType::boolType();
-	needNeg->left = std::move(shouldNegate);
-	needNeg->op = awst::BinaryBooleanOperator::And;
-	needNeg->right = std::make_shared<awst::Not>();
+	auto needNeg = awst::makeBoolBinOp(std::move(shouldNegate), awst::BinaryBooleanOperator::And, std::make_shared<awst::Not>(), m_loc);
 	dynamic_cast<awst::Not*>(needNeg->right.get())->sourceLocation = m_loc;
 	dynamic_cast<awst::Not*>(needNeg->right.get())->wtype = awst::WType::boolType();
 	dynamic_cast<awst::Not*>(needNeg->right.get())->expr = std::move(resultIsZero);

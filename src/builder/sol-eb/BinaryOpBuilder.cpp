@@ -173,22 +173,12 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 	// Boolean operations
 	case Token::And:
 	{
-		auto e = std::make_shared<awst::BooleanBinaryOperation>();
-		e->sourceLocation = _loc;
-		e->wtype = awst::WType::boolType();
-		e->left = std::move(_left);
-		e->op = awst::BinaryBooleanOperator::And;
-		e->right = std::move(_right);
+		auto e = awst::makeBoolBinOp(std::move(_left), awst::BinaryBooleanOperator::And, std::move(_right), _loc);
 		return e;
 	}
 	case Token::Or:
 	{
-		auto e = std::make_shared<awst::BooleanBinaryOperation>();
-		e->sourceLocation = _loc;
-		e->wtype = awst::WType::boolType();
-		e->left = std::move(_left);
-		e->op = awst::BinaryBooleanOperator::Or;
-		e->right = std::move(_right);
+		auto e = awst::makeBoolBinOp(std::move(_left), awst::BinaryBooleanOperator::Or, std::move(_right), _loc);
 		return e;
 	}
 

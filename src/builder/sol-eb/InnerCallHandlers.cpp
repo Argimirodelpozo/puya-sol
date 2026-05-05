@@ -244,9 +244,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleTransfer(
 	auto stmt = awst::makeExpressionStatement(submit, _loc);
 	_ctx.pendingStatements.push_back(std::move(stmt));
 
-	auto vc = std::make_shared<awst::VoidConstant>();
-	vc->sourceLocation = _loc;
-	vc->wtype = awst::WType::voidType();
+	auto vc = awst::makeVoidConstant(_loc);
 	return std::make_unique<GenericResultBuilder>(_ctx, std::move(vc));
 }
 

@@ -457,9 +457,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 				awst::makeBoolConstant(false, m_loc), m_loc, "uninitialized function pointer"), m_loc);
 			m_ctx.pendingStatements.push_back(std::move(stmt));
 
-			auto vc = std::make_shared<awst::VoidConstant>();
-			vc->sourceLocation = m_loc;
-			vc->wtype = awst::WType::voidType();
+			auto vc = awst::makeVoidConstant(m_loc);
 			return vc;
 		}
 	}

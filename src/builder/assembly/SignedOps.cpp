@@ -268,12 +268,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSlt(
 			// x < signBitThreshold
 			auto ltPow = awst::makeNumericCompare(b, awst::NumericComparison::Lt, std::move(signThreshold), _loc);
 			// AND
-			auto andExpr = std::make_shared<awst::BooleanBinaryOperation>();
-			andExpr->sourceLocation = _loc;
-			andExpr->wtype = awst::WType::boolType();
-			andExpr->left = std::move(gtZero);
-			andExpr->op = awst::BinaryBooleanOperator::And;
-			andExpr->right = std::move(ltPow);
+			auto andExpr = awst::makeBoolBinOp(std::move(gtZero), awst::BinaryBooleanOperator::And, std::move(ltPow), _loc);
 			return ensureBiguint(andExpr, _loc);
 		}
 	}

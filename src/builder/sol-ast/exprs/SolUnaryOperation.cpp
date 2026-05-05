@@ -335,11 +335,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 	if (dynamic_cast<awst::BoxValueExpression const*>(_operand.get()))
 	{
 		auto defaultVal = builder::StorageMapper::makeDefaultValue(_operand->wtype, m_loc);
-		auto stateGet = std::make_shared<awst::StateGet>();
-		stateGet->sourceLocation = m_loc;
-		stateGet->wtype = _operand->wtype;
-		stateGet->field = _operand;
-		stateGet->defaultValue = defaultVal;
+		auto stateGet = awst::makeStateGet(_operand, defaultVal, _operand->wtype, m_loc);
 		_operand = std::move(stateGet);
 	}
 
@@ -589,11 +585,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 			auto readBase = base;
 			if (dynamic_cast<awst::BoxValueExpression const*>(base.get()))
 			{
-				auto stateGet = std::make_shared<awst::StateGet>();
-				stateGet->sourceLocation = m_loc;
-				stateGet->wtype = base->wtype;
-				stateGet->field = base;
-				stateGet->defaultValue = builder::StorageMapper::makeDefaultValue(base->wtype, m_loc);
+				auto stateGet = awst::makeStateGet(base, builder::StorageMapper::makeDefaultValue(base->wtype, m_loc), base->wtype, m_loc);
 				readBase = stateGet;
 			}
 

@@ -545,9 +545,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 		}
 	}
 
-	auto vc = std::make_shared<awst::VoidConstant>();
-	vc->sourceLocation = m_loc;
-	vc->wtype = awst::WType::voidType();
+	auto vc = awst::makeVoidConstant(m_loc);
 	return vc;
 }
 

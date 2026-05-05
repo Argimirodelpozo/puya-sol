@@ -195,9 +195,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleSelfdestruct(
 	auto retStmt = awst::makeReturnStatement(nullptr, _loc);
 	_ctx.prePendingStatements.push_back(std::move(retStmt));
 
-	auto vc = std::make_shared<awst::VoidConstant>();
-	vc->sourceLocation = _loc;
-	vc->wtype = awst::WType::voidType();
+	auto vc = awst::makeVoidConstant(_loc);
 	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(vc));
 }
 
@@ -337,12 +335,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 
 		auto lte = awst::makeNumericCompare(readV(), awst::NumericComparison::Lte, mkU64("28"), _loc);
 
-		auto andOp = std::make_shared<awst::BooleanBinaryOperation>();
-		andOp->sourceLocation = _loc;
-		andOp->wtype = awst::WType::boolType();
-		andOp->left = std::move(gte);
-		andOp->op = awst::BinaryBooleanOperator::And;
-		andOp->right = std::move(lte);
+		auto andOp = awst::makeBoolBinOp(std::move(gte), awst::BinaryBooleanOperator::And, std::move(lte), _loc);
 		return andOp;
 	};
 

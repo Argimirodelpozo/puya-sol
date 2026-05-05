@@ -34,12 +34,7 @@ std::unique_ptr<InstanceBuilder> SolBoolBuilder::binary_op(
 		return nullptr;
 	}
 
-	auto e = std::make_shared<awst::BooleanBinaryOperation>();
-	e->sourceLocation = _loc;
-	e->wtype = awst::WType::boolType();
-	e->left = resolve();
-	e->op = boolOp;
-	e->right = _other.resolve();
+	auto e = awst::makeBoolBinOp(resolve(), boolOp, _other.resolve(), _loc);
 	return std::make_unique<SolBoolBuilder>(m_ctx, std::move(e));
 }
 

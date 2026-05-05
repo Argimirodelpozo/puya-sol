@@ -45,11 +45,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	if (!m_indexAccess.annotation().willBeWrittenTo)
 	{
 		auto defaultVal = builder::TypeCoercion::makeDefaultValue(arrWType, m_loc);
-		auto sg = std::make_shared<awst::StateGet>();
-		sg->sourceLocation = m_loc;
-		sg->wtype = arrWType;
-		sg->field = boxExpr;
-		sg->defaultValue = defaultVal;
+		auto sg = awst::makeStateGet(boxExpr, defaultVal, arrWType, m_loc);
 		baseExprForRead = sg;
 	}
 
@@ -352,11 +348,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 		return e;
 
 	auto defaultVal = builder::StorageMapper::makeDefaultValue(e->wtype, m_loc);
-	auto stateGet = std::make_shared<awst::StateGet>();
-	stateGet->sourceLocation = m_loc;
-	stateGet->wtype = e->wtype;
-	stateGet->field = e;
-	stateGet->defaultValue = defaultVal;
+	auto stateGet = awst::makeStateGet(e, defaultVal, e->wtype, m_loc);
 	return stateGet;
 }
 

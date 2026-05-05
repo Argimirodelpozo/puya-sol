@@ -281,6 +281,15 @@ struct VoidConstant: Expression
 	std::string nodeType() const override { return "VoidConstant"; }
 };
 
+// `void` value — the zero of the unit type. Always typed `voidType()`.
+inline std::shared_ptr<VoidConstant> makeVoidConstant(SourceLocation loc)
+{
+	auto node = std::make_shared<VoidConstant>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = WType::voidType();
+	return node;
+}
+
 struct VarExpression: Expression
 {
 	std::string nodeType() const override { return "VarExpression"; }
@@ -407,6 +416,20 @@ struct BooleanBinaryOperation: Expression
 	BinaryBooleanOperator op;
 	std::shared_ptr<Expression> right;
 };
+
+// `left {AND,OR} right` over bool operands. Result type is always bool.
+inline std::shared_ptr<BooleanBinaryOperation> makeBoolBinOp(
+	std::shared_ptr<Expression> left, BinaryBooleanOperator op,
+	std::shared_ptr<Expression> right, SourceLocation loc)
+{
+	auto node = std::make_shared<BooleanBinaryOperation>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = WType::boolType();
+	node->left = std::move(left);
+	node->op = op;
+	node->right = std::move(right);
+	return node;
+}
 
 struct Not: Expression
 {
@@ -800,6 +823,20 @@ struct StateGet: Expression
 	std::shared_ptr<Expression> field;
 	std::shared_ptr<Expression> defaultValue;
 };
+
+// Read of a state field with a default value when uninitialized.
+inline std::shared_ptr<StateGet> makeStateGet(
+	std::shared_ptr<Expression> field,
+	std::shared_ptr<Expression> defaultValue,
+	WType const* wtype, SourceLocation loc)
+{
+	auto node = std::make_shared<StateGet>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->field = std::move(field);
+	node->defaultValue = std::move(defaultValue);
+	return node;
+}
 
 struct StateExists: Expression
 {

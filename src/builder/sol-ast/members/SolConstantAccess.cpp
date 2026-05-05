@@ -20,9 +20,7 @@ std::shared_ptr<awst::Expression> SolConstantAccess::toAwst()
 	// Event member access: L.E → VoidConstant placeholder (for .selector)
 	if (dynamic_cast<EventDefinition const*>(refDecl))
 	{
-		auto vc = std::make_shared<awst::VoidConstant>();
-		vc->sourceLocation = m_loc;
-		vc->wtype = awst::WType::voidType();
+		auto vc = awst::makeVoidConstant(m_loc);
 		return vc;
 	}
 

@@ -9,9 +9,7 @@ std::shared_ptr<awst::Expression> SolWrapUnwrap::toAwst()
 {
 	if (m_call.arguments().empty())
 	{
-		auto vc = std::make_shared<awst::VoidConstant>();
-		vc->sourceLocation = m_loc;
-		vc->wtype = awst::WType::voidType();
+		auto vc = awst::makeVoidConstant(m_loc);
 		return vc;
 	}
 	auto val = buildExpr(*m_call.arguments()[0]);

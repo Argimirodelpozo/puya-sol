@@ -13,9 +13,7 @@ std::shared_ptr<awst::Expression> SolMetaType::toAwst()
 {
 	// type(X) is never used standalone — it's always followed by member access.
 	// Return a void placeholder; MemberAccessBuilder handles .max/.min/.name etc.
-	auto vc = std::make_shared<awst::VoidConstant>();
-	vc->sourceLocation = m_loc;
-	vc->wtype = awst::WType::voidType();
+	auto vc = awst::makeVoidConstant(m_loc);
 	return vc;
 }
 

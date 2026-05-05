@@ -239,11 +239,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 					if (dynamic_cast<awst::BoxValueExpression const*>(aliasExpr.get())
 						|| dynamic_cast<awst::AppStateExpression const*>(aliasExpr.get()))
 					{
-						auto sg = std::make_shared<awst::StateGet>();
-						sg->sourceLocation = m_loc;
-						sg->wtype = aliasExpr->wtype;
-						sg->field = aliasExpr;
-						sg->defaultValue = StorageMapper::makeDefaultValue(aliasExpr->wtype, m_loc);
+						auto sg = awst::makeStateGet(aliasExpr, StorageMapper::makeDefaultValue(aliasExpr->wtype, m_loc), aliasExpr->wtype, m_loc);
 						aliasExpr = sg;
 					}
 					m_scope.setStorageAlias(lhsDecl->id(), std::move(aliasExpr));
@@ -539,11 +535,7 @@ std::shared_ptr<awst::Expression> SolAssignment::buildStructFieldBytesWrite(
 		if (dynamic_cast<awst::BoxValueExpression const*>(outerWriteBase.get())
 			&& !dynamic_cast<awst::StateGet const*>(outerBase.get()))
 		{
-			auto sg = std::make_shared<awst::StateGet>();
-			sg->sourceLocation = m_loc;
-			sg->wtype = outerWriteBase->wtype;
-			sg->field = outerWriteBase;
-			sg->defaultValue = builder::StorageMapper::makeDefaultValue(outerWriteBase->wtype, m_loc);
+			auto sg = awst::makeStateGet(outerWriteBase, builder::StorageMapper::makeDefaultValue(outerWriteBase->wtype, m_loc), outerWriteBase->wtype, m_loc);
 			outerReadBase = sg;
 		}
 
@@ -605,11 +597,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 	auto readBase = base;
 	if (dynamic_cast<awst::BoxValueExpression const*>(base.get()))
 	{
-		auto stateGet = std::make_shared<awst::StateGet>();
-		stateGet->sourceLocation = m_loc;
-		stateGet->wtype = base->wtype;
-		stateGet->field = base;
-		stateGet->defaultValue = builder::StorageMapper::makeDefaultValue(base->wtype, m_loc);
+		auto stateGet = awst::makeStateGet(base, builder::StorageMapper::makeDefaultValue(base->wtype, m_loc), base->wtype, m_loc);
 		readBase = stateGet;
 	}
 
@@ -683,11 +671,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 		if (dynamic_cast<awst::BoxValueExpression const*>(outerWriteBase.get())
 			&& !dynamic_cast<awst::StateGet const*>(outerBase.get()))
 		{
-			auto sg = std::make_shared<awst::StateGet>();
-			sg->sourceLocation = m_loc;
-			sg->wtype = outerWriteBase->wtype;
-			sg->field = outerWriteBase;
-			sg->defaultValue = builder::StorageMapper::makeDefaultValue(outerWriteBase->wtype, m_loc);
+			auto sg = awst::makeStateGet(outerWriteBase, builder::StorageMapper::makeDefaultValue(outerWriteBase->wtype, m_loc), outerWriteBase->wtype, m_loc);
 			outerReadBase = sg;
 		}
 

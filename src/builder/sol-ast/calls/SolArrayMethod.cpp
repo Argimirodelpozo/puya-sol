@@ -264,9 +264,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 
 								auto stmt = awst::makeExpressionStatement(std::move(e), m_loc);
 								m_ctx.pendingStatements.push_back(std::move(stmt));
-								auto vc = std::make_shared<awst::VoidConstant>();
-								vc->sourceLocation = m_loc;
-								vc->wtype = awst::WType::voidType();
+								auto vc = awst::makeVoidConstant(m_loc);
 								return vc;
 							}
 							if (memberName == "pop")
@@ -386,9 +384,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						m_ctx.pendingStatements.push_back(std::move(stmt));
 					}
 
-					auto vc = std::make_shared<awst::VoidConstant>();
-					vc->sourceLocation = loc;
-					vc->wtype = awst::WType::voidType();
+					auto vc = awst::makeVoidConstant(loc);
 					return vc;
 				}
 			}
@@ -485,9 +481,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						m_ctx.pendingStatements.push_back(std::move(stmt));
 					}
 
-					auto vc = std::make_shared<awst::VoidConstant>();
-					vc->sourceLocation = loc;
-					vc->wtype = awst::WType::voidType();
+					auto vc = awst::makeVoidConstant(loc);
 					return vc;
 				}
 			}
@@ -637,9 +631,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 		m_ctx.pendingStatements.push_back(std::move(writeStmt));
 	}
 
-	auto vc = std::make_shared<awst::VoidConstant>();
-	vc->sourceLocation = loc;
-	vc->wtype = awst::WType::voidType();
+	auto vc = awst::makeVoidConstant(loc);
 	return vc;
 }
 
@@ -682,11 +674,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 	emptyArr->sourceLocation = m_loc;
 	emptyArr->wtype = arrWType;
 
-	auto stateGet = std::make_shared<awst::StateGet>();
-	stateGet->sourceLocation = m_loc;
-	stateGet->wtype = arrWType;
-	stateGet->field = boxExpr;
-	stateGet->defaultValue = emptyArr;
+	auto stateGet = awst::makeStateGet(boxExpr, emptyArr, arrWType, m_loc);
 
 	std::shared_ptr<awst::Expression> writeExpr = boxExpr;
 
@@ -754,9 +742,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 		auto extendStmt = awst::makeExpressionStatement(std::move(e), m_loc);
 		m_ctx.pendingStatements.push_back(std::move(extendStmt));
 
-		auto vc = std::make_shared<awst::VoidConstant>();
-		vc->sourceLocation = m_loc;
-		vc->wtype = awst::WType::voidType();
+		auto vc = awst::makeVoidConstant(m_loc);
 		return vc;
 	}
 	else if (_memberName == "pop")
@@ -773,9 +759,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 		return decode;
 	}
 
-	auto vc = std::make_shared<awst::VoidConstant>();
-	vc->sourceLocation = m_loc;
-	vc->wtype = awst::WType::voidType();
+	auto vc = awst::makeVoidConstant(m_loc);
 	return vc;
 }
 
@@ -873,9 +857,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMemoryArray(
 		return e;
 	}
 
-	auto vc = std::make_shared<awst::VoidConstant>();
-	vc->sourceLocation = m_loc;
-	vc->wtype = awst::WType::voidType();
+	auto vc = awst::makeVoidConstant(m_loc);
 	return vc;
 }
 
@@ -898,11 +880,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMappingElementArrayLengt
 		box->sourceLocation = m_loc;
 		box->wtype = awst::WType::bytesType();
 		box->key = boxKey;
-		auto sg = std::make_shared<awst::StateGet>();
-		sg->sourceLocation = m_loc;
-		sg->wtype = awst::WType::bytesType();
-		sg->field = box;
-		sg->defaultValue = awst::makeBytesConstant({}, m_loc);
+		auto sg = awst::makeStateGet(box, awst::makeBytesConstant({}, m_loc), awst::WType::bytesType(), m_loc);
 		return sg;
 	};
 
@@ -949,9 +927,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMappingElementArrayLengt
 	auto stmt = awst::makeExpressionStatement(std::move(put), m_loc);
 	m_ctx.pendingStatements.push_back(std::move(stmt));
 
-	auto vc = std::make_shared<awst::VoidConstant>();
-	vc->sourceLocation = m_loc;
-	vc->wtype = awst::WType::voidType();
+	auto vc = awst::makeVoidConstant(m_loc);
 	return vc;
 }
 

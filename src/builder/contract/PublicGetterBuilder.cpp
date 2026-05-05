@@ -445,11 +445,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 
 				auto defaultVal = StorageMapper::makeDefaultValue(storedWType, loc);
 
-				auto stateGet = std::make_shared<awst::StateGet>();
-				stateGet->sourceLocation = loc;
-				stateGet->wtype = storedWType;
-				stateGet->field = std::move(boxExpr);
-				stateGet->defaultValue = std::move(defaultVal);
+				auto stateGet = awst::makeStateGet(std::move(boxExpr), std::move(defaultVal), storedWType, loc);
 
 				storageRead = std::move(stateGet);
 				} // end keyArgCount > 0 branch

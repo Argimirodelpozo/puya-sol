@@ -137,17 +137,11 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleStorage
 	if (dynamic_cast<awst::BoxValueExpression const*>(rhsExpr.get())
 		|| dynamic_cast<awst::AppStateExpression const*>(rhsExpr.get()))
 	{
-		auto sg = std::make_shared<awst::StateGet>();
-		sg->sourceLocation = m_loc;
-		sg->wtype = rhsExpr->wtype;
-		sg->field = rhsExpr;
-		sg->defaultValue = StorageMapper::makeDefaultValue(rhsExpr->wtype, m_loc);
+		auto sg = awst::makeStateGet(rhsExpr, StorageMapper::makeDefaultValue(rhsExpr->wtype, m_loc), rhsExpr->wtype, m_loc);
 		aliasExpr = sg;
 	}
 	m_scope.setStorageAlias(lhsDecl->id(), std::move(aliasExpr));
-	auto voidExpr = std::make_shared<awst::VoidConstant>();
-	voidExpr->sourceLocation = m_loc;
-	voidExpr->wtype = awst::WType::voidType();
+	auto voidExpr = awst::makeVoidConstant(m_loc);
 	return std::shared_ptr<awst::Expression>(voidExpr);
 }
 
@@ -451,11 +445,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 		if (dynamic_cast<awst::BoxValueExpression const*>(currentValue.get()))
 		{
 			auto defaultVal = builder::StorageMapper::makeDefaultValue(currentValue->wtype, m_loc);
-			auto stateGet = std::make_shared<awst::StateGet>();
-			stateGet->sourceLocation = m_loc;
-			stateGet->wtype = currentValue->wtype;
-			stateGet->field = currentValue;
-			stateGet->defaultValue = defaultVal;
+			auto stateGet = awst::makeStateGet(currentValue, defaultVal, currentValue->wtype, m_loc);
 			currentValue = std::move(stateGet);
 		}
 		auto* targetSolType = m_assignment.leftHandSide().annotation().type;

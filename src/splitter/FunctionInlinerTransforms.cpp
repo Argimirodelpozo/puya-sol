@@ -1107,11 +1107,7 @@ std::shared_ptr<awst::Expression> FunctionInliner::deepCopyExpr(
 	if (type == "StateGet")
 	{
 		auto& src = static_cast<awst::StateGet const&>(*_expr);
-		auto n = std::make_shared<awst::StateGet>();
-		n->sourceLocation = src.sourceLocation;
-		n->wtype = src.wtype;
-		n->field = deepCopyExpr(src.field);
-		n->defaultValue = deepCopyExpr(src.defaultValue);
+		auto n = awst::makeStateGet(deepCopyExpr(src.field), deepCopyExpr(src.defaultValue), src.wtype, src.sourceLocation);
 		return n;
 	}
 

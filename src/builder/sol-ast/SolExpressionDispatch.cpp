@@ -171,9 +171,7 @@ private:
 
 	std::shared_ptr<awst::Expression> makeVoid(solidity::frontend::ASTNode const& _node)
 	{
-		auto vc = std::make_shared<awst::VoidConstant>();
-		vc->sourceLocation = makeLoc(_node);
-		vc->wtype = awst::WType::voidType();
+		auto vc = awst::makeVoidConstant(makeLoc(_node));
 		return vc;
 	}
 };

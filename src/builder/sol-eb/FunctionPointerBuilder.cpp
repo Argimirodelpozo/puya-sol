@@ -556,9 +556,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 			ifStmt->ifBranch->body.push_back(awst::makeExpressionStatement(selfCall, _loc));
 			ifStmt->elseBranch->body.push_back(awst::makeExpressionStatement(submit, _loc));
 			_ctx.prePendingStatements.push_back(std::move(ifStmt));
-			auto vc = std::make_shared<awst::VoidConstant>();
-			vc->sourceLocation = _loc;
-			vc->wtype = awst::WType::voidType();
+			auto vc = awst::makeVoidConstant(_loc);
 			return vc;
 		}
 

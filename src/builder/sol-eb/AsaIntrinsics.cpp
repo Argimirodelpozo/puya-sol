@@ -354,9 +354,7 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaTransfer(
 	auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);
 	_ctx.prePendingStatements.push_back(std::move(submitStmt));
 
-	auto vc = std::make_shared<awst::VoidConstant>();
-	vc->sourceLocation = _loc;
-	vc->wtype = awst::WType::voidType();
+	auto vc = awst::makeVoidConstant(_loc);
 	return vc;
 }
 

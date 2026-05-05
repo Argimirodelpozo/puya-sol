@@ -859,28 +859,13 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildSignedModDiv(
 	else
 	{
 		// div: negate if signs differ — XOR = eitherNeg && !bothNeg
-		auto bothNeg = std::make_shared<awst::BooleanBinaryOperation>();
-		bothNeg->sourceLocation = _loc;
-		bothNeg->wtype = awst::WType::boolType();
-		bothNeg->left = isLeftNeg;
-		bothNeg->op = awst::BinaryBooleanOperator::And;
-		bothNeg->right = isRightNeg;
+		auto bothNeg = awst::makeBoolBinOp(isLeftNeg, awst::BinaryBooleanOperator::And, isRightNeg, _loc);
 
-		auto eitherNeg = std::make_shared<awst::BooleanBinaryOperation>();
-		eitherNeg->sourceLocation = _loc;
-		eitherNeg->wtype = awst::WType::boolType();
-		eitherNeg->left = isLeftNeg;
-		eitherNeg->op = awst::BinaryBooleanOperator::Or;
-		eitherNeg->right = isRightNeg;
+		auto eitherNeg = awst::makeBoolBinOp(isLeftNeg, awst::BinaryBooleanOperator::Or, isRightNeg, _loc);
 
 		auto notBothNeg = awst::makeNot(std::move(bothNeg), _loc);
 
-		auto xorSigns = std::make_shared<awst::BooleanBinaryOperation>();
-		xorSigns->sourceLocation = _loc;
-		xorSigns->wtype = awst::WType::boolType();
-		xorSigns->left = std::move(eitherNeg);
-		xorSigns->op = awst::BinaryBooleanOperator::And;
-		xorSigns->right = std::move(notBothNeg);
+		auto xorSigns = awst::makeBoolBinOp(std::move(eitherNeg), awst::BinaryBooleanOperator::And, std::move(notBothNeg), _loc);
 		shouldNegate = std::move(xorSigns);
 	}
 
@@ -889,12 +874,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildSignedModDiv(
 
 	auto notZero = awst::makeNot(std::move(isZero), _loc);
 
-	auto shouldNegateAndNonZero = std::make_shared<awst::BooleanBinaryOperation>();
-	shouldNegateAndNonZero->sourceLocation = _loc;
-	shouldNegateAndNonZero->wtype = awst::WType::boolType();
-	shouldNegateAndNonZero->left = std::move(shouldNegate);
-	shouldNegateAndNonZero->op = awst::BinaryBooleanOperator::And;
-	shouldNegateAndNonZero->right = std::move(notZero);
+	auto shouldNegateAndNonZero = awst::makeBoolBinOp(std::move(shouldNegate), awst::BinaryBooleanOperator::And, std::move(notZero), _loc);
 
 	return awst::makeConditional(
 		std::move(shouldNegateAndNonZero), std::move(negResult),
