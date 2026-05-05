@@ -310,11 +310,178 @@ std::shared_ptr<awst::Expression> decodeFromBytes(
 	return awst::makeReinterpretCast(std::move(_bytes), _ret, _loc);
 }
 
+// ─── og_sender / og_value globals (Pass 1) ────────────────────────────
+//
+// Every split-method call carries the user's identity (msg.sender) and
+// payable amount (msg.value) into the chunk that runs on __storage.
+// Those values are NOT visible from inside the chunk via Txn.Sender /
+// gtxns Amount — the chunk runs as an inner-itxn issued by orch, so
+// Txn.Sender = orch's app account and the group containing the user's
+// pay txn isn't reachable.
+//
+// The fix has two halves:
+//   1. main carries two app-global slots, __og_sender (account) and
+//      __og_value (uint64). Main's forwarding stub writes them BEFORE
+//      issuing the dispatch itxn and zeros them AFTER the call returns.
+//   2. Chunk method bodies get patched (Pass 2/3) to read msg.sender /
+//      msg.value from those globals via app_global_get_ex(MAIN, key).
+//
+// This file is the Pass 1 half: schema + setup/cleanup wrapping.
+constexpr char const* kOgSenderKey = "__og_sender";
+constexpr char const* kOgValueKey = "__og_value";
+
+/// Build an AssignmentStatement that writes `_value` into main's
+/// app-global slot named `_keyName`. The target is an AppStateExpression
+/// keyed by a UTF-8 BytesConstant of the slot name.
+std::shared_ptr<awst::Statement> makeAppGlobalPutStmt(
+	std::string const& _keyName,
+	awst::WType const* _valueType,
+	std::shared_ptr<awst::Expression> _value,
+	awst::SourceLocation const& _loc)
+{
+	auto target = std::make_shared<awst::AppStateExpression>();
+	target->sourceLocation = _loc;
+	target->wtype = _valueType;
+	target->key = awst::makeUtf8BytesConstant(
+		_keyName, _loc, awst::WType::stateKeyType());
+	return awst::makeAssignmentStatement(
+		std::move(target), std::move(_value), _loc);
+}
+
+/// `Txn.Sender` (uint64-typed nope, account-typed) — the user calling main.
+std::shared_ptr<awst::Expression> makeTxnSenderExpr(
+	awst::SourceLocation const& _loc)
+{
+	auto sender = awst::makeIntrinsicCall(
+		"txn", awst::WType::accountType(), _loc);
+	sender->immediates = {std::string("Sender")};
+	return sender;
+}
+
+/// `(GroupIndex > 0) ? gtxns(GroupIndex - 1, Amount) : 0` as uint64 —
+/// matches `SolIntrinsicAccess::msg.value` lowering. Captures the user's
+/// paired pay-txn amount when present, zero otherwise.
+std::shared_ptr<awst::Expression> makeMsgValueUint64Expr(
+	awst::SourceLocation const& _loc)
+{
+	auto groupIdx = awst::makeIntrinsicCall(
+		"txn", awst::WType::uint64Type(), _loc);
+	groupIdx->immediates = {std::string("GroupIndex")};
+	auto zero = awst::makeIntegerConstant("0", _loc);
+	auto hasPay = awst::makeNumericCompare(
+		groupIdx, awst::NumericComparison::Gt, std::move(zero), _loc);
+
+	auto groupIdx2 = awst::makeIntrinsicCall(
+		"txn", awst::WType::uint64Type(), _loc);
+	groupIdx2->immediates = {std::string("GroupIndex")};
+	auto one = awst::makeIntegerConstant("1", _loc);
+	auto payIdx = awst::makeUInt64BinOp(
+		std::move(groupIdx2), awst::UInt64BinaryOperator::Sub,
+		std::move(one), _loc);
+
+	auto amount = awst::makeIntrinsicCall(
+		"gtxns", awst::WType::uint64Type(), _loc);
+	amount->immediates = {std::string("Amount")};
+	amount->stackArgs.push_back(std::move(payIdx));
+
+	auto zeroVal = awst::makeIntegerConstant("0", _loc);
+	return awst::makeConditional(
+		std::move(hasPay), std::move(amount), std::move(zeroVal),
+		awst::WType::uint64Type(), _loc);
+}
+
+/// Setup statements: write Txn.Sender → __og_sender, msg.value →
+/// __og_value. Inserted at the top of every forwarding stub body.
+std::vector<std::shared_ptr<awst::Statement>> makeOgSetupStmts(
+	awst::SourceLocation const& _loc)
+{
+	std::vector<std::shared_ptr<awst::Statement>> stmts;
+	stmts.push_back(makeAppGlobalPutStmt(
+		kOgSenderKey, awst::WType::accountType(),
+		makeTxnSenderExpr(_loc), _loc));
+	stmts.push_back(makeAppGlobalPutStmt(
+		kOgValueKey, awst::WType::uint64Type(),
+		makeMsgValueUint64Expr(_loc), _loc));
+	return stmts;
+}
+
+/// Cleanup statements: zero out the og_* slots. Run before the stub
+/// returns so the values don't leak across calls. We `put` zero rather
+/// than `del` so subsequent reads return a defined value (zero address /
+/// zero uint) instead of `exists=false` — defensive against any future
+/// chunk code path that reads og_* outside a wrapped call.
+std::vector<std::shared_ptr<awst::Statement>> makeOgCleanupStmts(
+	awst::SourceLocation const& _loc)
+{
+	std::vector<std::shared_ptr<awst::Statement>> stmts;
+	auto zeroAddr = awst::makeReinterpretCast(
+		awst::makeBytesConstant(std::vector<uint8_t>(32, 0), _loc),
+		awst::WType::accountType(), _loc);
+	stmts.push_back(makeAppGlobalPutStmt(
+		kOgSenderKey, awst::WType::accountType(),
+		std::move(zeroAddr), _loc));
+	stmts.push_back(makeAppGlobalPutStmt(
+		kOgValueKey, awst::WType::uint64Type(),
+		awst::makeIntegerConstant("0", _loc), _loc));
+	return stmts;
+}
+
+/// Inject __og_sender / __og_value into the contract's appState +
+/// stateTotals. Called once on the main contract after stub bodies
+/// are installed.
+void appendOgGlobalsToContract(
+	awst::Contract& _c, awst::SourceLocation const& _loc)
+{
+	awst::AppStorageDefinition senderDef;
+	senderDef.sourceLocation = _loc;
+	senderDef.memberName = kOgSenderKey;
+	senderDef.storageKind = awst::AppStorageKind::AppGlobal;
+	senderDef.storageWType = awst::WType::accountType();
+	senderDef.key = awst::makeUtf8BytesConstant(
+		kOgSenderKey, _loc, awst::WType::stateKeyType());
+	senderDef.description = "uros: original caller of the split method "
+		"(written by main's stub, read by chunks via app_global_get_ex)";
+	_c.appState.push_back(std::move(senderDef));
+
+	awst::AppStorageDefinition valueDef;
+	valueDef.sourceLocation = _loc;
+	valueDef.memberName = kOgValueKey;
+	valueDef.storageKind = awst::AppStorageKind::AppGlobal;
+	valueDef.storageWType = awst::WType::uint64Type();
+	valueDef.key = awst::makeUtf8BytesConstant(
+		kOgValueKey, _loc, awst::WType::stateKeyType());
+	valueDef.description = "uros: original msg.value of the split method "
+		"(uint64; chunks read via app_global_get_ex)";
+	_c.appState.push_back(std::move(valueDef));
+
+	// stateTotals: bump global byteslice + uint counts. The struct itself
+	// is optional (puya allows the contract to leave it unset, in which
+	// case puya counts from appState entries directly), so we only adjust
+	// it when the user contract explicitly reserved counts.
+	if (_c.stateTotals.has_value())
+	{
+		auto& st = *_c.stateTotals;
+		if (st.globalBytes.has_value())
+			st.globalBytes = *st.globalBytes + 1;
+		if (st.globalUints.has_value())
+			st.globalUints = *st.globalUints + 1;
+	}
+}
+
 /// Forwarding stub body for main: inner-calls the orch with the
 /// user's (selector + args) tagged onto the dispatch selector. The
 /// orch then runs the install→call→restore dance against __storage
 /// and returns __storage's last_log, which we decode to the method's
 /// declared return type.
+///
+/// Body shape (Pass 1: og_* setup/cleanup wrapping the existing dance):
+///   __og_sender = Txn.Sender
+///   __og_value  = msg.value (ternary on GroupIndex)
+///   itxn appl → orch.dispatch(selector + args)
+///   [if non-void] tmp = decode(itxn LastLog)
+///   __og_sender = zero address
+///   __og_value  = 0
+///   return [tmp]
 ///
 /// ApplicationArgs layout on the inner call:
 ///   [0] = orch's `dispatch()` selector  (ABI router match)
@@ -325,6 +492,11 @@ std::shared_ptr<awst::Block> makeForwardingStubBody(
 	awst::SourceLocation const& _loc)
 {
 	auto block = awst::makeBlock(_loc);
+
+	// Pass 1 setup: write user identity / value into main's globals so
+	// chunks running on __storage can read them via app_global_get_ex.
+	for (auto& s : makeOgSetupStmts(_loc))
+		block->body.push_back(std::move(s));
 
 	// Build the inner-txn ApplicationArgs tuple.
 	auto argsTuple = std::make_shared<awst::TupleExpression>();
@@ -395,16 +567,26 @@ std::shared_ptr<awst::Block> makeForwardingStubBody(
 	auto submit = awst::makeSubmitInnerTransaction(&s_applTxnType, _loc);
 	submit->itxns.push_back(std::move(create));
 
-	// Void return: just submit and return.
+	// Void return: submit, cleanup og_*, return.
 	if (!_m.returnType || _m.returnType == awst::WType::voidType())
 	{
 		block->body.push_back(awst::makeExpressionStatement(std::move(submit), _loc));
+		for (auto& s : makeOgCleanupStmts(_loc))
+			block->body.push_back(std::move(s));
 		block->body.push_back(awst::makeReturnStatement(nullptr, _loc));
 		return block;
 	}
 
 	// Non-void: submit, then read inner.LastLog, strip 4-byte ABI
 	// prefix, decode to the declared return type.
+	//
+	// CAREFUL: the og_* cleanup must run AFTER the decoded value is
+	// captured in a temp var. Otherwise the decode (which still reads
+	// `itxn LastLog`) could end up after `app_global_put` statements
+	// that reset whatever `LastLog` would resolve to (puya's last-itxn
+	// reference is brittle). Materialising the decoded value into a
+	// local first puts it on solid ground, and the cleanup writes
+	// fall AFTER all uses of itxn-derived state.
 	block->body.push_back(awst::makeExpressionStatement(std::move(submit), _loc));
 
 	auto readLog = awst::makeIntrinsicCall("itxn", awst::WType::bytesType(), _loc);
@@ -418,7 +600,21 @@ std::shared_ptr<awst::Block> makeForwardingStubBody(
 	stripPrefix->stackArgs.push_back(std::move(readLog));
 
 	auto decoded = decodeFromBytes(std::move(stripPrefix), _m.returnType, _loc);
-	block->body.push_back(awst::makeReturnStatement(std::move(decoded), _loc));
+
+	// Bind the decoded value to a temp local, run cleanup, then return
+	// the local. Each forwarding stub gets its own counter-suffixed name
+	// so multiple stubs in the same contract don't collide on var ids.
+	static int s_retVarCounter = 0;
+	std::string retVarName =
+		"__uros_ret_" + std::to_string(s_retVarCounter++);
+	auto retVar = awst::makeVarExpression(retVarName, _m.returnType, _loc);
+	block->body.push_back(awst::makeAssignmentStatement(
+		retVar, std::move(decoded), _loc));
+
+	for (auto& s : makeOgCleanupStmts(_loc))
+		block->body.push_back(std::move(s));
+
+	block->body.push_back(awst::makeReturnStatement(std::move(retVar), _loc));
 	return block;
 }
 
@@ -594,6 +790,13 @@ UrosSplitter::Result UrosSplitter::split(
 	}
 	mainContract->methods.push_back(
 		makeDelegateUpdateMethod(primary->id, primary->sourceLocation));
+
+	// Pass 1 of the og_sender / og_value plumbing: declare the two
+	// app-global slots on main so puya emits the right state schema.
+	// Stubs (above) already write to them via AppStateExpression with
+	// these names. Chunks (Pass 2/3, future commits) will read them via
+	// app_global_get_ex(MAIN_ID, ...).
+	appendOgGlobalsToContract(*mainContract, primary->sourceLocation);
 
 	// Build N chunk contracts. Each chunk_i:
 	//  - same surface as primary (same selectors, same state schema)
