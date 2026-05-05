@@ -1,20 +1,22 @@
-# Semantic Test Status — v208
+# Semantic Test Status — v209
 
 **Totals**: 1092 PASS / 155 FAIL / 75 (56 compile_err + 19 deploy_err) = **1092/1322 (82.6%)**
 
-v208 confirms the AWST-helper / dead-code refactor (commit fc84eb803)
-is behaviour-preserving — every per-test outcome matches v207
-test-by-test through the first 1100 tests, then `mapping_contract_key_getter`
-moves 25p/2f → 27p/0s. Net delta vs v207: **+1 PASS / -1 FAIL**, no
-movement in compile_err / deploy_err. The +1 is most plausibly a
-localnet flake stabilising under the smaller program text the helpers
-emit (fewer node allocations on a hot path), not a real correctness
-change — the helper expansions produce byte-identical AWST nodes to
-the inlined form.
+v209 is the regression sentinel for the `makeConditional` helper
+(commit 377921e01) on top of the AWST-helper / dead-code refactor
+(commit fc84eb803). Result is **test-identical to v208** — every
+per-test outcome matches.
+
+v208 vs v207: **+1 PASS / -1 FAIL** from `mapping_contract_key_getter`
+stabilising 25p/2f → 27p/0s. Most plausibly a localnet flake settling
+under the smaller program text the helpers emit (fewer node
+allocations on a hot path), not a real correctness change — every
+helper expansion produces byte-identical AWST nodes to the inlined
+form.
 
 The 3-contract uros-splitter rewrite (commit c0a014177) and the AAVE V4
 end-to-end work that lives on it are still no-ops in the no-flag path
-of the semantic suite, so v208 also reconfirms that surface.
+of the semantic suite, so v208/v209 also reconfirm that surface.
 
 ## New since v195
 
@@ -58,6 +60,11 @@ of the semantic suite, so v208 also reconfirms that surface.
   dead-code purge (orc-guard machinery from the pre-3-contract
   design) drops ~150 lines. Net source diff: 49 files changed,
   -911 lines.
+- v209 = 1092 — sentinel for the `makeConditional` helper
+  (377921e01). 47 ConditionalExpression construction sites collapsed
+  to 1 (the holdout is in SolConditional.cpp where the condition
+  builds incrementally with side-effect handling). 19 files,
+  -147 lines. Test-identical to v208.
 
 ## v195 reference (preserved below)
 
