@@ -158,6 +158,29 @@ struct Options
 	// urosSplitGroups[i] is the methods that go into chunk i.
 	std::vector<std::vector<std::string>> urosSplitGroups;
 	int64_t urosOrchAppId = 0; // orchestrator app id baked into stub guards
+
+	// --pin-to-main: methods that MUST stay on the main contract and never
+	// be moved into a uros chunk. The validator below rejects any
+	// --uros-splitter group that includes one of these names. Reasons a
+	// method needs to be pinned:
+	//
+	//   * Reads `msg.sender`. Inside a chunk body the call frame is an
+	//     itxn issued by the orch, so `Txn.Sender` resolves to orch's app
+	//     account instead of the user's address — every auth check, every
+	//     `_balances[msg.sender]` lookup, every `transferFrom(msg.sender,
+	//     ...)` silently misbehaves. Until sender forwarding lands in the
+	//     orch dance (args[0] packing or similar), the only safe option is
+	//     to keep these methods unsplit.
+	//
+	//   * Reads `address(this)` AND callers expect the result to match
+	//     main's address. Inside a chunk the runtime "this" is the
+	//     __storage app account, not main, so any external contract that
+	//     identifies the contract by address will misbehave.
+	//
+	// This flag does NOT auto-detect — it's a manual list. The compile
+	// script is responsible for naming the methods it wants pinned. A
+	// future iteration can add call-graph-based auto-detection on top.
+	std::vector<std::string> pinnedToMain;
 };
 
 void printUsage(char const* _progName)
@@ -193,6 +216,12 @@ void printUsage(char const* _progName)
 		<< "                         guard to admit calls. Typically set on a SECOND compile\n"
 		<< "                         pass after the orchestrator is deployed and its app id\n"
 		<< "                         is known.\n"
+		<< "  --pin-to-main <list>   Comma-separated method names that MUST stay on the main\n"
+		<< "                         contract and never be split into a chunk. Use for methods\n"
+		<< "                         that read msg.sender or address(this) (chunks see orch as\n"
+		<< "                         sender / __storage as this). Repeatable. The compiler\n"
+		<< "                         errors out if any --uros-splitter group lists a pinned\n"
+		<< "                         name.\n"
 		<< "  --help                 Show this help message\n";
 }
 
@@ -242,6 +271,28 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.evmVersion = _argv[++i];
 		else if (arg == "--uros-orch-app-id" && i + 1 < _argc)
 			opts.urosOrchAppId = std::stoll(_argv[++i]);
+		else if (arg == "--pin-to-main" && i + 1 < _argc)
+		{
+			// Comma-separated method names that must stay on main.
+			// Repeatable: each invocation adds to the same list.
+			// See the field doc on Options::pinnedToMain for why.
+			std::string spec = _argv[++i];
+			size_t start = 0;
+			while (start <= spec.size())
+			{
+				size_t comma = spec.find(',', start);
+				size_t end = (comma == std::string::npos) ? spec.size() : comma;
+				std::string name = spec.substr(start, end - start);
+				while (!name.empty() && std::isspace(static_cast<unsigned char>(name.front())))
+					name.erase(name.begin());
+				while (!name.empty() && std::isspace(static_cast<unsigned char>(name.back())))
+					name.pop_back();
+				if (!name.empty())
+					opts.pinnedToMain.push_back(std::move(name));
+				if (comma == std::string::npos) break;
+				start = comma + 1;
+			}
+		}
 		else if (arg == "--uros-splitter" && i + 1 < _argc)
 		{
 			// Comma-separated method names. The flag is repeatable —
@@ -633,6 +684,33 @@ int main(int _argc, char* _argv[])
 	puyasol::splitter::UrosSplitter::Result splitResult;
 	if (!opts.urosSplitGroups.empty())
 	{
+		// Validate --pin-to-main: a pinned method must NOT appear in any
+		// chunk group. Pinned methods read msg.sender / address(this) and
+		// would silently misbehave if relocated to a chunk (the chunk runs
+		// as an itxn from orch, so Txn.Sender = orch and address(this) =
+		// __storage). Catching this at parse time prevents shipping broken
+		// auth / balance-keyed logic.
+		std::set<std::string> pinnedSet(
+			opts.pinnedToMain.begin(), opts.pinnedToMain.end());
+		for (size_t gi = 0; gi < opts.urosSplitGroups.size(); ++gi)
+		{
+			for (auto const& methodName : opts.urosSplitGroups[gi])
+			{
+				if (pinnedSet.count(methodName))
+				{
+					logger.error(
+						"--pin-to-main: method '" + methodName +
+						"' is pinned to main but appears in --uros-splitter "
+						"chunk " + std::to_string(gi) + ". Pinned methods "
+						"read msg.sender or address(this) — moving them to a "
+						"chunk would silently break their semantics. Remove "
+						"the method from the chunk list, or drop the pin if "
+						"chunk-side semantics are acceptable.");
+					return 1;
+				}
+			}
+		}
+
 		std::vector<std::set<std::string>> splitGroups;
 		for (auto const& g : opts.urosSplitGroups)
 			splitGroups.emplace_back(g.begin(), g.end());
