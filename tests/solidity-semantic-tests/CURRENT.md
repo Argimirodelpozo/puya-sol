@@ -1,12 +1,15 @@
-# Semantic Test Status — v210
+# Semantic Test Status — v211
 
 **Totals**: 1092 PASS / 155 FAIL / 75 (56 compile_err + 19 deploy_err) = **1092/1322 (82.6%)**
 
-v210 is the regression sentinel for the `makeIfElse` helper
-(commit 0890e044d). Result is **test-identical to v209** —
-which was test-identical to v208. The whole helper-refactor stack
-(fc84eb803 + 377921e01 + 0890e044d) holds 1092 PASS without
-movement.
+v211 is the regression sentinel for the `makeBlock` helper
+(commit ae92119be). Test-identical to v208/v209/v210. The full
+helper-refactor stack (fc84eb803 + 377921e01 + 0890e044d +
+ae92119be) holds 1092 PASS through four refactor commits.
+
+Cumulative source reduction across the refactor stack: ~1198 LOC
+(net -1198 across 49+19+16+26 = 110 unique-but-overlapping file
+edits, deduped to ~50 builder/splitter files).
 
 v208 vs v207: **+1 PASS / -1 FAIL** from `mapping_contract_key_getter`
 stabilising 25p/2f → 27p/0s. Most plausibly a localnet flake settling
@@ -71,6 +74,12 @@ of the semantic suite, so v208/v209 also reconfirm that surface.
   holdouts are in StatementOps.cpp and SolControlFlow.cpp where the
   if-body builds incrementally between condition evaluation and
   branch finalisation. 16 files, -48 lines. Test-identical to v209.
+- v211 = 1092 — sentinel for the `makeBlock` helper
+  (ae92119be). 93/97 Block construction sites collapsed via Python
+  regex sweep; 4 holdouts are in deep-copy / stand-alone uses where
+  the regex didn't match. 26 files, -92 lines. Test-identical to
+  v210. Local makeBlock helper in Ripemd160Builder.cpp deleted as
+  redundant with awst::makeBlock.
 
 ## v195 reference (preserved below)
 
