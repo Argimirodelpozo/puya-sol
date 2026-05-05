@@ -60,7 +60,7 @@ fails=()
 # the AVM 4-page (8 KB) deploy limit. Contracts not listed here compile
 # normally without splitting.
 declare -A SPLIT_GROUPS
-SPLIT_GROUPS[AccessManagerEnumerable]=$'getRole,getRoleCount,getRoles,getRoleMember,getRoleMemberCount,getRoleMembers,getRoleTarget,getRoleTargetCount,getRoleTargets|getAdminRole,getAdminRoleCount,getAdminRoles,getRoleOfAdminRole,getRoleOfAdminRoleCount,getRolesOfAdminRole,getRoleTargetSelector,getRoleTargetSelectorCount,getRoleTargetSelectors|expiration,minSetback,isTargetClosed,getTargetFunctionRole,getTargetAdminDelay,getRoleAdmin,getRoleGuardian,getRoleGrantDelay,getAccess,hasRole'
+SPLIT_GROUPS[AccessManagerEnumerable]=$'getRole,getRoleCount,getRoles,getRoleMember,getRoleMemberCount,getRoleMembers,getRoleTarget,getRoleTargetCount,getRoleTargets|getAdminRole,getAdminRoleCount,getAdminRoles,getRoleOfAdminRole,getRoleOfAdminRoleCount,getRolesOfAdminRole,getRoleTargetSelector,getRoleTargetSelectorCount,getRoleTargetSelectors|expiration,minSetback,isTargetClosed,getTargetFunctionRole,getTargetAdminDelay,getRoleAdmin,getRoleGuardian,getRoleGrantDelay,getAccess,hasRole|labelRole,grantRole,revokeRole,renounceRole,setRoleAdmin,setRoleGuardian,setGrantDelay,setTargetFunctionRole,setTargetAdminDelay,setTargetClosed,getSchedule,getNonce,updateAuthority,ADMIN_ROLE,PUBLIC_ROLE,canCall'
 
 # Hub.sol — 20 KB unsplit, 65 methods. 11 chunks all fit under the
 # 4-page (8 KB) AVM deploy limit. Bin-packed by domain:

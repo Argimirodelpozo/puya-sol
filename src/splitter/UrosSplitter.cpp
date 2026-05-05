@@ -3,6 +3,8 @@
 #include "splitter/UrosSplitter.h"
 
 #include "Logger.h"
+#include "awst/WType.h"
+#include "builder/sol-types/TypeCoercion.h"
 #include "json/AWSTSerializer.h"
 #include "json/OptionsWriter.h"
 #include "runner/PuyaRunner.h"
@@ -27,6 +29,7 @@ constexpr uint8_t DISPATCH_SELECTOR[4] = {0x61, 0x7d, 0xa4, 0x1d};
 
 /// AVM TypeEnum constant for ApplicationCall (`appl`).
 constexpr int APPL_TYPE_ENUM = 6;
+constexpr int TXN_TYPE_APPL = 6;
 
 /// Build `txn GroupIndex` reading the current txn's group index.
 std::shared_ptr<awst::IntrinsicCall> txnGroupIndex(awst::SourceLocation const& _loc)
@@ -240,31 +243,355 @@ awst::ContractMethod makeOrcGuardMethod(
 	return m;
 }
 
-/// Stub body: `this.__uros_orc_guard(); return <default>;`
+/// Stub body for chunks' non-group methods: just return the type's
+/// default value. (Chunks are only invoked when their own group's
+/// method is requested via the orch's selector→idx routing, so
+/// non-group selectors can't be reached on chunks under normal
+/// flow. Body is just a typed default to keep the dispatch table
+/// well-typed.)
 std::shared_ptr<awst::Block> makeStubBody(
 	awst::WType const* _ret, awst::SourceLocation const& _loc)
 {
 	auto block = std::make_shared<awst::Block>();
 	block->sourceLocation = _loc;
-
-	// `this.__uros_orc_guard()` — InstanceMethodTarget call to the
-	// shared helper. The contract owning this stub method must also
-	// carry the helper (added by split() to mainContract + each chunk).
-	auto callExpr = std::make_shared<awst::SubroutineCallExpression>();
-	callExpr->sourceLocation = _loc;
-	callExpr->wtype = awst::WType::voidType();
-	callExpr->target = awst::InstanceMethodTarget{ORC_GUARD_NAME};
-	block->body.push_back(awst::makeExpressionStatement(std::move(callExpr), _loc));
-
 	auto retVal = makeDefaultValue(_ret, _loc);
 	auto ret = awst::makeReturnStatement(std::move(retVal), _loc);
 	block->body.push_back(std::move(ret));
 	return block;
 }
 
-/// Deep-clone a ContractMethod's args + signature; replace the body with a
-/// stub matching its declared return type.
-awst::ContractMethod cloneStubbed(awst::ContractMethod const& _m)
+/// Owned dynamically-created WTypes (WTuple instances built for stub
+/// bodies). The splitter has no TypeMapper to register against, so we
+/// keep a process-lifetime cache here. Sufficient since the splitter
+/// is invoked once per puya-sol run.
+inline std::vector<std::unique_ptr<awst::WType>>& ownedSplitterTypes()
+{
+	static std::vector<std::unique_ptr<awst::WType>> instance;
+	return instance;
+}
+
+template <typename T, typename... Args>
+awst::WType const* makeOwnedType(Args&&... _args)
+{
+	auto p = std::make_unique<T>(std::forward<Args>(_args)...);
+	auto* raw = p.get();
+	ownedSplitterTypes().push_back(std::move(p));
+	return raw;
+}
+
+/// Build the ARC4 method-selector signature for a contract method by
+/// reading its arg + return wtypes. Format: `name(t1,t2,...)retType`.
+/// puya's MethodConstant takes this string and emits the 4-byte
+/// sha512_256 selector.
+std::string buildSelectorSig(awst::ContractMethod const& _m)
+{
+	auto wtypeName = [](awst::WType const* _t) -> std::string {
+		// wtypeToABIName covers most cases; handle a couple of
+		// puya-sol-specific names that diverge from the ARC4 ABI
+		// surface (selectors must match exactly what the chunk's
+		// dispatch table emits, which is determined by the
+		// chunk-side wtype).
+		if (_t == awst::WType::accountType()) return "address";
+		if (_t->kind() == awst::WTypeKind::Bytes)
+		{
+			auto const* bw = static_cast<awst::BytesWType const*>(_t);
+			if (bw->length().has_value())
+				return "byte[" + std::to_string(*bw->length()) + "]";
+		}
+		return builder::TypeCoercion::wtypeToABIName(_t);
+	};
+	std::string s = _m.memberName + "(";
+	bool first = true;
+	for (auto const& a : _m.args)
+	{
+		if (!first) s += ",";
+		s += wtypeName(a.wtype);
+		first = false;
+	}
+	s += ")";
+	auto const* ret = _m.returnType;
+	if (!ret || ret == awst::WType::voidType())
+		s += "void";
+	else if (auto const* tup = dynamic_cast<awst::WTuple const*>(ret))
+	{
+		s += "(";
+		bool firstR = true;
+		for (auto const* t : tup->types())
+		{
+			if (!firstR) s += ",";
+			s += wtypeName(t);
+			firstR = false;
+		}
+		s += ")";
+	}
+	else
+		s += wtypeName(ret);
+	return s;
+}
+
+/// Encoded size of an ARC4 / native AWST type, in bytes. Returns 0
+/// for variable-size or unsupported types — the caller falls back
+/// to a single-bytes pass-through in that case.
+int fixedEncodedSize(awst::WType const* _t)
+{
+	if (_t == awst::WType::biguintType()) return 32;
+	if (_t == awst::WType::uint64Type()) return 8;
+	if (_t == awst::WType::boolType()) return 1;
+	if (_t == awst::WType::accountType()) return 32;
+	if (auto const* bw = dynamic_cast<awst::BytesWType const*>(_t))
+		if (bw->length().has_value())
+			return static_cast<int>(bw->length().value());
+	if (_t->kind() == awst::WTypeKind::ARC4UIntN)
+	{
+		auto const* uw = static_cast<awst::ARC4UIntN const*>(_t);
+		return uw->n() / 8;
+	}
+	return 0;
+}
+
+/// Decode a single ABI-encoded scalar at fixed offset from the
+/// stripped return bytes. Used by `decodeFromBytes` for tuple field
+/// decoding. Returns nullptr if the field type is not fixed-encoding.
+std::shared_ptr<awst::Expression> decodeScalarAt(
+	std::shared_ptr<awst::Expression> _bytes,
+	awst::WType const* _t,
+	int _offset,
+	awst::SourceLocation const& _loc)
+{
+	int size = fixedEncodedSize(_t);
+	if (size == 0)
+		return nullptr;
+
+	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
+	extract->stackArgs.push_back(std::move(_bytes));
+	extract->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(_offset), _loc));
+	extract->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(size), _loc));
+
+	if (_t == awst::WType::biguintType())
+		return awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
+	if (_t == awst::WType::uint64Type())
+	{
+		auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
+		btoi->stackArgs.push_back(std::move(extract));
+		return btoi;
+	}
+	if (_t == awst::WType::boolType())
+	{
+		auto getbit = awst::makeIntrinsicCall("getbit", awst::WType::uint64Type(), _loc);
+		getbit->stackArgs.push_back(std::move(extract));
+		getbit->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
+		auto cmp = awst::makeNumericCompare(
+			std::move(getbit), awst::NumericComparison::Ne,
+			awst::makeIntegerConstant("0", _loc), _loc);
+		return cmp;
+	}
+	if (_t == awst::WType::accountType())
+		return awst::makeReinterpretCast(std::move(extract), awst::WType::accountType(), _loc);
+	// ARC4 native types (incl. ARC4UIntN, ARC4StaticArray, ...): the
+	// extracted slice IS the ARC4 encoding for fixed-width types.
+	// Reinterpret to the declared wtype.
+	if (_t->kind() == awst::WTypeKind::ARC4UIntN
+		|| _t->kind() == awst::WTypeKind::ARC4StaticArray
+		|| _t->kind() == awst::WTypeKind::ARC4Struct)
+		return awst::makeReinterpretCast(std::move(extract), _t, _loc);
+	// Fixed-bytes (BytesWType with length): keep as raw bytes (extracted slice).
+	return std::move(extract);
+}
+
+/// Decode the ABI-encoded return bytes (post 4-byte-prefix strip)
+/// into the method's declared return type. Mirrors the decode logic
+/// used by `SolExternalCall::submitAndReturn` for cross-contract
+/// calls (same need: bytes → typed value).
+std::shared_ptr<awst::Expression> decodeFromBytes(
+	std::shared_ptr<awst::Expression> _bytes,
+	awst::WType const* _ret,
+	awst::SourceLocation const& _loc)
+{
+	if (!_ret || _ret == awst::WType::voidType())
+		return nullptr;
+	if (_ret == awst::WType::biguintType())
+		return awst::makeReinterpretCast(std::move(_bytes), awst::WType::biguintType(), _loc);
+	if (_ret == awst::WType::uint64Type())
+	{
+		auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
+		btoi->stackArgs.push_back(std::move(_bytes));
+		return btoi;
+	}
+	if (_ret == awst::WType::boolType())
+	{
+		auto getbit = awst::makeIntrinsicCall("getbit", awst::WType::uint64Type(), _loc);
+		getbit->stackArgs.push_back(std::move(_bytes));
+		getbit->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
+		auto cmp = awst::makeNumericCompare(
+			std::move(getbit), awst::NumericComparison::Ne,
+			awst::makeIntegerConstant("0", _loc), _loc);
+		return cmp;
+	}
+	if (_ret == awst::WType::accountType())
+		return awst::makeReinterpretCast(std::move(_bytes), awst::WType::accountType(), _loc);
+
+	// WTuple (puya-sol synthesizes these for multi-return Solidity
+	// methods, e.g. `getAccessReturn`): per-field decode via
+	// SingleEvaluation + extract3 + per-type cast. Reinterpret cast
+	// of bytes→WTuple is rejected by puya — we have to walk the
+	// fields manually.
+	if (auto const* tup = dynamic_cast<awst::WTuple const*>(_ret))
+	{
+		auto singleBytes = std::make_shared<awst::SingleEvaluation>();
+		singleBytes->sourceLocation = _loc;
+		singleBytes->wtype = awst::WType::bytesType();
+		singleBytes->source = std::move(_bytes);
+		static int seCounter = 0;
+		singleBytes->id = ++seCounter;
+
+		auto tuple = std::make_shared<awst::TupleExpression>();
+		tuple->sourceLocation = _loc;
+		tuple->wtype = _ret;
+
+		int offset = 0;
+		for (auto const* fieldType : tup->types())
+		{
+			auto decoded = decodeScalarAt(singleBytes, fieldType, offset, _loc);
+			if (!decoded)
+			{
+				// Unknown / variable-encoding field — fall back to
+				// putting the whole remaining bytes here. Best-effort.
+				tuple->items.push_back(singleBytes);
+				break;
+			}
+			tuple->items.push_back(std::move(decoded));
+			offset += fixedEncodedSize(fieldType);
+		}
+		return tuple;
+	}
+
+	// ARC4 native types and aggregates: the stripped bytes are already
+	// the ARC4 encoding, so a reinterpret yields the right typed value
+	// for everything algopy/puya treats structurally (ARC4UIntN,
+	// ARC4StaticArray, ARC4Struct, ARC4Tuple, etc.). Bytes / strings
+	// are already raw, also reinterpret.
+	return awst::makeReinterpretCast(std::move(_bytes), _ret, _loc);
+}
+
+/// Forwarding stub body for main: inner-calls the orch with the
+/// user's (selector + args) tagged onto the dispatch selector. The
+/// orch then runs the install→call→restore dance against __storage
+/// and returns __storage's last_log, which we decode to the method's
+/// declared return type.
+///
+/// ApplicationArgs layout on the inner call:
+///   [0] = orch's `dispatch()` selector  (ABI router match)
+///   [1] = THIS method's selector  (user's intent)
+///   [2..N+1] = forwarded from `Txn.ApplicationArgs[1..N]`
+std::shared_ptr<awst::Block> makeForwardingStubBody(
+	awst::ContractMethod const& _m,
+	awst::SourceLocation const& _loc)
+{
+	auto block = std::make_shared<awst::Block>();
+	block->sourceLocation = _loc;
+
+	// Build the inner-txn ApplicationArgs tuple.
+	auto argsTuple = std::make_shared<awst::TupleExpression>();
+	argsTuple->sourceLocation = _loc;
+
+	// [0]: orch.dispatch() ARC4 selector. MethodConstant lets puya
+	// compute the 4-byte selector from the canonical signature.
+	auto dispatchSel = std::make_shared<awst::MethodConstant>();
+	dispatchSel->sourceLocation = _loc;
+	dispatchSel->wtype = awst::WType::bytesType();
+	dispatchSel->value = "dispatch()byte[]";
+	argsTuple->items.push_back(std::move(dispatchSel));
+
+	// [1]: this method's ARC4 selector. The orch reads this from its
+	// own ApplicationArgs[1], looks up the matching chunk, and
+	// forwards the call.
+	auto userSel = std::make_shared<awst::MethodConstant>();
+	userSel->sourceLocation = _loc;
+	userSel->wtype = awst::WType::bytesType();
+	userSel->value = buildSelectorSig(_m);
+	argsTuple->items.push_back(std::move(userSel));
+
+	// [2..N+1]: forward Txn.ApplicationArgs[1..N] verbatim. Reading
+	// raw bytes via `txna ApplicationArgs i` is cheaper than
+	// re-encoding the typed args puya already decoded for our
+	// signature — and the chunk's ABI router will decode them again
+	// from the inner call's ApplicationArgs anyway.
+	//
+	// KNOWN LIMITATION: `Txn.Sender` inside a split method body
+	// resolves to the ORCH's app account, not the user's address,
+	// because the chunk runs as an inner txn from orch. Auth-checking
+	// flows (msg.sender comparisons, AccessManaged.canConsume, etc.)
+	// will see orch as the caller. Sender-forwarding is left as a
+	// follow-up; the trailing-arg approach was rejected, packed-into-
+	// selector needs router rewrites in puya backend.
+	for (size_t i = 0; i < _m.args.size(); ++i)
+	{
+		auto txna = awst::makeIntrinsicCall("txna", awst::WType::bytesType(), _loc);
+		txna->immediates = {std::string("ApplicationArgs"), int(i + 1)};
+		argsTuple->items.push_back(std::move(txna));
+	}
+
+	// WTuple type for the ApplicationArgs slot.
+	std::vector<awst::WType const*> argTypes(
+		argsTuple->items.size(), awst::WType::bytesType());
+	argsTuple->wtype = makeOwnedType<awst::WTuple>(std::move(argTypes), std::nullopt);
+
+	// Build CreateInnerTransaction(appl, app_id=orch, args=tuple, fee=0).
+	static awst::WInnerTransactionFields s_applFieldsType(
+		static_cast<int>(TXN_TYPE_APPL));
+	auto create = std::make_shared<awst::CreateInnerTransaction>();
+	create->sourceLocation = _loc;
+	create->wtype = &s_applFieldsType;
+	create->fields["TypeEnum"] = awst::makeIntegerConstant(
+		std::to_string(TXN_TYPE_APPL), _loc);
+	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
+	create->fields["OnCompletion"] = awst::makeIntegerConstant("0", _loc);
+	auto orchTmpl = std::make_shared<awst::TemplateVar>();
+	orchTmpl->sourceLocation = _loc;
+	orchTmpl->wtype = awst::WType::uint64Type();
+	orchTmpl->name = "TMPL_UROS_ORCH_APP_ID";
+	create->fields["ApplicationID"] = std::move(orchTmpl);
+	create->fields["ApplicationArgs"] = std::move(argsTuple);
+
+	// Wrap in SubmitInnerTransaction.
+	static awst::WInnerTransaction s_applTxnType(
+		static_cast<int>(TXN_TYPE_APPL));
+	auto submit = std::make_shared<awst::SubmitInnerTransaction>();
+	submit->sourceLocation = _loc;
+	submit->wtype = &s_applTxnType;
+	submit->itxns.push_back(std::move(create));
+
+	// Void return: just submit and return.
+	if (!_m.returnType || _m.returnType == awst::WType::voidType())
+	{
+		block->body.push_back(awst::makeExpressionStatement(std::move(submit), _loc));
+		block->body.push_back(awst::makeReturnStatement(nullptr, _loc));
+		return block;
+	}
+
+	// Non-void: submit, then read inner.LastLog, strip 4-byte ABI
+	// prefix, decode to the declared return type.
+	block->body.push_back(awst::makeExpressionStatement(std::move(submit), _loc));
+
+	auto readLog = awst::makeIntrinsicCall("itxn", awst::WType::bytesType(), _loc);
+	readLog->immediates = {std::string("LastLog")};
+
+	auto stripPrefix = std::make_shared<awst::IntrinsicCall>();
+	stripPrefix->sourceLocation = _loc;
+	stripPrefix->opCode = "extract";
+	stripPrefix->immediates = {4, 0};
+	stripPrefix->wtype = awst::WType::bytesType();
+	stripPrefix->stackArgs.push_back(std::move(readLog));
+
+	auto decoded = decodeFromBytes(std::move(stripPrefix), _m.returnType, _loc);
+	block->body.push_back(awst::makeReturnStatement(std::move(decoded), _loc));
+	return block;
+}
+
+/// Deep-clone a ContractMethod's args + signature. `_forwarding`
+/// chooses the body shape: forwarding (main's stubs, inner-call
+/// orch) vs default-value (chunks' non-group stubs).
+awst::ContractMethod cloneStubbed(awst::ContractMethod const& _m, bool _forwarding = false)
 {
 	awst::ContractMethod stub;
 	stub.sourceLocation = _m.sourceLocation;
@@ -276,7 +603,9 @@ awst::ContractMethod cloneStubbed(awst::ContractMethod const& _m)
 	stub.cref = _m.cref;
 	stub.memberName = _m.memberName;
 	stub.arc4MethodConfig = _m.arc4MethodConfig;
-	stub.body = makeStubBody(_m.returnType, _m.sourceLocation);
+	stub.body = _forwarding
+		? makeForwardingStubBody(_m, _m.sourceLocation)
+		: makeStubBody(_m.returnType, _m.sourceLocation);
 	return stub;
 }
 
@@ -413,28 +742,35 @@ UrosSplitter::Result UrosSplitter::split(
 	}
 
 	// Build mainContract: every split method (across all groups) is
-	// stubbed. Non-split methods keep their real bodies. Plus a
-	// synthetic __delegate_update to admit the dance's swap-in.
+	// stubbed with a forwarding body that inner-calls orch.dispatch
+	// with the user's selector + raw ApplicationArgs. Non-split
+	// methods keep their real bodies (callable directly on main —
+	// useful for getters that don't need the dance).
+	//
+	// __delegate_update IS kept on main: at deploy time the harness
+	// uses main's bytecode for __storage's initial program (so
+	// AppCreate runs the user contract's state-var inits on
+	// __storage), then UpdateApplications __storage to the thin
+	// admit-update default. That UpdateApplication call lands on
+	// main's __delegate_update entry point.
 	auto mainContract = shallowCloneContract(*primary);
 	for (auto& m : mainContract->methods)
 	{
 		if (appliedAll.count(m.memberName))
-			m = cloneStubbed(m);
+			m = cloneStubbed(m, /*forwarding=*/true);
 	}
 	mainContract->methods.push_back(
 		makeDelegateUpdateMethod(primary->id, primary->sourceLocation));
-	mainContract->methods.push_back(
-		makeOrcGuardMethod(primary->id, primary->sourceLocation));
 
 	// Build N chunk contracts. Each chunk_i:
-	//  - same surface as main (same selectors, same state schema)
+	//  - same surface as primary (same selectors, same state schema)
 	//  - REAL bodies for its group's methods
-	//  - STUB bodies for split methods OUTSIDE its group (so the chunk
-	//    is small while still carrying the dispatch table)
-	//  - REAL bodies for non-split methods (they may be called
-	//    internally by the chunk's split methods — same constraint as
-	//    the original single-helper design)
-	//  - synthetic __delegate_update to admit step 3's restore
+	//  - STUB bodies (default-value return) for everything else;
+	//    those selectors are routed to OTHER chunks by orch's
+	//    csel→idx map, so they're never invoked when this chunk is
+	//    installed on __storage
+	//  - synthetic __delegate_update to admit orch's UpdateApplication
+	//    inner txns when restoring __storage between calls
 	for (size_t gi = 0; gi < _splitGroups.size(); ++gi)
 	{
 		std::set<std::string> myMethods(
@@ -452,17 +788,16 @@ UrosSplitter::Result UrosSplitter::split(
 
 		for (auto& m : chunkContract->methods)
 		{
-			// Stub the methods in OTHER chunks' groups; keep this chunk's
-			// real bodies and all non-split methods real.
-			bool isSplitButNotMine =
-				appliedAll.count(m.memberName) && !myMethods.count(m.memberName);
-			if (isSplitButNotMine)
-				m = cloneStubbed(m);
+			// Chunks stub EVERY method that isn't in their own group:
+			// orch routes each selector to a single chunk, so chunks
+			// only ever execute their own group's methods. Stubbing
+			// non-group methods (incl. non-split ones) keeps each
+			// chunk small.
+			if (!myMethods.count(m.memberName))
+				m = cloneStubbed(m, /*forwarding=*/false);
 		}
 		chunkContract->methods.push_back(
 			makeDelegateUpdateMethod(primary->id, primary->sourceLocation));
-		chunkContract->methods.push_back(
-			makeOrcGuardMethod(primary->id, primary->sourceLocation));
 
 		// Build this chunk's full root set: all roots, with the primary
 		// contract substituted for chunkContract.

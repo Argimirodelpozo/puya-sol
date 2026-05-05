@@ -1,18 +1,43 @@
-"""Helpers for deploying --uros-splitter contracts and invoking
-their stubbed methods via the orchestrator's 3-itxn dance.
+"""Helpers for deploying --uros-splitter contracts in the
+3-contract architecture (main + __storage + orch).
 
-Pattern, per test session:
-  * compile the orchestrator template once (via puyapy)
-  * deploy ONE orchestrator app (session-scoped fixture)
-  * for each split contract under test, call deploy_split_app() — it
-    substitutes TMPL_UROS_ORCH_APP_ID in the .approval.teal at deploy
-    time (no puya recompile needed), deploys main, runs the setup
-    ceremony, returns a SplitClient wrapping main_id + orch_id.
+Architecture:
+  main      — entry point; full ABI surface; stubs forward to orch
+              via inner-app-call. State on main is unused (just gets
+              defaults written at AppCreate time but never read).
+  __storage — state holder; deployed first with MAIN's bytecode so
+              AppCreate runs the user contract's state-var defaults
+              on __storage. After AppCreate, harness UpdateApplications
+              __storage to the thin admit-update default bytecode.
+              From then on, only orch may UpdateApplication.
+  orch      — generic dance executor; holds chunk bytecode in boxes,
+              swaps chunks onto __storage per call, restores default.
 
-Pattern, per call to a stubbed method:
-  client.call_dance("methodSig(types)retType", [arg1_bytes, ...]) returns
-  the algod confirmation result. The caller decodes the return-log if
-  needed (raw_logs[0] = ABI return: 4-byte 151f7c75 prefix + value).
+Per-call flow (transparent to caller):
+  user → main.foo(args)   (single txn, no group dance)
+    main.foo stub → inner orch.dispatch(args=[dispatch_sel, foo_sel,
+                                              ...user_args])
+      orch.dispatch:
+        itxn 1 → UpdateApplication(__storage, chunk_for_foo)
+        itxn 2 → __storage.foo(args)  ← chunk runs, mutates state
+        itxn 3 → UpdateApplication(__storage, default)
+      returns last_log
+    main.foo returns last_log to user
+
+Deploy flow:
+  1. Deploy orch (compile uros_orchestrator.py once per session)
+  2. Compile uros_storage.py for the thin default bytecode
+  3. For each split contract:
+     a. Recompile its main.teal with TMPL_UROS_ORCH_APP_ID = orch.id
+     b. Deploy __storage with main_bytes (AppCreate inits state)
+     c. UpdateApplication __storage → thin default (via main's
+        __delegate_update)
+     d. set_orch on __storage; set_storage on orch
+     e. Stream default + chunks into orch boxes
+     f. register_chunk_method per selector
+     g. Deploy main as a separate app
+     h. Call main.__postInit(args) → dance routes to __storage,
+        runs constructor body; state init complete
 """
 
 from __future__ import annotations
@@ -20,6 +45,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -38,19 +64,19 @@ from algosdk.transaction import (
     OnComplete,
     PaymentTxn,
     StateSchema,
-    assign_group_id,
     wait_for_confirmation,
 )
 from algosdk.v2client.algod import AlgodClient
 
 REPO_ROOT = Path(__file__).resolve().parents[4]  # → puya-sol/
-ORCH_PY = REPO_ROOT / "src" / "splitter" / "uros_orchestrator.py"
 PUYAPY_BIN = REPO_ROOT / "puya" / ".venv" / "bin" / "puyapy"
+ORCH_PY = REPO_ROOT / "src" / "splitter" / "uros_orchestrator.py"
+STORAGE_PY = REPO_ROOT / "src" / "splitter" / "uros_storage.py"
 ORCH_OUT = REPO_ROOT / "tests" / "uros-splitter" / "out" / "Orchestrator"
+STORAGE_OUT = REPO_ROOT / "tests" / "uros-splitter" / "out" / "Storage"
 
 OUT_DIR = Path(__file__).parent.parent / "out"
 
-DISPATCH_SELECTOR_HEX = "617da41d"  # sha512_256("dispatch()byte[]")[:4]
 EMPTY_BOX = (0, b"")
 
 
@@ -60,8 +86,7 @@ def _arc4_selector(sig: str) -> bytes:
 
 def _app_addr(app_id: int) -> str:
     return encoding.encode_address(
-        encoding.checksum(b"appID" + app_id.to_bytes(8, "big"))
-    )
+        encoding.checksum(b"appID" + app_id.to_bytes(8, "big")))
 
 
 def _fund(algod: AlgodClient, sender: SigningAccount, addr: str, amt: int) -> None:
@@ -72,44 +97,44 @@ def _fund(algod: AlgodClient, sender: SigningAccount, addr: str, amt: int) -> No
 
 
 def compile_orchestrator() -> None:
-    """Compile uros_orchestrator.py if its outputs aren't already present."""
-    if (ORCH_OUT / "UrosOrchestrator.approval.teal").exists():
-        return
-    ORCH_OUT.parent.mkdir(parents=True, exist_ok=True)
-    subprocess.run(
-        [str(PUYAPY_BIN), str(ORCH_PY), "--out-dir", str(ORCH_OUT), "--output-bytecode"],
-        check=True,
-        capture_output=True,
-    )
+    """Compile both orch and __storage default templates if not
+    already cached. Targets AVM v10 to match puya-sol's emit (so
+    chunks aren't a downgrade)."""
+    if not (ORCH_OUT / "UrosOrchestrator.approval.teal").exists():
+        ORCH_OUT.parent.mkdir(parents=True, exist_ok=True)
+        subprocess.run(
+            [str(PUYAPY_BIN), str(ORCH_PY), "--out-dir", str(ORCH_OUT),
+             "--output-bytecode", "--target-avm-version", "10"],
+            check=True, capture_output=True,
+        )
+    if not (STORAGE_OUT / "UrosStorage.approval.teal").exists():
+        STORAGE_OUT.parent.mkdir(parents=True, exist_ok=True)
+        subprocess.run(
+            [str(PUYAPY_BIN), str(STORAGE_PY), "--out-dir", str(STORAGE_OUT),
+             "--output-bytecode", "--target-avm-version", "10"],
+            check=True, capture_output=True,
+        )
 
 
 def deploy_orchestrator(algod: AlgodClient, sender: SigningAccount) -> int:
     compile_orchestrator()
-    approval_teal = (ORCH_OUT / "UrosOrchestrator.approval.teal").read_text()
-    clear_teal = (ORCH_OUT / "UrosOrchestrator.clear.teal").read_text()
-    approval = base64.b64decode(algod.compile(approval_teal)["result"])
-    clear = base64.b64decode(algod.compile(clear_teal)["result"])
+    approval = base64.b64decode(algod.compile(
+        (ORCH_OUT / "UrosOrchestrator.approval.teal").read_text())["result"])
+    clear = base64.b64decode(algod.compile(
+        (ORCH_OUT / "UrosOrchestrator.clear.teal").read_text())["result"])
 
     sp = algod.suggested_params()
-    init_sel = _arc4_selector("init()void")
     txn = ApplicationCreateTxn(
-        sender=sender.address,
-        sp=sp,
+        sender=sender.address, sp=sp,
         on_complete=OnComplete.NoOpOC,
-        approval_program=approval,
-        clear_program=clear,
+        approval_program=approval, clear_program=clear,
         global_schema=StateSchema(num_uints=16, num_byte_slices=16),
         local_schema=StateSchema(num_uints=0, num_byte_slices=0),
-        app_args=[init_sel],
-        extra_pages=3,
+        app_args=[_arc4_selector("init()void")], extra_pages=3,
     )
     txid = algod.send_transaction(txn.sign(sender.private_key))
-    result = wait_for_confirmation(algod, txid, 4)
-    orch_id = int(result["application-index"])
-    # Orch holds the bytecode boxes: __codebox_main (~8 KB) + one
-    # __codebox_chunk_<i> per chunk (each ~8 KB) + small clen_* /
-    # csel_* per registered method. MBR ≈ 400 µA/byte → fund
-    # generously so a 10-chunk Hub still fits.
+    orch_id = int(wait_for_confirmation(algod, txid, 4)["application-index"])
+    # Box MBR: 4 codeboxes × ~8 KB + per-method clen/csel entries.
     _fund(algod, sender, _app_addr(orch_id), 200_000_000)
     return orch_id
 
@@ -124,154 +149,73 @@ def _compile_teal(algod: AlgodClient, teal: str) -> bytes:
 
 @dataclass
 class SplitDeployment:
-    """Returned by deploy_split_app; carries everything needed to
-    invoke stubbed methods via the dance."""
     main_id: int
+    storage_id: int
     orch_id: int
     app_spec: au.Arc56Contract
-    deploy_tmpl: dict
-    selector_to_chunk: dict[bytes, int]  # method selector → chunk_idx
-
-    def call_dance(
-        self,
-        algod: AlgodClient,
-        sender: SigningAccount,
-        method_sig: str,
-        method_args: list[bytes] | None = None,
-    ) -> dict:
-        """Send the 2-txn group [main.method, orch.dispatch] and return
-        the algod confirmation result.
-
-        Box read budget split:
-          txn1 (main): 8 empty refs as pure budget carriers (8×1024 B).
-          txn2 (orch): 4 known refs (csel, clen, chunk, main) + 3 empty
-                       + 1 foreign_app (main_id) = 8 references max.
-
-        The inner dispatch call runs main's real method body (e.g.
-        `getRoleCount` reads `_rolesSet`). Those state boxes aren't
-        known statically here — we use populate_app_call_resources to
-        auto-discover them by simulating the group, then merge the
-        result into txn1's empty box-ref slots.
-        """
-        sel = _arc4_selector(method_sig)
-        chunk_idx = self.selector_to_chunk[sel]
-        sp = algod.suggested_params()
-        sp.fee = sp.min_fee * 12  # dance does 3 inner txns + buffer
-        txn1 = ApplicationCallTxn(
-            sender=sender.address, sp=sp, index=self.main_id,
-            on_complete=OnComplete.NoOpOC,
-            app_args=[sel, *(method_args or [])],
-        )
-        dispatch_sel = _arc4_selector("dispatch()byte[]")
-        csel_box = b"csel_" + sel
-        clen_box = b"clen_" + chunk_idx.to_bytes(8, "big")
-        chunk_box = b"__codebox_chunk_" + chunk_idx.to_bytes(8, "big")
-        main_box = b"__codebox_main"
-        txn2 = ApplicationCallTxn(
-            sender=sender.address, sp=sp, index=self.orch_id,
-            on_complete=OnComplete.NoOpOC,
-            app_args=[dispatch_sel],
-            foreign_apps=[self.main_id],
-            boxes=[
-                (self.orch_id, csel_box),
-                (self.orch_id, clen_box),
-                (self.orch_id, chunk_box),
-                (self.orch_id, main_box),
-                EMPTY_BOX, EMPTY_BOX, EMPTY_BOX,
-            ],
-        )
-        signer = AccountTransactionSigner(sender.private_key)
-        atc = AtomicTransactionComposer()
-        atc.add_transaction(TransactionWithSigner(txn1, signer))
-        atc.add_transaction(TransactionWithSigner(txn2, signer))
-        atc = au.populate_app_call_resources(atc, algod)
-        results = atc.execute(algod, 4)
-        # AtomicTransactionComposer.execute returns a result with
-        # tx_ids and confirmed_round; fetch the dispatch txn's full
-        # confirmation to get inner-txns + logs.
-        dispatch_txid = results.tx_ids[1]
-        return algod.pending_transaction_info(dispatch_txid)
 
 
-def _stream_to_box(
-    algod: AlgodClient, sender: SigningAccount, orch_id: int,
-    write_sel: bytes, box_name: bytes, data: bytes,
-    extra_app_args: list[bytes] | None = None,
-) -> None:
+def _stream_to_box(algod: AlgodClient, sender: SigningAccount, orch_id: int,
+                   write_sel: bytes, box_name: bytes, data: bytes,
+                   extra_args_pre: list[bytes] | None = None) -> None:
     chunk_size = 1024
     for offset in range(0, len(data), chunk_size):
-        chunk = data[offset : offset + chunk_size]
+        piece = data[offset : offset + chunk_size]
         sp = algod.suggested_params()
         off_b = offset.to_bytes(8, "big")
-        data_b = len(chunk).to_bytes(2, "big") + chunk
-        app_args = [write_sel] + (extra_app_args or []) + [off_b, data_b]
+        data_b = len(piece).to_bytes(2, "big") + piece
+        app_args = [write_sel] + (extra_args_pre or []) + [off_b, data_b]
         txn = ApplicationCallTxn(
             sender=sender.address, sp=sp, index=orch_id,
             on_complete=OnComplete.NoOpOC,
             app_args=app_args,
             boxes=[(orch_id, box_name)] + [EMPTY_BOX] * 7,
         )
-        txid = algod.send_transaction(txn.sign(sender.private_key))
-        wait_for_confirmation(algod, txid, 4)
+        wait_for_confirmation(algod,
+            algod.send_transaction(txn.sign(sender.private_key)), 4)
 
 
-def _box_exists_with_size(algod: AlgodClient, app_id: int, name: bytes,
-                          expected_size: int) -> bool:
-    """Check whether `name` exists on `app_id` with exactly `expected_size`
-    bytes. Used to skip redundant setup calls when an orch fixture is
-    reused across tests in the same session."""
-    try:
-        info = algod.application_box_by_name(app_id, name)
-    except Exception:
-        return False
-    value_b64 = info.get("value", "")
-    return len(base64.b64decode(value_b64)) == expected_size
-
-
-def _setup_main_and_chunks(
-    algod: AlgodClient,
-    sender: SigningAccount,
-    orch_id: int,
-    main_id: int,
-    main_bytes: bytes,
-    chunks: list[dict],
-) -> dict[bytes, int]:
-    """Run set_main + setup_*_box + write_* + register_chunk_method
-    for all chunks. Idempotent on box setup — if a chunk's box is
-    already present with the same length, skip the setup + write.
-    Returns the selector → chunk_idx map."""
-    # set_main is always called: each new main gets a fresh app id, so
-    # the orch's main_app_id global must be re-pointed.
-    set_main_sel = _arc4_selector("set_main(uint64)void")
+def _setup_orch_with_chunks(
+    algod: AlgodClient, sender: SigningAccount,
+    orch_id: int, storage_id: int,
+    storage_default_bytes: bytes,
+    chunks_with_full_sigs: list[dict],
+) -> None:
+    """Run the orch ceremony: set_storage, setup boxes, stream
+    bytes, register selectors."""
+    # set_storage
     sp = algod.suggested_params()
     txn = ApplicationCallTxn(
         sender=sender.address, sp=sp, index=orch_id,
         on_complete=OnComplete.NoOpOC,
-        app_args=[set_main_sel, main_id.to_bytes(8, "big")],
+        app_args=[_arc4_selector("set_storage(uint64)void"),
+                  storage_id.to_bytes(8, "big")],
     )
-    txid = algod.send_transaction(txn.sign(sender.private_key))
-    wait_for_confirmation(algod, txid, 4)
+    wait_for_confirmation(algod,
+        algod.send_transaction(txn.sign(sender.private_key)), 4)
 
-    main_box_name = b"__codebox_main"
-    if not _box_exists_with_size(algod, orch_id, main_box_name, len(main_bytes)):
-        setup_main_sel = _arc4_selector("setup_main_box(uint64)void")
+    # setup_default_box
+    if not _box_exists_with_size(algod, orch_id, b"__codebox_default",
+                                 len(storage_default_bytes)):
         sp = algod.suggested_params()
-        sp.fee = sp.min_fee * 3  # box-create inner txn
+        sp.fee = sp.min_fee * 3
         txn = ApplicationCallTxn(
             sender=sender.address, sp=sp, index=orch_id,
             on_complete=OnComplete.NoOpOC,
-            app_args=[setup_main_sel, len(main_bytes).to_bytes(8, "big")],
-            boxes=[(orch_id, main_box_name)] + [EMPTY_BOX] * 7,
+            app_args=[_arc4_selector("setup_default_box(uint64)void"),
+                      len(storage_default_bytes).to_bytes(8, "big")],
+            boxes=[(orch_id, b"__codebox_default")] + [EMPTY_BOX] * 7,
         )
-        txid = algod.send_transaction(txn.sign(sender.private_key))
-        wait_for_confirmation(algod, txid, 4)
-        write_main_sel = _arc4_selector("write_main(uint64,byte[])void")
-        _stream_to_box(algod, sender, orch_id, write_main_sel,
-                       main_box_name, main_bytes)
+        wait_for_confirmation(algod,
+            algod.send_transaction(txn.sign(sender.private_key)), 4)
+        _stream_to_box(algod, sender, orch_id,
+                       _arc4_selector("write_default(uint64,byte[])void"),
+                       b"__codebox_default", storage_default_bytes)
 
+    # setup + stream each chunk
     setup_chunk_sel = _arc4_selector("setup_chunk_box(uint64,uint64)void")
     write_chunk_sel = _arc4_selector("write_chunk(uint64,uint64,byte[])void")
-    for ci, chunk in enumerate(chunks):
+    for ci, chunk in enumerate(chunks_with_full_sigs):
         chunk_bytes = bytes.fromhex(chunk["approval_hex"])
         chunk_box = b"__codebox_chunk_" + ci.to_bytes(8, "big")
         clen_box = b"clen_" + ci.to_bytes(8, "big")
@@ -282,28 +226,22 @@ def _setup_main_and_chunks(
         txn = ApplicationCallTxn(
             sender=sender.address, sp=sp, index=orch_id,
             on_complete=OnComplete.NoOpOC,
-            app_args=[
-                setup_chunk_sel,
-                ci.to_bytes(8, "big"),
-                len(chunk_bytes).to_bytes(8, "big"),
-            ],
+            app_args=[setup_chunk_sel,
+                      ci.to_bytes(8, "big"),
+                      len(chunk_bytes).to_bytes(8, "big")],
             boxes=[(orch_id, chunk_box), (orch_id, clen_box)] + [EMPTY_BOX] * 6,
         )
-        txid = algod.send_transaction(txn.sign(sender.private_key))
-        wait_for_confirmation(algod, txid, 4)
-        _stream_to_box(
-            algod, sender, orch_id, write_chunk_sel,
-            chunk_box, chunk_bytes,
-            extra_app_args=[ci.to_bytes(8, "big")],
-        )
+        wait_for_confirmation(algod,
+            algod.send_transaction(txn.sign(sender.private_key)), 4)
+        _stream_to_box(algod, sender, orch_id, write_chunk_sel,
+                       chunk_box, chunk_bytes,
+                       extra_args_pre=[ci.to_bytes(8, "big")])
 
-    # Register each split method's selector → chunk_idx.
+    # register selectors
     register_sel = _arc4_selector("register_chunk_method(byte[],uint64)void")
-    selector_to_chunk: dict[bytes, int] = {}
-    for ci, chunk in enumerate(chunks):
+    for ci, chunk in enumerate(chunks_with_full_sigs):
         for full_sig in chunk["full_sigs"]:
             sel = _arc4_selector(full_sig)
-            selector_to_chunk[sel] = ci
             csel_box = b"csel_" + sel
             sel_arg = len(sel).to_bytes(2, "big") + sel
             sp = algod.suggested_params()
@@ -313,45 +251,17 @@ def _setup_main_and_chunks(
                 app_args=[register_sel, sel_arg, ci.to_bytes(8, "big")],
                 boxes=[(orch_id, csel_box)] + [EMPTY_BOX] * 7,
             )
-            txid = algod.send_transaction(txn.sign(sender.private_key))
-            wait_for_confirmation(algod, txid, 4)
-    return selector_to_chunk
+            wait_for_confirmation(algod,
+                algod.send_transaction(txn.sign(sender.private_key)), 4)
 
 
-def _call_postinit(
-    algod: AlgodClient, sender: SigningAccount, app_id: int,
-    app_spec: au.Arc56Contract, app_args: list[bytes],
-) -> None:
-    """If the contract has __postInit, invoke it with the same args
-    that were passed at AppCreate (puya-sol's auto-split ctor pattern)."""
-    postinit_method = None
-    for m in getattr(app_spec, "methods", []) or []:
-        if getattr(m, "name", None) == "__postInit":
-            postinit_method = m
-            break
-    if postinit_method is None or len(app_args) < len(postinit_method.args):
-        return
-    arg_types = ",".join(getattr(a, "type", "") for a in postinit_method.args)
-    sig = f"__postInit({arg_types})void"
-    sel = _arc4_selector(sig)
-    sp = algod.suggested_params()
-    call_args = [sel] + list(app_args)[: len(postinit_method.args)]
-    call_txn = ApplicationCallTxn(
-        sender=sender.address, sp=sp, index=app_id,
-        on_complete=OnComplete.NoOpOC, app_args=call_args,
-    )
-    signer = AccountTransactionSigner(sender.private_key)
-    atc = AtomicTransactionComposer()
-    atc.add_transaction(TransactionWithSigner(call_txn, signer))
+def _box_exists_with_size(algod: AlgodClient, app_id: int, name: bytes,
+                          expected_size: int) -> bool:
     try:
-        atc = au.populate_app_call_resources(atc, algod)
+        info = algod.application_box_by_name(app_id, name)
     except Exception:
-        pass
-    try:
-        atc.execute(algod, 4)
-    except Exception:
-        # Same fail-open semantics as conftest.deploy_contract.
-        pass
+        return False
+    return len(base64.b64decode(info.get("value", ""))) == expected_size
 
 
 def deploy_split_app(
@@ -360,87 +270,178 @@ def deploy_split_app(
     name: str,
     orch_id: int,
     app_args: list[bytes] | None = None,
-    fund_amount: int = 1_000_000,
+    fund_amount: int = 5_000_000,
 ) -> SplitDeployment:
-    """Deploy a split contract: substitute orch_id into TEAL, deploy
-    main, run the orch setup ceremony, optionally __postInit. The
-    chunks' bytecode is the build-time output (orch_id is template
-    var #7 in the intcblock — we substitute via .replace on TEAL
-    text and recompile via algod.compile)."""
+    """Deploy a split contract under the new 3-contract architecture.
+
+    Steps (per call):
+      1. Substitute TMPL_UROS_ORCH_APP_ID into main + chunk TEAL,
+         compile via algod.
+      2. Deploy __storage with **main's bytecode** initially. AppCreate
+         runs the user contract's state-var inits on __storage.
+      3. UpdateApplication __storage → thin uros_storage default
+         bytes. Sender = deployer; main's __delegate_update admits
+         the update (no orch involved yet).
+      4. set_orch on __storage; set_storage on orch.
+      5. Set up orch's chunk boxes; stream bytes; register selectors.
+      6. Deploy main as a separate app (for user-direct calls).
+      7. Call main.__postInit(args) → dance routes to __storage's
+         __postInit chunk → state init complete.
+    """
     contract_dir = OUT_DIR / name
     deploy_tmpl = json.loads((contract_dir / "deploy.uros.json").read_text())
-
-    # 1. Substitute TMPL_UROS_ORCH_APP_ID and compile main.
-    main_teal_path = contract_dir / f"{name}.approval.teal"
-    main_clear_path = contract_dir / f"{name}.clear.teal"
-    main_teal = _substitute_orch_id(main_teal_path.read_text(), orch_id)
-    main_approval = _compile_teal(algod, main_teal)
-    main_clear = _compile_teal(algod, main_clear_path.read_text())
-
-    # 2. Substitute and compile each chunk's TEAL — the orch ceremony
-    #    streams the substituted bytes into __codebox_chunk_<i>.
-    chunks = []
     arc56_path = contract_dir / f"{name}.arc56.json"
-    app_spec = au.Arc56Contract.from_json(arc56_path.read_text())
-    method_signatures = {m.name: m for m in (app_spec.methods or [])}
+    # Lightweight method-sig parser: pull each method's name + arg types
+    # + return type from raw arc56 JSON. Sidesteps algokit's ABI parser
+    # which rejects int256 (puya emits int256 for some signed-int returns
+    # like Hub's eliminateDeficit, which AAVE V4's source has).
+    arc56_raw = json.loads(arc56_path.read_text())
+    method_signatures: dict[str, dict] = {}
+    for m in arc56_raw.get("methods", []):
+        method_signatures[m["name"]] = m
+    # Best-effort algokit Arc56Contract — needed for the optional
+    # __postInit dance below. Skip for contracts whose spec doesn't
+    # parse (e.g. Hub: int256). The harness still works without it
+    # since __postInit-via-dance is optional.
+    try:
+        app_spec = au.Arc56Contract.from_json(arc56_path.read_text())
+    except Exception:
+        app_spec = None
+
+    # 1. Substitute orch_id into main + chunk TEAL.
+    main_teal = (contract_dir / f"{name}.approval.teal").read_text()
+    main_clear_teal = (contract_dir / f"{name}.clear.teal").read_text()
+    main_approval = _compile_teal(algod, _substitute_orch_id(main_teal, orch_id))
+    main_clear = _compile_teal(algod, main_clear_teal)
+
+    # Read storage default bytes (already compiled by compile_orchestrator).
+    storage_default = (STORAGE_OUT / "UrosStorage.approval.bin").read_bytes()
+    storage_clear = (STORAGE_OUT / "UrosStorage.clear.bin").read_bytes()
+
+    # Build chunks list (with TEAL substitution + full ABI sigs).
+    chunks_with_full_sigs = []
     for ci, c in enumerate(deploy_tmpl["chunks"]):
-        chunk_teal = (
-            contract_dir / "__uros_split" / f"chunk_{ci}" / f"{c['name']}.approval.teal"
-        ).read_text()
-        chunk_teal = _substitute_orch_id(chunk_teal, orch_id)
-        chunk_bytes = _compile_teal(algod, chunk_teal)
-        # Look up each split method's full ABI signature from the arc56 spec.
+        chunk_teal = (contract_dir / "__uros_split" / f"chunk_{ci}"
+                      / f"{c['name']}.approval.teal").read_text()
+        chunk_bytes = _compile_teal(algod, _substitute_orch_id(chunk_teal, orch_id))
         full_sigs = []
         for mname in c["methods"]:
             m = method_signatures.get(mname)
             if m is None:
-                # Fallback: use bare name (won't compute a useful selector
-                # but the harness still streams + registers). Surface the
-                # mismatch via assertion so the test fails loudly.
                 raise AssertionError(
-                    f"split method '{mname}' not in arc56 for {name}"
-                )
-            arg_types = ",".join(getattr(a, "type", "") for a in m.args)
-            ret = getattr(getattr(m, "returns", None), "type", "void") or "void"
+                    f"split method '{mname}' not in arc56 for {name}")
+            arg_types = ",".join(a.get("type", "") for a in m.get("args", []))
+            ret = (m.get("returns") or {}).get("type") or "void"
             full_sigs.append(f"{mname}({arg_types}){ret}")
-        chunks.append({
-            **c,
-            "approval_hex": chunk_bytes.hex(),
+        chunks_with_full_sigs.append({
+            **c, "approval_hex": chunk_bytes.hex(),
             "full_sigs": full_sigs,
         })
 
-    # 3. Deploy main.
+    # 2. Deploy __storage WITH MAIN'S BYTECODE so AppCreate runs the
+    # user contract's state-var inits.
     sp = algod.suggested_params()
     txn = ApplicationCreateTxn(
-        sender=sender.address,
-        sp=sp,
+        sender=sender.address, sp=sp,
         on_complete=OnComplete.NoOpOC,
-        approval_program=main_approval,
-        clear_program=main_clear,
+        approval_program=main_approval, clear_program=main_clear,
         global_schema=StateSchema(num_uints=16, num_byte_slices=16),
         local_schema=StateSchema(num_uints=0, num_byte_slices=0),
-        app_args=app_args or [],
-        extra_pages=3,
+        app_args=app_args or [], extra_pages=3,
     )
     txid = algod.send_transaction(txn.sign(sender.private_key))
-    result = wait_for_confirmation(algod, txid, 4)
-    main_id = int(result["application-index"])
-    if fund_amount > 0:
-        _fund(algod, sender, _app_addr(main_id), fund_amount)
+    storage_id = int(wait_for_confirmation(algod, txid, 4)["application-index"])
+    _fund(algod, sender, _app_addr(storage_id), fund_amount)
 
-    # 4. Run __postInit (if present and arg-count matches).
-    if app_args:
-        _call_postinit(algod, sender, main_id, app_spec, list(app_args))
-
-    # 5. Run orch setup ceremony.
-    selector_to_chunk = _setup_main_and_chunks(
-        algod, sender, orch_id, main_id, main_approval, chunks,
+    # 3. UpdateApplication __storage → thin admit-update default.
+    # Sender = deployer; main's __delegate_update admits.
+    sp = algod.suggested_params()
+    txn = ApplicationCallTxn(
+        sender=sender.address, sp=sp, index=storage_id,
+        on_complete=OnComplete.UpdateApplicationOC,
+        approval_program=storage_default, clear_program=storage_clear,
+        app_args=[_arc4_selector("__delegate_update()void")],
     )
+    wait_for_confirmation(algod,
+        algod.send_transaction(txn.sign(sender.private_key)), 4)
+
+    # 4. __storage.set_orch(orch_id).
+    sp = algod.suggested_params()
+    txn = ApplicationCallTxn(
+        sender=sender.address, sp=sp, index=storage_id,
+        on_complete=OnComplete.NoOpOC,
+        app_args=[_arc4_selector("set_orch(uint64)void"),
+                  orch_id.to_bytes(8, "big")],
+    )
+    wait_for_confirmation(algod,
+        algod.send_transaction(txn.sign(sender.private_key)), 4)
+
+    # 5. orch setup (set_storage + boxes + chunks + selectors).
+    _setup_orch_with_chunks(algod, sender, orch_id, storage_id,
+                            storage_default, chunks_with_full_sigs)
+
+    # 6. Deploy main as a separate app (for user-direct calls).
+    sp = algod.suggested_params()
+    txn = ApplicationCreateTxn(
+        sender=sender.address, sp=sp,
+        on_complete=OnComplete.NoOpOC,
+        approval_program=main_approval, clear_program=main_clear,
+        global_schema=StateSchema(num_uints=16, num_byte_slices=16),
+        local_schema=StateSchema(num_uints=0, num_byte_slices=0),
+        app_args=app_args or [], extra_pages=3,
+    )
+    txid = algod.send_transaction(txn.sign(sender.private_key))
+    main_id = int(wait_for_confirmation(algod, txid, 4)["application-index"])
+    _fund(algod, sender, _app_addr(main_id), 1_000_000)
+
+    # 7. main.__postInit dance, routes through orch to __storage.
+    if app_args and app_spec is not None:
+        _call_postinit_via_dance(algod, sender, main_id, orch_id, storage_id,
+                                 app_spec, list(app_args))
 
     return SplitDeployment(
-        main_id=main_id,
-        orch_id=orch_id,
+        main_id=main_id, storage_id=storage_id, orch_id=orch_id,
         app_spec=app_spec,
-        deploy_tmpl=deploy_tmpl,
-        selector_to_chunk=selector_to_chunk,
     )
+
+
+def _call_postinit_via_dance(
+    algod: AlgodClient, sender: SigningAccount,
+    main_id: int, orch_id: int, storage_id: int,
+    app_spec: au.Arc56Contract, app_args: list[bytes],
+) -> None:
+    """Call main.__postInit which forwards via inner-call to orch.
+    The orch dances to __storage to run the actual __postInit chunk
+    (which writes state init)."""
+    postinit = None
+    for m in (app_spec.methods or []):
+        if m.name == "__postInit":
+            postinit = m
+            break
+    if postinit is None or len(app_args) < len(postinit.args):
+        return
+    arg_types = ",".join(getattr(a, "type", "") for a in postinit.args)
+    sig = f"__postInit({arg_types})void"
+    sel = _arc4_selector(sig)
+    call_args = [sel] + list(app_args)[: len(postinit.args)]
+    sp = algod.suggested_params()
+    sp.fee = sp.min_fee * 16  # main → orch → 3-itxn dance + buffer
+    txn = ApplicationCallTxn(
+        sender=sender.address, sp=sp, index=main_id,
+        on_complete=OnComplete.NoOpOC, app_args=call_args,
+        foreign_apps=[orch_id, storage_id],
+    )
+    signer = AccountTransactionSigner(sender.private_key)
+    atc = AtomicTransactionComposer()
+    atc.add_transaction(TransactionWithSigner(txn, signer))
+    try:
+        atc = au.populate_app_call_resources(atc, algod)
+    except Exception:
+        pass
+    try:
+        atc.execute(algod, 4)
+    except Exception:
+        # Mirror the legacy harness: swallow __postInit errors so
+        # tests that don't actually rely on full init can still
+        # exercise direct (non-init-dependent) methods.
+        pass
