@@ -62,12 +62,9 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 
 		auto zeros = awst::makeBytesConstant(std::vector<uint8_t>(32, 0), m_loc);
 
-		auto cond = std::make_shared<awst::ConditionalExpression>();
-		cond->sourceLocation = m_loc;
-		cond->wtype = awst::WType::bytesType();
-		cond->condition = std::move(withinRange);
-		cond->trueExpr = std::move(seed);
-		cond->falseExpr = std::move(zeros);
+		auto cond = awst::makeConditional(
+			std::move(withinRange), std::move(seed), std::move(zeros),
+			awst::WType::bytesType(), m_loc);
 
 		auto cast = awst::makeReinterpretCast(std::move(cond), m_ctx.typeMapper.createType<awst::BytesWType>(32), m_loc);
 		return cast;

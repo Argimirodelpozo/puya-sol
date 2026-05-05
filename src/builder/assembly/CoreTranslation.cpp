@@ -431,20 +431,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		auto isZero = awst::makeNumericCompare(std::move(addrExprForZero), awst::NumericComparison::Eq, std::move(zeroLit), loc);
 
 		// small (0 < addr <= 100) → emptyHash; large (addr > 100) → hash(self); addr == 0 → 0
-		auto smallOrLarge = std::make_shared<awst::ConditionalExpression>();
-		smallOrLarge->sourceLocation = loc;
-		smallOrLarge->wtype = awst::WType::biguintType();
-		smallOrLarge->condition = std::move(isLarge);
-		smallOrLarge->trueExpr = std::move(hashBigUint);
-		smallOrLarge->falseExpr = std::move(emptyHashBigUint);
+		auto smallOrLarge = awst::makeConditional(
+			std::move(isLarge), std::move(hashBigUint), std::move(emptyHashBigUint),
+			awst::WType::biguintType(), loc);
 
-		auto cond = std::make_shared<awst::ConditionalExpression>();
-		cond->sourceLocation = loc;
-		cond->wtype = awst::WType::biguintType();
-		cond->condition = std::move(isZero);
-		cond->trueExpr = std::move(zero);
-		cond->falseExpr = std::move(smallOrLarge);
-		return cond;
+		return awst::makeConditional(
+			std::move(isZero), std::move(zero), std::move(smallOrLarge),
+			awst::WType::biguintType(), loc);
 	}
 	if (funcName == "address")
 	{
@@ -501,13 +494,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 
 			auto zero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
 
-			auto cond = std::make_shared<awst::ConditionalExpression>();
-			cond->sourceLocation = loc;
-			cond->wtype = awst::WType::biguintType();
-			cond->condition = std::move(withinRange);
-			cond->trueExpr = std::move(seedBigUint);
-			cond->falseExpr = std::move(zero);
-			return cond;
+			return awst::makeConditional(
+				std::move(withinRange), std::move(seedBigUint), std::move(zero),
+				awst::WType::biguintType(), loc);
 		}
 		return seedBigUint;
 	}

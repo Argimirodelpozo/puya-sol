@@ -91,12 +91,9 @@ void AssemblyBuilder::storeResultToMemory(
 		auto one = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType());
 		auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 
-		auto cond = std::make_shared<awst::ConditionalExpression>();
-		cond->sourceLocation = _loc;
-		cond->wtype = awst::WType::biguintType();
-		cond->condition = std::move(_result);
-		cond->trueExpr = std::move(one);
-		cond->falseExpr = std::move(zero);
+		auto cond = awst::makeConditional(
+			std::move(_result), std::move(one), std::move(zero),
+			awst::WType::biguintType(), _loc);
 
 		auto padded = padTo32Bytes(std::move(cond), _loc);
 
@@ -220,12 +217,9 @@ void AssemblyBuilder::storeResultToMemoryRT(
 	{
 		auto one = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType());
 		auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
-		auto cond = std::make_shared<awst::ConditionalExpression>();
-		cond->sourceLocation = _loc;
-		cond->wtype = awst::WType::biguintType();
-		cond->condition = std::move(_result);
-		cond->trueExpr = std::move(one);
-		cond->falseExpr = std::move(zero);
+		auto cond = awst::makeConditional(
+			std::move(_result), std::move(one), std::move(zero),
+			awst::WType::biguintType(), _loc);
 		auto padded = padTo32Bytes(std::move(cond), _loc);
 
 		auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);

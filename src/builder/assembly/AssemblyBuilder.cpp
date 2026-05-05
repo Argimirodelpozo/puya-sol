@@ -750,13 +750,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBiguint(
 
 		auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 
-		auto cond = std::make_shared<awst::ConditionalExpression>();
-		cond->sourceLocation = _loc;
-		cond->wtype = awst::WType::biguintType();
-		cond->condition = std::move(_expr);
-		cond->trueExpr = std::move(one);
-		cond->falseExpr = std::move(zero);
-		return cond;
+		return awst::makeConditional(
+			std::move(_expr), std::move(one), std::move(zero),
+			awst::WType::biguintType(), _loc);
 	}
 
 	if (_expr->wtype == awst::WType::uint64Type())
@@ -864,13 +860,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::safeDivMod(
 
 	auto divExpr = makeBigUIntBinOp(_left, _op, _right, _loc);
 
-	auto ternary = std::make_shared<awst::ConditionalExpression>();
-	ternary->sourceLocation = _loc;
-	ternary->wtype = awst::WType::biguintType();
-	ternary->condition = std::move(cond);
-	ternary->trueExpr = std::move(divExpr);
-	ternary->falseExpr = std::move(zero);
-	return ternary;
+	return awst::makeConditional(
+		std::move(cond), std::move(divExpr), std::move(zero),
+		awst::WType::biguintType(), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::safeBtoi(

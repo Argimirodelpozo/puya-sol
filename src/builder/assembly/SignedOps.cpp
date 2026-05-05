@@ -161,20 +161,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSdiv(
 	auto bNeg = isNegative256(b, _loc);
 
 	// |a| = aNeg ? negate(a) : a
-	auto absA = std::make_shared<awst::ConditionalExpression>();
-	absA->sourceLocation = _loc;
-	absA->wtype = awst::WType::biguintType();
-	absA->condition = aNeg;
-	absA->trueExpr = negate256(a, _loc);
-	absA->falseExpr = a;
+	auto absA = awst::makeConditional(
+		aNeg, negate256(a, _loc), a, awst::WType::biguintType(), _loc);
 
 	// |b| = bNeg ? negate(b) : b
-	auto absB = std::make_shared<awst::ConditionalExpression>();
-	absB->sourceLocation = _loc;
-	absB->wtype = awst::WType::biguintType();
-	absB->condition = bNeg;
-	absB->trueExpr = negate256(b, _loc);
-	absB->falseExpr = b;
+	auto absB = awst::makeConditional(
+		bNeg, negate256(b, _loc), b, awst::WType::biguintType(), _loc);
 
 	// |a| / |b|
 	auto quotient = makeBigUIntBinOp(absA, awst::BigUIntBinaryOperator::FloorDiv, absB, _loc);
@@ -187,13 +179,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSdiv(
 	auto xorResult = awst::makeNumericCompare(aNegInt, awst::NumericComparison::Ne, bNegInt, _loc);
 
 	// result = resultNeg ? negate(quotient) : quotient
-	auto result = std::make_shared<awst::ConditionalExpression>();
-	result->sourceLocation = _loc;
-	result->wtype = awst::WType::biguintType();
-	result->condition = std::move(xorResult);
-	result->trueExpr = negate256(quotient, _loc);
-	result->falseExpr = quotient;
-	return result;
+	return awst::makeConditional(
+		std::move(xorResult), negate256(quotient, _loc), quotient,
+		awst::WType::biguintType(), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleSmod(
@@ -215,34 +203,22 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSmod(
 	auto aNeg = isNegative256(a, _loc);
 
 	// |a|
-	auto absA = std::make_shared<awst::ConditionalExpression>();
-	absA->sourceLocation = _loc;
-	absA->wtype = awst::WType::biguintType();
-	absA->condition = aNeg;
-	absA->trueExpr = negate256(a, _loc);
-	absA->falseExpr = a;
+	auto absA = awst::makeConditional(
+		aNeg, negate256(a, _loc), a, awst::WType::biguintType(), _loc);
 
 	// |b|
 	auto bNeg = isNegative256(b, _loc);
-	auto absB = std::make_shared<awst::ConditionalExpression>();
-	absB->sourceLocation = _loc;
-	absB->wtype = awst::WType::biguintType();
-	absB->condition = bNeg;
-	absB->trueExpr = negate256(b, _loc);
-	absB->falseExpr = b;
+	auto absB = awst::makeConditional(
+		bNeg, negate256(b, _loc), b, awst::WType::biguintType(), _loc);
 
 	// |a| % |b|
 	auto remainder = makeBigUIntBinOp(absA, awst::BigUIntBinaryOperator::Mod, absB, _loc);
 
 	// result = aNeg ? negate(remainder) : remainder
 	auto aNeg2 = isNegative256(a, _loc);
-	auto result = std::make_shared<awst::ConditionalExpression>();
-	result->sourceLocation = _loc;
-	result->wtype = awst::WType::biguintType();
-	result->condition = std::move(aNeg2);
-	result->trueExpr = negate256(remainder, _loc);
-	result->falseExpr = remainder;
-	return result;
+	return awst::makeConditional(
+		std::move(aNeg2), negate256(remainder, _loc), remainder,
+		awst::WType::biguintType(), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleSlt(
@@ -316,12 +292,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSlt(
 	auto unsignedLt = awst::makeNumericCompare(a, awst::NumericComparison::Lt, b, _loc);
 
 	// signsMatch ? (a < b) : aNeg
-	auto result = std::make_shared<awst::ConditionalExpression>();
-	result->sourceLocation = _loc;
-	result->wtype = awst::WType::boolType();
-	result->condition = signsMatch;
-	result->trueExpr = unsignedLt;
-	result->falseExpr = aNeg2;
+	auto result = awst::makeConditional(
+		signsMatch, unsignedLt, aNeg2, awst::WType::boolType(), _loc);
 
 	// Convert bool to biguint (Yul semantics: slt returns 0 or 1 as uint256)
 	return ensureBiguint(result, _loc);
@@ -425,13 +397,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSar(
 	// posResult = shr (re-compute to avoid sharing)
 	auto posResult = handleShr(coercedArgs, _loc);
 
-	auto result = std::make_shared<awst::ConditionalExpression>();
-	result->sourceLocation = _loc;
-	result->wtype = awst::WType::biguintType();
-	result->condition = valNeg;
-	result->trueExpr = negResult;
-	result->falseExpr = posResult;
-	return result;
+	return awst::makeConditional(
+		valNeg, negResult, posResult, awst::WType::biguintType(), _loc);
 }
 
 void AssemblyBuilder::handleSstore(

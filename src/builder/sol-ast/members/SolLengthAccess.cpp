@@ -258,13 +258,10 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 					extractLen->stackArgs.push_back(std::move(contents));
 					extractLen->stackArgs.push_back(awst::makeIntegerConstant("0", m_loc));
 
-					auto cond = std::make_shared<awst::ConditionalExpression>();
-					cond->sourceLocation = m_loc;
-					cond->wtype = awst::WType::uint64Type();
-					cond->condition = std::move(exists);
-					cond->trueExpr = std::move(extractLen);
-					cond->falseExpr = awst::makeIntegerConstant("0", m_loc);
-					return cond;
+					return awst::makeConditional(
+						std::move(exists), std::move(extractLen),
+						awst::makeIntegerConstant("0", m_loc),
+						awst::WType::uint64Type(), m_loc);
 				}
 
 				auto elemSizeConst = awst::makeIntegerConstant(std::to_string(elemSize), m_loc);
@@ -277,12 +274,9 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 
 				auto lenGe2 = awst::makeNumericCompare(lenVal, awst::NumericComparison::Gte, two, m_loc);
 
-				auto safeLen = std::make_shared<awst::ConditionalExpression>();
-				safeLen->sourceLocation = m_loc;
-				safeLen->wtype = awst::WType::uint64Type();
-				safeLen->condition = std::move(lenGe2);
-				safeLen->trueExpr = std::move(lenVal);
-				safeLen->falseExpr = std::move(two);
+				auto safeLen = awst::makeConditional(
+					std::move(lenGe2), std::move(lenVal), std::move(two),
+					awst::WType::uint64Type(), m_loc);
 
 				// Subtract 2-byte ARC4 length header before dividing
 				auto headerSize = awst::makeIntegerConstant("2", m_loc);

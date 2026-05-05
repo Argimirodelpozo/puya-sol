@@ -466,13 +466,8 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 
 			auto one = awst::makeIntegerConstant("1", _loc);
 
-			auto ternary = std::make_shared<awst::ConditionalExpression>();
-			ternary->sourceLocation = _loc;
-			ternary->wtype = awst::WType::uint64Type();
-			ternary->condition = std::move(cond);
-			ternary->trueExpr = std::move(one);
-			ternary->falseExpr = e;
-			return ternary;
+			return awst::makeConditional(
+				std::move(cond), std::move(one), e, awst::WType::uint64Type(), _loc);
 		}
 		case Token::SHL: case Token::AssignShl: e->op = awst::UInt64BinaryOperator::LShift; break;
 		case Token::SHR: case Token::AssignShr: case Token::SAR: case Token::AssignSar: e->op = awst::UInt64BinaryOperator::RShift; break;

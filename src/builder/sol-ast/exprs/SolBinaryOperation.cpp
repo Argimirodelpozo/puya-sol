@@ -467,13 +467,9 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 				// pow2N - val
 				auto negated = awst::makeBigUIntBinOp(makeBiguintConst(pow2NStr), awst::BigUIntBinaryOperator::Sub, val, m_loc);
 				// neg ? (pow2N - val) : val
-				auto cond = std::make_shared<awst::ConditionalExpression>();
-				cond->sourceLocation = m_loc;
-				cond->wtype = awst::WType::biguintType();
-				cond->condition = std::move(neg);
-				cond->trueExpr = std::move(negated);
-				cond->falseExpr = val;
-				return cond;
+				return awst::makeConditional(
+					std::move(neg), std::move(negated), val,
+					awst::WType::biguintType(), m_loc);
 			};
 
 			auto absA = absVal(_left);
@@ -503,12 +499,9 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 			leHalf->expr = std::move(halfLtProd);
 
 			// sameSign ? (absProduct < half) : (absProduct <= half)
-			auto rangeCheck = std::make_shared<awst::ConditionalExpression>();
-			rangeCheck->sourceLocation = m_loc;
-			rangeCheck->wtype = awst::WType::boolType();
-			rangeCheck->condition = std::move(sameSign);
-			rangeCheck->trueExpr = std::move(ltHalf);
-			rangeCheck->falseExpr = std::move(leHalf);
+			auto rangeCheck = awst::makeConditional(
+				std::move(sameSign), std::move(ltHalf), std::move(leHalf),
+				awst::WType::boolType(), m_loc);
 
 			// Also handle b == 0 (no overflow, result is 0)
 			auto bZero = awst::makeNumericCompare(_right, awst::NumericComparison::Eq, makeBiguintConst("0"), m_loc);
@@ -604,12 +597,8 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 
 	// abs(base) = baseNeg ? (pow2N - base) : base
 	auto negBase = awst::makeBigUIntBinOp(makeBiguintConst(pow2NStr), awst::BigUIntBinaryOperator::Sub, _base, m_loc);
-	auto absBase = std::make_shared<awst::ConditionalExpression>();
-	absBase->sourceLocation = m_loc;
-	absBase->wtype = awst::WType::biguintType();
-	absBase->condition = baseNeg;
-	absBase->trueExpr = std::move(negBase);
-	absBase->falseExpr = _base;
+	auto absBase = awst::makeConditional(
+		baseNeg, std::move(negBase), _base, awst::WType::biguintType(), m_loc);
 
 	// Ensure exp is biguint
 	if (_exp->wtype == awst::WType::uint64Type())
@@ -649,12 +638,9 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 		leHalf->wtype = awst::WType::boolType();
 		leHalf->expr = std::move(halfLtRes);
 
-		auto rangeOk = std::make_shared<awst::ConditionalExpression>();
-		rangeOk->sourceLocation = m_loc;
-		rangeOk->wtype = awst::WType::boolType();
-		rangeOk->condition = std::move(resultNeg);
-		rangeOk->trueExpr = std::move(leHalf);
-		rangeOk->falseExpr = std::move(ltHalf);
+		auto rangeOk = awst::makeConditional(
+			std::move(resultNeg), std::move(leHalf), std::move(ltHalf),
+			awst::WType::boolType(), m_loc);
 
 		auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(rangeOk), m_loc, "signed exp overflow"), m_loc);
 		m_ctx.prePendingStatements.push_back(std::move(assertStmt));
@@ -686,14 +672,9 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 	doNeg->op = awst::BinaryBooleanOperator::And;
 	doNeg->right = std::move(notZero);
 
-	auto finalResult = std::make_shared<awst::ConditionalExpression>();
-	finalResult->sourceLocation = m_loc;
-	finalResult->wtype = awst::WType::biguintType();
-	finalResult->condition = std::move(doNeg);
-	finalResult->trueExpr = std::move(negMod);
-	finalResult->falseExpr = std::move(absResult);
-
-	return finalResult;
+	return awst::makeConditional(
+		std::move(doNeg), std::move(negMod), std::move(absResult),
+		awst::WType::biguintType(), m_loc);
 }
 
 std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
@@ -763,13 +744,9 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 	auto absVal = [&](std::shared_ptr<awst::Expression> const& val) {
 		auto neg = isNeg(val);
 		auto negated = awst::makeBigUIntBinOp(makeBiguintConst(pow2NStr), awst::BigUIntBinaryOperator::Sub, val, m_loc);
-		auto cond = std::make_shared<awst::ConditionalExpression>();
-		cond->sourceLocation = m_loc;
-		cond->wtype = awst::WType::biguintType();
-		cond->condition = std::move(neg);
-		cond->trueExpr = std::move(negated);
-		cond->falseExpr = val;
-		return cond;
+		return awst::makeConditional(
+			std::move(neg), std::move(negated), val,
+			awst::WType::biguintType(), m_loc);
 	};
 
 	// Checked: assert(y != 0)
@@ -857,12 +834,9 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 	dynamic_cast<awst::Not*>(needNeg->right.get())->expr = std::move(resultIsZero);
 
 	// shouldNegate && result != 0 ? negated : unsigned
-	auto finalResult = std::make_shared<awst::ConditionalExpression>();
-	finalResult->sourceLocation = m_loc;
-	finalResult->wtype = awst::WType::biguintType();
-	finalResult->condition = std::move(needNeg);
-	finalResult->trueExpr = std::move(negMod);
-	finalResult->falseExpr = std::move(unsignedResult);
+	auto finalResult = awst::makeConditional(
+		std::move(needNeg), std::move(negMod), std::move(unsignedResult),
+		awst::WType::biguintType(), m_loc);
 
 	// Convert back to uint64 for ≤64-bit types
 	if (bits <= 64)

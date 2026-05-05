@@ -254,12 +254,9 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	extractSel->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
 	extractSel->stackArgs.push_back(awst::makeIntegerConstant("4", _loc));
 
-	auto selector = std::make_shared<awst::ConditionalExpression>();
-	selector->sourceLocation = _loc;
-	selector->wtype = awst::WType::bytesType();
-	selector->condition = makeGe4();
-	selector->trueExpr = std::move(extractSel);
-	selector->falseExpr = tmpRead();
+	auto selector = awst::makeConditional(
+		makeGe4(), std::move(extractSel), tmpRead(),
+		awst::WType::bytesType(), _loc);
 
 	// rest = len >= 4 ? extract3(data, 4, len - 4) : empty
 	auto restLen = awst::makeUInt64BinOp(
@@ -270,12 +267,10 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	extractRest->stackArgs.push_back(awst::makeIntegerConstant("4", _loc));
 	extractRest->stackArgs.push_back(std::move(restLen));
 
-	auto rest = std::make_shared<awst::ConditionalExpression>();
-	rest->sourceLocation = _loc;
-	rest->wtype = awst::WType::bytesType();
-	rest->condition = makeGe4();
-	rest->trueExpr = std::move(extractRest);
-	rest->falseExpr = awst::makeBytesConstant({}, _loc);
+	auto rest = awst::makeConditional(
+		makeGe4(), std::move(extractRest),
+		awst::makeBytesConstant({}, _loc),
+		awst::WType::bytesType(), _loc);
 
 	auto argsTuple = std::make_shared<awst::TupleExpression>();
 	argsTuple->sourceLocation = _loc;

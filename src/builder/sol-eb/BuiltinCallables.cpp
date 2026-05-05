@@ -278,12 +278,9 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 
 	auto vMinus27 = awst::makeUInt64BinOp(readV(), awst::UInt64BinaryOperator::Sub, mkU64("27"), _loc);
 
-	auto recIdCond = std::make_shared<awst::ConditionalExpression>();
-	recIdCond->sourceLocation = _loc;
-	recIdCond->wtype = awst::WType::uint64Type();
-	recIdCond->condition = std::move(vGte27);
-	recIdCond->trueExpr = std::move(vMinus27);
-	recIdCond->falseExpr = mkU64("0");
+	auto recIdCond = awst::makeConditional(
+		std::move(vGte27), std::move(vMinus27), mkU64("0"),
+		awst::WType::uint64Type(), _loc);
 	// Clamp further: `recovery_id & 1` so the ecdsa opcode doesn't see an
 	// out-of-range value when v is e.g. 29. Combined with the outer result
 	// masking this keeps the TEAL valid for any v.
@@ -357,12 +354,9 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 		return andOp;
 	};
 
-	auto maskedAddr = std::make_shared<awst::ConditionalExpression>();
-	maskedAddr->sourceLocation = _loc;
-	maskedAddr->wtype = awst::WType::bytesType();
-	maskedAddr->condition = isValidV();
-	maskedAddr->trueExpr = std::move(paddedAddr);
-	maskedAddr->falseExpr = awst::makeBzero(32, _loc);
+	auto maskedAddr = awst::makeConditional(
+		isValidV(), std::move(paddedAddr), awst::makeBzero(32, _loc),
+		awst::WType::bytesType(), _loc);
 
 	// Cast to account type (address return type)
 	auto addrCast = awst::makeReinterpretCast(std::move(maskedAddr), awst::WType::accountType(), _loc);

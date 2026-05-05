@@ -128,14 +128,8 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint256(
 
 	auto mod = awst::makeBigUIntBinOp(std::move(add), awst::BigUIntBinaryOperator::Mod, std::move(pow256Const), _loc);
 
-	auto ternary = std::make_shared<awst::ConditionalExpression>();
-	ternary->sourceLocation = _loc;
-	ternary->wtype = awst::WType::biguintType();
-	ternary->condition = std::move(cond);
-	ternary->trueExpr = std::move(mod);
-	ternary->falseExpr = promoted;
-
-	return ternary;
+	return awst::makeConditional(
+		std::move(cond), std::move(mod), promoted, awst::WType::biguintType(), _loc);
 }
 
 // ── Bytes ────────────────────────────────────────────────────────

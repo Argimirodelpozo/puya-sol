@@ -92,13 +92,11 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 					return makeSelectorExpr(trueSig);
 
 				auto ternCond = buildExpr(cond->condition());
-				auto ternary = std::make_shared<awst::ConditionalExpression>();
-				ternary->sourceLocation = m_loc;
-				ternary->wtype = awst::WType::bytesType();
-				ternary->condition = std::move(ternCond);
-				ternary->trueExpr = makeSelectorExpr(trueSig);
-				ternary->falseExpr = makeSelectorExpr(falseSig.empty() ? trueSig : falseSig);
-				return ternary;
+				return awst::makeConditional(
+					std::move(ternCond),
+					makeSelectorExpr(trueSig),
+					makeSelectorExpr(falseSig.empty() ? trueSig : falseSig),
+					awst::WType::bytesType(), m_loc);
 			}
 		}
 		// General: h().f.selector — evaluate h() for side effects
@@ -155,15 +153,13 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 					if (!trueSig.empty() && !falseSig.empty())
 					{
 						auto condition = buildExpr(cond->condition());
-						auto ternary = std::make_shared<awst::ConditionalExpression>();
-						ternary->sourceLocation = m_loc;
-						ternary->wtype = awst::WType::bytesType();
-						ternary->condition = std::move(condition);
-						ternary->trueExpr = makeSelectorExpr(trueSig);
-						ternary->falseExpr = makeSelectorExpr(falseSig);
+						auto ternary = awst::makeConditional(
+							std::move(condition),
+							makeSelectorExpr(trueSig),
+							makeSelectorExpr(falseSig),
+							awst::WType::bytesType(), m_loc);
 
-						auto cast = awst::makeReinterpretCast(std::move(ternary), awst::WType::biguintType(), m_loc);
-						return cast;
+						return awst::makeReinterpretCast(std::move(ternary), awst::WType::biguintType(), m_loc);
 					}
 				}
 				// Fallback: try identifier

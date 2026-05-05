@@ -187,13 +187,8 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 
 		auto one = awst::makeIntegerConstant("1", _loc);
 
-		auto ternary = std::make_shared<awst::ConditionalExpression>();
-		ternary->sourceLocation = _loc;
-		ternary->wtype = awst::WType::uint64Type();
-		ternary->condition = std::move(cond);
-		ternary->trueExpr = std::move(one);
-		ternary->falseExpr = e;
-		std::shared_ptr<awst::Expression> powResult = std::move(ternary);
+		std::shared_ptr<awst::Expression> powResult = awst::makeConditional(
+			std::move(cond), std::move(one), e, awst::WType::uint64Type(), _loc);
 
 		// Apply unchecked sub-type wrapping for Pow (can't fall through to general wrapping)
 		if (m_scope.isUnchecked() && !m_signed && m_bits < 64)
@@ -836,12 +831,8 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildSignedModDiv(
 	// absLeft = isLeftNeg ? (2^256 - left) : left
 	auto negLeft = awst::makeBigUIntBinOp(makeConst(kPow2_256), awst::BigUIntBinaryOperator::Sub, _left, _loc);
 
-	auto absLeft = std::make_shared<awst::ConditionalExpression>();
-	absLeft->sourceLocation = _loc;
-	absLeft->wtype = awst::WType::biguintType();
-	absLeft->condition = isLeftNeg;
-	absLeft->trueExpr = std::move(negLeft);
-	absLeft->falseExpr = _left;
+	auto absLeft = awst::makeConditional(
+		isLeftNeg, std::move(negLeft), _left, awst::WType::biguintType(), _loc);
 
 	// isRightNeg = right >= 2^255
 	auto isRightNeg = awst::makeNumericCompare(_right, awst::NumericComparison::Gte, makeConst(POW_2_255), _loc);
@@ -849,12 +840,8 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildSignedModDiv(
 	// absRight = isRightNeg ? (2^256 - right) : right
 	auto negRight = awst::makeBigUIntBinOp(makeConst(kPow2_256), awst::BigUIntBinaryOperator::Sub, _right, _loc);
 
-	auto absRight = std::make_shared<awst::ConditionalExpression>();
-	absRight->sourceLocation = _loc;
-	absRight->wtype = awst::WType::biguintType();
-	absRight->condition = isRightNeg;
-	absRight->trueExpr = std::move(negRight);
-	absRight->falseExpr = _right;
+	auto absRight = awst::makeConditional(
+		isRightNeg, std::move(negRight), _right, awst::WType::biguintType(), _loc);
 
 	// Compute abs result
 	awst::BigUIntBinaryOperator unsignedOp =
@@ -920,14 +907,9 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildSignedModDiv(
 	shouldNegateAndNonZero->op = awst::BinaryBooleanOperator::And;
 	shouldNegateAndNonZero->right = std::move(notZero);
 
-	auto signedResult = std::make_shared<awst::ConditionalExpression>();
-	signedResult->sourceLocation = _loc;
-	signedResult->wtype = awst::WType::biguintType();
-	signedResult->condition = std::move(shouldNegateAndNonZero);
-	signedResult->trueExpr = std::move(negResult);
-	signedResult->falseExpr = std::move(absResult);
-
-	return signedResult;
+	return awst::makeConditional(
+		std::move(shouldNegateAndNonZero), std::move(negResult),
+		std::move(absResult), awst::WType::biguintType(), _loc);
 }
 
 } // namespace puyasol::builder::eb

@@ -1131,13 +1131,11 @@ std::shared_ptr<awst::Expression> FunctionInliner::deepCopyExpr(
 	if (type == "ConditionalExpression")
 	{
 		auto& src = static_cast<awst::ConditionalExpression const&>(*_expr);
-		auto n = std::make_shared<awst::ConditionalExpression>();
-		n->sourceLocation = src.sourceLocation;
-		n->wtype = src.wtype;
-		n->condition = deepCopyExpr(src.condition);
-		n->trueExpr = deepCopyExpr(src.trueExpr);
-		n->falseExpr = deepCopyExpr(src.falseExpr);
-		return n;
+		return awst::makeConditional(
+			deepCopyExpr(src.condition),
+			deepCopyExpr(src.trueExpr),
+			deepCopyExpr(src.falseExpr),
+			src.wtype, src.sourceLocation);
 	}
 	if (type == "InnerTransactionField")
 	{

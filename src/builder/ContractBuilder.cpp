@@ -134,12 +134,10 @@ void ContractBuilder::prependNonPayableCheck(awst::ContractMethod& _method)
 
 	// Match msg.value's ConditionalExpression shape — avoids evaluating
 	// GroupIndex - 1 when GroupIndex == 0 (underflow-safe).
-	auto msgValue = std::make_shared<awst::ConditionalExpression>();
-	msgValue->sourceLocation = loc;
-	msgValue->wtype = awst::WType::uint64Type();
-	msgValue->condition = std::move(hasPayment);
-	msgValue->trueExpr = std::move(amount);
-	msgValue->falseExpr = awst::makeIntegerConstant("0", loc);
+	auto msgValue = awst::makeConditional(
+		std::move(hasPayment), std::move(amount),
+		awst::makeIntegerConstant("0", loc),
+		awst::WType::uint64Type(), loc);
 
 	auto isZero = awst::makeNumericCompare(
 		std::move(msgValue), awst::NumericComparison::Eq,

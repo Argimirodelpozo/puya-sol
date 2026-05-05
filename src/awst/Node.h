@@ -571,6 +571,24 @@ inline std::shared_ptr<IntrinsicCall> makeKeccak256(
 	return node;
 }
 
+// `condition ? trueExpr : falseExpr` — assemble in one call instead of
+// the std::make_shared + 5 field assignments boilerplate.
+inline std::shared_ptr<ConditionalExpression> makeConditional(
+	std::shared_ptr<Expression> condition,
+	std::shared_ptr<Expression> trueExpr,
+	std::shared_ptr<Expression> falseExpr,
+	WType const* wtype,
+	SourceLocation loc)
+{
+	auto node = std::make_shared<ConditionalExpression>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->condition = std::move(condition);
+	node->trueExpr = std::move(trueExpr);
+	node->falseExpr = std::move(falseExpr);
+	return node;
+}
+
 struct FieldExpression: Expression
 {
 	std::string nodeType() const override { return "FieldExpression"; }

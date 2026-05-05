@@ -179,13 +179,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleShl(
 		shift, awst::NumericComparison::Lt, std::move(twoFiftySix), _loc);
 	auto zero = awst::makeIntegerConstant(
 		"0", _loc, awst::WType::biguintType());
-	auto cexpr = std::make_shared<awst::ConditionalExpression>();
-	cexpr->sourceLocation = _loc;
-	cexpr->wtype = awst::WType::biguintType();
-	cexpr->condition = std::move(cond);
-	cexpr->trueExpr = std::move(wrapped);
-	cexpr->falseExpr = std::move(zero);
-	return cexpr;
+	return awst::makeConditional(
+		std::move(cond), std::move(wrapped), std::move(zero),
+		awst::WType::biguintType(), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleShr(
@@ -219,13 +215,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleShr(
 		shift, awst::NumericComparison::Lt, std::move(twoFiftySix), _loc);
 	auto zero = awst::makeIntegerConstant(
 		"0", _loc, awst::WType::biguintType());
-	auto cexpr = std::make_shared<awst::ConditionalExpression>();
-	cexpr->sourceLocation = _loc;
-	cexpr->wtype = awst::WType::biguintType();
-	cexpr->condition = std::move(cond);
-	cexpr->trueExpr = std::move(divResult);
-	cexpr->falseExpr = std::move(zero);
-	return cexpr;
+	return awst::makeConditional(
+		std::move(cond), std::move(divResult), std::move(zero),
+		awst::WType::biguintType(), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleByte(
@@ -378,13 +370,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 	auto posResult = awst::makeReinterpretCast(std::move(andCall), awst::WType::biguintType(), _loc);
 
 	// Conditional: isNeg ? negResult : posResult
-	auto cond = std::make_shared<awst::ConditionalExpression>();
-	cond->sourceLocation = _loc;
-	cond->wtype = awst::WType::biguintType();
-	cond->condition = std::move(isNeg);
-	cond->trueExpr = std::move(negResult);
-	cond->falseExpr = std::move(posResult);
-	return cond;
+	return awst::makeConditional(
+		std::move(isNeg), std::move(negResult), std::move(posResult),
+		awst::WType::biguintType(), _loc);
 }
 
 

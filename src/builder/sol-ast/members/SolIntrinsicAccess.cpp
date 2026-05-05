@@ -104,12 +104,9 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 
 		auto zeroVal = awst::makeIntegerConstant("0", m_loc);
 
-		auto cond = std::make_shared<awst::ConditionalExpression>();
-		cond->sourceLocation = m_loc;
-		cond->wtype = awst::WType::uint64Type();
-		cond->condition = std::move(hasPayment);
-		cond->trueExpr = std::move(amount);
-		cond->falseExpr = std::move(zeroVal);
+		auto cond = awst::makeConditional(
+			std::move(hasPayment), std::move(amount), std::move(zeroVal),
+			awst::WType::uint64Type(), m_loc);
 
 		// Promote to biguint
 		auto itob = awst::makeItob(std::move(cond), m_loc);
@@ -159,12 +156,10 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 			auto slotBytes = awst::makeIntrinsicCall("txna", awst::WType::bytesType(), m_loc);
 			slotBytes->immediates = {std::string("ApplicationArgs"), slot};
 
-			auto slotChoice = std::make_shared<awst::ConditionalExpression>();
-			slotChoice->sourceLocation = m_loc;
-			slotChoice->wtype = awst::WType::bytesType();
-			slotChoice->condition = std::move(slotPresent);
-			slotChoice->trueExpr = std::move(slotBytes);
-			slotChoice->falseExpr = awst::makeBzero(0, m_loc);
+			auto slotChoice = awst::makeConditional(
+				std::move(slotPresent), std::move(slotBytes),
+				awst::makeBzero(0, m_loc),
+				awst::WType::bytesType(), m_loc);
 
 			if (!calldataConcat)
 			{
@@ -179,15 +174,10 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 			}
 		}
 
-		auto emptyAll = awst::makeBzero(0, m_loc);
-
-		auto cond = std::make_shared<awst::ConditionalExpression>();
-		cond->sourceLocation = m_loc;
-		cond->wtype = awst::WType::bytesType();
-		cond->condition = std::move(hasData);
-		cond->trueExpr = std::move(calldataConcat);
-		cond->falseExpr = std::move(emptyAll);
-		return cond;
+		return awst::makeConditional(
+			std::move(hasData), std::move(calldataConcat),
+			awst::makeBzero(0, m_loc),
+			awst::WType::bytesType(), m_loc);
 	}
 
 	// Standard intrinsics via IntrinsicMapper

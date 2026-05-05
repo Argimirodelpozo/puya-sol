@@ -941,12 +941,10 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMappingElementArrayLengt
 	auto extractLen = awst::makeIntrinsicCall("extract_uint16", awst::WType::uint64Type(), m_loc);
 	extractLen->stackArgs.push_back(boxRead());
 	extractLen->stackArgs.push_back(awst::makeIntegerConstant("0", m_loc));
-	auto cur = std::make_shared<awst::ConditionalExpression>();
-	cur->sourceLocation = m_loc;
-	cur->wtype = awst::WType::uint64Type();
-	cur->condition = std::move(isNonEmpty);
-	cur->trueExpr = std::move(extractLen);
-	cur->falseExpr = awst::makeIntegerConstant("0", m_loc);
+	auto cur = awst::makeConditional(
+		std::move(isNonEmpty), std::move(extractLen),
+		awst::makeIntegerConstant("0", m_loc),
+		awst::WType::uint64Type(), m_loc);
 
 	// new_len = cur ± 1
 	auto delta = awst::makeIntegerConstant("1", m_loc);
