@@ -1,16 +1,17 @@
-# Semantic Test Status — v212
+# Semantic Test Status — v213
 
 **Totals**: 1092 PASS / 155 FAIL / 75 (56 compile_err + 19 deploy_err) = **1092/1322 (82.6%)**
 
-v212 is the regression sentinel for the `makeNot` helper
-(commit 43266783c). Test-identical to v208-v211. The full
-helper-refactor stack (fc84eb803 + 377921e01 + 0890e044d +
-ae92119be + 43266783c) holds 1092 PASS through five refactor
-commits.
+v213 is the regression sentinel for the
+`makeFieldExpression / makeIndexExpression / makeTupleItem`
+helpers (commit d32e8fae8). Test-identical to v208-v212. The
+full helper-refactor stack (fc84eb803 + 377921e01 + 0890e044d +
+ae92119be + 43266783c + d32e8fae8) holds 1092 PASS through six
+refactor commits.
 
-Cumulative source reduction across the refactor stack: ~1238 LOC
-across the AWST construction surface — every helper expansion
-produces byte-identical AWST nodes to the inlined form.
+Cumulative source reduction across the refactor stack:
+~1455 LOC across the AWST construction surface — every helper
+expansion produces byte-identical AWST nodes to the inlined form.
 
 v208 vs v207: **+1 PASS / -1 FAIL** from `mapping_contract_key_getter`
 stabilising 25p/2f → 27p/0s. Most plausibly a localnet flake settling
@@ -85,6 +86,12 @@ of the semantic suite, so v208/v209 also reconfirm that surface.
   17/19 Not construction sites collapsed via regex; 2 holdouts in
   deep-copy / non-bool-typed contexts. 10 files, -40 lines.
   Test-identical to v211.
+- v213 = 1092 — sentinel for the
+  `makeFieldExpression / makeIndexExpression / makeTupleItem`
+  helpers (d32e8fae8). 64 sites collapsed across 25 files via
+  regex sweep: 21/22 FieldExpression, 13/16 IndexExpression,
+  30/31 TupleItemExpression. 26 files, -217 lines.
+  Test-identical to v212.
 
 ## v195 reference (preserved below)
 
