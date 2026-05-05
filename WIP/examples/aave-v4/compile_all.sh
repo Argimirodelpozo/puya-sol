@@ -29,7 +29,6 @@ CONTRACTS=(
     HubConfigurator
     IntentConsumer
     MathUtilsWrapper
-    MockHub
     NoncesKeyed
     NoncesKeyedMock
     PercentageMathWrapper
