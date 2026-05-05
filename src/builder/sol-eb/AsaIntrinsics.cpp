@@ -103,11 +103,7 @@ std::shared_ptr<awst::Expression> tupleFirst(
 	awst::WType const* _firstType,
 	awst::SourceLocation const& _loc)
 {
-	auto out = std::make_shared<awst::TupleItemExpression>();
-	out->sourceLocation = _loc;
-	out->wtype = _firstType;
-	out->base = std::move(_tuple);
-	out->index = 0;
+	auto out = awst::makeTupleItem(std::move(_tuple), 0, _firstType, _loc);
 	return out;
 }
 

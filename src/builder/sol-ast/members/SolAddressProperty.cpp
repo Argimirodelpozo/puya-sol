@@ -92,11 +92,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 
 		auto tupleRead = awst::makeVarExpression(tmpName, tupleType, m_loc);
 
-		auto item = std::make_shared<awst::TupleItemExpression>();
-		item->sourceLocation = m_loc;
-		item->wtype = awst::WType::bytesType();
-		item->base = std::move(tupleRead);
-		item->index = 0;
+		auto item = awst::makeTupleItem(std::move(tupleRead), 0, awst::WType::bytesType(), m_loc);
 		return item;
 	}
 
@@ -168,11 +164,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 					m_ctx.prePendingStatements.push_back(std::move(addrAssign));
 
 					auto addrTupleRead = awst::makeVarExpression(addrTmp, addrTupleType, m_loc);
-					auto addrBytesItem = std::make_shared<awst::TupleItemExpression>();
-					addrBytesItem->sourceLocation = m_loc;
-					addrBytesItem->wtype = awst::WType::bytesType();
-					addrBytesItem->base = std::move(addrTupleRead);
-					addrBytesItem->index = 0;
+					auto addrBytesItem = awst::makeTupleItem(std::move(addrTupleRead), 0, awst::WType::bytesType(), m_loc);
 					auto realAddr = awst::makeReinterpretCast(
 						std::move(addrBytesItem), awst::WType::accountType(), m_loc);
 
@@ -184,11 +176,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 					acctParams->immediates = {std::string("AcctBalance")};
 					acctParams->stackArgs.push_back(std::move(realAddr));
 
-					auto bal = std::make_shared<awst::TupleItemExpression>();
-					bal->sourceLocation = m_loc;
-					bal->wtype = awst::WType::uint64Type();
-					bal->base = std::move(acctParams);
-					bal->index = 0;
+					auto bal = awst::makeTupleItem(std::move(acctParams), 0, awst::WType::uint64Type(), m_loc);
 
 					auto itobBal = awst::makeItob(std::move(bal), m_loc);
 					return awst::makeReinterpretCast(
@@ -208,11 +196,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 		acctParams->stackArgs.push_back(std::move(addrExpr));
 
 		// Extract the balance (index 0)
-		auto balanceVal = std::make_shared<awst::TupleItemExpression>();
-		balanceVal->sourceLocation = m_loc;
-		balanceVal->wtype = awst::WType::uint64Type();
-		balanceVal->base = std::move(acctParams);
-		balanceVal->index = 0;
+		auto balanceVal = awst::makeTupleItem(std::move(acctParams), 0, awst::WType::uint64Type(), m_loc);
 
 		// Solidity returns uint256 for balance — promote uint64 → biguint
 		auto itob = awst::makeItob(std::move(balanceVal), m_loc);
@@ -276,11 +260,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 				appParamsGet->immediates = {std::string("AppApprovalProgram")};
 				appParamsGet->stackArgs.push_back(std::move(appIdCast));
 
-				auto bytesOut = std::make_shared<awst::TupleItemExpression>();
-				bytesOut->sourceLocation = m_loc;
-				bytesOut->wtype = awst::WType::bytesType();
-				bytesOut->base = std::move(appParamsGet);
-				bytesOut->index = 0;
+				auto bytesOut = awst::makeTupleItem(std::move(appParamsGet), 0, awst::WType::bytesType(), m_loc);
 
 				auto hash = awst::makeKeccak256(std::move(bytesOut), m_loc);
 

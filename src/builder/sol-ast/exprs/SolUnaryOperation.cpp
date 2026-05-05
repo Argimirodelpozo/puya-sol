@@ -613,11 +613,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 					newStruct->values[fname] = std::move(zeroVal);
 				else
 				{
-					auto field = std::make_shared<awst::FieldExpression>();
-					field->sourceLocation = m_loc;
-					field->base = readBase;
-					field->name = fname;
-					field->wtype = ftype;
+					auto field = awst::makeFieldExpression(readBase, fname, ftype, m_loc);
 					newStruct->values[fname] = std::move(field);
 				}
 			}

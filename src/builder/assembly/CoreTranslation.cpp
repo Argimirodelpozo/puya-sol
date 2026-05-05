@@ -378,11 +378,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		appParamsGet->immediates = {std::string("AppApprovalProgram")};
 		appParamsGet->stackArgs.push_back(std::move(appIdCast));
 
-		auto bytesOut = std::make_shared<awst::TupleItemExpression>();
-		bytesOut->sourceLocation = loc;
-		bytesOut->wtype = awst::WType::bytesType();
-		bytesOut->base = std::move(appParamsGet);
-		bytesOut->index = 0;
+		auto bytesOut = awst::makeTupleItem(std::move(appParamsGet), 0, awst::WType::bytesType(), loc);
 
 		auto hash = awst::makeKeccak256(std::move(bytesOut), loc);
 

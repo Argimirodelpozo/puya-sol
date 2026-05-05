@@ -223,11 +223,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 					std::shared_ptr<awst::Expression> data;
 					for (int i = 0; i < numFields; ++i)
 					{
-						auto field = std::make_shared<awst::TupleItemExpression>();
-						field->sourceLocation = _loc;
-						field->wtype = tupleType->types()[static_cast<size_t>(i)];
-						field->base = _args[0];
-						field->index = i;
+						auto field = awst::makeTupleItem(_args[0], i, tupleType->types()[static_cast<size_t>(i)], _loc);
 
 						auto padded = padTo32Bytes(std::move(field), _loc);
 
@@ -272,11 +268,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 						std::shared_ptr<awst::Expression> data;
 						for (int i = 0; i < numFields; ++i)
 						{
-							auto field = std::make_shared<awst::TupleItemExpression>();
-							field->sourceLocation = _loc;
-							field->wtype = tupleType->types()[static_cast<size_t>(i)];
-							field->base = _args[0];
-							field->index = i;
+							auto field = awst::makeTupleItem(_args[0], i, tupleType->types()[static_cast<size_t>(i)], _loc);
 
 							auto padded = padTo32Bytes(std::move(field), _loc);
 

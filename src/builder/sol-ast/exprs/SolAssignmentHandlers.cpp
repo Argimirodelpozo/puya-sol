@@ -233,11 +233,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 						auto const* valueTuple = dynamic_cast<awst::WTuple const*>(_value->wtype);
 						auto sliceType = (valueTuple && i < valueTuple->types().size())
 							? valueTuple->types()[i] : item->wtype;
-						auto slice = std::make_shared<awst::TupleItemExpression>();
-						slice->sourceLocation = m_loc;
-						slice->wtype = sliceType;
-						slice->base = _value;
-						slice->index = static_cast<int>(i);
+						auto slice = awst::makeTupleItem(_value, static_cast<int>(i), sliceType, m_loc);
 						aliasExpr = slice;
 					}
 					if (dynamic_cast<awst::BoxValueExpression const*>(aliasExpr.get())
@@ -517,11 +513,7 @@ std::shared_ptr<awst::Expression> SolAssignment::buildStructFieldBytesWrite(
 			newStruct->values[fname] = encodedValue;
 		else
 		{
-			auto f = std::make_shared<awst::FieldExpression>();
-			f->sourceLocation = m_loc;
-			f->base = base;
-			f->name = fname;
-			f->wtype = ftype;
+			auto f = awst::makeFieldExpression(base, fname, ftype, m_loc);
 			newStruct->values[fname] = std::move(f);
 		}
 	}
@@ -566,11 +558,7 @@ std::shared_ptr<awst::Expression> SolAssignment::buildStructFieldBytesWrite(
 				outerNewStruct->values[fn] = std::move(assignValue);
 			else
 			{
-				auto f = std::make_shared<awst::FieldExpression>();
-				f->sourceLocation = m_loc;
-				f->base = outerReadBase;
-				f->name = fn;
-				f->wtype = ft;
+				auto f = awst::makeFieldExpression(outerReadBase, fn, ft, m_loc);
 				outerNewStruct->values[fn] = std::move(f);
 			}
 		}
@@ -583,11 +571,7 @@ std::shared_ptr<awst::Expression> SolAssignment::buildStructFieldBytesWrite(
 	{
 		if (auto const* sg = dynamic_cast<awst::StateGet const*>(idx->base.get()))
 		{
-			auto newIdx = std::make_shared<awst::IndexExpression>();
-			newIdx->sourceLocation = idx->sourceLocation;
-			newIdx->wtype = idx->wtype;
-			newIdx->base = sg->field;
-			newIdx->index = idx->index;
+			auto newIdx = awst::makeIndexExpression(sg->field, idx->index, idx->wtype, idx->sourceLocation);
 			assignTarget = std::move(newIdx);
 		}
 	}
@@ -631,11 +615,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 
 	if (op != Token::Assign)
 	{
-		auto currentField = std::make_shared<awst::FieldExpression>();
-		currentField->sourceLocation = m_loc;
-		currentField->base = readBase;
-		currentField->name = fieldName;
-		currentField->wtype = _fieldExpr->wtype;
+		auto currentField = awst::makeFieldExpression(readBase, fieldName, _fieldExpr->wtype, m_loc);
 		auto decoded = std::make_shared<awst::ARC4Decode>();
 		decoded->sourceLocation = m_loc;
 		decoded->wtype = m_ctx.typeMapper.map(m_assignment.leftHandSide().annotation().type);
@@ -679,11 +659,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 			newStruct->values[fname] = std::move(_value);
 		else
 		{
-			auto field = std::make_shared<awst::FieldExpression>();
-			field->sourceLocation = m_loc;
-			field->base = readBase;
-			field->name = fname;
-			field->wtype = ftype;
+			auto field = awst::makeFieldExpression(readBase, fname, ftype, m_loc);
 			newStruct->values[fname] = std::move(field);
 		}
 	}
@@ -750,11 +726,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 	{
 		if (auto const* sg = dynamic_cast<awst::StateGet const*>(idx->base.get()))
 		{
-			auto newIdx = std::make_shared<awst::IndexExpression>();
-			newIdx->sourceLocation = idx->sourceLocation;
-			newIdx->wtype = idx->wtype;
-			newIdx->base = sg->field;
-			newIdx->index = idx->index;
+			auto newIdx = awst::makeIndexExpression(sg->field, idx->index, idx->wtype, idx->sourceLocation);
 			assignTarget2 = std::move(newIdx);
 		}
 	}
@@ -823,18 +795,10 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 		std::shared_ptr<awst::Expression> extractBase = std::move(e);
 		for (auto it = fieldChain.rbegin(); it != fieldChain.rend(); ++it)
 		{
-			auto fe = std::make_shared<awst::FieldExpression>();
-			fe->sourceLocation = m_loc;
-			fe->base = std::move(extractBase);
-			fe->name = it->first;
-			fe->wtype = it->second;
+			auto fe = awst::makeFieldExpression(std::move(extractBase), it->first, it->second, m_loc);
 			extractBase = std::move(fe);
 		}
-		auto fieldExtract = std::make_shared<awst::FieldExpression>();
-		fieldExtract->sourceLocation = m_loc;
-		fieldExtract->base = std::move(extractBase);
-		fieldExtract->name = fieldName;
-		fieldExtract->wtype = arc4FieldType;
+		auto fieldExtract = awst::makeFieldExpression(std::move(extractBase), fieldName, arc4FieldType, m_loc);
 		auto decode = std::make_shared<awst::ARC4Decode>();
 		decode->sourceLocation = m_loc;
 		decode->wtype = m_ctx.typeMapper.map(m_assignment.annotation().type);

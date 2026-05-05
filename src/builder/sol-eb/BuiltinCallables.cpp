@@ -308,18 +308,10 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 
 	// Extract pubkey_x and pubkey_y
 	auto tupleRead0 = awst::makeVarExpression(tmpName, tupleType, _loc);
-	auto pubkeyX = std::make_shared<awst::TupleItemExpression>();
-	pubkeyX->sourceLocation = _loc;
-	pubkeyX->wtype = awst::WType::bytesType();
-	pubkeyX->base = std::move(tupleRead0);
-	pubkeyX->index = 0;
+	auto pubkeyX = awst::makeTupleItem(std::move(tupleRead0), 0, awst::WType::bytesType(), _loc);
 
 	auto tupleRead1 = awst::makeVarExpression(tmpName, tupleType, _loc);
-	auto pubkeyY = std::make_shared<awst::TupleItemExpression>();
-	pubkeyY->sourceLocation = _loc;
-	pubkeyY->wtype = awst::WType::bytesType();
-	pubkeyY->base = std::move(tupleRead1);
-	pubkeyY->index = 1;
+	auto pubkeyY = awst::makeTupleItem(std::move(tupleRead1), 1, awst::WType::bytesType(), _loc);
 
 	// concat(pubkey_x, pubkey_y) → 64 bytes
 	auto pubkeyConcat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);

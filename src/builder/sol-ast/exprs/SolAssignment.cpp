@@ -41,11 +41,7 @@ std::shared_ptr<awst::Expression> SolAssignment::buildTupleWithUpdatedField(
 			tuple->items.push_back(std::move(_newValue));
 		else
 		{
-			auto field = std::make_shared<awst::FieldExpression>();
-			field->sourceLocation = m_loc;
-			field->base = _base;
-			field->name = names[i];
-			field->wtype = types[i];
+			auto field = awst::makeFieldExpression(_base, names[i], types[i], m_loc);
 			tuple->items.push_back(std::move(field));
 		}
 	}
@@ -418,11 +414,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 
 			if (op != Token::Assign)
 			{
-				auto currentField = std::make_shared<awst::FieldExpression>();
-				currentField->sourceLocation = m_loc;
-				currentField->base = base;
-				currentField->name = fieldName;
-				currentField->wtype = fieldExpr->wtype;
+				auto currentField = awst::makeFieldExpression(base, fieldName, fieldExpr->wtype, m_loc);
 				auto* solType = m_assignment.leftHandSide().annotation().type;
 				auto builderResult = eb::AssignmentHelper::tryComputeCompoundValue(
 					m_ctx, op, solType, currentField, value, m_loc);
@@ -447,11 +439,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 			e->target = std::move(writeTarget);
 			e->value = std::move(newTuple);
 
-			auto fieldExtract = std::make_shared<awst::FieldExpression>();
-			fieldExtract->sourceLocation = m_loc;
-			fieldExtract->base = std::move(e);
-			fieldExtract->name = fieldName;
-			fieldExtract->wtype = fieldExpr->wtype;
+			auto fieldExtract = awst::makeFieldExpression(std::move(e), fieldName, fieldExpr->wtype, m_loc);
 			return fieldExtract;
 		}
 	}

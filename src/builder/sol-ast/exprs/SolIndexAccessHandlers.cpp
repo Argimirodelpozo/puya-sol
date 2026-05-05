@@ -75,11 +75,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 		return extract;
 	}
 
-	auto indexExpr = std::make_shared<awst::IndexExpression>();
-	indexExpr->sourceLocation = m_loc;
-	indexExpr->wtype = elemType;
-	indexExpr->base = m_indexAccess.annotation().willBeWrittenTo ? boxExpr : baseExprForRead;
-	indexExpr->index = std::move(idx);
+	auto indexExpr = awst::makeIndexExpression(m_indexAccess.annotation().willBeWrittenTo ? boxExpr : baseExprForRead, std::move(idx), elemType, m_loc);
 
 	if (m_indexAccess.annotation().willBeWrittenTo)
 		return indexExpr;
@@ -445,11 +441,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 		actualElemType = const_cast<awst::WType*>(arc4Arr->elementType());
 	}
 
-	auto e = std::make_shared<awst::IndexExpression>();
-	e->sourceLocation = m_loc;
-	e->base = std::move(base);
-	e->index = std::move(index);
-	e->wtype = actualElemType;
+	auto e = awst::makeIndexExpression(std::move(base), std::move(index), actualElemType, m_loc);
 
 	// Decode ARC4 element to native type if needed (for rvalue usage)
 	// Only decode when element is ARC4 and expected type is native (not ARC4)
@@ -677,11 +669,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 	auto* rawElemType = m_ctx.typeMapper.map(rootArrType->baseType());
 	auto* arc4ElemType = m_ctx.typeMapper.mapSolTypeToARC4(rootArrType->baseType());
 
-	auto indexExpr = std::make_shared<awst::IndexExpression>();
-	indexExpr->sourceLocation = m_loc;
-	indexExpr->base = awst::makeVarExpression(rootVarName, rootBase->wtype, m_loc);
-	indexExpr->index = std::move(effective);
-	indexExpr->wtype = arc4ElemType;
+	auto indexExpr = awst::makeIndexExpression(awst::makeVarExpression(rootVarName, rootBase->wtype, m_loc), std::move(effective), arc4ElemType, m_loc);
 
 	bool needsDecode = rawElemType != arc4ElemType && rawElemType->name() != arc4ElemType->name();
 	if (needsDecode)

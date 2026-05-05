@@ -216,11 +216,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 
 			auto target = awst::makeVarExpression(decl.name(), type, m_blk.makeLoc(decl.location()));
 
-			auto itemExpr = std::make_shared<awst::TupleItemExpression>();
-			itemExpr->sourceLocation = m_loc;
-			itemExpr->wtype = type;
-			itemExpr->base = rhsExpr;
-			itemExpr->index = static_cast<int>(i);
+			auto itemExpr = awst::makeTupleItem(rhsExpr, static_cast<int>(i), type, m_loc);
 
 			auto assign = awst::makeAssignmentStatement(std::move(target), std::move(itemExpr), m_loc);
 			result.push_back(assign);

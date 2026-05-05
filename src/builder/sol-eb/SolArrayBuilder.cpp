@@ -43,11 +43,7 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 	if (!elemType)
 		return nullptr;
 
-	auto e = std::make_shared<awst::IndexExpression>();
-	e->sourceLocation = _loc;
-	e->base = std::move(base);
-	e->index = std::move(index);
-	e->wtype = elemType;
+	auto e = awst::makeIndexExpression(std::move(base), std::move(index), elemType, _loc);
 
 	// Determine if we need to decode ARC4 → native
 	auto* expectedType = m_ctx.typeMapper.map(m_arrayType->baseType());

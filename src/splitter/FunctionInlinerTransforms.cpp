@@ -923,21 +923,13 @@ std::shared_ptr<awst::Expression> FunctionInliner::deepCopyExpr(
 	if (type == "FieldExpression")
 	{
 		auto& src = static_cast<awst::FieldExpression const&>(*_expr);
-		auto n = std::make_shared<awst::FieldExpression>();
-		n->sourceLocation = src.sourceLocation;
-		n->wtype = src.wtype;
-		n->base = deepCopyExpr(src.base);
-		n->name = src.name;
+		auto n = awst::makeFieldExpression(deepCopyExpr(src.base), src.name, src.wtype, src.sourceLocation);
 		return n;
 	}
 	if (type == "TupleItemExpression")
 	{
 		auto& src = static_cast<awst::TupleItemExpression const&>(*_expr);
-		auto n = std::make_shared<awst::TupleItemExpression>();
-		n->sourceLocation = src.sourceLocation;
-		n->wtype = src.wtype;
-		n->base = deepCopyExpr(src.base);
-		n->index = src.index;
+		auto n = awst::makeTupleItem(deepCopyExpr(src.base), src.index, src.wtype, src.sourceLocation);
 		return n;
 	}
 	if (type == "StateExists")
@@ -1068,11 +1060,7 @@ std::shared_ptr<awst::Expression> FunctionInliner::deepCopyExpr(
 	if (type == "IndexExpression")
 	{
 		auto& src = static_cast<awst::IndexExpression const&>(*_expr);
-		auto n = std::make_shared<awst::IndexExpression>();
-		n->sourceLocation = src.sourceLocation;
-		n->wtype = src.wtype;
-		n->base = deepCopyExpr(src.base);
-		n->index = deepCopyExpr(src.index);
+		auto n = awst::makeIndexExpression(deepCopyExpr(src.base), deepCopyExpr(src.index), src.wtype, src.sourceLocation);
 		return n;
 	}
 	if (type == "ArrayConcat")

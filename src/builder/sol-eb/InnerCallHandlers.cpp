@@ -639,11 +639,7 @@ void InnerCallHandlers::fundCreatedApp(
 	appParams->immediates = {std::string("AppAddress")};
 	appParams->stackArgs.push_back(std::move(appId));
 
-	auto addrBytes = std::make_shared<awst::TupleItemExpression>();
-	addrBytes->sourceLocation = _loc;
-	addrBytes->wtype = awst::WType::bytesType();
-	addrBytes->base = std::move(appParams);
-	addrBytes->index = 0;
+	auto addrBytes = awst::makeTupleItem(std::move(appParams), 0, awst::WType::bytesType(), _loc);
 
 	auto receiver = awst::makeReinterpretCast(std::move(addrBytes), awst::WType::accountType(), _loc);
 

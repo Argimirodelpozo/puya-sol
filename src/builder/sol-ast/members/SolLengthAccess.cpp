@@ -206,11 +206,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 				auto boxLen = awst::makeIntrinsicCall("box_len", tupleType, m_loc);
 				boxLen->stackArgs.push_back(std::move(boxKey));
 
-				auto lenVal = std::make_shared<awst::TupleItemExpression>();
-				lenVal->sourceLocation = m_loc;
-				lenVal->wtype = awst::WType::uint64Type();
-				lenVal->base = std::move(boxLen);
-				lenVal->index = 0;
+				auto lenVal = awst::makeTupleItem(std::move(boxLen), 0, awst::WType::uint64Type(), m_loc);
 
 				// Dynamic bytes / string state var: the raw box byte count is
 				// the Solidity length. No 2-byte ARC4 prefix is applied on
@@ -241,17 +237,9 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 					auto boxGet = awst::makeIntrinsicCall("box_get", getTupleType, m_loc);
 					boxGet->stackArgs.push_back(std::move(boxKey));
 
-					auto contents = std::make_shared<awst::TupleItemExpression>();
-					contents->sourceLocation = m_loc;
-					contents->wtype = awst::WType::bytesType();
-					contents->base = boxGet;
-					contents->index = 0;
+					auto contents = awst::makeTupleItem(boxGet, 0, awst::WType::bytesType(), m_loc);
 
-					auto exists = std::make_shared<awst::TupleItemExpression>();
-					exists->sourceLocation = m_loc;
-					exists->wtype = awst::WType::boolType();
-					exists->base = boxGet;
-					exists->index = 1;
+					auto exists = awst::makeTupleItem(boxGet, 1, awst::WType::boolType(), m_loc);
 
 					auto extractLen = awst::makeIntrinsicCall(
 						"extract_uint16", awst::WType::uint64Type(), m_loc);

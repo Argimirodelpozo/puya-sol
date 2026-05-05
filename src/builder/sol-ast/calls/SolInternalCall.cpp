@@ -293,11 +293,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		{
 			if (isBareSingle)
 				return tempVar;
-			auto t = std::make_shared<awst::TupleItemExpression>();
-			t->sourceLocation = m_loc;
-			t->wtype = ty;
-			t->base = tempVar;
-			t->index = static_cast<int>(idx);
+			auto t = awst::makeTupleItem(tempVar, static_cast<int>(idx), ty, m_loc);
 			return t;
 		};
 
@@ -362,11 +358,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 								newStruct->values[fn] = modifiedArg;
 							else
 							{
-								auto fieldRead = std::make_shared<awst::FieldExpression>();
-								fieldRead->sourceLocation = m_loc;
-								fieldRead->wtype = ft;
-								fieldRead->base = readStruct;
-								fieldRead->name = fn;
+								auto fieldRead = awst::makeFieldExpression(readStruct, fn, ft, m_loc);
 								newStruct->values[fn] = std::move(fieldRead);
 							}
 						}
@@ -690,11 +682,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 							arc4FieldType = ftype;
 							break;
 						}
-					auto field = std::make_shared<awst::FieldExpression>();
-					field->sourceLocation = m_loc;
-					field->base = std::move(baseExpr);
-					field->name = _memberAccess.memberName();
-					field->wtype = arc4FieldType ? arc4FieldType : ptrNativeType;
+					auto field = awst::makeFieldExpression(std::move(baseExpr), _memberAccess.memberName(), arc4FieldType ? arc4FieldType : ptrNativeType, m_loc);
 					if (arc4FieldType && arc4FieldType != ptrNativeType)
 					{
 						auto decode = std::make_shared<awst::ARC4Decode>();
@@ -708,11 +696,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 				}
 				else
 				{
-					auto field = std::make_shared<awst::FieldExpression>();
-					field->sourceLocation = m_loc;
-					field->base = std::move(baseExpr);
-					field->name = _memberAccess.memberName();
-					field->wtype = ptrNativeType;
+					auto field = awst::makeFieldExpression(std::move(baseExpr), _memberAccess.memberName(), ptrNativeType, m_loc);
 					ptrExpr = std::move(field);
 				}
 

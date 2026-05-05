@@ -65,11 +65,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					auto boxLen = awst::makeIntrinsicCall("box_len", tupleType, m_loc);
 					boxLen->stackArgs.push_back(boxKey);
 
-					auto existsVal = std::make_shared<awst::TupleItemExpression>();
-					existsVal->sourceLocation = m_loc;
-					existsVal->wtype = awst::WType::boolType();
-					existsVal->base = std::move(boxLen);
-					existsVal->index = 1;
+					auto existsVal = awst::makeTupleItem(std::move(boxLen), 1, awst::WType::boolType(), m_loc);
 
 					auto notExists = awst::makeNot(std::move(existsVal), m_loc);
 
@@ -161,11 +157,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						awst::makeIntegerConstant("1", m_loc),
 						m_loc);
 
-					auto idxExpr = std::make_shared<awst::IndexExpression>();
-					idxExpr->sourceLocation = m_loc;
-					idxExpr->base = baseAwst;
-					idxExpr->index = std::move(lastIndex);
-					idxExpr->wtype = elemType;
+					auto idxExpr = awst::makeIndexExpression(baseAwst, std::move(lastIndex), elemType, m_loc);
 					return idxExpr;
 				}
 				if (memberName == "pop")
@@ -582,11 +574,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 
 	// tmp.field (FieldExpression)
 	auto tmpRead = awst::makeVarExpression(tmpName, structWType, loc);
-	auto fieldExpr = std::make_shared<awst::FieldExpression>();
-	fieldExpr->sourceLocation = loc;
-	fieldExpr->wtype = rawFieldType;
-	fieldExpr->base = std::move(tmpRead);
-	fieldExpr->name = fieldName;
+	auto fieldExpr = awst::makeFieldExpression(std::move(tmpRead), fieldName, rawFieldType, loc);
 
 	// Mutate tmp.field via ArrayExtend / ArrayPop
 	if (_memberName == "push")

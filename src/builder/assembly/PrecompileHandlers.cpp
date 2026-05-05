@@ -71,19 +71,11 @@ void AssemblyBuilder::handleEcRecover(
 	// 4. Extract pubkey_x (index 0) and pubkey_y (index 1)
 	auto tupleRead0 = awst::makeVarExpression(tupleVar, tupleTypePtr, _loc);
 
-	auto pubkeyX = std::make_shared<awst::TupleItemExpression>();
-	pubkeyX->sourceLocation = _loc;
-	pubkeyX->wtype = awst::WType::bytesType();
-	pubkeyX->base = std::move(tupleRead0);
-	pubkeyX->index = 0;
+	auto pubkeyX = awst::makeTupleItem(std::move(tupleRead0), 0, awst::WType::bytesType(), _loc);
 
 	auto tupleRead1 = awst::makeVarExpression(tupleVar, tupleTypePtr, _loc);
 
-	auto pubkeyY = std::make_shared<awst::TupleItemExpression>();
-	pubkeyY->sourceLocation = _loc;
-	pubkeyY->wtype = awst::WType::bytesType();
-	pubkeyY->base = std::move(tupleRead1);
-	pubkeyY->index = 1;
+	auto pubkeyY = awst::makeTupleItem(std::move(tupleRead1), 1, awst::WType::bytesType(), _loc);
 
 	// 5. concat(pubkey_x, pubkey_y) → 64 bytes
 	auto pubkeyConcat = awst::makeConcat(std::move(pubkeyX), std::move(pubkeyY), _loc);

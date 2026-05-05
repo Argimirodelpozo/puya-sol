@@ -380,11 +380,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				m_ctx.prePendingStatements.push_back(std::move(fundAssign));
 
 				auto fundTupleRead = awst::makeVarExpression(fundTmpName, fundTupleType, m_loc);
-				auto fundAddrBytes = std::make_shared<awst::TupleItemExpression>();
-				fundAddrBytes->sourceLocation = m_loc;
-				fundAddrBytes->wtype = awst::WType::bytesType();
-				fundAddrBytes->base = std::move(fundTupleRead);
-				fundAddrBytes->index = 0;
+				auto fundAddrBytes = awst::makeTupleItem(std::move(fundTupleRead), 0, awst::WType::bytesType(), m_loc);
 				auto fundAddr = awst::makeReinterpretCast(std::move(fundAddrBytes), awst::WType::accountType(), m_loc);
 
 				static awst::WInnerTransactionFields s_fundFieldsType(1);
@@ -504,11 +500,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				m_ctx.prePendingStatements.push_back(std::move(addrAssign));
 
 				auto addrRead = awst::makeVarExpression(addrTmp, addrTupleType, m_loc);
-				auto addrBytes = std::make_shared<awst::TupleItemExpression>();
-				addrBytes->sourceLocation = m_loc;
-				addrBytes->wtype = awst::WType::bytesType();
-				addrBytes->base = std::move(addrRead);
-				addrBytes->index = 0;
+				auto addrBytes = awst::makeTupleItem(std::move(addrRead), 0, awst::WType::bytesType(), m_loc);
 				auto receiver = awst::makeReinterpretCast(std::move(addrBytes), awst::WType::accountType(), m_loc);
 
 				// PaymentTxn (sets msg.value for __postInit)

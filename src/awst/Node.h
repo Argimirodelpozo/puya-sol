@@ -627,6 +627,45 @@ struct TupleItemExpression: Expression
 	int index = 0;
 };
 
+// `base.name` member access on a struct-typed expression.
+inline std::shared_ptr<FieldExpression> makeFieldExpression(
+	std::shared_ptr<Expression> base, std::string name,
+	WType const* wtype, SourceLocation loc)
+{
+	auto node = std::make_shared<FieldExpression>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->base = std::move(base);
+	node->name = std::move(name);
+	return node;
+}
+
+// `base[index]` indexed access — for arrays, mappings, etc.
+inline std::shared_ptr<IndexExpression> makeIndexExpression(
+	std::shared_ptr<Expression> base, std::shared_ptr<Expression> index,
+	WType const* wtype, SourceLocation loc)
+{
+	auto node = std::make_shared<IndexExpression>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->base = std::move(base);
+	node->index = std::move(index);
+	return node;
+}
+
+// `tuple.N` element access on a WTuple-typed expression.
+inline std::shared_ptr<TupleItemExpression> makeTupleItem(
+	std::shared_ptr<Expression> base, int index,
+	WType const* wtype, SourceLocation loc)
+{
+	auto node = std::make_shared<TupleItemExpression>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->base = std::move(base);
+	node->index = index;
+	return node;
+}
+
 struct ARC4Encode: Expression
 {
 	std::string nodeType() const override { return "ARC4Encode"; }

@@ -543,11 +543,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 						}
 				}
 
-				auto fieldExpr = std::make_shared<awst::FieldExpression>();
-				fieldExpr->sourceLocation = _loc;
-				fieldExpr->base = _expr;
-				fieldExpr->name = memberDecl->name();
-				fieldExpr->wtype = arc4FieldType ? arc4FieldType : fieldNativeType;
+				auto fieldExpr = awst::makeFieldExpression(_expr, memberDecl->name(), arc4FieldType ? arc4FieldType : fieldNativeType, _loc);
 
 				std::shared_ptr<awst::Expression> fieldValue = fieldExpr;
 				if (arc4FieldType && arc4FieldType != fieldNativeType)

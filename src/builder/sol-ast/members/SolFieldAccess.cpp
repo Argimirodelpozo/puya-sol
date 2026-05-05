@@ -24,12 +24,8 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 				break;
 			}
 
-		auto field = std::make_shared<awst::FieldExpression>();
-		field->sourceLocation = m_loc;
-		field->base = std::move(base);
-		field->name = member;
-		field->wtype = arc4FieldType ? arc4FieldType
-			: m_ctx.typeMapper.map(m_memberAccess.annotation().type);
+		auto field = awst::makeFieldExpression(std::move(base), member, arc4FieldType ? arc4FieldType
+			: m_ctx.typeMapper.map(m_memberAccess.annotation().type), m_loc);
 
 		auto* nativeType = m_ctx.typeMapper.map(m_memberAccess.annotation().type);
 		if (arc4FieldType && arc4FieldType != nativeType)
@@ -45,11 +41,7 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 
 	if (base->wtype && base->wtype->kind() == awst::WTypeKind::WTuple)
 	{
-		auto e = std::make_shared<awst::FieldExpression>();
-		e->sourceLocation = m_loc;
-		e->base = std::move(base);
-		e->name = member;
-		e->wtype = m_ctx.typeMapper.map(m_memberAccess.annotation().type);
+		auto e = awst::makeFieldExpression(std::move(base), member, m_ctx.typeMapper.map(m_memberAccess.annotation().type), m_loc);
 		return e;
 	}
 

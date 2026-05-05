@@ -183,11 +183,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 									break;
 								}
 
-						auto fieldExpr = std::make_shared<awst::FieldExpression>();
-						fieldExpr->sourceLocation = loc;
-						fieldExpr->wtype = arc4FieldType ? arc4FieldType : m_typeMapper.map(member.type);
-						fieldExpr->base = fullStruct;
-						fieldExpr->name = member.name;
+						auto fieldExpr = awst::makeFieldExpression(fullStruct, member.name, arc4FieldType ? arc4FieldType : m_typeMapper.map(member.type), loc);
 
 						auto* nativeType = m_typeMapper.map(member.type);
 						if (arc4FieldType && arc4FieldType != nativeType)
@@ -248,11 +244,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				auto idx = TypeCoercion::implicitNumericCast(
 					idxRef, awst::WType::uint64Type(), loc);
 
-				auto indexExpr = std::make_shared<awst::IndexExpression>();
-				indexExpr->sourceLocation = loc;
-				indexExpr->wtype = elemARC4;
-				indexExpr->base = std::move(arrayRead);
-				indexExpr->index = std::move(idx);
+				auto indexExpr = awst::makeIndexExpression(std::move(arrayRead), std::move(idx), elemARC4, loc);
 
 				// Decode ARC4 element back to native type (e.g. arc4.uint256 → biguint)
 				auto* nativeElem = m_typeMapper.map(arrType->baseType());
@@ -288,11 +280,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 									break;
 								}
 
-						auto fieldExpr = std::make_shared<awst::FieldExpression>();
-						fieldExpr->sourceLocation = loc;
-						fieldExpr->wtype = arc4FieldType ? arc4FieldType : m_typeMapper.map(member.type);
-						fieldExpr->base = result;
-						fieldExpr->name = member.name;
+						auto fieldExpr = awst::makeFieldExpression(result, member.name, arc4FieldType ? arc4FieldType : m_typeMapper.map(member.type), loc);
 
 						auto* nativeFieldType = m_typeMapper.map(member.type);
 						if (arc4FieldType && arc4FieldType != nativeFieldType)
@@ -484,11 +472,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 						auto idx = TypeCoercion::implicitNumericCast(
 							idxRef, awst::WType::uint64Type(), loc);
 
-						auto indexExpr = std::make_shared<awst::IndexExpression>();
-						indexExpr->sourceLocation = loc;
-						indexExpr->wtype = elemARC4;
-						indexExpr->base = std::move(indexed);
-						indexExpr->index = std::move(idx);
+						auto indexExpr = awst::makeIndexExpression(std::move(indexed), std::move(idx), elemARC4, loc);
 						indexed = std::move(indexExpr);
 
 						walkType = at->baseType();
@@ -528,11 +512,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 										break;
 									}
 
-							auto fieldExpr = std::make_shared<awst::FieldExpression>();
-							fieldExpr->sourceLocation = loc;
-							fieldExpr->wtype = arc4FieldType ? arc4FieldType : m_typeMapper.map(member.type);
-							fieldExpr->base = fullStruct;
-							fieldExpr->name = member.name;
+							auto fieldExpr = awst::makeFieldExpression(fullStruct, member.name, arc4FieldType ? arc4FieldType : m_typeMapper.map(member.type), loc);
 
 							// ARC4Decode to native type if needed
 							auto* nativeType = m_typeMapper.map(member.type);

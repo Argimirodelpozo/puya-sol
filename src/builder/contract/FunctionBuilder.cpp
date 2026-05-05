@@ -815,11 +815,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 								newTuple->sourceLocation = assign->sourceLocation;
 								for (size_t i = 0; i < arc4Types.size() && i < subTupleType->types().size(); ++i)
 								{
-									auto item = std::make_shared<awst::TupleItemExpression>();
-									item->sourceLocation = assign->sourceLocation;
-									item->base = tmpVar;
-									item->index = static_cast<int>(i);
-									item->wtype = subTupleType->types()[i];
+									auto item = awst::makeTupleItem(tmpVar, static_cast<int>(i), subTupleType->types()[i], assign->sourceLocation);
 									if (subTupleType->types()[i] == awst::WType::biguintType()
 										&& arc4Types[i]->kind() == awst::WTypeKind::ARC4UIntN)
 									{

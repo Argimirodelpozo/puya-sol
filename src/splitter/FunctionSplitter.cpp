@@ -536,11 +536,7 @@ std::vector<std::shared_ptr<awst::Subroutine>> FunctionSplitter::splitFunction(
 					auto target = awst::makeVarExpression(liveOut[j].name, liveOut[j].wtype, _func->sourceLocation);
 					assign->target = target;
 
-					auto item = std::make_shared<awst::TupleItemExpression>();
-					item->sourceLocation = _func->sourceLocation;
-					item->wtype = liveOut[j].wtype;
-					item->base = se;
-					item->index = static_cast<int>(j);
+					auto item = awst::makeTupleItem(se, static_cast<int>(j), liveOut[j].wtype, _func->sourceLocation);
 					assign->value = item;
 
 					newBody->body.push_back(assign);
@@ -1665,11 +1661,7 @@ void FunctionSplitter::convertToValueBasedIO(
 					assign->sourceLocation = _parent->sourceLocation;
 					assign->target = oldAs.target; // preserve original target
 
-					auto item = std::make_shared<awst::TupleItemExpression>();
-					item->sourceLocation = _parent->sourceLocation;
-					item->wtype = oldAs.target->wtype;
-					item->base = se;
-					item->index = static_cast<int>(itemIdx);
+					auto item = awst::makeTupleItem(se, static_cast<int>(itemIdx), oldAs.target->wtype, _parent->sourceLocation);
 					assign->value = item;
 
 					newBody->body.push_back(assign);
@@ -1685,11 +1677,7 @@ void FunctionSplitter::convertToValueBasedIO(
 					auto target = awst::makeVarExpression(writes[wi].localVarName, writes[wi].wtype, _parent->sourceLocation);
 					assign->target = target;
 
-					auto item = std::make_shared<awst::TupleItemExpression>();
-					item->sourceLocation = _parent->sourceLocation;
-					item->wtype = writes[wi].wtype;
-					item->base = se;
-					item->index = static_cast<int>(itemIdx);
+					auto item = awst::makeTupleItem(se, static_cast<int>(itemIdx), writes[wi].wtype, _parent->sourceLocation);
 					assign->value = item;
 
 					newBody->body.push_back(assign);

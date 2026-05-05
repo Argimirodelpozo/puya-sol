@@ -437,11 +437,7 @@ void AssemblyBuilder::initializeMemoryBlob(
 
 			auto index = awst::makeIntegerConstant(std::to_string(i), loc);
 
-			auto indexExpr = std::make_shared<awst::IndexExpression>();
-			indexExpr->sourceLocation = loc;
-			indexExpr->wtype = awst::WType::biguintType();
-			indexExpr->base = std::move(base);
-			indexExpr->index = std::move(index);
+			auto indexExpr = awst::makeIndexExpression(std::move(base), std::move(index), awst::WType::biguintType(), loc);
 
 			// Pad to 32 bytes and write into blob
 			auto padded = padTo32Bytes(std::move(indexExpr), loc);
@@ -609,11 +605,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::accessFlatElement(
 
 		auto index = awst::makeIntegerConstant(std::to_string(outerIndex), _loc);
 
-		auto indexExpr = std::make_shared<awst::IndexExpression>();
-		indexExpr->sourceLocation = _loc;
-		indexExpr->base = _base;
-		indexExpr->index = std::move(index);
-		indexExpr->wtype = refArr->elementType();
+		auto indexExpr = awst::makeIndexExpression(_base, std::move(index), refArr->elementType(), _loc);
 
 		if (innerSize == 1)
 			return indexExpr;
@@ -634,11 +626,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::accessFlatElement(
 
 		auto index = awst::makeIntegerConstant(std::to_string(outerIndex), _loc);
 
-		auto indexExpr = std::make_shared<awst::IndexExpression>();
-		indexExpr->sourceLocation = _loc;
-		indexExpr->base = _base;
-		indexExpr->index = std::move(index);
-		indexExpr->wtype = arc4Arr->elementType();
+		auto indexExpr = awst::makeIndexExpression(_base, std::move(index), arc4Arr->elementType(), _loc);
 
 		if (innerSize == 1)
 		{
