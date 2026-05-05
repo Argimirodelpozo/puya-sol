@@ -872,9 +872,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 									}
 									else if (method.returnType == awst::WType::uint64Type())
 									{
-										auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), sloc);
-										itob->stackArgs.push_back(storeVal);
-										storeVal = itob;
+										storeVal = awst::makeItob(storeVal, sloc);
 									}
 									auto storeIntr = std::make_shared<awst::IntrinsicCall>();
 									storeIntr->sourceLocation = sloc;
@@ -1090,17 +1088,13 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 				}
 				else if (sub->returnType == awst::WType::uint64Type())
 				{
-					auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), sub->sourceLocation);
-					itob->stackArgs.push_back(storeVal);
-					storeVal = itob;
+					storeVal = awst::makeItob(storeVal, sub->sourceLocation);
 				}
 				else if (sub->returnType == awst::WType::boolType())
 				{
 					// bool → itob(btoi equivalent)
 					auto boolToInt = awst::makeReinterpretCast(storeVal, awst::WType::uint64Type(), sub->sourceLocation);
-					auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), sub->sourceLocation);
-					itob->stackArgs.push_back(boolToInt);
-					storeVal = itob;
+					storeVal = awst::makeItob(std::move(boolToInt), sub->sourceLocation);
 				}
 				// else: bytes/ARC4 types are already bytes at runtime
 

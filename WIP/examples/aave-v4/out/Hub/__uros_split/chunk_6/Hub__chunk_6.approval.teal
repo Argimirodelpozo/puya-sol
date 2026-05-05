@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 25 278 664 TMPL_UROS_ORCH_APP_ID
-    bytecblock 0x 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 "_spokes" 0x01 0x8000000000000000000000000000000000000000000000000000000000000000 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffff 0x033b2e3c9fd0803ce8000000 0x00 0xffffffffffffffffffffffffffffffffffffffffffffffffff "_assets" "_authority" "__ctor_pending" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x2710 0x0000000000000000000000000000000000000000000000000000000000000000 "_assetCount" 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffff "_consumingSchedule" 0x8cd154d1 0x151f7c7500 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    intcblock 32 1 0 25 278
+    bytecblock 0x151f7c75 0x 0x010000000000000000000000000000000000000000000000000000000000000000 "_spokes" 0x01 0xffffffffffffffffffffffffffffff 0x033b2e3c9fd0803ce8000000 0x8000000000000000000000000000000000000000000000000000000000000000 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c750000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffff 0x00 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "_assets" 0x151f7c750000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffff "_assetCount" 0x151f7c7500 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -16,7 +16,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 13 // "__ctor_pending"
+    pushbytes "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -33,8 +33,50 @@ main_after_if_else@2:
     assert
     pushbytess 0x990f30ae 0x59596edc 0xd6044b05 0x2356f87a 0x9b96f263 0x35a9e214 0x32207cff 0xac976e02 0x4147a499 0xbdeea34a 0x28b171dd 0x0047c111 0x51daad7f 0x32cce73c 0x23797d80 0x66f3ed67 0x6e87d42d 0x1bb062a2 0xedf1f091 0x25ed95e3 0x8c7b5bd4 0xa3198419 0x125f62c6 0x65478877 0x8b7b4745 0xb0af4c30 0x40adb38a 0x9ea1c0dd 0x6bfb57f0 0x6e01273e 0x3f31d978 0xf397c338 0x1e745464 0x3aaac150 0xdb1c19c8 0x6a22daa3 0x2c75d537 0x9c658b2c 0x50e0fd43 0x789b00ac 0xeeb7d341 0xd2d2c93b 0xb9e49209 0xbe065b02 0xdb4f6580 0xa3afd24b 0x2767bdbb 0x96751ffd 0x95d7df73 0xfa9e02cf 0x9dc72f20 0xdc97b532 0xd4d1b4ba 0x27b38dbe 0xf8af4603 0x7fb751a6 0x70f87036 0xd5550415 0x3abe2772 0xa96dc3c1 0x8b0457b2 0xe06a6589 0xece59dd4 0xcdda4ea6 0xcd513da5 // method "__postInit(address)void", method "addAsset(address,uint64,address,address,byte[])uint512", method "updateAssetConfig(uint256,(uint8[32],uint16,uint8[32],uint8[32]),byte[])void", method "addSpoke(uint256,address,(uint40,uint40,uint24,bool,bool))void", method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void", method "setInterestRateData(uint256,byte[])void", method "mintFeeShares(uint256)uint512", method "add(uint256,uint256)uint256", method "remove(uint256,uint256,address)uint256", method "draw(uint256,uint256,address)uint256", method "restore(uint256,uint256,(int256,int256,uint256))uint256", method "reportDeficit(uint256,uint256,(int256,int256,uint256))uint256", method "eliminateDeficit(uint256,uint256,address)uint512", method "refreshPremium(uint256,(int256,int256,uint256))void", method "payFeeShares(uint256,uint256)void", method "transferShares(uint256,uint256,address)void", method "sweep(uint256,uint256)void", method "reclaim(uint256,uint256)void", method "isUnderlyingListed(address)bool", method "getAssetId(address)uint256", method "getAssetCount()uint256", method "previewAddByAssets(uint256,uint256)uint256", method "previewAddByShares(uint256,uint256)uint256", method "previewRemoveByAssets(uint256,uint256)uint256", method "previewRemoveByShares(uint256,uint256)uint256", method "previewDrawByAssets(uint256,uint256)uint256", method "previewDrawByShares(uint256,uint256)uint256", method "previewRestoreByAssets(uint256,uint256)uint256", method "previewRestoreByShares(uint256,uint256)uint256", method "getAssetUnderlyingAndDecimals(uint256)(address,uint64)", method "getAssetDrawnIndex(uint256)uint256", method "getAddedAssets(uint256)uint256", method "getAddedShares(uint256)uint256", method "getAssetOwed(uint256)(uint256,uint256)", method "getAssetTotalOwed(uint256)uint256", method "getAssetPremiumRay(uint256)uint256", method "getAssetDrawnShares(uint256)uint256", method "getAssetPremiumData(uint256)(uint512,uint512)", method "getAssetLiquidity(uint256)uint256", method "getAssetDeficitRay(uint256)uint256", method "getAsset(uint256)(uint120,uint120,uint8,uint120,uint120,int200,uint120,uint120,uint16,uint120,uint96,uint40,uint8[32],uint8[32],uint8[32],uint8[32],uint200)", method "getAssetConfig(uint256)(uint8[32],uint16,uint8[32],uint8[32])", method "getAssetAccruedFees(uint256)uint256", method "getAssetSwept(uint256)uint256", method "getAssetDrawnRate(uint256)uint256", method "getSpokeCount(uint256)uint256", method "getSpokeAddedAssets(uint256,address)uint256", method "getSpokeAddedShares(uint256,address)uint256", method "getSpokeOwed(uint256,address)(uint256,uint256)", method "getSpokeTotalOwed(uint256,address)uint256", method "getSpokePremiumRay(uint256,address)uint256", method "getSpokeDrawnShares(uint256,address)uint256", method "getSpokePremiumData(uint256,address)(uint512,uint512)", method "getSpokeDeficitRay(uint256,address)uint256", method "isSpokeListed(uint256,address)bool", method "getSpokeAddress(uint256,uint256)address", method "getSpoke(uint256,address)(uint120,uint120,int200,uint120,uint40,uint40,uint24,bool,bool,uint200)", method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)", method "MAX_ALLOWED_UNDERLYING_DECIMALS()uint64", method "MIN_ALLOWED_UNDERLYING_DECIMALS()uint64", method "MAX_ALLOWED_SPOKE_CAP()uint64", method "MAX_RISK_PREMIUM_THRESHOLD()uint64", method "authority()address", method "setAuthority(address)void", method "isConsumingScheduledOp()byte[4]"
     txna ApplicationArgs 0
-    match __postInit addAsset updateAssetConfig addSpoke updateSpokeConfig setInterestRateData mintFeeShares add remove draw restore reportDeficit eliminateDeficit refreshPremium payFeeShares transferShares sweep reclaim isUnderlyingListed getAssetId getAssetCount previewAddByAssets previewAddByShares previewRemoveByAssets previewRemoveByShares previewDrawByAssets previewDrawByShares previewRestoreByAssets previewRestoreByShares getAssetUnderlyingAndDecimals getAssetDrawnIndex getAddedAssets getAddedShares getAssetOwed getAssetTotalOwed getAssetPremiumRay getAssetDrawnShares getAssetPremiumData getAssetLiquidity getAssetDeficitRay getAsset getAssetConfig getAssetAccruedFees getAssetSwept getAssetDrawnRate getSpokeCount getSpokeAddedAssets getSpokeAddedShares getSpokeOwed getSpokeTotalOwed getSpokePremiumRay getSpokeDrawnShares getSpokePremiumData getSpokeDeficitRay isSpokeListed getSpokeAddress getSpoke getSpokeConfig MAX_ALLOWED_UNDERLYING_DECIMALS MIN_ALLOWED_UNDERLYING_DECIMALS MAX_ALLOWED_SPOKE_CAP MAX_RISK_PREMIUM_THRESHOLD authority setAuthority isConsumingScheduledOp
+    match __postInit addAsset updateAssetConfig addSpoke updateSpokeConfig setInterestRateData mintFeeShares add remove draw restore reportDeficit eliminateDeficit refreshPremium payFeeShares transferShares sweep reclaim isUnderlyingListed getAssetId main_getAssetCount_route@27 previewAddByAssets previewAddByShares previewRemoveByAssets previewRemoveByShares previewDrawByAssets previewDrawByShares previewRestoreByAssets previewRestoreByShares getAssetUnderlyingAndDecimals getAssetDrawnIndex getAddedAssets getAddedShares getAssetOwed getAssetTotalOwed getAssetPremiumRay getAssetDrawnShares getAssetPremiumData getAssetLiquidity getAssetDeficitRay getAsset getAssetConfig getAssetAccruedFees getAssetSwept getAssetDrawnRate getSpokeCount getSpokeAddedAssets getSpokeAddedShares getSpokeOwed getSpokeTotalOwed getSpokePremiumRay getSpokeDrawnShares getSpokePremiumData getSpokeDeficitRay isSpokeListed getSpokeAddress getSpoke getSpokeConfig main_MAX_ALLOWED_UNDERLYING_DECIMALS_route@65 main_MIN_ALLOWED_UNDERLYING_DECIMALS_route@66 main_MAX_ALLOWED_SPOKE_CAP_route@67 main_MAX_RISK_PREMIUM_THRESHOLD_route@68 main_authority_route@69 setAuthority main_isConsumingScheduledOp_route@71
     err
+
+main_isConsumingScheduledOp_route@71:
+    bytec_0 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_authority_route@69:
+    bytec 14 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+main_MAX_RISK_PREMIUM_THRESHOLD_route@68:
+    bytec 9 // 0x151f7c750000000000000000
+    log
+    intc_1 // 1
+    return
+
+main_MAX_ALLOWED_SPOKE_CAP_route@67:
+    bytec 9 // 0x151f7c750000000000000000
+    log
+    intc_1 // 1
+    return
+
+main_MIN_ALLOWED_UNDERLYING_DECIMALS_route@66:
+    bytec 9 // 0x151f7c750000000000000000
+    log
+    intc_1 // 1
+    return
+
+main_MAX_ALLOWED_UNDERLYING_DECIMALS_route@65:
+    bytec 9 // 0x151f7c750000000000000000
+    log
+    intc_1 // 1
+    return
+
+main_getAssetCount_route@27:
+    bytec_0 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
 
 main___delegate_update_route@4:
     txn OnCompletion
@@ -43,19 +85,6 @@ main___delegate_update_route@4:
     txn ApplicationID
     &&
     return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.AssetLogic.toDrawnAssetsUp(asset: bytes, shares: bytes) -> bytes, bytes:
-AssetLogic.toDrawnAssetsUp:
-    proto 2 2
-    frame_dig -2
-    callsub AssetLogic.getDrawnIndex
-    frame_bury -2
-    frame_dig -1
-    swap
-    callsub WadRayMath.rayMulUp
-    frame_dig -2
-    retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.AssetLogic.toDrawnSharesDown(asset: bytes, assets: bytes) -> bytes, bytes:
@@ -239,7 +268,7 @@ AssetLogic.accrue_after_if_else@2:
     callsub SafeCast.toUint120
     b+
     dup
-    bytec 7 // 0xffffffffffffffffffffffffffffff
+    bytec 5 // 0xffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     frame_dig -1
@@ -495,12 +524,12 @@ AssetLogic.getDrawnIndex:
     bnz AssetLogic.getDrawnIndex_if_body@3
     frame_dig -1
     extract 86 15
-    bytec_0 // 0x
+    bytec_1 // 0x
     b==
     bz AssetLogic.getDrawnIndex_after_if_else@4
     frame_dig -1
     extract 101 15
-    bytec_0 // 0x
+    bytec_1 // 0x
     b==
     bz AssetLogic.getDrawnIndex_after_if_else@4
 
@@ -653,7 +682,7 @@ AssetLogic.getUnrealizedFees_after_if_else@2:
     itob
     dup
     frame_bury 0
-    bytec_0 // 0x
+    bytec_1 // 0x
     b==
     bz AssetLogic.getUnrealizedFees_after_if_else@4
     intc_2 // 0
@@ -748,60 +777,12 @@ MathUtils.calculateLinearInterest:
     b%
     pushbytes 0x01e13380
     b/
-    bytec 8 // 0x033b2e3c9fd0803ce8000000
+    bytec 6 // 0x033b2e3c9fd0803ce8000000
     b+
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     swap
     store 0
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.MathUtils.add(a: bytes, b: bytes) -> bytes:
-MathUtils.add:
-    proto 2 1
-    frame_dig -1
-    bytec 5 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b^
-    bytec 5 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b>=
-    bz MathUtils.add_after_if_else@2
-    frame_dig -2
-    frame_dig -1
-    b+
-    retsub
-
-MathUtils.add_after_if_else@2:
-    frame_dig -1
-    bytec 5 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b!=
-    assert // signed negation overflow
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    b~
-    bytec 4 // 0x01
-    b+
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    frame_dig -2
-    dig 1
-    b>=
-    assert // underflow
-    frame_dig -2
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    swap
-    b-
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     retsub
 
 
@@ -823,17 +804,17 @@ PercentageMath.percentMulDown:
     proto 2 1
     load 0
     frame_dig -1
-    bytec_0 // 0x
+    bytec_1 // 0x
     b==
-    bytec_0 // 0x
+    bytec_1 // 0x
     bytec 4 // 0x01
     uncover 2
     select
     frame_dig -1
-    bytec_0 // 0x
+    bytec_1 // 0x
     b!=
     bz PercentageMath.percentMulDown_ternary_false@2
-    bytec 14 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 15 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     frame_dig -1
     b/
 
@@ -841,13 +822,13 @@ PercentageMath.percentMulDown_ternary_merge@3:
     frame_dig -2
     b<
     !
-    bytec_0 // 0x
+    bytec_1 // 0x
     bytec 4 // 0x01
     uncover 2
     select
     frame_dig 1
     b|
-    bytec_0 // 0x
+    bytec_1 // 0x
     b==
     !
     assert // revert
@@ -856,7 +837,7 @@ PercentageMath.percentMulDown_ternary_merge@3:
     b*
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 15 // 0x2710
+    pushbytes 0x2710
     b/
     frame_dig 0
     store 0
@@ -864,71 +845,8 @@ PercentageMath.percentMulDown_ternary_merge@3:
     retsub
 
 PercentageMath.percentMulDown_ternary_false@2:
-    bytec_0 // 0x
+    bytec_1 // 0x
     b PercentageMath.percentMulDown_ternary_merge@3
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.PercentageMath.percentMulUp(value: bytes, percentage: bytes) -> bytes:
-PercentageMath.percentMulUp:
-    proto 2 1
-    load 0
-    frame_dig -1
-    bytec_0 // 0x
-    b==
-    bytec_0 // 0x
-    bytec 4 // 0x01
-    uncover 2
-    select
-    frame_dig -1
-    bytec_0 // 0x
-    b!=
-    bz PercentageMath.percentMulUp_ternary_false@2
-    bytec 14 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    frame_dig -1
-    b/
-
-PercentageMath.percentMulUp_ternary_merge@3:
-    frame_dig -2
-    b<
-    !
-    bytec_0 // 0x
-    bytec 4 // 0x01
-    uncover 2
-    select
-    frame_dig 1
-    b|
-    bytec_0 // 0x
-    b==
-    !
-    assert // revert
-    frame_dig -2
-    frame_dig -1
-    b*
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    bytec 15 // 0x2710
-    b/
-    swap
-    bytec 15 // 0x2710
-    b%
-    bytec_0 // 0x
-    b>
-    bytec_0 // 0x
-    bytec 4 // 0x01
-    uncover 2
-    select
-    b+
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    frame_dig 0
-    store 0
-    frame_bury 0
-    retsub
-
-PercentageMath.percentMulUp_ternary_false@2:
-    bytec_0 // 0x
-    b PercentageMath.percentMulUp_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Premium.calculatePremiumRay(premiumShares: bytes, premiumOffsetRay: bytes, drawnIndex: bytes) -> bytes:
@@ -939,11 +857,11 @@ Premium.calculatePremiumRay:
     b*
     dup
     callsub SafeCast.toInt256
-    bytec 5 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     frame_dig -2
-    bytec 5 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     ==
@@ -951,7 +869,7 @@ Premium.calculatePremiumRay:
     frame_dig 0
     dup
     callsub SafeCast.toInt256
-    bytec 5 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     swap
@@ -962,7 +880,7 @@ Premium.calculatePremiumRay:
     b-
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 5 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     ==
@@ -1008,12 +926,12 @@ SafeCast.toUint200:
 SafeCast.toUint120:
     proto 1 1
     frame_dig -1
-    bytec 7 // 0xffffffffffffffffffffffffffffff
+    bytec 5 // 0xffffffffffffffffffffffffffffff
     b>
     !
     assert // SafeCastOverflowedUintDowncast
     frame_dig -1
-    bytec 7 // 0xffffffffffffffffffffffffffffff
+    bytec 5 // 0xffffffffffffffffffffffffffffff
     b&
     retsub
 
@@ -1022,12 +940,12 @@ SafeCast.toUint120:
 SafeCast.toUint96:
     proto 1 1
     frame_dig -1
-    bytec 19 // 0xffffffffffffffffffffffff
+    bytec 16 // 0xffffffffffffffffffffffff
     b>
     !
     assert // SafeCastOverflowedUintDowncast
     frame_dig -1
-    bytec 19 // 0xffffffffffffffffffffffff
+    bytec 16 // 0xffffffffffffffffffffffff
     b&
     retsub
 
@@ -1058,19 +976,12 @@ SafeCast.toUint40:
 SafeCast.toUint256:
     proto 1 1
     frame_dig -1
-    bytec 5 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
-    bytec 5 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     assert // SafeCastOverflowedIntToUint
-    frame_dig -1
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.SafeCast.toInt200(value: bytes) -> bytes:
-SafeCast.toInt200:
-    proto 1 1
     frame_dig -1
     retsub
 
@@ -1112,7 +1023,7 @@ SafeERC20._safeTransfer:
     uncover 2
     pushbytes 0xa9059cbb00000000000000000000000000000000000000000000000000000000
     replace2 0
-    bytec 16 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 4
     swap
     frame_dig -2
@@ -1133,22 +1044,22 @@ SafeERC20._safeTransfer:
     extract 0 32
     bytec 4 // 0x01
     b==
-    bytec_0 // 0x
+    bytec_1 // 0x
     bytec 4 // 0x01
     uncover 2
     select
     bytec 4 // 0x01
     b&
-    bytec_0 // 0x
+    bytec_1 // 0x
     b==
     bz SafeERC20._safeTransfer_after_if_else@8
-    bytec_0 // 0x
+    bytec_1 // 0x
     bytec 4 // 0x01
     frame_dig -1
     select
-    bytec_0 // 0x
+    bytec_1 // 0x
     b&
-    bytec_0 // 0x
+    bytec_1 // 0x
     b!=
     !
     assert // revert
@@ -1179,17 +1090,17 @@ WadRayMath.rayMulUp:
     proto 2 1
     load 0
     frame_dig -1
-    bytec_0 // 0x
+    bytec_1 // 0x
     b==
-    bytec_0 // 0x
+    bytec_1 // 0x
     bytec 4 // 0x01
     uncover 2
     select
     frame_dig -1
-    bytec_0 // 0x
+    bytec_1 // 0x
     b!=
     bz WadRayMath.rayMulUp_ternary_false@2
-    bytec 14 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 15 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     frame_dig -1
     b/
 
@@ -1197,13 +1108,13 @@ WadRayMath.rayMulUp_ternary_merge@3:
     frame_dig -2
     b<
     !
-    bytec_0 // 0x
+    bytec_1 // 0x
     bytec 4 // 0x01
     uncover 2
     select
     frame_dig 1
     b|
-    bytec_0 // 0x
+    bytec_1 // 0x
     b==
     !
     assert // revert
@@ -1213,14 +1124,14 @@ WadRayMath.rayMulUp_ternary_merge@3:
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    bytec 8 // 0x033b2e3c9fd0803ce8000000
+    bytec 6 // 0x033b2e3c9fd0803ce8000000
     b/
     swap
-    bytec 8 // 0x033b2e3c9fd0803ce8000000
+    bytec 6 // 0x033b2e3c9fd0803ce8000000
     b%
-    bytec_0 // 0x
+    bytec_1 // 0x
     b>
-    bytec_0 // 0x
+    bytec_1 // 0x
     bytec 4 // 0x01
     uncover 2
     select
@@ -1233,7 +1144,7 @@ WadRayMath.rayMulUp_ternary_merge@3:
     retsub
 
 WadRayMath.rayMulUp_ternary_false@2:
-    bytec_0 // 0x
+    bytec_1 // 0x
     b WadRayMath.rayMulUp_ternary_merge@3
 
 
@@ -1242,9 +1153,9 @@ WadRayMath.rayDivDown:
     proto 2 1
     load 0
     frame_dig -1
-    bytec_0 // 0x
+    bytec_1 // 0x
     b==
-    bytec_0 // 0x
+    bytec_1 // 0x
     bytec 4 // 0x01
     uncover 2
     select
@@ -1253,21 +1164,21 @@ WadRayMath.rayDivDown:
     b>
     !
     !
-    bytec_0 // 0x
+    bytec_1 // 0x
     bytec 4 // 0x01
     uncover 2
     select
     b|
-    bytec_0 // 0x
+    bytec_1 // 0x
     b!=
     !
     assert // revert
     frame_dig -1
-    bytec_0 // 0x
+    bytec_1 // 0x
     b!=
     bz WadRayMath.rayDivDown_ternary_false@5
     frame_dig -2
-    bytec 8 // 0x033b2e3c9fd0803ce8000000
+    bytec 6 // 0x033b2e3c9fd0803ce8000000
     b*
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -1281,7 +1192,7 @@ WadRayMath.rayDivDown_ternary_merge@6:
     retsub
 
 WadRayMath.rayDivDown_ternary_false@5:
-    bytec_0 // 0x
+    bytec_1 // 0x
     b WadRayMath.rayDivDown_ternary_merge@6
 
 
@@ -1290,14 +1201,14 @@ WadRayMath.fromRayUp:
     proto 1 1
     load 0
     frame_dig -1
-    bytec 8 // 0x033b2e3c9fd0803ce8000000
+    bytec 6 // 0x033b2e3c9fd0803ce8000000
     b/
     frame_dig -1
-    bytec 8 // 0x033b2e3c9fd0803ce8000000
+    bytec 6 // 0x033b2e3c9fd0803ce8000000
     b%
-    bytec_0 // 0x
+    bytec_1 // 0x
     b>
-    bytec_0 // 0x
+    bytec_1 // 0x
     bytec 4 // 0x01
     uncover 2
     select
@@ -1312,52 +1223,10 @@ WadRayMath.fromRayUp:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.__postInit[routing]() -> void:
 __postInit:
     txna ApplicationArgs 1
-    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    bytec 13 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec 13 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec 11 // "_assets"
-    pushint 2
-    box_create
-    pop
-    bytec_3 // "_spokes"
-    pushint 2
-    box_create
-    pop
-    pushbytes "_assetToSpokes"
-    pushint 2
-    box_create
-    pop
-    pushbytes "_underlyingToAssetId"
-    pushint 2
-    box_create
-    pop
-    bytec 12 // "_authority"
-    bytec 16 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
-    app_global_put
-    bytec 20 // "_consumingSchedule"
-    intc_2 // 0
-    app_global_put
-    bytec 17 // "_assetCount"
-    bytec_0 // 0x
-    app_global_put
-    bytec 12 // "_authority"
-    dig 1
-    app_global_put
-    bytec 21 // method "AuthorityUpdated(uint8[32])"
-    dig 1
-    concat
-    log
-    bytec 16 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    !=
-    assert // InvalidAddress
     intc_1 // 1
     return
 
@@ -1394,8 +1263,7 @@ addAsset:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    callsub __uros_orc_guard
-    bytec 18 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 12 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
@@ -1423,7 +1291,6 @@ updateAssetConfig:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    callsub __uros_orc_guard
     intc_1 // 1
     return
 
@@ -1445,7 +1312,6 @@ addSpoke:
     pushint 14
     ==
     assert // invalid number of bytes for SpokeConfig
-    callsub __uros_orc_guard
     intc_1 // 1
     return
 
@@ -1467,7 +1333,6 @@ updateSpokeConfig:
     pushint 14
     ==
     assert // invalid number of bytes for SpokeConfig
-    callsub __uros_orc_guard
     intc_1 // 1
     return
 
@@ -1489,7 +1354,6 @@ setInterestRateData:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    callsub __uros_orc_guard
     intc_1 // 1
     return
 
@@ -1501,8 +1365,7 @@ mintFeeShares:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec 18 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 12 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
@@ -1520,8 +1383,7 @@ add:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -1544,8 +1406,7 @@ remove:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -1568,8 +1429,7 @@ draw:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -1592,8 +1452,7 @@ restore:
     pushint 96
     ==
     assert // invalid number of bytes for PremiumDelta
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -1601,9 +1460,6 @@ restore:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.reportDeficit[routing]() -> void:
 reportDeficit:
-    intc_2 // 0
-    dupn 8
-    bytec_0 // ""
     txna ApplicationArgs 1
     dup
     len
@@ -1635,8 +1491,9 @@ reportDeficit_ternary_merge@4:
     intc_0 // 32
     bzero
     dup
-    bury 6
-    dig 3
+    dig 4
+    dup
+    cover 2
     concat
     dup
     len
@@ -1645,34 +1502,23 @@ reportDeficit_ternary_merge@4:
     intc_0 // 32
     extract3
     dup
-    bury 7
-    dup
     sha256
-    bytec 11 // "_assets"
+    bytec 13 // "_assets"
     swap
     concat
     dup
-    bury 11
-    dup
     box_get
-    bytec 6 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 8 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     callsub AssetLogic.accrue
     pop
-    dup
-    bury 16
+    dup2
     box_put
-    txn Sender
-    concat
-    sha256
-    bytec_3 // "_spokes"
-    swap
-    concat
-    bytec_0 // 0x
+    bytec_1 // 0x
     intc_2 // 0
     getbit
-    bytec_0 // 0x
+    bytec_1 // 0x
     intc_1 // 1
     uncover 2
     setbit
@@ -1681,77 +1527,18 @@ reportDeficit_ternary_merge@4:
     concat
     pushbytes 0x00000000000000000000000000000000000000000000000000
     concat
-    dup
-    bury 13
-    swap
-    box_get
-    select
-    bury 7
-    dup
-    extract 64 32
-    bury 8
-    dig 1
-    bytec_0 // 0x
-    b>
-    bnz reportDeficit_bool_true@7
-    dig 7
-    bytec_0 // 0x
-    b>
-    bz reportDeficit_bool_false@8
-
-reportDeficit_bool_true@7:
-    intc_1 // 1
-
-reportDeficit_bool_merge@9:
-    assert // InvalidAmount
     dig 6
     dup
-    intc 5 // 664
-    getbit
-    bytec 9 // 0x00
-    intc_2 // 0
+    cover 5
+    extract 64 32
     uncover 2
-    setbit
-    intc_2 // 0
-    getbit
-    assert // SpokeNotActive
-    dup
-    extract 0 15
-    dig 14
-    swap
-    callsub AssetLogic.toDrawnAssetsUp
-    dig 2
-    extract 15 15
-    uncover 3
-    extract 30 25
-    uncover 2
-    callsub AssetLogic.getDrawnIndex
-    pop
-    callsub Premium.calculatePremiumRay
-    dig 3
-    dup
-    cover 3
-    uncover 2
-    b<=
-    assert // SurplusDrawnDeficitReported
     dig 9
-    b>=
-    assert // SurplusPremiumRayDeficitReported
-    dig 9
-    dup
-    box_get
-    bytec 6 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    uncover 2
     callsub AssetLogic.toDrawnSharesDown
     pop
     callsub SafeCast.toUint120
-    dup
-    bury 12
-    dig 1
+    dig 3
     box_get
-    bytec 6 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 8 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
@@ -1767,7 +1554,7 @@ reportDeficit_bool_merge@9:
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    bytec 7 // 0xffffffffffffffffffffffffffffff
+    bytec 5 // 0xffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     dig 1
@@ -1847,68 +1634,10 @@ reportDeficit_bool_merge@9:
     concat
     uncover 2
     concat
-    dig 3
+    dig 5
     swap
     box_put
-    txn Sender
-    dig 9
-    dup
-    uncover 2
-    concat
-    sha256
-    bytec_3 // "_spokes"
-    swap
-    concat
-    box_get
-    dig 16
-    dup
-    cover 4
-    cover 2
-    select
-    extract 0 15
-    dig 4
-    b>=
-    assert // underflow
-    dup
-    txn Sender
-    concat
-    sha256
-    bytec_3 // "_spokes"
-    swap
-    concat
-    box_get
-    dig 3
-    cover 2
-    select
-    extract 0 15
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    uncover 4
-    b-
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    bytec 7 // 0xffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dig 1
-    txn Sender
-    concat
-    sha256
-    bytec_3 // "_spokes"
-    swap
-    concat
-    box_get
-    dig 4
-    cover 2
-    select
-    intc 5 // 664
-    getbit
-    bytec 9 // 0x00
-    intc_2 // 0
-    uncover 2
-    setbit
-    dig 2
+    dig 5
     txn Sender
     concat
     sha256
@@ -1919,8 +1648,33 @@ reportDeficit_bool_merge@9:
     dig 5
     cover 2
     select
-    extract 70 5
-    dig 3
+    extract 0 15
+    dig 2
+    b>=
+    assert // underflow
+    dig 5
+    txn Sender
+    concat
+    sha256
+    bytec_3 // "_spokes"
+    swap
+    concat
+    box_get
+    dig 5
+    cover 2
+    select
+    extract 0 15
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 2
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 5 // 0xffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 6
     txn Sender
     concat
     sha256
@@ -1931,8 +1685,13 @@ reportDeficit_bool_merge@9:
     dig 6
     cover 2
     select
-    extract 55 15
-    dig 4
+    pushint 664
+    getbit
+    bytec 11 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    dig 7
     txn Sender
     concat
     sha256
@@ -1943,8 +1702,8 @@ reportDeficit_bool_merge@9:
     dig 7
     cover 2
     select
-    extract 84 25
-    dig 5
+    extract 70 5
+    dig 8
     txn Sender
     concat
     sha256
@@ -1955,16 +1714,8 @@ reportDeficit_bool_merge@9:
     dig 8
     cover 2
     select
-    extract 75 5
-    dig 5
-    len
-    pushint 15
-    <=
-    assert // overflow
-    uncover 5
-    uncover 8
-    b|
-    dig 6
+    extract 55 15
+    dig 9
     txn Sender
     concat
     sha256
@@ -1975,13 +1726,8 @@ reportDeficit_bool_merge@9:
     dig 9
     cover 2
     select
-    pushint 665
-    getbit
-    bytec 9 // 0x00
-    intc_2 // 0
-    uncover 2
-    setbit
-    dig 7
+    extract 84 25
+    dig 10
     txn Sender
     concat
     sha256
@@ -1992,8 +1738,33 @@ reportDeficit_bool_merge@9:
     dig 10
     cover 2
     select
-    extract 30 25
-    dig 8
+    extract 75 5
+    dig 5
+    len
+    pushint 15
+    <=
+    assert // overflow
+    uncover 5
+    uncover 6
+    b|
+    dig 10
+    txn Sender
+    concat
+    sha256
+    bytec_3 // "_spokes"
+    swap
+    concat
+    box_get
+    dig 10
+    cover 2
+    select
+    pushint 665
+    getbit
+    bytec 11 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    dig 11
     txn Sender
     concat
     sha256
@@ -2004,8 +1775,8 @@ reportDeficit_bool_merge@9:
     dig 11
     cover 2
     select
-    extract 15 15
-    dig 9
+    extract 30 25
+    dig 12
     txn Sender
     concat
     sha256
@@ -2014,6 +1785,18 @@ reportDeficit_bool_merge@9:
     concat
     box_get
     dig 12
+    cover 2
+    select
+    extract 15 15
+    dig 13
+    txn Sender
+    concat
+    sha256
+    bytec_3 // "_spokes"
+    swap
+    concat
+    box_get
+    dig 13
     cover 2
     select
     extract 80 3
@@ -2040,7 +1823,7 @@ reportDeficit_bool_merge@9:
     concat
     swap
     concat
-    dig 1
+    dig 5
     txn Sender
     concat
     sha256
@@ -2049,85 +1832,17 @@ reportDeficit_bool_merge@9:
     concat
     swap
     box_put
-    uncover 2
-    box_get
-    bytec 6 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    txn Sender
-    uncover 2
-    swap
-    concat
-    sha256
-    bytec_3 // "_spokes"
-    swap
-    concat
-    box_get
-    uncover 3
-    cover 2
-    select
-    dup
-    bury 9
-    dig 1
-    extract 118 15
-    dig 2
-    extract 101 15
-    uncover 3
-    extract 61 25
-    dig 2
-    cover 2
-    dig 5
-    dup
-    cover 5
-    callsub _validateApplyPremiumDelta
-    popn 2
-    dig 2
-    extract 15 15
-    dup
-    cover 2
-    bury 16
     dig 3
-    extract 30 25
-    swap
-    cover 2
-    uncover 3
-    callsub _validateApplyPremiumDelta
-    popn 2
-    extract 80 3
-    btoi
-    dup
-    bury 5
-    pushint 16777215
-    ==
-    bnz reportDeficit_bool_true@13
-    dig 6
-    extract 0 15
-    dig 4
-    itob
-    callsub PercentageMath.percentMulUp
-    dig 12
-    b>=
-    bz reportDeficit_bool_false@14
-
-reportDeficit_bool_true@13:
-    intc_1 // 1
-
-reportDeficit_bool_merge@15:
-    assert // InvalidPremiumChange
-    dig 8
-    dup
     box_get
-    bytec 6 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 8 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
     extract 118 15
-    dig 12
-    dup
-    cover 4
+    dig 2
     dig 1
     b*
-    dig 12
+    uncover 4
     b+
     dig 2
     intc 4 // 278
@@ -2213,50 +1928,10 @@ reportDeficit_bool_merge@15:
     concat
     swap
     concat
-    dig 3
+    dig 5
     swap
     box_put
-    txn Sender
-    dig 10
-    dup
-    uncover 2
-    concat
-    sha256
-    bytec_3 // "_spokes"
-    swap
-    concat
-    box_get
-    dig 17
-    dup
-    cover 4
-    cover 2
-    select
-    extract 84 25
-    dig 4
-    callsub SafeCast.toUint200
-    b+
-    dup
-    bytec 10 // 0xffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dig 1
-    txn Sender
-    concat
-    sha256
-    bytec_3 // "_spokes"
-    swap
-    concat
-    box_get
-    dig 4
-    cover 2
-    select
-    intc 5 // 664
-    getbit
-    bytec 9 // 0x00
-    intc_2 // 0
-    uncover 2
-    setbit
-    dig 2
+    dig 5
     txn Sender
     concat
     sha256
@@ -2267,8 +1942,15 @@ reportDeficit_bool_merge@15:
     dig 5
     cover 2
     select
-    extract 70 5
-    dig 3
+    extract 84 25
+    dig 2
+    callsub SafeCast.toUint200
+    b+
+    dup
+    bytec 10 // 0xffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 6
     txn Sender
     concat
     sha256
@@ -2279,16 +1961,13 @@ reportDeficit_bool_merge@15:
     dig 6
     cover 2
     select
-    extract 55 15
-    dig 3
-    len
-    intc_3 // 25
-    <=
-    assert // overflow
-    uncover 3
-    uncover 6
-    b|
-    dig 4
+    pushint 664
+    getbit
+    bytec 11 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    dig 7
     txn Sender
     concat
     sha256
@@ -2299,8 +1978,8 @@ reportDeficit_bool_merge@15:
     dig 7
     cover 2
     select
-    extract 75 5
-    dig 5
+    extract 70 5
+    dig 8
     txn Sender
     concat
     sha256
@@ -2311,8 +1990,28 @@ reportDeficit_bool_merge@15:
     dig 8
     cover 2
     select
-    extract 0 15
-    dig 6
+    extract 55 15
+    dig 3
+    len
+    intc_3 // 25
+    <=
+    assert // overflow
+    uncover 3
+    uncover 4
+    b|
+    dig 8
+    txn Sender
+    concat
+    sha256
+    bytec_3 // "_spokes"
+    swap
+    concat
+    box_get
+    dig 8
+    cover 2
+    select
+    extract 75 5
+    dig 9
     txn Sender
     concat
     sha256
@@ -2323,13 +2022,8 @@ reportDeficit_bool_merge@15:
     dig 9
     cover 2
     select
-    pushint 665
-    getbit
-    bytec 9 // 0x00
-    intc_2 // 0
-    uncover 2
-    setbit
-    dig 7
+    extract 0 15
+    dig 10
     txn Sender
     concat
     sha256
@@ -2340,8 +2034,13 @@ reportDeficit_bool_merge@15:
     dig 10
     cover 2
     select
-    extract 30 25
-    dig 8
+    pushint 665
+    getbit
+    bytec 11 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    dig 11
     txn Sender
     concat
     sha256
@@ -2352,8 +2051,8 @@ reportDeficit_bool_merge@15:
     dig 11
     cover 2
     select
-    extract 15 15
-    dig 9
+    extract 30 25
+    dig 12
     txn Sender
     concat
     sha256
@@ -2361,7 +2060,19 @@ reportDeficit_bool_merge@15:
     swap
     concat
     box_get
-    uncover 12
+    dig 12
+    cover 2
+    select
+    extract 15 15
+    dig 13
+    txn Sender
+    concat
+    sha256
+    bytec_3 // "_spokes"
+    swap
+    concat
+    box_get
+    uncover 13
     cover 2
     select
     extract 80 3
@@ -2389,7 +2100,7 @@ reportDeficit_bool_merge@15:
     swap
     concat
     txn Sender
-    uncover 2
+    uncover 5
     swap
     concat
     sha256
@@ -2398,14 +2109,12 @@ reportDeficit_bool_merge@15:
     concat
     swap
     box_put
-    dig 1
+    dig 2
     box_get
-    bytec 6 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 8 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
-    dig 6
-    dup
-    cover 3
+    dig 5
     callsub AssetLogic.updateDrawnRate
     pop
     uncover 3
@@ -2416,25 +2125,23 @@ reportDeficit_bool_merge@15:
     intc_0 // 32
     <=
     assert // overflow
-    dig 7
-    dup
-    cover 2
+    dig 4
     b|
-    dig 3
+    dig 1
     len
     intc_0 // 32
     <=
     assert // overflow
-    uncover 3
-    uncover 2
+    swap
+    uncover 4
     b|
     txn Sender
-    uncover 3
+    uncover 4
     swap
     concat
     dig 1
     concat
-    dig 3
+    uncover 3
     concat
     uncover 2
     concat
@@ -2442,20 +2149,12 @@ reportDeficit_bool_merge@15:
     swap
     concat
     log
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
-
-reportDeficit_bool_false@14:
-    intc_2 // 0
-    b reportDeficit_bool_merge@15
-
-reportDeficit_bool_false@8:
-    intc_2 // 0
-    b reportDeficit_bool_merge@9
 
 reportDeficit_ternary_false@3:
     intc_2 // 0
@@ -2479,8 +2178,7 @@ eliminateDeficit:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub __uros_orc_guard
-    bytec 18 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 12 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
@@ -2498,7 +2196,6 @@ refreshPremium:
     pushint 96
     ==
     assert // invalid number of bytes for PremiumDelta
-    callsub __uros_orc_guard
     intc_1 // 1
     return
 
@@ -2515,7 +2212,6 @@ payFeeShares:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
     intc_1 // 1
     return
 
@@ -2537,7 +2233,6 @@ transferShares:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub __uros_orc_guard
     intc_1 // 1
     return
 
@@ -2586,55 +2281,46 @@ sweep_ternary_merge@4:
     intc_0 // 32
     extract3
     sha256
-    bytec 11 // "_assets"
+    bytec 13 // "_assets"
     swap
     concat
     dup
     box_get
-    bytec 6 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 8 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     callsub AssetLogic.accrue
     pop
-    txn Sender
-    dig 1
-    extract 214 32
-    swap
-    dig 1
-    ==
-    assert // OnlyReinvestmentController
+    dup
+    extract 0 15
     dig 4
     dup
-    bytec_0 // 0x
-    b>
-    assert // InvalidAmount
-    dig 2
-    extract 0 15
-    dup2
+    cover 3
+    dig 1
     b<=
     assert // InsufficientLiquidity
-    dig 3
+    dig 1
     extract 31 15
-    dig 4
+    dig 2
     extract 30 1
-    dig 5
+    dig 3
     intc 4 // 278
     intc_3 // 25
     extract3
-    dig 6
+    dig 4
     extract 118 15
-    dig 7
+    dig 5
     extract 133 12
-    dig 8
+    dig 6
     extract 86 15
-    dig 9
+    dig 7
     extract 246 32
-    dig 10
+    dig 8
     extract 182 32
-    dig 11
+    dig 9
     extract 145 5
     uncover 9
-    dig 10
+    dig 11
     callsub MathUtils.uncheckedSub
     callsub SafeCast.toUint120
     dup
@@ -2647,46 +2333,48 @@ sweep_ternary_merge@4:
     swap
     dig 1
     b|
-    dig 13
+    dig 11
     extract 116 2
-    dig 14
+    dig 12
     extract 61 25
-    dig 15
+    dig 13
     extract 101 15
-    dig 16
+    dig 14
     extract 15 15
-    dig 17
+    dig 15
+    extract 214 32
+    dig 16
     extract 46 15
-    uncover 18
+    uncover 17
     extract 150 32
-    uncover 6
-    uncover 3
+    uncover 7
+    uncover 4
     concat
-    uncover 14
+    uncover 15
     concat
-    uncover 14
+    uncover 15
     concat
     uncover 2
+    concat
+    uncover 4
+    concat
+    uncover 9
+    concat
+    uncover 3
     concat
     uncover 3
     concat
     uncover 8
     concat
-    uncover 2
-    concat
-    uncover 2
-    concat
     uncover 7
     concat
-    uncover 6
+    uncover 4
+    concat
+    swap
     concat
     uncover 3
     concat
     swap
-    concat
-    uncover 2
-    concat
-    uncover 5
     concat
     uncover 2
     concat
@@ -2698,7 +2386,7 @@ sweep_ternary_merge@4:
     callsub SafeCast.toUint120
     b+
     dup
-    bytec 7 // 0xffffffffffffffffffffffffffffff
+    bytec 5 // 0xffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     dig 1
@@ -2851,35 +2539,25 @@ reclaim_ternary_merge@4:
     intc_0 // 32
     extract3
     sha256
-    bytec 11 // "_assets"
+    bytec 13 // "_assets"
     swap
     concat
     dup
     box_get
-    bytec 6 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 8 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     callsub AssetLogic.accrue
     pop
-    txn Sender
-    dig 1
-    extract 214 32
-    swap
-    dig 1
-    ==
-    assert // OnlyReinvestmentController
+    dup
+    extract 0 15
     dig 4
     dup
-    bytec_0 // 0x
-    b>
-    assert // InvalidAmount
-    dig 2
-    extract 0 15
-    dig 1
+    cover 3
     b+
     itxn_begin
     global CurrentApplicationAddress
-    dig 4
+    dig 2
     extract 150 32
     dup
     pushint 24
@@ -2901,25 +2579,25 @@ reclaim_ternary_merge@4:
     dig 2
     b>=
     assert // InsufficientTransferred
-    dig 4
+    dig 2
     extract 31 15
-    dig 5
+    dig 3
     extract 30 1
-    dig 6
+    dig 4
     intc 4 // 278
     intc_3 // 25
     extract3
-    dig 7
+    dig 5
     extract 118 15
-    dig 8
+    dig 6
     extract 133 12
-    dig 9
+    dig 7
     extract 86 15
-    dig 10
+    dig 8
     extract 246 32
-    dig 11
+    dig 9
     extract 182 32
-    dig 12
+    dig 10
     extract 145 5
     uncover 10
     callsub SafeCast.toUint120
@@ -2933,44 +2611,46 @@ reclaim_ternary_merge@4:
     swap
     dig 1
     b|
-    dig 14
+    dig 12
     extract 116 2
-    dig 15
+    dig 13
     extract 61 25
-    dig 16
+    dig 14
     extract 101 15
-    dig 17
+    dig 15
     extract 15 15
-    uncover 18
+    dig 16
+    extract 214 32
+    uncover 17
     extract 46 15
-    uncover 5
-    uncover 2
+    uncover 6
+    uncover 3
     concat
-    uncover 13
+    uncover 14
     concat
-    uncover 13
+    uncover 14
     concat
     swap
+    concat
+    uncover 3
+    concat
+    uncover 8
+    concat
+    uncover 2
     concat
     uncover 2
     concat
     uncover 7
     concat
-    swap
+    uncover 6
     concat
-    swap
+    uncover 3
     concat
     uncover 6
     concat
-    uncover 5
+    uncover 3
     concat
-    uncover 2
-    concat
-    uncover 5
-    concat
-    uncover 2
-    concat
-    uncover 5
+    swap
     concat
     uncover 2
     concat
@@ -2991,7 +2671,7 @@ reclaim_ternary_merge@4:
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    bytec 7 // 0xffffffffffffffffffffffffffffff
+    bytec 5 // 0xffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     dig 1
@@ -3103,8 +2783,7 @@ isUnderlyingListed:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub __uros_orc_guard
-    bytec 22 // 0x151f7c7500
+    bytec 18 // 0x151f7c7500
     log
     intc_1 // 1
     return
@@ -3117,17 +2796,7 @@ getAssetId:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
-    log
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.getAssetCount[routing]() -> void:
-getAssetCount:
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3145,8 +2814,7 @@ previewAddByAssets:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3164,8 +2832,7 @@ previewAddByShares:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3183,8 +2850,7 @@ previewRemoveByAssets:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3202,8 +2868,7 @@ previewRemoveByShares:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3221,8 +2886,7 @@ previewDrawByAssets:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3240,8 +2904,7 @@ previewDrawByShares:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3259,8 +2922,7 @@ previewRestoreByAssets:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3278,8 +2940,7 @@ previewRestoreByShares:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3292,7 +2953,6 @@ getAssetUnderlyingAndDecimals:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
     pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
@@ -3306,8 +2966,7 @@ getAssetDrawnIndex:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3320,8 +2979,7 @@ getAddedAssets:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3334,8 +2992,7 @@ getAddedShares:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3348,8 +3005,7 @@ getAssetOwed:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3362,8 +3018,7 @@ getAssetTotalOwed:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3376,8 +3031,7 @@ getAssetPremiumRay:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3390,8 +3044,7 @@ getAssetDrawnShares:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3404,8 +3057,7 @@ getAssetPremiumData:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec 23 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 19 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
@@ -3418,8 +3070,7 @@ getAssetLiquidity:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3432,8 +3083,7 @@ getAssetDeficitRay:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3446,8 +3096,7 @@ getAsset:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3460,8 +3109,7 @@ getAssetConfig:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3474,8 +3122,7 @@ getAssetAccruedFees:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3488,8 +3135,7 @@ getAssetSwept:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3502,8 +3148,7 @@ getAssetDrawnRate:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3516,8 +3161,7 @@ getSpokeCount:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3535,8 +3179,7 @@ getSpokeAddedAssets:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3554,8 +3197,7 @@ getSpokeAddedShares:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3573,8 +3215,7 @@ getSpokeOwed:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3592,8 +3233,7 @@ getSpokeTotalOwed:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3611,8 +3251,7 @@ getSpokePremiumRay:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3630,8 +3269,7 @@ getSpokeDrawnShares:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3649,8 +3287,7 @@ getSpokePremiumData:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub __uros_orc_guard
-    bytec 23 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 19 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
@@ -3668,8 +3305,7 @@ getSpokeDeficitRay:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub __uros_orc_guard
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -3687,8 +3323,7 @@ isSpokeListed:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub __uros_orc_guard
-    bytec 22 // 0x151f7c7500
+    bytec 18 // 0x151f7c7500
     log
     intc_1 // 1
     return
@@ -3706,8 +3341,7 @@ getSpokeAddress:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub __uros_orc_guard
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    bytec 14 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
@@ -3725,15 +3359,14 @@ getSpoke:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub __uros_orc_guard
-    bytec_0 // 0x
+    bytec_1 // 0x
     intc_2 // 0
     getbit
-    bytec_0 // 0x
+    bytec_1 // 0x
     intc_1 // 1
     uncover 2
     setbit
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -3753,114 +3386,14 @@ getSpokeConfig:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub __uros_orc_guard
-    bytec_0 // 0x
+    bytec_1 // 0x
     intc_2 // 0
     getbit
-    bytec_0 // 0x
+    bytec_1 // 0x
     intc_1 // 1
     uncover 2
     setbit
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.MAX_ALLOWED_UNDERLYING_DECIMALS[routing]() -> void:
-MAX_ALLOWED_UNDERLYING_DECIMALS:
-    txn GroupIndex
-    bz MAX_ALLOWED_UNDERLYING_DECIMALS_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-MAX_ALLOWED_UNDERLYING_DECIMALS_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c750000000000000012
-    log
-    intc_1 // 1
-    return
-
-MAX_ALLOWED_UNDERLYING_DECIMALS_ternary_false@3:
-    intc_2 // 0
-    b MAX_ALLOWED_UNDERLYING_DECIMALS_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.MIN_ALLOWED_UNDERLYING_DECIMALS[routing]() -> void:
-MIN_ALLOWED_UNDERLYING_DECIMALS:
-    txn GroupIndex
-    bz MIN_ALLOWED_UNDERLYING_DECIMALS_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-MIN_ALLOWED_UNDERLYING_DECIMALS_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c750000000000000006
-    log
-    intc_1 // 1
-    return
-
-MIN_ALLOWED_UNDERLYING_DECIMALS_ternary_false@3:
-    intc_2 // 0
-    b MIN_ALLOWED_UNDERLYING_DECIMALS_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.MAX_ALLOWED_SPOKE_CAP[routing]() -> void:
-MAX_ALLOWED_SPOKE_CAP:
-    txn GroupIndex
-    bz MAX_ALLOWED_SPOKE_CAP_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-MAX_ALLOWED_SPOKE_CAP_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c75000000ffffffffff
-    log
-    intc_1 // 1
-    return
-
-MAX_ALLOWED_SPOKE_CAP_ternary_false@3:
-    intc_2 // 0
-    b MAX_ALLOWED_SPOKE_CAP_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.MAX_RISK_PREMIUM_THRESHOLD[routing]() -> void:
-MAX_RISK_PREMIUM_THRESHOLD:
-    txn GroupIndex
-    bz MAX_RISK_PREMIUM_THRESHOLD_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-MAX_RISK_PREMIUM_THRESHOLD_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c750000000000ffffff
-    log
-    intc_1 // 1
-    return
-
-MAX_RISK_PREMIUM_THRESHOLD_ternary_false@3:
-    intc_2 // 0
-    b MAX_RISK_PREMIUM_THRESHOLD_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.authority[routing]() -> void:
-authority:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.authority
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -3871,211 +3404,9 @@ authority:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.setAuthority[routing]() -> void:
 setAuthority:
     txna ApplicationArgs 1
-    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz setAuthority_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-setAuthority_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.authority
-    !=
-    !
-    assert // AccessManagedUnauthorized
-    dupn 2
-    pushint 24
-    extract_uint64
-    app_params_get AppApprovalProgram
-    pop
-    len
-    itob
-    bytec_0 // 0x
-    b==
-    !
-    assert // AccessManagedInvalidAuthority
-    bytec 12 // "_authority"
-    dig 1
-    app_global_put
-    bytec 21 // method "AuthorityUpdated(uint8[32])"
-    swap
-    concat
-    log
     intc_1 // 1
     return
-
-setAuthority_ternary_false@3:
-    intc_2 // 0
-    b setAuthority_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.isConsumingScheduledOp[routing]() -> void:
-isConsumingScheduledOp:
-    txn GroupIndex
-    bz isConsumingScheduledOp_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-isConsumingScheduledOp_ternary_merge@4:
-    !
-    assert // not payable
-    intc_2 // 0
-    bytec 20 // "_consumingSchedule"
-    app_global_get_ex
-    assert // check _consumingSchedule exists
-    bz isConsumingScheduledOp_ternary_false@6
-    pushbytes 0x8fb36037
-
-isConsumingScheduledOp_ternary_merge@7:
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-isConsumingScheduledOp_ternary_false@6:
-    pushbytes 0x00000000
-    b isConsumingScheduledOp_ternary_merge@7
-
-isConsumingScheduledOp_ternary_false@3:
-    intc_2 // 0
-    b isConsumingScheduledOp_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub._validateApplyPremiumDelta(drawnIndex: bytes, premiumShares: bytes, premiumOffsetRay: bytes, premiumDelta: bytes) -> bytes, bytes:
-_validateApplyPremiumDelta:
-    proto 4 2
-    frame_dig -3
-    frame_dig -2
-    frame_dig -4
-    callsub Premium.calculatePremiumRay
-    frame_dig -1
-    extract 0 32
-    frame_dig -3
-    swap
-    callsub MathUtils.add
-    frame_dig -2
-    bytec 5 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b<
-    !
-    dup
-    frame_dig -1
-    extract 32 32
-    dup
-    cover 2
-    bytec 5 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b<
-    !
-    !=
-    bnz _validateApplyPremiumDelta_bool_true@2
-    frame_dig -2
-    frame_dig 3
-    b+
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bytec 5 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b<
-    !
-    frame_dig 2
-    ==
-    bz _validateApplyPremiumDelta_bool_false@3
-
-_validateApplyPremiumDelta_bool_true@2:
-    intc_1 // 1
-
-_validateApplyPremiumDelta_bool_merge@4:
-    assert // signed arithmetic overflow
-    frame_dig -2
-    frame_dig 3
-    b+
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    frame_dig 1
-    dup
-    cover 2
-    dig 1
-    frame_dig -4
-    callsub Premium.calculatePremiumRay
-    frame_dig -1
-    extract 64 32
-    b+
-    frame_dig 0
-    b==
-    assert // InvalidPremiumChange
-    swap
-    callsub SafeCast.toUint120
-    swap
-    callsub SafeCast.toInt200
-    frame_bury 1
-    frame_bury 0
-    retsub
-
-_validateApplyPremiumDelta_bool_false@3:
-    intc_2 // 0
-    b _validateApplyPremiumDelta_bool_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.authority() -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.authority:
-    txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.authority_ternary_false@2
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.authority_ternary_merge@3:
-    !
-    assert // not payable
-    intc_2 // 0
-    bytec 12 // "_authority"
-    app_global_get_ex
-    assert // check _authority exists
-    retsub
-
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.authority_ternary_false@2:
-    intc_2 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.authority_ternary_merge@3
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.__uros_orc_guard() -> void:
-__uros_orc_guard:
-    txn GroupIndex
-    intc_1 // 1
-    +
-    global GroupSize
-    <
-    assert // uros: no orch txn after stub
-    txn GroupIndex
-    intc_1 // 1
-    +
-    gtxns TypeEnum
-    pushint 6
-    ==
-    assert // uros: next txn not appl
-    txn GroupIndex
-    intc_1 // 1
-    +
-    gtxns ApplicationID
-    intc 6 // TMPL_UROS_ORCH_APP_ID
-    ==
-    assert // uros: wrong orch app
-    txn GroupIndex
-    intc_1 // 1
-    +
-    gtxnsa ApplicationArgs 0
-    pushbytes 0x617da41d
-    ==
-    assert // uros: not dispatch selector
-    retsub
