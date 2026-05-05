@@ -1,0 +1,95 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/MockHub.sol.MockHub.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x2767bdbb 0x96751ffd // method "getSpokeAddedAssets(uint256,address)uint256", method "getSpokeAddedShares(uint256,address)uint256"
+    txna ApplicationArgs 0
+    match getSpokeAddedAssets getSpokeAddedShares
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/MockHub.sol.MockHub.getSpokeAddedAssets[routing]() -> void:
+getSpokeAddedAssets:
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz getSpokeAddedAssets_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getSpokeAddedAssets_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+getSpokeAddedAssets_ternary_false@3:
+    intc_2 // 0
+    b getSpokeAddedAssets_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/MockHub.sol.MockHub.getSpokeAddedShares[routing]() -> void:
+getSpokeAddedShares:
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz getSpokeAddedShares_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getSpokeAddedShares_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+getSpokeAddedShares_ternary_false@3:
+    intc_2 // 0
+    b getSpokeAddedShares_ternary_merge@4

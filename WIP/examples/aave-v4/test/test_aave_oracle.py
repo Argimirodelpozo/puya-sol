@@ -77,7 +77,19 @@ def test_get_reserve_source_unset(oracle):
     assert result == ZERO_ADDR
 
 
-@pytest.mark.xfail(reason="setSpoke requires authority inner txn (AccessManaged)")
+@pytest.mark.xfail(
+    reason=(
+        "setSpoke needs ISpoke(spoke).ORACLE() == address(this) to hold, "
+        "which requires puya-sol to reconcile its two address encodings: "
+        "stored addresses use the `\\x00*24 + itob(app_id)` convention "
+        "(so SolExternalCall::addressToAppId can dispatch inner calls), "
+        "but address(this) emits global CurrentApplicationAddress (the "
+        "sha512_256 hash). No single value of `spoke` satisfies both the "
+        "inner-call dispatch path and the equality check. Needs a "
+        "compiler-level fix that special-cases address(this) / msg.sender "
+        "in equality comparisons against convention-form stored addresses."
+    )
+)
 def test_set_spoke(oracle, account):
     """setSpoke should update the spoke address."""
     _call(oracle, "setSpoke", account.address)
@@ -85,7 +97,14 @@ def test_set_spoke(oracle, account):
     assert result == account.address
 
 
-@pytest.mark.xfail(reason="setReserveSource requires authority inner txn (AccessManaged)")
+@pytest.mark.xfail(
+    reason=(
+        "Same address-encoding bind as test_set_spoke — the require chain "
+        "in setReserveSource compares msg.sender (sha512_256 hash form) "
+        "against the stored SPOKE (convention form). The two encodings "
+        "are mutually incompatible without a compiler-level fix."
+    )
+)
 def test_set_reserve_source(oracle, account):
     """setReserveSource should store a price source for a reserve."""
     reserve_id = 1
@@ -96,7 +115,13 @@ def test_set_reserve_source(oracle, account):
     assert result == account.address
 
 
-@pytest.mark.xfail(reason="requires authority + UnitPriceFeed inner txn")
+@pytest.mark.xfail(
+    reason=(
+        "Calls setReserveSource which requires msg.sender == SPOKE — same "
+        "address-encoding bind as the other oracle xfails. Needs the "
+        "compiler-level address-equality fix before this lifts."
+    )
+)
 def test_get_reserve_price_with_unit_feed(oracle, localnet, account):
     """Set up a UnitPriceFeed as price source and verify assignment."""
     feed = deploy_contract(

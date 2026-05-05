@@ -27,26 +27,49 @@ def _extract_events(confirmation):
 ZERO_ADDR = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"
 
 
+def _appid_to_pseudo_addr_bytes(app_id: int) -> bytes:
+    """puya-sol stores app addresses as `\\x00 * 24 + itob(app_id)` (24 zero
+    bytes + 8-byte big-endian app_id). The interface dispatcher in
+    SolExternalCall.cpp::addressToAppId reads back the last 8 bytes to
+    derive the inner-call's ApplicationID. Tests that pass a real Hub /
+    Spoke / Oracle app as a Solidity `address` arg must use this format
+    so cross-contract calls land on the right app id."""
+    return b"\x00" * 24 + app_id.to_bytes(8, "big")
+
+
 @pytest.fixture(scope="module")
-def spoke(localnet, account):
-    hub_addr = encoding.decode_address(account.address)
-    authority = encoding.decode_address(account.address)
+def mock_hub(localnet, account):
+    return deploy_contract(localnet, account, "MockHub")
+
+
+@pytest.fixture(scope="module")
+def spoke(localnet, account, mock_hub):
+    # TreasurySpoke constructor signature: (address owner_, address hub_)
+    # The owner is the test signer; the hub is a deployed MockHub so
+    # cross-contract calls (getSpokeAddedAssets / Shares) actually land.
+    owner_ = encoding.decode_address(account.address)
+    hub_ = _appid_to_pseudo_addr_bytes(mock_hub.app_id)
     return deploy_contract(
         localnet, account, "TreasurySpoke",
-        app_args=[hub_addr, authority],
+        app_args=[owner_, hub_],
     )
 
 
 _call_counter = 0
 
 
-def _call(client, method, *args):
+def _call(client, method, *args, extra_fee_micro=None, foreign_apps=None):
+    """extra_fee_micro: extra fee (microalgos) the outer call carries to
+    cover one or more inner txns. foreign_apps: app ids the inner call
+    targets — algokit auto-populates resources but localnet sometimes
+    needs the explicit list when the inner-call dispatch is dynamic."""
     global _call_counter
     _call_counter += 1
     note = f"ts_{_call_counter}".encode()
-    result = client.send.call(
-        au.AppClientMethodCallParams(method=method, args=list(args), note=note)
-    )
+    kwargs = dict(method=method, args=list(args), note=note)
+    if extra_fee_micro is not None:
+        kwargs["extra_fee"] = au.AlgoAmount(micro_algo=extra_fee_micro)
+    result = client.send.call(au.AppClientMethodCallParams(**kwargs))
     return result.abi_return
 
 
@@ -123,31 +146,36 @@ def test_repay_reverts(spoke, account):
         _call(spoke, "repay", 0, 100, account.address)
 
 
-@pytest.mark.xfail(reason="getSuppliedAmount makes inner txn to hub (fee too small)")
 def test_getSuppliedAmount_zero(spoke):
-    """getSuppliedAmount for reserve 0 should be 0."""
-    result = _call(spoke, "getSuppliedAmount", 0)
+    """getSuppliedAmount for reserve 0 should be 0.
+
+    Forwards to HUB.getSpokeAddedAssets(reserveId, address(this)) — needs
+    extra_fee for the inner txn and a deployed MockHub at the address
+    TreasurySpoke was constructed with.
+    """
+    result = _call(spoke, "getSuppliedAmount", 0, extra_fee_micro=1000)
     assert result == 0
 
 
-@pytest.mark.xfail(reason="getSuppliedShares makes inner txn to hub (fee too small)")
 def test_getSuppliedShares_zero(spoke):
-    """getSuppliedShares for reserve 0 should be 0."""
-    result = _call(spoke, "getSuppliedShares", 0)
+    """getSuppliedShares for reserve 0 should be 0.
+
+    Same shape as getSuppliedAmount but forwards to
+    HUB.getSpokeAddedShares.
+    """
+    result = _call(spoke, "getSuppliedShares", 0, extra_fee_micro=1000)
     assert result == 0
 
 
-@pytest.mark.xfail(reason="getReserveSuppliedAssets makes inner txn to hub (fee too small)")
 def test_getReserveSuppliedAssets_zero(spoke):
     """getReserveSuppliedAssets for reserve 0 should be 0."""
-    result = _call(spoke, "getReserveSuppliedAssets", 0)
+    result = _call(spoke, "getReserveSuppliedAssets", 0, extra_fee_micro=1000)
     assert result == 0
 
 
-@pytest.mark.xfail(reason="getReserveSuppliedShares makes inner txn to hub (fee too small)")
 def test_getReserveSuppliedShares_zero(spoke):
     """getReserveSuppliedShares for reserve 0 should be 0."""
-    result = _call(spoke, "getReserveSuppliedShares", 0)
+    result = _call(spoke, "getReserveSuppliedShares", 0, extra_fee_micro=1000)
     assert result == 0
 
 
