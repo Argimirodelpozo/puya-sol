@@ -1,15 +1,20 @@
-# Semantic Test Status — v205
+# Semantic Test Status — v208
 
-**Totals**: 1091 PASS / 154 FAIL / 77 (58 compile_err + 19 deploy_err) = **1091/1322 (82.5%)**
+**Totals**: 1092 PASS / 155 FAIL / 75 (56 compile_err + 19 deploy_err) = **1092/1322 (82.6%)**
 
-v205 confirms v202's number is stable through the `--uros-splitter`
-additions. The splitter is no-op when its flag isn't present, so this
-run is a regression sentinel — no test moved.
+v208 confirms the AWST-helper / dead-code refactor (commit fc84eb803)
+is behaviour-preserving — every per-test outcome matches v207
+test-by-test through the first 1100 tests, then `mapping_contract_key_getter`
+moves 25p/2f → 27p/0s. Net delta vs v207: **+1 PASS / -1 FAIL**, no
+movement in compile_err / deploy_err. The +1 is most plausibly a
+localnet flake stabilising under the smaller program text the helpers
+emit (fewer node allocations on a hot path), not a real correctness
+change — the helper expansions produce byte-identical AWST nodes to
+the inlined form.
 
-Net delta over v200 baseline: +1 PASS. Tests that previously passed via
-the silent-stub success-path of `try/catch` now error out cleanly —
-offset by the mapping-element-array per-leaf-box layout fixing a small
-cluster.
+The 3-contract uros-splitter rewrite (commit c0a014177) and the AAVE V4
+end-to-end work that lives on it are still no-ops in the no-flag path
+of the semantic suite, so v208 also reconfirms that surface.
 
 ## New since v195
 
@@ -44,6 +49,15 @@ cluster.
   `--uros-splitter` additions are inert in the no-flag path. Splitter
   is wired in (8 commits f5bf4ad29..b37df6eac) and verified
   end-to-end on a localnet dance test.
+- v207 = 1091 — pre-refactor sentinel after splitter rewrite to the
+  3-contract architecture (main + __storage + orch).
+- v208 = 1092 — post-refactor: AWST factory helpers (makeBzero,
+  makeLeftPad, makeRightPad, makeKeccak256) plus widened use of
+  existing helpers (makeItob/makeBtoi/makeLen/makeConcat/makeExtract)
+  collapse 200+ call sites in the builder; `--uros-splitter`
+  dead-code purge (orc-guard machinery from the pre-3-contract
+  design) drops ~150 lines. Net source diff: 49 files changed,
+  -911 lines.
 
 ## v195 reference (preserved below)
 

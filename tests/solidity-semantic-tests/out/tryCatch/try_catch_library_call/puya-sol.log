@@ -6,11 +6,8 @@ info: Parse and type-check successful!
 info: Building AWST...
 info: Translating library: L
 info: Translating contract: C
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/try_catch_library_call.sol:516 warning: try/catch stubbed as success path: AVM cannot catch runtime errors, catch clauses are dropped — behavior differs from EVM when the try call reverts
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/try_catch_library_call.sol:769 warning: try/catch stubbed as success path: AVM cannot catch runtime errors, catch clauses are dropped — behavior differs from EVM when the try call reverts
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/try_catch_library_call.sol:516 error: try/catch is not supported on AVM. Solidity's try requires at least one catch clause, and AVM has no in-transaction revert recovery — a failing inner txn aborts the whole outer txn. The catch path's user-written logic can't be honored, so silently compiling would produce semantically different code. Refactor the call site to handle the contract directly (e.g. drop the try, or guard with an explicit if-check) before recompiling.
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/try_catch_library_call.sol:769 error: try/catch is not supported on AVM. Solidity's try requires at least one catch clause, and AVM has no in-transaction revert recovery — a failing inner txn aborts the whole outer txn. The catch path's user-written logic can't be honored, so silently compiling would produce semantically different code. Refactor the call site to handle the contract directly (e.g. drop the try, or guard with an explicit if-check) before recompiling.
 info: Generated 3 AWST root node(s)
 info: Wrote: /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/out/tryCatch/try_catch_library_call/awst.json
 info: Wrote: /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/out/tryCatch/try_catch_library_call/options.json
-info: Completed with 2 warning(s)
-info: Invoking puya backend...
-info: puya completed successfully

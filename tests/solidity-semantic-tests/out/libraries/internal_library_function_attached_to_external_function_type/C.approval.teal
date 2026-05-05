@@ -1,0 +1,144 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_external_function_type.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    bytecblock 0x151f7c75
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x10f6bb68 0x4e8d9329 // method "identity(uint256)uint256", method "test(uint256)uint256"
+    txna ApplicationArgs 0
+    match identity test
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_external_function_type.sol.L.double(f: bytes, x: bytes) -> bytes:
+L.double:
+    proto 2 1
+    itxn_begin
+    frame_dig -2
+    extract 8 4
+    intc_1 // 32
+    bzero
+    frame_dig -1
+    b|
+    frame_dig -2
+    intc_2 // 0
+    extract_uint64
+    dup
+    bnz L.double_ternary_false@2
+    global CurrentApplicationID
+
+L.double_ternary_merge@3:
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    frame_dig 0
+    itxn_field ApplicationArgs
+    frame_dig 1
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    pushbytes 0x02
+    b*
+    frame_bury 0
+    retsub
+
+L.double_ternary_false@2:
+    frame_dig 2
+    b L.double_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_external_function_type.sol.C.identity[routing]() -> void:
+identity:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz identity_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+identity_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_0 // 0x151f7c75
+    dig 1
+    concat
+    log
+    intc_0 // 1
+    return
+
+identity_ternary_false@3:
+    intc_2 // 0
+    b identity_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_external_function_type.sol.C.test[routing]() -> void:
+test:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz test_ternary_false@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x000000000000000010f6bb68
+    dig 1
+    callsub L.double
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+test_ternary_false@3:
+    intc_2 // 0
+    b test_ternary_merge@4

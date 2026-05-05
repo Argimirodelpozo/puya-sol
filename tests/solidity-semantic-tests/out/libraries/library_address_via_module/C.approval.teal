@@ -1,0 +1,358 @@
+#pragma version 10
+#pragma typetrack false
+
+// /tmp/multisource_qtv8502c/a.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1 32 4
+    bytecblock 0x 0x151f7c75 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x5545e37c 0xc14ad39f 0xb9f9b1ca 0xd735f408 0xe25f867e 0x108c79b3 // method "addr()bool", method "g(uint256)uint256", method "h(uint256)uint256", method "i(uint256)uint256", method "j(uint256)uint256", method "k(uint256)uint256"
+    txna ApplicationArgs 0
+    match addr g h i j k
+    err
+
+
+// /tmp/multisource_qtv8502c/a.sol.L.f(v: bytes) -> bytes:
+L.f:
+    proto 1 1
+    frame_dig -1
+    dup
+    b*
+    retsub
+
+
+// /tmp/multisource_qtv8502c/a.sol.C.addr[routing]() -> void:
+addr:
+    txn GroupIndex
+    bz addr_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+addr_ternary_merge@4:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+addr_ternary_false@3:
+    intc_0 // 0
+    b addr_ternary_merge@4
+
+
+// /tmp/multisource_qtv8502c/a.sol.C.g[routing]() -> void:
+g:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz g_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@4:
+    !
+    assert // not payable
+    dup
+    callsub L.f
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+g_ternary_false@3:
+    intc_0 // 0
+    b g_ternary_merge@4
+
+
+// /tmp/multisource_qtv8502c/a.sol.C.h[routing]() -> void:
+h:
+    txna ApplicationArgs 1
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz h_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+h_ternary_false@3:
+    intc_0 // 0
+    b h_ternary_merge@4
+
+
+// /tmp/multisource_qtv8502c/a.sol.C.i[routing]() -> void:
+i:
+    intc_0 // 0
+    dupn 2
+    bytec_0 // ""
+    dup
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz i_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+i_ternary_merge@4:
+    !
+    assert // not payable
+    intc_2 // 32
+    bzero
+    dup
+    bury 5
+    dig 1
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    pushbytes 0xb3de648b
+    swap
+    concat
+    dup
+    bury 7
+    itxn_begin
+    len
+    dup
+    bury 4
+    intc_3 // 4
+    >=
+    dup
+    bury 3
+    bz i_ternary_false@6
+    dig 5
+    extract 0 4
+    bury 5
+
+i_ternary_merge@7:
+    dig 1
+    bz i_ternary_false@9
+    dig 2
+    intc_3 // 4
+    -
+    dig 6
+    intc_3 // 4
+    uncover 2
+    extract3
+
+i_ternary_merge@10:
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    intc_0 // 0
+    itxn_field ApplicationID
+    dig 5
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 0 32
+    dig 4
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+i_ternary_false@9:
+    bytec_0 // 0x
+    b i_ternary_merge@10
+
+i_ternary_false@6:
+    dig 5
+    bury 5
+    b i_ternary_merge@7
+
+i_ternary_false@3:
+    intc_0 // 0
+    b i_ternary_merge@4
+
+
+// /tmp/multisource_qtv8502c/a.sol.C.j[routing]() -> void:
+j:
+    txna ApplicationArgs 1
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz j_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+j_ternary_merge@4:
+    !
+    assert // not payable
+    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+j_ternary_false@3:
+    intc_0 // 0
+    b j_ternary_merge@4
+
+
+// /tmp/multisource_qtv8502c/a.sol.C.k[routing]() -> void:
+k:
+    intc_0 // 0
+    dupn 2
+    bytec_0 // ""
+    dup
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz k_ternary_false@3
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+k_ternary_merge@4:
+    !
+    assert // not payable
+    intc_2 // 32
+    bzero
+    dup
+    bury 5
+    dig 1
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    pushbytes 0xe420264a
+    swap
+    concat
+    dup
+    bury 7
+    itxn_begin
+    len
+    dup
+    bury 4
+    intc_3 // 4
+    >=
+    dup
+    bury 3
+    bz k_ternary_false@6
+    dig 5
+    extract 0 4
+    bury 5
+
+k_ternary_merge@7:
+    dig 1
+    bz k_ternary_false@9
+    dig 2
+    intc_3 // 4
+    -
+    dig 6
+    intc_3 // 4
+    uncover 2
+    extract3
+
+k_ternary_merge@10:
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    intc_0 // 0
+    itxn_field ApplicationID
+    dig 5
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 0 32
+    dig 4
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+k_ternary_false@9:
+    bytec_0 // 0x
+    b k_ternary_merge@10
+
+k_ternary_false@6:
+    dig 5
+    bury 5
+    b k_ternary_merge@7
+
+k_ternary_false@3:
+    intc_0 // 0
+    b k_ternary_merge@4

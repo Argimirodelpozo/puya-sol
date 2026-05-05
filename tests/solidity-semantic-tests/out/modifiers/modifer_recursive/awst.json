@@ -602,7 +602,7 @@
         "args": [
           {
             "_type": "SubroutineArgument",
-            "name": "x",
+            "name": "__arc4_x",
             "source_location": {
               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
               "line": 107,
@@ -612,9 +612,12 @@
               "end_column": null
             },
             "wtype": {
-              "_type": "WType",
-              "name": "biguint",
-              "immutable": true
+              "_type": "ARC4UIntN",
+              "name": "arc4.uint256",
+              "immutable": true,
+              "n": 256,
+              "arc4_alias": null,
+              "source_location": null
             }
           }
         ],
@@ -864,6 +867,71 @@
                 },
                 "error_message": "not payable",
                 "comment": "not payable"
+              }
+            },
+            {
+              "_type": "AssignmentStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                "line": 107,
+                "end_line": 113,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "target": {
+                "_type": "VarExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                  "line": 107,
+                  "end_line": 113,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
+                },
+                "name": "x"
+              },
+              "value": {
+                "_type": "ARC4Decode",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                  "line": 107,
+                  "end_line": 113,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
+                },
+                "value": {
+                  "_type": "VarExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                    "line": 107,
+                    "end_line": 113,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
+                  },
+                  "name": "__arc4_x"
+                },
+                "error_message": null
               }
             },
             {
@@ -1196,65 +1264,178 @@
                     },
                     "body": [
                       {
-                        "_type": "ExpressionStatement",
+                        "_type": "IfElse",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                          "line": 179,
-                          "end_line": 184,
+                          "line": 164,
+                          "end_line": 188,
                           "comment_lines": 0,
                           "column": null,
                           "end_column": null
                         },
-                        "expr": {
-                          "_type": "AssertExpression",
+                        "condition": {
+                          "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                            "line": 179,
-                            "end_line": 184,
+                            "line": 164,
+                            "end_line": 170,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
                           },
                           "wtype": {
                             "_type": "WType",
-                            "name": "void",
+                            "name": "bool",
                             "immutable": true
                           },
-                          "condition": {
-                            "_type": "NumericComparisonExpression",
+                          "lhs": {
+                            "_type": "VarExpression",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                              "line": 179,
-                              "end_line": 184,
+                              "line": 164,
+                              "end_line": 165,
                               "comment_lines": 0,
                               "column": null,
                               "end_column": null
                             },
                             "wtype": {
                               "_type": "WType",
-                              "name": "bool",
+                              "name": "biguint",
                               "immutable": true
                             },
-                            "lhs": {
-                              "_type": "VarExpression",
+                            "name": "x"
+                          },
+                          "operator": "==",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                              "line": 164,
+                              "end_line": 170,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "value": 0,
+                            "teal_alias": null
+                          }
+                        },
+                        "if_branch": {
+                          "_type": "Block",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                            "line": 164,
+                            "end_line": 188,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "body": [
+                            {
+                              "_type": "AssignmentStatement",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                                "line": 179,
-                                "end_line": 180,
+                                "line": 164,
+                                "end_line": 188,
                                 "comment_lines": 0,
                                 "column": null,
                                 "end_column": null
                               },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
+                              "target": {
+                                "_type": "VarExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                  "line": 164,
+                                  "end_line": 188,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "name": "__cond_0"
                               },
-                              "name": "x"
-                            },
-                            "operator": ">=",
-                            "rhs": {
-                              "_type": "IntegerConstant",
+                              "value": {
+                                "_type": "ReinterpretCast",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                  "line": 164,
+                                  "end_line": 188,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "expr": {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                    "line": 164,
+                                    "end_line": 188,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "itob",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                        "line": 173,
+                                        "end_line": 174,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 2,
+                                      "teal_alias": null
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          ],
+                          "label": null,
+                          "comment": null
+                        },
+                        "else_branch": {
+                          "_type": "Block",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                            "line": 164,
+                            "end_line": 188,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "body": [
+                            {
+                              "_type": "ExpressionStatement",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
                                 "line": 179,
@@ -1263,116 +1444,8 @@
                                 "column": null,
                                 "end_column": null
                               },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "value": 1,
-                              "teal_alias": null
-                            }
-                          },
-                          "error_message": "underflow",
-                          "comment": "underflow"
-                        }
-                      },
-                      {
-                        "_type": "AssignmentStatement",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                          "line": 177,
-                          "end_line": 188,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "target": {
-                          "_type": "VarExpression",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                            "line": 177,
-                            "end_line": 188,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "name": "__biguint_exp_result_0"
-                        },
-                        "value": {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                            "line": 177,
-                            "end_line": 188,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "value": 1,
-                          "teal_alias": null
-                        }
-                      },
-                      {
-                        "_type": "AssignmentStatement",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                          "line": 177,
-                          "end_line": 188,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "target": {
-                          "_type": "VarExpression",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                            "line": 177,
-                            "end_line": 188,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "name": "__biguint_exp_base_0"
-                        },
-                        "value": {
-                          "_type": "SubroutineCallExpression",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                            "line": 177,
-                            "end_line": 185,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "target": {
-                            "_type": "InstanceMethodTarget",
-                            "member_name": "f"
-                          },
-                          "args": [
-                            {
-                              "name": null,
-                              "value": {
-                                "_type": "BigUIntBinaryOperation",
+                              "expr": {
+                                "_type": "AssertExpression",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
                                   "line": 179,
@@ -1383,11 +1456,11 @@
                                 },
                                 "wtype": {
                                   "_type": "WType",
-                                  "name": "biguint",
+                                  "name": "void",
                                   "immutable": true
                                 },
-                                "left": {
-                                  "_type": "BigUIntBinaryOperation",
+                                "condition": {
+                                  "_type": "NumericComparisonExpression",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
                                     "line": 179,
@@ -1398,15 +1471,15 @@
                                   },
                                   "wtype": {
                                     "_type": "WType",
-                                    "name": "biguint",
+                                    "name": "bool",
                                     "immutable": true
                                   },
-                                  "left": {
-                                    "_type": "BigUIntBinaryOperation",
+                                  "lhs": {
+                                    "_type": "VarExpression",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
                                       "line": 179,
-                                      "end_line": 184,
+                                      "end_line": 180,
                                       "comment_lines": 0,
                                       "column": null,
                                       "end_column": null
@@ -1416,45 +1489,10 @@
                                       "name": "biguint",
                                       "immutable": true
                                     },
-                                    "left": {
-                                      "_type": "VarExpression",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                                        "line": 179,
-                                        "end_line": 180,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "biguint",
-                                        "immutable": true
-                                      },
-                                      "name": "x"
-                                    },
-                                    "op": "+",
-                                    "right": {
-                                      "_type": "IntegerConstant",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                                        "line": 179,
-                                        "end_line": 184,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "biguint",
-                                        "immutable": true
-                                      },
-                                      "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
-                                      "teal_alias": null
-                                    }
+                                    "name": "x"
                                   },
-                                  "op": "-",
-                                  "right": {
+                                  "operator": ">=",
+                                  "rhs": {
                                     "_type": "IntegerConstant",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
@@ -1473,151 +1511,279 @@
                                     "teal_alias": null
                                   }
                                 },
-                                "op": "%",
-                                "right": {
-                                  "_type": "IntegerConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                                    "line": 179,
-                                    "end_line": 184,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "biguint",
-                                    "immutable": true
-                                  },
-                                  "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
-                                  "teal_alias": null
-                                }
+                                "error_message": "underflow",
+                                "comment": "underflow"
                               }
-                            }
-                          ]
-                        }
-                      },
-                      {
-                        "_type": "AssignmentStatement",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                          "line": 177,
-                          "end_line": 188,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "target": {
-                          "_type": "VarExpression",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                            "line": 177,
-                            "end_line": 188,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "name": "__biguint_exp_exp_0"
-                        },
-                        "value": {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                            "line": 177,
-                            "end_line": 188,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "value": 2,
-                          "teal_alias": null
-                        }
-                      },
-                      {
-                        "_type": "WhileLoop",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                          "line": 177,
-                          "end_line": 188,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "condition": {
-                          "_type": "NumericComparisonExpression",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                            "line": 177,
-                            "end_line": 188,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "bool",
-                            "immutable": true
-                          },
-                          "lhs": {
-                            "_type": "VarExpression",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                              "line": 177,
-                              "end_line": 188,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
                             },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "biguint",
-                              "immutable": true
-                            },
-                            "name": "__biguint_exp_exp_0"
-                          },
-                          "operator": ">",
-                          "rhs": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                              "line": 177,
-                              "end_line": 188,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "biguint",
-                              "immutable": true
-                            },
-                            "value": 0,
-                            "teal_alias": null
-                          }
-                        },
-                        "loop_body": {
-                          "_type": "Block",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                            "line": 177,
-                            "end_line": 188,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "body": [
                             {
-                              "_type": "IfElse",
+                              "_type": "AssignmentStatement",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                "line": 177,
+                                "end_line": 188,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "target": {
+                                "_type": "VarExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                  "line": 177,
+                                  "end_line": 188,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "name": "__biguint_exp_result_0"
+                              },
+                              "value": {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                  "line": 177,
+                                  "end_line": 188,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "value": 1,
+                                "teal_alias": null
+                              }
+                            },
+                            {
+                              "_type": "AssignmentStatement",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                "line": 177,
+                                "end_line": 188,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "target": {
+                                "_type": "VarExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                  "line": 177,
+                                  "end_line": 188,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "name": "__biguint_exp_base_0"
+                              },
+                              "value": {
+                                "_type": "SubroutineCallExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                  "line": 177,
+                                  "end_line": 185,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "target": {
+                                  "_type": "InstanceMethodTarget",
+                                  "member_name": "f"
+                                },
+                                "args": [
+                                  {
+                                    "name": null,
+                                    "value": {
+                                      "_type": "BigUIntBinaryOperation",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                        "line": 179,
+                                        "end_line": 184,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "biguint",
+                                        "immutable": true
+                                      },
+                                      "left": {
+                                        "_type": "BigUIntBinaryOperation",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                          "line": 179,
+                                          "end_line": 184,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "left": {
+                                          "_type": "BigUIntBinaryOperation",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                            "line": 179,
+                                            "end_line": 184,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "left": {
+                                            "_type": "VarExpression",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                              "line": 179,
+                                              "end_line": 180,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "biguint",
+                                              "immutable": true
+                                            },
+                                            "name": "x"
+                                          },
+                                          "op": "+",
+                                          "right": {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                              "line": 179,
+                                              "end_line": 184,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "biguint",
+                                              "immutable": true
+                                            },
+                                            "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
+                                            "teal_alias": null
+                                          }
+                                        },
+                                        "op": "-",
+                                        "right": {
+                                          "_type": "IntegerConstant",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                            "line": 179,
+                                            "end_line": 184,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "value": 1,
+                                          "teal_alias": null
+                                        }
+                                      },
+                                      "op": "%",
+                                      "right": {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                          "line": 179,
+                                          "end_line": 184,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
+                                        "teal_alias": null
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "_type": "AssignmentStatement",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                "line": 177,
+                                "end_line": 188,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "target": {
+                                "_type": "VarExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                  "line": 177,
+                                  "end_line": 188,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "name": "__biguint_exp_exp_0"
+                              },
+                              "value": {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                  "line": 177,
+                                  "end_line": 188,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "value": 2,
+                                "teal_alias": null
+                              }
+                            },
+                            {
+                              "_type": "WhileLoop",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
                                 "line": 177,
@@ -1642,7 +1808,7 @@
                                   "immutable": true
                                 },
                                 "lhs": {
-                                  "_type": "BigUIntBinaryOperation",
+                                  "_type": "VarExpression",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
                                     "line": 177,
@@ -1656,44 +1822,9 @@
                                     "name": "biguint",
                                     "immutable": true
                                   },
-                                  "left": {
-                                    "_type": "VarExpression",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                                      "line": 177,
-                                      "end_line": 188,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "biguint",
-                                      "immutable": true
-                                    },
-                                    "name": "__biguint_exp_exp_0"
-                                  },
-                                  "op": "&",
-                                  "right": {
-                                    "_type": "IntegerConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                                      "line": 177,
-                                      "end_line": 188,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "biguint",
-                                      "immutable": true
-                                    },
-                                    "value": 1,
-                                    "teal_alias": null
-                                  }
+                                  "name": "__biguint_exp_exp_0"
                                 },
-                                "operator": "!=",
+                                "operator": ">",
                                 "rhs": {
                                   "_type": "IntegerConstant",
                                   "source_location": {
@@ -1713,7 +1844,7 @@
                                   "teal_alias": null
                                 }
                               },
-                              "if_branch": {
+                              "loop_body": {
                                 "_type": "Block",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
@@ -1724,6 +1855,199 @@
                                   "end_column": null
                                 },
                                 "body": [
+                                  {
+                                    "_type": "IfElse",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                      "line": 177,
+                                      "end_line": 188,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "condition": {
+                                      "_type": "NumericComparisonExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                        "line": 177,
+                                        "end_line": 188,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "bool",
+                                        "immutable": true
+                                      },
+                                      "lhs": {
+                                        "_type": "BigUIntBinaryOperation",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                          "line": 177,
+                                          "end_line": 188,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "left": {
+                                          "_type": "VarExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                            "line": 177,
+                                            "end_line": 188,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "name": "__biguint_exp_exp_0"
+                                        },
+                                        "op": "&",
+                                        "right": {
+                                          "_type": "IntegerConstant",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                            "line": 177,
+                                            "end_line": 188,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "value": 1,
+                                          "teal_alias": null
+                                        }
+                                      },
+                                      "operator": "!=",
+                                      "rhs": {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                          "line": 177,
+                                          "end_line": 188,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "value": 0,
+                                        "teal_alias": null
+                                      }
+                                    },
+                                    "if_branch": {
+                                      "_type": "Block",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                        "line": 177,
+                                        "end_line": 188,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "body": [
+                                        {
+                                          "_type": "AssignmentStatement",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                            "line": 177,
+                                            "end_line": 188,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "target": {
+                                            "_type": "VarExpression",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                              "line": 177,
+                                              "end_line": 188,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "biguint",
+                                              "immutable": true
+                                            },
+                                            "name": "__biguint_exp_result_0"
+                                          },
+                                          "value": {
+                                            "_type": "BigUIntBinaryOperation",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                              "line": 177,
+                                              "end_line": 188,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "biguint",
+                                              "immutable": true
+                                            },
+                                            "left": {
+                                              "_type": "VarExpression",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                                "line": 177,
+                                                "end_line": 188,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "biguint",
+                                                "immutable": true
+                                              },
+                                              "name": "__biguint_exp_result_0"
+                                            },
+                                            "op": "*",
+                                            "right": {
+                                              "_type": "VarExpression",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                                "line": 177,
+                                                "end_line": 188,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "biguint",
+                                                "immutable": true
+                                              },
+                                              "name": "__biguint_exp_base_0"
+                                            }
+                                          }
+                                        }
+                                      ],
+                                      "label": null,
+                                      "comment": null
+                                    },
+                                    "else_branch": null
+                                  },
                                   {
                                     "_type": "AssignmentStatement",
                                     "source_location": {
@@ -1749,7 +2073,7 @@
                                         "name": "biguint",
                                         "immutable": true
                                       },
-                                      "name": "__biguint_exp_result_0"
+                                      "name": "__biguint_exp_exp_0"
                                     },
                                     "value": {
                                       "_type": "BigUIntBinaryOperation",
@@ -1781,7 +2105,87 @@
                                           "name": "biguint",
                                           "immutable": true
                                         },
-                                        "name": "__biguint_exp_result_0"
+                                        "name": "__biguint_exp_exp_0"
+                                      },
+                                      "op": "//",
+                                      "right": {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                          "line": 177,
+                                          "end_line": 188,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "value": 2,
+                                        "teal_alias": null
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "_type": "AssignmentStatement",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                      "line": 177,
+                                      "end_line": 188,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "target": {
+                                      "_type": "VarExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                        "line": 177,
+                                        "end_line": 188,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "biguint",
+                                        "immutable": true
+                                      },
+                                      "name": "__biguint_exp_base_0"
+                                    },
+                                    "value": {
+                                      "_type": "BigUIntBinaryOperation",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                        "line": 177,
+                                        "end_line": 188,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "biguint",
+                                        "immutable": true
+                                      },
+                                      "left": {
+                                        "_type": "VarExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                          "line": 177,
+                                          "end_line": 188,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "name": "__biguint_exp_base_0"
                                       },
                                       "op": "*",
                                       "right": {
@@ -1806,100 +2210,36 @@
                                 ],
                                 "label": null,
                                 "comment": null
-                              },
-                              "else_branch": null
-                            },
-                            {
-                              "_type": "AssignmentStatement",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                                "line": 177,
-                                "end_line": 188,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "target": {
-                                "_type": "VarExpression",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                                  "line": 177,
-                                  "end_line": 188,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "biguint",
-                                  "immutable": true
-                                },
-                                "name": "__biguint_exp_exp_0"
-                              },
-                              "value": {
-                                "_type": "BigUIntBinaryOperation",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                                  "line": 177,
-                                  "end_line": 188,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "biguint",
-                                  "immutable": true
-                                },
-                                "left": {
-                                  "_type": "VarExpression",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                                    "line": 177,
-                                    "end_line": 188,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "biguint",
-                                    "immutable": true
-                                  },
-                                  "name": "__biguint_exp_exp_0"
-                                },
-                                "op": "//",
-                                "right": {
-                                  "_type": "IntegerConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                                    "line": 177,
-                                    "end_line": 188,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "biguint",
-                                    "immutable": true
-                                  },
-                                  "value": 2,
-                                  "teal_alias": null
-                                }
                               }
                             },
                             {
                               "_type": "AssignmentStatement",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                                "line": 177,
+                                "line": 164,
                                 "end_line": 188,
                                 "comment_lines": 0,
                                 "column": null,
                                 "end_column": null
                               },
                               "target": {
+                                "_type": "VarExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
+                                  "line": 164,
+                                  "end_line": 188,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "name": "__cond_0"
+                              },
+                              "value": {
                                 "_type": "VarExpression",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
@@ -1914,58 +2254,7 @@
                                   "name": "biguint",
                                   "immutable": true
                                 },
-                                "name": "__biguint_exp_base_0"
-                              },
-                              "value": {
-                                "_type": "BigUIntBinaryOperation",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                                  "line": 177,
-                                  "end_line": 188,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "biguint",
-                                  "immutable": true
-                                },
-                                "left": {
-                                  "_type": "VarExpression",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                                    "line": 177,
-                                    "end_line": 188,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "biguint",
-                                    "immutable": true
-                                  },
-                                  "name": "__biguint_exp_base_0"
-                                },
-                                "op": "*",
-                                "right": {
-                                  "_type": "VarExpression",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                                    "line": 177,
-                                    "end_line": 188,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "biguint",
-                                    "immutable": true
-                                  },
-                                  "name": "__biguint_exp_base_0"
-                                }
+                                "name": "__biguint_exp_result_0"
                               }
                             }
                           ],
@@ -2001,7 +2290,7 @@
                           "name": "r"
                         },
                         "value": {
-                          "_type": "ConditionalExpression",
+                          "_type": "VarExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
                             "line": 164,
@@ -2015,130 +2304,7 @@
                             "name": "biguint",
                             "immutable": true
                           },
-                          "condition": {
-                            "_type": "NumericComparisonExpression",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                              "line": 164,
-                              "end_line": 170,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "bool",
-                              "immutable": true
-                            },
-                            "lhs": {
-                              "_type": "VarExpression",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                                "line": 164,
-                                "end_line": 165,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "name": "x"
-                            },
-                            "operator": "==",
-                            "rhs": {
-                              "_type": "IntegerConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                                "line": 164,
-                                "end_line": 170,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "value": 0,
-                              "teal_alias": null
-                            }
-                          },
-                          "true_expr": {
-                            "_type": "ReinterpretCast",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                              "line": 164,
-                              "end_line": 188,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "biguint",
-                              "immutable": true
-                            },
-                            "expr": {
-                              "_type": "IntrinsicCall",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                                "line": 164,
-                                "end_line": 188,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "op_code": "itob",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "IntegerConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                                    "line": 173,
-                                    "end_line": 174,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
-                                  },
-                                  "value": 2,
-                                  "teal_alias": null
-                                }
-                              ]
-                            }
-                          },
-                          "false_expr": {
-                            "_type": "VarExpression",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol",
-                              "line": 177,
-                              "end_line": 188,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "biguint",
-                              "immutable": true
-                            },
-                            "name": "__biguint_exp_result_0"
-                          }
+                          "name": "__cond_0"
                         }
                       }
                     ],
