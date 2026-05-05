@@ -630,18 +630,16 @@ std::shared_ptr<awst::Expression> patchMsgValueExpr(
 /// app_params_get reverts on resource availability. The orch update
 /// to forward main_id (via global CallerApplicationID at the orch
 /// frame) lands separately.
-std::shared_ptr<awst::Expression> patchAddressThisExpr(
-	awst::Expression const& _e)
+/// Helper that builds the (account, bool) tuple expression returned by
+/// `app_params_get(MAIN_ID, AppAddress)`. Used by Pass 4 (address(this))
+/// and Pass 5 (inner-pay Sender override). Both extract the value half
+/// via TupleItem; the exists half is unused (main is always deployed
+/// by the time chunks run).
+std::shared_ptr<awst::Expression> makeMainAddressExpr(
+	awst::SourceLocation const& _loc)
 {
-	auto const* ic = dynamic_cast<awst::IntrinsicCall const*>(&_e);
-	if (!ic) return nullptr;
-	if (ic->opCode != "global") return nullptr;
-	if (ic->immediates.empty()) return nullptr;
-	auto const* imm = std::get_if<std::string>(&ic->immediates[0]);
-	if (!imm || *imm != "CurrentApplicationAddress") return nullptr;
-
 	auto mainTmpl = std::make_shared<awst::TemplateVar>();
-	mainTmpl->sourceLocation = ic->sourceLocation;
+	mainTmpl->sourceLocation = _loc;
 	mainTmpl->wtype = awst::WType::uint64Type();
 	mainTmpl->name = kMainAppIdTmpl;
 
@@ -651,12 +649,64 @@ std::shared_ptr<awst::Expression> patchAddressThisExpr(
 		std::nullopt);
 
 	auto get = awst::makeIntrinsicCall(
-		"app_params_get", tupleType, ic->sourceLocation);
+		"app_params_get", tupleType, _loc);
 	get->immediates = {std::string("AppAddress")};
 	get->stackArgs.push_back(std::move(mainTmpl));
 
 	return awst::makeTupleItem(
-		get, 0, awst::WType::accountType(), ic->sourceLocation);
+		get, 0, awst::WType::accountType(), _loc);
+}
+
+std::shared_ptr<awst::Expression> patchAddressThisExpr(
+	awst::Expression const& _e)
+{
+	auto const* ic = dynamic_cast<awst::IntrinsicCall const*>(&_e);
+	if (!ic) return nullptr;
+	if (ic->opCode != "global") return nullptr;
+	if (ic->immediates.empty()) return nullptr;
+	auto const* imm = std::get_if<std::string>(&ic->immediates[0]);
+	if (!imm || *imm != "CurrentApplicationAddress") return nullptr;
+	return makeMainAddressExpr(ic->sourceLocation);
+}
+
+/// Pass 5 rewriter: every pay-typed `CreateInnerTransaction` (TypeEnum=1)
+/// inside a chunk method body has its `Sender` field set to main's
+/// address. Combined with main's account being rekey'd-to __storage at
+/// deploy time, this lets chunk-emitted payments draw from main's
+/// balance — preserving the user-facing identity that "the contract"
+/// is main, not __storage.
+///
+/// We do NOT override Sender if the user code already set it (the only
+/// time that path is exercised today is the orch-dispatch itxn from
+/// main's stub, which doesn't run as chunk code, so this guard is
+/// mostly defensive).
+///
+/// Only Pay txns (TypeEnum=1) get the override; outbound ApplicationCall
+/// txns (TypeEnum=6) keep `Sender = __storage`. External contracts will
+/// see __storage as the caller — accepted limitation for now.
+std::shared_ptr<awst::Expression> patchInnerPaySenderExpr(
+	awst::Expression const& _e)
+{
+	auto const* cit = dynamic_cast<awst::CreateInnerTransaction const*>(&_e);
+	if (!cit) return nullptr;
+
+	// Identify pay-typed by TypeEnum field = "1".
+	auto teIt = cit->fields.find("TypeEnum");
+	if (teIt == cit->fields.end()) return nullptr;
+	auto const* teConst = dynamic_cast<awst::IntegerConstant const*>(
+		teIt->second.get());
+	if (!teConst || teConst->value != "1") return nullptr;
+
+	// Don't overwrite a user-supplied Sender.
+	if (cit->fields.count("Sender")) return nullptr;
+
+	// Clone (preserve all existing fields), inject Sender override.
+	auto cloned = std::make_shared<awst::CreateInnerTransaction>();
+	cloned->sourceLocation = cit->sourceLocation;
+	cloned->wtype = cit->wtype;
+	cloned->fields = cit->fields;
+	cloned->fields["Sender"] = makeMainAddressExpr(cit->sourceLocation);
+	return cloned;
 }
 
 /// Apply all chunk-side patches to a chunk method body. Single walker
@@ -669,6 +719,7 @@ void patchChunkMethodBody(awst::ContractMethod& _m)
 		if (auto r = patchMsgSenderExpr(e)) return r;
 		if (auto r = patchMsgValueExpr(e)) return r;
 		if (auto r = patchAddressThisExpr(e)) return r;
+		if (auto r = patchInnerPaySenderExpr(e)) return r;
 		return nullptr;
 	};
 	walkBlock(*_m.body, fn);
@@ -879,6 +930,86 @@ awst::ContractMethod makeDelegateUpdateMethod(
 	return m;
 }
 
+/// Build the synthetic `__rekey_to_storage(address)void` method on
+/// main that rekeys main's app account to the supplied address (the
+/// __storage app's account). Called once at deploy time after both
+/// main and __storage are created.
+///
+/// Body:
+///     itxn pay
+///       Receiver = address(this)
+///       Amount   = 0
+///       Fee      = 0
+///       RekeyTo  = storage_addr  (method arg)
+///     itxn_submit
+///
+/// AVM honors the rekey because the inner txn comes from main itself
+/// (Sender defaults to CurrentApplicationAddress); after submission,
+/// main's account has AuthAddr = storage_addr. Subsequent inner txns
+/// issued by __storage code that set Sender = main's address (Pass 5)
+/// are then admitted by AVM via the rekey relationship.
+///
+/// Security note: this method has no caller-auth check. An adversary
+/// could call it again to re-rekey main to an attacker-controlled
+/// address. Mitigation for follow-up work: add a `rekeyed` global
+/// flag and assert false on subsequent calls. For now the deploy
+/// harness calls it exactly once at setup, before any user-facing
+/// txns can land.
+awst::ContractMethod makeRekeyToStorageMethod(
+	std::string const& _cref, awst::SourceLocation const& _loc)
+{
+	awst::ContractMethod m;
+	m.sourceLocation = _loc;
+	m.cref = _cref;
+	m.memberName = "__rekey_to_storage";
+	m.returnType = awst::WType::voidType();
+
+	awst::SubroutineArgument arg;
+	arg.name = "storage_addr";
+	arg.sourceLocation = _loc;
+	arg.wtype = awst::WType::accountType();
+	m.args.push_back(std::move(arg));
+
+	auto block = awst::makeBlock(_loc);
+
+	static awst::WInnerTransactionFields s_payFieldsType(1);
+	auto create = std::make_shared<awst::CreateInnerTransaction>();
+	create->sourceLocation = _loc;
+	create->wtype = &s_payFieldsType;
+	create->fields["TypeEnum"] = awst::makeIntegerConstant("1", _loc);
+	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
+	create->fields["Amount"] = awst::makeIntegerConstant("0", _loc);
+	// Receiver = address(this). Use the raw global intrinsic — main's
+	// stub bodies (this is one) aren't subject to the chunk-side Pass 4
+	// patch; they always run on main, so Global.CurrentApplicationAddress
+	// is correct here.
+	auto recv = awst::makeIntrinsicCall(
+		"global", awst::WType::accountType(), _loc);
+	recv->immediates = {std::string("CurrentApplicationAddress")};
+	create->fields["Receiver"] = std::move(recv);
+	create->fields["RekeyTo"] = awst::makeVarExpression(
+		"storage_addr", awst::WType::accountType(), _loc);
+
+	static awst::WInnerTransaction s_payTxnType(1);
+	auto submit = awst::makeSubmitInnerTransaction(&s_payTxnType, _loc);
+	submit->itxns.push_back(std::move(create));
+
+	block->body.push_back(awst::makeExpressionStatement(submit, _loc));
+	block->body.push_back(awst::makeReturnStatement(nullptr, _loc));
+	m.body = block;
+
+	awst::ARC4ABIMethodConfig cfg;
+	cfg.sourceLocation = _loc;
+	cfg.allowedCompletionTypes = {0}; // NoOp
+	cfg.create = 3;  // Disallow — main is created via the explicit
+	                  // ApplicationCreateTxn in the deploy harness, never
+	                  // through this method.
+	cfg.name = "__rekey_to_storage";
+	cfg.readonly = false;
+	m.arc4MethodConfig = cfg;
+	return m;
+}
+
 /// Find the primary deployable Contract in `_roots`.
 ///
 /// AAVE V4 contract files routinely hold a base + a deployable
@@ -996,6 +1127,8 @@ UrosSplitter::Result UrosSplitter::split(
 	}
 	mainContract->methods.push_back(
 		makeDelegateUpdateMethod(primary->id, primary->sourceLocation));
+	mainContract->methods.push_back(
+		makeRekeyToStorageMethod(primary->id, primary->sourceLocation));
 
 	// Pass 1 of the og_sender / og_value plumbing: declare the two
 	// app-global slots on main so puya emits the right state schema.

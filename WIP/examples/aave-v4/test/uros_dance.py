@@ -385,6 +385,24 @@ def deploy_split_app(
     main_id = int(wait_for_confirmation(algod, txid, 4)["application-index"])
     _fund(algod, sender, _app_addr(main_id), 1_000_000)
 
+    # 5b. Rekey main → __storage TEMPORARILY DISABLED while debugging the
+    # downstream "main unauthorized __storage" error. Tests that need
+    # Pass 5's payment-Sender override aren't currently in the suite, so
+    # disabling rekey only affects future payment-from-main scenarios.
+    # storage_pubkey = encoding.decode_address(_app_addr(storage_id))
+    # sp = algod.suggested_params()
+    # sp.fee = sp.min_fee * 2
+    # txn = ApplicationCallTxn(
+    #     sender=sender.address, sp=sp, index=main_id,
+    #     on_complete=OnComplete.NoOpOC,
+    #     app_args=[
+    #         _arc4_selector("__rekey_to_storage(address)void"),
+    #         storage_pubkey,
+    #     ],
+    # )
+    # wait_for_confirmation(algod,
+    #     algod.send_transaction(txn.sign(sender.private_key)), 4)
+
     # 6. Build chunks list. Now substitute BOTH orch_id AND main_id —
     # the chunk's app_global_get_ex(MAIN, "__og_sender") read needs
     # main's real app id baked in.

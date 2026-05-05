@@ -44,6 +44,7 @@ Boxes:
 """
 
 from algopy import (
+    Application,
     ARC4Contract,
     BoxMap,
     Bytes,
@@ -200,6 +201,15 @@ class UrosOrchestrator(ARC4Contract):
         # We read user_args from our own Txn.ApplicationArgs[2..N+1].
         # AVM caps app_args at 16 entries; static branch on
         # NumAppArgs - 1 (we exclude our own dispatch selector at [0]).
+        #
+        # apps=(main,): the chunk's body reads main's __og_sender /
+        # __og_value globals via app_global_get_ex, and main's address
+        # via app_params_get(MAIN, AppAddress). Both require main's app
+        # id to be in the resource list of the inner txn that targets
+        # __storage. CallerApplicationID at this frame is main (main's
+        # forwarding stub is what dispatched into us), so we forward it
+        # straight through.
+        main_app = Application(op.Global.caller_application_id)
         n = op.Txn.num_app_args - UInt64(1)
         if n == UInt64(1):
             # Just selector, no extra args
@@ -207,6 +217,7 @@ class UrosOrchestrator(ARC4Contract):
                 app_id=target_app,
                 on_completion=OnCompleteAction.NoOp,
                 app_args=(user_selector,),
+                apps=(main_app,),
                 fee=0,
             ).submit()
         elif n == UInt64(2):
@@ -215,6 +226,7 @@ class UrosOrchestrator(ARC4Contract):
                 app_id=target_app,
                 on_completion=OnCompleteAction.NoOp,
                 app_args=(user_selector, a1),
+                apps=(main_app,),
                 fee=0,
             ).submit()
         elif n == UInt64(3):
@@ -224,6 +236,7 @@ class UrosOrchestrator(ARC4Contract):
                 app_id=target_app,
                 on_completion=OnCompleteAction.NoOp,
                 app_args=(user_selector, a1, a2),
+                apps=(main_app,),
                 fee=0,
             ).submit()
         elif n == UInt64(4):
@@ -234,6 +247,7 @@ class UrosOrchestrator(ARC4Contract):
                 app_id=target_app,
                 on_completion=OnCompleteAction.NoOp,
                 app_args=(user_selector, a1, a2, a3),
+                apps=(main_app,),
                 fee=0,
             ).submit()
         elif n == UInt64(5):
@@ -245,6 +259,7 @@ class UrosOrchestrator(ARC4Contract):
                 app_id=target_app,
                 on_completion=OnCompleteAction.NoOp,
                 app_args=(user_selector, a1, a2, a3, a4),
+                apps=(main_app,),
                 fee=0,
             ).submit()
         else:
@@ -259,6 +274,7 @@ class UrosOrchestrator(ARC4Contract):
                 app_id=target_app,
                 on_completion=OnCompleteAction.NoOp,
                 app_args=(user_selector, a1, a2, a3, a4, a5),
+                apps=(main_app,),
                 fee=0,
             ).submit()
 
