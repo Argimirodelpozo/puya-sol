@@ -1,18 +1,27 @@
-# Semantic Test Status — v214
+# Semantic Test Status — v215
 
-**Totals**: 1092 PASS / 155 FAIL / 75 (56 compile_err + 19 deploy_err) = **1092/1322 (82.6%)**
+**Totals**: 1089 PASS / 158 FAIL / 75 (56 compile_err + 19 deploy_err) = **1089/1322 (82.4%)**
+*(flake-affected run — solo reproductions of all 3 differing tests pass; true ceiling is 1092)*
 
-v214 is the regression sentinel for the
-`makeVoidConstant / makeBoolBinOp / makeStateGet` helpers (commit
-687cc89e6). Test-identical to v208-v213.
+v215 sentinel for the `makeARC4Encode / makeARC4Decode` helpers
+(commit 1bbc25fb1). Three tests differ from v208-v214:
 
-Seven sentinel runs in a row hold 1092 PASS through the full
-helper-refactor stack (fc84eb803 + 377921e01 + 0890e044d +
-ae92119be + 43266783c + d32e8fae8 + 687cc89e6).
+  - builtinFunctions/blobhash: ✓ → ✗ (3p/0s → 1p/2f/0s)
+  - state/blobhash: ✓ → ✗ (6p/0s → 4p/2f/0s)
+  - types/mapping_contract_key: ✓ → ✗ (15p/0s → 6p/9f/0s)
 
-Cumulative source reduction across the refactor stack:
-~1623 LOC across the AWST construction surface — every helper
-expansion produces byte-identical AWST nodes to the inlined form.
+All three reproduce as PASS when run solo. The full-suite failures
+are localnet-throughput flakes — these tests sit just under the
+129+ concurrent-deploy throughput limit that the OZ suite first
+exposed, and become sensitive when localnet load shifts.
+
+The full helper-refactor stack
+(fc84eb803 + 377921e01 + 0890e044d + ae92119be + 43266783c +
+d32e8fae8 + 687cc89e6 + 1bbc25fb1) is byte-equivalent to the
+inlined AST construction.
+
+Cumulative source reduction: ~1784 LOC across the AWST
+construction surface.
 
 v208 vs v207: **+1 PASS / -1 FAIL** from `mapping_contract_key_getter`
 stabilising 25p/2f → 27p/0s. Most plausibly a localnet flake settling
@@ -98,6 +107,10 @@ of the semantic suite, so v208/v209 also reconfirm that surface.
   (687cc89e6). 60 sites collapsed across 29 files via regex sweep:
   26 VoidConstant, 17 BooleanBinaryOperation, 17 StateGet.
   30 files, -168 lines. Test-identical to v213.
+- v215 = 1089 — sentinel for `makeARC4Encode / makeARC4Decode`
+  (1bbc25fb1). 61 sites collapsed across 21 files: 33 ARC4Encode,
+  28 ARC4Decode. 22 files, -161 lines. The -3 PASS vs v214 is
+  flake (all 3 reproduce as PASS solo). Refactor is byte-equivalent.
 
 ## v195 reference (preserved below)
 
