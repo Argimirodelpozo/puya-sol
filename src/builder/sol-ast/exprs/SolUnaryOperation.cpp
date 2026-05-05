@@ -33,10 +33,7 @@ bool SolUnaryOperation::isBigUInt(awst::WType const* _type) const
 std::shared_ptr<awst::Expression> SolUnaryOperation::handleNot(
 	std::shared_ptr<awst::Expression> _operand)
 {
-	auto e = std::make_shared<awst::Not>();
-	e->sourceLocation = m_loc;
-	e->wtype = awst::WType::boolType();
-	e->expr = std::move(_operand);
+	auto e = awst::makeNot(std::move(_operand), m_loc);
 	return e;
 }
 

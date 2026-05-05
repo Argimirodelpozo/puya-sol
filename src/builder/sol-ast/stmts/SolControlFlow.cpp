@@ -72,10 +72,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 		auto body = awst::makeBlock(m_blk.makeLoc(m_node.body().location()));
 
 		auto cond = bc.build(m_node.condition());
-		auto notCond = std::make_shared<awst::Not>();
-		notCond->sourceLocation = m_loc;
-		notCond->wtype = awst::WType::boolType();
-		notCond->expr = std::move(cond);
+		auto notCond = awst::makeNot(std::move(cond), m_loc);
 
 		auto breakBlock = awst::makeBlock(m_loc);
 		breakBlock->body.push_back(std::make_shared<awst::LoopExit>());

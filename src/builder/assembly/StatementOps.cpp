@@ -57,10 +57,7 @@ void AssemblyBuilder::buildStatement(
 				{
 					// Emit assert(NOT(condition)) — avoids DCE of if(cond){assert(false)}
 					auto cond = ensureBool(buildExpression(*_node.condition), loc);
-					auto notCond = std::make_shared<awst::Not>();
-					notCond->sourceLocation = loc;
-					notCond->wtype = awst::WType::boolType();
-					notCond->expr = std::move(cond);
+					auto notCond = awst::makeNot(std::move(cond), loc);
 
 					auto stmt = awst::makeExpressionStatement(awst::makeAssert(std::move(notCond), loc, "revert"), loc);
 					_out.push_back(std::move(stmt));

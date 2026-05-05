@@ -414,6 +414,17 @@ struct Not: Expression
 	std::shared_ptr<Expression> expr;
 };
 
+// Logical-not on a bool expression. Result type is always bool.
+inline std::shared_ptr<Not> makeNot(
+	std::shared_ptr<Expression> expr, SourceLocation loc)
+{
+	auto node = std::make_shared<Not>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = WType::boolType();
+	node->expr = std::move(expr);
+	return node;
+}
+
 struct AssertExpression: Expression
 {
 	std::string nodeType() const override { return "AssertExpression"; }

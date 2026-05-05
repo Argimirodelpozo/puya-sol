@@ -71,10 +71,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					existsVal->base = std::move(boxLen);
 					existsVal->index = 1;
 
-					auto notExists = std::make_shared<awst::Not>();
-					notExists->sourceLocation = m_loc;
-					notExists->wtype = awst::WType::boolType();
-					notExists->expr = std::move(existsVal);
+					auto notExists = awst::makeNot(std::move(existsVal), m_loc);
 
 					auto createCall = awst::makeIntrinsicCall(
 						"box_create", awst::WType::boolType(), m_loc);

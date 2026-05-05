@@ -873,10 +873,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildSignedModDiv(
 		eitherNeg->op = awst::BinaryBooleanOperator::Or;
 		eitherNeg->right = isRightNeg;
 
-		auto notBothNeg = std::make_shared<awst::Not>();
-		notBothNeg->sourceLocation = _loc;
-		notBothNeg->wtype = awst::WType::boolType();
-		notBothNeg->expr = std::move(bothNeg);
+		auto notBothNeg = awst::makeNot(std::move(bothNeg), _loc);
 
 		auto xorSigns = std::make_shared<awst::BooleanBinaryOperation>();
 		xorSigns->sourceLocation = _loc;
@@ -890,10 +887,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildSignedModDiv(
 	// Only negate if result is non-zero (negating 0 gives 2^256)
 	auto isZero = awst::makeNumericCompare(absResult, awst::NumericComparison::Eq, makeConst("0"), _loc);
 
-	auto notZero = std::make_shared<awst::Not>();
-	notZero->sourceLocation = _loc;
-	notZero->wtype = awst::WType::boolType();
-	notZero->expr = std::move(isZero);
+	auto notZero = awst::makeNot(std::move(isZero), _loc);
 
 	auto shouldNegateAndNonZero = std::make_shared<awst::BooleanBinaryOperation>();
 	shouldNegateAndNonZero->sourceLocation = _loc;

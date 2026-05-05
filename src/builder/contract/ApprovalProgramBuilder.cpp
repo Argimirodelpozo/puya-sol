@@ -1470,10 +1470,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		{
 			auto matchVarRead = awst::makeVarExpression(matchVarName, awst::WType::boolType(), method.sourceLocation);
 
-			auto notMatch = std::make_shared<awst::Not>();
-			notMatch->sourceLocation = method.sourceLocation;
-			notMatch->wtype = awst::WType::boolType();
-			notMatch->expr = std::move(matchVarRead);
+			auto notMatch = awst::makeNot(std::move(matchVarRead), method.sourceLocation);
 
 			auto dispatchBlock = awst::makeBlock(method.sourceLocation);
 			dispatchBlock->body.push_back(makeCall("__fallback", fallbackFunc, false));

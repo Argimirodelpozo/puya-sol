@@ -64,10 +64,7 @@ std::unique_ptr<InstanceBuilder> SolBoolBuilder::unary_op(
 	if (_op != BuilderUnaryOp::LogicalNot)
 		return nullptr;
 
-	auto e = std::make_shared<awst::Not>();
-	e->sourceLocation = _loc;
-	e->wtype = awst::WType::boolType();
-	e->expr = resolve();
+	auto e = awst::makeNot(resolve(), _loc);
 	return std::make_unique<SolBoolBuilder>(m_ctx, std::move(e));
 }
 
@@ -76,10 +73,7 @@ std::unique_ptr<InstanceBuilder> SolBoolBuilder::bool_eval(
 {
 	if (_negate)
 	{
-		auto e = std::make_shared<awst::Not>();
-		e->sourceLocation = m_expr->sourceLocation;
-		e->wtype = awst::WType::boolType();
-		e->expr = resolve();
+		auto e = awst::makeNot(resolve(), m_expr->sourceLocation);
 		return std::make_unique<SolBoolBuilder>(m_ctx, std::move(e));
 	}
 	return std::make_unique<SolBoolBuilder>(m_ctx, resolve());

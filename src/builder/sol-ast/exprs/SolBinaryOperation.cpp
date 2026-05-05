@@ -403,10 +403,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 		auto isNeg = [&](std::shared_ptr<awst::Expression> const& val)
 			-> std::shared_ptr<awst::Expression> {
 			auto cmp = awst::makeNumericCompare(toBiguint(val), awst::NumericComparison::Lt, makeBiguintConst(halfNStr), m_loc);
-			auto notExpr = std::make_shared<awst::Not>();
-			notExpr->sourceLocation = m_loc;
-			notExpr->wtype = awst::WType::boolType();
-			notExpr->expr = std::move(cmp);
+			auto notExpr = awst::makeNot(std::move(cmp), m_loc);
 			return notExpr;
 		};
 
@@ -493,10 +490,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 			// If different sign: absProduct <= half (result must be negative, >= -half)
 			// absProduct <= half  ↔  NOT (absProduct > half)  ↔  NOT (half < absProduct)
 			auto halfLtProd = awst::makeNumericCompare(makeBiguintConst(halfNStr), awst::NumericComparison::Lt, absProduct, m_loc);
-			auto leHalf = std::make_shared<awst::Not>();
-			leHalf->sourceLocation = m_loc;
-			leHalf->wtype = awst::WType::boolType();
-			leHalf->expr = std::move(halfLtProd);
+			auto leHalf = awst::makeNot(std::move(halfLtProd), m_loc);
 
 			// sameSign ? (absProduct < half) : (absProduct <= half)
 			auto rangeCheck = awst::makeConditional(
@@ -590,10 +584,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 
 	// isNeg: base >= half
 	auto baseNegCmp = awst::makeNumericCompare(_base, awst::NumericComparison::Lt, makeBiguintConst(halfNStr), m_loc);
-	auto baseNeg = std::make_shared<awst::Not>();
-	baseNeg->sourceLocation = m_loc;
-	baseNeg->wtype = awst::WType::boolType();
-	baseNeg->expr = std::move(baseNegCmp);
+	auto baseNeg = awst::makeNot(std::move(baseNegCmp), m_loc);
 
 	// abs(base) = baseNeg ? (pow2N - base) : base
 	auto negBase = awst::makeBigUIntBinOp(makeBiguintConst(pow2NStr), awst::BigUIntBinaryOperator::Sub, _base, m_loc);
@@ -633,10 +624,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 		auto ltHalf = awst::makeNumericCompare(absResult, awst::NumericComparison::Lt, makeBiguintConst(halfNStr), m_loc);
 
 		auto halfLtRes = awst::makeNumericCompare(makeBiguintConst(halfNStr), awst::NumericComparison::Lt, absResult, m_loc);
-		auto leHalf = std::make_shared<awst::Not>();
-		leHalf->sourceLocation = m_loc;
-		leHalf->wtype = awst::WType::boolType();
-		leHalf->expr = std::move(halfLtRes);
+		auto leHalf = awst::makeNot(std::move(halfLtRes), m_loc);
 
 		auto rangeOk = awst::makeConditional(
 			std::move(resultNeg), std::move(leHalf), std::move(ltHalf),
@@ -661,10 +649,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 
 	// absResult == 0 → don't negate
 	auto resZero = awst::makeNumericCompare(absResult, awst::NumericComparison::Eq, makeBiguintConst("0"), m_loc);
-	auto notZero = std::make_shared<awst::Not>();
-	notZero->sourceLocation = m_loc;
-	notZero->wtype = awst::WType::boolType();
-	notZero->expr = std::move(resZero);
+	auto notZero = awst::makeNot(std::move(resZero), m_loc);
 	auto doNeg = std::make_shared<awst::BooleanBinaryOperation>();
 	doNeg->sourceLocation = m_loc;
 	doNeg->wtype = awst::WType::boolType();
@@ -733,10 +718,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 	auto isNeg = [&](std::shared_ptr<awst::Expression> const& val)
 		-> std::shared_ptr<awst::Expression> {
 		auto cmp = awst::makeNumericCompare(val, awst::NumericComparison::Lt, makeBiguintConst(halfNStr), m_loc);
-		auto notExpr = std::make_shared<awst::Not>();
-		notExpr->sourceLocation = m_loc;
-		notExpr->wtype = awst::WType::boolType();
-		notExpr->expr = std::move(cmp);
+		auto notExpr = awst::makeNot(std::move(cmp), m_loc);
 		return notExpr;
 	};
 
@@ -781,10 +763,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 		bothTrue->op = awst::BinaryBooleanOperator::And;
 		bothTrue->right = std::move(yIsNeg1);
 
-		auto notBoth = std::make_shared<awst::Not>();
-		notBoth->sourceLocation = m_loc;
-		notBoth->wtype = awst::WType::boolType();
-		notBoth->expr = std::move(bothTrue);
+		auto notBoth = awst::makeNot(std::move(bothTrue), m_loc);
 
 		auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(notBoth), m_loc, "signed division overflow"), m_loc);
 		m_ctx.prePendingStatements.push_back(std::move(assertStmt));

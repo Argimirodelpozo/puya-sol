@@ -132,10 +132,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleIszero(
 	// iszero(x): if x is already bool, emit Not; otherwise x == 0
 	if (_args[0]->wtype == awst::WType::boolType())
 	{
-		auto notExpr = std::make_shared<awst::Not>();
-		notExpr->sourceLocation = _loc;
-		notExpr->wtype = awst::WType::boolType();
-		notExpr->expr = _args[0];
+		auto notExpr = awst::makeNot(_args[0], _loc);
 		return notExpr;
 	}
 
