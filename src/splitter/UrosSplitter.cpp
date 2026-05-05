@@ -610,6 +610,55 @@ std::shared_ptr<awst::Expression> patchMsgValueExpr(
 		awst::WType::uint64Type(), cond->sourceLocation);
 }
 
+/// Pass 4 rewriter: every literal `IntrinsicCall("global",
+/// "CurrentApplicationAddress")` (the AST shape Solidity lowers
+/// `address(this)` to) is rewritten as a runtime read of main's app
+/// address via `app_params_get AppAddress` keyed by
+/// TMPL_UROS_MAIN_APP_ID.
+///
+///     app_params_get(TMPL_UROS_MAIN_APP_ID, AppAddress)  →  (account, bool)
+///     . item[0]  // the address; ignore exists, main is always deployed
+///
+/// We reuse the integer TMPL_UROS_MAIN_APP_ID rather than introducing
+/// a new bytes template var (TMPL_UROS_MAIN_ADDR) because the runtime
+/// hash address can be re-derived from the app id via app_params_get
+/// at zero stored-bytes cost. Three extra opcodes per read versus a
+/// pushbytes template, but no new options.json plumbing.
+///
+/// Chunk runtime requirement: main's app id must be in the inner-txn's
+/// foreign-apps when orch dispatches into __storage. Otherwise
+/// app_params_get reverts on resource availability. The orch update
+/// to forward main_id (via global CallerApplicationID at the orch
+/// frame) lands separately.
+std::shared_ptr<awst::Expression> patchAddressThisExpr(
+	awst::Expression const& _e)
+{
+	auto const* ic = dynamic_cast<awst::IntrinsicCall const*>(&_e);
+	if (!ic) return nullptr;
+	if (ic->opCode != "global") return nullptr;
+	if (ic->immediates.empty()) return nullptr;
+	auto const* imm = std::get_if<std::string>(&ic->immediates[0]);
+	if (!imm || *imm != "CurrentApplicationAddress") return nullptr;
+
+	auto mainTmpl = std::make_shared<awst::TemplateVar>();
+	mainTmpl->sourceLocation = ic->sourceLocation;
+	mainTmpl->wtype = awst::WType::uint64Type();
+	mainTmpl->name = kMainAppIdTmpl;
+
+	auto* tupleType = makeOwnedType<awst::WTuple>(
+		std::vector<awst::WType const*>{
+			awst::WType::accountType(), awst::WType::boolType()},
+		std::nullopt);
+
+	auto get = awst::makeIntrinsicCall(
+		"app_params_get", tupleType, ic->sourceLocation);
+	get->immediates = {std::string("AppAddress")};
+	get->stackArgs.push_back(std::move(mainTmpl));
+
+	return awst::makeTupleItem(
+		get, 0, awst::WType::accountType(), ic->sourceLocation);
+}
+
 /// Apply all chunk-side patches to a chunk method body. Single walker
 /// invocation per method — combined predicate ensures each Expression
 /// slot only gets visited once.
@@ -619,6 +668,7 @@ void patchChunkMethodBody(awst::ContractMethod& _m)
 	auto fn = [](awst::Expression const& e) -> std::shared_ptr<awst::Expression> {
 		if (auto r = patchMsgSenderExpr(e)) return r;
 		if (auto r = patchMsgValueExpr(e)) return r;
+		if (auto r = patchAddressThisExpr(e)) return r;
 		return nullptr;
 	};
 	walkBlock(*_m.body, fn);
