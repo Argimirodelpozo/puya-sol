@@ -149,12 +149,15 @@ def deploy_contract(
     return client
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def orch_app_id(localnet, account):
-    """Session-scoped: deploy a single Uros orchestrator app, fund it,
-    and return its app id. Tests for split contracts use this id when
-    deploying main (TMPL_UROS_ORCH_APP_ID is substituted into the
-    main+chunk TEAL at deploy time)."""
+    """Module-scoped (was session-scoped): each test file deploys its
+    own Uros orchestrator app. Module isolation matters because the
+    orch holds chunk bytecode in boxes keyed by chunk index. Two
+    different split contracts deployed via the same orch would collide
+    on chunk_0 / chunk_1 / ... — the second deploy's `Box.create`
+    asserts on existence. Per-module orch keeps each split contract's
+    chunk pool disjoint."""
     from uros_dance import deploy_orchestrator
     return deploy_orchestrator(localnet.client.algod, account)
 

@@ -8,6 +8,7 @@ import base64
 import algokit_utils as au
 from algosdk import encoding
 from conftest import deploy_contract
+from uros_dance import deploy_split_app
 
 
 ABI_RETURN_PREFIX = bytes.fromhex("151f7c75")
@@ -27,26 +28,53 @@ def _extract_events(confirmation):
 ZERO_ADDR = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"
 
 
+def _appid_to_pseudo_addr_bytes(app_id: int) -> bytes:
+    """puya-sol app-address convention: \\x00*24 + itob(app_id). Tests
+    passing a real app's address as a Solidity `address` arg need this
+    format so SolExternalCall::addressToAppId recovers the right id."""
+    return b"\x00" * 24 + app_id.to_bytes(8, "big")
+
+
 @pytest.fixture(scope="module")
-def spoke(localnet, account):
-    hub_addr = encoding.decode_address(account.address)
+def hub(localnet, account, orch_app_id):
+    """Real Hub via the 3-app dance (main + __storage + orch). Hub's
+    constructor takes a single `address authority_`; we pass the
+    dispenser. getSpokeAddedAssets / getSpokeAddedShares (the methods
+    treasury_spoke calls) are unauth views, so the authority value
+    isn't actually checked at runtime."""
     authority = encoding.decode_address(account.address)
+    return deploy_split_app(
+        localnet.client.algod, account, "Hub",
+        orch_id=orch_app_id,
+        app_args=[authority],
+    )
+
+
+@pytest.fixture(scope="module")
+def spoke(localnet, account, hub):
+    # TreasurySpoke ctor: (address owner_, address hub_). hub_ in puya-sol
+    # convention so the spoke's inner calls land on Hub's main app.
+    owner_ = encoding.decode_address(account.address)
+    hub_ = _appid_to_pseudo_addr_bytes(hub.main_id)
     return deploy_contract(
         localnet, account, "TreasurySpoke",
-        app_args=[hub_addr, authority],
+        app_args=[owner_, hub_],
     )
 
 
 _call_counter = 0
 
 
-def _call(client, method, *args):
+def _call(client, method, *args, extra_fee_micro=None, apps=None):
     global _call_counter
     _call_counter += 1
     note = f"ts_{_call_counter}".encode()
-    result = client.send.call(
-        au.AppClientMethodCallParams(method=method, args=list(args), note=note)
-    )
+    kwargs = dict(method=method, args=list(args), note=note)
+    if extra_fee_micro is not None:
+        kwargs["extra_fee"] = au.AlgoAmount(micro_algo=extra_fee_micro)
+    if apps:
+        kwargs["app_references"] = apps
+    result = client.send.call(au.AppClientMethodCallParams(**kwargs))
     return result.abi_return
 
 
@@ -123,31 +151,44 @@ def test_repay_reverts(spoke, account):
         _call(spoke, "repay", 0, 100, account.address)
 
 
-@pytest.mark.xfail(reason="getSuppliedAmount makes inner txn to hub (fee too small)")
-def test_getSuppliedAmount_zero(spoke):
-    """getSuppliedAmount for reserve 0 should be 0."""
-    result = _call(spoke, "getSuppliedAmount", 0)
+def _hub_apps(hub):
+    """All three of Hub's app refs (main / orch / storage). Needed in
+    foreign-apps for any cross-contract call that goes through the
+    dance, so AVM resource resolution admits the inner-itxn cascade."""
+    return [hub.main_id, hub.orch_id, hub.storage_id]
+
+
+def test_getSuppliedAmount_zero(spoke, hub):
+    """TreasurySpoke.getSuppliedAmount → HUB.getSpokeAddedAssets.
+    Inner-call chain:
+      account → spoke (outer)
+        → hub.main      (itxn 1)
+          → orch        (itxn 2 from main's stub)
+            → __storage Update install chunk  (itxn 3)
+            → __storage call getSpokeAddedAssets (itxn 4)
+            → __storage Update restore default (itxn 5)
+    Plus pay-forward callsub if msg.value > 0 (here 0). 5 inner-itxns
+    total, fee budget = 6×min_fee."""
+    result = _call(spoke, "getSuppliedAmount", 0,
+        extra_fee_micro=8000, apps=_hub_apps(hub))
     assert result == 0
 
 
-@pytest.mark.xfail(reason="getSuppliedShares makes inner txn to hub (fee too small)")
-def test_getSuppliedShares_zero(spoke):
-    """getSuppliedShares for reserve 0 should be 0."""
-    result = _call(spoke, "getSuppliedShares", 0)
+def test_getSuppliedShares_zero(spoke, hub):
+    result = _call(spoke, "getSuppliedShares", 0,
+        extra_fee_micro=8000, apps=_hub_apps(hub))
     assert result == 0
 
 
-@pytest.mark.xfail(reason="getReserveSuppliedAssets makes inner txn to hub (fee too small)")
-def test_getReserveSuppliedAssets_zero(spoke):
-    """getReserveSuppliedAssets for reserve 0 should be 0."""
-    result = _call(spoke, "getReserveSuppliedAssets", 0)
+def test_getReserveSuppliedAssets_zero(spoke, hub):
+    result = _call(spoke, "getReserveSuppliedAssets", 0,
+        extra_fee_micro=8000, apps=_hub_apps(hub))
     assert result == 0
 
 
-@pytest.mark.xfail(reason="getReserveSuppliedShares makes inner txn to hub (fee too small)")
-def test_getReserveSuppliedShares_zero(spoke):
-    """getReserveSuppliedShares for reserve 0 should be 0."""
-    result = _call(spoke, "getReserveSuppliedShares", 0)
+def test_getReserveSuppliedShares_zero(spoke, hub):
+    result = _call(spoke, "getReserveSuppliedShares", 0,
+        extra_fee_micro=8000, apps=_hub_apps(hub))
     assert result == 0
 
 

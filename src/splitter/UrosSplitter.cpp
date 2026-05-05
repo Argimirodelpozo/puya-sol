@@ -1028,8 +1028,19 @@ std::shared_ptr<awst::Block> makeForwardingStubBody(
 		return block;
 	}
 
-	// Non-void: submit, then read inner.LastLog, strip 4-byte ABI
-	// prefix, decode to the declared return type.
+	// Non-void: submit, then unwrap inner.LastLog and decode to the
+	// declared return type.
+	//
+	// The wrapping is deeper than a single ABI prefix because orch.dispatch
+	// returns Bytes (raw chunk log), not the original method's return type.
+	// The actual log emitted by orch on its outer txn is:
+	//
+	//   0x151f7c75       (orch's ABI return prefix)
+	//   <uint16 len>     (ARC4 length prefix of the Bytes return)
+	//   <chunk log>      (= 0x151f7c75 + ARC4(<actual return value>))
+	//
+	// So to recover the actual return value we strip 4 + 2 + 4 = 10 bytes
+	// from the front of itxn LastLog.
 	//
 	// CAREFUL: the og_* cleanup must run AFTER the decoded value is
 	// captured in a temp var. Otherwise the decode (which still reads
@@ -1046,7 +1057,7 @@ std::shared_ptr<awst::Block> makeForwardingStubBody(
 	auto stripPrefix = std::make_shared<awst::IntrinsicCall>();
 	stripPrefix->sourceLocation = _loc;
 	stripPrefix->opCode = "extract";
-	stripPrefix->immediates = {4, 0};
+	stripPrefix->immediates = {10, 0};
 	stripPrefix->wtype = awst::WType::bytesType();
 	stripPrefix->stackArgs.push_back(std::move(readLog));
 
