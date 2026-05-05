@@ -1,15 +1,16 @@
-# Semantic Test Status — v211
+# Semantic Test Status — v212
 
 **Totals**: 1092 PASS / 155 FAIL / 75 (56 compile_err + 19 deploy_err) = **1092/1322 (82.6%)**
 
-v211 is the regression sentinel for the `makeBlock` helper
-(commit ae92119be). Test-identical to v208/v209/v210. The full
+v212 is the regression sentinel for the `makeNot` helper
+(commit 43266783c). Test-identical to v208-v211. The full
 helper-refactor stack (fc84eb803 + 377921e01 + 0890e044d +
-ae92119be) holds 1092 PASS through four refactor commits.
+ae92119be + 43266783c) holds 1092 PASS through five refactor
+commits.
 
-Cumulative source reduction across the refactor stack: ~1198 LOC
-(net -1198 across 49+19+16+26 = 110 unique-but-overlapping file
-edits, deduped to ~50 builder/splitter files).
+Cumulative source reduction across the refactor stack: ~1238 LOC
+across the AWST construction surface — every helper expansion
+produces byte-identical AWST nodes to the inlined form.
 
 v208 vs v207: **+1 PASS / -1 FAIL** from `mapping_contract_key_getter`
 stabilising 25p/2f → 27p/0s. Most plausibly a localnet flake settling
@@ -80,6 +81,10 @@ of the semantic suite, so v208/v209 also reconfirm that surface.
   the regex didn't match. 26 files, -92 lines. Test-identical to
   v210. Local makeBlock helper in Ripemd160Builder.cpp deleted as
   redundant with awst::makeBlock.
+- v212 = 1092 — sentinel for the `makeNot` helper (43266783c).
+  17/19 Not construction sites collapsed via regex; 2 holdouts in
+  deep-copy / non-bool-typed contexts. 10 files, -40 lines.
+  Test-identical to v211.
 
 ## v195 reference (preserved below)
 
