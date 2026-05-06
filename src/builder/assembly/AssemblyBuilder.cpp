@@ -533,6 +533,23 @@ int AssemblyBuilder::computeFlatElementCount(awst::WType const* _type)
 		if (arc4Arr)
 			return arc4Arr->arraySize() * computeFlatElementCount(arc4Arr->elementType());
 	}
+	// ARC4Struct (e.g. Honk.G1Point { x, y }): sum of field counts. Without
+	// this, computeFlatElementCount(G1Point) was 1, so a ReferenceArray<G1Point>
+	// pretended to have 1 flat slot per element — and `mload(mload(base))` patterns
+	// folded the whole struct into a single ARC4Decode<biguint>(struct), which
+	// puya rejects. Counting fields lets accessFlatElement's struct branch
+	// (above) extract the right field at the right flat index.
+	if (_type->kind() == awst::WTypeKind::ARC4Struct)
+	{
+		auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(_type);
+		if (arc4Struct)
+		{
+			int total = 0;
+			for (auto const& [name, fieldType]: arc4Struct->fields())
+				total += computeFlatElementCount(fieldType);
+			return total;
+		}
+	}
 	return 1;
 }
 
@@ -636,6 +653,48 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::accessFlatElement(
 		}
 
 		return accessFlatElement(indexExpr, arc4Arr->elementType(), innerFlatIndex, _loc);
+	}
+
+	// Handle ARC4Struct (e.g. Honk's G1Point { x: uint256, y: uint256 }).
+	// Inline assembly that does `mload(mload(struct_ptr_array))` ends up
+	// here once the calldata-map walk recurses into a struct element. We
+	// pick the field at `_flatIndex` (counting nested fields by size) and
+	// emit a FieldExpression. Without this branch the call would fall
+	// through to the scalar return and the caller would wrap the raw
+	// struct in ARC4Decode<biguint>, which puya rejects.
+	if (_type && _type->kind() == awst::WTypeKind::ARC4Struct)
+	{
+		auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(_type);
+		if (!arc4Struct)
+			return _base;
+
+		int cursor = 0;
+		for (auto const& [name, fieldType] : arc4Struct->fields())
+		{
+			int fieldSize = computeFlatElementCount(fieldType);
+			if (_flatIndex < cursor + fieldSize)
+			{
+				int innerFlatIndex = _flatIndex - cursor;
+				auto fieldExpr = awst::makeFieldExpression(
+					_base, name, fieldType, _loc);
+				if (fieldSize == 1)
+				{
+					// Leaf field — decode to biguint to match the
+					// shape every other accessFlatElement leaf returns
+					// (mload's caller expects a biguint scalar).
+					return awst::makeARC4Decode(
+						std::move(fieldExpr),
+						awst::WType::biguintType(), _loc);
+				}
+				return accessFlatElement(
+					std::move(fieldExpr), fieldType,
+					innerFlatIndex, _loc);
+			}
+			cursor += fieldSize;
+		}
+		// _flatIndex past all fields — should be unreachable; bail to
+		// scalar so we at least don't crash the compile.
+		return _base;
 	}
 
 	// Scalar — _flatIndex should be 0
