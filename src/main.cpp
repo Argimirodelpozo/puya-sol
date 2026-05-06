@@ -183,17 +183,14 @@ struct Options
 	// future iteration can add call-graph-based auto-detection on top.
 	std::vector<std::string> pinnedToMain;
 
-	// --fn-split <SubName>:<idx>,<idx>,...:g<N>
+	// --fn-split <Name>:<idx>,<idx>,...:g<N>
 	//
-	// Slice the named subroutine's body into N+1 pieces along the
-	// statement indices. Each piece becomes its own free-standing
-	// Subroutine called `<SubName>__piece_<i>_g<groupId>`. Live
-	// variables that cross a split point flow through scratch slot 100
-	// (single-slot ARC4-encoded tuple). The original subroutine is left
-	// in roots unchanged — downstream tools (e.g. UrosSplitter + the
-	// orch group dance) decide how to call the pieces.
+	// Slice the named subroutine / contract method's body into N+1
+	// pieces along the statement indices. FunctionSplitter picks the
+	// live-vars threading mechanism based on the target's shape; main
+	// doesn't need to know.
 	//
-	// Repeatable: one flag invocation per subroutine to split.
+	// Repeatable: one flag invocation per target to split.
 	struct FnSplitSpec
 	{
 		std::string subroutineName;
@@ -303,7 +300,7 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.urosOrchAppId = std::stoll(_argv[++i]);
 		else if (arg == "--fn-split" && i + 1 < _argc)
 		{
-			// Format: <SubName>:<idx>,<idx>,...:g<N>
+			// Format: <Name>:<idx>,<idx>,...:g<N>
 			std::string spec = _argv[++i];
 
 			// Split on ':' into (name, indices, group)
@@ -312,7 +309,7 @@ Options parseArgs(int _argc, char* _argv[])
 			if (colon1 == std::string::npos || colon1 == colon2)
 			{
 				std::cerr << "--fn-split: malformed spec '" << spec
-					<< "' — expected <SubName>:<idx>,<idx>,...:g<N>"
+					<< "' — expected <Name>:<idx>,<idx>,...:g<N>"
 					<< std::endl;
 				std::exit(1);
 			}

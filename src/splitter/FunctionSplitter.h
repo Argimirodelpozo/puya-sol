@@ -41,7 +41,7 @@ public:
 	/// scratch-based locals; pick something well above that.
 	static constexpr int kLiveVarsScratchSlot = 100;
 
-	/// One spec per subroutine to split.
+	/// One spec per target to split.
 	///   splitPoints: statement indices where splits occur. With N split
 	///                points, the body slices into N+1 pieces.
 	///                e.g. body has 10 statements, splitPoints = [3, 7]:
@@ -50,6 +50,16 @@ public:
 	///                  piece_2 = stmts [7..10)
 	///   groupId: the `_gN` suffix on each piece's name. Pieces with the
 	///            same groupId form one logical chain.
+	///
+	/// FunctionSplitter picks the live-vars threading mechanism from the
+	/// target's shape:
+	///   * Subroutine target → scratch slot 100 (single-program callsub
+	///     chain). Cheap; works because pieces all execute in the same
+	///     txn frame.
+	///   * ContractMethod target → app-box `__uros_lv_g<groupId>` on the
+	///     parent contract. Survives the uros dance: each piece may
+	///     end up on a different chunk, run on __storage as a separate
+	///     inner-itxn, and the box persists across chunk swaps.
 	struct PieceSpec
 	{
 		std::string subroutineName;

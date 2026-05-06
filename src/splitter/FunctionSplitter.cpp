@@ -653,6 +653,97 @@ std::shared_ptr<awst::Statement> makeScratchStoreStmt(
 	return awst::makeExpressionStatement(std::move(store), _loc);
 }
 
+std::string makeBoxKey(int _groupId)
+{
+	return "__uros_lv_g" + std::to_string(_groupId);
+}
+
+/// Build a `box_put(__uros_lv_g<N>, payload)` statement. Cross-chunk
+/// analog of `makeScratchStoreStmt`. Box owned by whichever app the
+/// piece runs on (storage_id when invoked through the uros dance,
+/// main when callable directly).
+///
+/// Each piece pads its blob to `_maxBlobBytes` with bzero so every
+/// piece writes the SAME box length. AVM `box_put` rejects a write
+/// whose length differs from the existing box length, so without
+/// padding the second piece's epilogue would trap whenever the live-
+/// vars count changed across boundaries. Padding lets us use `box_put`
+/// directly without a box_del / box_create dance.
+std::shared_ptr<awst::Statement> makeBoxStoreStmt(
+	std::vector<FunctionSplitter::VarInfo> const& _liveOut,
+	int _groupId,
+	int _maxBlobBytes,
+	awst::SourceLocation const& _loc)
+{
+	std::shared_ptr<awst::Expression> payload;
+	int actualBytes = static_cast<int>(_liveOut.size()) * kLiveVarBytes;
+	if (_liveOut.empty())
+	{
+		payload = awst::makeBytesConstant({}, _loc);
+	}
+	else
+	{
+		std::shared_ptr<awst::Expression> acc;
+		for (auto const& lv : _liveOut)
+		{
+			auto var = awst::makeVarExpression(lv.name, lv.wtype, _loc);
+			auto fixed = coerceToFixedBytes(var, lv.wtype, _loc);
+			if (!acc)
+				acc = fixed;
+			else
+				acc = awst::makeConcat(acc, fixed, _loc);
+		}
+		payload = acc;
+	}
+	if (actualBytes < _maxBlobBytes)
+	{
+		auto pad = awst::makeBzero(_maxBlobBytes - actualBytes, _loc);
+		payload = awst::makeConcat(std::move(payload), std::move(pad), _loc);
+	}
+
+	auto put = awst::makeIntrinsicCall(
+		"box_put", awst::WType::voidType(), _loc);
+	put->stackArgs.push_back(awst::makeUtf8BytesConstant(
+		makeBoxKey(_groupId), _loc));
+	put->stackArgs.push_back(std::move(payload));
+	return awst::makeExpressionStatement(std::move(put), _loc);
+}
+
+/// Build the prologue stmts that load the live-in blob from box
+/// `__uros_lv_g<N>` into a temp local, then extract each var from
+/// fixed-width slices. Cross-chunk analog of `makeScratchLoadStmts`.
+/// Uses `box_extract` directly (unwraps box_get's (bytes, bool) tuple
+/// implicitly via the `assert exists` shape inside puya's box_get
+/// codegen). We use box_extract per-var since AVM exposes it directly.
+std::vector<std::shared_ptr<awst::Statement>> makeBoxLoadStmts(
+	std::vector<FunctionSplitter::VarInfo> const& _liveIn,
+	int _groupId,
+	awst::SourceLocation const& _loc)
+{
+	std::vector<std::shared_ptr<awst::Statement>> out;
+	if (_liveIn.empty())
+		return out;
+
+	for (size_t i = 0; i < _liveIn.size(); ++i)
+	{
+		auto extract = awst::makeIntrinsicCall(
+			"box_extract", awst::WType::bytesType(), _loc);
+		extract->stackArgs.push_back(awst::makeUtf8BytesConstant(
+			makeBoxKey(_groupId), _loc));
+		extract->stackArgs.push_back(awst::makeIntegerConstant(
+			std::to_string(i * kLiveVarBytes), _loc));
+		extract->stackArgs.push_back(awst::makeIntegerConstant(
+			std::to_string(kLiveVarBytes), _loc));
+		auto value = coerceFromFixedBytes(extract, _liveIn[i].wtype, _loc);
+		auto target = awst::makeVarExpression(
+			_liveIn[i].name, _liveIn[i].wtype, _loc);
+		out.push_back(awst::makeAssignmentStatement(
+			std::move(target), std::move(value), _loc));
+	}
+
+	return out;
+}
+
 std::vector<std::shared_ptr<awst::Statement>> makeScratchLoadStmts(
 	std::vector<FunctionSplitter::VarInfo> const& _liveIn,
 	int _prevCallTxnIndex,
@@ -857,6 +948,15 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 		for (size_t sp : spec.splitPoints)
 			liveAt.push_back(computeLiveVars(stmts, sp, paramNames));
 
+		// In box-mode (cross-chunk threading), every piece's box_put
+		// must use the SAME blob length — AVM rejects writes whose
+		// length differs from the existing box. Pad each piece's blob
+		// up to the max liveAt count across the chain.
+		size_t maxLiveCount = 0;
+		for (auto const& lv : liveAt)
+			if (lv.size() > maxLiveCount) maxLiveCount = lv.size();
+		int maxBlobBytes = static_cast<int>(maxLiveCount) * 32;
+
 		// Build chunk ranges: [0, sp[0]), [sp[0], sp[1]), ..., [sp[N-1], end).
 		std::vector<std::pair<size_t, size_t>> ranges;
 		size_t prev = 0;
@@ -905,18 +1005,27 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 
 			auto pieceBody = awst::makeBlock(origLoc);
 
-			// Prologue: load live-vars from scratch (skip on piece 0).
+			// Prologue: load live-vars (skip on piece 0).
 			if (!isFirst)
 			{
-				// Convention: piece N's call-txn index in the orch dance
-				// group is (2N+1) — install_0, call_0=1, install_1,
-				// call_1=3, ..., call_N=2N+1. So previous call-txn
-				// index = 2N-1.
-				int prevCallTxnIdx = static_cast<int>(2 * pi - 1);
-				for (auto& s : makeScratchLoadStmts(
-					liveAt[pi - 1], prevCallTxnIdx, origLoc))
+				if (isContractMethod)
 				{
-					pieceBody->body.push_back(std::move(s));
+					for (auto& s : makeBoxLoadStmts(
+						liveAt[pi - 1], spec.groupId, origLoc))
+					{
+						pieceBody->body.push_back(std::move(s));
+					}
+				}
+				else
+				{
+					// In-app callsub: prev_call_txn_index unused but kept
+					// for future gload-based variants.
+					int prevCallTxnIdx = static_cast<int>(2 * pi - 1);
+					for (auto& s : makeScratchLoadStmts(
+						liveAt[pi - 1], prevCallTxnIdx, origLoc))
+					{
+						pieceBody->body.push_back(std::move(s));
+					}
 				}
 			}
 
@@ -924,12 +1033,20 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 			for (size_t i = ranges[pi].first; i < ranges[pi].second; ++i)
 				pieceBody->body.push_back(stmts[i]);
 
-			// Epilogue: store live-vars to scratch (skip on last piece —
-			// the last piece ends with the original return statement).
+			// Epilogue: store live-vars (skip on last — ends with the
+			// original return statement instead).
 			if (!isLast)
 			{
-				pieceBody->body.push_back(makeScratchStoreStmt(
-					liveAt[pi], origLoc));
+				if (isContractMethod)
+				{
+					pieceBody->body.push_back(makeBoxStoreStmt(
+						liveAt[pi], spec.groupId, maxBlobBytes, origLoc));
+				}
+				else
+				{
+					pieceBody->body.push_back(makeScratchStoreStmt(
+						liveAt[pi], origLoc));
+				}
 				pieceBody->body.push_back(awst::makeReturnStatement(
 					nullptr, origLoc));
 			}
@@ -1009,6 +1126,16 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 		// it). For Subroutine target, return them via SplitResult so the
 		// caller appends to roots.
 		bool tgtPure = tgt.pure();
+		// If the original method has an ABI config, copy it onto each
+		// piece — pieces of a ContractMethod target are always ABI-
+		// callable so uros can dispatch them through the orch when
+		// they end up on different chunks. (The orch routes by
+		// selector → chunk index. Without an ABI config, the piece
+		// has no selector and isn't reachable cross-chunk.) Each piece
+		// gets its own `name` derived from the original.
+		std::optional<awst::ARC4MethodConfig> origAbiConfig;
+		if (isContractMethod)
+			origAbiConfig = tgt.method->arc4MethodConfig;
 		for (auto const& bp : built)
 		{
 			if (isContractMethod)
@@ -1021,9 +1148,13 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 				m.cref = cref;
 				m.memberName = bp.name;
 				m.pure = tgtPure;
-				// No arc4MethodConfig — pieces are internal-only,
-				// invoked via InstanceMethodTarget callsub. No ABI
-				// dispatch / no router entry.
+				if (origAbiConfig.has_value())
+				{
+					awst::ARC4MethodConfig cfg = *origAbiConfig;
+					if (auto* abi = std::get_if<awst::ARC4ABIMethodConfig>(&cfg))
+						abi->name = bp.name;
+					m.arc4MethodConfig = std::move(cfg);
+				}
 				parentContract->methods.push_back(std::move(m));
 				++result.newContractMethodPieces;
 			}
