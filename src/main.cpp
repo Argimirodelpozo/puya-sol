@@ -808,6 +808,37 @@ int main(int _argc, char* _argv[])
 		puyasol::splitter::PureHelperExtractor ex;
 		pureHelperResult = ex.extract(roots);
 	}
+	// pure_helpers.json: small artifact the deploy harness reads to
+	// (a) enumerate the synthesized helper Contracts, (b) deploy each
+	// as a standalone app, (c) substitute the corresponding TMPL_*
+	// variables into main + chunk TEAL at deploy time. Emitted under
+	// the contract output dir so it sits beside deploy.uros.json.
+	if (pureHelperResult.didExtract)
+	{
+		fs::create_directories(opts.outputDir);
+		njson helpersDoc;
+		njson arr = njson::array();
+		for (auto const& h : pureHelperResult.extracted)
+		{
+			// Helper Contract's emitted file prefix is its bare name
+			// (last dotted segment); recover from the full id the same
+			// way buildHelperContract does.
+			auto dot = h.helperContractId.find_last_of('.');
+			std::string bareName = (dot == std::string::npos)
+				? h.helperContractId
+				: h.helperContractId.substr(dot + 1);
+			njson e;
+			e["template_var"] = h.templateVarName;
+			e["contract_name"] = bareName;
+			arr.push_back(std::move(e));
+		}
+		helpersDoc["helpers"] = std::move(arr);
+		std::string pureHelpersPath =
+			(fs::path(opts.outputDir) / "pure_helpers.json").string();
+		std::ofstream phout(pureHelpersPath);
+		phout << helpersDoc.dump(2) << std::endl;
+		logger.info("Wrote: " + pureHelpersPath);
+	}
 
 	// ─── --uros-splitter: split AWST into main + N chunks ───────────────
 	// Each --uros-splitter flag invocation defines one chunk's method

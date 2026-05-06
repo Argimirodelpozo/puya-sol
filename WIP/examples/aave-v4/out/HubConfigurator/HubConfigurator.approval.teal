@@ -4,7 +4,11 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.approval_program() -> uint64:
 main:
     intcblock 0 32 1 6
-    bytecblock 0x00 0xd5550415 0x9b96f263 0x 0x01 0xd2d2c93b 0xd6044b05 "_authority" "_consumingSchedule" 0x151f7c75 0x0000 0x0000000000 0x0000000000000000000000000000000000000000000000000000000000000000 0xa3afd24b 0x7fb751a6 0x8c7b5bd4 0xf8af4603 0x8cd154d1 0xffffffff 0xde313475 0x2356f87a
+    bytecblock 0x00 0xd5550415 0x9b96f263 0x01 0xd2d2c93b 0xd6044b05 "_authority" "_consumingSchedule" 0x151f7c75 0x0000000000 0x0000 0x0000000000000000000000000000000000000000000000000000000000000000 0x8c7b5bd4 0xf8af4603 0xa3afd24b 0x7fb751a6 0x8cd154d1 0x2356f87a 0xde313475 0xffffffff
+    intc_0 // 0
+    dupn 24
+    pushbytes ""
+    dupn 5
     pushint 4096
     bzero
     dup
@@ -17,16 +21,16 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     txna ApplicationArgs 0
-    bytec 7 // "_authority"
-    bytec 12 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bytec 6 // "_authority"
+    bytec 11 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     app_global_put
-    bytec 8 // "_consumingSchedule"
+    bytec 7 // "_consumingSchedule"
     intc_0 // 0
     app_global_put
-    bytec 7 // "_authority"
+    bytec 6 // "_authority"
     dig 1
     app_global_put
-    bytec 17 // method "AuthorityUpdated(uint8[32])"
+    bytec 16 // method "AuthorityUpdated(uint8[32])"
     swap
     concat
     log
@@ -41,8 +45,3119 @@ main_after_if_else@2:
     assert
     pushbytess 0xaa832cc1 0x2ec5d98c 0xd2fab5aa 0xb4623918 0x89dbdbd0 0x04f71c8c 0xf12999a8 0xa052c149 0x3d6ea267 0x5a9d73db 0xac155049 0x3a0144aa 0x99fe8afc 0xe004d6ea 0x06a3c63d 0x3a5c418e 0x12b09530 0xc889d7ce 0x4b48e860 0xfc748066 0x17dc0d21 0xe9102cec 0xece59dd4 0xcdda4ea6 0xcd513da5 // method "addAsset(address,address,address,uint256,address,byte[])uint512", method "addAssetWithDecimals(address,address,uint64,address,uint256,address,byte[])uint512", method "updateLiquidityFee(address,uint256,uint256)void", method "updateFeeReceiver(address,uint256,address)void", method "updateFeeConfig(address,uint256,uint256,address)void", method "updateInterestRateStrategy(address,uint256,address,byte[])void", method "updateReinvestmentController(address,uint256,address)void", method "resetAssetCaps(address,uint256)void", method "deactivateAsset(address,uint256)void", method "haltAsset(address,uint256)void", method "addSpoke(address,address,uint256,(uint40,uint40,uint24,bool,bool))void", method "addSpokeToAssets(address,address,uint256[],(uint40,uint40,uint24,bool,bool)[])void", method "updateSpokeActive(address,uint256,address,bool)void", method "updateSpokeHalted(address,uint256,address,bool)void", method "updateSpokeAddCap(address,uint256,address,uint256)void", method "updateSpokeDrawCap(address,uint256,address,uint256)void", method "updateSpokeRiskPremiumThreshold(address,uint256,address,uint256)void", method "updateSpokeCaps(address,uint256,address,uint256,uint256)void", method "deactivateSpoke(address,address)void", method "haltSpoke(address,address)void", method "resetSpokeCaps(address,address)void", method "updateInterestRateData(address,uint256,byte[])void", method "authority()address", method "setAuthority(address)void", method "isConsumingScheduledOp()byte[4]"
     txna ApplicationArgs 0
-    match addAsset addAssetWithDecimals updateLiquidityFee updateFeeReceiver updateFeeConfig updateInterestRateStrategy updateReinvestmentController resetAssetCaps deactivateAsset haltAsset addSpoke addSpokeToAssets updateSpokeActive updateSpokeHalted updateSpokeAddCap updateSpokeDrawCap updateSpokeRiskPremiumThreshold updateSpokeCaps deactivateSpoke haltSpoke resetSpokeCaps updateInterestRateData authority setAuthority isConsumingScheduledOp
+    match main_addAsset_route@5 main_addAssetWithDecimals_route@6 main_updateLiquidityFee_route@7 main_updateFeeReceiver_route@8 main_updateFeeConfig_route@9 main_updateInterestRateStrategy_route@10 main_updateReinvestmentController_route@11 main_resetAssetCaps_route@12 main_deactivateAsset_route@13 main_haltAsset_route@14 main_addSpoke_route@15 main_addSpokeToAssets_route@16 main_updateSpokeActive_route@17 main_updateSpokeHalted_route@18 main_updateSpokeAddCap_route@19 main_updateSpokeDrawCap_route@20 main_updateSpokeRiskPremiumThreshold_route@21 main_updateSpokeCaps_route@22 main_deactivateSpoke_route@23 main_haltSpoke_route@24 main_resetSpokeCaps_route@25 main_updateInterestRateData_route@26 main_authority_route@27 main_setAuthority_route@28 main_isConsumingScheduledOp_route@29
     err
+
+main_isConsumingScheduledOp_route@29:
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 7 // "_consumingSchedule"
+    app_global_get_ex
+    assert // check _consumingSchedule exists
+    bz main_ternary_false@38
+    pushbytes 0x8fb36037
+
+main_ternary_merge@39:
+    bytec 8 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@38:
+    pushbytes 0x00000000
+    b main_ternary_merge@39
+
+main_ternary_false@35:
+    intc_0 // 0
+    b main_ternary_merge@36
+
+main_setAuthority_route@28:
+    txna ApplicationArgs 1
+    dup
+    bury 17
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@43
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@44:
+    !
+    assert // not payable
+    txn Sender
+    callsub authority
+    !=
+    !
+    assert // AccessManagedUnauthorized
+    dig 15
+    dup
+    pushint 24
+    extract_uint64
+    app_params_get AppApprovalProgram
+    pop
+    len
+    itob
+    pushbytes 0x
+    b==
+    !
+    assert // AccessManagedInvalidAuthority
+    bytec 6 // "_authority"
+    dig 1
+    app_global_put
+    bytec 16 // method "AuthorityUpdated(uint8[32])"
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@43:
+    intc_0 // 0
+    b main_ternary_merge@44
+
+main_authority_route@27:
+    callsub authority
+    bytec 8 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_updateInterestRateData_route@26:
+    txna ApplicationArgs 1
+    dup
+    bury 21
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 31
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 18
+    txn GroupIndex
+    bz main_ternary_false@50
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@51:
+    !
+    assert // not payable
+    txn Sender
+    callsub _msgData
+    callsub _checkCanCall
+    itxn_begin
+    intc_1 // 32
+    bzero
+    dig 30
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 18
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    dig 21
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x35a9e214 // method "setInterestRateData(uint256,byte[])void"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_2 // 1
+    return
+
+main_ternary_false@50:
+    intc_0 // 0
+    b main_ternary_merge@51
+
+main_resetSpokeCaps_route@25:
+    txna ApplicationArgs 1
+    dup
+    bury 21
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 16
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@55
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@56:
+    !
+    assert // not payable
+    txn Sender
+    callsub _msgData
+    callsub _checkCanCall
+    itxn_begin
+    dig 19
+    pushint 24
+    extract_uint64
+    dup
+    bury 2
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 12 // method "getAssetCount()uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    bury 26
+    intc_0 // 0
+    itob
+    bury 25
+
+main_while_top@57:
+    dig 24
+    dig 26
+    b<
+    bz main_after_while@148
+    itxn_begin
+    intc_1 // 32
+    bzero
+    dig 25
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dup
+    bury 13
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dig 1
+    itxn_field ApplicationID
+    bytec 13 // method "isSpokeListed(uint256,address)bool"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    dig 14
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    intc_0 // 0
+    getbit
+    bz main_after_if_else@60
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dupn 2
+    itxn_field ApplicationID
+    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
+    itxn_field ApplicationArgs
+    dig 12
+    dup
+    cover 2
+    itxn_field ApplicationArgs
+    dig 16
+    dup
+    cover 3
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    extract 4 0
+    dup
+    pushint 104
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    dig 2
+    extract 9 5
+    uncover 2
+    pushint 105
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    uncover 3
+    extract 14 3
+    bytec 9 // 0x0000000000
+    uncover 3
+    concat
+    swap
+    concat
+    swap
+    intc_0 // 0
+    getbit
+    uncover 2
+    intc_2 // 1
+    uncover 2
+    setbit
+    concat
+    dup
+    pushint 104
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    dig 1
+    extract 0 5
+    dig 2
+    pushint 105
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    uncover 3
+    extract 10 3
+    uncover 2
+    bytec 9 // 0x0000000000
+    concat
+    swap
+    concat
+    swap
+    intc_0 // 0
+    getbit
+    uncover 2
+    intc_2 // 1
+    uncover 2
+    setbit
+    concat
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    swap
+    itxn_field ApplicationID
+    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+
+main_after_if_else@60:
+    dig 24
+    bytec_3 // 0x01
+    b+
+    bury 25
+    b main_while_top@57
+
+main_after_while@148:
+    intc_2 // 1
+    return
+
+main_ternary_false@55:
+    intc_0 // 0
+    b main_ternary_merge@56
+
+main_haltSpoke_route@24:
+    txna ApplicationArgs 1
+    dup
+    bury 21
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 16
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@65
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@66:
+    !
+    assert // not payable
+    txn Sender
+    callsub _msgData
+    callsub _checkCanCall
+    itxn_begin
+    dig 19
+    pushint 24
+    extract_uint64
+    dup
+    bury 2
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 12 // method "getAssetCount()uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    bury 26
+    intc_0 // 0
+    itob
+    bury 25
+
+main_while_top@67:
+    dig 24
+    dig 26
+    b<
+    bz main_after_while@148
+    itxn_begin
+    intc_1 // 32
+    bzero
+    dig 25
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dup
+    bury 13
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dig 1
+    itxn_field ApplicationID
+    bytec 13 // method "isSpokeListed(uint256,address)bool"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    dig 14
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    intc_0 // 0
+    getbit
+    bz main_after_if_else@70
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dupn 2
+    itxn_field ApplicationID
+    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
+    itxn_field ApplicationArgs
+    dig 12
+    dup
+    cover 2
+    itxn_field ApplicationArgs
+    dig 16
+    dup
+    cover 3
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    extract 4 0
+    pushint 104
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    dig 1
+    extract 4 5
+    dig 2
+    extract 9 5
+    uncover 3
+    extract 14 3
+    cover 2
+    concat
+    swap
+    concat
+    swap
+    intc_2 // 1
+    dup
+    setbit
+    concat
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    swap
+    itxn_field ApplicationID
+    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+
+main_after_if_else@70:
+    dig 24
+    bytec_3 // 0x01
+    b+
+    bury 25
+    b main_while_top@67
+
+main_ternary_false@65:
+    intc_0 // 0
+    b main_ternary_merge@66
+
+main_deactivateSpoke_route@23:
+    txna ApplicationArgs 1
+    dup
+    bury 21
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 16
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@75
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@76:
+    !
+    assert // not payable
+    txn Sender
+    callsub _msgData
+    callsub _checkCanCall
+    itxn_begin
+    dig 19
+    pushint 24
+    extract_uint64
+    dup
+    bury 2
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 12 // method "getAssetCount()uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    bury 26
+    intc_0 // 0
+    itob
+    bury 25
+
+main_while_top@77:
+    dig 24
+    dig 26
+    b<
+    bz main_after_while@148
+    itxn_begin
+    intc_1 // 32
+    bzero
+    dig 25
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dup
+    bury 13
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dig 1
+    itxn_field ApplicationID
+    bytec 13 // method "isSpokeListed(uint256,address)bool"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    dig 14
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    intc_0 // 0
+    getbit
+    bz main_after_if_else@80
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dupn 2
+    itxn_field ApplicationID
+    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
+    itxn_field ApplicationArgs
+    dig 12
+    dup
+    cover 2
+    itxn_field ApplicationArgs
+    dig 16
+    dup
+    cover 3
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    extract 4 0
+    dig 1
+    extract 4 5
+    dig 2
+    extract 9 5
+    uncover 2
+    pushint 105
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    uncover 3
+    extract 14 3
+    uncover 3
+    uncover 3
+    concat
+    swap
+    concat
+    swap
+    intc_0 // 0
+    getbit
+    bytec_0 // 0x00
+    intc_2 // 1
+    uncover 2
+    setbit
+    concat
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    swap
+    itxn_field ApplicationID
+    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+
+main_after_if_else@80:
+    dig 24
+    bytec_3 // 0x01
+    b+
+    bury 25
+    b main_while_top@77
+
+main_ternary_false@75:
+    intc_0 // 0
+    b main_ternary_merge@76
+
+main_updateSpokeCaps_route@22:
+    txna ApplicationArgs 1
+    dup
+    bury 21
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 31
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    bury 16
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    dup
+    bury 32
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 5
+    dup
+    bury 30
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@85
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@86:
+    !
+    assert // not payable
+    txn Sender
+    callsub _msgData
+    callsub _checkCanCall
+    itxn_begin
+    intc_1 // 32
+    bzero
+    dig 30
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 20
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
+    itxn_field ApplicationArgs
+    dig 1
+    itxn_field ApplicationArgs
+    dig 16
+    dup
+    cover 3
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    extract 4 0
+    dup
+    pushint 104
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    dig 36
+    callsub SafeCast.toUint40
+    itob
+    dup
+    bitlen
+    pushint 40
+    <=
+    assert // overflow
+    extract 3 5
+    dig 3
+    extract 9 5
+    uncover 3
+    pushint 105
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    uncover 4
+    extract 14 3
+    uncover 3
+    uncover 3
+    concat
+    swap
+    concat
+    swap
+    intc_0 // 0
+    getbit
+    uncover 2
+    intc_2 // 1
+    uncover 2
+    setbit
+    concat
+    dup
+    pushint 104
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    dig 1
+    extract 0 5
+    dig 34
+    callsub SafeCast.toUint40
+    itob
+    dup
+    bitlen
+    pushint 40
+    <=
+    assert // overflow
+    extract 3 5
+    dig 3
+    pushint 105
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    uncover 4
+    extract 10 3
+    uncover 3
+    uncover 3
+    concat
+    swap
+    concat
+    swap
+    intc_0 // 0
+    getbit
+    uncover 2
+    intc_2 // 1
+    uncover 2
+    setbit
+    concat
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    swap
+    itxn_field ApplicationID
+    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_2 // 1
+    return
+
+main_ternary_false@85:
+    intc_0 // 0
+    b main_ternary_merge@86
+
+main_updateSpokeRiskPremiumThreshold_route@21:
+    txna ApplicationArgs 1
+    dup
+    bury 21
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 31
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    bury 16
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    dup
+    bury 28
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@90
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@91:
+    !
+    assert // not payable
+    txn Sender
+    callsub _msgData
+    callsub _checkCanCall
+    itxn_begin
+    intc_1 // 32
+    bzero
+    dig 30
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 20
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
+    itxn_field ApplicationArgs
+    dig 1
+    itxn_field ApplicationArgs
+    dig 16
+    dup
+    cover 3
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    extract 4 0
+    dup
+    pushint 104
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    dig 2
+    extract 4 5
+    uncover 3
+    extract 9 5
+    uncover 3
+    pushint 105
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    dig 33
+    callsub SafeCast.toUint24
+    itob
+    dup
+    bitlen
+    pushint 24
+    <=
+    assert // overflow
+    extract 5 3
+    uncover 3
+    uncover 3
+    concat
+    swap
+    concat
+    swap
+    intc_0 // 0
+    getbit
+    uncover 2
+    intc_2 // 1
+    uncover 2
+    setbit
+    concat
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    swap
+    itxn_field ApplicationID
+    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_2 // 1
+    return
+
+main_ternary_false@90:
+    intc_0 // 0
+    b main_ternary_merge@91
+
+main_updateSpokeDrawCap_route@20:
+    txna ApplicationArgs 1
+    dup
+    bury 21
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 31
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    bury 16
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    dup
+    bury 30
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@95
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@96:
+    !
+    assert // not payable
+    txn Sender
+    callsub _msgData
+    callsub _checkCanCall
+    itxn_begin
+    intc_1 // 32
+    bzero
+    dig 30
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 20
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
+    itxn_field ApplicationArgs
+    dig 1
+    itxn_field ApplicationArgs
+    dig 16
+    dup
+    cover 3
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    extract 4 0
+    dup
+    pushint 104
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    dig 2
+    extract 4 5
+    dig 35
+    callsub SafeCast.toUint40
+    itob
+    dup
+    bitlen
+    pushint 40
+    <=
+    assert // overflow
+    extract 3 5
+    uncover 3
+    pushint 105
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    uncover 4
+    extract 14 3
+    uncover 3
+    uncover 3
+    concat
+    swap
+    concat
+    swap
+    intc_0 // 0
+    getbit
+    uncover 2
+    intc_2 // 1
+    uncover 2
+    setbit
+    concat
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    swap
+    itxn_field ApplicationID
+    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_2 // 1
+    return
+
+main_ternary_false@95:
+    intc_0 // 0
+    b main_ternary_merge@96
+
+main_updateSpokeAddCap_route@19:
+    txna ApplicationArgs 1
+    dup
+    bury 21
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 31
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    bury 16
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    dup
+    bury 32
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@100
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@101:
+    !
+    assert // not payable
+    txn Sender
+    callsub _msgData
+    callsub _checkCanCall
+    itxn_begin
+    intc_1 // 32
+    bzero
+    dig 30
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 20
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
+    itxn_field ApplicationArgs
+    dig 1
+    itxn_field ApplicationArgs
+    dig 16
+    dup
+    cover 3
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    extract 4 0
+    dup
+    pushint 104
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    dig 36
+    callsub SafeCast.toUint40
+    itob
+    dup
+    bitlen
+    pushint 40
+    <=
+    assert // overflow
+    extract 3 5
+    dig 3
+    extract 9 5
+    uncover 3
+    pushint 105
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    uncover 4
+    extract 14 3
+    uncover 3
+    uncover 3
+    concat
+    swap
+    concat
+    swap
+    intc_0 // 0
+    getbit
+    uncover 2
+    intc_2 // 1
+    uncover 2
+    setbit
+    concat
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    swap
+    itxn_field ApplicationID
+    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_2 // 1
+    return
+
+main_ternary_false@100:
+    intc_0 // 0
+    b main_ternary_merge@101
+
+main_updateSpokeHalted_route@18:
+    txna ApplicationArgs 1
+    dup
+    bury 21
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 31
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    bury 16
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_2 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_0 // 0
+    getbit
+    bury 2
+    txn GroupIndex
+    bz main_ternary_false@105
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@106:
+    !
+    assert // not payable
+    txn Sender
+    callsub _msgData
+    callsub _checkCanCall
+    dig 1
+    dup
+    intc_2 // 1
+    <=
+    assert // ABI bool validation
+    itxn_begin
+    intc_1 // 32
+    bzero
+    dig 31
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 21
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
+    itxn_field ApplicationArgs
+    dig 1
+    itxn_field ApplicationArgs
+    dig 17
+    dup
+    cover 3
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    extract 4 0
+    pushint 104
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    dig 1
+    extract 4 5
+    dig 2
+    extract 9 5
+    uncover 3
+    extract 14 3
+    cover 2
+    concat
+    swap
+    concat
+    swap
+    intc_2 // 1
+    uncover 6
+    setbit
+    concat
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    swap
+    itxn_field ApplicationID
+    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_2 // 1
+    return
+
+main_ternary_false@105:
+    intc_0 // 0
+    b main_ternary_merge@106
+
+main_updateSpokeActive_route@17:
+    txna ApplicationArgs 1
+    dup
+    bury 21
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 31
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    bury 16
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    dup
+    bury 10
+    dup
+    len
+    intc_2 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_0 // 0
+    getbit
+    bury 6
+    txn GroupIndex
+    bz main_ternary_false@110
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@111:
+    !
+    assert // not payable
+    txn Sender
+    callsub _msgData
+    callsub _checkCanCall
+    dig 5
+    intc_2 // 1
+    <=
+    assert // ABI bool validation
+    itxn_begin
+    intc_1 // 32
+    bzero
+    dig 30
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 20
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
+    itxn_field ApplicationArgs
+    dig 1
+    itxn_field ApplicationArgs
+    dig 16
+    dup
+    cover 3
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    extract 4 0
+    dig 1
+    extract 4 5
+    dig 2
+    extract 9 5
+    uncover 2
+    pushint 105
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    uncover 3
+    extract 14 3
+    uncover 3
+    uncover 3
+    concat
+    swap
+    concat
+    swap
+    intc_0 // 0
+    getbit
+    dig 13
+    intc_2 // 1
+    uncover 2
+    setbit
+    concat
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    swap
+    itxn_field ApplicationID
+    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_2 // 1
+    return
+
+main_ternary_false@110:
+    intc_0 // 0
+    b main_ternary_merge@111
+
+main_addSpokeToAssets_route@16:
+    txna ApplicationArgs 1
+    dup
+    bury 21
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 16
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    bury 25
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    bury 7
+    intc_1 // 32
+    *
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txna ApplicationArgs 4
+    dup
+    bury 23
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    bury 6
+    pushint 14
+    *
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<SpokeConfig>
+    txn GroupIndex
+    bz main_ternary_false@115
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@116:
+    !
+    assert // not payable
+    txn Sender
+    callsub _msgData
+    callsub _checkCanCall
+    dig 4
+    itob
+    dup
+    bury 27
+    dig 4
+    itob
+    b==
+    assert // MismatchedConfigs
+    intc_0 // 0
+    itob
+    bury 19
+
+main_while_top@117:
+    dig 18
+    dig 26
+    b<
+    bz main_after_while@148
+    itxn_begin
+    intc_1 // 32
+    bzero
+    pushint 8
+    bzero
+    dig 20
+    dup
+    cover 3
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 26
+    extract 2 0
+    dig 1
+    intc_1 // 32
+    *
+    intc_1 // 32
+    extract3 // on error: index access is out of bounds
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 24
+    extract 2 0
+    uncover 2
+    pushint 14
+    *
+    pushint 14
+    extract3 // on error: index access is out of bounds
+    dig 22
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 17 // method "addSpoke(uint256,address,(uint40,uint40,uint24,bool,bool))void"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    dig 16
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    bytec_3 // 0x01
+    b+
+    bury 19
+    b main_while_top@117
+
+main_ternary_false@115:
+    intc_0 // 0
+    b main_ternary_merge@116
+
+main_addSpoke_route@15:
+    txna ApplicationArgs 1
+    dup
+    bury 21
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 16
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    bury 31
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    dup
+    bury 24
+    len
+    pushint 14
+    ==
+    assert // invalid number of bytes for SpokeConfig
+    txn GroupIndex
+    bz main_ternary_false@123
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@124:
+    !
+    assert // not payable
+    txn Sender
+    callsub _msgData
+    callsub _checkCanCall
+    itxn_begin
+    intc_1 // 32
+    bzero
+    dig 30
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 20
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 17 // method "addSpoke(uint256,address,(uint40,uint40,uint24,bool,bool))void"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    dig 14
+    itxn_field ApplicationArgs
+    dig 22
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_2 // 1
+    return
+
+main_ternary_false@123:
+    intc_0 // 0
+    b main_ternary_merge@124
+
+main_haltAsset_route@14:
+    txna ApplicationArgs 1
+    dup
+    bury 21
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 31
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@128
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@129:
+    !
+    assert // not payable
+    txn Sender
+    callsub _msgData
+    callsub _checkCanCall
+    itxn_begin
+    intc_1 // 32
+    bzero
+    dup
+    bury 9
+    dig 30
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dup
+    bury 14
+    dig 20
+    pushint 24
+    extract_uint64
+    dup
+    bury 3
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 14 // method "getSpokeCount(uint256)uint256"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    bury 14
+    intc_0 // 0
+    itob
+    bury 19
+
+main_while_top@130:
+    dig 18
+    dig 14
+    b<
+    bz main_after_while@148
+    itxn_begin
+    dig 7
+    dig 19
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dig 2
+    dup
+    cover 2
+    itxn_field ApplicationID
+    bytec 15 // method "getSpokeAddress(uint256,uint256)address"
+    itxn_field ApplicationArgs
+    dig 15
+    dup
+    cover 3
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dig 1
+    itxn_field ApplicationID
+    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
+    itxn_field ApplicationArgs
+    dig 2
+    itxn_field ApplicationArgs
+    dup
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    extract 4 0
+    pushint 104
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    dig 1
+    extract 4 5
+    dig 2
+    extract 9 5
+    uncover 3
+    extract 14 3
+    cover 2
+    concat
+    swap
+    concat
+    swap
+    intc_2 // 1
+    dup
+    setbit
+    concat
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    uncover 2
+    itxn_field ApplicationID
+    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
+    itxn_field ApplicationArgs
+    uncover 2
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    bytec_3 // 0x01
+    b+
+    bury 19
+    b main_while_top@130
+
+main_ternary_false@128:
+    intc_0 // 0
+    b main_ternary_merge@129
+
+main_deactivateAsset_route@13:
+    txna ApplicationArgs 1
+    dup
+    bury 21
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 31
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@136
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@137:
+    !
+    assert // not payable
+    txn Sender
+    callsub _msgData
+    callsub _checkCanCall
+    itxn_begin
+    intc_1 // 32
+    bzero
+    dup
+    bury 9
+    dig 30
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dup
+    bury 14
+    dig 20
+    pushint 24
+    extract_uint64
+    dup
+    bury 3
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 14 // method "getSpokeCount(uint256)uint256"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    bury 14
+    intc_0 // 0
+    itob
+    bury 19
+
+main_while_top@138:
+    dig 18
+    dig 14
+    b<
+    bz main_after_while@148
+    itxn_begin
+    dig 7
+    dig 19
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dig 2
+    dup
+    cover 2
+    itxn_field ApplicationID
+    bytec 15 // method "getSpokeAddress(uint256,uint256)address"
+    itxn_field ApplicationArgs
+    dig 15
+    dup
+    cover 3
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dig 1
+    itxn_field ApplicationID
+    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
+    itxn_field ApplicationArgs
+    dig 2
+    itxn_field ApplicationArgs
+    dup
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    extract 4 0
+    dig 1
+    extract 4 5
+    dig 2
+    extract 9 5
+    uncover 2
+    pushint 105
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    uncover 3
+    extract 14 3
+    uncover 3
+    uncover 3
+    concat
+    swap
+    concat
+    swap
+    intc_0 // 0
+    getbit
+    bytec_0 // 0x00
+    intc_2 // 1
+    uncover 2
+    setbit
+    concat
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    uncover 2
+    itxn_field ApplicationID
+    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
+    itxn_field ApplicationArgs
+    uncover 2
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    bytec_3 // 0x01
+    b+
+    bury 19
+    b main_while_top@138
+
+main_ternary_false@136:
+    intc_0 // 0
+    b main_ternary_merge@137
+
+main_resetAssetCaps_route@12:
+    txna ApplicationArgs 1
+    dup
+    bury 21
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 31
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@144
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@145:
+    !
+    assert // not payable
+    txn Sender
+    callsub _msgData
+    callsub _checkCanCall
+    itxn_begin
+    intc_1 // 32
+    bzero
+    dup
+    bury 9
+    dig 30
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dup
+    bury 14
+    dig 20
+    pushint 24
+    extract_uint64
+    dup
+    bury 3
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 14 // method "getSpokeCount(uint256)uint256"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    bury 14
+    intc_0 // 0
+    itob
+    bury 19
+
+main_while_top@146:
+    dig 18
+    dig 14
+    b<
+    bz main_after_while@148
+    itxn_begin
+    dig 7
+    dig 19
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dig 2
+    dup
+    cover 2
+    itxn_field ApplicationID
+    bytec 15 // method "getSpokeAddress(uint256,uint256)address"
+    itxn_field ApplicationArgs
+    dig 15
+    dup
+    cover 3
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dig 1
+    itxn_field ApplicationID
+    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
+    itxn_field ApplicationArgs
+    dig 2
+    itxn_field ApplicationArgs
+    dup
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    extract 4 0
+    dup
+    pushint 104
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    dig 2
+    extract 9 5
+    uncover 2
+    pushint 105
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    uncover 3
+    extract 14 3
+    bytec 9 // 0x0000000000
+    uncover 3
+    concat
+    swap
+    concat
+    swap
+    intc_0 // 0
+    getbit
+    uncover 2
+    intc_2 // 1
+    uncover 2
+    setbit
+    concat
+    dup
+    pushint 104
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    dig 1
+    extract 0 5
+    dig 2
+    pushint 105
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    uncover 3
+    extract 10 3
+    uncover 2
+    bytec 9 // 0x0000000000
+    concat
+    swap
+    concat
+    swap
+    intc_0 // 0
+    getbit
+    uncover 2
+    intc_2 // 1
+    uncover 2
+    setbit
+    concat
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    uncover 2
+    itxn_field ApplicationID
+    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
+    itxn_field ApplicationArgs
+    uncover 2
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    bytec_3 // 0x01
+    b+
+    bury 19
+    b main_while_top@146
+
+main_ternary_false@144:
+    intc_0 // 0
+    b main_ternary_merge@145
+
+main_updateReinvestmentController_route@11:
+    txna ApplicationArgs 1
+    dup
+    bury 21
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 31
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    bury 12
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@152
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@153:
+    !
+    assert // not payable
+    txn Sender
+    callsub _msgData
+    callsub _checkCanCall
+    itxn_begin
+    intc_1 // 32
+    bzero
+    dig 30
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 20
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec 4 // method "getAssetConfig(uint256)(uint8[32],uint16,uint8[32],uint8[32])"
+    itxn_field ApplicationArgs
+    dig 1
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    extract 4 32
+    dig 1
+    extract 38 32
+    uncover 2
+    extract 36 2
+    uncover 2
+    swap
+    concat
+    swap
+    concat
+    dig 13
+    concat
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    swap
+    itxn_field ApplicationID
+    bytec 5 // method "updateAssetConfig(uint256,(uint8[32],uint16,uint8[32],uint8[32]),byte[])void"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    bytec 10 // 0x0000
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_2 // 1
+    return
+
+main_ternary_false@152:
+    intc_0 // 0
+    b main_ternary_merge@153
+
+main_updateInterestRateStrategy_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 21
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 31
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    bury 12
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 18
+    txn GroupIndex
+    bz main_ternary_false@157
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@158:
+    !
+    assert // not payable
+    txn Sender
+    callsub _msgData
+    callsub _checkCanCall
+    itxn_begin
+    intc_1 // 32
+    bzero
+    dig 30
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 20
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec 4 // method "getAssetConfig(uint256)(uint8[32],uint16,uint8[32],uint8[32])"
+    itxn_field ApplicationArgs
+    dig 1
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    extract 4 32
+    dig 1
+    extract 36 2
+    uncover 2
+    extract 70 32
+    cover 2
+    concat
+    dig 14
+    concat
+    swap
+    concat
+    itxn_begin
+    dig 20
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    uncover 2
+    itxn_field ApplicationID
+    bytec 5 // method "updateAssetConfig(uint256,(uint8[32],uint16,uint8[32],uint8[32]),byte[])void"
+    itxn_field ApplicationArgs
+    uncover 2
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_2 // 1
+    return
+
+main_ternary_false@157:
+    intc_0 // 0
+    b main_ternary_merge@158
+
+main_updateFeeConfig_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 21
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 31
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    bury 29
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    dup
+    bury 11
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@162
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@163:
+    !
+    assert // not payable
+    txn Sender
+    callsub _msgData
+    callsub _checkCanCall
+    itxn_begin
+    intc_1 // 32
+    bzero
+    dig 30
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 20
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec 4 // method "getAssetConfig(uint256)(uint8[32],uint16,uint8[32],uint8[32])"
+    itxn_field ApplicationArgs
+    dig 1
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    extract 4 32
+    dig 1
+    extract 38 32
+    dig 32
+    callsub SafeCast.toUint16
+    itob
+    dup
+    bitlen
+    pushint 16
+    <=
+    assert // overflow
+    extract 6 2
+    uncover 3
+    extract 70 32
+    uncover 3
+    uncover 2
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    dup
+    extract 34 32
+    dig 1
+    extract 32 2
+    uncover 2
+    extract 66 32
+    dig 14
+    uncover 2
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    swap
+    itxn_field ApplicationID
+    bytec 5 // method "updateAssetConfig(uint256,(uint8[32],uint16,uint8[32],uint8[32]),byte[])void"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    bytec 10 // 0x0000
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_2 // 1
+    return
+
+main_ternary_false@162:
+    intc_0 // 0
+    b main_ternary_merge@163
+
+main_updateFeeReceiver_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 21
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 31
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    bury 12
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@167
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@168:
+    !
+    assert // not payable
+    txn Sender
+    callsub _msgData
+    callsub _checkCanCall
+    itxn_begin
+    intc_1 // 32
+    bzero
+    dig 30
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 20
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec 4 // method "getAssetConfig(uint256)(uint8[32],uint16,uint8[32],uint8[32])"
+    itxn_field ApplicationArgs
+    dig 1
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    extract 38 32
+    dig 1
+    extract 36 2
+    uncover 2
+    extract 70 32
+    dig 15
+    uncover 2
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    swap
+    itxn_field ApplicationID
+    bytec 5 // method "updateAssetConfig(uint256,(uint8[32],uint16,uint8[32],uint8[32]),byte[])void"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    bytec 10 // 0x0000
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_2 // 1
+    return
+
+main_ternary_false@167:
+    intc_0 // 0
+    b main_ternary_merge@168
+
+main_updateLiquidityFee_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 21
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 31
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    bury 29
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@172
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@173:
+    !
+    assert // not payable
+    txn Sender
+    callsub _msgData
+    callsub _checkCanCall
+    dig 19
+    dig 30
+    dig 29
+    callsub _updateLiquidityFee
+    intc_2 // 1
+    return
+
+main_ternary_false@172:
+    intc_0 // 0
+    b main_ternary_merge@173
+
+main_addAssetWithDecimals_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 21
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 8
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 3
+    txna ApplicationArgs 4
+    dup
+    bury 22
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 5
+    dup
+    bury 29
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 6
+    dup
+    bury 18
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 7
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 18
+    txn GroupIndex
+    bz main_ternary_false@177
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@178:
+    !
+    assert // not payable
+    txn Sender
+    callsub _msgData
+    callsub _checkCanCall
+    dig 2
+    dup
+    pushint 255
+    <=
+    assert // ABI validation
+    pushint 255
+    &
+    itxn_begin
+    itob
+    dig 18
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    dig 21
+    dup
+    cover 3
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 18 // method "addAsset(address,uint64,address,address,byte[])uint256"
+    itxn_field ApplicationArgs
+    dig 9
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    dig 22
+    itxn_field ApplicationArgs
+    dig 18
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    swap
+    dig 1
+    dig 30
+    callsub _updateLiquidityFee
+    dup
+    len
+    pushint 64
+    <=
+    assert // overflow
+    pushint 64
+    bzero
+    b|
+    bytec 8 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@177:
+    intc_0 // 0
+    b main_ternary_merge@178
+
+main_addAsset_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 21
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 8
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    bury 22
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    dup
+    bury 29
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 5
+    dup
+    bury 18
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 6
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 18
+    txn GroupIndex
+    bz main_ternary_false@182
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@183:
+    !
+    assert // not payable
+    txn Sender
+    callsub _msgData
+    callsub _checkCanCall
+    itxn_begin
+    dig 6
+    dup
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0xb8779ee7 // method "decimals()uint64"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn_begin
+    itxn LastLog
+    extract 4 0
+    btoi
+    itob
+    dig 19
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    dig 22
+    dup
+    cover 3
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 18 // method "addAsset(address,uint64,address,address,byte[])uint256"
+    itxn_field ApplicationArgs
+    uncover 3
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    dig 22
+    itxn_field ApplicationArgs
+    dig 18
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    swap
+    dig 1
+    dig 30
+    callsub _updateLiquidityFee
+    dup
+    len
+    pushint 64
+    <=
+    assert // overflow
+    pushint 64
+    bzero
+    b|
+    bytec 8 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@182:
+    intc_0 // 0
+    b main_ternary_merge@183
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.AuthorityUtils.canCallWithDelay(authority: bytes, caller: bytes, target: bytes, selector: bytes) -> uint64, uint64:
@@ -52,17 +3167,17 @@ AuthorityUtils.canCallWithDelay:
     pushint 8
     bzero
     swap
-    bytec 12 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 11 // 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 0
-    bytec 12 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 11 // 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 32
     dup
     extract 0 32
-    bytec_3 // 0x
+    pushbytes 0x
     b!=
     dig 1
     extract 32 32
-    bytec 18 // 0xffffffff
+    bytec 19 // 0xffffffff
     b&
     dig 3
     swap
@@ -76,16 +3191,16 @@ AuthorityUtils.canCallWithDelay:
     dup
     pushbytes 0x0000000000000000000000000000000000000000000000000000000100000000
     b/
-    bytec_3 // 0x
+    pushbytes 0x
     b==
-    bytec_3 // 0x
-    bytec 4 // 0x01
+    pushbytes 0x
+    bytec_3 // 0x01
     uncover 2
     select
     b*
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 18 // 0xffffffff
+    bytec 19 // 0xffffffff
     b&
     uncover 3
     swap
@@ -166,3129 +3281,6 @@ SafeCast.toUint16:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.addAsset[routing]() -> void:
-addAsset:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 3
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 4
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 5
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 6
-    dup
-    intc_0 // 0
-    extract_uint16 // on error: invalid array length header
-    pushint 2
-    +
-    dig 1
-    len
-    ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    extract 2 0
-    txn GroupIndex
-    bz addAsset_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-addAsset_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub _msgData
-    callsub _checkCanCall
-    itxn_begin
-    dig 4
-    dup
-    pushint 24
-    extract_uint64
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    pushbytes 0xb8779ee7 // method "decimals()uint64"
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn_begin
-    itxn LastLog
-    extract 4 0
-    btoi
-    itob
-    dig 2
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    dig 8
-    dup
-    cover 3
-    pushint 24
-    extract_uint64
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec 19 // method "addAsset(address,uint64,address,address,byte[])uint256"
-    itxn_field ApplicationArgs
-    uncover 3
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    dig 5
-    itxn_field ApplicationArgs
-    dig 3
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    swap
-    dig 1
-    dig 5
-    callsub _updateLiquidityFee
-    dup
-    len
-    pushint 64
-    <=
-    assert // overflow
-    pushint 64
-    bzero
-    b|
-    bytec 9 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-addAsset_ternary_false@3:
-    intc_0 // 0
-    b addAsset_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.addAssetWithDecimals[routing]() -> void:
-addAssetWithDecimals:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 3
-    dup
-    len
-    pushint 8
-    ==
-    assert // invalid number of bytes for arc4.uint64
-    btoi
-    txna ApplicationArgs 4
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 5
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 6
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 7
-    dup
-    intc_0 // 0
-    extract_uint16 // on error: invalid array length header
-    pushint 2
-    +
-    dig 1
-    len
-    ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    extract 2 0
-    txn GroupIndex
-    bz addAssetWithDecimals_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-addAssetWithDecimals_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub _msgData
-    callsub _checkCanCall
-    dig 4
-    dup
-    pushint 255
-    <=
-    assert // ABI validation
-    pushint 255
-    &
-    itxn_begin
-    itob
-    dig 1
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    dig 8
-    dup
-    cover 3
-    pushint 24
-    extract_uint64
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec 19 // method "addAsset(address,uint64,address,address,byte[])uint256"
-    itxn_field ApplicationArgs
-    dig 8
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    dig 5
-    itxn_field ApplicationArgs
-    dig 3
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    swap
-    dig 1
-    dig 5
-    callsub _updateLiquidityFee
-    dup
-    len
-    pushint 64
-    <=
-    assert // overflow
-    pushint 64
-    bzero
-    b|
-    bytec 9 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-addAssetWithDecimals_ternary_false@3:
-    intc_0 // 0
-    b addAssetWithDecimals_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.updateLiquidityFee[routing]() -> void:
-updateLiquidityFee:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 3
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz updateLiquidityFee_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-updateLiquidityFee_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub _msgData
-    callsub _checkCanCall
-    dig 2
-    dig 2
-    dig 2
-    callsub _updateLiquidityFee
-    intc_2 // 1
-    return
-
-updateLiquidityFee_ternary_false@3:
-    intc_0 // 0
-    b updateLiquidityFee_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.updateFeeReceiver[routing]() -> void:
-updateFeeReceiver:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 3
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz updateFeeReceiver_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-updateFeeReceiver_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub _msgData
-    callsub _checkCanCall
-    itxn_begin
-    intc_1 // 32
-    bzero
-    dig 2
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    dig 3
-    pushint 24
-    extract_uint64
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dup
-    itxn_field ApplicationID
-    bytec 5 // method "getAssetConfig(uint256)(uint8[32],uint16,uint8[32],uint8[32])"
-    itxn_field ApplicationArgs
-    dig 1
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    dup
-    extract 38 32
-    dig 1
-    extract 36 2
-    uncover 2
-    extract 70 32
-    dig 5
-    uncover 2
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    itxn_begin
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    swap
-    itxn_field ApplicationID
-    bytec 6 // method "updateAssetConfig(uint256,(uint8[32],uint16,uint8[32],uint8[32]),byte[])void"
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    bytec 10 // 0x0000
-    itxn_field ApplicationArgs
-    itxn_submit
-    intc_2 // 1
-    return
-
-updateFeeReceiver_ternary_false@3:
-    intc_0 // 0
-    b updateFeeReceiver_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.updateFeeConfig[routing]() -> void:
-updateFeeConfig:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 3
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 4
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz updateFeeConfig_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-updateFeeConfig_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub _msgData
-    callsub _checkCanCall
-    itxn_begin
-    intc_1 // 32
-    bzero
-    dig 3
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    dig 4
-    pushint 24
-    extract_uint64
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dup
-    itxn_field ApplicationID
-    bytec 5 // method "getAssetConfig(uint256)(uint8[32],uint16,uint8[32],uint8[32])"
-    itxn_field ApplicationArgs
-    dig 1
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    dup
-    extract 4 32
-    dig 1
-    extract 38 32
-    dig 6
-    callsub SafeCast.toUint16
-    itob
-    dup
-    bitlen
-    pushint 16
-    <=
-    assert // overflow
-    extract 6 2
-    uncover 3
-    extract 70 32
-    uncover 3
-    uncover 2
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    dup
-    extract 34 32
-    dig 1
-    extract 32 2
-    uncover 2
-    extract 66 32
-    dig 5
-    uncover 2
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    itxn_begin
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    swap
-    itxn_field ApplicationID
-    bytec 6 // method "updateAssetConfig(uint256,(uint8[32],uint16,uint8[32],uint8[32]),byte[])void"
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    bytec 10 // 0x0000
-    itxn_field ApplicationArgs
-    itxn_submit
-    intc_2 // 1
-    return
-
-updateFeeConfig_ternary_false@3:
-    intc_0 // 0
-    b updateFeeConfig_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.updateInterestRateStrategy[routing]() -> void:
-updateInterestRateStrategy:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 3
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 4
-    dup
-    intc_0 // 0
-    extract_uint16 // on error: invalid array length header
-    pushint 2
-    +
-    dig 1
-    len
-    ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    extract 2 0
-    txn GroupIndex
-    bz updateInterestRateStrategy_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-updateInterestRateStrategy_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub _msgData
-    callsub _checkCanCall
-    itxn_begin
-    intc_1 // 32
-    bzero
-    dig 3
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    dig 4
-    pushint 24
-    extract_uint64
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dup
-    itxn_field ApplicationID
-    bytec 5 // method "getAssetConfig(uint256)(uint8[32],uint16,uint8[32],uint8[32])"
-    itxn_field ApplicationArgs
-    dig 1
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    dup
-    extract 4 32
-    dig 1
-    extract 36 2
-    uncover 2
-    extract 70 32
-    cover 2
-    concat
-    dig 5
-    concat
-    swap
-    concat
-    itxn_begin
-    dig 3
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    uncover 2
-    itxn_field ApplicationID
-    bytec 6 // method "updateAssetConfig(uint256,(uint8[32],uint16,uint8[32],uint8[32]),byte[])void"
-    itxn_field ApplicationArgs
-    uncover 2
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    intc_2 // 1
-    return
-
-updateInterestRateStrategy_ternary_false@3:
-    intc_0 // 0
-    b updateInterestRateStrategy_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.updateReinvestmentController[routing]() -> void:
-updateReinvestmentController:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 3
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz updateReinvestmentController_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-updateReinvestmentController_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub _msgData
-    callsub _checkCanCall
-    itxn_begin
-    intc_1 // 32
-    bzero
-    dig 2
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    dig 3
-    pushint 24
-    extract_uint64
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dup
-    itxn_field ApplicationID
-    bytec 5 // method "getAssetConfig(uint256)(uint8[32],uint16,uint8[32],uint8[32])"
-    itxn_field ApplicationArgs
-    dig 1
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    dup
-    extract 4 32
-    dig 1
-    extract 38 32
-    uncover 2
-    extract 36 2
-    uncover 2
-    swap
-    concat
-    swap
-    concat
-    dig 3
-    concat
-    itxn_begin
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    swap
-    itxn_field ApplicationID
-    bytec 6 // method "updateAssetConfig(uint256,(uint8[32],uint16,uint8[32],uint8[32]),byte[])void"
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    bytec 10 // 0x0000
-    itxn_field ApplicationArgs
-    itxn_submit
-    intc_2 // 1
-    return
-
-updateReinvestmentController_ternary_false@3:
-    intc_0 // 0
-    b updateReinvestmentController_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.resetAssetCaps[routing]() -> void:
-resetAssetCaps:
-    intc_0 // 0
-    dupn 3
-    bytec_3 // ""
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz resetAssetCaps_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-resetAssetCaps_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub _msgData
-    callsub _checkCanCall
-    itxn_begin
-    intc_1 // 32
-    bzero
-    dup
-    bury 5
-    dig 1
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    dup
-    bury 6
-    dig 2
-    pushint 24
-    extract_uint64
-    dup
-    bury 5
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec 13 // method "getSpokeCount(uint256)uint256"
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    bury 6
-    intc_0 // 0
-    itob
-    bury 7
-
-resetAssetCaps_while_top@8:
-    dig 6
-    dig 6
-    b<
-    bz resetAssetCaps_after_while@13
-    itxn_begin
-    dig 3
-    dig 7
-    dup
-    cover 2
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dig 4
-    dup
-    cover 2
-    itxn_field ApplicationID
-    bytec 14 // method "getSpokeAddress(uint256,uint256)address"
-    itxn_field ApplicationArgs
-    dig 7
-    dup
-    cover 3
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    itxn_begin
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dig 1
-    itxn_field ApplicationID
-    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
-    itxn_field ApplicationArgs
-    dig 2
-    itxn_field ApplicationArgs
-    dup
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    dup
-    extract 4 0
-    dup
-    pushint 104
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    dig 2
-    extract 9 5
-    uncover 2
-    pushint 105
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    uncover 3
-    extract 14 3
-    bytec 11 // 0x0000000000
-    uncover 3
-    concat
-    swap
-    concat
-    swap
-    intc_0 // 0
-    getbit
-    uncover 2
-    intc_2 // 1
-    uncover 2
-    setbit
-    concat
-    dup
-    pushint 104
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    dig 1
-    extract 0 5
-    dig 2
-    pushint 105
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    uncover 3
-    extract 10 3
-    uncover 2
-    bytec 11 // 0x0000000000
-    concat
-    swap
-    concat
-    swap
-    intc_0 // 0
-    getbit
-    uncover 2
-    intc_2 // 1
-    uncover 2
-    setbit
-    concat
-    itxn_begin
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    uncover 2
-    itxn_field ApplicationID
-    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
-    itxn_field ApplicationArgs
-    uncover 2
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    bytec 4 // 0x01
-    b+
-    bury 7
-    b resetAssetCaps_while_top@8
-
-resetAssetCaps_after_while@13:
-    intc_2 // 1
-    return
-
-resetAssetCaps_ternary_false@3:
-    intc_0 // 0
-    b resetAssetCaps_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.deactivateAsset[routing]() -> void:
-deactivateAsset:
-    intc_0 // 0
-    dupn 3
-    bytec_3 // ""
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz deactivateAsset_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-deactivateAsset_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub _msgData
-    callsub _checkCanCall
-    itxn_begin
-    intc_1 // 32
-    bzero
-    dup
-    bury 5
-    dig 1
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    dup
-    bury 6
-    dig 2
-    pushint 24
-    extract_uint64
-    dup
-    bury 5
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec 13 // method "getSpokeCount(uint256)uint256"
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    bury 6
-    intc_0 // 0
-    itob
-    bury 7
-
-deactivateAsset_while_top@8:
-    dig 6
-    dig 6
-    b<
-    bz deactivateAsset_after_while@13
-    itxn_begin
-    dig 3
-    dig 7
-    dup
-    cover 2
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dig 4
-    dup
-    cover 2
-    itxn_field ApplicationID
-    bytec 14 // method "getSpokeAddress(uint256,uint256)address"
-    itxn_field ApplicationArgs
-    dig 7
-    dup
-    cover 3
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    itxn_begin
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dig 1
-    itxn_field ApplicationID
-    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
-    itxn_field ApplicationArgs
-    dig 2
-    itxn_field ApplicationArgs
-    dup
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    dup
-    extract 4 0
-    dig 1
-    extract 4 5
-    dig 2
-    extract 9 5
-    uncover 2
-    pushint 105
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    uncover 3
-    extract 14 3
-    uncover 3
-    uncover 3
-    concat
-    swap
-    concat
-    swap
-    intc_0 // 0
-    getbit
-    bytec_0 // 0x00
-    intc_2 // 1
-    uncover 2
-    setbit
-    concat
-    itxn_begin
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    uncover 2
-    itxn_field ApplicationID
-    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
-    itxn_field ApplicationArgs
-    uncover 2
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    bytec 4 // 0x01
-    b+
-    bury 7
-    b deactivateAsset_while_top@8
-
-deactivateAsset_after_while@13:
-    intc_2 // 1
-    return
-
-deactivateAsset_ternary_false@3:
-    intc_0 // 0
-    b deactivateAsset_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.haltAsset[routing]() -> void:
-haltAsset:
-    intc_0 // 0
-    dupn 3
-    bytec_3 // ""
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz haltAsset_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-haltAsset_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub _msgData
-    callsub _checkCanCall
-    itxn_begin
-    intc_1 // 32
-    bzero
-    dup
-    bury 5
-    dig 1
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    dup
-    bury 6
-    dig 2
-    pushint 24
-    extract_uint64
-    dup
-    bury 5
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec 13 // method "getSpokeCount(uint256)uint256"
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    bury 6
-    intc_0 // 0
-    itob
-    bury 7
-
-haltAsset_while_top@8:
-    dig 6
-    dig 6
-    b<
-    bz haltAsset_after_while@13
-    itxn_begin
-    dig 3
-    dig 7
-    dup
-    cover 2
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dig 4
-    dup
-    cover 2
-    itxn_field ApplicationID
-    bytec 14 // method "getSpokeAddress(uint256,uint256)address"
-    itxn_field ApplicationArgs
-    dig 7
-    dup
-    cover 3
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    itxn_begin
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dig 1
-    itxn_field ApplicationID
-    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
-    itxn_field ApplicationArgs
-    dig 2
-    itxn_field ApplicationArgs
-    dup
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    dup
-    extract 4 0
-    pushint 104
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    dig 1
-    extract 4 5
-    dig 2
-    extract 9 5
-    uncover 3
-    extract 14 3
-    cover 2
-    concat
-    swap
-    concat
-    swap
-    intc_2 // 1
-    dup
-    setbit
-    concat
-    itxn_begin
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    uncover 2
-    itxn_field ApplicationID
-    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
-    itxn_field ApplicationArgs
-    uncover 2
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    bytec 4 // 0x01
-    b+
-    bury 7
-    b haltAsset_while_top@8
-
-haltAsset_after_while@13:
-    intc_2 // 1
-    return
-
-haltAsset_ternary_false@3:
-    intc_0 // 0
-    b haltAsset_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.addSpoke[routing]() -> void:
-addSpoke:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 3
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 4
-    dup
-    len
-    pushint 14
-    ==
-    assert // invalid number of bytes for SpokeConfig
-    txn GroupIndex
-    bz addSpoke_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-addSpoke_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub _msgData
-    callsub _checkCanCall
-    itxn_begin
-    intc_1 // 32
-    bzero
-    dig 2
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    dig 4
-    pushint 24
-    extract_uint64
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec 20 // method "addSpoke(uint256,address,(uint40,uint40,uint24,bool,bool))void"
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    dig 2
-    itxn_field ApplicationArgs
-    dup
-    itxn_field ApplicationArgs
-    itxn_submit
-    intc_2 // 1
-    return
-
-addSpoke_ternary_false@3:
-    intc_0 // 0
-    b addSpoke_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.addSpokeToAssets[routing]() -> void:
-addSpokeToAssets:
-    intc_0 // 0
-    dup
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 3
-    dupn 2
-    intc_0 // 0
-    extract_uint16 // on error: invalid array length header
-    dup
-    cover 2
-    intc_1 // 32
-    *
-    pushint 2
-    +
-    swap
-    len
-    ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
-    txna ApplicationArgs 4
-    dupn 2
-    intc_0 // 0
-    extract_uint16 // on error: invalid array length header
-    dup
-    cover 2
-    pushint 14
-    *
-    pushint 2
-    +
-    swap
-    len
-    ==
-    assert // invalid number of bytes for arc4.dynamic_array<SpokeConfig>
-    txn GroupIndex
-    bz addSpokeToAssets_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-addSpokeToAssets_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub _msgData
-    callsub _checkCanCall
-    dig 2
-    itob
-    dup
-    bury 9
-    dig 1
-    itob
-    b==
-    assert // MismatchedConfigs
-    intc_0 // 0
-    itob
-    bury 7
-
-addSpokeToAssets_while_top@7:
-    dig 6
-    dig 8
-    b<
-    bz addSpokeToAssets_after_while@10
-    itxn_begin
-    intc_1 // 32
-    bzero
-    pushint 8
-    bzero
-    dig 8
-    dup
-    cover 3
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    dig 6
-    extract 2 0
-    dig 1
-    intc_1 // 32
-    *
-    intc_1 // 32
-    extract3 // on error: index access is out of bounds
-    uncover 2
-    swap
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    dig 4
-    extract 2 0
-    uncover 2
-    pushint 14
-    *
-    pushint 14
-    extract3 // on error: index access is out of bounds
-    dig 8
-    pushint 24
-    extract_uint64
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec 20 // method "addSpoke(uint256,address,(uint40,uint40,uint24,bool,bool))void"
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    dig 6
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    bytec 4 // 0x01
-    b+
-    bury 7
-    b addSpokeToAssets_while_top@7
-
-addSpokeToAssets_after_while@10:
-    intc_2 // 1
-    return
-
-addSpokeToAssets_ternary_false@3:
-    intc_0 // 0
-    b addSpokeToAssets_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.updateSpokeActive[routing]() -> void:
-updateSpokeActive:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 3
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 4
-    dupn 2
-    len
-    intc_2 // 1
-    ==
-    assert // invalid number of bytes for arc4.bool
-    intc_0 // 0
-    getbit
-    txn GroupIndex
-    bz updateSpokeActive_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-updateSpokeActive_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub _msgData
-    callsub _checkCanCall
-    dup
-    intc_2 // 1
-    <=
-    assert // ABI bool validation
-    itxn_begin
-    intc_1 // 32
-    bzero
-    dig 4
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    dig 5
-    pushint 24
-    extract_uint64
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dup
-    itxn_field ApplicationID
-    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
-    itxn_field ApplicationArgs
-    dig 1
-    itxn_field ApplicationArgs
-    dig 4
-    dup
-    cover 3
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    dup
-    extract 4 0
-    dig 1
-    extract 4 5
-    dig 2
-    extract 9 5
-    uncover 2
-    pushint 105
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    uncover 3
-    extract 14 3
-    uncover 3
-    uncover 3
-    concat
-    swap
-    concat
-    swap
-    intc_0 // 0
-    getbit
-    dig 6
-    intc_2 // 1
-    uncover 2
-    setbit
-    concat
-    itxn_begin
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    swap
-    itxn_field ApplicationID
-    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    intc_2 // 1
-    return
-
-updateSpokeActive_ternary_false@3:
-    intc_0 // 0
-    b updateSpokeActive_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.updateSpokeHalted[routing]() -> void:
-updateSpokeHalted:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 3
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 4
-    dup
-    len
-    intc_2 // 1
-    ==
-    assert // invalid number of bytes for arc4.bool
-    intc_0 // 0
-    getbit
-    txn GroupIndex
-    bz updateSpokeHalted_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-updateSpokeHalted_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub _msgData
-    callsub _checkCanCall
-    dupn 2
-    intc_2 // 1
-    <=
-    assert // ABI bool validation
-    itxn_begin
-    intc_1 // 32
-    bzero
-    dig 4
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    dig 5
-    pushint 24
-    extract_uint64
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dup
-    itxn_field ApplicationID
-    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
-    itxn_field ApplicationArgs
-    dig 1
-    itxn_field ApplicationArgs
-    dig 4
-    dup
-    cover 3
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    dup
-    extract 4 0
-    pushint 104
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    dig 1
-    extract 4 5
-    dig 2
-    extract 9 5
-    uncover 3
-    extract 14 3
-    cover 2
-    concat
-    swap
-    concat
-    swap
-    intc_2 // 1
-    uncover 6
-    setbit
-    concat
-    itxn_begin
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    swap
-    itxn_field ApplicationID
-    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    intc_2 // 1
-    return
-
-updateSpokeHalted_ternary_false@3:
-    intc_0 // 0
-    b updateSpokeHalted_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.updateSpokeAddCap[routing]() -> void:
-updateSpokeAddCap:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 3
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 4
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz updateSpokeAddCap_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-updateSpokeAddCap_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub _msgData
-    callsub _checkCanCall
-    itxn_begin
-    intc_1 // 32
-    bzero
-    dig 3
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    dig 4
-    pushint 24
-    extract_uint64
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dup
-    itxn_field ApplicationID
-    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
-    itxn_field ApplicationArgs
-    dig 1
-    itxn_field ApplicationArgs
-    dig 3
-    dup
-    cover 3
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    dup
-    extract 4 0
-    dup
-    pushint 104
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    dig 6
-    callsub SafeCast.toUint40
-    itob
-    dup
-    bitlen
-    pushint 40
-    <=
-    assert // overflow
-    extract 3 5
-    dig 3
-    extract 9 5
-    uncover 3
-    pushint 105
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    uncover 4
-    extract 14 3
-    uncover 3
-    uncover 3
-    concat
-    swap
-    concat
-    swap
-    intc_0 // 0
-    getbit
-    uncover 2
-    intc_2 // 1
-    uncover 2
-    setbit
-    concat
-    itxn_begin
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    swap
-    itxn_field ApplicationID
-    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    intc_2 // 1
-    return
-
-updateSpokeAddCap_ternary_false@3:
-    intc_0 // 0
-    b updateSpokeAddCap_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.updateSpokeDrawCap[routing]() -> void:
-updateSpokeDrawCap:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 3
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 4
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz updateSpokeDrawCap_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-updateSpokeDrawCap_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub _msgData
-    callsub _checkCanCall
-    itxn_begin
-    intc_1 // 32
-    bzero
-    dig 3
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    dig 4
-    pushint 24
-    extract_uint64
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dup
-    itxn_field ApplicationID
-    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
-    itxn_field ApplicationArgs
-    dig 1
-    itxn_field ApplicationArgs
-    dig 3
-    dup
-    cover 3
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    dup
-    extract 4 0
-    dup
-    pushint 104
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    dig 2
-    extract 4 5
-    dig 7
-    callsub SafeCast.toUint40
-    itob
-    dup
-    bitlen
-    pushint 40
-    <=
-    assert // overflow
-    extract 3 5
-    uncover 3
-    pushint 105
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    uncover 4
-    extract 14 3
-    uncover 3
-    uncover 3
-    concat
-    swap
-    concat
-    swap
-    intc_0 // 0
-    getbit
-    uncover 2
-    intc_2 // 1
-    uncover 2
-    setbit
-    concat
-    itxn_begin
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    swap
-    itxn_field ApplicationID
-    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    intc_2 // 1
-    return
-
-updateSpokeDrawCap_ternary_false@3:
-    intc_0 // 0
-    b updateSpokeDrawCap_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.updateSpokeRiskPremiumThreshold[routing]() -> void:
-updateSpokeRiskPremiumThreshold:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 3
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 4
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz updateSpokeRiskPremiumThreshold_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-updateSpokeRiskPremiumThreshold_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub _msgData
-    callsub _checkCanCall
-    itxn_begin
-    intc_1 // 32
-    bzero
-    dig 3
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    dig 4
-    pushint 24
-    extract_uint64
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dup
-    itxn_field ApplicationID
-    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
-    itxn_field ApplicationArgs
-    dig 1
-    itxn_field ApplicationArgs
-    dig 3
-    dup
-    cover 3
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    dup
-    extract 4 0
-    dup
-    pushint 104
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    dig 2
-    extract 4 5
-    uncover 3
-    extract 9 5
-    uncover 3
-    pushint 105
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    dig 7
-    callsub SafeCast.toUint24
-    itob
-    dup
-    bitlen
-    pushint 24
-    <=
-    assert // overflow
-    extract 5 3
-    uncover 3
-    uncover 3
-    concat
-    swap
-    concat
-    swap
-    intc_0 // 0
-    getbit
-    uncover 2
-    intc_2 // 1
-    uncover 2
-    setbit
-    concat
-    itxn_begin
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    swap
-    itxn_field ApplicationID
-    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    intc_2 // 1
-    return
-
-updateSpokeRiskPremiumThreshold_ternary_false@3:
-    intc_0 // 0
-    b updateSpokeRiskPremiumThreshold_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.updateSpokeCaps[routing]() -> void:
-updateSpokeCaps:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 3
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 4
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 5
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz updateSpokeCaps_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-updateSpokeCaps_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub _msgData
-    callsub _checkCanCall
-    itxn_begin
-    intc_1 // 32
-    bzero
-    dig 4
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    dig 5
-    pushint 24
-    extract_uint64
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dup
-    itxn_field ApplicationID
-    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
-    itxn_field ApplicationArgs
-    dig 1
-    itxn_field ApplicationArgs
-    dig 4
-    dup
-    cover 3
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    dup
-    extract 4 0
-    dup
-    pushint 104
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    dig 7
-    callsub SafeCast.toUint40
-    itob
-    dup
-    bitlen
-    pushint 40
-    <=
-    assert // overflow
-    extract 3 5
-    dig 3
-    extract 9 5
-    uncover 3
-    pushint 105
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    uncover 4
-    extract 14 3
-    uncover 3
-    uncover 3
-    concat
-    swap
-    concat
-    swap
-    intc_0 // 0
-    getbit
-    uncover 2
-    intc_2 // 1
-    uncover 2
-    setbit
-    concat
-    dup
-    pushint 104
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    dig 1
-    extract 0 5
-    dig 6
-    callsub SafeCast.toUint40
-    itob
-    dup
-    bitlen
-    pushint 40
-    <=
-    assert // overflow
-    extract 3 5
-    dig 3
-    pushint 105
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    uncover 4
-    extract 10 3
-    uncover 3
-    uncover 3
-    concat
-    swap
-    concat
-    swap
-    intc_0 // 0
-    getbit
-    uncover 2
-    intc_2 // 1
-    uncover 2
-    setbit
-    concat
-    itxn_begin
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    swap
-    itxn_field ApplicationID
-    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    intc_2 // 1
-    return
-
-updateSpokeCaps_ternary_false@3:
-    intc_0 // 0
-    b updateSpokeCaps_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.deactivateSpoke[routing]() -> void:
-deactivateSpoke:
-    intc_0 // 0
-    dupn 2
-    bytec_3 // ""
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz deactivateSpoke_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-deactivateSpoke_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub _msgData
-    callsub _checkCanCall
-    itxn_begin
-    dig 1
-    pushint 24
-    extract_uint64
-    dup
-    bury 4
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec 15 // method "getAssetCount()uint256"
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    bury 6
-    intc_0 // 0
-    itob
-    bury 5
-
-deactivateSpoke_while_top@8:
-    dig 4
-    dig 6
-    b<
-    bz deactivateSpoke_after_while@15
-    itxn_begin
-    intc_1 // 32
-    bzero
-    dig 5
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    dup
-    bury 5
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dig 3
-    itxn_field ApplicationID
-    bytec 16 // method "isSpokeListed(uint256,address)bool"
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    dup
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    intc_0 // 0
-    getbit
-    bz deactivateSpoke_after_if_else@14
-    itxn_begin
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dig 2
-    dup
-    itxn_field ApplicationID
-    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
-    itxn_field ApplicationArgs
-    dig 4
-    dup
-    cover 2
-    itxn_field ApplicationArgs
-    dig 2
-    dup
-    cover 3
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    dup
-    extract 4 0
-    dig 1
-    extract 4 5
-    dig 2
-    extract 9 5
-    uncover 2
-    pushint 105
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    uncover 3
-    extract 14 3
-    uncover 3
-    uncover 3
-    concat
-    swap
-    concat
-    swap
-    intc_0 // 0
-    getbit
-    bytec_0 // 0x00
-    intc_2 // 1
-    uncover 2
-    setbit
-    concat
-    itxn_begin
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    swap
-    itxn_field ApplicationID
-    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-
-deactivateSpoke_after_if_else@14:
-    dig 4
-    bytec 4 // 0x01
-    b+
-    bury 5
-    b deactivateSpoke_while_top@8
-
-deactivateSpoke_after_while@15:
-    intc_2 // 1
-    return
-
-deactivateSpoke_ternary_false@3:
-    intc_0 // 0
-    b deactivateSpoke_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.haltSpoke[routing]() -> void:
-haltSpoke:
-    intc_0 // 0
-    dupn 2
-    bytec_3 // ""
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz haltSpoke_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-haltSpoke_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub _msgData
-    callsub _checkCanCall
-    itxn_begin
-    dig 1
-    pushint 24
-    extract_uint64
-    dup
-    bury 4
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec 15 // method "getAssetCount()uint256"
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    bury 6
-    intc_0 // 0
-    itob
-    bury 5
-
-haltSpoke_while_top@8:
-    dig 4
-    dig 6
-    b<
-    bz haltSpoke_after_while@15
-    itxn_begin
-    intc_1 // 32
-    bzero
-    dig 5
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    dup
-    bury 5
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dig 3
-    itxn_field ApplicationID
-    bytec 16 // method "isSpokeListed(uint256,address)bool"
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    dup
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    intc_0 // 0
-    getbit
-    bz haltSpoke_after_if_else@14
-    itxn_begin
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dig 2
-    dup
-    itxn_field ApplicationID
-    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
-    itxn_field ApplicationArgs
-    dig 4
-    dup
-    cover 2
-    itxn_field ApplicationArgs
-    dig 2
-    dup
-    cover 3
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    dup
-    extract 4 0
-    pushint 104
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    dig 1
-    extract 4 5
-    dig 2
-    extract 9 5
-    uncover 3
-    extract 14 3
-    cover 2
-    concat
-    swap
-    concat
-    swap
-    intc_2 // 1
-    dup
-    setbit
-    concat
-    itxn_begin
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    swap
-    itxn_field ApplicationID
-    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-
-haltSpoke_after_if_else@14:
-    dig 4
-    bytec 4 // 0x01
-    b+
-    bury 5
-    b haltSpoke_while_top@8
-
-haltSpoke_after_while@15:
-    intc_2 // 1
-    return
-
-haltSpoke_ternary_false@3:
-    intc_0 // 0
-    b haltSpoke_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.resetSpokeCaps[routing]() -> void:
-resetSpokeCaps:
-    intc_0 // 0
-    dupn 2
-    bytec_3 // ""
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz resetSpokeCaps_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-resetSpokeCaps_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub _msgData
-    callsub _checkCanCall
-    itxn_begin
-    dig 1
-    pushint 24
-    extract_uint64
-    dup
-    bury 4
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec 15 // method "getAssetCount()uint256"
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    bury 6
-    intc_0 // 0
-    itob
-    bury 5
-
-resetSpokeCaps_while_top@8:
-    dig 4
-    dig 6
-    b<
-    bz resetSpokeCaps_after_while@15
-    itxn_begin
-    intc_1 // 32
-    bzero
-    dig 5
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    dup
-    bury 5
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dig 3
-    itxn_field ApplicationID
-    bytec 16 // method "isSpokeListed(uint256,address)bool"
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    dup
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    intc_0 // 0
-    getbit
-    bz resetSpokeCaps_after_if_else@14
-    itxn_begin
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    dig 2
-    dup
-    itxn_field ApplicationID
-    bytec_1 // method "getSpokeConfig(uint256,address)(uint40,uint40,uint24,bool,bool)"
-    itxn_field ApplicationArgs
-    dig 4
-    dup
-    cover 2
-    itxn_field ApplicationArgs
-    dig 2
-    dup
-    cover 3
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    dup
-    extract 4 0
-    dup
-    pushint 104
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    dig 2
-    extract 9 5
-    uncover 2
-    pushint 105
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    uncover 3
-    extract 14 3
-    bytec 11 // 0x0000000000
-    uncover 3
-    concat
-    swap
-    concat
-    swap
-    intc_0 // 0
-    getbit
-    uncover 2
-    intc_2 // 1
-    uncover 2
-    setbit
-    concat
-    dup
-    pushint 104
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    dig 1
-    extract 0 5
-    dig 2
-    pushint 105
-    getbit
-    bytec_0 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    uncover 3
-    extract 10 3
-    uncover 2
-    bytec 11 // 0x0000000000
-    concat
-    swap
-    concat
-    swap
-    intc_0 // 0
-    getbit
-    uncover 2
-    intc_2 // 1
-    uncover 2
-    setbit
-    concat
-    itxn_begin
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    swap
-    itxn_field ApplicationID
-    bytec_2 // method "updateSpokeConfig(uint256,address,(uint40,uint40,uint24,bool,bool))void"
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-
-resetSpokeCaps_after_if_else@14:
-    dig 4
-    bytec 4 // 0x01
-    b+
-    bury 5
-    b resetSpokeCaps_while_top@8
-
-resetSpokeCaps_after_while@15:
-    intc_2 // 1
-    return
-
-resetSpokeCaps_ternary_false@3:
-    intc_0 // 0
-    b resetSpokeCaps_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.updateInterestRateData[routing]() -> void:
-updateInterestRateData:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 3
-    dup
-    intc_0 // 0
-    extract_uint16 // on error: invalid array length header
-    pushint 2
-    +
-    dig 1
-    len
-    ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    extract 2 0
-    txn GroupIndex
-    bz updateInterestRateData_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-updateInterestRateData_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub _msgData
-    callsub _checkCanCall
-    itxn_begin
-    intc_1 // 32
-    bzero
-    dig 2
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    dig 1
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    dig 4
-    pushint 24
-    extract_uint64
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    pushbytes 0x35a9e214 // method "setInterestRateData(uint256,byte[])void"
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    intc_2 // 1
-    return
-
-updateInterestRateData_ternary_false@3:
-    intc_0 // 0
-    b updateInterestRateData_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.authority[routing]() -> void:
-authority:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.authority
-    bytec 9 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.setAuthority[routing]() -> void:
-setAuthority:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz setAuthority_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-setAuthority_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.authority
-    !=
-    !
-    assert // AccessManagedUnauthorized
-    dupn 2
-    pushint 24
-    extract_uint64
-    app_params_get AppApprovalProgram
-    pop
-    len
-    itob
-    bytec_3 // 0x
-    b==
-    !
-    assert // AccessManagedInvalidAuthority
-    bytec 7 // "_authority"
-    dig 1
-    app_global_put
-    bytec 17 // method "AuthorityUpdated(uint8[32])"
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-setAuthority_ternary_false@3:
-    intc_0 // 0
-    b setAuthority_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.isConsumingScheduledOp[routing]() -> void:
-isConsumingScheduledOp:
-    txn GroupIndex
-    bz isConsumingScheduledOp_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-isConsumingScheduledOp_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 0
-    bytec 8 // "_consumingSchedule"
-    app_global_get_ex
-    assert // check _consumingSchedule exists
-    bz isConsumingScheduledOp_ternary_false@6
-    pushbytes 0x8fb36037
-
-isConsumingScheduledOp_ternary_merge@7:
-    bytec 9 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-isConsumingScheduledOp_ternary_false@6:
-    pushbytes 0x00000000
-    b isConsumingScheduledOp_ternary_merge@7
-
-isConsumingScheduledOp_ternary_false@3:
-    intc_0 // 0
-    b isConsumingScheduledOp_ternary_merge@4
-
-
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator._updateLiquidityFee(hub: bytes, assetId: bytes, liquidityFee: bytes) -> void:
 _updateLiquidityFee:
     proto 3 0
@@ -3314,7 +3306,7 @@ _updateLiquidityFee:
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec 5 // method "getAssetConfig(uint256)(uint8[32],uint16,uint8[32],uint8[32])"
+    bytec 4 // method "getAssetConfig(uint256)(uint8[32],uint16,uint8[32],uint8[32])"
     itxn_field ApplicationArgs
     dig 1
     itxn_field ApplicationArgs
@@ -3351,7 +3343,7 @@ _updateLiquidityFee:
     itxn_field Fee
     swap
     itxn_field ApplicationID
-    bytec 6 // method "updateAssetConfig(uint256,(uint8[32],uint16,uint8[32],uint8[32]),byte[])void"
+    bytec 5 // method "updateAssetConfig(uint256,(uint8[32],uint16,uint8[32],uint8[32]),byte[])void"
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
@@ -3363,32 +3355,32 @@ _updateLiquidityFee:
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.authority() -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.authority:
+authority:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.authority_ternary_false@2
+    bz authority_ternary_false@2
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.authority_ternary_merge@3:
+authority_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 0
-    bytec 7 // "_authority"
+    bytec 6 // "_authority"
     app_global_get_ex
     assert // check _authority exists
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.authority_ternary_false@2:
+authority_ternary_false@2:
     intc_0 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.authority_ternary_merge@3
+    b authority_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator._checkCanCall(caller: bytes, data: bytes) -> void:
 _checkCanCall:
     proto 2 0
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.authority
+    callsub authority
     global CurrentApplicationAddress
     frame_dig -1
     substring 0 4
@@ -3399,7 +3391,7 @@ _checkCanCall:
     callsub AuthorityUtils.canCallWithDelay
     pop
     swap
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.authority
+    callsub authority
     frame_dig -2
     global CurrentApplicationAddress
     uncover 3
@@ -3409,7 +3401,7 @@ _checkCanCall:
     bnz _checkCanCall_after_if_else@6
     frame_dig 0
     assert // AccessManagedUnauthorized
-    bytec 8 // "_consumingSchedule"
+    bytec 7 // "_consumingSchedule"
     intc_2 // 1
     app_global_put
     itxn_begin
@@ -3419,7 +3411,7 @@ _checkCanCall:
     extract 6 2
     frame_dig -1
     concat
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/HubConfigurator.sol.HubConfigurator.authority
+    callsub authority
     pushint 24
     extract_uint64
     intc_3 // 6
@@ -3435,7 +3427,7 @@ _checkCanCall:
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
-    bytec 8 // "_consumingSchedule"
+    bytec 7 // "_consumingSchedule"
     intc_0 // 0
     app_global_put
 

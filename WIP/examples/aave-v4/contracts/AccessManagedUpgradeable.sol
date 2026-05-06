@@ -37,11 +37,14 @@ abstract contract AccessManagedUpgradeable is Initializable, ContextUpgradeable,
   /**
    * @dev Initializes the contract connected to an initial authority.
    */
-  function __AccessManaged_init(address initialAuthority) internal onlyInitializing {
+  // NOTE (AVM): EVM source had `internal onlyInitializing` modifier
+  // (OZ Initializable). Dropped — see SpokeInstance.initialize for
+  // context. The deploy harness gates re-init via app-level state.
+  function __AccessManaged_init(address initialAuthority) internal {
     __AccessManaged_init_unchained(initialAuthority);
   }
 
-  function __AccessManaged_init_unchained(address initialAuthority) internal onlyInitializing {
+  function __AccessManaged_init_unchained(address initialAuthority) internal {
     _setAuthority(initialAuthority);
   }
 

@@ -1,0 +1,88 @@
+#pragma version 10
+#pragma typetrack false
+
+// PureHelper__EIP712Hash_hash__0.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    bytecblock 0x0000000000000000000000000000000000000001000000000000000000000000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txna ApplicationArgs 0
+    pushbytes 0x2a9a3b7c // method "EIP712Hash.hash(PositionManagerUpdate)byte[32]"
+    ==
+    assert // helper: unknown selector
+    txna ApplicationArgs 1
+    callsub EIP712Hash.hash
+    pop
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.EIP712Hash.hash(1)_1(params: bytes) -> bytes, bytes:
+EIP712Hash.hash:
+    proto 1 2
+    load 0
+    dup
+    extract 64 32
+    intc_0 // 32
+    bzero
+    uncover 2
+    pushbytes 0x187dbd227227274b90655fb4011fc21dd749e8966fc040bd91e0b92609202565
+    replace2 0
+    frame_dig -1
+    extract 0 32
+    extract 0 1 // on error: index access is out of bounds
+    bytec_0 // 0x0000000000000000000000000000000000000001000000000000000000000000
+    b*
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // 0x0000000000000000000000000000000000000001000000000000000000000000
+    b/
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 32
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 64
+    dup
+    extract 0 96
+    keccak256
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 32
+    uncover 2
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
+    replace2 64
+    store 0
+    frame_dig -1
+    retsub

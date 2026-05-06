@@ -139,6 +139,95 @@ def deploy_orchestrator(algod: AlgodClient, sender: SigningAccount) -> int:
     return orch_id
 
 
+def _substitute_pure_helper_ids(
+    teal: str, helper_app_ids: dict[str, int],
+) -> str:
+    """Each entry is `PURE_HELPER_<name>_<n>_APP_ID -> app_id`. We
+    substitute the TMPL_-prefixed form into the TEAL (the prefix puya
+    bakes in at compile time)."""
+    for tv, app_id in helper_app_ids.items():
+        teal = teal.replace("TMPL_" + tv, str(app_id))
+    return teal
+
+
+def _deploy_pure_helpers(
+    algod: AlgodClient, sender: SigningAccount,
+    contract_dir: Path,
+) -> dict[str, int]:
+    """Deploy each PureHelper sidecar app listed in pure_helpers.json,
+    return {template_var → app_id}. Helpers are tiny single-method
+    contracts (no state, no creation args), so AppCreate is plain.
+    Idempotency: caller is expected to deploy fresh each module run
+    (the splitter dance fixture is module-scoped already).
+
+    Ordering: pure helpers can call other pure helpers (via inner-
+    txn ApplicationCall). The callee's helper id has to be known at
+    the caller's compile time — algod's TEAL compiler rejects
+    `intcblock TMPL_X` operands as non-integer. So we walk the
+    dep graph by scanning each helper's TEAL for unresolved TMPL_
+    references and deploy in topological order.
+    """
+    pure_helpers_path = contract_dir / "pure_helpers.json"
+    if not pure_helpers_path.exists():
+        return {}
+    spec = json.loads(pure_helpers_path.read_text())
+    helpers = spec.get("helpers", [])
+    # Index by template_var for the topo walk.
+    by_tv: dict[str, dict] = {h["template_var"]: h for h in helpers}
+    teals: dict[str, str] = {}
+    deps: dict[str, set[str]] = {}
+    for h in helpers:
+        tv = h["template_var"]
+        name = h["contract_name"]
+        teal = (contract_dir / f"{name}.approval.teal").read_text()
+        teals[tv] = teal
+        # Scan the TEAL for TMPL_PURE_HELPER_*_APP_ID references —
+        # everything BUT this helper's own var is a dependency.
+        d: set[str] = set()
+        for other in by_tv:
+            if other == tv:
+                continue
+            if "TMPL_" + other in teal:
+                d.add(other)
+        deps[tv] = d
+
+    # Topological sort. Pure functions can be mutually recursive in
+    # principle, but Solidity disallows this for `pure` functions
+    # (no recursion through state-mutability). Cycle would deadlock
+    # the deploy — assert no cycles.
+    deployed: dict[str, int] = {}
+    pending = set(by_tv.keys())
+    while pending:
+        ready = {tv for tv in pending if deps[tv].issubset(deployed.keys())}
+        if not ready:
+            raise RuntimeError(
+                f"_deploy_pure_helpers: dependency cycle / unresolvable "
+                f"refs among: {pending!r}")
+        for tv in sorted(ready):
+            h = by_tv[tv]
+            name = h["contract_name"]
+            # Substitute any caller helper's TMPL refs to known ids
+            # before compiling.
+            teal = _substitute_pure_helper_ids(teals[tv], deployed)
+            clear_teal = (contract_dir / f"{name}.clear.teal").read_text()
+            approval = _compile_teal(algod, teal)
+            clear = _compile_teal(algod, clear_teal)
+            sp = algod.suggested_params()
+            txn = ApplicationCreateTxn(
+                sender=sender.address, sp=sp,
+                on_complete=OnComplete.NoOpOC,
+                approval_program=approval, clear_program=clear,
+                global_schema=StateSchema(num_uints=0, num_byte_slices=0),
+                local_schema=StateSchema(num_uints=0, num_byte_slices=0),
+                extra_pages=0,
+            )
+            txid = algod.send_transaction(txn.sign(sender.private_key))
+            app_id = int(wait_for_confirmation(algod, txid, 4)["application-index"])
+            deployed[tv] = app_id
+            pending.remove(tv)
+    return deployed
+
+
 def _substitute_orch_id(teal: str, orch_id: int) -> str:
     return teal.replace("TMPL_UROS_ORCH_APP_ID", str(orch_id))
 
@@ -355,6 +444,13 @@ def deploy_split_app(
     except Exception:
         app_spec = None
 
+    # 0. Deploy any --deploy-pure-helpers sidecar apps first so we can
+    # bake their app ids into main + chunk TEAL. Each helper is a
+    # one-method standalone Contract with its own approval/clear; the
+    # rewritten call sites in main + chunks reference each helper by
+    # TMPL_PURE_HELPER_<name>_<n>_APP_ID. Empty if no --deploy-pure-helpers.
+    pure_helper_app_ids = _deploy_pure_helpers(algod, sender, contract_dir)
+
     # 1. Read main TEAL. Substitution is split across steps because of
     # a chicken-and-egg: main references TMPL_UROS_STORAGE_APP_ID for
     # the pay-forward shim, but __storage is deployed by AppCreate'ing
@@ -367,7 +463,9 @@ def deploy_split_app(
     main_clear_teal = (contract_dir / f"{name}.clear.teal").read_text()
     main_clear = _compile_teal(algod, main_clear_teal)
     main_approval_v1 = _compile_teal(
-        algod, _substitute_main_uros_ids(main_teal, orch_id, 0))
+        algod, _substitute_pure_helper_ids(
+            _substitute_main_uros_ids(main_teal, orch_id, 0),
+            pure_helper_app_ids))
 
     # Read storage default bytes (already compiled by compile_orchestrator).
     storage_default = (STORAGE_OUT / "UrosStorage.approval.bin").read_bytes()
@@ -415,8 +513,11 @@ def deploy_split_app(
     # main BEFORE compiling chunks. Chunks reference main's app id via
     # TMPL_UROS_MAIN_APP_ID for cross-app reads of __og_sender /
     # __og_value, so we need main_id known before chunk TEAL compiles.
+    print(f"[uros_dance] compiling main_v2 with orch_id={orch_id} storage_id={storage_id}")
     main_approval_v2 = _compile_teal(
-        algod, _substitute_main_uros_ids(main_teal, orch_id, storage_id))
+        algod, _substitute_pure_helper_ids(
+            _substitute_main_uros_ids(main_teal, orch_id, storage_id),
+            pure_helper_app_ids))
     sp = algod.suggested_params()
     txn = ApplicationCreateTxn(
         sender=sender.address, sp=sp,
@@ -456,8 +557,10 @@ def deploy_split_app(
         chunk_teal = (contract_dir / "__uros_split" / f"chunk_{ci}"
                       / f"{c['name']}.approval.teal").read_text()
         chunk_bytes = _compile_teal(
-            algod, _substitute_chunk_uros_ids(
-                chunk_teal, orch_id, main_id, storage_id))
+            algod, _substitute_pure_helper_ids(
+                _substitute_chunk_uros_ids(
+                    chunk_teal, orch_id, main_id, storage_id),
+                pure_helper_app_ids))
         full_sigs = []
         for mname in c["methods"]:
             m = method_signatures.get(mname)
@@ -483,9 +586,14 @@ def deploy_split_app(
     if app_args and "__postInit" in method_signatures:
         # Pre-discover static box names from main's TEAL — __postInit
         # may box_create state-init boxes (e.g. SpokeInstance creates
-        # _reserves / _userPositions / __gap). populate_app_call_resources
-        # can't always reach them via simulate when the simulate itself
-        # asserts before reaching box_create.
+        # _reserves / _userPositions / __gap). Constructor-body
+        # inner-calls (like AAVE's old `IAaveOracle.DECIMALS()` check)
+        # would need extra_foreign_apps slots, but the AVM 8-ref cap
+        # leaves no room past `[storage_id] + 7 boxes`. Source-side
+        # workaround for AAVE's Spoke ctor (see Spoke.sol). Other
+        # callers needing ctor-side foreign apps must pass them
+        # explicitly via this function's `extra_foreign_apps` arg
+        # AND drop boxes to fit.
         box_names = _discover_box_names_from_teal(main_teal)
         _call_postinit_via_dance(algod, sender, main_id, orch_id, storage_id,
                                  method_signatures["__postInit"],
@@ -545,6 +653,7 @@ def _call_postinit_via_dance(
     main_id: int, orch_id: int, storage_id: int,
     postinit: dict, app_args: list[bytes],
     box_names: list[bytes] | None = None,
+    extra_foreign_apps: list[int] | None = None,
 ) -> None:
     """Call main.__postInit which forwards via inner-call to orch.
     The orch dances to __storage to run the actual __postInit chunk
@@ -576,23 +685,50 @@ def _call_postinit_via_dance(
     # foreign_apps because every main method calls __uros_forward_value
     # which does `app_params_get AppAddress` on TMPL_UROS_STORAGE_APP_ID.
     # 1 foreign_app + 7 boxes = 8 references.
+    # __postInit, when chunked into the dance, runs on __storage —
+    # box_creates land on storage's app boxes. So the outer txn's
+    # box refs target storage. Plus orch_id in foreign_apps so main's
+    # forwarding stub can issue the inner-itxn to orch.dispatch.
+    fa = [storage_id, orch_id, *(extra_foreign_apps or [])]
     box_refs: list[tuple[int, bytes]] = [
-        (0, n) for n in (box_names or [])[:7]
+        (storage_id, n) for n in (box_names or [])[:7]
     ]
     txn = ApplicationCallTxn(
         sender=sender.address, sp=sp, index=main_id,
         on_complete=OnComplete.NoOpOC, app_args=call_args,
-        foreign_apps=[storage_id],
-        boxes=box_refs,
+        foreign_apps=fa,
+        boxes=box_refs[: max(0, 8 - len(fa))],
     )
     signer = AccountTransactionSigner(sender.private_key)
     atc = AtomicTransactionComposer()
+    # Pre-pad the group with three no-op app calls (re-set orch's
+    # storage to its current value — `set_storage(uint64)` is a
+    # globalput, idempotent). populate_app_call_resources distributes
+    # box / foreign-app refs across the group, so each pad txn buys
+    # us 8 more ref slots. Pay txns can't carry box refs, so we use
+    # app calls.
+    import os
+    pad_sel = _arc4_selector("set_storage(uint64)void")
+    pad_sp = algod.suggested_params()
+    pad_sp.fee = pad_sp.min_fee
+    pad_sp.flat_fee = True
+    for i in range(3):
+        pad_txn = ApplicationCallTxn(
+            sender=sender.address, sp=pad_sp, index=orch_id,
+            on_complete=OnComplete.NoOpOC,
+            app_args=[pad_sel, storage_id.to_bytes(8, "big")],
+            note=os.urandom(16) + bytes([i]),
+        )
+        atc.add_transaction(TransactionWithSigner(pad_txn, signer))
     atc.add_transaction(TransactionWithSigner(txn, signer))
-    # Skip populate_app_call_resources: it runs simulate, which trips
-    # an assert in __postInit before reaching all the box_creates,
-    # then would overwrite our hand-built box refs with an incomplete
-    # auto-discovered set. Our box_refs (capped at 6) plus the 2
-    # foreign_apps fit within MaxAppTotalTxnReferences=8.
+    # Now that __postInit runs via the dance, the orch needs its
+    # csel_<sel> + chunk-bytes boxes admitted. populate_app_call_resources
+    # walks simulate to find them. Hand-built box refs (state-init
+    # boxes on storage) stay; populate ADDS to the set.
+    try:
+        atc = au.populate_app_call_resources(atc, algod)
+    except Exception as e:
+        print(f"[uros_dance] populate_app_call_resources failed: {e!r}")
     try:
         atc.execute(algod, 4)
     except Exception as e:

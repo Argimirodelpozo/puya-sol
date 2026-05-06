@@ -4,7 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2 4294967295
-    bytecblock 0x "_interestRateData" 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x0000000000000000000000000000 0x01 "HUB" 0x033b2e3c9fd0803ce8000000 "__ctor_pending" 0x152d02c7e14af6800000
+    bytecblock 0x "_interestRateData" 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000 0x01 "HUB" 0x033b2e3c9fd0803ce8000000 "__ctor_pending" 0x152d02c7e14af6800000
+    intc_2 // 0
+    dupn 9
+    bytec_0 // ""
     pushint 4096
     bzero
     dup
@@ -30,8 +33,804 @@ main_after_if_else@2:
     assert
     pushbytess 0x990f30ae 0x35a9e214 0x3e15e3e8 0x19e2e01b 0x04e18e3f 0x5b4236ed 0xa1bbad99 0xe9d7a99c 0x19451065 0x73092767 0x40f7c07f 0x0de77883 0x900ad7d7 // method "__postInit(address)void", method "setInterestRateData(uint256,byte[])void", method "getInterestRateData(uint256)(uint16,uint32,uint32,uint32)", method "getOptimalUsageRatio(uint256)uint256", method "getBaseVariableBorrowRate(uint256)uint256", method "getVariableRateSlope1(uint256)uint256", method "getVariableRateSlope2(uint256)uint256", method "getMaxVariableBorrowRate(uint256)uint256", method "calculateInterestRate(uint256,uint256,uint256,uint256,uint256)uint256", method "MAX_BORROW_RATE()uint256", method "MIN_OPTIMAL_RATIO()uint256", method "MAX_OPTIMAL_RATIO()uint256", method "HUB()address"
     txna ApplicationArgs 0
-    match __postInit setInterestRateData getInterestRateData getOptimalUsageRatio getBaseVariableBorrowRate getVariableRateSlope1 getVariableRateSlope2 getMaxVariableBorrowRate calculateInterestRate MAX_BORROW_RATE MIN_OPTIMAL_RATIO MAX_OPTIMAL_RATIO HUB
+    match main___postInit_route@5 main_setInterestRateData_route@6 main_getInterestRateData_route@7 main_getOptimalUsageRatio_route@8 main_getBaseVariableBorrowRate_route@9 main_getVariableRateSlope1_route@10 main_getVariableRateSlope2_route@11 main_getMaxVariableBorrowRate_route@12 main_calculateInterestRate_route@13 main_MAX_BORROW_RATE_route@14 main_MIN_OPTIMAL_RATIO_route@15 main_MAX_OPTIMAL_RATIO_route@16 main_HUB_route@17
     err
+
+main_HUB_route@17:
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec 6 // "HUB"
+    app_global_get_ex
+    assert // check HUB exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@23:
+    intc_2 // 0
+    b main_ternary_merge@24
+
+main_MAX_OPTIMAL_RATIO_route@16:
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000026ac
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
+
+main_MIN_OPTIMAL_RATIO_route@15:
+    txn GroupIndex
+    bz main_ternary_false@33
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@34:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000064
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@33:
+    intc_2 // 0
+    b main_ternary_merge@34
+
+main_MAX_BORROW_RATE_route@14:
+    txn GroupIndex
+    bz main_ternary_false@38
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@39:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000186a0
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@38:
+    intc_2 // 0
+    b main_ternary_merge@39
+
+main_calculateInterestRate_route@13:
+    txna ApplicationArgs 1
+    dup
+    bury 12
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 10
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    bury 11
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 5
+    dup
+    bury 9
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@43
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@44:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    bury 3
+    dig 11
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_1 // "_interestRateData"
+    swap
+    concat
+    box_get
+    bytec 4 // 0x0000000000000000000000000000
+    cover 2
+    select
+    dup
+    bury 6
+    dup
+    intc_2 // 0
+    extract_uint16
+    dup
+    bury 3
+    assert // InterestRateDataNotSet
+    intc_3 // 2
+    extract_uint32
+    itob
+    callsub WadRayMath.bpsToRay
+    bury 7
+    dig 9
+    bytec_0 // 0x
+    b==
+    bz main_after_if_else@46
+    dig 6
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.calculateInterestRate@50:
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_after_if_else@46:
+    dig 8
+    dig 10
+    dup
+    cover 2
+    b+
+    dig 9
+    b+
+    callsub WadRayMath.rayDivUp
+    dup
+    dig 2
+    itob
+    callsub WadRayMath.bpsToRay
+    dup
+    bury 9
+    b<=
+    bz main_else_body@48
+    dig 5
+    pushint 6
+    extract_uint32
+    itob
+    callsub WadRayMath.bpsToRay
+    swap
+    callsub WadRayMath.rayMulUp
+    dig 6
+    callsub WadRayMath.rayDivUp
+    dig 7
+    b+
+    bury 7
+
+main_after_if_else@49:
+    dig 6
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.calculateInterestRate@50
+
+main_else_body@48:
+    dup
+    dig 7
+    dup
+    cover 2
+    b>=
+    assert // underflow
+    bytec 7 // 0x033b2e3c9fd0803ce8000000
+    dig 1
+    b>=
+    assert // underflow
+    dig 6
+    dup
+    pushint 6
+    extract_uint32
+    itob
+    callsub WadRayMath.bpsToRay
+    swap
+    pushint 10
+    extract_uint32
+    itob
+    callsub WadRayMath.bpsToRay
+    uncover 3
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 3
+    b-
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    callsub WadRayMath.rayMulUp
+    pushbytes 0x010000000000000000000000000000000000000000033b2e3c9fd0803ce8000000
+    uncover 3
+    b-
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    callsub WadRayMath.rayDivUp
+    b+
+    dig 7
+    b+
+    bury 7
+    b main_after_if_else@49
+
+main_ternary_false@43:
+    intc_2 // 0
+    b main_ternary_merge@44
+
+main_getMaxVariableBorrowRate_route@12:
+    txna ApplicationArgs 1
+    dup
+    bury 12
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@54
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@55:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 12
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_1 // "_interestRateData"
+    swap
+    concat
+    box_get
+    bytec 4 // 0x0000000000000000000000000000
+    cover 2
+    select
+    dup
+    intc_3 // 2
+    extract_uint32
+    dig 1
+    pushint 6
+    extract_uint32
+    +
+    dup
+    intc 4 // 4294967295
+    <=
+    assert // overflow
+    swap
+    pushint 10
+    extract_uint32
+    +
+    dup
+    intc 4 // 4294967295
+    <=
+    assert // overflow
+    itob
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@54:
+    intc_2 // 0
+    b main_ternary_merge@55
+
+main_getVariableRateSlope2_route@11:
+    txna ApplicationArgs 1
+    dup
+    bury 12
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@59
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@60:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 12
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_1 // "_interestRateData"
+    swap
+    concat
+    box_get
+    bytec 4 // 0x0000000000000000000000000000
+    cover 2
+    select
+    pushint 10
+    extract_uint32
+    itob
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@59:
+    intc_2 // 0
+    b main_ternary_merge@60
+
+main_getVariableRateSlope1_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 12
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@64
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@65:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 12
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_1 // "_interestRateData"
+    swap
+    concat
+    box_get
+    bytec 4 // 0x0000000000000000000000000000
+    cover 2
+    select
+    pushint 6
+    extract_uint32
+    itob
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@64:
+    intc_2 // 0
+    b main_ternary_merge@65
+
+main_getBaseVariableBorrowRate_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 12
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@69
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@70:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 12
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_1 // "_interestRateData"
+    swap
+    concat
+    box_get
+    bytec 4 // 0x0000000000000000000000000000
+    cover 2
+    select
+    intc_3 // 2
+    extract_uint32
+    itob
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@69:
+    intc_2 // 0
+    b main_ternary_merge@70
+
+main_getOptimalUsageRatio_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 12
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@74
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@75:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 12
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_1 // "_interestRateData"
+    swap
+    concat
+    box_get
+    bytec 4 // 0x0000000000000000000000000000
+    cover 2
+    select
+    intc_2 // 0
+    extract_uint16
+    itob
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@74:
+    intc_2 // 0
+    b main_ternary_merge@75
+
+main_getInterestRateData_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 12
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@79
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@80:
+    !
+    assert // not payable
+    load 0
+    pushint 24
+    bzero
+    dig 1
+    pushint 88
+    extract_uint64
+    pushint 14
+    +
+    itob
+    concat
+    replace2 64
+    store 0
+    intc_0 // 32
+    bzero
+    dig 11
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_1 // "_interestRateData"
+    swap
+    concat
+    box_get
+    bytec 4 // 0x0000000000000000000000000000
+    cover 2
+    select
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@79:
+    intc_2 // 0
+    b main_ternary_merge@80
+
+main_setInterestRateData_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 12
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 4
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txn GroupIndex
+    bz main_ternary_false@84
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@85:
+    !
+    assert // not payable
+    txn Sender
+    intc_2 // 0
+    bytec 6 // "HUB"
+    app_global_get_ex
+    assert // check HUB exists
+    ==
+    bnz main_bool_true@87
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_2 // 0
+    bytec 6 // "HUB"
+    app_global_get_ex
+    assert // check HUB exists
+    ==
+    bz main_bool_false@88
+
+main_bool_true@87:
+    intc_1 // 1
+
+main_bool_merge@89:
+    assert // OnlyHub
+    dig 2
+    extract 2 32
+    dup
+    bury 6
+    intc_2 // 0
+    extract_uint16
+    itob
+    dup
+    bury 5
+    pushbytes 0x64
+    b>=
+    bz main_bool_false@92
+    dig 3
+    pushbytes 0x26ac
+    b<=
+    bz main_bool_false@92
+    intc_1 // 1
+
+main_bool_merge@93:
+    assert // InvalidOptimalUsageRatio
+    dig 4
+    dup
+    pushint 6
+    extract_uint32
+    dig 1
+    pushint 10
+    extract_uint32
+    dup2
+    <=
+    assert // Slope2MustBeGteSlope1
+    dig 2
+    intc_3 // 2
+    extract_uint32
+    dup
+    dig 3
+    +
+    dup
+    intc 4 // 4294967295
+    <=
+    assert // overflow
+    dig 2
+    +
+    dup
+    intc 4 // 4294967295
+    <=
+    assert // overflow
+    itob
+    pushbytes 0x0186a0
+    b<=
+    assert // InvalidMaxRate
+    intc_0 // 32
+    bzero
+    dig 15
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_1 // "_interestRateData"
+    swap
+    concat
+    uncover 5
+    box_put
+    swap
+    itob
+    intc_2 // 0
+    bytec 6 // "HUB"
+    app_global_get_ex
+    assert // check HUB exists
+    uncover 4
+    itob
+    uncover 4
+    itob
+    uncover 2
+    uncover 4
+    concat
+    dig 7
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    pushbytes 0xa1a834bb // method "UpdateRateData(uint8[32],uint256,uint64,uint64,uint64,uint64)"
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_bool_false@92:
+    intc_2 // 0
+    b main_bool_merge@93
+
+main_bool_false@88:
+    intc_2 // 0
+    b main_bool_merge@89
+
+main_ternary_false@84:
+    intc_2 // 0
+    b main_ternary_merge@85
+
+main___postInit_route@5:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    bytec 8 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 8 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_1 // "_interestRateData"
+    intc_3 // 2
+    box_create
+    pop
+    dup
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    !=
+    assert // InvalidAddress
+    bytec 6 // "HUB"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.WadRayMath.rayMulUp(a: bytes, b: bytes) -> bytes:
@@ -70,7 +869,7 @@ WadRayMath.rayMulUp_ternary_merge@3:
     frame_dig -2
     frame_dig -1
     b*
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     bytec 7 // 0x033b2e3c9fd0803ce8000000
@@ -85,7 +884,7 @@ WadRayMath.rayMulUp_ternary_merge@3:
     uncover 2
     select
     b+
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     frame_dig 0
     store 0
@@ -126,7 +925,7 @@ WadRayMath.rayDivUp:
     frame_dig -2
     bytec 7 // 0x033b2e3c9fd0803ce8000000
     b*
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     frame_dig -1
     bytec_0 // 0x
@@ -154,7 +953,7 @@ WadRayMath.rayDivUp_ternary_merge@9:
     select
     frame_dig 0
     b+
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     frame_dig 1
     store 0
@@ -178,7 +977,7 @@ WadRayMath.bpsToRay:
     frame_dig -1
     bytec 9 // 0x152d02c7e14af6800000
     b*
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     bytec 9 // 0x152d02c7e14af6800000
@@ -191,817 +990,3 @@ WadRayMath.bpsToRay:
     swap
     store 0
     retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.__postInit[routing]() -> void:
-__postInit:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    bytec 8 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec 8 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec_1 // "_interestRateData"
-    intc_3 // 2
-    box_create
-    pop
-    dup
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
-    !=
-    assert // InvalidAddress
-    bytec 6 // "HUB"
-    swap
-    app_global_put
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.setInterestRateData[routing]() -> void:
-setInterestRateData:
-    intc_2 // 0
-    dup
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    dupn 2
-    intc_2 // 0
-    extract_uint16 // on error: invalid array length header
-    intc_3 // 2
-    +
-    swap
-    len
-    ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    txn GroupIndex
-    bz setInterestRateData_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-setInterestRateData_ternary_merge@4:
-    !
-    assert // not payable
-    txn Sender
-    intc_2 // 0
-    bytec 6 // "HUB"
-    app_global_get_ex
-    assert // check HUB exists
-    ==
-    bnz setInterestRateData_bool_true@6
-    pushint 24
-    bzero
-    global CallerApplicationID
-    itob
-    concat
-    intc_2 // 0
-    bytec 6 // "HUB"
-    app_global_get_ex
-    assert // check HUB exists
-    ==
-    bz setInterestRateData_bool_false@7
-
-setInterestRateData_bool_true@6:
-    intc_1 // 1
-
-setInterestRateData_bool_merge@8:
-    assert // OnlyHub
-    dup
-    extract 2 32
-    dup
-    bury 5
-    intc_2 // 0
-    extract_uint16
-    itob
-    dup
-    bury 4
-    pushbytes 0x64
-    b>=
-    bz setInterestRateData_bool_false@11
-    dig 2
-    pushbytes 0x26ac
-    b<=
-    bz setInterestRateData_bool_false@11
-    intc_1 // 1
-
-setInterestRateData_bool_merge@12:
-    assert // InvalidOptimalUsageRatio
-    dig 3
-    dup
-    pushint 6
-    extract_uint32
-    dig 1
-    pushint 10
-    extract_uint32
-    dup2
-    <=
-    assert // Slope2MustBeGteSlope1
-    dig 2
-    intc_3 // 2
-    extract_uint32
-    dup
-    dig 3
-    +
-    dup
-    intc 4 // 4294967295
-    <=
-    assert // overflow
-    dig 2
-    +
-    dup
-    intc 4 // 4294967295
-    <=
-    assert // overflow
-    itob
-    pushbytes 0x0186a0
-    b<=
-    assert // InvalidMaxRate
-    intc_0 // 32
-    bzero
-    dig 6
-    dup
-    cover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    sha256
-    bytec_1 // "_interestRateData"
-    swap
-    concat
-    uncover 5
-    box_put
-    swap
-    itob
-    intc_2 // 0
-    bytec 6 // "HUB"
-    app_global_get_ex
-    assert // check HUB exists
-    uncover 4
-    itob
-    uncover 4
-    itob
-    uncover 2
-    uncover 4
-    concat
-    dig 6
-    concat
-    uncover 3
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    pushbytes 0xa1a834bb // method "UpdateRateData(uint8[32],uint256,uint64,uint64,uint64,uint64)"
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-setInterestRateData_bool_false@11:
-    intc_2 // 0
-    b setInterestRateData_bool_merge@12
-
-setInterestRateData_bool_false@7:
-    intc_2 // 0
-    b setInterestRateData_bool_merge@8
-
-setInterestRateData_ternary_false@3:
-    intc_2 // 0
-    b setInterestRateData_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.getInterestRateData[routing]() -> void:
-getInterestRateData:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz getInterestRateData_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-getInterestRateData_ternary_merge@4:
-    !
-    assert // not payable
-    load 0
-    pushint 24
-    bzero
-    dig 1
-    pushint 88
-    extract_uint64
-    pushint 14
-    +
-    itob
-    concat
-    replace2 64
-    store 0
-    intc_0 // 32
-    bzero
-    dig 1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    sha256
-    bytec_1 // "_interestRateData"
-    swap
-    concat
-    box_get
-    bytec 4 // 0x0000000000000000000000000000
-    cover 2
-    select
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-getInterestRateData_ternary_false@3:
-    intc_2 // 0
-    b getInterestRateData_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.getOptimalUsageRatio[routing]() -> void:
-getOptimalUsageRatio:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz getOptimalUsageRatio_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-getOptimalUsageRatio_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    dup
-    dig 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    sha256
-    bytec_1 // "_interestRateData"
-    swap
-    concat
-    box_get
-    bytec 4 // 0x0000000000000000000000000000
-    cover 2
-    select
-    intc_2 // 0
-    extract_uint16
-    itob
-    b|
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-getOptimalUsageRatio_ternary_false@3:
-    intc_2 // 0
-    b getOptimalUsageRatio_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.getBaseVariableBorrowRate[routing]() -> void:
-getBaseVariableBorrowRate:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz getBaseVariableBorrowRate_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-getBaseVariableBorrowRate_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    dup
-    dig 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    sha256
-    bytec_1 // "_interestRateData"
-    swap
-    concat
-    box_get
-    bytec 4 // 0x0000000000000000000000000000
-    cover 2
-    select
-    intc_3 // 2
-    extract_uint32
-    itob
-    b|
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-getBaseVariableBorrowRate_ternary_false@3:
-    intc_2 // 0
-    b getBaseVariableBorrowRate_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.getVariableRateSlope1[routing]() -> void:
-getVariableRateSlope1:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz getVariableRateSlope1_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-getVariableRateSlope1_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    dup
-    dig 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    sha256
-    bytec_1 // "_interestRateData"
-    swap
-    concat
-    box_get
-    bytec 4 // 0x0000000000000000000000000000
-    cover 2
-    select
-    pushint 6
-    extract_uint32
-    itob
-    b|
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-getVariableRateSlope1_ternary_false@3:
-    intc_2 // 0
-    b getVariableRateSlope1_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.getVariableRateSlope2[routing]() -> void:
-getVariableRateSlope2:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz getVariableRateSlope2_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-getVariableRateSlope2_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    dup
-    dig 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    sha256
-    bytec_1 // "_interestRateData"
-    swap
-    concat
-    box_get
-    bytec 4 // 0x0000000000000000000000000000
-    cover 2
-    select
-    pushint 10
-    extract_uint32
-    itob
-    b|
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-getVariableRateSlope2_ternary_false@3:
-    intc_2 // 0
-    b getVariableRateSlope2_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.getMaxVariableBorrowRate[routing]() -> void:
-getMaxVariableBorrowRate:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz getMaxVariableBorrowRate_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-getMaxVariableBorrowRate_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    dup
-    dig 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    sha256
-    bytec_1 // "_interestRateData"
-    swap
-    concat
-    box_get
-    bytec 4 // 0x0000000000000000000000000000
-    cover 2
-    select
-    dup
-    intc_3 // 2
-    extract_uint32
-    dig 1
-    pushint 6
-    extract_uint32
-    +
-    dup
-    intc 4 // 4294967295
-    <=
-    assert // overflow
-    swap
-    pushint 10
-    extract_uint32
-    +
-    dup
-    intc 4 // 4294967295
-    <=
-    assert // overflow
-    itob
-    b|
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-getMaxVariableBorrowRate_ternary_false@3:
-    intc_2 // 0
-    b getMaxVariableBorrowRate_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.calculateInterestRate[routing]() -> void:
-calculateInterestRate:
-    intc_2 // 0
-    dupn 3
-    bytec_0 // ""
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 3
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 4
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 5
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz calculateInterestRate_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-calculateInterestRate_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    dup
-    bury 7
-    dig 4
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    sha256
-    bytec_1 // "_interestRateData"
-    swap
-    concat
-    box_get
-    bytec 4 // 0x0000000000000000000000000000
-    cover 2
-    select
-    dup
-    bury 8
-    dup
-    intc_2 // 0
-    extract_uint16
-    dup
-    bury 7
-    assert // InterestRateDataNotSet
-    intc_3 // 2
-    extract_uint32
-    itob
-    callsub WadRayMath.bpsToRay
-    bury 9
-    dig 1
-    bytec_0 // 0x
-    b==
-    bz calculateInterestRate_after_if_else@6
-    dig 8
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 6
-    b|
-
-calculateInterestRate_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.calculateInterestRate@10:
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-calculateInterestRate_after_if_else@6:
-    dig 2
-    dig 2
-    dup
-    cover 2
-    b+
-    dig 2
-    b+
-    callsub WadRayMath.rayDivUp
-    dup
-    dig 6
-    itob
-    callsub WadRayMath.bpsToRay
-    dup
-    bury 11
-    b<=
-    bz calculateInterestRate_else_body@8
-    dig 7
-    pushint 6
-    extract_uint32
-    itob
-    callsub WadRayMath.bpsToRay
-    swap
-    callsub WadRayMath.rayMulUp
-    dig 8
-    callsub WadRayMath.rayDivUp
-    dig 9
-    b+
-    bury 9
-
-calculateInterestRate_after_if_else@9:
-    dig 8
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 6
-    b|
-    b calculateInterestRate_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.calculateInterestRate@10
-
-calculateInterestRate_else_body@8:
-    dup
-    dig 9
-    dup
-    cover 2
-    b>=
-    assert // underflow
-    bytec 7 // 0x033b2e3c9fd0803ce8000000
-    dig 1
-    b>=
-    assert // underflow
-    dig 8
-    dup
-    pushint 6
-    extract_uint32
-    itob
-    callsub WadRayMath.bpsToRay
-    swap
-    pushint 10
-    extract_uint32
-    itob
-    callsub WadRayMath.bpsToRay
-    uncover 3
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    dig 3
-    b-
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    callsub WadRayMath.rayMulUp
-    pushbytes 0x010000000000000000000000000000000000000000033b2e3c9fd0803ce8000000
-    uncover 3
-    b-
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    callsub WadRayMath.rayDivUp
-    b+
-    dig 9
-    b+
-    bury 9
-    b calculateInterestRate_after_if_else@9
-
-calculateInterestRate_ternary_false@3:
-    intc_2 // 0
-    b calculateInterestRate_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.MAX_BORROW_RATE[routing]() -> void:
-MAX_BORROW_RATE:
-    txn GroupIndex
-    bz MAX_BORROW_RATE_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-MAX_BORROW_RATE_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000186a0
-    log
-    intc_1 // 1
-    return
-
-MAX_BORROW_RATE_ternary_false@3:
-    intc_2 // 0
-    b MAX_BORROW_RATE_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.MIN_OPTIMAL_RATIO[routing]() -> void:
-MIN_OPTIMAL_RATIO:
-    txn GroupIndex
-    bz MIN_OPTIMAL_RATIO_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-MIN_OPTIMAL_RATIO_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000064
-    log
-    intc_1 // 1
-    return
-
-MIN_OPTIMAL_RATIO_ternary_false@3:
-    intc_2 // 0
-    b MIN_OPTIMAL_RATIO_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.MAX_OPTIMAL_RATIO[routing]() -> void:
-MAX_OPTIMAL_RATIO:
-    txn GroupIndex
-    bz MAX_OPTIMAL_RATIO_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-MAX_OPTIMAL_RATIO_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000026ac
-    log
-    intc_1 // 1
-    return
-
-MAX_OPTIMAL_RATIO_ternary_false@3:
-    intc_2 // 0
-    b MAX_OPTIMAL_RATIO_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.HUB[routing]() -> void:
-HUB:
-    txn GroupIndex
-    bz HUB_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-HUB_ternary_merge@4:
-    !
-    assert // not payable
-    intc_2 // 0
-    bytec 6 // "HUB"
-    app_global_get_ex
-    assert // check HUB exists
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-HUB_ternary_false@3:
-    intc_2 // 0
-    b HUB_ternary_merge@4

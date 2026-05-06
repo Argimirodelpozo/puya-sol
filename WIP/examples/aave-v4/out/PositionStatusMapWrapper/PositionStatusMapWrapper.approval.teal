@@ -4,7 +4,11 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMapWrapper.approval_program() -> uint64:
 main:
     intcblock 32 1 8 0 255 256
-    bytecblock 0x 0x010000000000000000000000000000000000000000000000000000000000000000 0x01 "map" "_p" 0x0100 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000002 0x80 0x0000000000000000000000000000000000000000000000000000000000000080 0x5555555555555555555555555555555555555555555555555555555555555555 0x00 0x3333333333333333333333333333333333333333333333333333333333333333 0x0000000000000000000000000000000000000000000000000000000000000010 0x0000000000000000000000000000000000000000000000000000000000000100 0x8421084210842108cc6318c6db6d54be 0x010000000000000000000000000000000000000000000000000000000000000100 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    bytecblock 0x 0x010000000000000000000000000000000000000000000000000000000000000000 0x01 "map" "_p" 0x151f7c75 0x0100 0x0000000000000000000000000000000000000000000000000000000000000002 0x80 0x0000000000000000000000000000000000000000000000000000000000000080 0x00 0x5555555555555555555555555555555555555555555555555555555555555555 0x3333333333333333333333333333333333333333333333333333333333333333 0x0000000000000000000000000000000000000000000000000000000000000010 0x0000000000000000000000000000000000000000000000000000000000000100 0x8421084210842108cc6318c6db6d54be 0x010000000000000000000000000000000000000000000000000000000000000100 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    intc_3 // 0
+    dupn 3
+    bytec_0 // ""
+    dup
     pushint 4096
     bzero
     dup
@@ -30,8 +34,504 @@ main_after_if_else@2:
     assert
     pushbytess 0x39aae42e 0xa52483a6 0xd6c31955 0xfdc3dd40 0xe3a7ce99 0xc0b63ecc 0xd4f70b2d 0xea960387 0xd35bf7bb 0xb4359d1f 0x21759777 0x70ce2847 0xdd9d9daf // method "BORROWING_MASK()uint256", method "COLLATERAL_MASK()uint256", method "setBorrowing(uint256,bool)void", method "setUsingAsCollateral(uint256,bool)void", method "isUsingAsCollateralOrBorrowing(uint256)bool", method "isBorrowing(uint256)bool", method "isUsingAsCollateral(uint256)bool", method "collateralCount(uint256)uint256", method "borrowCount(uint256)uint256", method "bucketId(uint256)uint256", method "isolateBorrowing(uint256)uint256", method "isolateCollateral(uint256)uint256", method "fls(uint256)uint256"
     txna ApplicationArgs 0
-    match BORROWING_MASK COLLATERAL_MASK setBorrowing setUsingAsCollateral isUsingAsCollateralOrBorrowing isBorrowing isUsingAsCollateral collateralCount borrowCount bucketId isolateBorrowing isolateCollateral fls
+    match main_BORROWING_MASK_route@5 main_COLLATERAL_MASK_route@6 main_setBorrowing_route@7 main_setUsingAsCollateral_route@8 main_isUsingAsCollateralOrBorrowing_route@9 main_isBorrowing_route@10 main_isUsingAsCollateral_route@11 main_collateralCount_route@12 main_borrowCount_route@13 main_bucketId_route@14 main_isolateBorrowing_route@15 main_isolateCollateral_route@16 main_fls_route@17
     err
+
+main_fls_route@17:
+    txna ApplicationArgs 1
+    dup
+    bury 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    dig 2
+    callsub LibBit.fls
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@23:
+    intc_3 // 0
+    b main_ternary_merge@24
+
+main_isolateCollateral_route@16:
+    txna ApplicationArgs 1
+    dup
+    bury 5
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    dig 3
+    callsub PositionStatusMap.isolateCollateral
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@28:
+    intc_3 // 0
+    b main_ternary_merge@29
+
+main_isolateBorrowing_route@15:
+    txna ApplicationArgs 1
+    dup
+    bury 5
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@33
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@34:
+    !
+    assert // not payable
+    dig 3
+    callsub PositionStatusMap.isolateBorrowing
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@33:
+    intc_3 // 0
+    b main_ternary_merge@34
+
+main_bucketId_route@14:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@38
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@39:
+    !
+    assert // not payable
+    dig 4
+    callsub PositionStatusMap.bucketId
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@38:
+    intc_3 // 0
+    b main_ternary_merge@39
+
+main_borrowCount_route@13:
+    txna ApplicationArgs 1
+    dup
+    bury 7
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@43
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@44:
+    !
+    assert // not payable
+    intc_3 // 0
+    bytec 4 // "_p"
+    app_global_get_ex
+    assert // check _p exists
+    dig 6
+    callsub PositionStatusMap.borrowCount
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@43:
+    intc_3 // 0
+    b main_ternary_merge@44
+
+main_collateralCount_route@12:
+    txna ApplicationArgs 1
+    dup
+    bury 7
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@48
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@49:
+    !
+    assert // not payable
+    intc_3 // 0
+    bytec 4 // "_p"
+    app_global_get_ex
+    assert // check _p exists
+    dig 6
+    callsub PositionStatusMap.collateralCount
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@48:
+    intc_3 // 0
+    b main_ternary_merge@49
+
+main_isUsingAsCollateral_route@11:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@53
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@54:
+    !
+    assert // not payable
+    intc_3 // 0
+    bytec 4 // "_p"
+    app_global_get_ex
+    assert // check _p exists
+    dig 5
+    callsub PositionStatusMap.isUsingAsCollateral
+    bytec 10 // 0x00
+    intc_3 // 0
+    uncover 2
+    setbit
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@53:
+    intc_3 // 0
+    b main_ternary_merge@54
+
+main_isBorrowing_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@58
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@59:
+    !
+    assert // not payable
+    intc_3 // 0
+    bytec 4 // "_p"
+    app_global_get_ex
+    assert // check _p exists
+    dig 5
+    callsub PositionStatusMap.isBorrowing
+    bytec 10 // 0x00
+    intc_3 // 0
+    uncover 2
+    setbit
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@58:
+    intc_3 // 0
+    b main_ternary_merge@59
+
+main_isUsingAsCollateralOrBorrowing_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@63
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@64:
+    !
+    assert // not payable
+    intc_3 // 0
+    bytec 4 // "_p"
+    app_global_get_ex
+    assert // check _p exists
+    dig 5
+    callsub PositionStatusMap.isUsingAsCollateralOrBorrowing
+    bytec 10 // 0x00
+    intc_3 // 0
+    uncover 2
+    setbit
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@63:
+    intc_3 // 0
+    b main_ternary_merge@64
+
+main_setUsingAsCollateral_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_3 // 0
+    getbit
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@68
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@69:
+    !
+    assert // not payable
+    dupn 2
+    intc_1 // 1
+    <=
+    assert // ABI bool validation
+    intc_3 // 0
+    bytec 4 // "_p"
+    app_global_get_ex
+    assert // check _p exists
+    dig 6
+    uncover 2
+    callsub PositionStatusMap.setUsingAsCollateral
+    bytec 4 // "_p"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_ternary_false@68:
+    intc_3 // 0
+    b main_ternary_merge@69
+
+main_setBorrowing_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_3 // 0
+    getbit
+    bury 2
+    txn GroupIndex
+    bz main_ternary_false@73
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@74:
+    !
+    assert // not payable
+    dig 1
+    dup
+    intc_1 // 1
+    <=
+    assert // ABI bool validation
+    intc_3 // 0
+    bytec 4 // "_p"
+    app_global_get_ex
+    assert // check _p exists
+    dig 6
+    uncover 2
+    callsub PositionStatusMap.setBorrowing
+    bytec 4 // "_p"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_ternary_false@73:
+    intc_3 // 0
+    b main_ternary_merge@74
+
+main_COLLATERAL_MASK_route@6:
+    txn GroupIndex
+    bz main_ternary_false@78
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@79:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@78:
+    intc_3 // 0
+    b main_ternary_merge@79
+
+main_BORROWING_MASK_route@5:
+    txn GroupIndex
+    bz main_ternary_false@83
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@84:
+    !
+    assert // not payable
+    pushbytes 0x151f7c755555555555555555555555555555555555555555555555555555555555555555
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@83:
+    intc_3 // 0
+    b main_ternary_merge@84
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.LibBit.popCount(x: bytes) -> bytes:
@@ -51,7 +551,7 @@ LibBit.popCount:
     frame_dig -1
     bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000002
     b/
-    bytec 10 // 0x5555555555555555555555555555555555555555555555555555555555555555
+    bytec 11 // 0x5555555555555555555555555555555555555555555555555555555555555555
     b&
     b-
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -133,7 +633,7 @@ LibBit.fls:
     b%
     b|
     dup
-    bytec 5 // 0x0100
+    bytec 6 // 0x0100
     b<
     bz LibBit.fls_ternary_false@9
     frame_dig 6
@@ -172,7 +672,7 @@ LibBit.fls_ternary_merge@10:
     b|
     dup
     frame_bury 7
-    bytec 5 // 0x0100
+    bytec 6 // 0x0100
     b<
     bz LibBit.fls_ternary_false@15
     frame_dig 6
@@ -211,7 +711,7 @@ LibBit.fls_ternary_merge@16:
     b|
     dup
     frame_bury 7
-    bytec 5 // 0x0100
+    bytec 6 // 0x0100
     b<
     bz LibBit.fls_ternary_false@21
     frame_dig 6
@@ -250,7 +750,7 @@ LibBit.fls_ternary_merge@22:
     b|
     dup
     frame_bury 7
-    bytec 5 // 0x0100
+    bytec 6 // 0x0100
     b<
     bz LibBit.fls_ternary_false@27
     frame_dig 6
@@ -289,7 +789,7 @@ LibBit.fls_ternary_merge@28:
     b|
     dup
     frame_bury 7
-    bytec 5 // 0x0100
+    bytec 6 // 0x0100
     b<
     dup
     frame_bury 3
@@ -316,7 +816,7 @@ LibBit.fls_ternary_merge@28:
     b/
 
 LibBit.fls_ternary_merge@33:
-    bytec 5 // 0x0100
+    bytec 6 // 0x0100
     b<
     bz LibBit.fls_ternary_false@41
     frame_dig 3
@@ -424,7 +924,7 @@ LibBit.fls_ternary_merge@42:
     b/
 
 LibBit.fls_ternary_merge@45:
-    bytec 5 // 0x0100
+    bytec 6 // 0x0100
     b<
     bz LibBit.fls_ternary_false@53
     frame_dig 3
@@ -1175,7 +1675,7 @@ PositionStatusMap.isolateBorrowing:
     proto 1 1
     load 0
     frame_dig -1
-    bytec 10 // 0x5555555555555555555555555555555555555555555555555555555555555555
+    bytec 11 // 0x5555555555555555555555555555555555555555555555555555555555555555
     b&
     swap
     store 0
@@ -1205,7 +1705,7 @@ PositionStatusMap.isolateBorrowingUntil:
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    bytec 5 // 0x0100
+    bytec 6 // 0x0100
     b<
     bz PositionStatusMap.isolateBorrowingUntil_ternary_false@20
     frame_dig 2
@@ -1225,7 +1725,7 @@ PositionStatusMap.isolateBorrowingUntil:
     swap
     intc_1 // 1
     setbit
-    bytec 10 // 0x5555555555555555555555555555555555555555555555555555555555555555
+    bytec 11 // 0x5555555555555555555555555555555555555555555555555555555555555555
     swap
     b/
 
@@ -1277,7 +1777,7 @@ PositionStatusMap.isolateCollateralUntil:
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    bytec 5 // 0x0100
+    bytec 6 // 0x0100
     b<
     bz PositionStatusMap.isolateCollateralUntil_ternary_false@20
     frame_dig 2
@@ -1312,511 +1812,3 @@ PositionStatusMap.isolateCollateralUntil_ternary_merge@21:
 PositionStatusMap.isolateCollateralUntil_ternary_false@20:
     bytec_0 // 0x
     b PositionStatusMap.isolateCollateralUntil_ternary_merge@21
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMapWrapper.BORROWING_MASK[routing]() -> void:
-BORROWING_MASK:
-    txn GroupIndex
-    bz BORROWING_MASK_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-BORROWING_MASK_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c755555555555555555555555555555555555555555555555555555555555555555
-    log
-    intc_1 // 1
-    return
-
-BORROWING_MASK_ternary_false@3:
-    intc_3 // 0
-    b BORROWING_MASK_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMapWrapper.COLLATERAL_MASK[routing]() -> void:
-COLLATERAL_MASK:
-    txn GroupIndex
-    bz COLLATERAL_MASK_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-COLLATERAL_MASK_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c75aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-    log
-    intc_1 // 1
-    return
-
-COLLATERAL_MASK_ternary_false@3:
-    intc_3 // 0
-    b COLLATERAL_MASK_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMapWrapper.setBorrowing[routing]() -> void:
-setBorrowing:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 1
-    ==
-    assert // invalid number of bytes for arc4.bool
-    intc_3 // 0
-    getbit
-    txn GroupIndex
-    bz setBorrowing_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-setBorrowing_ternary_merge@4:
-    !
-    assert // not payable
-    dupn 2
-    intc_1 // 1
-    <=
-    assert // ABI bool validation
-    intc_3 // 0
-    bytec 4 // "_p"
-    app_global_get_ex
-    assert // check _p exists
-    dig 3
-    uncover 2
-    callsub PositionStatusMap.setBorrowing
-    bytec 4 // "_p"
-    swap
-    app_global_put
-    intc_1 // 1
-    return
-
-setBorrowing_ternary_false@3:
-    intc_3 // 0
-    b setBorrowing_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMapWrapper.setUsingAsCollateral[routing]() -> void:
-setUsingAsCollateral:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_1 // 1
-    ==
-    assert // invalid number of bytes for arc4.bool
-    intc_3 // 0
-    getbit
-    txn GroupIndex
-    bz setUsingAsCollateral_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-setUsingAsCollateral_ternary_merge@4:
-    !
-    assert // not payable
-    dupn 2
-    intc_1 // 1
-    <=
-    assert // ABI bool validation
-    intc_3 // 0
-    bytec 4 // "_p"
-    app_global_get_ex
-    assert // check _p exists
-    dig 3
-    uncover 2
-    callsub PositionStatusMap.setUsingAsCollateral
-    bytec 4 // "_p"
-    swap
-    app_global_put
-    intc_1 // 1
-    return
-
-setUsingAsCollateral_ternary_false@3:
-    intc_3 // 0
-    b setUsingAsCollateral_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMapWrapper.isUsingAsCollateralOrBorrowing[routing]() -> void:
-isUsingAsCollateralOrBorrowing:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz isUsingAsCollateralOrBorrowing_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-isUsingAsCollateralOrBorrowing_ternary_merge@4:
-    !
-    assert // not payable
-    intc_3 // 0
-    bytec 4 // "_p"
-    app_global_get_ex
-    assert // check _p exists
-    dig 1
-    callsub PositionStatusMap.isUsingAsCollateralOrBorrowing
-    bytec 11 // 0x00
-    intc_3 // 0
-    uncover 2
-    setbit
-    bytec 6 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-isUsingAsCollateralOrBorrowing_ternary_false@3:
-    intc_3 // 0
-    b isUsingAsCollateralOrBorrowing_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMapWrapper.isBorrowing[routing]() -> void:
-isBorrowing:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz isBorrowing_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-isBorrowing_ternary_merge@4:
-    !
-    assert // not payable
-    intc_3 // 0
-    bytec 4 // "_p"
-    app_global_get_ex
-    assert // check _p exists
-    dig 1
-    callsub PositionStatusMap.isBorrowing
-    bytec 11 // 0x00
-    intc_3 // 0
-    uncover 2
-    setbit
-    bytec 6 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-isBorrowing_ternary_false@3:
-    intc_3 // 0
-    b isBorrowing_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMapWrapper.isUsingAsCollateral[routing]() -> void:
-isUsingAsCollateral:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz isUsingAsCollateral_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-isUsingAsCollateral_ternary_merge@4:
-    !
-    assert // not payable
-    intc_3 // 0
-    bytec 4 // "_p"
-    app_global_get_ex
-    assert // check _p exists
-    dig 1
-    callsub PositionStatusMap.isUsingAsCollateral
-    bytec 11 // 0x00
-    intc_3 // 0
-    uncover 2
-    setbit
-    bytec 6 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-isUsingAsCollateral_ternary_false@3:
-    intc_3 // 0
-    b isUsingAsCollateral_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMapWrapper.collateralCount[routing]() -> void:
-collateralCount:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz collateralCount_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-collateralCount_ternary_merge@4:
-    !
-    assert // not payable
-    intc_3 // 0
-    bytec 4 // "_p"
-    app_global_get_ex
-    assert // check _p exists
-    dig 1
-    callsub PositionStatusMap.collateralCount
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 6 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-collateralCount_ternary_false@3:
-    intc_3 // 0
-    b collateralCount_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMapWrapper.borrowCount[routing]() -> void:
-borrowCount:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz borrowCount_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-borrowCount_ternary_merge@4:
-    !
-    assert // not payable
-    intc_3 // 0
-    bytec 4 // "_p"
-    app_global_get_ex
-    assert // check _p exists
-    dig 1
-    callsub PositionStatusMap.borrowCount
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 6 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-borrowCount_ternary_false@3:
-    intc_3 // 0
-    b borrowCount_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMapWrapper.bucketId[routing]() -> void:
-bucketId:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz bucketId_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-bucketId_ternary_merge@4:
-    !
-    assert // not payable
-    dup
-    callsub PositionStatusMap.bucketId
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 6 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-bucketId_ternary_false@3:
-    intc_3 // 0
-    b bucketId_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMapWrapper.isolateBorrowing[routing]() -> void:
-isolateBorrowing:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz isolateBorrowing_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-isolateBorrowing_ternary_merge@4:
-    !
-    assert // not payable
-    dup
-    callsub PositionStatusMap.isolateBorrowing
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 6 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-isolateBorrowing_ternary_false@3:
-    intc_3 // 0
-    b isolateBorrowing_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMapWrapper.isolateCollateral[routing]() -> void:
-isolateCollateral:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz isolateCollateral_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-isolateCollateral_ternary_merge@4:
-    !
-    assert // not payable
-    dup
-    callsub PositionStatusMap.isolateCollateral
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 6 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-isolateCollateral_ternary_false@3:
-    intc_3 // 0
-    b isolateCollateral_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMapWrapper.fls[routing]() -> void:
-fls:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz fls_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-fls_ternary_merge@4:
-    !
-    assert // not payable
-    dup
-    callsub LibBit.fls
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 6 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-fls_ternary_false@3:
-    intc_3 // 0
-    b fls_ternary_merge@4

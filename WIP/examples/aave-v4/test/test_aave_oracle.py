@@ -162,24 +162,6 @@ def test_get_reserve_source_unset(oracle):
     assert result == ZERO_ADDR
 
 
-@pytest.mark.xfail(
-    reason=(
-        "SpokeInstance fixture wired (uros split + AccessManager) but "
-        "__postInit can't complete on main: it `box_create`s 7 boxes "
-        "(_reserves / _hubAssetIdToReserveId / _dynamicConfig / "
-        "_positionStatus / _userPositions / _positionManager / __gap), "
-        "and the AVM 8-reference cap (boxes + foreign_apps + accts + "
-        "assets) leaves room for only 7 boxes IF we drop a foreign "
-        "app — but every method on main calls __uros_forward_value "
-        "which reads TMPL_UROS_STORAGE_APP_ID via app_params_get, so "
-        "storage_id MUST be in foreign_apps. Result: __postInit needs "
-        "to be split across multiple grouped txns (each with its own "
-        "8-ref budget), or the splitter needs to defer __dyn_storage's "
-        "box_create to a separate post-init step. Without ORACLE set "
-        "on storage's globals, ISpoke(spoke).ORACLE() returns 0 and "
-        "fails the `== address(this)` check inside oracle.setSpoke."
-    )
-)
 def test_set_spoke(oracle, spoke, account):
     """setSpoke should update SPOKE to a real spoke whose ORACLE()
     returns this oracle's address."""
@@ -191,34 +173,147 @@ def test_set_spoke(oracle, spoke, account):
     assert result == spoke_addr
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Same __postInit blocker as test_set_spoke. Plus: "
-        "spoke.initialize(authority) traps with `getbit index > 63 "
-        "with Uint` — puya-sol emits getbit on a uint64 at bit 64 "
-        "for OZ Initializable's reinitializer modifier (the "
-        "`_initializing` bool packed beside `_initialized` uint64). "
-        "The bit should be in a byte slot, not a uint slot. Plus: "
-        "addReserve plumbing — updateReservePriceSource requires "
-        "`reserveId < _reserveCount`, so the test would need to "
-        "call addReserve first (which itself inner-calls "
-        "oracle.setReserveSource, hub.addAsset, etc.)."
+def _ensure_spoke_set(oracle, spoke):
+    spoke_addr = _appid_to_pseudo_addr_str(spoke.main_id)
+    if _call(oracle, "SPOKE") != spoke_addr:
+        _call(oracle, "setSpoke", spoke_addr,
+              extra_fee_micro=10_000,
+              apps=[spoke.main_id, spoke.orch_id, spoke.storage_id])
+    return spoke_addr
+
+
+def _call_spoke_main_method(spoke, sel_sig, args, account, extra_fee_micro,
+                            extra_apps=None, boxes=None):
+    """Direct ApplicationCall to spoke's main app — bypasses algokit's
+    Arc56Contract parser (which rejects int200 in SpokeInstance.arc56).
+    Pads the group with no-op app calls so populate_app_call_resources
+    can discover the orch dance's box / app refs (csel_<sel>,
+    __codebox_chunk_<i>, etc.) and distribute them across txns."""
+    from algosdk.transaction import (
+        ApplicationCallTxn, OnComplete,
     )
-)
-def test_set_reserve_source(oracle, spoke, account):
-    """setReserveSource via spoke.updateReservePriceSource (which has
-    the `restricted` modifier — dispenser holds ADMIN_ROLE)."""
-    raise NotImplementedError
+    from algosdk.atomic_transaction_composer import (
+        AtomicTransactionComposer, TransactionWithSigner,
+        AccountTransactionSigner,
+    )
+    import os
+    import algokit_utils as au
+    algod = au.ClientManager.get_algod_client(
+        au.ClientManager.get_default_localnet_config('algod'))
+    sel = hashlib.new("sha512_256", sel_sig.encode()).digest()[:4]
+    sp = algod.suggested_params()
+    sp.fee = sp.min_fee * extra_fee_micro
+    sp.flat_fee = True
+    txn = ApplicationCallTxn(
+        sender=account.address, sp=sp, index=spoke.main_id,
+        on_complete=OnComplete.NoOpOC,
+        app_args=[sel, *args],
+        foreign_apps=extra_apps,
+        boxes=boxes,
+    )
+    signer = AccountTransactionSigner(account.private_key)
+    atc = AtomicTransactionComposer()
+    # Pad with no-op app calls (orch.set_storage = idempotent
+    # globalput) so populate_app_call_resources has room to fan out
+    # box/app refs across the group.
+    pad_sel = hashlib.new(
+        "sha512_256", b"set_storage(uint64)void").digest()[:4]
+    pad_sp = algod.suggested_params()
+    pad_sp.fee = pad_sp.min_fee
+    pad_sp.flat_fee = True
+    for i in range(3):
+        pad_txn = ApplicationCallTxn(
+            sender=account.address, sp=pad_sp, index=spoke.orch_id,
+            on_complete=OnComplete.NoOpOC,
+            app_args=[pad_sel, spoke.storage_id.to_bytes(8, "big")],
+            note=os.urandom(16) + bytes([i]),
+        )
+        atc.add_transaction(TransactionWithSigner(pad_txn, signer))
+    atc.add_transaction(TransactionWithSigner(txn, signer))
+    try:
+        atc = au.populate_app_call_resources(atc, algod)
+    except Exception as e:
+        print(f"[test] populate_app_call_resources failed: {e!r}")
+    return atc.execute(algod, 4)
 
 
 @pytest.mark.xfail(
     reason=(
-        "Same SpokeInstance + addReserve + initialize blockers as "
-        "test_set_reserve_source. Once those are unblocked, this test "
-        "deploys a UnitPriceFeed (already exists), routes through "
-        "spoke.updateReservePriceSource(reserveId, priceSource=feed)."
+        "Chunk-vs-main state-coordination gap. __postInit is chunked "
+        "(so it runs on storage; ORACLE writes land on storage's "
+        "globals; chunk_0's ORACLE getter reads from storage — that's "
+        "what made test_set_spoke pass). updateReservePriceSource is "
+        "PINNED TO MAIN (so its oracle.setReserveSource inner-call "
+        "has Sender=spoke.main_addr, matching oracle.SPOKE). But "
+        "main-pinned methods read state from MAIN's globals, where "
+        "ORACLE was never written. Need a splitter pass that patches "
+        "chunk-side state-var reads to use app_global_get_ex(MAIN, "
+        "key) — the same trick the og_sender / og_value passes use, "
+        "extended to user-defined state vars. Then we'd flip back to "
+        "main-resident __postInit and the consistency holds."
     )
 )
+def test_set_reserve_source(oracle, spoke, localnet, account):
+    """setReserveSource is `msg.sender == SPOKE`-gated. Route via
+    spoke.updateReservePriceSource (which inner-calls
+    oracle.setReserveSource). The source must implement
+    `decimals()uint64` returning the same value as oracle.DECIMALS()
+    — UnitPriceFeed at decimals=8 fits."""
+    _ensure_spoke_set(oracle, spoke)
+
+    # Deploy a UnitPriceFeed as the price source; its decimals()
+    # returns 8 (matches oracle.DECIMALS()).
+    feed = deploy_contract(
+        localnet, account, "UnitPriceFeed",
+        app_args=[(8).to_bytes(8, "big"),
+                  len(b"Test Feed").to_bytes(2, "big") + b"Test Feed"],
+    )
+    feed_addr_bytes = _appid_to_pseudo_addr_bytes(feed.app_id)
+    feed_addr_str = _appid_to_pseudo_addr_str(feed.app_id)
+
+    reserve_id = 1
+    box_key = _mapping_box_key("_reserveSources", _biguint_key(reserve_id))
+    # spoke.updateReservePriceSource(reserveId, priceSource):
+    #   spoke (main → orch → __storage chunk) → oracle.setReserveSource
+    #   → feed.decimals()
+    # Resource refs: spoke.{main,orch,storage} for the dance, oracle
+    # for the inner-call back, feed for decimals(), oracle's box for
+    # _reserveSources mapping.
+    reserve_id_bytes = (b"\x00" * 24) + reserve_id.to_bytes(8, "big")
+    _call_spoke_main_method(
+        spoke, "updateReservePriceSource(uint256,address)void",
+        [reserve_id_bytes, feed_addr_bytes],
+        account=account, extra_fee_micro=20,
+        extra_apps=[spoke.orch_id, spoke.storage_id, oracle.app_id, feed.app_id],
+        boxes=[(oracle.app_id, box_key)],
+    )
+    result = _call(oracle, "getReserveSource", reserve_id,
+                   boxes=[_box_ref(oracle.app_id, box_key)])
+    assert result == feed_addr_str
+
+
+@pytest.mark.xfail(reason="Same chunk-vs-main state issue as test_set_reserve_source.")
 def test_get_reserve_price_with_unit_feed(oracle, spoke, localnet, account):
     """Set up a UnitPriceFeed as price source and verify assignment."""
-    raise NotImplementedError
+    _ensure_spoke_set(oracle, spoke)
+    feed = deploy_contract(
+        localnet, account, "UnitPriceFeed",
+        app_args=[(8).to_bytes(8, "big"),
+                  len(b"Unit Feed").to_bytes(2, "big") + b"Unit Feed"],
+    )
+    feed_addr_bytes = _appid_to_pseudo_addr_bytes(feed.app_id)
+    feed_addr_str = _appid_to_pseudo_addr_str(feed.app_id)
+
+    reserve_id = 2
+    box_key = _mapping_box_key("_reserveSources", _biguint_key(reserve_id))
+    reserve_id_bytes = (b"\x00" * 24) + reserve_id.to_bytes(8, "big")
+    _call_spoke_main_method(
+        spoke, "updateReservePriceSource(uint256,address)void",
+        [reserve_id_bytes, feed_addr_bytes],
+        account=account, extra_fee_micro=20,
+        extra_apps=[spoke.orch_id, spoke.storage_id, oracle.app_id, feed.app_id],
+        boxes=[(oracle.app_id, box_key)],
+    )
+    source = _call(oracle, "getReserveSource", reserve_id,
+                   boxes=[_box_ref(oracle.app_id, box_key)])
+    assert source == feed_addr_str
