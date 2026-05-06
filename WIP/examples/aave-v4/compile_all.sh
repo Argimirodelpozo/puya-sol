@@ -73,6 +73,16 @@ SPLIT_GROUPS[AccessManagerEnumerable]=$'getRole,getRoleCount,getRoles,getRoleMem
 #   1 spoke-config cluster (updateSpokeConfig+setInterestRateData)
 SPLIT_GROUPS[Hub]=$'getAssetUnderlyingAndDecimals,getAssetDrawnIndex,getAddedAssets,getAddedShares,getAssetOwed,getAssetTotalOwed,getAssetPremiumRay,getAssetDrawnShares,getAssetPremiumData,getAssetLiquidity,getAssetDeficitRay,getAsset,getAssetConfig,getAssetAccruedFees,getAssetSwept,getAssetDrawnRate|getSpokeCount,getSpokeAddedAssets,getSpokeAddedShares,getSpokeOwed,getSpokeTotalOwed,getSpokePremiumRay,getSpokeDrawnShares,getSpokePremiumData,getSpokeDeficitRay,getSpokeAddress,getSpoke,getSpokeConfig|getAssetId,getAssetCount,previewAddByAssets,previewAddByShares,previewRemoveByAssets,previewRemoveByShares,previewDrawByAssets,previewDrawByShares,previewRestoreByAssets,previewRestoreByShares,isUnderlyingListed,isSpokeListed|add,remove|draw,restore|transferShares,refreshPremium,mintFeeShares,payFeeShares|sweep,reclaim,reportDeficit|eliminateDeficit|addAsset|updateAssetConfig,addSpoke|updateSpokeConfig,setInterestRateData'
 
+# SpokeInstance.sol — 23 KB unsplit, 58 methods (inherited from Spoke).
+# Bin-pack: 8 chunks by domain. Methods kept on main (not in any
+# chunk): __postInit, initialize, eip712Domain, multicall, extSload,
+# extSloads. eip712Domain/multicall/extSloads return variable-length
+# types whose forwarding-stub decode would break tuple shape; extSload
+# calls __storage_read(slot) with bytes[32] but the chunk's
+# __storage_read stub has uint64 arg signature → typecheck fails. Both
+# stay on main where the original body runs directly.
+SPLIT_GROUPS[SpokeInstance]=$'SPOKE_REVISION,SET_USER_POSITION_MANAGERS_TYPEHASH,MAX_USER_RESERVES_LIMIT,ORACLE,DOMAIN_SEPARATOR,getLiquidationConfig,getLiquidationLogic,getLiquidationBonus|getReserveCount,getReserveSuppliedAssets,getReserveSuppliedShares,getReserveDebt,getReserveTotalDebt,getReserveId,getReserve,getReserveConfig,getDynamicReserveConfig|getUserReserveStatus,getUserSuppliedAssets,getUserSuppliedShares,getUserDebt,getUserTotalDebt,getUserPremiumDebtRay,getUserPosition,getUserLastRiskPremium,getUserAccountData,isPositionManagerActive,isPositionManager|updateLiquidationConfig,addReserve,updateReserveConfig,updateReservePriceSource,addDynamicReserveConfig,updateDynamicReserveConfig,updatePositionManager|borrow|repay|liquidationCall|supply,withdraw,setUsingAsCollateral|updateUserRiskPremium,updateUserDynamicConfig,setUserPositionManager,setUserPositionManagersWithSig,renouncePositionManagerRole,permitReserve,useNonce,nonces|authority,setAuthority,isConsumingScheduledOp'
+
 for c in "${CONTRACTS[@]}"; do
     src="$HERE/contracts/$c.sol"
     if [ ! -f "$src" ]; then

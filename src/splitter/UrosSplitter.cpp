@@ -1256,6 +1256,63 @@ std::shared_ptr<awst::Contract> shallowCloneContract(
 	return out;
 }
 
+/// Collect all SubroutineID targets reached transitively from `_block`,
+/// inserting each into `_out`. Walks every Expression slot via
+/// AwstWalker but only inspects SubroutineCallExpression targets — the
+/// callback always returns nullptr to keep walking. Other call shapes
+/// (InstanceMethodTarget / ContractMethodTarget / SuperMethodTarget)
+/// resolve to ContractMethods which are the chunk-level binning unit
+/// and therefore not part of the reachability set we're after.
+void collectCalledSubIDs(
+	awst::Block& _block, std::set<std::string>& _out)
+{
+	auto fn = [&_out](awst::Expression const& e)
+		-> std::shared_ptr<awst::Expression>
+	{
+		if (auto const* sce = dynamic_cast<awst::SubroutineCallExpression const*>(&e))
+		{
+			if (auto const* sid = std::get_if<awst::SubroutineID>(&sce->target))
+				_out.insert(sid->target);
+		}
+		return nullptr; // never substitute
+	};
+	walkBlock(_block, fn);
+}
+
+/// Compute the set of Subroutine IDs reachable from any body in
+/// `_seedBodies` through SubroutineCallExpression edges, using
+/// `_subById` as the call-graph ground truth (a Subroutine's body is
+/// inspected only if it appears in `_subById`).
+std::set<std::string> computeReachableSubIDs(
+	std::vector<awst::Block*> const& _seedBodies,
+	std::map<std::string, std::shared_ptr<awst::Subroutine>> const& _subById)
+{
+	std::set<std::string> reached;
+	std::vector<std::string> worklist;
+	for (auto* b : _seedBodies)
+	{
+		if (!b) continue;
+		std::set<std::string> seedCalls;
+		collectCalledSubIDs(*b, seedCalls);
+		for (auto const& s : seedCalls)
+			if (reached.insert(s).second)
+				worklist.push_back(s);
+	}
+	while (!worklist.empty())
+	{
+		std::string cur = std::move(worklist.back());
+		worklist.pop_back();
+		auto it = _subById.find(cur);
+		if (it == _subById.end() || !it->second->body) continue;
+		std::set<std::string> calls;
+		collectCalledSubIDs(*it->second->body, calls);
+		for (auto const& s : calls)
+			if (reached.insert(s).second)
+				worklist.push_back(s);
+	}
+	return reached;
+}
+
 } // namespace
 
 UrosSplitter::Result UrosSplitter::split(
@@ -1399,8 +1456,39 @@ UrosSplitter::Result UrosSplitter::split(
 		chunkContract->methods.push_back(
 			makeDelegateUpdateMethod(primary->id, primary->sourceLocation));
 
-		// Build this chunk's full root set: all roots, with the primary
-		// contract substituted for chunkContract.
+		// Per-chunk Subroutine reachability: only Subroutines actually
+		// reached from any retained body in this chunk get carried into
+		// the chunk's root set. Avoids duplicating every library
+		// Subroutine into every chunk — the dominant source of bloat
+		// for big contracts (AAVE V4 SpokeInstance.liquidationCall went
+		// from 9.6 KB → fits-under-cap with this filter). Subroutines
+		// referenced via SubroutineID across chunks are still found
+		// because the filter is per-chunk, not global.
+		//
+		// Seeds: this chunk's primary-contract methods PLUS every method
+		// on every other contract root (e.g. NoncesKeyed's synthetic
+		// __funcptr_dispatch_* methods, which puya-sol emits for
+		// function-pointer support and which themselves call Subroutines
+		// in libraries like Comparators).
+		std::map<std::string, std::shared_ptr<awst::Subroutine>> subById;
+		for (auto const& r : _roots)
+			if (auto sub = std::dynamic_pointer_cast<awst::Subroutine>(r))
+				subById[sub->id] = sub;
+		std::vector<awst::Block*> seedBodies;
+		for (auto& m : chunkContract->methods)
+			if (m.body) seedBodies.push_back(m.body.get());
+		for (auto const& r : _roots)
+		{
+			auto c = std::dynamic_pointer_cast<awst::Contract>(r);
+			if (!c || c.get() == primary.get()) continue;
+			for (auto& m : c->methods)
+				if (m.body) seedBodies.push_back(m.body.get());
+		}
+		auto reachableSubIDs = computeReachableSubIDs(seedBodies, subById);
+
+		// Build this chunk's full root set: substitute primary for
+		// chunkContract, drop unreachable Subroutines, pass everything
+		// else through unchanged.
 		Chunk chunk;
 		for (auto const& r : _roots)
 		{
@@ -1410,6 +1498,11 @@ UrosSplitter::Result UrosSplitter::split(
 					chunk.roots.push_back(chunkContract);
 				else
 					chunk.roots.push_back(r);
+			}
+			else if (auto sub = std::dynamic_pointer_cast<awst::Subroutine>(r))
+			{
+				if (reachableSubIDs.count(sub->id))
+					chunk.roots.push_back(sub);
 			}
 			else
 			{

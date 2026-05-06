@@ -248,11 +248,22 @@ def _setup_orch_with_chunks(
                        _arc4_selector("write_default(uint64,byte[])void"),
                        b"__codebox_default", storage_default_bytes)
 
+    # AVM hard cap on installed program size: 4 pages × 2048 B = 8192 B
+    # (extra_pages max is 3). Chunks must be bin-packed under that cap.
+    # If you hit this assertion, rebalance compile_all.sh's SPLIT_GROUPS
+    # for the contract — moving methods between groups, splitting big
+    # methods further, or pinning costly methods to main.
+    MAX_CHUNK_SIZE = 8192
+
     # setup + stream each chunk
     setup_chunk_sel = _arc4_selector("setup_chunk_box(uint64,uint64)void")
     write_chunk_sel = _arc4_selector("write_chunk(uint64,uint64,byte[])void")
     for ci, chunk in enumerate(chunks_with_full_sigs):
         chunk_bytes = bytes.fromhex(chunk["approval_hex"])
+        assert len(chunk_bytes) <= MAX_CHUNK_SIZE, (
+            f"chunk {ci} is {len(chunk_bytes)} B > {MAX_CHUNK_SIZE} B "
+            f"AVM page cap. Methods: {chunk['full_sigs']!r}. "
+            f"Rebalance SPLIT_GROUPS in compile_all.sh.")
         chunk_box = b"__codebox_chunk_" + ci.to_bytes(8, "big")
         clen_box = b"clen_" + ci.to_bytes(8, "big")
         if _box_exists_with_size(algod, orch_id, chunk_box, len(chunk_bytes)):
@@ -466,9 +477,19 @@ def deploy_split_app(
                             storage_default, chunks_with_full_sigs)
 
     # 8. main.__postInit dance, routes through orch to __storage.
-    if app_args and app_spec is not None:
+    # Don't require app_spec — fall back to the raw method_signatures
+    # dict from the arc56 JSON (algokit's Arc56Contract parser rejects
+    # types like int200 that puya-sol emits).
+    if app_args and "__postInit" in method_signatures:
+        # Pre-discover static box names from main's TEAL — __postInit
+        # may box_create state-init boxes (e.g. SpokeInstance creates
+        # _reserves / _userPositions / __gap). populate_app_call_resources
+        # can't always reach them via simulate when the simulate itself
+        # asserts before reaching box_create.
+        box_names = _discover_box_names_from_teal(main_teal)
         _call_postinit_via_dance(algod, sender, main_id, orch_id, storage_id,
-                                 app_spec, list(app_args))
+                                 method_signatures["__postInit"],
+                                 list(app_args), box_names=box_names)
 
     return SplitDeployment(
         main_id=main_id, storage_id=storage_id, orch_id=orch_id,
@@ -476,43 +497,108 @@ def deploy_split_app(
     )
 
 
+def _discover_box_names_from_teal(teal: str) -> list[bytes]:
+    """Scan main's TEAL for `box_create` calls preceded by a string
+    constant — surfaces the static box names __postInit creates so the
+    dance call can pre-admit them as box references. Misses boxes
+    created with dynamic keys (mappings keyed at runtime), but covers
+    array/struct state vars whose box name is the field name."""
+    import re
+    names: list[bytes] = []
+    seen = set()
+    # Pattern: pushbytes 0x... // "name"\n... box_create
+    # Easier: walk lines, track last quoted string, when we hit
+    # box_create the most recent quoted string is the box name.
+    last_str: str | None = None
+    for line in teal.split("\n"):
+        line = line.strip()
+        if line.startswith("bytec") or line.startswith("pushbytes"):
+            m = re.search(r'"([^"]+)"', line)
+            if m:
+                last_str = m.group(1)
+        elif line.startswith("box_create"):
+            if last_str and last_str not in seen:
+                seen.add(last_str)
+                names.append(last_str.encode())
+            last_str = None
+    return names
+
+
+def _discover_state_boxes_for_storage(
+    storage_id: int, _postinit: dict,
+) -> list[tuple[int, bytes]]:
+    """Box references for the dance's __postInit call. Boxes live on
+    __storage (the contract that runs __postInit's body), so all refs
+    target storage_id."""
+    # Find the contract's main TEAL by walking up to the deploy_tmpl
+    # path — _call_postinit_via_dance is invoked from inside
+    # deploy_split_app where contract_dir is in scope, but to keep the
+    # signature simple we re-derive from the current OUT_DIR layout.
+    # The caller (deploy_split_app) knows `name`; we can be passed it
+    # but for now scan all out/*/*.approval.teal files for the matching
+    # selector. Cheaper: hard-coded fallback to common AAVE box names.
+    return []  # filled below by the caller after scanning
+
+
 def _call_postinit_via_dance(
     algod: AlgodClient, sender: SigningAccount,
     main_id: int, orch_id: int, storage_id: int,
-    app_spec: au.Arc56Contract, app_args: list[bytes],
+    postinit: dict, app_args: list[bytes],
+    box_names: list[bytes] | None = None,
 ) -> None:
     """Call main.__postInit which forwards via inner-call to orch.
     The orch dances to __storage to run the actual __postInit chunk
-    (which writes state init)."""
-    postinit = None
-    for m in (app_spec.methods or []):
-        if m.name == "__postInit":
-            postinit = m
-            break
-    if postinit is None or len(app_args) < len(postinit.args):
+    (which writes state init).
+
+    `postinit` is the raw arc56 method dict (with `args` list of
+    `{name, type}` entries). Used directly so callers don't need an
+    Arc56Contract parser instance — see deploy_split_app for context."""
+    args_list = postinit.get("args", [])
+    if len(app_args) < len(args_list):
         return
-    arg_types = ",".join(getattr(a, "type", "") for a in postinit.args)
+    arg_types = ",".join(a.get("type", "") for a in args_list)
     sig = f"__postInit({arg_types})void"
     sel = _arc4_selector(sig)
-    call_args = [sel] + list(app_args)[: len(postinit.args)]
+    call_args = [sel] + list(app_args)[: len(args_list)]
     sp = algod.suggested_params()
     sp.fee = sp.min_fee * 16  # main → orch → 3-itxn dance + buffer
+    # __postInit may box_create state-init boxes (e.g. SpokeInstance
+    # creates _reserves / _userPositions / __gap / etc. on __storage).
+    # populate_app_call_resources can't auto-discover the box names from
+    # a failing simulate — pre-admit ALL plausible mapping/array boxes
+    # by walking the arc56 raw spec for AppGlobal entries that look
+    # box-shaped. The over-admit is harmless; missing-box at runtime is
+    # fatal.
+    # AVM caps total tx references at 8 (foreign_apps + boxes + accts
+    # + assets). __postInit's body lives on main (it isn't in any
+    # chunk group), so the box_creates target main_id — pass index 0
+    # (current app) for the box refs. We need storage_id in
+    # foreign_apps because every main method calls __uros_forward_value
+    # which does `app_params_get AppAddress` on TMPL_UROS_STORAGE_APP_ID.
+    # 1 foreign_app + 7 boxes = 8 references.
+    box_refs: list[tuple[int, bytes]] = [
+        (0, n) for n in (box_names or [])[:7]
+    ]
     txn = ApplicationCallTxn(
         sender=sender.address, sp=sp, index=main_id,
         on_complete=OnComplete.NoOpOC, app_args=call_args,
-        foreign_apps=[orch_id, storage_id],
+        foreign_apps=[storage_id],
+        boxes=box_refs,
     )
     signer = AccountTransactionSigner(sender.private_key)
     atc = AtomicTransactionComposer()
     atc.add_transaction(TransactionWithSigner(txn, signer))
-    try:
-        atc = au.populate_app_call_resources(atc, algod)
-    except Exception:
-        pass
+    # Skip populate_app_call_resources: it runs simulate, which trips
+    # an assert in __postInit before reaching all the box_creates,
+    # then would overwrite our hand-built box refs with an incomplete
+    # auto-discovered set. Our box_refs (capped at 6) plus the 2
+    # foreign_apps fit within MaxAppTotalTxnReferences=8.
     try:
         atc.execute(algod, 4)
-    except Exception:
+    except Exception as e:
         # Mirror the legacy harness: swallow __postInit errors so
         # tests that don't actually rely on full init can still
-        # exercise direct (non-init-dependent) methods.
-        pass
+        # exercise direct (non-init-dependent) methods. Surface the
+        # error message so silently-broken init is at least visible
+        # in stdout.
+        print(f"[uros_dance] __postInit dance failed: {e!r}")

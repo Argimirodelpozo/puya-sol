@@ -7,9 +7,22 @@ import hashlib
 import algokit_utils as au
 from algosdk import encoding
 from conftest import deploy_contract
+from uros_dance import deploy_split_app
 
 
 ZERO_ADDR = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"
+
+
+def _appid_to_pseudo_addr_bytes(app_id: int) -> bytes:
+    """puya-sol app-address convention: \\x00*24 + itob(app_id). Tests
+    passing a real app's address as a Solidity `address` arg need this
+    format so SolExternalCall::addressToAppId recovers the right id."""
+    return b"\x00" * 24 + app_id.to_bytes(8, "big")
+
+
+def _appid_to_pseudo_addr_str(app_id: int) -> str:
+    """Same convention, as a checksummed Algorand address string."""
+    return encoding.encode_address(_appid_to_pseudo_addr_bytes(app_id))
 
 _call_counter = 0
 
@@ -28,13 +41,18 @@ def _biguint_key(val):
     return padded[len(padded) - 64:]
 
 
-def _call(client, method, *args, boxes=None):
+def _call(client, method, *args, boxes=None, extra_fee_micro=None,
+          apps=None):
     global _call_counter
     _call_counter += 1
     note = f"ao_{_call_counter}".encode()
     kwargs = dict(method=method, args=list(args), note=note)
     if boxes:
         kwargs["box_references"] = boxes
+    if extra_fee_micro is not None:
+        kwargs["extra_fee"] = au.AlgoAmount(micro_algo=extra_fee_micro)
+    if apps:
+        kwargs["app_references"] = apps
     result = client.send.call(au.AppClientMethodCallParams(**kwargs))
     return result.abi_return
 
@@ -52,6 +70,73 @@ def oracle(localnet, account):
         localnet, account, "AaveOracle",
         app_args=[decimals.to_bytes(8, "big"), description],
     )
+
+
+@pytest.fixture(scope="module")
+def access_manager(localnet, account):
+    """AccessManager contract with the dispenser as initialAdmin. Used as
+    the authority for a SpokeInstance — without setTargetFunctionRole on
+    spoke methods, every restricted method requires ADMIN_ROLE, which
+    the dispenser holds."""
+    initial_admin = encoding.decode_address(account.address)
+    return deploy_contract(
+        localnet, account, "AccessManager",
+        app_args=[initial_admin],
+    )
+
+
+def _raw_abi_call(algod, sender, app_id, sig: str, *args: bytes,
+                  fee_mult: int = 1, foreign_apps=None,
+                  boxes=None) -> dict:
+    """Raw ApplicationCallTxn with ABI selector + concatenated args.
+    Bypasses algokit's Arc56Contract / algosdk's ABI Method parsing,
+    which rejects types like int200 / int256 that puya-sol emits in
+    real AAVE V4 arc56s. Each arg must be pre-encoded by the caller."""
+    from algosdk.transaction import (
+        ApplicationCallTxn, OnComplete, wait_for_confirmation)
+    sel = hashlib.new("sha512_256", sig.encode()).digest()[:4]
+    sp = algod.suggested_params()
+    if fee_mult > 1:
+        sp.fee = sp.min_fee * fee_mult
+        sp.flat_fee = True
+    txn = ApplicationCallTxn(
+        sender=sender.address, sp=sp, index=app_id,
+        on_complete=OnComplete.NoOpOC,
+        app_args=[sel, *args],
+        foreign_apps=foreign_apps,
+        boxes=boxes,
+    )
+    txid = algod.send_transaction(txn.sign(sender.private_key))
+    return wait_for_confirmation(algod, txid, 4)
+
+
+@pytest.fixture(scope="module")
+def spoke(localnet, account, oracle, access_manager, orch_app_id):
+    """SpokeInstance via 3-app uros dance. Constructor arg: oracle's
+    address (puya-sol app-address convention) + maxUserReservesLimit_=16.
+    After deploy, call initialize(authority=access_manager) so the
+    AccessManaged-restricted methods are gated by AccessManager."""
+    oracle_arg = _appid_to_pseudo_addr_bytes(oracle.app_id)
+    max_user_reserves = (16).to_bytes(8, "big")
+    spoke_dep = deploy_split_app(
+        localnet.client.algod, account, "SpokeInstance",
+        orch_id=orch_app_id,
+        app_args=[oracle_arg, max_user_reserves],
+    )
+    # initialize(authority) — the spoke's __AccessManaged_init writes
+    # the AccessManager id; restricted methods downstream check there.
+    # NOTE: spoke.initialize(authority) currently traps with
+    # `getbit index > 63 with Uint` — puya-sol emits getbit on a
+    # uint64 at bit 64 for OZ Initializable's reinitializer modifier
+    # (the `_initializing` bool packed beside `_initialized` uint64).
+    # The bit should be in a byte slot, not a uint slot. Tracked as
+    # follow-up. test_set_spoke doesn't need initialize since it only
+    # reads spoke.ORACLE() (set by __postInit), so we leave the spoke
+    # uninitialized for now. test_set_reserve_source / _with_unit_feed
+    # WILL need initialize fixed (their `restricted` modifier reads
+    # the authority set inside initialize).
+    spoke_dep.access_manager_id = access_manager.app_id  # for tests
+    return spoke_dep
 
 
 def test_deploy(oracle):
@@ -79,76 +164,61 @@ def test_get_reserve_source_unset(oracle):
 
 @pytest.mark.xfail(
     reason=(
-        "Needs a real SpokeInstance deployed via uros split+dance: "
-        "(1) bin-pack SpokeInstance's 58 methods into chunks (~6-8 "
-        "groups under 8 KB each, similar to Hub's SPLIT_GROUPS), "
-        "(2) deploy SpokeInstance via deploy_split_app with oracle's "
-        "address as the constructor arg, (3) call initialize(authority) "
-        "with a deployed AccessManager. Then test_set_spoke can pass "
-        "spoke.main_id (in convention form) to oracle.setSpoke. The "
-        "ISpoke(spoke).ORACLE() == address(this) check inside setSpoke "
-        "is satisfied because SpokeInstance's ORACLE getter on main "
-        "returns the address it was constructed with. Address-equality "
-        "bridge in SolAddressBuilder handles the convention/hash form "
-        "comparison. Deferred — significant test-infra work that's "
-        "orthogonal to the splitter passes."
+        "SpokeInstance fixture wired (uros split + AccessManager) but "
+        "__postInit can't complete on main: it `box_create`s 7 boxes "
+        "(_reserves / _hubAssetIdToReserveId / _dynamicConfig / "
+        "_positionStatus / _userPositions / _positionManager / __gap), "
+        "and the AVM 8-reference cap (boxes + foreign_apps + accts + "
+        "assets) leaves room for only 7 boxes IF we drop a foreign "
+        "app — but every method on main calls __uros_forward_value "
+        "which reads TMPL_UROS_STORAGE_APP_ID via app_params_get, so "
+        "storage_id MUST be in foreign_apps. Result: __postInit needs "
+        "to be split across multiple grouped txns (each with its own "
+        "8-ref budget), or the splitter needs to defer __dyn_storage's "
+        "box_create to a separate post-init step. Without ORACLE set "
+        "on storage's globals, ISpoke(spoke).ORACLE() returns 0 and "
+        "fails the `== address(this)` check inside oracle.setSpoke."
     )
 )
-def test_set_spoke(oracle, account):
-    """setSpoke should update the spoke address."""
-    _call(oracle, "setSpoke", account.address)
+def test_set_spoke(oracle, spoke, account):
+    """setSpoke should update SPOKE to a real spoke whose ORACLE()
+    returns this oracle's address."""
+    spoke_addr = _appid_to_pseudo_addr_str(spoke.main_id)
+    _call(oracle, "setSpoke", spoke_addr,
+          extra_fee_micro=10_000,
+          apps=[spoke.main_id, spoke.orch_id, spoke.storage_id])
     result = _call(oracle, "SPOKE")
-    assert result == account.address
+    assert result == spoke_addr
 
 
 @pytest.mark.xfail(
     reason=(
-        "Same SpokeInstance setup as test_set_spoke, plus: the call "
-        "to oracle.setReserveSource has to come FROM the spoke (not "
-        "the user) so msg.sender == SPOKE inside the oracle. So the "
-        "test would route via spoke.updateReservePriceSource which "
-        "does the inner call internally. That method has the "
-        "`restricted` modifier — needs AccessManager-granted role "
-        "for the calling user. Multi-contract orchestration: deploy "
-        "AccessManager, deploy SpokeInstance with authority=AccessManager, "
-        "call AccessManager.grantRole(user, role) for the right role, "
-        "then user calls spoke.updateReservePriceSource which inner-"
-        "calls oracle.setReserveSource. Plus a deployed AggregatorV3 "
-        "(UnitPriceFeed) for the targetSource.decimals() check."
+        "Same __postInit blocker as test_set_spoke. Plus: "
+        "spoke.initialize(authority) traps with `getbit index > 63 "
+        "with Uint` — puya-sol emits getbit on a uint64 at bit 64 "
+        "for OZ Initializable's reinitializer modifier (the "
+        "`_initializing` bool packed beside `_initialized` uint64). "
+        "The bit should be in a byte slot, not a uint slot. Plus: "
+        "addReserve plumbing — updateReservePriceSource requires "
+        "`reserveId < _reserveCount`, so the test would need to "
+        "call addReserve first (which itself inner-calls "
+        "oracle.setReserveSource, hub.addAsset, etc.)."
     )
 )
-def test_set_reserve_source(oracle, account):
-    """setReserveSource should store a price source for a reserve."""
-    reserve_id = 1
-    box_key = _mapping_box_key("_reserveSources", _biguint_key(reserve_id))
-    box = _box_ref(oracle.app_id, box_key)
-    _call(oracle, "setReserveSource", reserve_id, account.address, boxes=[box])
-    result = _call(oracle, "getReserveSource", reserve_id, boxes=[box])
-    assert result == account.address
+def test_set_reserve_source(oracle, spoke, account):
+    """setReserveSource via spoke.updateReservePriceSource (which has
+    the `restricted` modifier — dispenser holds ADMIN_ROLE)."""
+    raise NotImplementedError
 
 
 @pytest.mark.xfail(
     reason=(
-        "Same SpokeInstance + AccessManager + role grant setup as "
-        "test_set_reserve_source. Once that's wired, this test deploys "
-        "UnitPriceFeed (already exists), routes through "
-        "spoke.updateReservePriceSource(reserveId=2, priceSource=feed)."
+        "Same SpokeInstance + addReserve + initialize blockers as "
+        "test_set_reserve_source. Once those are unblocked, this test "
+        "deploys a UnitPriceFeed (already exists), routes through "
+        "spoke.updateReservePriceSource(reserveId, priceSource=feed)."
     )
 )
-def test_get_reserve_price_with_unit_feed(oracle, localnet, account):
+def test_get_reserve_price_with_unit_feed(oracle, spoke, localnet, account):
     """Set up a UnitPriceFeed as price source and verify assignment."""
-    feed = deploy_contract(
-        localnet, account, "UnitPriceFeed",
-        app_args=[(8).to_bytes(8, "big"), b"Test Feed"],
-    )
-    feed_addr = encoding.encode_address(
-        encoding.checksum(b"appID" + feed.app_id.to_bytes(8, "big"))
-    )
-
-    reserve_id = 2
-    box_key = _mapping_box_key("_reserveSources", _biguint_key(reserve_id))
-    box = _box_ref(oracle.app_id, box_key)
-    _call(oracle, "setReserveSource", reserve_id, feed_addr, boxes=[box])
-
-    source = _call(oracle, "getReserveSource", reserve_id, boxes=[box])
-    assert source == feed_addr
+    raise NotImplementedError
