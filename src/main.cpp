@@ -150,7 +150,7 @@ struct Options
 	bool noPuya = false;
 	uint64_t opupBudget = 0;
 	std::map<std::string, uint64_t> ensureBudget; // func_name → budget
-	int optimizationLevel = 1;
+	int optimizationLevel = 2;
 	bool outputIr = false;
 	bool outputLogs = true;
 	bool viaYulBehavior = false;
@@ -219,7 +219,7 @@ void printUsage(char const* _progName)
 		<< "  --no-puya              Skip puya invocation (only generate JSON)\n"
 		<< "  --opup-budget <N>      Inject ensure_budget(N) into ALL public methods (OpUp)\n"
 		<< "  --ensure-budget <f:N>  Inject ensure_budget(N) into function f (repeatable)\n"
-		<< "  --optimization-level <N>   Puya optimization level: 0, 1, 2 (default: 1)\n"
+		<< "  --optimization-level <N>   Puya optimization level: 0, 1, 2 (default: 2)\n"
 		<< "  --output-ir            Output all intermediate representations (SSA IR, MIR, TEAL)\n"
 		<< "  --no-output-logs       Disable writing compilation logs to output directory\n"
 		<< "  --via-yul-behavior     Emulate Solidity's viaIR/compileViaYul codegen semantics\n"
