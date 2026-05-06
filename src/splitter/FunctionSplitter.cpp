@@ -705,6 +705,10 @@ std::vector<std::shared_ptr<awst::Statement>> makeScratchLoadStmts(
 // slicing code below can treat them uniformly. We mutate body / args /
 // returnType / name / id through pointer-to-member-like accessors so
 // rewriting the original works for both shapes.
+//
+// `parentContract` is non-null only when method != nullptr; it lets the
+// piece emitter add ContractMethod pieces back to the contract's
+// `methods` list so puya can resolve them.
 struct SplitTarget
 {
 	// Body, args, return type, name, id are all referenced via accessors
@@ -712,6 +716,7 @@ struct SplitTarget
 	// the two pointers is set; the other is null.
 	std::shared_ptr<awst::Subroutine> sub;
 	awst::ContractMethod* method = nullptr;
+	awst::Contract* parentContract = nullptr;
 	awst::SourceLocation loc;
 
 	std::shared_ptr<awst::Block>& body() {
@@ -735,6 +740,7 @@ struct SplitTarget
 	bool pure() const {
 		return sub ? sub->pure : method->pure;
 	}
+	bool isContractMethod() const { return method != nullptr; }
 };
 
 FunctionSplitter::SplitResult FunctionSplitter::splitAt(
@@ -764,6 +770,7 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 			{
 				SplitTarget st;
 				st.method = &m;
+				st.parentContract = contract.get();
 				st.loc = m.sourceLocation;
 				// Name lookup uses the bare member name.
 				byName[m.memberName] = st;
@@ -860,29 +867,43 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 		}
 		ranges.push_back({prev, stmts.size()});
 
-		// Emit one piece per range. Pieces are always emitted as
-		// Subroutines (not ContractMethods) — they're called via callsub
-		// from the rewritten original, never via ABI dispatch, so the
-		// extra ContractMethod machinery would be dead weight.
+		// Emit one piece per range. Piece SHAPE depends on target:
+		//   - Target is a Subroutine: pieces are Subroutines, called via
+		//     SubroutineID (callsub).
+		//   - Target is a ContractMethod: pieces are ContractMethods on
+		//     the SAME contract, called via InstanceMethodTarget. This
+		//     matters because piece bodies may contain instance-method
+		//     invocations (e.g. `this.helper()` → InstanceMethodTarget),
+		//     which puya only accepts inside a ContractMethod context.
 		std::string baseId = tgt.id();
-		for (size_t pi = 0; pi < ranges.size(); ++pi)
+		size_t numPieces = ranges.size();
+
+		// Cache: needed for rewriting the original body without holding a
+		// (possibly invalidated) tgt.method pointer once we push pieces.
+		auto origLoc = tgt.loc;
+		auto origArgs = tgt.args();
+		auto* origReturnType = tgt.returnType();
+		bool isContractMethod = tgt.isContractMethod();
+		auto* parentContract = tgt.parentContract;
+		std::string cref = isContractMethod ? tgt.method->cref : "";
+
+		// Build all piece bodies first (heap allocations; no vector
+		// invalidation concerns yet).
+		struct BuiltPiece
+		{
+			std::shared_ptr<awst::Block> body;
+			awst::WType const* returnType = nullptr;
+			std::string id;
+			std::string name;
+		};
+		std::vector<BuiltPiece> built;
+		built.reserve(numPieces);
+		for (size_t pi = 0; pi < numPieces; ++pi)
 		{
 			bool isFirst = (pi == 0);
-			bool isLast = (pi == ranges.size() - 1);
+			bool isLast = (pi == numPieces - 1);
 
-			auto piece = std::make_shared<awst::Subroutine>();
-			piece->sourceLocation = tgt.loc;
-			piece->id = baseId + "__piece_" +
-				std::to_string(pi) + "_g" + std::to_string(spec.groupId);
-			piece->name = pieceName(tgt.name(), pi, spec.groupId);
-			piece->args = tgt.args(); // identical signature
-			piece->returnType = isLast
-				? tgt.returnType()
-				: awst::WType::voidType();
-			piece->pure = tgt.pure();
-			piece->inlineOpt = false;
-
-			auto body = awst::makeBlock(tgt.loc);
+			auto pieceBody = awst::makeBlock(origLoc);
 
 			// Prologue: load live-vars from scratch (skip on piece 0).
 			if (!isFirst)
@@ -893,82 +914,133 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 				// index = 2N-1.
 				int prevCallTxnIdx = static_cast<int>(2 * pi - 1);
 				for (auto& s : makeScratchLoadStmts(
-					liveAt[pi - 1], prevCallTxnIdx, tgt.loc))
+					liveAt[pi - 1], prevCallTxnIdx, origLoc))
 				{
-					body->body.push_back(std::move(s));
+					pieceBody->body.push_back(std::move(s));
 				}
 			}
 
 			// Body: original statements in this piece's range.
 			for (size_t i = ranges[pi].first; i < ranges[pi].second; ++i)
-				body->body.push_back(stmts[i]);
+				pieceBody->body.push_back(stmts[i]);
 
 			// Epilogue: store live-vars to scratch (skip on last piece —
 			// the last piece ends with the original return statement).
 			if (!isLast)
 			{
-				body->body.push_back(makeScratchStoreStmt(
-					liveAt[pi], tgt.loc));
-				body->body.push_back(awst::makeReturnStatement(
-					nullptr, tgt.loc));
+				pieceBody->body.push_back(makeScratchStoreStmt(
+					liveAt[pi], origLoc));
+				pieceBody->body.push_back(awst::makeReturnStatement(
+					nullptr, origLoc));
 			}
 
-			piece->body = body;
-			result.newSubroutines.push_back(piece);
+			BuiltPiece bp;
+			bp.body = pieceBody;
+			bp.returnType = isLast
+				? origReturnType
+				: awst::WType::voidType();
+			bp.id = baseId + "__piece_" + std::to_string(pi) +
+				"_g" + std::to_string(spec.groupId);
+			bp.name = pieceName(tgt.name(), pi, spec.groupId);
+			built.push_back(std::move(bp));
 		}
 
 		// Rewrite the ORIGINAL function's body to dispatch to the
-		// pieces sequentially via callsub. Pieces share the txn's
-		// scratch frame (slot 100) so live vars cross piece boundaries
-		// transparently. Without this rewrite the original still
-		// carries its full body, which puya tries to compile and
-		// trips the 'h' format / 32 KB branch limit that motivated
-		// splitting in the first place.
-		auto newBody = awst::makeBlock(tgt.loc);
-		size_t numPieces = ranges.size();
+		// pieces sequentially. Pieces share the txn's scratch frame
+		// (slot 100) so live vars cross piece boundaries transparently.
+		// Without this rewrite the original still carries its full body,
+		// which puya tries to compile and trips the 'h' format / 32 KB
+		// branch limit that motivated splitting in the first place.
+		auto newBody = awst::makeBlock(origLoc);
 		for (size_t pi = 0; pi < numPieces; ++pi)
 		{
-			bool isLast = (pi == numPieces - 1);
-			auto pieceRet = isLast
-				? tgt.returnType()
-				: awst::WType::voidType();
+			BuiltPiece const& bp = built[pi];
 
 			auto call = std::make_shared<awst::SubroutineCallExpression>();
-			call->sourceLocation = tgt.loc;
-			call->wtype = pieceRet;
-			call->target = awst::SubroutineID{
-				baseId + "__piece_" + std::to_string(pi) +
-				"_g" + std::to_string(spec.groupId)};
+			call->sourceLocation = origLoc;
+			call->wtype = bp.returnType;
+			if (isContractMethod)
+			{
+				// Use InstanceMethodTarget — piece is a ContractMethod
+				// on the same contract, callable on `this`.
+				awst::InstanceMethodTarget imt;
+				imt.memberName = bp.name;
+				call->target = imt;
+			}
+			else
+			{
+				call->target = awst::SubroutineID{bp.id};
+			}
 			// Pass through the original args verbatim.
-			for (auto const& arg : tgt.args())
+			for (auto const& arg : origArgs)
 			{
 				awst::CallArg ca;
 				ca.name = arg.name;
 				ca.value = awst::makeVarExpression(
-					arg.name, arg.wtype, tgt.loc);
+					arg.name, arg.wtype, origLoc);
 				call->args.push_back(std::move(ca));
 			}
 
-			if (isLast && pieceRet != awst::WType::voidType())
+			bool isLast = (pi == numPieces - 1);
+			if (isLast && bp.returnType != awst::WType::voidType())
 			{
 				newBody->body.push_back(awst::makeReturnStatement(
-					std::move(call), tgt.loc));
+					std::move(call), origLoc));
 			}
 			else
 			{
 				newBody->body.push_back(awst::makeExpressionStatement(
-					std::move(call), tgt.loc));
+					std::move(call), origLoc));
 			}
 		}
 		// If the last piece returns void, append a bare return.
-		if (tgt.returnType() == awst::WType::voidType()
+		if (origReturnType == awst::WType::voidType()
 			&& !newBody->body.empty()
 			&& newBody->body.back()->nodeType() != "ReturnStatement")
 		{
 			newBody->body.push_back(awst::makeReturnStatement(
-				nullptr, tgt.loc));
+				nullptr, origLoc));
 		}
-		tgt.body() = newBody;
+		tgt.body() = newBody; // safe: tgt.method pointer still valid
+
+		// Now register the pieces — for ContractMethod target, push them
+		// onto the parent contract's `methods` (this MAY invalidate
+		// `tgt.method`, but we've already done all mutation we need on
+		// it). For Subroutine target, return them via SplitResult so the
+		// caller appends to roots.
+		bool tgtPure = tgt.pure();
+		for (auto const& bp : built)
+		{
+			if (isContractMethod)
+			{
+				awst::ContractMethod m;
+				m.sourceLocation = origLoc;
+				m.args = origArgs;
+				m.returnType = bp.returnType;
+				m.body = bp.body;
+				m.cref = cref;
+				m.memberName = bp.name;
+				m.pure = tgtPure;
+				// No arc4MethodConfig — pieces are internal-only,
+				// invoked via InstanceMethodTarget callsub. No ABI
+				// dispatch / no router entry.
+				parentContract->methods.push_back(std::move(m));
+				++result.newContractMethodPieces;
+			}
+			else
+			{
+				auto piece = std::make_shared<awst::Subroutine>();
+				piece->sourceLocation = origLoc;
+				piece->id = bp.id;
+				piece->name = bp.name;
+				piece->args = origArgs;
+				piece->returnType = bp.returnType;
+				piece->pure = tgtPure;
+				piece->inlineOpt = false;
+				piece->body = bp.body;
+				result.newSubroutines.push_back(piece);
+			}
+		}
 
 		result.splitFunctions.insert(tgt.name());
 		result.didSplit = true;

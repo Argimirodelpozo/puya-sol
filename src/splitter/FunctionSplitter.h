@@ -60,7 +60,14 @@ public:
 	struct SplitResult
 	{
 		/// New piece subroutines, appended to `_roots` by `splitAt`.
+		/// Only populated for Subroutine targets — ContractMethod pieces
+		/// are pushed directly onto the parent contract's `methods` list
+		/// (counted in `newContractMethodPieces`).
 		std::vector<std::shared_ptr<awst::Subroutine>> newSubroutines;
+
+		/// Count of ContractMethod pieces created (already pushed onto
+		/// their parent contract's `methods` — not exposed as a list).
+		size_t newContractMethodPieces = 0;
 
 		/// Names of subroutines that were split (for downstream tools to
 		/// detect "this name now means a chain of pieces").

@@ -773,10 +773,12 @@ int main(int _argc, char* _argv[])
 		if (fsResult.didSplit)
 			logger.info(
 				"--fn-split: emitted " +
-				std::to_string(fsResult.newSubroutines.size()) +
+				std::to_string(
+					fsResult.newSubroutines.size() +
+					fsResult.newContractMethodPieces) +
 				" piece(s) across " +
 				std::to_string(fsResult.splitFunctions.size()) +
-				" subroutine(s)");
+				" function(s)");
 	}
 
 	// ─── --uros-splitter: split AWST into main + N chunks ───────────────
