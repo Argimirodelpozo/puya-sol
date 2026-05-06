@@ -1456,7 +1456,8 @@ std::vector<UrosSplitter::ChunkPaths> UrosSplitter::emitChunkAwsts(
 	Result const& _result,
 	int _optimizationLevel,
 	bool _outputIr,
-	int64_t _orchAppId)
+	int64_t _orchAppId,
+	std::map<std::string, int64_t> const& _extraTemplateVars)
 {
 	std::vector<ChunkPaths> paths;
 	paths.reserve(_result.chunks.size());
@@ -1509,6 +1510,11 @@ std::vector<UrosSplitter::ChunkPaths> UrosSplitter::emitChunkAwsts(
 		chunkTemplateVars["UROS_ORCH_APP_ID"] = _orchAppId;
 		chunkTemplateVars["UROS_MAIN_APP_ID"] = 0;
 		chunkTemplateVars["UROS_STORAGE_APP_ID"] = 0;
+		// Extra template vars — typically PURE_HELPER_*_APP_ID
+		// declarations forwarded from PureHelperExtractor so chunk
+		// bodies that inner-call lifted helpers compile.
+		for (auto const& [k, v] : _extraTemplateVars)
+			chunkTemplateVars.emplace(k, v);
 		if (chunkContractNames.size() <= 1)
 		{
 			std::string nm = chunkContractNames.empty() ? "" : chunkContractNames[0];

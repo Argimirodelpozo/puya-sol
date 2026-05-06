@@ -109,6 +109,9 @@ public:
 	/// chunk AWSTs and run puya themselves. `_orchAppId` is baked into
 	/// the orc-guards as TMPL_UROS_ORCH_APP_ID; pass `0` for first-pass
 	/// builds where the orchestrator hasn't been deployed yet.
+	/// `_extraTemplateVars` are merged into each chunk's options.json
+	/// so chunk bodies that reference TemplateVars from sibling
+	/// transformations (e.g. PureHelperExtractor) compile.
 	///
 	/// Returns one ChunkPaths per chunk in `_result.chunks`, in order.
 	static std::vector<ChunkPaths> emitChunkAwsts(
@@ -116,7 +119,8 @@ public:
 		Result const& _result,
 		int _optimizationLevel,
 		bool _outputIr,
-		int64_t _orchAppId);
+		int64_t _orchAppId,
+		std::map<std::string, int64_t> const& _extraTemplateVars = {});
 
 	/// Run puya on each chunk's awst.json + write `deploy.uros.json`
 	/// (the canonical artifact for the runtime deploy harness — see

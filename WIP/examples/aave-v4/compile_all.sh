@@ -83,6 +83,13 @@ SPLIT_GROUPS[Hub]=$'getAssetUnderlyingAndDecimals,getAssetDrawnIndex,getAddedAss
 # stay on main where the original body runs directly.
 SPLIT_GROUPS[SpokeInstance]=$'SPOKE_REVISION,SET_USER_POSITION_MANAGERS_TYPEHASH,MAX_USER_RESERVES_LIMIT,ORACLE,DOMAIN_SEPARATOR,getLiquidationConfig,getLiquidationLogic,getLiquidationBonus|getReserveCount,getReserveSuppliedAssets,getReserveSuppliedShares,getReserveDebt,getReserveTotalDebt,getReserveId,getReserve,getReserveConfig,getDynamicReserveConfig|getUserReserveStatus,getUserSuppliedAssets,getUserSuppliedShares,getUserDebt,getUserTotalDebt,getUserPremiumDebtRay,getUserPosition,getUserLastRiskPremium,getUserAccountData,isPositionManagerActive,isPositionManager|updateLiquidationConfig,addReserve,updateReserveConfig,updateReservePriceSource,addDynamicReserveConfig,updateDynamicReserveConfig,updatePositionManager|borrow|repay|liquidationCall|supply,withdraw,setUsingAsCollateral|updateUserRiskPremium,updateUserDynamicConfig,setUserPositionManager,setUserPositionManagersWithSig,renouncePositionManagerRole,permitReserve,useNonce,nonces|authority,setAuthority,isConsumingScheduledOp'
 
+# Per-contract opt-in to --deploy-pure-helpers. SpokeInstance's
+# liquidationCall chunk needs ~700 B trimmed to fit under the AVM
+# 8 KB page cap; lifting the heavy LiquidationLogic pure helpers into
+# sidecar apps does it.
+declare -A DEPLOY_PURE_HELPERS
+DEPLOY_PURE_HELPERS[SpokeInstance]=1
+
 for c in "${CONTRACTS[@]}"; do
     src="$HERE/contracts/$c.sol"
     if [ ! -f "$src" ]; then
@@ -91,6 +98,9 @@ for c in "${CONTRACTS[@]}"; do
     fi
     rm -rf "$OUT/$c"
     args=(--source "$src" --output-dir "$OUT/$c" --puya-path "$PUYA_PATH")
+    if [ -n "${DEPLOY_PURE_HELPERS[$c]:-}" ]; then
+        args+=(--deploy-pure-helpers)
+    fi
     if [ -n "${SPLIT_GROUPS[$c]:-}" ]; then
         IFS='|' read -ra groups <<< "${SPLIT_GROUPS[$c]}"
         for g in "${groups[@]}"; do

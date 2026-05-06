@@ -149,6 +149,7 @@ set(SOURCES
 	src/runner/PuyaRunner.cpp
 	src/splitter/FunctionSplitter.cpp
 	src/splitter/UrosSplitter.cpp
+	src/splitter/PureHelperExtractor.cpp
 	src/splitter/AwstWalker.cpp
 )
 

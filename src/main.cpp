@@ -6,6 +6,7 @@
 #include "json/OptionsWriter.h"
 #include "runner/PuyaRunner.h"
 #include "splitter/FunctionSplitter.h"
+#include "splitter/PureHelperExtractor.h"
 #include "splitter/UrosSplitter.h"
 
 #include <libsolidity/interface/CompilerStack.h>
@@ -198,6 +199,15 @@ struct Options
 		int groupId = 0;
 	};
 	std::vector<FnSplitSpec> fnSplits;
+
+	// --deploy-pure-helpers
+	//
+	// Lift every pure Subroutine (state-mutability `pure` in Solidity)
+	// into its own one-method sidecar Contract; rewrite the call sites
+	// in the rest of the contract set to inner-txn ApplicationCall the
+	// helper. Removes the helper's bytecode from the calling chunks
+	// (per-Contract DCE drops the now-unreached Subroutine).
+	bool deployPureHelpers = false;
 };
 
 void printUsage(char const* _progName)
@@ -249,6 +259,13 @@ void printUsage(char const* _progName)
 		<< "                         sender / __storage as this). Repeatable. The compiler\n"
 		<< "                         errors out if any --uros-splitter group lists a pinned\n"
 		<< "                         name.\n"
+		<< "  --deploy-pure-helpers  Lift each pure (Solidity `pure`) Subroutine into its own\n"
+		<< "                         one-method sidecar Contract. Call sites in the rest of\n"
+		<< "                         the contract set are rewritten to inner-txn ApplicationCall\n"
+		<< "                         the helper. The helper's bytecode leaves the calling\n"
+		<< "                         chunks (per-Contract DCE), at the cost of one inner-txn\n"
+		<< "                         per call. Each helper gets a TMPL_PURE_HELPER_<name>_<n>\n"
+		<< "                         _APP_ID template var the deploy harness substitutes.\n"
 		<< "  --help                 Show this help message\n";
 }
 
@@ -298,6 +315,8 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.evmVersion = _argv[++i];
 		else if (arg == "--uros-orch-app-id" && i + 1 < _argc)
 			opts.urosOrchAppId = std::stoll(_argv[++i]);
+		else if (arg == "--deploy-pure-helpers")
+			opts.deployPureHelpers = true;
 		else if (arg == "--fn-split" && i + 1 < _argc)
 		{
 			// Format: <Name>:<idx>,<idx>,...:g<N>
@@ -778,6 +797,18 @@ int main(int _argc, char* _argv[])
 				" function(s)");
 	}
 
+	// ─── --deploy-pure-helpers: lift pure Subs to sidecar Contracts ───
+	// Runs AFTER --fn-split (so any pieces have already been formed)
+	// and BEFORE --uros-splitter (so uros sees the post-rewrite roots:
+	// helper Contracts present, lifted Subs no longer reachable from
+	// the calling chunks).
+	puyasol::splitter::PureHelperExtractor::Result pureHelperResult;
+	if (opts.deployPureHelpers)
+	{
+		puyasol::splitter::PureHelperExtractor ex;
+		pureHelperResult = ex.extract(roots);
+	}
+
 	// ─── --uros-splitter: split AWST into main + N chunks ───────────────
 	// Each --uros-splitter flag invocation defines one chunk's method
 	// list. The splitter returns mainRoots (replaces `roots`) plus per-
@@ -868,6 +899,12 @@ int main(int _argc, char* _argv[])
 		// __storage app id once it's deployed.
 		intTemplateVars["UROS_STORAGE_APP_ID"] = 0;
 	}
+	// Each --deploy-pure-helpers extraction injects a TemplateVar at
+	// every rewritten call site. Declare each as an int placeholder
+	// so puya doesn't reject the AWST; the deploy harness substitutes
+	// real app ids per helper.
+	for (auto const& h : pureHelperResult.extracted)
+		intTemplateVars[h.templateVarName] = 0;
 	if (contractNames.size() <= 1)
 	{
 		std::string contractName = contractNames.empty() ? "" : contractNames[0];
@@ -882,9 +919,13 @@ int main(int _argc, char* _argv[])
 	// ─── --uros-splitter: emit per-chunk AWST + options eagerly ─────────
 	// Done before the --no-puya gate so inspection/manual puya runs
 	// work even when puya invocation is skipped.
+	std::map<std::string, int64_t> chunkExtraTemplateVars;
+	for (auto const& h : pureHelperResult.extracted)
+		chunkExtraTemplateVars[h.templateVarName] = 0;
 	auto chunkPaths = puyasol::splitter::UrosSplitter::emitChunkAwsts(
 		opts.outputDir, splitResult,
-		opts.optimizationLevel, opts.outputIr, opts.urosOrchAppId);
+		opts.optimizationLevel, opts.outputIr, opts.urosOrchAppId,
+		chunkExtraTemplateVars);
 
 	// Summary
 	if (logger.warningCount() > 0)
