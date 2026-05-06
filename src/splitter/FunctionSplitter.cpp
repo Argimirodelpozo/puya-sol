@@ -527,48 +527,125 @@ std::string pieceName(std::string const& _orig, size_t _index, int _groupId)
 		+ "_g" + std::to_string(_groupId);
 }
 
+// Convention: every live var is normalised to a fixed-width 32-byte
+// chunk, all chunks concatenated, stored at scratch slot 100.
+// Decoding is the inverse: extract each chunk, reinterpret to wtype.
+//
+// Why not ARC4: ARC4 tuple encoding requires plumbing ARC4Tuple wtypes
+// (mapping each WTuple element to its ARC4 form) and that plumbing
+// lives in puya-sol's TypeMapper, not in the splitter. Fixed-width
+// bytes round-trip cleanly through ReinterpretCast for biguint /
+// account / bool / uint64 — covers everything FunctionSplitter sees
+// in practice.
+constexpr int kLiveVarBytes = 32;
+
+std::shared_ptr<awst::Expression> coerceToFixedBytes(
+	std::shared_ptr<awst::Expression> _value,
+	awst::WType const* _wtype,
+	awst::SourceLocation const& _loc)
+{
+	if (_wtype == awst::WType::biguintType())
+	{
+		// biguint → bytes (variable length) → left-pad to 32 by
+		// concat-with-bzero(32) + extract last 32 bytes.
+		auto bytes = awst::makeReinterpretCast(
+			std::move(_value), awst::WType::bytesType(), _loc);
+		auto bz = awst::makeBzero(32, _loc);
+		auto cat = awst::makeConcat(std::move(bz), std::move(bytes), _loc);
+		auto len = awst::makeLen(cat, _loc);
+		auto offset = awst::makeUInt64BinOp(
+			std::move(len), awst::UInt64BinaryOperator::Sub,
+			awst::makeIntegerConstant("32", _loc), _loc);
+		auto extract = awst::makeIntrinsicCall(
+			"extract3", awst::WType::bytesType(), _loc);
+		extract->stackArgs.push_back(cat);
+		extract->stackArgs.push_back(std::move(offset));
+		extract->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
+		return extract;
+	}
+	if (_wtype == awst::WType::accountType())
+		return awst::makeReinterpretCast(
+			std::move(_value), awst::WType::bytesType(), _loc);
+	if (_wtype == awst::WType::uint64Type())
+	{
+		auto itob = awst::makeItob(std::move(_value), _loc);
+		return awst::makeLeftPad(std::move(itob), 24, _loc);
+	}
+	if (_wtype == awst::WType::boolType())
+	{
+		auto cond = awst::makeConditional(
+			std::move(_value),
+			awst::makeIntegerConstant("1", _loc),
+			awst::makeIntegerConstant("0", _loc),
+			awst::WType::uint64Type(), _loc);
+		auto itob = awst::makeItob(std::move(cond), _loc);
+		return awst::makeLeftPad(std::move(itob), 24, _loc);
+	}
+	if (_wtype && _wtype->kind() == awst::WTypeKind::Bytes)
+		return _value;
+	return awst::makeReinterpretCast(
+		std::move(_value), awst::WType::bytesType(), _loc);
+}
+
+std::shared_ptr<awst::Expression> coerceFromFixedBytes(
+	std::shared_ptr<awst::Expression> _bytes,
+	awst::WType const* _wtype,
+	awst::SourceLocation const& _loc)
+{
+	if (_wtype == awst::WType::biguintType())
+		return awst::makeReinterpretCast(
+			std::move(_bytes), awst::WType::biguintType(), _loc);
+	if (_wtype == awst::WType::accountType())
+		return awst::makeReinterpretCast(
+			std::move(_bytes), awst::WType::accountType(), _loc);
+	if (_wtype == awst::WType::uint64Type())
+	{
+		auto extract = awst::makeIntrinsicCall(
+			"extract", awst::WType::bytesType(), _loc);
+		extract->immediates = {24, 8};
+		extract->stackArgs.push_back(std::move(_bytes));
+		return awst::makeBtoi(std::move(extract), _loc);
+	}
+	if (_wtype == awst::WType::boolType())
+	{
+		auto extract = awst::makeIntrinsicCall(
+			"extract", awst::WType::bytesType(), _loc);
+		extract->immediates = {31, 1};
+		extract->stackArgs.push_back(std::move(_bytes));
+		auto u64 = awst::makeBtoi(std::move(extract), _loc);
+		return awst::makeNumericCompare(
+			std::move(u64), awst::NumericComparison::Ne,
+			awst::makeIntegerConstant("0", _loc), _loc);
+	}
+	if (_wtype && _wtype->kind() == awst::WTypeKind::Bytes)
+		return _bytes;
+	return awst::makeReinterpretCast(std::move(_bytes), _wtype, _loc);
+}
+
 std::shared_ptr<awst::Statement> makeScratchStoreStmt(
 	std::vector<FunctionSplitter::VarInfo> const& _liveOut,
 	awst::SourceLocation const& _loc)
 {
-	// Tuple of live vars → ARC4Encode → store slot 100.
-	// For an empty live-vars set, store an empty bytes constant (decode
-	// path will produce the same shape).
 	std::shared_ptr<awst::Expression> payload;
 	if (_liveOut.empty())
 	{
 		payload = awst::makeBytesConstant({}, _loc);
 	}
-	else if (_liveOut.size() == 1)
-	{
-		// Single-var: just encode as that type's ARC4 form, no tuple wrap.
-		auto var = awst::makeVarExpression(
-			_liveOut[0].name, _liveOut[0].wtype, _loc);
-		payload = awst::makeARC4Encode(
-			std::move(var), _liveOut[0].wtype, _loc);
-	}
 	else
 	{
-		std::vector<awst::WType const*> types;
+		std::shared_ptr<awst::Expression> acc;
 		for (auto const& lv : _liveOut)
-			types.push_back(lv.wtype);
-		auto* tupleType = awst::WType::voidType(); // placeholder
-		// We need a WTuple type for the tuple shape; FunctionSplitter
-		// doesn't have a TypeMapper, so allocate one ourselves and let
-		// it leak (process-lifetime; the type pool is small).
-		static std::vector<std::unique_ptr<awst::WType>> s_owned;
-		s_owned.push_back(std::make_unique<awst::WTuple>(types, std::nullopt));
-		tupleType = s_owned.back().get();
-
-		auto tup = awst::makeTupleExpression(tupleType, _loc);
-		for (auto const& lv : _liveOut)
-			tup->items.push_back(
-				awst::makeVarExpression(lv.name, lv.wtype, _loc));
-		payload = awst::makeARC4Encode(
-			std::move(tup), tupleType, _loc);
+		{
+			auto var = awst::makeVarExpression(lv.name, lv.wtype, _loc);
+			auto fixed = coerceToFixedBytes(var, lv.wtype, _loc);
+			if (!acc)
+				acc = fixed;
+			else
+				acc = awst::makeConcat(acc, fixed, _loc);
+		}
+		payload = acc;
 	}
 
-	// store <slot> <value>
 	auto store = awst::makeIntrinsicCall(
 		"store", awst::WType::voidType(), _loc);
 	store->immediates = {FunctionSplitter::kLiveVarsScratchSlot};
@@ -581,60 +658,40 @@ std::vector<std::shared_ptr<awst::Statement>> makeScratchLoadStmts(
 	int _prevCallTxnIndex,
 	awst::SourceLocation const& _loc)
 {
-	// gload <prev_call_txn_index> <slot> → bytes
-	// then ARC4Decode into live vars. For single-var, decode directly to
-	// that var. For multi-var, decode to tuple, then unpack.
 	std::vector<std::shared_ptr<awst::Statement>> out;
 	if (_liveIn.empty())
 		return out;
 
-	auto loadBytes = [&]() -> std::shared_ptr<awst::Expression> {
-		auto g = awst::makeIntrinsicCall(
-			"gload", awst::WType::bytesType(), _loc);
-		g->immediates = {
-			_prevCallTxnIndex,
-			FunctionSplitter::kLiveVarsScratchSlot
-		};
-		return g;
-	};
-
-	if (_liveIn.size() == 1)
-	{
-		auto bytes = loadBytes();
-		auto decoded = awst::makeARC4Decode(
-			std::move(bytes), _liveIn[0].wtype, _loc);
-		auto target = awst::makeVarExpression(
-			_liveIn[0].name, _liveIn[0].wtype, _loc);
-		out.push_back(awst::makeAssignmentStatement(
-			std::move(target), std::move(decoded), _loc));
-		return out;
-	}
-
-	// Multi-var: decode bytes → tuple, then assign each item to its var.
-	std::vector<awst::WType const*> types;
-	for (auto const& lv : _liveIn)
-		types.push_back(lv.wtype);
-	static std::vector<std::unique_ptr<awst::WType>> s_owned;
-	s_owned.push_back(std::make_unique<awst::WTuple>(types, std::nullopt));
-	auto* tupleType = s_owned.back().get();
-
+	// In-app callsub mode: pieces share the same txn's scratch frame, so
+	// just `load <slot>` to read what the previous piece stored. The
+	// _prevCallTxnIndex param is unused in this mode (kept for future
+	// gload-based orch-dance variant).
+	(void)_prevCallTxnIndex;
 	std::string tmpName = "__uros_live_in";
-	auto tmpVar = awst::makeVarExpression(tmpName, tupleType, _loc);
-	auto bytes = loadBytes();
-	auto decoded = awst::makeARC4Decode(std::move(bytes), tupleType, _loc);
+	auto load = awst::makeIntrinsicCall(
+		"load", awst::WType::bytesType(), _loc);
+	load->immediates = {FunctionSplitter::kLiveVarsScratchSlot};
+	auto tmpTarget = awst::makeVarExpression(
+		tmpName, awst::WType::bytesType(), _loc);
 	out.push_back(awst::makeAssignmentStatement(
-		tmpVar, std::move(decoded), _loc));
+		tmpTarget, std::move(load), _loc));
 
 	for (size_t i = 0; i < _liveIn.size(); ++i)
 	{
-		auto base = awst::makeVarExpression(tmpName, tupleType, _loc);
-		auto item = awst::makeTupleItem(
-			std::move(base), static_cast<int>(i),
-			_liveIn[i].wtype, _loc);
+		auto blob = awst::makeVarExpression(
+			tmpName, awst::WType::bytesType(), _loc);
+		auto extract = awst::makeIntrinsicCall(
+			"extract3", awst::WType::bytesType(), _loc);
+		extract->stackArgs.push_back(blob);
+		extract->stackArgs.push_back(awst::makeIntegerConstant(
+			std::to_string(i * kLiveVarBytes), _loc));
+		extract->stackArgs.push_back(awst::makeIntegerConstant(
+			std::to_string(kLiveVarBytes), _loc));
+		auto value = coerceFromFixedBytes(extract, _liveIn[i].wtype, _loc);
 		auto target = awst::makeVarExpression(
 			_liveIn[i].name, _liveIn[i].wtype, _loc);
 		out.push_back(awst::makeAssignmentStatement(
-			std::move(target), std::move(item), _loc));
+			std::move(target), std::move(value), _loc));
 	}
 
 	return out;
@@ -644,6 +701,42 @@ std::vector<std::shared_ptr<awst::Statement>> makeScratchLoadStmts(
 
 // ─── Public API: splitAt ─────────────────────────────────────────────
 
+// A SplitTarget abstracts over Subroutine / ContractMethod so the
+// slicing code below can treat them uniformly. We mutate body / args /
+// returnType / name / id through pointer-to-member-like accessors so
+// rewriting the original works for both shapes.
+struct SplitTarget
+{
+	// Body, args, return type, name, id are all referenced via accessors
+	// on the underlying node (Subroutine* or ContractMethod*). One of
+	// the two pointers is set; the other is null.
+	std::shared_ptr<awst::Subroutine> sub;
+	awst::ContractMethod* method = nullptr;
+	awst::SourceLocation loc;
+
+	std::shared_ptr<awst::Block>& body() {
+		return sub ? sub->body : method->body;
+	}
+	std::vector<awst::SubroutineArgument> const& args() const {
+		return sub ? sub->args : method->args;
+	}
+	awst::WType const* returnType() const {
+		return sub ? sub->returnType : method->returnType;
+	}
+	std::string const& name() const {
+		return sub ? sub->name : method->memberName;
+	}
+	std::string id() const {
+		// Subroutine has explicit id; ContractMethod uses cref + ".method"
+		// for callsub identification (puya's resolveContractMethod walks
+		// MRO + cref to find).
+		return sub ? sub->id : (method->cref + "." + method->memberName);
+	}
+	bool pure() const {
+		return sub ? sub->pure : method->pure;
+	}
+};
+
 FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 	std::vector<std::shared_ptr<awst::RootNode>>& _roots,
 	std::vector<PieceSpec> const& _specs)
@@ -651,12 +744,31 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 	auto& logger = Logger::instance();
 	SplitResult result;
 
-	// Build name → Subroutine map for the lookup below.
-	std::map<std::string, std::shared_ptr<awst::Subroutine>> byName;
+	// Build name → SplitTarget map. Both Subroutines (free / library
+	// functions) and ContractMethods (members of a Contract root) are
+	// targetable.
+	std::map<std::string, SplitTarget> byName;
 	for (auto const& root : _roots)
 	{
 		if (auto sub = std::dynamic_pointer_cast<awst::Subroutine>(root))
-			byName[sub->name] = sub;
+		{
+			SplitTarget st;
+			st.sub = sub;
+			st.loc = sub->sourceLocation;
+			byName[sub->name] = st;
+		}
+		else if (auto contract =
+			std::dynamic_pointer_cast<awst::Contract>(root))
+		{
+			for (auto& m : contract->methods)
+			{
+				SplitTarget st;
+				st.method = &m;
+				st.loc = m.sourceLocation;
+				// Name lookup uses the bare member name.
+				byName[m.memberName] = st;
+			}
+		}
 	}
 
 	for (auto const& spec : _specs)
@@ -669,16 +781,16 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 				"' not found in AWST roots; skipping");
 			continue;
 		}
-		auto sub = it->second;
-		if (!sub->body)
+		SplitTarget& tgt = it->second;
+		if (!tgt.body())
 		{
 			logger.warning(
-				"--fn-split: subroutine '" + spec.subroutineName +
+				"--fn-split: '" + spec.subroutineName +
 				"' has no body; skipping");
 			continue;
 		}
 
-		auto const& stmts = sub->body->body;
+		auto const& stmts = tgt.body()->body;
 		if (spec.splitPoints.empty())
 		{
 			logger.warning(
@@ -714,10 +826,10 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 			std::to_string(spec.splitPoints.size() + 1) +
 			" pieces of group g" + std::to_string(spec.groupId));
 
-		// Collect param names and seed m_varTypes from the sub's args.
+		// Collect param names and seed m_varTypes from the args.
 		std::set<std::string> paramNames;
 		m_varTypes.clear();
-		for (auto const& arg : sub->args)
+		for (auto const& arg : tgt.args())
 		{
 			paramNames.insert(arg.name);
 			m_varTypes[arg.name] = arg.wtype;
@@ -748,26 +860,29 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 		}
 		ranges.push_back({prev, stmts.size()});
 
-		// Emit one piece per range.
+		// Emit one piece per range. Pieces are always emitted as
+		// Subroutines (not ContractMethods) — they're called via callsub
+		// from the rewritten original, never via ABI dispatch, so the
+		// extra ContractMethod machinery would be dead weight.
+		std::string baseId = tgt.id();
 		for (size_t pi = 0; pi < ranges.size(); ++pi)
 		{
 			bool isFirst = (pi == 0);
 			bool isLast = (pi == ranges.size() - 1);
 
 			auto piece = std::make_shared<awst::Subroutine>();
-			piece->sourceLocation = sub->sourceLocation;
-			piece->id = sub->id + "__piece_" +
+			piece->sourceLocation = tgt.loc;
+			piece->id = baseId + "__piece_" +
 				std::to_string(pi) + "_g" + std::to_string(spec.groupId);
-			piece->name = pieceName(sub->name, pi, spec.groupId);
-			piece->args = sub->args; // identical signature
+			piece->name = pieceName(tgt.name(), pi, spec.groupId);
+			piece->args = tgt.args(); // identical signature
 			piece->returnType = isLast
-				? sub->returnType
+				? tgt.returnType()
 				: awst::WType::voidType();
-			piece->pure = sub->pure;
-			piece->documentation = sub->documentation;
+			piece->pure = tgt.pure();
 			piece->inlineOpt = false;
 
-			auto body = awst::makeBlock(sub->sourceLocation);
+			auto body = awst::makeBlock(tgt.loc);
 
 			// Prologue: load live-vars from scratch (skip on piece 0).
 			if (!isFirst)
@@ -778,7 +893,7 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 				// index = 2N-1.
 				int prevCallTxnIdx = static_cast<int>(2 * pi - 1);
 				for (auto& s : makeScratchLoadStmts(
-					liveAt[pi - 1], prevCallTxnIdx, sub->sourceLocation))
+					liveAt[pi - 1], prevCallTxnIdx, tgt.loc))
 				{
 					body->body.push_back(std::move(s));
 				}
@@ -793,16 +908,69 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 			if (!isLast)
 			{
 				body->body.push_back(makeScratchStoreStmt(
-					liveAt[pi], sub->sourceLocation));
+					liveAt[pi], tgt.loc));
 				body->body.push_back(awst::makeReturnStatement(
-					nullptr, sub->sourceLocation));
+					nullptr, tgt.loc));
 			}
 
 			piece->body = body;
 			result.newSubroutines.push_back(piece);
 		}
 
-		result.splitFunctions.insert(sub->name);
+		// Rewrite the ORIGINAL function's body to dispatch to the
+		// pieces sequentially via callsub. Pieces share the txn's
+		// scratch frame (slot 100) so live vars cross piece boundaries
+		// transparently. Without this rewrite the original still
+		// carries its full body, which puya tries to compile and
+		// trips the 'h' format / 32 KB branch limit that motivated
+		// splitting in the first place.
+		auto newBody = awst::makeBlock(tgt.loc);
+		size_t numPieces = ranges.size();
+		for (size_t pi = 0; pi < numPieces; ++pi)
+		{
+			bool isLast = (pi == numPieces - 1);
+			auto pieceRet = isLast
+				? tgt.returnType()
+				: awst::WType::voidType();
+
+			auto call = std::make_shared<awst::SubroutineCallExpression>();
+			call->sourceLocation = tgt.loc;
+			call->wtype = pieceRet;
+			call->target = awst::SubroutineID{
+				baseId + "__piece_" + std::to_string(pi) +
+				"_g" + std::to_string(spec.groupId)};
+			// Pass through the original args verbatim.
+			for (auto const& arg : tgt.args())
+			{
+				awst::CallArg ca;
+				ca.name = arg.name;
+				ca.value = awst::makeVarExpression(
+					arg.name, arg.wtype, tgt.loc);
+				call->args.push_back(std::move(ca));
+			}
+
+			if (isLast && pieceRet != awst::WType::voidType())
+			{
+				newBody->body.push_back(awst::makeReturnStatement(
+					std::move(call), tgt.loc));
+			}
+			else
+			{
+				newBody->body.push_back(awst::makeExpressionStatement(
+					std::move(call), tgt.loc));
+			}
+		}
+		// If the last piece returns void, append a bare return.
+		if (tgt.returnType() == awst::WType::voidType()
+			&& !newBody->body.empty()
+			&& newBody->body.back()->nodeType() != "ReturnStatement")
+		{
+			newBody->body.push_back(awst::makeReturnStatement(
+				nullptr, tgt.loc));
+		}
+		tgt.body() = newBody;
+
+		result.splitFunctions.insert(tgt.name());
 		result.didSplit = true;
 	}
 

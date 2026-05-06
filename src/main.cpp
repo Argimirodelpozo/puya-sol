@@ -5,6 +5,7 @@
 #include "json/AWSTSerializer.h"
 #include "json/OptionsWriter.h"
 #include "runner/PuyaRunner.h"
+#include "splitter/FunctionSplitter.h"
 #include "splitter/UrosSplitter.h"
 
 #include <libsolidity/interface/CompilerStack.h>
@@ -181,6 +182,25 @@ struct Options
 	// script is responsible for naming the methods it wants pinned. A
 	// future iteration can add call-graph-based auto-detection on top.
 	std::vector<std::string> pinnedToMain;
+
+	// --fn-split <SubName>:<idx>,<idx>,...:g<N>
+	//
+	// Slice the named subroutine's body into N+1 pieces along the
+	// statement indices. Each piece becomes its own free-standing
+	// Subroutine called `<SubName>__piece_<i>_g<groupId>`. Live
+	// variables that cross a split point flow through scratch slot 100
+	// (single-slot ARC4-encoded tuple). The original subroutine is left
+	// in roots unchanged — downstream tools (e.g. UrosSplitter + the
+	// orch group dance) decide how to call the pieces.
+	//
+	// Repeatable: one flag invocation per subroutine to split.
+	struct FnSplitSpec
+	{
+		std::string subroutineName;
+		std::vector<size_t> splitPoints;
+		int groupId = 0;
+	};
+	std::vector<FnSplitSpec> fnSplits;
 };
 
 void printUsage(char const* _progName)
@@ -216,6 +236,16 @@ void printUsage(char const* _progName)
 		<< "                         guard to admit calls. Typically set on a SECOND compile\n"
 		<< "                         pass after the orchestrator is deployed and its app id\n"
 		<< "                         is known.\n"
+		<< "  --fn-split <spec>      Slice a subroutine's body into pieces. Repeatable.\n"
+		<< "                         Format: <SubName>:<idx>,<idx>,...:g<N>\n"
+		<< "                           SubName  — name of the awst::Subroutine to split\n"
+		<< "                           idx,...  — statement indices where splits occur\n"
+		<< "                           g<N>     — group id; pieces share the suffix _g<N>\n"
+		<< "                         Pieces are named <SubName>__piece_<i>_g<N> and append\n"
+		<< "                         to AWST roots. Live variables across split points flow\n"
+		<< "                         through scratch slot 100. The original subroutine is\n"
+		<< "                         left in place; pair with --uros-splitter to dispatch\n"
+		<< "                         pieces via the orch's inner-txn group dance.\n"
 		<< "  --pin-to-main <list>   Comma-separated method names that MUST stay on the main\n"
 		<< "                         contract and never be split into a chunk. Use for methods\n"
 		<< "                         that read msg.sender or address(this) (chunks see orch as\n"
@@ -271,6 +301,52 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.evmVersion = _argv[++i];
 		else if (arg == "--uros-orch-app-id" && i + 1 < _argc)
 			opts.urosOrchAppId = std::stoll(_argv[++i]);
+		else if (arg == "--fn-split" && i + 1 < _argc)
+		{
+			// Format: <SubName>:<idx>,<idx>,...:g<N>
+			std::string spec = _argv[++i];
+
+			// Split on ':' into (name, indices, group)
+			auto colon1 = spec.find(':');
+			auto colon2 = spec.rfind(':');
+			if (colon1 == std::string::npos || colon1 == colon2)
+			{
+				std::cerr << "--fn-split: malformed spec '" << spec
+					<< "' — expected <SubName>:<idx>,<idx>,...:g<N>"
+					<< std::endl;
+				std::exit(1);
+			}
+
+			Options::FnSplitSpec fs;
+			fs.subroutineName = spec.substr(0, colon1);
+
+			// Parse comma-separated indices.
+			std::string idxList = spec.substr(colon1 + 1, colon2 - colon1 - 1);
+			size_t start = 0;
+			while (start <= idxList.size())
+			{
+				size_t comma = idxList.find(',', start);
+				size_t end = (comma == std::string::npos)
+					? idxList.size() : comma;
+				std::string tok = idxList.substr(start, end - start);
+				if (!tok.empty())
+					fs.splitPoints.push_back(std::stoull(tok));
+				if (comma == std::string::npos) break;
+				start = comma + 1;
+			}
+
+			// Parse group id (must start with 'g').
+			std::string gTok = spec.substr(colon2 + 1);
+			if (gTok.empty() || gTok[0] != 'g')
+			{
+				std::cerr << "--fn-split: group id must start with 'g' "
+					"(got '" << gTok << "')" << std::endl;
+				std::exit(1);
+			}
+			fs.groupId = std::stoi(gTok.substr(1));
+
+			opts.fnSplits.push_back(std::move(fs));
+		}
 		else if (arg == "--pin-to-main" && i + 1 < _argc)
 		{
 			// Comma-separated method names that must stay on main.
@@ -674,6 +750,34 @@ int main(int _argc, char* _argv[])
 	}
 
 	logger.info("Generated " + std::to_string(roots.size()) + " AWST root node(s)");
+
+	// ─── --fn-split: slice subroutine bodies into pieces ─────────────────
+	// Runs BEFORE --uros-splitter so the new piece subroutines are visible
+	// when uros bin-packs methods into chunks. Pieces are appended to roots
+	// as additional Subroutine nodes; the original subroutine is left in
+	// place (callers can still callsub it normally if they're not going
+	// through the orch dance).
+	if (!opts.fnSplits.empty())
+	{
+		std::vector<puyasol::splitter::FunctionSplitter::PieceSpec> specs;
+		for (auto const& fs : opts.fnSplits)
+		{
+			puyasol::splitter::FunctionSplitter::PieceSpec ps;
+			ps.subroutineName = fs.subroutineName;
+			ps.splitPoints = fs.splitPoints;
+			ps.groupId = fs.groupId;
+			specs.push_back(std::move(ps));
+		}
+		puyasol::splitter::FunctionSplitter fs;
+		auto fsResult = fs.splitAt(roots, specs);
+		if (fsResult.didSplit)
+			logger.info(
+				"--fn-split: emitted " +
+				std::to_string(fsResult.newSubroutines.size()) +
+				" piece(s) across " +
+				std::to_string(fsResult.splitFunctions.size()) +
+				" subroutine(s)");
+	}
 
 	// ─── --uros-splitter: split AWST into main + N chunks ───────────────
 	// Each --uros-splitter flag invocation defines one chunk's method
