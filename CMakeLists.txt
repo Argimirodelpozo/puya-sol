@@ -147,13 +147,7 @@ set(SOURCES
 	src/json/Base85.cpp
 	src/json/OptionsWriter.cpp
 	src/runner/PuyaRunner.cpp
-	src/splitter/SizeEstimator.cpp
-	src/splitter/CallGraphAnalyzer.cpp
-	src/splitter/ContractSplitter.cpp
 	src/splitter/FunctionSplitter.cpp
-	src/splitter/FunctionInliner.cpp
-	src/splitter/FunctionInlinerTransforms.cpp
-	src/splitter/ConstantExternalizer.cpp
 	src/splitter/UrosSplitter.cpp
 	src/splitter/AwstWalker.cpp
 )
