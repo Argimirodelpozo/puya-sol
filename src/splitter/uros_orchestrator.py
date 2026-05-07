@@ -158,8 +158,10 @@ class UrosOrchestrator(ARC4Contract):
         returned (read via op.GITxn.last_log at the known chain-length-
         dependent index).
 
-        Currently supports chains of length 2 — extend the branch
-        below as needed (cap at 7 = 15-txn group max).
+        v2 supports chain_len == 2 with each piece's chunk and the
+        default storage up to 4 pages (8 KB) — install branches mirror
+        dispatch()'s 1/2/3/4-page extract pattern. Extending past 2
+        pieces is a follow-up (cap at 7 = 15-txn group max).
         """
         user_selector = op.Txn.application_args(UInt64(1))
         entries = self.chain_for_selector[user_selector]
@@ -175,7 +177,7 @@ class UrosOrchestrator(ARC4Contract):
         # Forwarded args: orch's [2..N+1] passes through to each piece.
         n_user_args = op.Txn.num_app_args - UInt64(1)
 
-        assert chain_len == UInt64(2), "dispatch_chain: only 2-piece chains supported in v1"
+        assert chain_len == UInt64(2), "dispatch_chain v2: only 2-piece chains supported"
 
         # Decode piece 0
         c0_idx = op.btoi(op.extract(entries, UInt64(0), UInt64(8)))
@@ -188,27 +190,57 @@ class UrosOrchestrator(ARC4Contract):
         c1_box = Bytes(b"__codebox_chunk_") + op.itob(c1_idx)
         c1_len = self.chunk_lens[c1_idx]
 
-        # Up to 1-page chunks for chained dispatch (v1 simplification).
-        # If the chunk exceeds 2048 B we fall through to assert; v2 will
-        # branch by chunk size like the regular dispatch.
-        assert c0_len <= page and c1_len <= page, "dispatch_chain v1: chunks must fit in one page"
-        assert default_len <= page, "dispatch_chain v1: default must fit in one page"
+        # ── Stage install_0 (multi-page; first txn → begin_group=True) ──
+        if c0_len <= page:
+            c0_p0 = op.Box.extract(c0_box, UInt64(0), c0_len)
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=c0_p0,
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).stage(begin_group=True)
+        elif c0_len <= page * UInt64(2):
+            c0_p0 = op.Box.extract(c0_box, UInt64(0), page)
+            c0_p1 = op.Box.extract(c0_box, page, c0_len - page)
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=(c0_p0, c0_p1),
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).stage(begin_group=True)
+        elif c0_len <= page * UInt64(3):
+            c0_p0 = op.Box.extract(c0_box, UInt64(0), page)
+            c0_p1 = op.Box.extract(c0_box, page, page)
+            c0_p2 = op.Box.extract(c0_box, page * UInt64(2),
+                                   c0_len - page * UInt64(2))
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=(c0_p0, c0_p1, c0_p2),
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).stage(begin_group=True)
+        else:
+            c0_p0 = op.Box.extract(c0_box, UInt64(0), page)
+            c0_p1 = op.Box.extract(c0_box, page, page)
+            c0_p2 = op.Box.extract(c0_box, page * UInt64(2), page)
+            c0_p3 = op.Box.extract(c0_box, page * UInt64(3),
+                                   c0_len - page * UInt64(3))
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=(c0_p0, c0_p1, c0_p2, c0_p3),
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).stage(begin_group=True)
 
-        c0_bytes = op.Box.extract(c0_box, UInt64(0), c0_len)
-        c1_bytes = op.Box.extract(c1_box, UInt64(0), c1_len)
-        default_bytes = op.Box.extract(default_box, UInt64(0), default_len)
-
-        # Stage the 5-txn group: install_0, call_0, install_1, call_1, restore.
-        itxn.ApplicationCall(
-            app_id=target_app,
-            on_completion=OnCompleteAction.UpdateApplication,
-            approval_program=c0_bytes,
-            clear_state_program=clear,
-            app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
-            fee=0,
-        ).stage(begin_group=True)
-
-        # Build the call-piece-0 itxn with forwarded user args.
+        # ── Stage call_0 (forwarded user args) ──
         if n_user_args == UInt64(1):
             itxn.ApplicationCall(
                 app_id=target_app,
@@ -250,16 +282,57 @@ class UrosOrchestrator(ARC4Contract):
                 fee=0,
             ).stage()
 
-        itxn.ApplicationCall(
-            app_id=target_app,
-            on_completion=OnCompleteAction.UpdateApplication,
-            approval_program=c1_bytes,
-            clear_state_program=clear,
-            app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
-            fee=0,
-        ).stage()
+        # ── Stage install_1 (multi-page) ──
+        if c1_len <= page:
+            c1_p0 = op.Box.extract(c1_box, UInt64(0), c1_len)
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=c1_p0,
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).stage()
+        elif c1_len <= page * UInt64(2):
+            c1_p0 = op.Box.extract(c1_box, UInt64(0), page)
+            c1_p1 = op.Box.extract(c1_box, page, c1_len - page)
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=(c1_p0, c1_p1),
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).stage()
+        elif c1_len <= page * UInt64(3):
+            c1_p0 = op.Box.extract(c1_box, UInt64(0), page)
+            c1_p1 = op.Box.extract(c1_box, page, page)
+            c1_p2 = op.Box.extract(c1_box, page * UInt64(2),
+                                   c1_len - page * UInt64(2))
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=(c1_p0, c1_p1, c1_p2),
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).stage()
+        else:
+            c1_p0 = op.Box.extract(c1_box, UInt64(0), page)
+            c1_p1 = op.Box.extract(c1_box, page, page)
+            c1_p2 = op.Box.extract(c1_box, page * UInt64(2), page)
+            c1_p3 = op.Box.extract(c1_box, page * UInt64(3),
+                                   c1_len - page * UInt64(3))
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=(c1_p0, c1_p1, c1_p2, c1_p3),
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).stage()
 
-        # Build the call-piece-1 itxn — same arg-shape branch.
+        # ── Stage call_1 (same arg-shape branch as call_0) ──
         if n_user_args == UInt64(1):
             itxn.ApplicationCall(
                 app_id=target_app,
@@ -300,15 +373,55 @@ class UrosOrchestrator(ARC4Contract):
                 fee=0,
             ).stage()
 
-        # Restore default bytecode on __storage.
-        itxn.ApplicationCall(
-            app_id=target_app,
-            on_completion=OnCompleteAction.UpdateApplication,
-            approval_program=default_bytes,
-            clear_state_program=clear,
-            app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
-            fee=0,
-        ).stage()
+        # ── Stage restore (multi-page for default) ──
+        if default_len <= page:
+            d_p0 = op.Box.extract(default_box, UInt64(0), default_len)
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=d_p0,
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).stage()
+        elif default_len <= page * UInt64(2):
+            d_p0 = op.Box.extract(default_box, UInt64(0), page)
+            d_p1 = op.Box.extract(default_box, page, default_len - page)
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=(d_p0, d_p1),
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).stage()
+        elif default_len <= page * UInt64(3):
+            d_p0 = op.Box.extract(default_box, UInt64(0), page)
+            d_p1 = op.Box.extract(default_box, page, page)
+            d_p2 = op.Box.extract(default_box, page * UInt64(2),
+                                  default_len - page * UInt64(2))
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=(d_p0, d_p1, d_p2),
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).stage()
+        else:
+            d_p0 = op.Box.extract(default_box, UInt64(0), page)
+            d_p1 = op.Box.extract(default_box, page, page)
+            d_p2 = op.Box.extract(default_box, page * UInt64(2), page)
+            d_p3 = op.Box.extract(default_box, page * UInt64(3),
+                                  default_len - page * UInt64(3))
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=(d_p0, d_p1, d_p2, d_p3),
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).stage()
 
         itxn.submit_staged()
 
