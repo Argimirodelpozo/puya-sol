@@ -1,0 +1,512 @@
+#pragma version 10
+#pragma typetrack false
+
+// PureHelper__LibBit_fls__2.approval_program() -> uint64:
+main:
+    intcblock 1 8 256 255
+    bytecblock 0x 0x0100 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 0x8421084210842108cc6318c6db6d54be
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txna ApplicationArgs 0
+    pushbytes 0x03b7e170 // method "LibBit.fls(uint256)uint256"
+    ==
+    assert // helper: unknown selector
+    txna ApplicationArgs 1
+    callsub LibBit.fls
+    pushint 32
+    bzero
+    swap
+    concat
+    dup
+    len
+    pushint 32
+    -
+    pushint 32
+    extract3
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.LibBit.fls(x: bytes) -> bytes:
+LibBit.fls:
+    proto 1 1
+    pushint 0
+    dupn 2
+    bytec_0 // ""
+    load 0
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    bytec_0 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    pushint 32
+    bzero
+    swap
+    intc_1 // 8
+    bzero
+    swap
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000100
+    b*
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0xffffffffffffffffffffffffffffffff
+    frame_dig -1
+    b<
+    bytec_0 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    b*
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b|
+    dup
+    bytec_1 // 0x0100
+    b<
+    bz LibBit.fls_ternary_false@9
+    frame_dig 6
+    frame_dig 7
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_2 // 256
+    %
+    intc_3 // 255
+    swap
+    -
+    frame_dig 5
+    swap
+    intc_0 // 1
+    setbit
+    frame_dig -1
+    swap
+    b/
+
+LibBit.fls_ternary_merge@10:
+    pushbytes 0xffffffffffffffff
+    b>
+    bytec_0 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000040
+    b*
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig 7
+    b|
+    dup
+    frame_bury 7
+    bytec_1 // 0x0100
+    b<
+    bz LibBit.fls_ternary_false@15
+    frame_dig 6
+    frame_dig 7
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_2 // 256
+    %
+    intc_3 // 255
+    swap
+    -
+    frame_dig 5
+    swap
+    intc_0 // 1
+    setbit
+    frame_dig -1
+    swap
+    b/
+
+LibBit.fls_ternary_merge@16:
+    pushbytes 0xffffffff
+    b>
+    bytec_0 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000020
+    b*
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig 7
+    b|
+    dup
+    frame_bury 7
+    bytec_1 // 0x0100
+    b<
+    bz LibBit.fls_ternary_false@21
+    frame_dig 6
+    frame_dig 7
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_2 // 256
+    %
+    intc_3 // 255
+    swap
+    -
+    frame_dig 5
+    swap
+    intc_0 // 1
+    setbit
+    frame_dig -1
+    swap
+    b/
+
+LibBit.fls_ternary_merge@22:
+    pushbytes 0xffff
+    b>
+    bytec_0 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000010
+    b*
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig 7
+    b|
+    dup
+    frame_bury 7
+    bytec_1 // 0x0100
+    b<
+    bz LibBit.fls_ternary_false@27
+    frame_dig 6
+    frame_dig 7
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_2 // 256
+    %
+    intc_3 // 255
+    swap
+    -
+    frame_dig 5
+    swap
+    intc_0 // 1
+    setbit
+    frame_dig -1
+    swap
+    b/
+
+LibBit.fls_ternary_merge@28:
+    pushbytes 0xff
+    b>
+    bytec_0 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
+    b*
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig 7
+    b|
+    dup
+    frame_bury 7
+    bytec_1 // 0x0100
+    b<
+    dup
+    frame_bury 3
+    bz LibBit.fls_ternary_false@32
+    frame_dig 6
+    frame_dig 7
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_2 // 256
+    %
+    intc_3 // 255
+    swap
+    -
+    frame_dig 5
+    swap
+    intc_0 // 1
+    setbit
+    frame_dig -1
+    swap
+    b/
+
+LibBit.fls_ternary_merge@33:
+    bytec_1 // 0x0100
+    b<
+    bz LibBit.fls_ternary_false@41
+    frame_dig 3
+    bz LibBit.fls_ternary_false@36
+    frame_dig 6
+    frame_dig 7
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_2 // 256
+    %
+    intc_3 // 255
+    swap
+    -
+    frame_dig 5
+    swap
+    intc_0 // 1
+    setbit
+    frame_dig -1
+    swap
+    b/
+
+LibBit.fls_ternary_merge@37:
+    frame_dig 6
+    swap
+    concat
+    frame_bury 0
+    frame_dig 3
+    bz LibBit.fls_ternary_false@39
+    frame_dig 6
+    frame_dig 7
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_2 // 256
+    %
+    intc_3 // 255
+    swap
+    -
+    frame_dig 5
+    swap
+    intc_0 // 1
+    setbit
+    frame_dig -1
+    swap
+    b/
+
+LibBit.fls_ternary_merge@40:
+    frame_dig 6
+    swap
+    concat
+    len
+    intc_1 // 8
+    -
+    frame_dig 0
+    swap
+    extract_uint64
+    intc_2 // 256
+    %
+    intc_3 // 255
+    swap
+    -
+    frame_dig 5
+    swap
+    intc_0 // 1
+    setbit
+    bytec 4 // 0x8421084210842108cc6318c6db6d54be
+    swap
+    b/
+
+LibBit.fls_ternary_merge@42:
+    pushbytes 0x1f
+    b&
+    frame_dig 6
+    swap
+    concat
+    frame_bury 1
+    frame_dig 3
+    bz LibBit.fls_ternary_false@44
+    frame_dig 6
+    frame_dig 7
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_2 // 256
+    %
+    intc_3 // 255
+    swap
+    -
+    frame_dig 5
+    swap
+    intc_0 // 1
+    setbit
+    frame_dig -1
+    swap
+    b/
+
+LibBit.fls_ternary_merge@45:
+    bytec_1 // 0x0100
+    b<
+    bz LibBit.fls_ternary_false@53
+    frame_dig 3
+    bz LibBit.fls_ternary_false@48
+    frame_dig 6
+    frame_dig 7
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_2 // 256
+    %
+    intc_3 // 255
+    swap
+    -
+    frame_dig 5
+    swap
+    intc_0 // 1
+    setbit
+    frame_dig -1
+    swap
+    b/
+
+LibBit.fls_ternary_merge@49:
+    frame_dig 6
+    swap
+    concat
+    frame_bury 2
+    frame_dig 3
+    bz LibBit.fls_ternary_false@51
+    frame_dig 6
+    frame_dig 7
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_2 // 256
+    %
+    intc_3 // 255
+    swap
+    -
+    frame_dig 5
+    swap
+    intc_0 // 1
+    setbit
+    frame_dig -1
+    swap
+    b/
+
+LibBit.fls_ternary_merge@52:
+    frame_dig 6
+    swap
+    concat
+    len
+    intc_1 // 8
+    -
+    frame_dig 2
+    swap
+    extract_uint64
+    intc_2 // 256
+    %
+    intc_3 // 255
+    swap
+    -
+    frame_dig 5
+    swap
+    intc_0 // 1
+    setbit
+    bytec 4 // 0x8421084210842108cc6318c6db6d54be
+    swap
+    b/
+
+LibBit.fls_ternary_merge@54:
+    pushbytes 0x1f
+    b&
+    frame_dig 6
+    swap
+    concat
+    len
+    intc_1 // 8
+    -
+    frame_dig 1
+    swap
+    extract_uint64
+    pushbytes 0x0706060506020504060203020504030106050205030304010505030400000000
+    swap
+    intc_0 // 1
+    extract3
+    frame_dig 7
+    b|
+    frame_dig 4
+    store 0
+    frame_bury 0
+    retsub
+
+LibBit.fls_ternary_false@51:
+    bytec_0 // 0x
+    b LibBit.fls_ternary_merge@52
+
+LibBit.fls_ternary_false@48:
+    bytec_0 // 0x
+    b LibBit.fls_ternary_merge@49
+
+LibBit.fls_ternary_false@53:
+    bytec_0 // 0x
+    b LibBit.fls_ternary_merge@54
+
+LibBit.fls_ternary_false@44:
+    bytec_0 // 0x
+    b LibBit.fls_ternary_merge@45
+
+LibBit.fls_ternary_false@39:
+    bytec_0 // 0x
+    b LibBit.fls_ternary_merge@40
+
+LibBit.fls_ternary_false@36:
+    bytec_0 // 0x
+    b LibBit.fls_ternary_merge@37
+
+LibBit.fls_ternary_false@41:
+    bytec_0 // 0x
+    b LibBit.fls_ternary_merge@42
+
+LibBit.fls_ternary_false@32:
+    bytec_0 // 0x
+    b LibBit.fls_ternary_merge@33
+
+LibBit.fls_ternary_false@27:
+    bytec_0 // 0x
+    b LibBit.fls_ternary_merge@28
+
+LibBit.fls_ternary_false@21:
+    bytec_0 // 0x
+    b LibBit.fls_ternary_merge@22
+
+LibBit.fls_ternary_false@15:
+    bytec_0 // 0x
+    b LibBit.fls_ternary_merge@16
+
+LibBit.fls_ternary_false@9:
+    bytec_0 // 0x
+    b LibBit.fls_ternary_merge@10

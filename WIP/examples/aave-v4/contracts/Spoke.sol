@@ -191,15 +191,12 @@ abstract contract Spoke is
 
   /// @inheritdoc ISpoke
   // NOTE (AVM): EVM source had `external restricted` modifier (OZ
-  // AccessManaged). Dropped — the AccessManager `canCall` check
-  // requires deeper test scaffolding (deploy AccessManager, grant
-  // role, etc.) than makes sense for the deploy harness. Re-add
-  // for production; this is a test-fork patch.
+  // AccessManaged) and a `require(reserveId < _reserveCount,
+  // ReserveNotListed())` precondition. Both dropped for the deploy
+  // harness — restricted needs an AccessManager-issued role for the
+  // caller, _reserveCount needs addReserve which itself needs a
+  // deployed Hub + asset metadata. Re-add for production.
   function updateReservePriceSource(uint256 reserveId, address priceSource) external {
-    // NOTE (AVM): the reserveId-must-be-listed check requires
-    // `addReserve` to have run first, which itself needs a deployed
-    // Hub + asset metadata + price source validation. Skipped for
-    // the deploy harness; production should re-add the check.
     _updateReservePriceSource(reserveId, priceSource);
   }
 

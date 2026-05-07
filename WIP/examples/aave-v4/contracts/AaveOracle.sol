@@ -40,7 +40,15 @@ contract AaveOracle is IAaveOracle {
     require(msg.sender == DEPLOYER, OnlyDeployer());
     require(spoke != address(0), InvalidAddress());
     require(SPOKE == address(0), SpokeAlreadySet());
-    require(ISpoke(spoke).ORACLE() == address(this), OracleMismatch());
+    // NOTE (AVM): EVM source had
+    //   require(ISpoke(spoke).ORACLE() == address(this), OracleMismatch());
+    // The "spoke" address registered here is `__storage.app_addr`
+    // (the actual issuer of inner-txns from chunked spoke methods,
+    // which is what setReserveSource's `msg.sender == SPOKE` check
+    // matches). __storage's runtime program is the orch-mediated
+    // chunk container; reaching its ORACLE() getter requires the
+    // dance, which a direct `ISpoke(spoke).ORACLE()` inner-call
+    // can't trigger. Validation moved to deploy-time off-chain.
     SPOKE = spoke;
     emit SetSpoke(spoke);
   }

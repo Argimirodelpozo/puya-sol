@@ -1377,25 +1377,105 @@ UrosSplitter::Result UrosSplitter::split(
 		chunkContract->methodResolutionOrder.insert(
 			chunkContract->methodResolutionOrder.begin(), primary->id);
 
-		for (auto& m : chunkContract->methods)
+		// Pre-compute which internal methods are reachable from this
+		// chunk's group (transitively, through InstanceMethodTarget
+		// calls). Internal methods (no arc4MethodConfig) must keep
+		// their real bodies if reachable from a live ABI method —
+		// otherwise the chunked method would hit a stub returning a
+		// default value and silently drop side effects (e.g.
+		// `_updateReservePriceSource` issuing the inner-call to
+		// `oracle.setReserveSource`).
+		std::set<std::string> reachableInternalNames;
 		{
-			// Chunks stub EVERY method that isn't in their own group:
-			// orch routes each selector to a single chunk, so chunks
-			// only ever execute their own group's methods. Stubbing
-			// non-group methods (incl. non-split ones) keeps each
-			// chunk small.
-			if (!myMethods.count(m.memberName))
-				m = cloneStubbed(m, /*forwarding=*/false);
-			else
+			std::set<std::string> seenAbi;
+			std::vector<std::string> worklist;
+			std::map<std::string, awst::ContractMethod*> byName;
+			for (auto& m : chunkContract->methods)
+				byName[m.memberName] = &m;
+			for (auto const& nm : myMethods)
 			{
-				// Real (non-stubbed) method body — apply chunk-side
-				// patches so msg.sender / msg.value / address(this) /
-				// inner-pay Sender resolve to main's identity rather
-				// than __storage's. Stubs don't need patching: they
-				// either return a default value or are never invoked.
-				patchChunkMethodBody(m);
+				if (auto it = byName.find(nm); it != byName.end())
+				{
+					seenAbi.insert(nm);
+					worklist.push_back(nm);
+				}
+			}
+			auto rwFn = [&](awst::Expression const& e)
+				-> std::shared_ptr<awst::Expression>
+			{
+				auto const* sce =
+					dynamic_cast<awst::SubroutineCallExpression const*>(&e);
+				if (!sce) return nullptr;
+				if (auto const* imt =
+					std::get_if<awst::InstanceMethodTarget>(&sce->target))
+				{
+					if (!seenAbi.count(imt->memberName)
+						&& !reachableInternalNames.count(imt->memberName))
+					{
+						auto it = byName.find(imt->memberName);
+						if (it != byName.end()
+							&& !it->second->arc4MethodConfig.has_value())
+						{
+							reachableInternalNames.insert(imt->memberName);
+							worklist.push_back(imt->memberName);
+						}
+					}
+				}
+				return nullptr;
+			};
+			while (!worklist.empty())
+			{
+				std::string cur = std::move(worklist.back());
+				worklist.pop_back();
+				auto it = byName.find(cur);
+				if (it == byName.end() || !it->second->body) continue;
+				walkBlock(*it->second->body, rwFn);
 			}
 		}
+
+		// Walk methods; produce a new vector that drops unreachable
+		// internals entirely (puya retains ContractMethod entries
+		// regardless of reachability — leaving them in bloats the
+		// chunk; stubbing them defeats the purpose for callers in
+		// the same chunk).
+		std::vector<awst::ContractMethod> filteredMethods;
+		filteredMethods.reserve(chunkContract->methods.size());
+		for (auto& m : chunkContract->methods)
+		{
+			bool isAbi = m.arc4MethodConfig.has_value();
+			bool isLiveAbi = isAbi && myMethods.count(m.memberName);
+			bool isReachableInternal = !isAbi
+				&& reachableInternalNames.count(m.memberName);
+			if (isLiveAbi)
+			{
+				// Real (non-stubbed) ABI method body — apply chunk-
+				// side patches so msg.sender / msg.value /
+				// address(this) / inner-pay Sender resolve to main's
+				// identity rather than __storage's.
+				patchChunkMethodBody(m);
+				filteredMethods.push_back(std::move(m));
+			}
+			else if (isReachableInternal)
+			{
+				// Internal helper called from this chunk's live ABI
+				// method(s). Keep its body as-is (no chunk-side
+				// patching — patching would mutate the body that
+				// shallowCloneContract shares with the primary
+				// contract / mainContract, breaking main).
+				filteredMethods.push_back(std::move(m));
+			}
+			else if (isAbi)
+			{
+				// ABI methods routed to other chunks: stubbed (orch
+				// handles dispatch). Keep the entry so the chunk's
+				// approval router still has a slot for the selector,
+				// even though the body is a no-op default-return.
+				filteredMethods.push_back(
+					cloneStubbed(m, /*forwarding=*/false));
+			}
+			// else: unreachable internal — drop entirely.
+		}
+		chunkContract->methods = std::move(filteredMethods);
 		chunkContract->methods.push_back(
 			makeDelegateUpdateMethod(primary->id, primary->sourceLocation));
 

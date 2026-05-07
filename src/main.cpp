@@ -184,12 +184,15 @@ struct Options
 	// future iteration can add call-graph-based auto-detection on top.
 	std::vector<std::string> pinnedToMain;
 
-	// --fn-split <Name>:<idx>,<idx>,...:g<N>
+	// --fn-split <Name>:<idx>,<idx>,...:g<N>[:cross]
 	//
 	// Slice the named subroutine / contract method's body into N+1
-	// pieces along the statement indices. FunctionSplitter picks the
-	// live-vars threading mechanism based on the target's shape; main
-	// doesn't need to know.
+	// pieces along the statement indices. The optional `:cross` suffix
+	// marks the chain as cross-chunk: pieces are intended to live on
+	// SEPARATE uros chunks and run as siblings inside one staged
+	// inner-txn group orchestrated by orch.dispatch_chain. Without
+	// `:cross`, pieces share the same txn frame (load 100); with it,
+	// they read each other via gload <prev_idx> 100.
 	//
 	// Repeatable: one flag invocation per target to split.
 	struct FnSplitSpec
@@ -197,6 +200,7 @@ struct Options
 		std::string subroutineName;
 		std::vector<size_t> splitPoints;
 		int groupId = 0;
+		bool crossChunk = false;
 	};
 	std::vector<FnSplitSpec> fnSplits;
 
@@ -244,15 +248,19 @@ void printUsage(char const* _progName)
 		<< "                         pass after the orchestrator is deployed and its app id\n"
 		<< "                         is known.\n"
 		<< "  --fn-split <spec>      Slice a subroutine's body into pieces. Repeatable.\n"
-		<< "                         Format: <SubName>:<idx>,<idx>,...:g<N>\n"
+		<< "                         Format: <SubName>:<idx>,<idx>,...:g<N>[:cross]\n"
 		<< "                           SubName  — name of the awst::Subroutine to split\n"
 		<< "                           idx,...  — statement indices where splits occur\n"
 		<< "                           g<N>     — group id; pieces share the suffix _g<N>\n"
+		<< "                           cross    — (optional) pieces live on separate chunks\n"
+		<< "                                       and chain via orch.dispatch_chain (gload-\n"
+		<< "                                       based prologue). Without it, pieces share\n"
+		<< "                                       the same txn frame (load 100).\n"
 		<< "                         Pieces are named <SubName>__piece_<i>_g<N> and append\n"
 		<< "                         to AWST roots. Live variables across split points flow\n"
-		<< "                         through scratch slot 100. The original subroutine is\n"
-		<< "                         left in place; pair with --uros-splitter to dispatch\n"
-		<< "                         pieces via the orch's inner-txn group dance.\n"
+		<< "                         through scratch slot 100. With :cross, main.cpp also\n"
+		<< "                         emits chain_groups.json so the deploy harness can\n"
+		<< "                         register the piece chain with orch after deploy.\n"
 		<< "  --pin-to-main <list>   Comma-separated method names that MUST stay on the main\n"
 		<< "                         contract and never be split into a chunk. Use for methods\n"
 		<< "                         that read msg.sender or address(this) (chunks see orch as\n"
@@ -319,25 +327,39 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.deployPureHelpers = true;
 		else if (arg == "--fn-split" && i + 1 < _argc)
 		{
-			// Format: <Name>:<idx>,<idx>,...:g<N>
+			// Format: <Name>:<idx>,<idx>,...:g<N>[:cross]
+			//
+			// Tokenize on ':'. Either 3 or 4 tokens. The optional
+			// trailing token, when present, must literally equal "cross"
+			// — sets the spec's crossChunk flag (pieces use gload-based
+			// prologue, intended to live on separate uros chunks).
 			std::string spec = _argv[++i];
-
-			// Split on ':' into (name, indices, group)
-			auto colon1 = spec.find(':');
-			auto colon2 = spec.rfind(':');
-			if (colon1 == std::string::npos || colon1 == colon2)
+			std::vector<std::string> toks;
+			{
+				size_t start = 0;
+				while (start <= spec.size())
+				{
+					size_t colon = spec.find(':', start);
+					size_t end = (colon == std::string::npos)
+						? spec.size() : colon;
+					toks.push_back(spec.substr(start, end - start));
+					if (colon == std::string::npos) break;
+					start = colon + 1;
+				}
+			}
+			if (toks.size() < 3 || toks.size() > 4)
 			{
 				std::cerr << "--fn-split: malformed spec '" << spec
-					<< "' — expected <Name>:<idx>,<idx>,...:g<N>"
+					<< "' — expected <Name>:<idx>,<idx>,...:g<N>[:cross]"
 					<< std::endl;
 				std::exit(1);
 			}
 
 			Options::FnSplitSpec fs;
-			fs.subroutineName = spec.substr(0, colon1);
+			fs.subroutineName = toks[0];
 
 			// Parse comma-separated indices.
-			std::string idxList = spec.substr(colon1 + 1, colon2 - colon1 - 1);
+			std::string const& idxList = toks[1];
 			size_t start = 0;
 			while (start <= idxList.size())
 			{
@@ -352,7 +374,7 @@ Options parseArgs(int _argc, char* _argv[])
 			}
 
 			// Parse group id (must start with 'g').
-			std::string gTok = spec.substr(colon2 + 1);
+			std::string const& gTok = toks[2];
 			if (gTok.empty() || gTok[0] != 'g')
 			{
 				std::cerr << "--fn-split: group id must start with 'g' "
@@ -360,6 +382,18 @@ Options parseArgs(int _argc, char* _argv[])
 				std::exit(1);
 			}
 			fs.groupId = std::stoi(gTok.substr(1));
+
+			if (toks.size() == 4)
+			{
+				if (toks[3] != "cross")
+				{
+					std::cerr << "--fn-split: trailing token must be "
+						"literally 'cross' if present (got '"
+						<< toks[3] << "')" << std::endl;
+					std::exit(1);
+				}
+				fs.crossChunk = true;
+			}
 
 			opts.fnSplits.push_back(std::move(fs));
 		}
@@ -782,6 +816,7 @@ int main(int _argc, char* _argv[])
 			ps.subroutineName = fs.subroutineName;
 			ps.splitPoints = fs.splitPoints;
 			ps.groupId = fs.groupId;
+			ps.crossChunk = fs.crossChunk;
 			specs.push_back(std::move(ps));
 		}
 		puyasol::splitter::FunctionSplitter fs;
@@ -795,6 +830,50 @@ int main(int _argc, char* _argv[])
 				" piece(s) across " +
 				std::to_string(fsResult.splitFunctions.size()) +
 				" function(s)");
+
+		// chain_groups.json: small artifact that records which split
+		// targets are cross-chunk chains. Only crossChunk specs make it
+		// in — non-cross pieces are in-program callsubs and don't need
+		// orch-side registration. The deploy harness reads this together
+		// with deploy.uros.json: for each group it finds the chunk_idx
+		// hosting each piece (by name), pulls the piece's ARC4 selector
+		// from that chunk's arc56.json, packs (chunk_app_id, selector)
+		// entries, and calls orch.register_chunk_method_chain at deploy
+		// time so user calls to orch.dispatch_chain(primary_selector,...)
+		// can fan out across the chain.
+		bool anyCross = false;
+		for (auto const& fnSpec : opts.fnSplits)
+			if (fnSpec.crossChunk) { anyCross = true; break; }
+		if (anyCross)
+		{
+			fs::create_directories(opts.outputDir);
+			njson chainsDoc;
+			njson groupsArr = njson::array();
+			for (auto const& fnSpec : opts.fnSplits)
+			{
+				if (!fnSpec.crossChunk) continue;
+				njson g;
+				g["primary_method"] = fnSpec.subroutineName;
+				g["group_id"] = fnSpec.groupId;
+				njson piecesArr = njson::array();
+				size_t numPieces = fnSpec.splitPoints.size() + 1;
+				for (size_t pi = 0; pi < numPieces; ++pi)
+				{
+					piecesArr.push_back(
+						fnSpec.subroutineName + "__piece_"
+						+ std::to_string(pi) + "_g"
+						+ std::to_string(fnSpec.groupId));
+				}
+				g["piece_methods"] = std::move(piecesArr);
+				groupsArr.push_back(std::move(g));
+			}
+			chainsDoc["groups"] = std::move(groupsArr);
+			std::string chainGroupsPath =
+				(fs::path(opts.outputDir) / "chain_groups.json").string();
+			std::ofstream cgout(chainGroupsPath);
+			cgout << chainsDoc.dump(2) << std::endl;
+			logger.info("Wrote: " + chainGroupsPath);
+		}
 	}
 
 	// ─── --deploy-pure-helpers: lift pure Subs to sidecar Contracts ───

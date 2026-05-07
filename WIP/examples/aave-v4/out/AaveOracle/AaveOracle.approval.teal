@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/AaveOracle.sol.AaveOracle.approval_program() -> uint64:
 main:
-    intcblock 0 1 32 24
+    intcblock 0 1 32 2
     bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 "SPOKE" 0x151f7c75 "DECIMALS" "_sources" "__ctor_pending" "DESCRIPTION" "DEPLOYER" 0x8000000000000000000000000000000000000000000000000000000000000000
     intc_0 // 0
     dupn 6
@@ -180,7 +180,7 @@ main_getReservesPrices_route@9:
     bury 3
     intc_2 // 32
     *
-    pushint 2
+    intc_3 // 2
     +
     swap
     len
@@ -266,7 +266,7 @@ main_while_top@44:
     bzero
     b|
     swap
-    pushint 2
+    intc_3 // 2
     +
     dig 8
     swap
@@ -361,7 +361,7 @@ main_ternary_merge@56:
     assert // check SPOKE exists
     ==
     bnz main_bool_true@58
-    intc_3 // 24
+    pushint 24
     bzero
     global CallerApplicationID
     itob
@@ -381,7 +381,7 @@ main_bool_merge@60:
     itxn_begin
     dig 3
     dup
-    intc_3 // 24
+    pushint 24
     extract_uint64
     pushint 6
     itxn_field TypeEnum
@@ -465,7 +465,7 @@ main_ternary_merge@65:
     assert // check DEPLOYER exists
     ==
     bnz main_bool_true@67
-    intc_3 // 24
+    pushint 24
     bzero
     global CallerApplicationID
     itob
@@ -494,43 +494,8 @@ main_bool_merge@69:
     bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     ==
     assert // SpokeAlreadySet
-    itxn_begin
-    intc_3 // 24
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    pushbytes 0x93a95ce5 // method "ORACLE()address"
-    itxn_field ApplicationArgs
-    itxn_submit
-    global CurrentApplicationAddress
-    itxn LastLog
-    extract 4 0
-    ==
-    bnz main_bool_true@71
-    intc_3 // 24
-    bzero
-    global CurrentApplicationID
-    itob
-    concat
-    itxn LastLog
-    extract 4 0
-    ==
-    bz main_bool_false@72
-
-main_bool_true@71:
-    intc_1 // 1
-
-main_bool_merge@73:
-    assert // OracleMismatch
     bytec_1 // "SPOKE"
-    dig 3
-    dup
-    cover 2
+    dig 1
     app_global_put
     pushbytes 0x6b666041 // method "SetSpoke(uint8[32])"
     swap
@@ -538,10 +503,6 @@ main_bool_merge@73:
     log
     intc_1 // 1
     return
-
-main_bool_false@72:
-    intc_0 // 0
-    b main_bool_merge@73
 
 main_bool_false@68:
     intc_0 // 0
@@ -563,7 +524,7 @@ main___postInit_route@5:
     dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -577,7 +538,7 @@ main___postInit_route@5:
     intc_0 // 0
     app_global_put
     bytec 4 // "_sources"
-    pushint 2
+    intc_3 // 2
     box_create
     pop
     bytec_3 // "DECIMALS"
@@ -628,7 +589,7 @@ _getSourcePrice:
     !=
     assert // InvalidSource
     itxn_begin
-    intc_3 // 24
+    pushint 24
     extract_uint64
     pushint 6
     itxn_field TypeEnum

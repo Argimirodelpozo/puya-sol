@@ -391,6 +391,95 @@ def _setup_orch_with_chunks(
                 algod.send_transaction(txn.sign(sender.private_key)), 4)
 
 
+def _register_chain_groups(
+    algod: AlgodClient, sender: SigningAccount,
+    orch_id: int, contract_dir: Path,
+    chunks_with_full_sigs: list[dict],
+    main_method_signatures: dict,
+) -> None:
+    """Register cross-chunk piece chains with orch.
+
+    For each entry in chain_groups.json:
+      - Look up the primary method's signature in main's arc56 (the
+        primary stays on main as a stub).
+      - For each piece, find its hosting chunk_idx by name and pull its
+        signature from THAT chunk's arc56 (pieces are only on chunks).
+      - Pack entries: 8 B chunk_idx (BE) + 4 B piece selector each.
+      - Call orch.register_chunk_method_chain(primary_sel, entries).
+
+    Idempotent: re-running on an already-registered chain just rewrites
+    the chain_for_selector box value (orch doesn't reject repeats).
+    """
+    chain_groups_path = contract_dir / "chain_groups.json"
+    if not chain_groups_path.exists():
+        return
+    chain_groups = json.loads(chain_groups_path.read_text())
+    groups = chain_groups.get("groups", [])
+    if not groups:
+        return
+
+    # piece_method_name → containing chunk_idx (linear scan; chunks list
+    # is small so a dict isn't worth the boilerplate).
+    piece_to_chunk: dict[str, int] = {}
+    for ci, c in enumerate(chunks_with_full_sigs):
+        for mname in c["methods"]:
+            piece_to_chunk[mname] = ci
+
+    register_sel = _arc4_selector(
+        "register_chunk_method_chain(byte[],byte[])void")
+
+    for g in groups:
+        primary_name = g["primary_method"]
+        primary_sig_meta = main_method_signatures.get(primary_name)
+        if primary_sig_meta is None:
+            raise AssertionError(
+                f"chain group primary '{primary_name}' not in main arc56 "
+                f"(was the original method removed by --uros-splitter?)")
+        a_types = ",".join(a.get("type", "") for a in primary_sig_meta.get("args", []))
+        ret = (primary_sig_meta.get("returns") or {}).get("type") or "void"
+        primary_sig = f"{primary_name}({a_types}){ret}"
+        primary_sel = _arc4_selector(primary_sig)
+
+        # Build packed entries: 12 B per piece.
+        entries = b""
+        for piece_name in g["piece_methods"]:
+            ci = piece_to_chunk.get(piece_name)
+            if ci is None:
+                raise AssertionError(
+                    f"chain piece '{piece_name}' not on any chunk; check "
+                    f"that --uros-splitter group lists include the piece "
+                    f"name (FunctionSplitter doesn't auto-distribute).")
+            chunk_meta = chunks_with_full_sigs[ci]
+            chunk_arc56 = json.loads(
+                (contract_dir / "__uros_split" / f"chunk_{ci}"
+                 / f"{chunk_meta['name']}.arc56.json").read_text())
+            chunk_method_sigs = {m["name"]: m
+                                 for m in chunk_arc56.get("methods", [])}
+            pm = chunk_method_sigs.get(piece_name)
+            if pm is None:
+                raise AssertionError(
+                    f"chain piece '{piece_name}' not in chunk {ci} arc56")
+            p_types = ",".join(a.get("type", "") for a in pm.get("args", []))
+            p_ret = (pm.get("returns") or {}).get("type") or "void"
+            piece_sig = f"{piece_name}({p_types}){p_ret}"
+            piece_sel = _arc4_selector(piece_sig)
+            entries += ci.to_bytes(8, "big") + piece_sel
+
+        # ABI byte[] arg encoding: uint16 BE length prefix + raw bytes.
+        primary_arg = len(primary_sel).to_bytes(2, "big") + primary_sel
+        entries_arg = len(entries).to_bytes(2, "big") + entries
+        cchain_box = b"cchain_" + primary_sel
+        sp = algod.suggested_params()
+        txn = ApplicationCallTxn(
+            sender=sender.address, sp=sp, index=orch_id,
+            on_complete=OnComplete.NoOpOC,
+            app_args=[register_sel, primary_arg, entries_arg],
+            boxes=[(orch_id, cchain_box)] + [EMPTY_BOX] * 7,
+        )
+        wait_for_confirmation(algod,
+            algod.send_transaction(txn.sign(sender.private_key)), 4)
+
+
 def _box_exists_with_size(algod: AlgodClient, app_id: int, name: bytes,
                           expected_size: int) -> bool:
     try:
@@ -552,21 +641,29 @@ def deploy_split_app(
     # 6. Build chunks list. Substitute orch_id, main_id, AND storage_id
     # — the chunk's app_global_get_ex(MAIN, ...) needs main, and any
     # pay-forward / storage-aware emit in chunks would need storage too.
+    # Method signatures are looked up first in main's arc56 (covers
+    # ABI-public methods that have stubs on main), then falling back to
+    # the chunk's own arc56 (covers FunctionSplitter pieces, which only
+    # exist on their containing chunk).
     chunks_with_full_sigs = []
     for ci, c in enumerate(deploy_tmpl["chunks"]):
-        chunk_teal = (contract_dir / "__uros_split" / f"chunk_{ci}"
-                      / f"{c['name']}.approval.teal").read_text()
+        chunk_dir = contract_dir / "__uros_split" / f"chunk_{ci}"
+        chunk_teal = (chunk_dir / f"{c['name']}.approval.teal").read_text()
         chunk_bytes = _compile_teal(
             algod, _substitute_pure_helper_ids(
                 _substitute_chunk_uros_ids(
                     chunk_teal, orch_id, main_id, storage_id),
                 pure_helper_app_ids))
+        chunk_arc56 = json.loads(
+            (chunk_dir / f"{c['name']}.arc56.json").read_text())
+        chunk_method_sigs = {m["name"]: m for m in chunk_arc56.get("methods", [])}
         full_sigs = []
         for mname in c["methods"]:
-            m = method_signatures.get(mname)
+            m = method_signatures.get(mname) or chunk_method_sigs.get(mname)
             if m is None:
                 raise AssertionError(
-                    f"split method '{mname}' not in arc56 for {name}")
+                    f"split method '{mname}' not in main or chunk arc56 "
+                    f"for {name} (chunk {ci})")
             arg_types = ",".join(a.get("type", "") for a in m.get("args", []))
             ret = (m.get("returns") or {}).get("type") or "void"
             full_sigs.append(f"{mname}({arg_types}){ret}")
@@ -578,6 +675,13 @@ def deploy_split_app(
     # 7. orch setup (set_storage + boxes + chunks + selectors).
     _setup_orch_with_chunks(algod, sender, orch_id, storage_id,
                             storage_default, chunks_with_full_sigs)
+
+    # 7b. Register cross-chunk piece chains with orch (if any). Reads
+    # chain_groups.json (emitted by main.cpp when --fn-split :cross is
+    # used) and packs (chunk_idx, piece_selector) entries per primary
+    # method, calling orch.register_chunk_method_chain for each.
+    _register_chain_groups(algod, sender, orch_id, contract_dir,
+                            chunks_with_full_sigs, method_signatures)
 
     # 8. main.__postInit dance, routes through orch to __storage.
     # Don't require app_spec — fall back to the raw method_signatures

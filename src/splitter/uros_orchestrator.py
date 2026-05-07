@@ -76,6 +76,14 @@ class UrosOrchestrator(ARC4Contract):
         self.chunk_count = UInt64(0)
         self.chunk_lens = BoxMap(UInt64, UInt64, key_prefix=b"clen_")
         self.chunk_for_selector = BoxMap(Bytes, UInt64, key_prefix=b"csel_")
+        # Per-selector chain registration: packed sequence of 12-byte
+        # entries, each `(chunk_idx_uint64_be, piece_selector_4bytes)`.
+        # When dispatch is called for a registered chain, all pieces'
+        # install+call cycles run as one staged inner-txn group so
+        # successive pieces can `gload <prev_call_txn_idx> 100` to read
+        # the scratch slot 100 written by the previous piece's epilogue
+        # (FunctionSplitter cross-chunk live-vars threading).
+        self.chain_for_selector = BoxMap(Bytes, Bytes, key_prefix=b"cchain_")
 
     @arc4.abimethod(create="require")
     def init(self) -> None:
@@ -125,6 +133,189 @@ class UrosOrchestrator(ARC4Contract):
     def register_chunk_method(self, selector: Bytes, chunk_idx: UInt64) -> None:
         """Map an ABI selector to its owning chunk."""
         self.chunk_for_selector[selector] = chunk_idx
+
+    @arc4.abimethod
+    def register_chunk_method_chain(self, selector: Bytes, entries: Bytes) -> None:
+        """Register a piece-chain for `selector`. `entries` is a packed
+        byte string of N×12-byte records: 8 bytes big-endian
+        `chunk_idx`, then 4 bytes `piece_selector`. dispatch() detects
+        this entry first and routes via dispatch_chain semantics so
+        live vars cross piece boundaries via gload."""
+        self.chain_for_selector[selector] = entries
+
+    @arc4.abimethod
+    def dispatch_chain(self) -> Bytes:
+        """Chain-dispatch a registered piece chain. ApplicationArgs
+        layout matches dispatch():
+            [0] = "dispatch_chain()" selector
+            [1] = user's primary selector (the original method)
+            [2..] = user's args (forwarded to every piece)
+
+        Each piece's install + call is staged into a single inner-txn
+        group, with a final restore-to-default install. Since they're
+        all in one group, piece N's body can read piece N-1's scratch
+        slot 100 via `gload (2N-1) 100`. The final piece's last_log is
+        returned (read via op.GITxn.last_log at the known chain-length-
+        dependent index).
+
+        Currently supports chains of length 2 — extend the branch
+        below as needed (cap at 7 = 15-txn group max).
+        """
+        user_selector = op.Txn.application_args(UInt64(1))
+        entries = self.chain_for_selector[user_selector]
+        # Each entry: 8 bytes chunk_idx + 4 bytes piece_selector = 12 B.
+        chain_len = entries.length // UInt64(12)
+        target_app = self.storage_app_id
+        clear = Bytes(CLEAR_PROGRAM)
+        default_box = Bytes(b"__codebox_default")
+        default_len = self.storage_default_len
+        page = UInt64(2048)
+        main_app = Application(op.Global.caller_application_id)
+
+        # Forwarded args: orch's [2..N+1] passes through to each piece.
+        n_user_args = op.Txn.num_app_args - UInt64(1)
+
+        assert chain_len == UInt64(2), "dispatch_chain: only 2-piece chains supported in v1"
+
+        # Decode piece 0
+        c0_idx = op.btoi(op.extract(entries, UInt64(0), UInt64(8)))
+        c0_sel = op.extract(entries, UInt64(8), UInt64(4))
+        c0_box = Bytes(b"__codebox_chunk_") + op.itob(c0_idx)
+        c0_len = self.chunk_lens[c0_idx]
+        # Decode piece 1
+        c1_idx = op.btoi(op.extract(entries, UInt64(12), UInt64(8)))
+        c1_sel = op.extract(entries, UInt64(20), UInt64(4))
+        c1_box = Bytes(b"__codebox_chunk_") + op.itob(c1_idx)
+        c1_len = self.chunk_lens[c1_idx]
+
+        # Up to 1-page chunks for chained dispatch (v1 simplification).
+        # If the chunk exceeds 2048 B we fall through to assert; v2 will
+        # branch by chunk size like the regular dispatch.
+        assert c0_len <= page and c1_len <= page, "dispatch_chain v1: chunks must fit in one page"
+        assert default_len <= page, "dispatch_chain v1: default must fit in one page"
+
+        c0_bytes = op.Box.extract(c0_box, UInt64(0), c0_len)
+        c1_bytes = op.Box.extract(c1_box, UInt64(0), c1_len)
+        default_bytes = op.Box.extract(default_box, UInt64(0), default_len)
+
+        # Stage the 5-txn group: install_0, call_0, install_1, call_1, restore.
+        itxn.ApplicationCall(
+            app_id=target_app,
+            on_completion=OnCompleteAction.UpdateApplication,
+            approval_program=c0_bytes,
+            clear_state_program=clear,
+            app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+            fee=0,
+        ).stage(begin_group=True)
+
+        # Build the call-piece-0 itxn with forwarded user args.
+        if n_user_args == UInt64(1):
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.NoOp,
+                app_args=(c0_sel,),
+                apps=(main_app,),
+                fee=0,
+            ).stage()
+        elif n_user_args == UInt64(2):
+            a1 = op.Txn.application_args(UInt64(2))
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.NoOp,
+                app_args=(c0_sel, a1),
+                apps=(main_app,),
+                fee=0,
+            ).stage()
+        elif n_user_args == UInt64(3):
+            a1 = op.Txn.application_args(UInt64(2))
+            a2 = op.Txn.application_args(UInt64(3))
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.NoOp,
+                app_args=(c0_sel, a1, a2),
+                apps=(main_app,),
+                fee=0,
+            ).stage()
+        else:
+            # Up to 5 user args (matches dispatch()'s ceiling for now).
+            a1 = op.Txn.application_args(UInt64(2))
+            a2 = op.Txn.application_args(UInt64(3))
+            a3 = op.Txn.application_args(UInt64(4))
+            a4 = op.Txn.application_args(UInt64(5))
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.NoOp,
+                app_args=(c0_sel, a1, a2, a3, a4),
+                apps=(main_app,),
+                fee=0,
+            ).stage()
+
+        itxn.ApplicationCall(
+            app_id=target_app,
+            on_completion=OnCompleteAction.UpdateApplication,
+            approval_program=c1_bytes,
+            clear_state_program=clear,
+            app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+            fee=0,
+        ).stage()
+
+        # Build the call-piece-1 itxn — same arg-shape branch.
+        if n_user_args == UInt64(1):
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.NoOp,
+                app_args=(c1_sel,),
+                apps=(main_app,),
+                fee=0,
+            ).stage()
+        elif n_user_args == UInt64(2):
+            a1 = op.Txn.application_args(UInt64(2))
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.NoOp,
+                app_args=(c1_sel, a1),
+                apps=(main_app,),
+                fee=0,
+            ).stage()
+        elif n_user_args == UInt64(3):
+            a1 = op.Txn.application_args(UInt64(2))
+            a2 = op.Txn.application_args(UInt64(3))
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.NoOp,
+                app_args=(c1_sel, a1, a2),
+                apps=(main_app,),
+                fee=0,
+            ).stage()
+        else:
+            a1 = op.Txn.application_args(UInt64(2))
+            a2 = op.Txn.application_args(UInt64(3))
+            a3 = op.Txn.application_args(UInt64(4))
+            a4 = op.Txn.application_args(UInt64(5))
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.NoOp,
+                app_args=(c1_sel, a1, a2, a3, a4),
+                apps=(main_app,),
+                fee=0,
+            ).stage()
+
+        # Restore default bytecode on __storage.
+        itxn.ApplicationCall(
+            app_id=target_app,
+            on_completion=OnCompleteAction.UpdateApplication,
+            approval_program=default_bytes,
+            clear_state_program=clear,
+            app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+            fee=0,
+        ).stage()
+
+        itxn.submit_staged()
+
+        # Group layout (0-indexed): [install_0, call_0, install_1,
+        # call_1, restore]. Last piece's call is at index 3 — that's
+        # where the ABI return log lives.
+        return op.GITxn.last_log(3)
 
     @arc4.abimethod
     def dispatch(self) -> Bytes:

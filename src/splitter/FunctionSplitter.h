@@ -50,21 +50,23 @@ public:
 	///                  piece_2 = stmts [7..10)
 	///   groupId: the `_gN` suffix on each piece's name. Pieces with the
 	///            same groupId form one logical chain.
-	///
-	/// FunctionSplitter picks the live-vars threading mechanism from the
-	/// target's shape:
-	///   * Subroutine target → scratch slot 100 (single-program callsub
-	///     chain). Cheap; works because pieces all execute in the same
-	///     txn frame.
-	///   * ContractMethod target → app-box `__uros_lv_g<groupId>` on the
-	///     parent contract. Survives the uros dance: each piece may
-	///     end up on a different chunk, run on __storage as a separate
-	///     inner-itxn, and the box persists across chunk swaps.
+	///   crossChunk: when true, pieces are intended to run on separate
+	///               uros chunks chained as a single staged inner-txn
+	///               group (orch's dispatch_chain dance). Prologue
+	///               reads the previous piece's scratch via
+	///               `gload <prev_call_txn_idx> 100`; the orch lays
+	///               install/call pairs at txn indices [0,1,2,3,...]
+	///               so piece N's call sits at index 2N+1 and its
+	///               prologue gloads from 2N-1.
+	///               When false, prologue uses `load 100` (same-txn
+	///               scratch — works for in-program callsub or all
+	///               pieces co-located on one chunk).
 	struct PieceSpec
 	{
 		std::string subroutineName;
 		std::vector<size_t> splitPoints;
 		int groupId = 0;
+		bool crossChunk = false;
 	};
 
 	struct SplitResult

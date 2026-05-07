@@ -530,10 +530,12 @@ PureHelperExtractor::Result PureHelperExtractor::extract(
 
 	// Pass 1: identify pure subroutines that are candidates for
 	// extraction. Skip stubs / those whose return type doesn't fit
-	// through `LastLog`. Skip tiny ones — the inner-txn overhead at
-	// each call site (~50 B vs ~5 B for a callsub) outweighs the
-	// savings from removing a tiny body. Heuristic threshold:
-	// kMinBodyStatements = 10. Anything smaller stays inline.
+	// through `LastLog`. Skip tiny ones — each call site pays ~50 B
+	// of inner-txn machinery (itxn_begin / 5 itxn_field / itxn_submit
+	// / LastLog / extract / decode), so subs whose original body is
+	// less than ~50 B of bytecode would inflate the caller more than
+	// they shrink the helper. Heuristic threshold: body has at least
+	// kMinBodyStatements top-level statements.
 	constexpr size_t kMinBodyStatements = 10;
 	std::vector<std::shared_ptr<awst::Subroutine>> pureSubs;
 	for (auto const& r : _roots)

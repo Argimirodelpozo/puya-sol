@@ -3,10 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Hub.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 TMPL_UROS_MAIN_APP_ID 278
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x "_spokes" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "__og_sender" 0x151f7c75 0x01 0x033b2e3c9fd0803ce8000000 0xffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000002 0x8000000000000000000000000000000000000000000000000000000000000000 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x00 0xffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c750000000000000000000000000000000000000000000000000000000000000000 0x151f7c7500 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffff 0x0f4240
-    intc_2 // 0
-    dupn 7
+    intcblock 32 0 1 TMPL_UROS_MAIN_APP_ID 278 664
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x "_spokes" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "__og_sender" 0x151f7c75 0x01 0x033b2e3c9fd0803ce8000000 0xffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000002 0x8000000000000000000000000000000000000000000000000000000000000000 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x00 0x0000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c750000000000000000000000000000000000000000000000000000000000000000 0x151f7c7500 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0xffffffff 0xffffffffffffffffffffffff 0x0f4240
+    intc_1 // 0
+    dupn 24
+    bytec_1 // ""
     pushint 4096
     bzero
     dup
@@ -19,9 +20,9 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     pushbytes "__ctor_pending"
-    intc_1 // 1
+    intc_2 // 1
     app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -41,7 +42,7 @@ main_after_if_else@2:
 main_getAssetCount_route@27:
     bytec 5 // 0x151f7c75
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main___postInit_route@7:
@@ -50,19 +51,19 @@ main___postInit_route@7:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_authority_route@69:
-    bytec 15 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    bytec 16 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_MAX_ALLOWED_UNDERLYING_DECIMALS_route@65:
     pushbytes 0x151f7c750000000000000000
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_getSpokeConfig_route@64:
@@ -77,17 +78,17 @@ main_getSpokeConfig_route@64:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     bytec_1 // 0x
-    intc_2 // 0
+    intc_1 // 0
     getbit
     bytec_1 // 0x
-    intc_1 // 1
+    intc_2 // 1
     uncover 2
     setbit
     bytec 5 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_getSpoke_route@63:
@@ -102,17 +103,17 @@ main_getSpoke_route@63:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     bytec_1 // 0x
-    intc_2 // 0
+    intc_1 // 0
     getbit
     bytec_1 // 0x
-    intc_1 // 1
+    intc_2 // 1
     uncover 2
     setbit
     bytec 5 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_getSpokeAddress_route@62:
@@ -126,9 +127,9 @@ main_getSpokeAddress_route@62:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec 15 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    bytec 16 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_isSpokeListed_route@61:
@@ -142,9 +143,9 @@ main_isSpokeListed_route@61:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    bytec 16 // 0x151f7c7500
+    bytec 17 // 0x151f7c7500
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_getSpokeAddedAssets_route@53:
@@ -160,7 +161,7 @@ main_getSpokeAddedAssets_route@53:
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     bytec 5 // 0x151f7c75
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_getSpokePremiumData_route@59:
@@ -174,9 +175,9 @@ main_getSpokePremiumData_route@59:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    bytec 17 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 18 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_getAssetDrawnIndex_route@37:
@@ -187,7 +188,7 @@ main_getAssetDrawnIndex_route@37:
     assert // invalid number of bytes for arc4.uint256
     bytec 5 // 0x151f7c75
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_getAssetPremiumData_route@44:
@@ -196,9 +197,9 @@ main_getAssetPremiumData_route@44:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec 17 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 18 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_getAssetUnderlyingAndDecimals_route@36:
@@ -209,7 +210,7 @@ main_getAssetUnderlyingAndDecimals_route@36:
     assert // invalid number of bytes for arc4.uint256
     pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_previewAddByShares_route@29:
@@ -225,7 +226,7 @@ main_previewAddByShares_route@29:
     assert // invalid number of bytes for arc4.uint256
     bytec 5 // 0x151f7c75
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_previewAddByAssets_route@28:
@@ -241,7 +242,7 @@ main_previewAddByAssets_route@28:
     assert // invalid number of bytes for arc4.uint256
     bytec 5 // 0x151f7c75
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_getAssetId_route@26:
@@ -252,7 +253,7 @@ main_getAssetId_route@26:
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     bytec 5 // 0x151f7c75
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_isUnderlyingListed_route@25:
@@ -261,9 +262,9 @@ main_isUnderlyingListed_route@25:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    bytec 16 // 0x151f7c7500
+    bytec 17 // 0x151f7c7500
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_sweep_route@23:
@@ -277,7 +278,7 @@ main_sweep_route@23:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_transferShares_route@22:
@@ -296,7 +297,7 @@ main_transferShares_route@22:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_payFeeShares_route@21:
@@ -310,7 +311,7 @@ main_payFeeShares_route@21:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_refreshPremium_route@20:
@@ -324,30 +325,27 @@ main_refreshPremium_route@20:
     pushint 96
     ==
     assert // invalid number of bytes for PremiumDelta
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_eliminateDeficit_route@19:
     txna ApplicationArgs 1
     dup
-    bury 8
-    dup
+    bury 26
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 10
-    dup
+    bury 27
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    bury 6
-    dup
+    bury 20
     len
     intc_0 // 32
     ==
@@ -358,11 +356,237 @@ main_eliminateDeficit_route@19:
     pop
     !
     assert // not payable
+    txn Sender
+    bury 24
+    txn NumAppArgs
+    bz main_ternary_false@237
+    txn NumAppArgs
+    bz main_ternary_false@190
+    txna ApplicationArgs 0
+    bury 18
+
+main_ternary_merge@191:
+    txn NumAppArgs
+    intc_2 // 1
+    >
+    bz main_ternary_false@193
+    txna ApplicationArgs 1
+
+main_ternary_merge@194:
+    dig 18
+    swap
+    concat
+    bury 4
+    txn NumAppArgs
+    pushint 2
+    >
+    bz main_ternary_false@196
+    txna ApplicationArgs 2
+
+main_ternary_merge@197:
+    dig 4
+    swap
+    concat
+    bury 2
+    txn NumAppArgs
+    pushint 3
+    >
+    bz main_ternary_false@199
+    txna ApplicationArgs 3
+
+main_ternary_merge@200:
+    dig 2
+    swap
+    concat
+    bury 17
+    txn NumAppArgs
+    pushint 4
+    >
+    bz main_ternary_false@202
+    txna ApplicationArgs 4
+
+main_ternary_merge@203:
+    dig 17
+    swap
+    concat
+    bury 15
+    txn NumAppArgs
+    pushint 5
+    >
+    bz main_ternary_false@205
+    txna ApplicationArgs 5
+
+main_ternary_merge@206:
+    dig 15
+    swap
+    concat
+    bury 14
+    txn NumAppArgs
+    pushint 6
+    >
+    bz main_ternary_false@208
+    txna ApplicationArgs 6
+
+main_ternary_merge@209:
+    dig 14
+    swap
+    concat
+    bury 13
+    txn NumAppArgs
+    pushint 7
+    >
+    bz main_ternary_false@211
+    txna ApplicationArgs 7
+
+main_ternary_merge@212:
+    dig 13
+    swap
+    concat
+    bury 12
+    txn NumAppArgs
+    pushint 8
+    >
+    bz main_ternary_false@214
+    txna ApplicationArgs 8
+
+main_ternary_merge@215:
+    dig 12
+    swap
+    concat
+    bury 11
+    txn NumAppArgs
+    pushint 9
+    >
+    bz main_ternary_false@217
+    txna ApplicationArgs 9
+
+main_ternary_merge@218:
+    dig 11
+    swap
+    concat
+    bury 10
+    txn NumAppArgs
+    pushint 10
+    >
+    bz main_ternary_false@220
+    txna ApplicationArgs 10
+
+main_ternary_merge@221:
+    dig 10
+    swap
+    concat
+    bury 9
+    txn NumAppArgs
+    pushint 11
+    >
+    bz main_ternary_false@223
+    txna ApplicationArgs 11
+
+main_ternary_merge@224:
+    dig 9
+    swap
+    concat
+    bury 8
+    txn NumAppArgs
+    pushint 12
+    >
+    bz main_ternary_false@226
+    txna ApplicationArgs 12
+
+main_ternary_merge@227:
+    dig 8
+    swap
+    concat
+    bury 7
+    txn NumAppArgs
+    pushint 13
+    >
+    bz main_ternary_false@229
+    txna ApplicationArgs 13
+
+main_ternary_merge@230:
+    dig 7
+    swap
+    concat
+    bury 6
+    txn NumAppArgs
+    pushint 14
+    >
+    bz main_ternary_false@232
+    txna ApplicationArgs 14
+
+main_ternary_merge@233:
+    dig 6
+    swap
+    concat
+    bury 5
+    txn NumAppArgs
+    pushint 15
+    >
+    bz main_ternary_false@235
+    txna ApplicationArgs 15
+
+main_ternary_merge@236:
+    dig 5
+    swap
+    concat
+    bury 23
+
+main_ternary_merge@238:
+    global CurrentApplicationAddress
+    dig 23
+    substring 0 4
+    bytec 13 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    dig 26
+    dup
+    cover 4
+    uncover 3
+    dig 3
+    callsub AuthorityUtils.canCallWithDelay
+    pop
+    cover 2
+    global CurrentApplicationAddress
+    bytec 13 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 3
+    swap
+    callsub AuthorityUtils.canCallWithDelay
+    bury 3
+    pop
+    bnz main_after_if_else@242
+    dup
+    assert // AccessManagedUnauthorized
+    itxn_begin
+    dig 22
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    intc_1 // 0
+    itxn_field ApplicationID
+    pushbytes 0x669ac04b // method "consumeScheduledOp(address,byte[])void"
+    itxn_field ApplicationArgs
+    dig 24
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    pushbytes "_consumingSchedule"
+    intc_1 // 0
+    app_global_put
+
+main_after_if_else@242:
     intc_0 // 32
     bzero
     dup
-    bury 5
-    uncover 3
+    bury 4
+    dig 25
     concat
     dup
     len
@@ -371,14 +595,14 @@ main_eliminateDeficit_route@19:
     intc_0 // 32
     extract3
     dup
-    bury 5
+    bury 17
     dup
     sha256
     pushbytes "_assets"
     swap
     concat
     dup
-    bury 9
+    bury 23
     dup
     box_get
     bytec 11 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -387,40 +611,72 @@ main_eliminateDeficit_route@19:
     callsub AssetLogic.accrue
     pop
     box_put
-    swap
+    dig 19
     concat
     sha256
     bytec_2 // "_spokes"
     swap
     concat
     dup
-    bury 6
+    bury 21
     box_get
     bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     extract 84 25
     dup
-    bury 8
+    bury 23
     callsub WadRayMath.fromRayUp
-    b<
+    dig 26
+    b>
     bz main_ternary_false@181
-    dig 7
+    dig 25
     callsub WadRayMath.toRay
 
 main_ternary_merge@182:
-    dig 5
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_sender"
+    app_global_get_ex
+    pop
+    dig 17
     dup
+    uncover 2
+    concat
+    sha256
+    bytec_2 // "_spokes"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc 5 // 664
+    getbit
+    bytec 12 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    assert // SpokeNotActive
+    swap
+    dup
+    bytec_1 // 0x
+    b>
+    assert // InvalidAmount
+    dig 22
+    dup
+    cover 2
     box_get
     bytec 11 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
-    dig 2
+    dig 1
     callsub WadRayMath.fromRayUp
     callsub AssetLogic.toAddedSharesUp
     pop
     callsub SafeCast.toUint120
-    dig 1
+    dig 2
     box_get
     bytec 11 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
@@ -518,16 +774,15 @@ main_ternary_merge@182:
     concat
     swap
     concat
-    dig 3
+    dig 4
     swap
     box_put
     intc_3 // TMPL_UROS_MAIN_APP_ID
     bytec 4 // "__og_sender"
     app_global_get_ex
     pop
-    dig 6
-    dup
-    uncover 2
+    dig 5
+    swap
     concat
     sha256
     bytec_2 // "_spokes"
@@ -538,14 +793,14 @@ main_ternary_merge@182:
     cover 2
     select
     extract 55 15
-    dig 3
+    dig 2
     b>=
     assert // underflow
     intc_3 // TMPL_UROS_MAIN_APP_ID
     bytec 4 // "__og_sender"
     app_global_get_ex
     pop
-    dig 1
+    dig 5
     swap
     concat
     sha256
@@ -559,7 +814,7 @@ main_ternary_merge@182:
     extract 55 15
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    dig 3
+    dig 2
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -571,7 +826,7 @@ main_ternary_merge@182:
     bytec 4 // "__og_sender"
     app_global_get_ex
     pop
-    dig 2
+    dig 6
     swap
     concat
     sha256
@@ -582,17 +837,17 @@ main_ternary_merge@182:
     bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
-    pushint 664
+    intc 5 // 664
     getbit
     bytec 12 // 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     intc_3 // TMPL_UROS_MAIN_APP_ID
     bytec 4 // "__og_sender"
     app_global_get_ex
     pop
-    dig 3
+    dig 7
     swap
     concat
     sha256
@@ -610,56 +865,8 @@ main_ternary_merge@182:
     <=
     assert // overflow
     uncover 2
-    uncover 4
+    uncover 3
     b|
-    intc_3 // TMPL_UROS_MAIN_APP_ID
-    bytec 4 // "__og_sender"
-    app_global_get_ex
-    pop
-    dig 4
-    swap
-    concat
-    sha256
-    bytec_2 // "_spokes"
-    swap
-    concat
-    box_get
-    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    extract 84 25
-    intc_3 // TMPL_UROS_MAIN_APP_ID
-    bytec 4 // "__og_sender"
-    app_global_get_ex
-    pop
-    dig 5
-    swap
-    concat
-    sha256
-    bytec_2 // "_spokes"
-    swap
-    concat
-    box_get
-    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    extract 75 5
-    intc_3 // TMPL_UROS_MAIN_APP_ID
-    bytec 4 // "__og_sender"
-    app_global_get_ex
-    pop
-    dig 6
-    swap
-    concat
-    sha256
-    bytec_2 // "_spokes"
-    swap
-    concat
-    box_get
-    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    extract 0 15
     intc_3 // TMPL_UROS_MAIN_APP_ID
     bytec 4 // "__og_sender"
     app_global_get_ex
@@ -675,12 +882,7 @@ main_ternary_merge@182:
     bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
-    pushint 665
-    getbit
-    bytec 12 // 0x00
-    intc_2 // 0
-    uncover 2
-    setbit
+    extract 84 25
     intc_3 // TMPL_UROS_MAIN_APP_ID
     bytec 4 // "__og_sender"
     app_global_get_ex
@@ -696,7 +898,7 @@ main_ternary_merge@182:
     bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
-    extract 30 25
+    extract 75 5
     intc_3 // TMPL_UROS_MAIN_APP_ID
     bytec 4 // "__og_sender"
     app_global_get_ex
@@ -712,12 +914,65 @@ main_ternary_merge@182:
     bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
-    extract 15 15
+    extract 0 15
     intc_3 // TMPL_UROS_MAIN_APP_ID
     bytec 4 // "__og_sender"
     app_global_get_ex
     pop
     dig 10
+    swap
+    concat
+    sha256
+    bytec_2 // "_spokes"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    pushint 665
+    getbit
+    bytec 12 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_sender"
+    app_global_get_ex
+    pop
+    dig 11
+    swap
+    concat
+    sha256
+    bytec_2 // "_spokes"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 30 25
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_sender"
+    app_global_get_ex
+    pop
+    dig 12
+    swap
+    concat
+    sha256
+    bytec_2 // "_spokes"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 15 15
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_sender"
+    app_global_get_ex
+    pop
+    dig 13
     swap
     concat
     sha256
@@ -743,10 +998,10 @@ main_ternary_merge@182:
     swap
     concat
     swap
-    intc_2 // 0
+    intc_1 // 0
     getbit
     uncover 3
-    intc_1 // 1
+    intc_2 // 1
     uncover 2
     setbit
     concat
@@ -756,7 +1011,7 @@ main_ternary_merge@182:
     bytec 4 // "__og_sender"
     app_global_get_ex
     pop
-    uncover 2
+    uncover 5
     swap
     concat
     sha256
@@ -765,7 +1020,7 @@ main_ternary_merge@182:
     concat
     swap
     box_put
-    dig 1
+    dig 2
     box_get
     bytec 11 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
@@ -774,20 +1029,20 @@ main_ternary_merge@182:
     intc 4 // 278
     pushint 25
     extract3
-    dig 4
+    dig 3
     callsub SafeCast.toUint200
     dig 1
     b<=
     assert // underflow
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    dig 4
+    dig 3
     callsub SafeCast.toUint200
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    bytec 13 // 0xffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 14 // 0xffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     dig 1
@@ -865,10 +1120,10 @@ main_ternary_merge@182:
     concat
     swap
     concat
-    dig 3
+    dig 4
     swap
     box_put
-    dig 7
+    dig 23
     dup
     box_get
     bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -876,27 +1131,27 @@ main_ternary_merge@182:
     select
     dup
     extract 84 25
-    dig 6
+    dig 5
     callsub SafeCast.toUint200
     dig 1
     b<=
     assert // underflow
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    dig 6
+    dig 5
     callsub SafeCast.toUint200
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    bytec 13 // 0xffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 14 // 0xffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     dig 1
-    pushint 664
+    intc 5 // 664
     getbit
     bytec 12 // 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     dig 2
@@ -919,7 +1174,7 @@ main_ternary_merge@182:
     pushint 665
     getbit
     bytec 12 // 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     dig 7
@@ -942,27 +1197,27 @@ main_ternary_merge@182:
     swap
     concat
     swap
-    intc_2 // 0
+    intc_1 // 0
     getbit
     uncover 3
-    intc_1 // 1
+    intc_2 // 1
     uncover 2
     setbit
     concat
     swap
     concat
     box_put
-    dig 1
+    dig 2
     box_get
     bytec 11 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
-    dig 10
+    dig 28
     dup
     cover 3
     callsub AssetLogic.updateDrawnRate
     pop
-    uncover 3
+    uncover 4
     swap
     box_put
     intc_3 // TMPL_UROS_MAIN_APP_ID
@@ -975,7 +1230,7 @@ main_ternary_merge@182:
     <=
     assert // overflow
     uncover 3
-    dig 4
+    dig 6
     dup
     cover 2
     b|
@@ -991,7 +1246,7 @@ main_ternary_merge@182:
     uncover 5
     uncover 4
     concat
-    dig 7
+    dig 23
     concat
     swap
     concat
@@ -1011,12 +1266,99 @@ main_ternary_merge@182:
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_ternary_false@181:
-    dig 5
+    dig 21
     b main_ternary_merge@182
+
+main_ternary_false@235:
+    intc_1 // 0
+    bzero
+    b main_ternary_merge@236
+
+main_ternary_false@232:
+    intc_1 // 0
+    bzero
+    b main_ternary_merge@233
+
+main_ternary_false@229:
+    intc_1 // 0
+    bzero
+    b main_ternary_merge@230
+
+main_ternary_false@226:
+    intc_1 // 0
+    bzero
+    b main_ternary_merge@227
+
+main_ternary_false@223:
+    intc_1 // 0
+    bzero
+    b main_ternary_merge@224
+
+main_ternary_false@220:
+    intc_1 // 0
+    bzero
+    b main_ternary_merge@221
+
+main_ternary_false@217:
+    intc_1 // 0
+    bzero
+    b main_ternary_merge@218
+
+main_ternary_false@214:
+    intc_1 // 0
+    bzero
+    b main_ternary_merge@215
+
+main_ternary_false@211:
+    intc_1 // 0
+    bzero
+    b main_ternary_merge@212
+
+main_ternary_false@208:
+    intc_1 // 0
+    bzero
+    b main_ternary_merge@209
+
+main_ternary_false@205:
+    intc_1 // 0
+    bzero
+    b main_ternary_merge@206
+
+main_ternary_false@202:
+    intc_1 // 0
+    bzero
+    b main_ternary_merge@203
+
+main_ternary_false@199:
+    intc_1 // 0
+    bzero
+    b main_ternary_merge@200
+
+main_ternary_false@196:
+    intc_1 // 0
+    bzero
+    b main_ternary_merge@197
+
+main_ternary_false@193:
+    intc_1 // 0
+    bzero
+    b main_ternary_merge@194
+
+main_ternary_false@190:
+    intc_1 // 0
+    bzero
+    bury 18
+    b main_ternary_merge@191
+
+main_ternary_false@237:
+    intc_1 // 0
+    bzero
+    bury 23
+    b main_ternary_merge@238
 
 main_restore_route@17:
     txna ApplicationArgs 1
@@ -1036,7 +1378,7 @@ main_restore_route@17:
     assert // invalid number of bytes for PremiumDelta
     bytec 5 // 0x151f7c75
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_remove_route@15:
@@ -1057,7 +1399,7 @@ main_remove_route@15:
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     bytec 5 // 0x151f7c75
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_add_route@14:
@@ -1073,7 +1415,7 @@ main_add_route@14:
     assert // invalid number of bytes for arc4.uint256
     bytec 5 // 0x151f7c75
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_mintFeeShares_route@13:
@@ -1082,9 +1424,9 @@ main_mintFeeShares_route@13:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec 18 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 19 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_setInterestRateData_route@12:
@@ -1095,7 +1437,7 @@ main_setInterestRateData_route@12:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -1103,7 +1445,7 @@ main_setInterestRateData_route@12:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_addSpoke_route@10:
@@ -1122,7 +1464,7 @@ main_addSpoke_route@10:
     pushint 14
     ==
     assert // invalid number of bytes for SpokeConfig
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_updateAssetConfig_route@9:
@@ -1138,7 +1480,7 @@ main_updateAssetConfig_route@9:
     assert // invalid number of bytes for AssetConfig
     txna ApplicationArgs 3
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -1146,7 +1488,7 @@ main_updateAssetConfig_route@9:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_addAsset_route@8:
@@ -1172,7 +1514,7 @@ main_addAsset_route@8:
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 5
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -1180,9 +1522,9 @@ main_addAsset_route@8:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    bytec 18 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 19 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main___delegate_update_route@4:
@@ -1820,9 +2162,9 @@ AssetLogic.getDrawnRate:
     extract_uint64
     pushint 6
     itxn_field TypeEnum
-    intc_2 // 0
+    intc_1 // 0
     itxn_field OnCompletion
-    intc_2 // 0
+    intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationID
     pushbytes 0x19451065 // method "calculateInterestRate(uint256,uint256,uint256,uint256,uint256)uint256"
@@ -1846,14 +2188,14 @@ AssetLogic.getDrawnRate:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.AssetLogic.getUnrealizedFees(asset: bytes, drawnIndex: bytes) -> bytes, bytes:
 AssetLogic.getUnrealizedFees:
     proto 2 2
-    intc_2 // 0
+    intc_1 // 0
     frame_dig -2
     extract 118 15
     dup
     frame_dig -1
     b==
     bz AssetLogic.getUnrealizedFees_after_if_else@2
-    intc_2 // 0
+    intc_1 // 0
     itob
     frame_dig -2
     uncover 3
@@ -1870,7 +2212,7 @@ AssetLogic.getUnrealizedFees_after_if_else@2:
     bytec_1 // 0x
     b==
     bz AssetLogic.getUnrealizedFees_after_if_else@4
-    intc_2 // 0
+    intc_1 // 0
     itob
     frame_dig -2
     uncover 3
@@ -1936,6 +2278,61 @@ AssetLogic._calculateAggregatedOwedRay:
     retsub
 
 
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.AuthorityUtils.canCallWithDelay(authority: bytes, caller: bytes, target: bytes, selector: bytes) -> uint64, uint64:
+AuthorityUtils.canCallWithDelay:
+    proto 4 2
+    load 0
+    pushint 8
+    bzero
+    swap
+    bytec 13 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 0
+    bytec 13 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 32
+    dup
+    extract 0 32
+    bytec_1 // 0x
+    b!=
+    dig 1
+    extract 32 32
+    bytec 20 // 0xffffffff
+    b&
+    dig 3
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    pushint 8
+    extract3
+    dup
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000100000000
+    b/
+    bytec_1 // 0x
+    b==
+    bytec_1 // 0x
+    bytec 6 // 0x01
+    uncover 2
+    select
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 20 // 0xffffffff
+    b&
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    uncover 2
+    store 0
+    retsub
+
+
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Math.mul512(a: bytes, b: bytes) -> bytes, bytes:
 Math.mul512:
     proto 2 2
@@ -1944,7 +2341,7 @@ Math.mul512:
     frame_dig -1
     b*
     dup
-    bytec 14 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 15 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b%
     swap
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -1993,7 +2390,7 @@ Math.ternary:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Math.mulDiv(3)(x: bytes, y: bytes, denominator: bytes) -> bytes:
 Math.mulDiv:
     proto 3 1
-    intc_2 // 0
+    intc_1 // 0
     dup
     bytec_1 // ""
     frame_dig -3
@@ -2244,7 +2641,7 @@ Math.mulDiv_ternary_false@6:
     bytec_1 // 0x
     b>
     bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Math.mulDiv(4)_bool_false@3
-    intc_1 // 1
+    intc_2 // 1
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Math.mulDiv(4)_bool_merge@4:
     callsub SafeCast.toUint
@@ -2254,7 +2651,7 @@ Math.mulDiv_ternary_false@6:
     retsub
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Math.mulDiv(4)_bool_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Math.mulDiv(4)_bool_merge@4
 
 
@@ -2266,7 +2663,7 @@ Math.unsignedRoundsUp:
     &
     pushint 2
     %
-    intc_1 // 1
+    intc_2 // 1
     ==
     retsub
 
@@ -2327,7 +2724,7 @@ PercentageMath.percentMulDown:
     bytec_1 // 0x
     b!=
     bz PercentageMath.percentMulDown_ternary_false@2
-    bytec 14 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 15 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     frame_dig -1
     b/
 
@@ -2400,7 +2797,7 @@ Premium.calculatePremiumRay:
     bz Premium.calculatePremiumRay_bool_false@3
 
 Premium.calculatePremiumRay_bool_true@2:
-    intc_1 // 1
+    intc_2 // 1
 
 Premium.calculatePremiumRay_bool_merge@4:
     assert // signed arithmetic overflow
@@ -2417,7 +2814,7 @@ Premium.calculatePremiumRay_bool_merge@4:
     retsub
 
 Premium.calculatePremiumRay_bool_false@3:
-    intc_2 // 0
+    intc_1 // 0
     b Premium.calculatePremiumRay_bool_merge@4
 
 
@@ -2425,12 +2822,12 @@ Premium.calculatePremiumRay_bool_false@3:
 SafeCast.toUint200:
     proto 1 1
     frame_dig -1
-    bytec 13 // 0xffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 14 // 0xffffffffffffffffffffffffffffffffffffffffffffffffff
     b>
     !
     assert // SafeCastOverflowedUintDowncast
     frame_dig -1
-    bytec 13 // 0xffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 14 // 0xffffffffffffffffffffffffffffffffffffffffffffffffff
     b&
     retsub
 
@@ -2453,12 +2850,12 @@ SafeCast.toUint120:
 SafeCast.toUint96:
     proto 1 1
     frame_dig -1
-    bytec 19 // 0xffffffffffffffffffffffff
+    bytec 21 // 0xffffffffffffffffffffffff
     b>
     !
     assert // SafeCastOverflowedUintDowncast
     frame_dig -1
-    bytec 19 // 0xffffffffffffffffffffffff
+    bytec 21 // 0xffffffffffffffffffffffff
     b&
     retsub
 
@@ -2531,14 +2928,14 @@ SafeCast.toUint:
 SharesMath.toSharesUp:
     proto 3 1
     frame_dig -1
-    bytec 20 // 0x0f4240
+    bytec 22 // 0x0f4240
     b+
     frame_dig -2
-    bytec 20 // 0x0f4240
+    bytec 22 // 0x0f4240
     b+
     frame_dig -3
     cover 2
-    intc_1 // 1
+    intc_2 // 1
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/Hub.sol.Math.mulDiv(4)
     retsub
 
@@ -2558,7 +2955,7 @@ WadRayMath.rayMulUp:
     bytec_1 // 0x
     b!=
     bz WadRayMath.rayMulUp_ternary_false@2
-    bytec 14 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 15 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     frame_dig -1
     b/
 

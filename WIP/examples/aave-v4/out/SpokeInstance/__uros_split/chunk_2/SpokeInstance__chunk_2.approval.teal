@@ -3,18 +3,19 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.SpokeInstance.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 TMPL_UROS_MAIN_APP_ID
-    bytecblock 0x151f7c75 0x "__og_value" 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "_reserves" 0x01 "_userPositions" 0x8000000000000000000000000000000000000000000000000000000000000000 0x033b2e3c9fd0803ce8000000 0x00050000000000 0x0000000000000000000000000000000000000000000000000000000000000080 "_positionStatus" 0x151f7c750000000000000000 0x0000000000000000000000000000000000000000000000000000000000000002
+    intcblock 32 1 0 8 TMPL_UROS_MAIN_APP_ID 255 TMPL_PURE_HELPER_LibBit_popCount_1_APP_ID TMPL_PURE_HELPER_LibBit_fls_2_APP_ID TMPL_PURE_HELPER_Math_mulDiv_4_APP_ID
+    bytecblock 0x 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x01 "__og_value" 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x00050000000000 "_reserves" "_userPositions" 0x0000000000000000000000000000000000000000000000000000000000000002 0x8000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x033b2e3c9fd0803ce8000000 "map" 0x00 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x80 0x0000000000000000000000000000000000000000000000000000000000000080 "_positionStatus" 0x0100 "_positionManager" 0x00030000 0x8b7b4745 0x151f7c750000000000000000 0x0000000000000000000000000000000000000000000000000000000000000000 0xffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0100000000000000000000000000000000000000000000000000000000ffffffff 0x0000000100000000000000000000000000000000000000000000000000000000 0x51381afb 0x03b7e170 0x010000000000000000000000000000000000000000000000000000000000000100 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 0x3f31d978 0x5af3107a4000
     intc_2 // 0
-    bytec_1 // ""
-    dupn 3
+    dupn 19
+    bytec_0 // ""
+    dupn 5
     pushint 4096
     bzero
     dup
     store 5
     store 0
     load 0
-    bytec 11 // 0x0000000000000000000000000000000000000000000000000000000000000080
+    bytec 17 // 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
     txn ApplicationID
@@ -40,7 +41,7 @@ main_after_if_else@2:
     err
 
 main_SET_USER_POSITION_MANAGERS_TYPEHASH_route@10:
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -71,7 +72,7 @@ main_nonces_route@61:
     pushint 24
     ==
     assert // invalid number of bytes for arc4.uint192
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -82,7 +83,7 @@ main_useNonce_route@60:
     pushint 24
     ==
     assert // invalid number of bytes for arc4.uint192
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -106,7 +107,7 @@ main_extSloads_route@57:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 32>>
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -117,7 +118,7 @@ main_extSload_route@56:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -128,7 +129,7 @@ main_multicall_route@55:
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 6
+    bury 8
     pushint 2
     *
     bury 3
@@ -136,20 +137,20 @@ main_multicall_route@55:
     len
     bury 2
     extract 2 0
-    bury 5
+    bury 24
     intc_2 // 0
     bury 3
 
 main_for_header@87:
     dig 2
-    dig 4
+    dig 6
     <
     bz main_after_for@89
     dig 2
     dup
     pushint 2
     *
-    dig 6
+    dig 25
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
@@ -180,32 +181,88 @@ main_after_for@89:
     dig 1
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint8>>
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     log
     intc_1 // 1
     return
 
 main_isPositionManager_route@53:
     txna ApplicationArgs 1
+    dup
+    bury 8
+    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
+    dup
+    bury 16
+    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    intc_3 // TMPL_UROS_MAIN_APP_ID
-    bytec_2 // "__og_value"
+    intc 4 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_value"
     app_global_get_ex
     pop
     !
     assert // not payable
-    pushbytes 0x151f7c7500
+    ==
+    bz main_after_if_else@92
+    intc_1 // 1
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.SpokeInstance._isPositionManager@97:
+    bytec 14 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
     log
     intc_1 // 1
     return
+
+main_after_if_else@92:
+    dig 13
+    sha256
+    bytec 20 // "_positionManager"
+    swap
+    concat
+    box_get
+    bytec 21 // 0x00030000
+    cover 2
+    select
+    pushint 16
+    getbit
+    bytec 14 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    intc_2 // 0
+    getbit
+    bz main_bool_false@95
+    dig 6
+    sha256
+    pushbytes "approval"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    bz main_bool_false@95
+    intc_1 // 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.SpokeInstance._isPositionManager@97
+
+main_bool_false@95:
+    intc_2 // 0
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.SpokeInstance._isPositionManager@97
 
 main_isPositionManagerActive_route@52:
     txna ApplicationArgs 1
@@ -214,27 +271,27 @@ main_isPositionManagerActive_route@52:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    intc_3 // TMPL_UROS_MAIN_APP_ID
-    bytec_2 // "__og_value"
+    intc 4 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_value"
     app_global_get_ex
     pop
     !
     assert // not payable
     sha256
-    pushbytes "_positionManager"
+    bytec 20 // "_positionManager"
     swap
     concat
     box_get
-    pushbytes 0x00030000
+    bytec 21 // 0x00030000
     cover 2
     select
     pushint 16
     getbit
-    pushbytes 0x00
+    bytec 14 // 0x00
     intc_2 // 0
     uncover 2
     setbit
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -257,19 +314,22 @@ main_getLiquidationBonus_route@51:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     log
     intc_1 // 1
     return
 
 main_getUserAccountData_route@50:
     txna ApplicationArgs 1
+    dup
+    bury 8
+    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    intc_3 // TMPL_UROS_MAIN_APP_ID
-    bytec_2 // "__og_value"
+    intc 4 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_value"
     app_global_get_ex
     pop
     !
@@ -277,19 +337,758 @@ main_getUserAccountData_route@50:
     load 0
     pushint 24
     bzero
-    dig 1
+    dup
+    cover 2
+    bury 12
+    dup
     pushint 88
     extract_uint64
     pushint 224
     +
     itob
+    dig 2
+    swap
     concat
     replace2 64
     store 0
-    bytec_0 // 0x151f7c75
+    load 0
+    store 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bury 28
+    load 0
+    dup
+    pushint 88
+    extract_uint64
+    pushint 224
+    +
+    itob
+    uncover 2
+    swap
+    concat
+    replace2 64
+    store 0
+    intc_2 // 0
+    pushbytes "_reserveCount"
+    app_global_get_ex
+    swap
+    dup
+    cover 2
+    bury 16
+    assert // check _reserveCount exists
+    swap
+    sha256
+    bytec 18 // "_positionStatus"
+    swap
+    concat
+    dup
+    bury 19
+    intc_2 // 0
+    itob
+    bury 20
+    box_get
+    bytec 6 // 0x00050000000000
+    cover 2
+    select
+    swap
+    callsub PositionStatusMap.collateralCount
+    callsub KeyValueList.init
+    bury 20
+
+main_while_top@101:
+    dig 16
+    dup
+    box_get
+    bytec 6 // 0x00050000000000
+    cover 2
+    select
+    dig 14
+    dup
+    cover 3
+    callsub PositionStatusMap.next
+    popn 3
+    dup
+    box_get
+    bytec 6 // 0x00050000000000
+    cover 2
+    select
+    dig 2
+    callsub PositionStatusMap.next
+    bury 8
+    popn 2
+    dup
+    box_get
+    bytec 6 // 0x00050000000000
+    cover 2
+    select
+    dig 2
+    callsub PositionStatusMap.next
+    pop
+    bury 8
+    pop
+    box_get
+    bytec 6 // 0x00050000000000
+    cover 2
+    select
+    swap
+    callsub PositionStatusMap.next
+    popn 2
+    dup
+    bury 14
+    bytec 11 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b==
+    bz main_after_if_else@103
+    dig 25
+    extract 128 32
+    dup
+    bytec_0 // 0x
+    b>
+    bnz main_if_body@115
+    dig 26
+    dup
+    extract 160 32
+    dig 1
+    extract 32 32
+    dig 2
+    extract 192 32
+    dig 3
+    extract 0 32
+    uncover 4
+    extract 96 32
+    swap
+    uncover 3
+    concat
+    bytec 11 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    concat
+    swap
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bury 26
+
+main_after_if_else@117:
+    dig 25
+    extract 96 32
+    dup
+    bury 26
+    bytec_0 // 0x
+    b>
+    bz main_after_if_else@119
+    dig 25
+    dup
+    extract 160 32
+    dig 1
+    extract 32 32
+    callsub WadRayMath.bpsToWad
+    dig 27
+    dup
+    cover 3
+    b/
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    dig 3
+    extract 192 32
+    dig 4
+    extract 64 32
+    dig 5
+    extract 0 32
+    uncover 6
+    extract 128 32
+    swap
+    uncover 4
+    concat
+    uncover 2
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bury 26
+
+main_after_if_else@119:
+    dig 19
+    callsub KeyValueList.sortByKey
+    bury 20
+    dig 25
+    extract 128 32
+    callsub WadRayMath.fromRayUp
+    dup
+    bury 9
+    bury 19
+
+main_while_top@120:
+    dig 19
+    callsub KeyValueList.length
+    bury 21
+    dig 18
+    b>
+    bz main_after_while@123
+    dig 18
+    bytec_0 // 0x
+    b==
+    bnz main_after_while@123
+    dig 19
+    dig 18
+    dup
+    cover 2
+    callsub KeyValueList.uncheckedAt
+    cover 2
+    pop
+    cover 2
+    dig 1
+    callsub KeyValueList.uncheckedAt
+    bury 24
+    bury 1
+    dig 21
+    dup
+    cover 3
+    callsub MathUtils.min
+    dig 29
+    dup
+    extract 160 32
+    dig 1
+    extract 32 32
+    dig 2
+    extract 192 32
+    dig 3
+    extract 64 32
+    dig 4
+    extract 0 32
+    dig 6
+    uncover 10
+    b*
+    b+
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    dig 5
+    extract 96 32
+    uncover 6
+    extract 128 32
+    uncover 2
+    uncover 5
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bury 29
+    uncover 2
+    swap
+    callsub MathUtils.uncheckedSub
+    bury 20
+    bytec_3 // 0x01
+    b+
+    bury 18
+    b main_while_top@120
+
+main_after_while@123:
+    dig 18
+    dig 8
+    b<
+    bz main_after_if_else@125
+    dig 25
+    dup
+    extract 160 32
+    dig 1
+    extract 32 32
+    dig 2
+    extract 192 32
+    dig 3
+    extract 64 32
+    dig 4
+    extract 0 32
+    dig 13
+    dig 25
+    callsub MathUtils.uncheckedSub
+    callsub MathUtils.divUp
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    dig 5
+    extract 96 32
+    uncover 6
+    extract 128 32
+    uncover 2
+    uncover 5
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bury 26
+
+main_after_if_else@125:
+    bytec_2 // 0x151f7c75
+    dig 26
+    concat
     log
     intc_1 // 1
     return
+
+main_if_body@115:
+    dig 26
+    dup
+    extract 160 32
+    dig 1
+    extract 32 32
+    dig 2
+    extract 192 32
+    dig 1
+    callsub WadRayMath.bpsToWad
+    bytec 12 // 0x033b2e3c9fd0803ce8000000
+    uncover 6
+    dup
+    cover 5
+    intc_2 // 0
+    callsub Math.mulDiv
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    dig 5
+    extract 0 32
+    uncover 6
+    extract 96 32
+    swap
+    uncover 4
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 2
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bury 26
+    b main_after_if_else@117
+
+main_after_if_else@103:
+    itxn_begin
+    intc_0 // 32
+    bzero
+    dup
+    bury 12
+    dig 13
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    bury 11
+    intc_2 // 0
+    pushbytes "ORACLE"
+    app_global_get_ex
+    assert // check ORACLE exists
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x7a8a2fa9 // method "getReservePrice(uint256)uint256"
+    itxn_field ApplicationArgs
+    dup
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    bury 23
+    sha256
+    bytec 7 // "_reserves"
+    swap
+    concat
+    dup
+    bury 16
+    box_get
+    bytec 15 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    pushint 66
+    getbyte
+    itob
+    bury 23
+    dig 3
+    bz main_after_if_else@112
+    dig 6
+    dig 10
+    dup
+    cover 2
+    concat
+    sha256
+    bytec 8 // "_userPositions"
+    swap
+    concat
+    dup
+    bury 18
+    box_get
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    pushint 70
+    extract_uint32
+    itob
+    concat
+    sha256
+    pushbytes "_dynamicConfig"
+    swap
+    concat
+    box_get
+    pushbytes 0x0000000000000000
+    cover 2
+    select
+    intc_2 // 0
+    extract_uint16
+    itob
+    dup
+    bury 22
+    bytec_0 // 0x
+    b>
+    bz main_after_if_else@112
+    dig 15
+    box_get
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 55 15
+    dup
+    bury 13
+    bytec_0 // 0x
+    b>
+    bz main_after_if_else@112
+    itxn_begin
+    dig 14
+    box_get
+    bytec 15 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    pushint 64
+    extract_uint16
+    itob
+    dig 10
+    swap
+    concat
+    dig 12
+    dup
+    cover 3
+    dig 15
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 32
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 22 // method "previewRemoveByShares(uint256,uint256)uint256"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dig 25
+    dig 25
+    callsub SpokeUtils.toValue
+    dig 28
+    dup
+    extract 160 32
+    dig 1
+    extract 32 32
+    dig 2
+    extract 192 32
+    dig 3
+    extract 64 32
+    dig 4
+    extract 0 32
+    dig 5
+    extract 96 32
+    dig 7
+    b+
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 9
+    b|
+    uncover 6
+    extract 128 32
+    uncover 2
+    uncover 5
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    dup
+    extract 160 32
+    uncover 3
+    extract 67 3
+    btoi
+    itob
+    dig 24
+    dig 2
+    uncover 2
+    dig 5
+    callsub KeyValueList.add
+    bury 24
+    dig 1
+    extract 32 32
+    dig 25
+    uncover 4
+    b*
+    b+
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 3
+    b|
+    dig 2
+    extract 192 32
+    dig 3
+    extract 64 32
+    dig 4
+    extract 0 32
+    dig 5
+    extract 96 32
+    uncover 6
+    extract 128 32
+    uncover 2
+    uncover 5
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    dup
+    extract 160 32
+    intc_1 // 1
+    itob
+    callsub MathUtils.uncheckedAdd
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    dig 1
+    extract 32 32
+    dig 2
+    extract 192 32
+    dig 3
+    extract 64 32
+    dig 4
+    extract 0 32
+    dig 5
+    extract 96 32
+    uncover 6
+    extract 128 32
+    uncover 2
+    uncover 5
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bury 26
+
+main_after_if_else@112:
+    dig 4
+    bz main_while_top@101
+    dig 6
+    dig 10
+    concat
+    sha256
+    bytec 8 // "_userPositions"
+    swap
+    concat
+    box_get
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dig 15
+    box_get
+    bytec 15 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 32 32
+    swap
+    pushint 64
+    extract_uint16
+    itob
+    callsub UserPositionUtils.getDebtComponents
+    dup
+    extract 0 32
+    dig 1
+    extract 64 32
+    b*
+    swap
+    extract 32 32
+    b+
+    dig 26
+    dup
+    extract 160 32
+    dig 1
+    extract 32 32
+    dig 2
+    extract 192 32
+    dig 3
+    extract 64 32
+    dig 4
+    extract 0 32
+    dig 5
+    extract 96 32
+    uncover 6
+    extract 128 32
+    uncover 7
+    dig 30
+    dig 30
+    callsub SpokeUtils.toValue
+    b+
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 17
+    dup
+    cover 6
+    b|
+    uncover 2
+    uncover 6
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 3
+    concat
+    swap
+    concat
+    dup
+    extract 160 32
+    dig 1
+    extract 32 32
+    dig 2
+    extract 192 32
+    intc_1 // 1
+    itob
+    callsub MathUtils.uncheckedAdd
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    b|
+    dig 3
+    extract 64 32
+    dig 4
+    extract 0 32
+    dig 5
+    extract 96 32
+    uncover 6
+    extract 128 32
+    uncover 2
+    uncover 5
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bury 26
+    b main_while_top@101
 
 main_getUserLastRiskPremium_route@49:
     txna ApplicationArgs 1
@@ -298,18 +1097,18 @@ main_getUserLastRiskPremium_route@49:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    intc_3 // TMPL_UROS_MAIN_APP_ID
-    bytec_2 // "__og_value"
+    intc 4 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_value"
     app_global_get_ex
     pop
     !
     assert // not payable
     sha256
-    bytec 12 // "_positionStatus"
+    bytec 18 // "_positionStatus"
     swap
     concat
     box_get
-    bytec 10 // 0x00050000000000
+    bytec 6 // 0x00050000000000
     cover 2
     select
     extract 2 3
@@ -318,7 +1117,7 @@ main_getUserLastRiskPremium_route@49:
     intc_0 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -338,8 +1137,8 @@ main_getUserPosition_route@48:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    intc_3 // TMPL_UROS_MAIN_APP_ID
-    bytec_2 // "__og_value"
+    intc 4 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_value"
     app_global_get_ex
     pop
     !
@@ -356,7 +1155,7 @@ main_getUserPosition_route@48:
     concat
     replace2 64
     store 0
-    bytec 5 // "_reserves"
+    bytec 7 // "_reserves"
     dig 2
     callsub SpokeUtils.get
     pop
@@ -372,14 +1171,14 @@ main_getUserPosition_route@48:
     extract3
     concat
     sha256
-    bytec 7 // "_userPositions"
+    bytec 8 // "_userPositions"
     swap
     concat
     box_get
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -399,13 +1198,13 @@ main_getUserPremiumDebtRay_route@47:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    intc_3 // TMPL_UROS_MAIN_APP_ID
-    bytec_2 // "__og_value"
+    intc 4 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_value"
     app_global_get_ex
     pop
     !
     assert // not payable
-    bytec 5 // "_reserves"
+    bytec 7 // "_reserves"
     dig 2
     callsub SpokeUtils.get
     intc_0 // 32
@@ -423,11 +1222,11 @@ main_getUserPremiumDebtRay_route@47:
     swap
     concat
     sha256
-    bytec 7 // "_userPositions"
+    bytec 8 // "_userPositions"
     swap
     concat
     box_get
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dig 2
@@ -444,7 +1243,7 @@ main_getUserPremiumDebtRay_route@47:
     <=
     assert // overflow
     b|
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -464,13 +1263,13 @@ main_getUserTotalDebt_route@46:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    intc_3 // TMPL_UROS_MAIN_APP_ID
-    bytec_2 // "__og_value"
+    intc 4 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_value"
     app_global_get_ex
     pop
     !
     assert // not payable
-    bytec 5 // "_reserves"
+    bytec 7 // "_reserves"
     dig 2
     callsub SpokeUtils.get
     intc_0 // 32
@@ -488,12 +1287,12 @@ main_getUserTotalDebt_route@46:
     swap
     concat
     sha256
-    bytec 7 // "_userPositions"
+    bytec 8 // "_userPositions"
     swap
     concat
     dup
     box_get
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dig 3
@@ -510,7 +1309,7 @@ main_getUserTotalDebt_route@46:
     cover 2
     uncover 3
     box_get
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     cover 2
@@ -524,7 +1323,7 @@ main_getUserTotalDebt_route@46:
     <=
     assert // overflow
     b|
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -544,13 +1343,13 @@ main_getUserDebt_route@45:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    intc_3 // TMPL_UROS_MAIN_APP_ID
-    bytec_2 // "__og_value"
+    intc 4 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_value"
     app_global_get_ex
     pop
     !
     assert // not payable
-    bytec 5 // "_reserves"
+    bytec 7 // "_reserves"
     dig 2
     callsub SpokeUtils.get
     intc_0 // 32
@@ -568,12 +1367,12 @@ main_getUserDebt_route@45:
     swap
     concat
     sha256
-    bytec 7 // "_userPositions"
+    bytec 8 // "_userPositions"
     swap
     concat
     dup
     box_get
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dig 3
@@ -590,7 +1389,7 @@ main_getUserDebt_route@45:
     cover 2
     uncover 3
     box_get
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     cover 2
@@ -614,7 +1413,7 @@ main_getUserDebt_route@45:
     uncover 2
     b|
     concat
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -634,13 +1433,13 @@ main_getUserSuppliedShares_route@44:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    intc_3 // TMPL_UROS_MAIN_APP_ID
-    bytec_2 // "__og_value"
+    intc 4 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_value"
     app_global_get_ex
     pop
     !
     assert // not payable
-    bytec 5 // "_reserves"
+    bytec 7 // "_reserves"
     dig 2
     callsub SpokeUtils.get
     pop
@@ -659,16 +1458,16 @@ main_getUserSuppliedShares_route@44:
     swap
     concat
     sha256
-    bytec 7 // "_userPositions"
+    bytec 8 // "_userPositions"
     swap
     concat
     box_get
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     extract 55 15
     b|
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -688,13 +1487,13 @@ main_getUserSuppliedAssets_route@43:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    intc_3 // TMPL_UROS_MAIN_APP_ID
-    bytec_2 // "__og_value"
+    intc 4 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_value"
     app_global_get_ex
     pop
     !
     assert // not payable
-    bytec 5 // "_reserves"
+    bytec 7 // "_reserves"
     dig 2
     callsub SpokeUtils.get
     itxn_begin
@@ -720,11 +1519,11 @@ main_getUserSuppliedAssets_route@43:
     swap
     concat
     sha256
-    bytec 7 // "_userPositions"
+    bytec 8 // "_userPositions"
     swap
     concat
     box_get
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     extract 55 15
@@ -748,7 +1547,7 @@ main_getUserSuppliedAssets_route@43:
     intc_2 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    pushbytes 0x8b7b4745 // method "previewRemoveByShares(uint256,uint256)uint256"
+    bytec 22 // method "previewRemoveByShares(uint256,uint256)uint256"
     itxn_field ApplicationArgs
     uncover 2
     itxn_field ApplicationArgs
@@ -762,7 +1561,7 @@ main_getUserSuppliedAssets_route@43:
     <=
     assert // overflow
     b|
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -782,42 +1581,42 @@ main_getUserReserveStatus_route@42:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    intc_3 // TMPL_UROS_MAIN_APP_ID
-    bytec_2 // "__og_value"
+    intc 4 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_value"
     app_global_get_ex
     pop
     !
     assert // not payable
-    bytec 5 // "_reserves"
+    bytec 7 // "_reserves"
     dig 2
     callsub SpokeUtils.get
     pop
     sha256
-    bytec 12 // "_positionStatus"
+    bytec 18 // "_positionStatus"
     swap
     concat
     dup
     box_get
-    bytec 10 // 0x00050000000000
+    bytec 6 // 0x00050000000000
     cover 2
     select
     dig 2
     callsub PositionStatusMap.isUsingAsCollateral
     swap
     box_get
-    bytec 10 // 0x00050000000000
+    bytec 6 // 0x00050000000000
     cover 2
     select
     uncover 2
     callsub PositionStatusMap.isBorrowing
-    pushbytes 0x00
+    bytec 14 // 0x00
     intc_2 // 0
     uncover 3
     setbit
     intc_1 // 1
     uncover 2
     setbit
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -832,10 +1631,10 @@ main_getDynamicReserveConfig_route@41:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     len
-    pushint 8
+    intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -846,10 +1645,10 @@ main_getReserveConfig_route@40:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_1 // 0x
+    bytec_0 // 0x
     intc_2 // 0
     getbit
-    bytec_1 // 0x
+    bytec_0 // 0x
     intc_1 // 1
     dig 2
     setbit
@@ -859,7 +1658,7 @@ main_getReserveConfig_route@40:
     pushint 3
     uncover 2
     setbit
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -872,7 +1671,7 @@ main_getReserveSuppliedAssets_route@34:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -888,7 +1687,7 @@ main_getReserveId_route@38:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -916,7 +1715,7 @@ main_permitReserve_route@31:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 5
     len
-    pushint 8
+    intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     txna ApplicationArgs 6
@@ -1059,12 +1858,12 @@ main_updateDynamicReserveConfig_route@18:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     len
-    pushint 8
+    intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     txna ApplicationArgs 3
     len
-    pushint 8
+    intc_3 // 8
     ==
     assert // invalid number of bytes for DynamicReserveConfig
     intc_1 // 1
@@ -1078,10 +1877,10 @@ main_addDynamicReserveConfig_route@17:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     len
-    pushint 8
+    intc_3 // 8
     ==
     assert // invalid number of bytes for DynamicReserveConfig
-    bytec 13 // 0x151f7c750000000000000000
+    bytec 23 // 0x151f7c750000000000000000
     log
     intc_1 // 1
     return
@@ -1137,7 +1936,7 @@ main_addReserve_route@14:
     assert // invalid number of bytes for ReserveConfig
     txna ApplicationArgs 5
     len
-    pushint 8
+    intc_3 // 8
     ==
     assert // invalid number of bytes for DynamicReserveConfig
     pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1155,7 +1954,7 @@ main_updateLiquidationConfig_route@13:
     return
 
 main_SPOKE_REVISION_route@9:
-    bytec 13 // 0x151f7c750000000000000000
+    bytec 23 // 0x151f7c750000000000000000
     log
     intc_1 // 1
     return
@@ -1168,7 +1967,7 @@ main___postInit_route@7:
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     len
-    pushint 8
+    intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     intc_1 // 1
@@ -1183,6 +1982,492 @@ main___delegate_update_route@4:
     return
 
 
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.Arrays.unsafeMemoryAccess(2)_2(arr: bytes, pos: bytes) -> bytes, bytes:
+Arrays.unsafeMemoryAccess:
+    proto 2 2
+    load 0
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    pushbytes 0x20
+    b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0x20
+    b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dig 1
+    swap
+    intc_0 // 32
+    extract3
+    swap
+    store 0
+    frame_dig -2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.KeyValueList.init(size: bytes) -> bytes:
+KeyValueList.init:
+    proto 1 1
+    pushbytes 0x0000
+    intc_2 // 0
+
+KeyValueList.init_while_top@1:
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    frame_dig 1
+    >
+    bz KeyValueList.init_after_while@3
+    frame_dig 0
+    dup
+    intc_2 // 0
+    extract_uint16
+    intc_1 // 1
+    +
+    itob
+    extract 6 0
+    replace2 0
+    bytec 24 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat
+    frame_bury 0
+    frame_dig 1
+    intc_1 // 1
+    +
+    frame_bury 1
+    b KeyValueList.init_while_top@1
+
+KeyValueList.init_after_while@3:
+    pushbytes 0x0002
+    frame_dig 0
+    concat
+    frame_bury 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.KeyValueList.length(self: bytes) -> bytes, bytes:
+KeyValueList.length:
+    proto 1 2
+    frame_dig -1
+    intc_2 // 0
+    extract_uint16
+    frame_dig -1
+    len
+    frame_dig -1
+    cover 2
+    substring3
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    itob
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.KeyValueList.add(self: bytes, idx: bytes, key: bytes, value: bytes) -> bytes:
+KeyValueList.add:
+    proto 4 1
+    frame_dig -2
+    bytec 25 // 0xffffffff
+    b<
+    bz KeyValueList.add_bool_false@3
+    frame_dig -1
+    bytec 26 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<
+    bz KeyValueList.add_bool_false@3
+    intc_1 // 1
+
+KeyValueList.add_bool_merge@4:
+    assert // MaxDataSizeExceeded
+    frame_dig -2
+    frame_dig -1
+    callsub KeyValueList.pack
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    intc_3 // 8
+    bzero
+    frame_dig -3
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    frame_dig -4
+    intc_2 // 0
+    extract_uint16
+    frame_dig -4
+    len
+    frame_dig -4
+    dig 2
+    uncover 2
+    substring3
+    uncover 2
+    intc_0 // 32
+    *
+    pushint 2
+    +
+    uncover 3
+    replace3 // on error: index access is out of bounds
+    frame_dig -4
+    intc_2 // 0
+    uncover 3
+    extract3
+    swap
+    concat
+    dup
+    frame_bury -4
+    retsub
+
+KeyValueList.add_bool_false@3:
+    intc_2 // 0
+    b KeyValueList.add_bool_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.KeyValueList.uncheckedAt(self: bytes, idx: bytes) -> bytes, bytes, bytes:
+KeyValueList.uncheckedAt:
+    proto 2 3
+    frame_dig -2
+    intc_2 // 0
+    extract_uint16
+    frame_dig -2
+    len
+    frame_dig -2
+    cover 2
+    substring3
+    frame_dig -1
+    callsub Arrays.unsafeMemoryAccess
+    pop
+    callsub KeyValueList.unpack
+    frame_dig -2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.KeyValueList.sortByKey(self: bytes) -> bytes:
+KeyValueList.sortByKey:
+    proto 1 1
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.KeyValueList.pack(key: bytes, value: bytes) -> bytes:
+KeyValueList.pack:
+    proto 2 1
+    bytec 25 // 0xffffffff
+    frame_dig -2
+    b>=
+    assert // underflow
+    bytec 27 // 0x0100000000000000000000000000000000000000000000000000000000ffffffff
+    frame_dig -2
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 28 // 0x0000000100000000000000000000000000000000000000000000000000000000
+    b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    b|
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.KeyValueList.unpackKey(data: bytes) -> bytes:
+KeyValueList.unpackKey:
+    proto 1 1
+    frame_dig -1
+    bytec 28 // 0x0000000100000000000000000000000000000000000000000000000000000000
+    b/
+    bytec 27 // 0x0100000000000000000000000000000000000000000000000000000000ffffffff
+    swap
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.KeyValueList.unpackValue(data: bytes) -> bytes:
+KeyValueList.unpackValue:
+    proto 1 1
+    frame_dig -1
+    bytec 26 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.KeyValueList.unpack(data: bytes) -> bytes, bytes:
+KeyValueList.unpack:
+    proto 1 2
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    bz KeyValueList.unpack_after_if_else@2
+    intc_2 // 0
+    itob
+    dup
+    retsub
+
+KeyValueList.unpack_after_if_else@2:
+    frame_dig -1
+    callsub KeyValueList.unpackKey
+    frame_dig -1
+    callsub KeyValueList.unpackValue
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.Math.mulDiv(4)(x: bytes, y: bytes, denominator: bytes, rounding: uint64) -> bytes:
+Math.mulDiv:
+    proto 4 1
+    frame_dig -2
+    bytec_0 // 0x
+    b!=
+    assert // modulo by zero
+    itxn_begin
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    frame_dig -3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc 8 // TMPL_PURE_HELPER_Math_mulDiv_4_APP_ID
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x3261697e // method "Math.mulDiv(uint256,uint256,uint256)uint256"
+    itxn_field ApplicationArgs
+    uncover 2
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    frame_dig -1
+    callsub Math.unsignedRoundsUp
+    bz Math.mulDiv_bool_false@4
+    frame_dig -4
+    frame_dig -3
+    b*
+    frame_dig -2
+    b%
+    bytec_0 // 0x
+    b>
+    bz Math.mulDiv_bool_false@4
+    intc_1 // 1
+
+Math.mulDiv_bool_merge@5:
+    callsub SafeCast.toUint
+    frame_dig 0
+    b+
+    swap
+    retsub
+
+Math.mulDiv_bool_false@4:
+    intc_2 // 0
+    b Math.mulDiv_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.Math.unsignedRoundsUp(rounding: uint64) -> uint64:
+Math.unsignedRoundsUp:
+    proto 1 1
+    frame_dig -1
+    intc 5 // 255
+    &
+    pushint 2
+    %
+    intc_1 // 1
+    ==
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.MathUtils.min(a: bytes, b: bytes) -> bytes:
+MathUtils.min:
+    proto 2 1
+    load 0
+    frame_dig -2
+    frame_dig -1
+    b^
+    frame_dig -2
+    frame_dig -1
+    b<
+    bytec_0 // 0x
+    bytec_3 // 0x01
+    uncover 2
+    select
+    b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    b^
+    swap
+    store 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.MathUtils.uncheckedAdd(a: bytes, b: bytes) -> bytes:
+MathUtils.uncheckedAdd:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.MathUtils.uncheckedSub(a: bytes, b: bytes) -> bytes:
+MathUtils.uncheckedSub:
+    proto 2 1
+    frame_dig -2
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig -1
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.MathUtils.uncheckedExp(a: bytes, b: bytes) -> bytes:
+MathUtils.uncheckedExp:
+    proto 2 1
+    bytec_3 // 0x01
+    frame_dig -2
+    frame_dig -1
+
+MathUtils.uncheckedExp_while_top@1:
+    frame_dig 2
+    bytec_0 // 0x
+    b>
+    bz MathUtils.uncheckedExp_after_while@5
+    frame_dig 2
+    bytec_3 // 0x01
+    b&
+    bytec_0 // 0x
+    b!=
+    bz MathUtils.uncheckedExp_after_if_else@4
+    frame_dig 0
+    frame_dig 1
+    b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 0
+
+MathUtils.uncheckedExp_after_if_else@4:
+    frame_dig 2
+    pushbytes 0x02
+    b/
+    frame_bury 2
+    frame_dig 1
+    dup
+    b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 1
+    b MathUtils.uncheckedExp_while_top@1
+
+MathUtils.uncheckedExp_after_while@5:
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.MathUtils.divUp(a: bytes, b: bytes) -> bytes:
+MathUtils.divUp:
+    proto 2 1
+    intc_2 // 0
+    load 0
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    !
+    assert // revert
+    frame_dig -1
+    bytec_0 // 0x
+    b!=
+    dup
+    bz MathUtils.divUp_ternary_false@2
+    frame_dig -2
+    frame_dig -1
+    b/
+    frame_bury 0
+
+MathUtils.divUp_ternary_merge@3:
+    frame_dig 2
+    bz MathUtils.divUp_ternary_false@5
+    frame_dig -2
+    frame_dig -1
+    b%
+
+MathUtils.divUp_ternary_merge@6:
+    bytec_0 // 0x
+    b>
+    bytec_0 // 0x
+    bytec_3 // 0x01
+    uncover 2
+    select
+    frame_dig 0
+    b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig 1
+    store 0
+    frame_bury 0
+    retsub
+
+MathUtils.divUp_ternary_false@5:
+    bytec_0 // 0x
+    b MathUtils.divUp_ternary_merge@6
+
+MathUtils.divUp_ternary_false@2:
+    bytec_0 // 0x
+    frame_bury 0
+    b MathUtils.divUp_ternary_merge@3
+
+
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.PositionStatusMap.isBorrowing(self: bytes, reserveId: bytes) -> uint64:
 PositionStatusMap.isBorrowing:
     proto 2 1
@@ -1191,30 +2476,30 @@ PositionStatusMap.isBorrowing:
     callsub PositionStatusMap.getBucketWord
     intc_0 // 32
     bzero
-    pushint 8
+    intc_3 // 8
     bzero
     frame_dig -1
-    pushbytes 0x80
+    bytec 16 // 0x80
     b%
-    bytec 14 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000002
     b*
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     concat
     dup
     len
-    pushint 8
+    intc_3 // 8
     -
     extract_uint64
-    pushint 255
+    intc 5 // 255
     swap
     -
     intc_1 // 1
     setbit
     b/
-    bytec 6 // 0x01
+    bytec_3 // 0x01
     b&
-    bytec_1 // 0x
+    bytec_0 // 0x
     b!=
     retsub
 
@@ -1227,35 +2512,348 @@ PositionStatusMap.isUsingAsCollateral:
     callsub PositionStatusMap.getBucketWord
     intc_0 // 32
     bzero
-    pushint 8
+    intc_3 // 8
     bzero
     frame_dig -1
-    pushbytes 0x80
+    bytec 16 // 0x80
     b%
-    bytec 14 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000002
     b*
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 6 // 0x01
+    bytec_3 // 0x01
     b+
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     concat
     dup
     len
-    pushint 8
+    intc_3 // 8
     -
     extract_uint64
-    pushint 255
+    intc 5 // 255
     swap
     -
     intc_1 // 1
     setbit
     b/
-    bytec 6 // 0x01
+    bytec_3 // 0x01
     b&
-    bytec_1 // 0x
+    bytec_0 // 0x
     b!=
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.PositionStatusMap.collateralCount(self: bytes, reserveCount: bytes) -> bytes:
+PositionStatusMap.collateralCount:
+    proto 2 1
+    frame_dig -1
+    callsub PositionStatusMap.bucketId
+    dup
+    itxn_begin
+    intc_0 // 32
+    bzero
+    dup
+    cover 2
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec 13 // "map"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    frame_dig -1
+    callsub PositionStatusMap.isolateCollateralUntil
+    dig 2
+    swap
+    concat
+    swap
+    frame_dig -1
+    callsub PositionStatusMap.isolateCollateralUntil
+    uncover 2
+    swap
+    concat
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc 6 // TMPL_PURE_HELPER_LibBit_popCount_1_APP_ID
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 29 // method "LibBit.popCount(uint256)uint256"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+
+PositionStatusMap.collateralCount_while_top@2:
+    frame_dig 0
+    bytec_0 // 0x
+    b!=
+    bz PositionStatusMap.collateralCount_after_while@5
+    frame_dig 0
+    bytec_3 // 0x01
+    b-
+    dup
+    frame_bury 0
+    itxn_begin
+    frame_dig 1
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec 13 // "map"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    callsub PositionStatusMap.isolateCollateral
+    dig 2
+    swap
+    concat
+    swap
+    callsub PositionStatusMap.isolateCollateral
+    uncover 2
+    swap
+    concat
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc 6 // TMPL_PURE_HELPER_LibBit_popCount_1_APP_ID
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 29 // method "LibBit.popCount(uint256)uint256"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    frame_dig 2
+    b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 2
+    b PositionStatusMap.collateralCount_while_top@2
+
+PositionStatusMap.collateralCount_after_while@5:
+    frame_dig 2
+    frame_bury 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.PositionStatusMap.next(self: bytes, fromReserveId: bytes) -> bytes, uint64, uint64:
+PositionStatusMap.next:
+    proto 2 3
+    bytec_0 // ""
+    frame_dig -1
+    callsub PositionStatusMap.bucketId
+    dup
+    intc_0 // 32
+    bzero
+    dup
+    cover 2
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec 13 // "map"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    cover 2
+    itxn_begin
+    dup
+    frame_dig -1
+    callsub PositionStatusMap.isolateUntil
+    dig 2
+    swap
+    concat
+    swap
+    frame_dig -1
+    callsub PositionStatusMap.isolateUntil
+    uncover 2
+    swap
+    concat
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc 7 // TMPL_PURE_HELPER_LibBit_fls_2_APP_ID
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 30 // method "LibBit.fls(uint256)uint256"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+
+PositionStatusMap.next_while_top@2:
+    frame_dig 4
+    bytec 19 // 0x0100
+    b==
+    dup
+    frame_bury 0
+    bz PositionStatusMap.next_after_while@6
+    frame_dig 1
+    bytec_0 // 0x
+    b!=
+    bz PositionStatusMap.next_after_while@6
+    frame_dig 1
+    bytec_3 // 0x01
+    b-
+    dup
+    frame_bury 1
+    frame_dig 2
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec 13 // "map"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    frame_bury 3
+    itxn_begin
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc 7 // TMPL_PURE_HELPER_LibBit_fls_2_APP_ID
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 30 // method "LibBit.fls(uint256)uint256"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    frame_bury 4
+    b PositionStatusMap.next_while_top@2
+
+PositionStatusMap.next_after_while@6:
+    frame_dig 0
+    bz PositionStatusMap.next_else_body@8
+    bytec 11 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    intc_2 // 0
+    dup
+    frame_bury 2
+    frame_bury 1
+    frame_bury 0
+    retsub
+
+PositionStatusMap.next_else_body@8:
+    intc_3 // 8
+    bzero
+    frame_dig 4
+    dup
+    cover 2
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc 5 // 255
+    swap
+    -
+    frame_dig 2
+    swap
+    intc_1 // 1
+    setbit
+    frame_dig 3
+    swap
+    b/
+    swap
+    frame_dig 1
+    callsub PositionStatusMap.fromBitId
+    dig 1
+    bytec_3 // 0x01
+    b&
+    bytec_0 // 0x
+    b!=
+    uncover 2
+    pushbytes 0x02
+    b&
+    bytec_0 // 0x
+    b!=
+    frame_bury 2
+    frame_bury 1
+    frame_bury 0
     retsub
 
 
@@ -1280,11 +2878,11 @@ PositionStatusMap.getBucketWord:
     intc_0 // 32
     extract3
     sha256
-    pushbytes "map"
+    bytec 13 // "map"
     swap
     concat
     box_get
-    bytec_1 // 0x
+    bytec_0 // 0x
     cover 2
     select
     retsub
@@ -1295,11 +2893,163 @@ PositionStatusMap.bucketId:
     proto 1 1
     load 0
     frame_dig -1
-    bytec 11 // 0x0000000000000000000000000000000000000000000000000000000000000080
+    bytec 17 // 0x0000000000000000000000000000000000000000000000000000000000000080
     b/
     swap
     store 0
     retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.PositionStatusMap.fromBitId(bitId: bytes, bucket: bytes) -> bytes:
+PositionStatusMap.fromBitId:
+    proto 2 1
+    load 0
+    frame_dig -2
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    frame_dig -1
+    bytec 17 // 0x0000000000000000000000000000000000000000000000000000000000000080
+    b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    swap
+    store 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.PositionStatusMap.isolateUntil(word: bytes, reserveCount: bytes) -> bytes:
+PositionStatusMap.isolateUntil:
+    proto 2 1
+    load 0
+    frame_dig -1
+    bytec 16 // 0x80
+    b%
+    intc_0 // 32
+    bzero
+    swap
+    intc_3 // 8
+    bzero
+    swap
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 31 // 0x010000000000000000000000000000000000000000000000000000000000000100
+    swap
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 19 // 0x0100
+    b<
+    bz PositionStatusMap.isolateUntil_ternary_false@20
+    frame_dig 2
+    frame_dig 3
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    pushint 256
+    %
+    intc 5 // 255
+    swap
+    -
+    frame_dig 1
+    swap
+    intc_1 // 1
+    setbit
+    bytec 11 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    swap
+    b/
+
+PositionStatusMap.isolateUntil_ternary_merge@21:
+    frame_dig -2
+    b&
+    frame_dig 0
+    store 0
+    frame_bury 0
+    retsub
+
+PositionStatusMap.isolateUntil_ternary_false@20:
+    bytec_0 // 0x
+    b PositionStatusMap.isolateUntil_ternary_merge@21
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.PositionStatusMap.isolateCollateral(word: bytes) -> bytes:
+PositionStatusMap.isolateCollateral:
+    proto 1 1
+    load 0
+    frame_dig -1
+    bytec 32 // 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    b&
+    swap
+    store 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.PositionStatusMap.isolateCollateralUntil(word: bytes, reserveCount: bytes) -> bytes:
+PositionStatusMap.isolateCollateralUntil:
+    proto 2 1
+    load 0
+    frame_dig -1
+    bytec 16 // 0x80
+    b%
+    intc_0 // 32
+    bzero
+    swap
+    intc_3 // 8
+    bzero
+    swap
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 31 // 0x010000000000000000000000000000000000000000000000000000000000000100
+    swap
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 19 // 0x0100
+    b<
+    bz PositionStatusMap.isolateCollateralUntil_ternary_false@20
+    frame_dig 2
+    frame_dig 3
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    pushint 256
+    %
+    intc 5 // 255
+    swap
+    -
+    frame_dig 1
+    swap
+    intc_1 // 1
+    setbit
+    bytec 32 // 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    swap
+    b/
+
+PositionStatusMap.isolateCollateralUntil_ternary_merge@21:
+    frame_dig -2
+    b&
+    frame_dig 0
+    store 0
+    frame_bury 0
+    retsub
+
+PositionStatusMap.isolateCollateralUntil_ternary_false@20:
+    bytec_0 // 0x
+    b PositionStatusMap.isolateCollateralUntil_ternary_merge@21
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.Premium.calculatePremiumRay(premiumShares: bytes, premiumOffsetRay: bytes, drawnIndex: bytes) -> bytes:
@@ -1310,11 +3060,11 @@ Premium.calculatePremiumRay:
     b*
     dup
     callsub SafeCast.toInt256
-    bytec 8 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 10 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     frame_dig -2
-    bytec 8 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 10 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     ==
@@ -1322,18 +3072,18 @@ Premium.calculatePremiumRay:
     frame_dig 0
     dup
     callsub SafeCast.toInt256
-    bytec 8 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 10 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     swap
     callsub SafeCast.toInt256
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     frame_dig -2
     b-
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 8 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 10 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     ==
@@ -1346,11 +3096,11 @@ Premium.calculatePremiumRay_bool_merge@4:
     assert // signed arithmetic overflow
     frame_dig 0
     callsub SafeCast.toInt256
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     frame_dig -2
     b-
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     callsub SafeCast.toUint256
     swap
@@ -1365,9 +3115,9 @@ Premium.calculatePremiumRay_bool_false@3:
 SafeCast.toUint256:
     proto 1 1
     frame_dig -1
-    bytec 8 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 10 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
-    bytec 8 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 10 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     assert // SafeCastOverflowedIntToUint
@@ -1384,6 +3134,22 @@ SafeCast.toInt256:
     !
     assert // SafeCastOverflowedUintToInt
     frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.SafeCast.toUint(b: uint64) -> bytes:
+SafeCast.toUint:
+    proto 1 1
+    load 0
+    frame_dig -1
+    !
+    !
+    bytec_0 // 0x
+    bytec_3 // 0x01
+    uncover 2
+    select
+    swap
+    store 0
     retsub
 
 
@@ -1405,14 +3171,36 @@ SpokeUtils.get:
     swap
     concat
     box_get
-    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 15 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
     extract 32 32
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 24 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
     assert // ReserveNotListed
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.SpokeUtils.toValue(amount: bytes, decimals: bytes, price: bytes) -> bytes:
+SpokeUtils.toValue:
+    proto 3 1
+    pushbytes 0x12
+    frame_dig -2
+    b>=
+    assert // underflow
+    frame_dig -3
+    frame_dig -1
+    b*
+    pushint 10
+    itob
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000012
+    frame_dig -2
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    callsub MathUtils.uncheckedExp
+    b*
     retsub
 
 
@@ -1440,7 +3228,7 @@ UserPositionUtils.getDebt:
     intc_2 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    pushbytes 0x3f31d978 // method "getAssetDrawnIndex(uint256)uint256"
+    bytec 33 // method "getAssetDrawnIndex(uint256)uint256"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
@@ -1466,6 +3254,65 @@ UserPositionUtils.getDebt:
     retsub
 
 
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.UserPositionUtils.getDebtComponents(userPosition: bytes, hub: bytes, assetId: bytes) -> bytes:
+UserPositionUtils.getDebtComponents:
+    proto 3 1
+    itxn_begin
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    frame_dig -2
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 33 // method "getAssetDrawnIndex(uint256)uint256"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dup
+    dig 2
+    b|
+    frame_dig -3
+    extract 0 15
+    dig 3
+    b|
+    frame_dig -3
+    uncover 3
+    callsub UserPositionUtils._calculatePremiumRay
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    b|
+    concat
+    swap
+    concat
+    retsub
+
+
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.UserPositionUtils._calculatePremiumRay(userPosition: bytes, drawnIndex: bytes) -> bytes:
 UserPositionUtils._calculatePremiumRay:
     proto 2 1
@@ -1483,17 +3330,17 @@ WadRayMath.rayMulUp:
     proto 2 1
     load 0
     frame_dig -1
-    bytec_1 // 0x
+    bytec_0 // 0x
     b==
-    bytec_1 // 0x
-    bytec 6 // 0x01
+    bytec_0 // 0x
+    bytec_3 // 0x01
     uncover 2
     select
     frame_dig -1
-    bytec_1 // 0x
+    bytec_0 // 0x
     b!=
     bz WadRayMath.rayMulUp_ternary_false@2
-    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 11 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     frame_dig -1
     b/
 
@@ -1501,35 +3348,35 @@ WadRayMath.rayMulUp_ternary_merge@3:
     frame_dig -2
     b<
     !
-    bytec_1 // 0x
-    bytec 6 // 0x01
+    bytec_0 // 0x
+    bytec_3 // 0x01
     uncover 2
     select
     frame_dig 1
     b|
-    bytec_1 // 0x
+    bytec_0 // 0x
     b==
     !
     assert // revert
     frame_dig -2
     frame_dig -1
     b*
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    bytec 9 // 0x033b2e3c9fd0803ce8000000
+    bytec 12 // 0x033b2e3c9fd0803ce8000000
     b/
     swap
-    bytec 9 // 0x033b2e3c9fd0803ce8000000
+    bytec 12 // 0x033b2e3c9fd0803ce8000000
     b%
-    bytec_1 // 0x
+    bytec_0 // 0x
     b>
-    bytec_1 // 0x
-    bytec 6 // 0x01
+    bytec_0 // 0x
+    bytec_3 // 0x01
     uncover 2
     select
     b+
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     frame_dig 0
     store 0
@@ -1537,7 +3384,7 @@ WadRayMath.rayMulUp_ternary_merge@3:
     retsub
 
 WadRayMath.rayMulUp_ternary_false@2:
-    bytec_1 // 0x
+    bytec_0 // 0x
     b WadRayMath.rayMulUp_ternary_merge@3
 
 
@@ -1546,20 +3393,42 @@ WadRayMath.fromRayUp:
     proto 1 1
     load 0
     frame_dig -1
-    bytec 9 // 0x033b2e3c9fd0803ce8000000
+    bytec 12 // 0x033b2e3c9fd0803ce8000000
     b/
     frame_dig -1
-    bytec 9 // 0x033b2e3c9fd0803ce8000000
+    bytec 12 // 0x033b2e3c9fd0803ce8000000
     b%
-    bytec_1 // 0x
+    bytec_0 // 0x
     b>
-    bytec_1 // 0x
-    bytec 6 // 0x01
+    bytec_0 // 0x
+    bytec_3 // 0x01
     uncover 2
     select
     b+
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    swap
+    store 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.WadRayMath.bpsToWad(a: bytes) -> bytes:
+WadRayMath.bpsToWad:
+    proto 1 1
+    load 0
+    frame_dig -1
+    bytec 34 // 0x5af3107a4000
+    b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 34 // 0x5af3107a4000
+    b/
+    frame_dig -1
+    b==
+    !
+    !
+    assert // revert
     swap
     store 0
     retsub

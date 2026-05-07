@@ -1,0 +1,720 @@
+#pragma version 10
+#pragma typetrack false
+
+// PureHelper__LiquidationLogic__calculateDebtToLiquidate__3.approval_program() -> uint64:
+main:
+    intcblock 32 0 1 TMPL_PURE_HELPER_Math_mulDiv_4_APP_ID
+    bytecblock 0x 0x010000000000000000000000000000000000000000000000000000000000000000 0x01 0x033b2e3c9fd0803ce8000000 0x2710 0x0de0b6b3a7640000 0x5af3107a4000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txna ApplicationArgs 0
+    pushbytes 0xb3a2f088 // method "LiquidationLogic._calculateDebtToLiquidate(CalculateDebtToLiquidateParams)(uint256,uint256)"
+    ==
+    assert // helper: unknown selector
+    txna ApplicationArgs 1
+    callsub LiquidationLogic._calculateDebtToLiquidate
+    intc_0 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.LiquidationLogic._calculateDebtToLiquidate(params: bytes) -> bytes, bytes:
+LiquidationLogic._calculateDebtToLiquidate:
+    proto 1 2
+    intc_1 // 0
+    dupn 2
+    frame_dig -1
+    pushint 256
+    intc_0 // 32
+    extract3
+    frame_dig -1
+    extract 192 32
+    dup
+    cover 2
+    frame_dig -1
+    extract 160 32
+    frame_dig -1
+    pushint 320
+    intc_0 // 32
+    extract3
+    frame_dig -1
+    pushint 288
+    intc_0 // 32
+    extract3
+    frame_dig -1
+    pushint 352
+    intc_0 // 32
+    extract3
+    frame_dig -1
+    extract 96 32
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    callsub LiquidationLogic._calculateDebtToTargetHealthFactor
+    dup
+    callsub WadRayMath.roundRayUp
+    frame_dig -1
+    extract 32 32
+    dup
+    cover 2
+    callsub MathUtils.min
+    dup
+    frame_dig -1
+    extract 224 32
+    dup
+    uncover 2
+    callsub WadRayMath.fromRayUp
+    b<
+    bz LiquidationLogic._calculateDebtToLiquidate_after_if_else@2
+    frame_dig 7
+    callsub WadRayMath.toRay
+    frame_bury 6
+
+LiquidationLogic._calculateDebtToLiquidate_after_if_else@2:
+    bytec_0 // 0x
+    frame_bury 1
+    frame_dig 6
+    frame_dig 5
+    b==
+    bz LiquidationLogic._calculateDebtToLiquidate_after_if_else@5
+    frame_dig 6
+    frame_dig 4
+    b<
+    bz LiquidationLogic._calculateDebtToLiquidate_after_if_else@5
+    frame_dig 4
+    dup
+    frame_dig 6
+    dup
+    cover 3
+    b>=
+    assert // underflow
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 1
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    extract 64 32
+    swap
+    dig 1
+    callsub MathUtils.divUp
+    dig 2
+    callsub WadRayMath.fromRayUp
+    frame_dig 7
+    dup
+    uncover 2
+    b>=
+    assert // underflow
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    uncover 3
+    callsub WadRayMath.fromRayUp
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_3 // 0x033b2e3c9fd0803ce8000000
+    uncover 3
+    intc_1 // 0
+    callsub Math.mulDiv
+    callsub MathUtils.min
+    frame_dig -1
+    extract 0 32
+    callsub MathUtils.min
+    frame_bury 1
+
+LiquidationLogic._calculateDebtToLiquidate_after_if_else@5:
+    frame_dig -1
+    extract 0 32
+    dup
+    frame_bury 2
+    dup
+    frame_dig 1
+    dup
+    cover 3
+    b>=
+    assert // underflow
+    dup
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 2
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    extract 64 32
+    b*
+    frame_dig 5
+    b+
+    dup
+    frame_dig 6
+    dup
+    cover 3
+    b>=
+    assert // underflow
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 0
+    b<
+    bz LiquidationLogic._calculateDebtToLiquidate_bool_false@8
+    frame_dig -1
+    extract 128 32
+    frame_dig 0
+    swap
+    frame_dig 3
+    callsub SpokeUtils.toValue
+    pushbytes 0x01431e0fae6d7217caa0000000
+    callsub WadRayMath.toRay
+    b<
+    bz LiquidationLogic._calculateDebtToLiquidate_bool_false@8
+    intc_2 // 1
+
+LiquidationLogic._calculateDebtToLiquidate_bool_merge@9:
+    bnz LiquidationLogic._calculateDebtToLiquidate_if_body@10
+    frame_dig 6
+    frame_bury 5
+
+LiquidationLogic._calculateDebtToLiquidate_after_if_else@11:
+    frame_dig 1
+    frame_dig 5
+    frame_bury 1
+    frame_bury 0
+    retsub
+
+LiquidationLogic._calculateDebtToLiquidate_if_body@10:
+    frame_dig 2
+    frame_bury 1
+    b LiquidationLogic._calculateDebtToLiquidate_after_if_else@11
+
+LiquidationLogic._calculateDebtToLiquidate_bool_false@8:
+    intc_1 // 0
+    b LiquidationLogic._calculateDebtToLiquidate_bool_merge@9
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.LiquidationLogic._calculateDebtToTargetHealthFactor(params: bytes) -> bytes:
+LiquidationLogic._calculateDebtToTargetHealthFactor:
+    proto 1 1
+    frame_dig -1
+    extract 128 32
+    callsub WadRayMath.bpsToWad
+    frame_dig -1
+    extract 96 32
+    callsub PercentageMath.percentMulUp
+    frame_dig -1
+    extract 192 32
+    frame_dig -1
+    extract 160 32
+    dup2
+    b>=
+    assert // underflow
+    dig 1
+    dig 3
+    b>=
+    assert // underflow
+    frame_dig -1
+    extract 0 32
+    frame_dig -1
+    extract 32 32
+    uncover 3
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dup
+    uncover 4
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 2
+    b*
+    swap
+    uncover 3
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    extract 64 32
+    callsub WadRayMath.toWad
+    b*
+    intc_2 // 1
+    callsub Math.mulDiv
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.Math.mulDiv(4)(x: bytes, y: bytes, denominator: bytes, rounding: uint64) -> bytes:
+Math.mulDiv:
+    proto 4 1
+    frame_dig -2
+    bytec_0 // 0x
+    b!=
+    assert // modulo by zero
+    itxn_begin
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    frame_dig -3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_3 // TMPL_PURE_HELPER_Math_mulDiv_4_APP_ID
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x3261697e // method "Math.mulDiv(uint256,uint256,uint256)uint256"
+    itxn_field ApplicationArgs
+    uncover 2
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    frame_dig -1
+    callsub Math.unsignedRoundsUp
+    bz Math.mulDiv_bool_false@4
+    frame_dig -4
+    frame_dig -3
+    b*
+    frame_dig -2
+    b%
+    bytec_0 // 0x
+    b>
+    bz Math.mulDiv_bool_false@4
+    intc_2 // 1
+
+Math.mulDiv_bool_merge@5:
+    callsub SafeCast.toUint
+    frame_dig 0
+    b+
+    swap
+    retsub
+
+Math.mulDiv_bool_false@4:
+    intc_1 // 0
+    b Math.mulDiv_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.Math.unsignedRoundsUp(rounding: uint64) -> uint64:
+Math.unsignedRoundsUp:
+    proto 1 1
+    frame_dig -1
+    pushint 255
+    &
+    pushint 2
+    %
+    intc_2 // 1
+    ==
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.MathUtils.min(a: bytes, b: bytes) -> bytes:
+MathUtils.min:
+    proto 2 1
+    load 0
+    frame_dig -2
+    frame_dig -1
+    b^
+    frame_dig -2
+    frame_dig -1
+    b<
+    bytec_0 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    b^
+    swap
+    store 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.MathUtils.uncheckedExp(a: bytes, b: bytes) -> bytes:
+MathUtils.uncheckedExp:
+    proto 2 1
+    bytec_2 // 0x01
+    frame_dig -2
+    frame_dig -1
+
+MathUtils.uncheckedExp_while_top@1:
+    frame_dig 2
+    bytec_0 // 0x
+    b>
+    bz MathUtils.uncheckedExp_after_while@5
+    frame_dig 2
+    bytec_2 // 0x01
+    b&
+    bytec_0 // 0x
+    b!=
+    bz MathUtils.uncheckedExp_after_if_else@4
+    frame_dig 0
+    frame_dig 1
+    b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 0
+
+MathUtils.uncheckedExp_after_if_else@4:
+    frame_dig 2
+    pushbytes 0x02
+    b/
+    frame_bury 2
+    frame_dig 1
+    dup
+    b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 1
+    b MathUtils.uncheckedExp_while_top@1
+
+MathUtils.uncheckedExp_after_while@5:
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.MathUtils.divUp(a: bytes, b: bytes) -> bytes:
+MathUtils.divUp:
+    proto 2 1
+    intc_1 // 0
+    load 0
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    !
+    assert // revert
+    frame_dig -1
+    bytec_0 // 0x
+    b!=
+    dup
+    bz MathUtils.divUp_ternary_false@2
+    frame_dig -2
+    frame_dig -1
+    b/
+    frame_bury 0
+
+MathUtils.divUp_ternary_merge@3:
+    frame_dig 2
+    bz MathUtils.divUp_ternary_false@5
+    frame_dig -2
+    frame_dig -1
+    b%
+
+MathUtils.divUp_ternary_merge@6:
+    bytec_0 // 0x
+    b>
+    bytec_0 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    frame_dig 0
+    b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig 1
+    store 0
+    frame_bury 0
+    retsub
+
+MathUtils.divUp_ternary_false@5:
+    bytec_0 // 0x
+    b MathUtils.divUp_ternary_merge@6
+
+MathUtils.divUp_ternary_false@2:
+    bytec_0 // 0x
+    frame_bury 0
+    b MathUtils.divUp_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.PercentageMath.percentMulUp(value: bytes, percentage: bytes) -> bytes:
+PercentageMath.percentMulUp:
+    proto 2 1
+    load 0
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    bytec_0 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    frame_dig -1
+    bytec_0 // 0x
+    b!=
+    bz PercentageMath.percentMulUp_ternary_false@2
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig -1
+    b/
+
+PercentageMath.percentMulUp_ternary_merge@3:
+    frame_dig -2
+    b<
+    !
+    bytec_0 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    frame_dig 1
+    b|
+    bytec_0 // 0x
+    b==
+    !
+    assert // revert
+    frame_dig -2
+    frame_dig -1
+    b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 4 // 0x2710
+    b/
+    swap
+    bytec 4 // 0x2710
+    b%
+    bytec_0 // 0x
+    b>
+    bytec_0 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig 0
+    store 0
+    frame_bury 0
+    retsub
+
+PercentageMath.percentMulUp_ternary_false@2:
+    bytec_0 // 0x
+    b PercentageMath.percentMulUp_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.SafeCast.toUint(b: uint64) -> bytes:
+SafeCast.toUint:
+    proto 1 1
+    load 0
+    frame_dig -1
+    !
+    !
+    bytec_0 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    swap
+    store 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.SpokeUtils.toValue(amount: bytes, decimals: bytes, price: bytes) -> bytes:
+SpokeUtils.toValue:
+    proto 3 1
+    pushbytes 0x12
+    frame_dig -2
+    b>=
+    assert // underflow
+    frame_dig -3
+    frame_dig -1
+    b*
+    pushint 10
+    itob
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000012
+    frame_dig -2
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    callsub MathUtils.uncheckedExp
+    b*
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.WadRayMath.toWad(a: bytes) -> bytes:
+WadRayMath.toWad:
+    proto 1 1
+    load 0
+    frame_dig -1
+    bytec 5 // 0x0de0b6b3a7640000
+    b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 5 // 0x0de0b6b3a7640000
+    b/
+    frame_dig -1
+    b==
+    !
+    !
+    assert // revert
+    swap
+    store 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.WadRayMath.toRay(a: bytes) -> bytes:
+WadRayMath.toRay:
+    proto 1 1
+    load 0
+    frame_dig -1
+    bytec_3 // 0x033b2e3c9fd0803ce8000000
+    b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec_3 // 0x033b2e3c9fd0803ce8000000
+    b/
+    frame_dig -1
+    b==
+    !
+    !
+    assert // revert
+    swap
+    store 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.WadRayMath.fromRayUp(a: bytes) -> bytes:
+WadRayMath.fromRayUp:
+    proto 1 1
+    load 0
+    frame_dig -1
+    bytec_3 // 0x033b2e3c9fd0803ce8000000
+    b/
+    frame_dig -1
+    bytec_3 // 0x033b2e3c9fd0803ce8000000
+    b%
+    bytec_0 // 0x
+    b>
+    bytec_0 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    swap
+    store 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.WadRayMath.bpsToWad(a: bytes) -> bytes:
+WadRayMath.bpsToWad:
+    proto 1 1
+    load 0
+    frame_dig -1
+    bytec 6 // 0x5af3107a4000
+    b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 6 // 0x5af3107a4000
+    b/
+    frame_dig -1
+    b==
+    !
+    !
+    assert // revert
+    swap
+    store 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/SpokeInstance.sol.WadRayMath.roundRayUp(a: bytes) -> bytes:
+WadRayMath.roundRayUp:
+    proto 1 1
+    load 0
+    frame_dig -1
+    bytec_3 // 0x033b2e3c9fd0803ce8000000
+    b/
+    frame_dig -1
+    bytec_3 // 0x033b2e3c9fd0803ce8000000
+    b%
+    bytec_0 // 0x
+    b>
+    bytec_0 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec_3 // 0x033b2e3c9fd0803ce8000000
+    b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec_3 // 0x033b2e3c9fd0803ce8000000
+    b/
+    uncover 2
+    b==
+    !
+    !
+    assert // revert
+    swap
+    store 0
+    retsub
