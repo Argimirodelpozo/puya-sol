@@ -53,6 +53,7 @@ from algopy import (
     arc4,
     itxn,
     op,
+    subroutine,
 )
 
 
@@ -143,6 +144,174 @@ class UrosOrchestrator(ARC4Contract):
         live vars cross piece boundaries via gload."""
         self.chain_for_selector[selector] = entries
 
+    # ── Internal helper subroutines for dispatch_chain ──
+    # Three helpers, one per stage shape. Each branches on its size
+    # arg internally, so the body of dispatch_chain stays small.
+
+    @subroutine
+    def _stage_install_first(self, install_box: Bytes,
+                              install_len: UInt64) -> None:
+        """Stage the FIRST install in the chain (begin_group=True).
+        Multi-page: chunks ≤ 1/2/3/4 pages packed as a tuple."""
+        target_app = self.storage_app_id
+        clear = Bytes(CLEAR_PROGRAM)
+        page = UInt64(2048)
+        if install_len <= page:
+            p0 = op.Box.extract(install_box, UInt64(0), install_len)
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=p0,
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).stage(begin_group=True)
+        elif install_len <= page * UInt64(2):
+            p0 = op.Box.extract(install_box, UInt64(0), page)
+            p1 = op.Box.extract(install_box, page, install_len - page)
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=(p0, p1),
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).stage(begin_group=True)
+        elif install_len <= page * UInt64(3):
+            p0 = op.Box.extract(install_box, UInt64(0), page)
+            p1 = op.Box.extract(install_box, page, page)
+            p2 = op.Box.extract(install_box, page * UInt64(2),
+                                install_len - page * UInt64(2))
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=(p0, p1, p2),
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).stage(begin_group=True)
+        else:
+            p0 = op.Box.extract(install_box, UInt64(0), page)
+            p1 = op.Box.extract(install_box, page, page)
+            p2 = op.Box.extract(install_box, page * UInt64(2), page)
+            p3 = op.Box.extract(install_box, page * UInt64(3),
+                                install_len - page * UInt64(3))
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=(p0, p1, p2, p3),
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).stage(begin_group=True)
+
+    @subroutine
+    def _stage_install_next(self, install_box: Bytes,
+                             install_len: UInt64) -> None:
+        """Stage a non-first install (or the final restore). Same
+        4-page branching as `_stage_install_first` but no
+        begin_group=True. begin_group is a Python compile-time bool
+        (algopy can't pass a runtime bool to .stage), so we have two
+        sibling subroutines instead of one with a flag arg."""
+        target_app = self.storage_app_id
+        clear = Bytes(CLEAR_PROGRAM)
+        page = UInt64(2048)
+        if install_len <= page:
+            p0 = op.Box.extract(install_box, UInt64(0), install_len)
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=p0,
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).stage()
+        elif install_len <= page * UInt64(2):
+            p0 = op.Box.extract(install_box, UInt64(0), page)
+            p1 = op.Box.extract(install_box, page, install_len - page)
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=(p0, p1),
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).stage()
+        elif install_len <= page * UInt64(3):
+            p0 = op.Box.extract(install_box, UInt64(0), page)
+            p1 = op.Box.extract(install_box, page, page)
+            p2 = op.Box.extract(install_box, page * UInt64(2),
+                                install_len - page * UInt64(2))
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=(p0, p1, p2),
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).stage()
+        else:
+            p0 = op.Box.extract(install_box, UInt64(0), page)
+            p1 = op.Box.extract(install_box, page, page)
+            p2 = op.Box.extract(install_box, page * UInt64(2), page)
+            p3 = op.Box.extract(install_box, page * UInt64(3),
+                                install_len - page * UInt64(3))
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.UpdateApplication,
+                approval_program=(p0, p1, p2, p3),
+                clear_state_program=clear,
+                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
+                fee=0,
+            ).stage()
+
+    @subroutine
+    def _stage_call(self, piece_sel: Bytes) -> None:
+        """Stage a piece's call with forwarded user args. Branches on
+        n_user_args = num_app_args − 1 (1/2/3/up-to-5)."""
+        target_app = self.storage_app_id
+        main_app = Application(op.Global.caller_application_id)
+        n_user_args = op.Txn.num_app_args - UInt64(1)
+        if n_user_args == UInt64(1):
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.NoOp,
+                app_args=(piece_sel,),
+                apps=(main_app,),
+                fee=0,
+            ).stage()
+        elif n_user_args == UInt64(2):
+            a1 = op.Txn.application_args(UInt64(2))
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.NoOp,
+                app_args=(piece_sel, a1),
+                apps=(main_app,),
+                fee=0,
+            ).stage()
+        elif n_user_args == UInt64(3):
+            a1 = op.Txn.application_args(UInt64(2))
+            a2 = op.Txn.application_args(UInt64(3))
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.NoOp,
+                app_args=(piece_sel, a1, a2),
+                apps=(main_app,),
+                fee=0,
+            ).stage()
+        else:
+            a1 = op.Txn.application_args(UInt64(2))
+            a2 = op.Txn.application_args(UInt64(3))
+            a3 = op.Txn.application_args(UInt64(4))
+            a4 = op.Txn.application_args(UInt64(5))
+            itxn.ApplicationCall(
+                app_id=target_app,
+                on_completion=OnCompleteAction.NoOp,
+                app_args=(piece_sel, a1, a2, a3, a4),
+                apps=(main_app,),
+                fee=0,
+            ).stage()
+
     @arc4.abimethod
     def dispatch_chain(self) -> Bytes:
         """Chain-dispatch a registered piece chain. ApplicationArgs
@@ -151,284 +320,222 @@ class UrosOrchestrator(ARC4Contract):
             [1] = user's primary selector (the original method)
             [2..] = user's args (forwarded to every piece)
 
-        Each piece's install + call is staged into a single inner-txn
-        group, with a final restore-to-default install. Since they're
-        all in one group, piece N's body can read piece N-1's scratch
-        slot 100 via `gload (2N-1) 100`. The final piece's last_log is
-        returned (read via op.GITxn.last_log at the known chain-length-
-        dependent index).
+        For chain_len N, stages 2N+1 inner-txns in one group:
+            install_0 (begin), call_0, install_1, call_1, ...,
+            install_{N-1}, call_{N-1}, restore (default).
+        Returns op.GITxn.last_log(2N-1) — last piece's call output.
 
-        v2 supports chain_len == 2 with each piece's chunk and the
-        default storage up to 4 pages (8 KB) — install branches mirror
-        dispatch()'s 1/2/3/4-page extract pattern. Extending past 2
-        pieces is a follow-up (cap at 7 = 15-txn group max).
+        v3 supports chain_len ∈ {2..7} (2N+1 ≤ 16 AVM inner-txn cap).
+        Each piece's chunk and the default storage may be up to 4
+        pages (8 KB).
+
+        Implementation: install/call/restore are three helper
+        subroutines. dispatch_chain decodes pieces, then orchestrates
+        the per-chain-length sequence as a flat list of subroutine
+        calls. Keeps the contract small (subroutine bodies emitted
+        once, called many times).
         """
         user_selector = op.Txn.application_args(UInt64(1))
         entries = self.chain_for_selector[user_selector]
         # Each entry: 8 bytes chunk_idx + 4 bytes piece_selector = 12 B.
         chain_len = entries.length // UInt64(12)
-        target_app = self.storage_app_id
-        clear = Bytes(CLEAR_PROGRAM)
         default_box = Bytes(b"__codebox_default")
         default_len = self.storage_default_len
-        page = UInt64(2048)
-        main_app = Application(op.Global.caller_application_id)
 
-        # Forwarded args: orch's [2..N+1] passes through to each piece.
-        n_user_args = op.Txn.num_app_args - UInt64(1)
+        # Decode up to 7 piece entries. Reads past `chain_len` are
+        # gated by the chain_len switch below — we never USE the
+        # decoded values for pieces beyond chain_len, but the decode
+        # must be statically reachable for algopy to typecheck.
+        # Use op.extract bounded reads — entries may be < 7*12 bytes,
+        # so we only decode within entries.length.
 
-        assert chain_len == UInt64(2), "dispatch_chain v2: only 2-piece chains supported"
-
-        # Decode piece 0
-        c0_idx = op.btoi(op.extract(entries, UInt64(0), UInt64(8)))
-        c0_sel = op.extract(entries, UInt64(8), UInt64(4))
-        c0_box = Bytes(b"__codebox_chunk_") + op.itob(c0_idx)
-        c0_len = self.chunk_lens[c0_idx]
-        # Decode piece 1
-        c1_idx = op.btoi(op.extract(entries, UInt64(12), UInt64(8)))
-        c1_sel = op.extract(entries, UInt64(20), UInt64(4))
-        c1_box = Bytes(b"__codebox_chunk_") + op.itob(c1_idx)
-        c1_len = self.chunk_lens[c1_idx]
-
-        # ── Stage install_0 (multi-page; first txn → begin_group=True) ──
-        if c0_len <= page:
-            c0_p0 = op.Box.extract(c0_box, UInt64(0), c0_len)
-            itxn.ApplicationCall(
-                app_id=target_app,
-                on_completion=OnCompleteAction.UpdateApplication,
-                approval_program=c0_p0,
-                clear_state_program=clear,
-                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
-                fee=0,
-            ).stage(begin_group=True)
-        elif c0_len <= page * UInt64(2):
-            c0_p0 = op.Box.extract(c0_box, UInt64(0), page)
-            c0_p1 = op.Box.extract(c0_box, page, c0_len - page)
-            itxn.ApplicationCall(
-                app_id=target_app,
-                on_completion=OnCompleteAction.UpdateApplication,
-                approval_program=(c0_p0, c0_p1),
-                clear_state_program=clear,
-                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
-                fee=0,
-            ).stage(begin_group=True)
-        elif c0_len <= page * UInt64(3):
-            c0_p0 = op.Box.extract(c0_box, UInt64(0), page)
-            c0_p1 = op.Box.extract(c0_box, page, page)
-            c0_p2 = op.Box.extract(c0_box, page * UInt64(2),
-                                   c0_len - page * UInt64(2))
-            itxn.ApplicationCall(
-                app_id=target_app,
-                on_completion=OnCompleteAction.UpdateApplication,
-                approval_program=(c0_p0, c0_p1, c0_p2),
-                clear_state_program=clear,
-                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
-                fee=0,
-            ).stage(begin_group=True)
+        if chain_len == UInt64(2):
+            c0_idx = op.btoi(op.extract(entries, UInt64(0), UInt64(8)))
+            c0_sel = op.extract(entries, UInt64(8), UInt64(4))
+            c1_idx = op.btoi(op.extract(entries, UInt64(12), UInt64(8)))
+            c1_sel = op.extract(entries, UInt64(20), UInt64(4))
+            self._stage_install_first(
+                Bytes(b"__codebox_chunk_") + op.itob(c0_idx),
+                self.chunk_lens[c0_idx])
+            self._stage_call(c0_sel)
+            self._stage_install_next(
+                Bytes(b"__codebox_chunk_") + op.itob(c1_idx),
+                self.chunk_lens[c1_idx])
+            self._stage_call(c1_sel)
+            self._stage_install_next(default_box, default_len)
+            itxn.submit_staged()
+            return op.GITxn.last_log(3)
+        elif chain_len == UInt64(3):
+            c0_idx = op.btoi(op.extract(entries, UInt64(0), UInt64(8)))
+            c0_sel = op.extract(entries, UInt64(8), UInt64(4))
+            c1_idx = op.btoi(op.extract(entries, UInt64(12), UInt64(8)))
+            c1_sel = op.extract(entries, UInt64(20), UInt64(4))
+            c2_idx = op.btoi(op.extract(entries, UInt64(24), UInt64(8)))
+            c2_sel = op.extract(entries, UInt64(32), UInt64(4))
+            self._stage_install_first(
+                Bytes(b"__codebox_chunk_") + op.itob(c0_idx),
+                self.chunk_lens[c0_idx])
+            self._stage_call(c0_sel)
+            self._stage_install_next(
+                Bytes(b"__codebox_chunk_") + op.itob(c1_idx),
+                self.chunk_lens[c1_idx])
+            self._stage_call(c1_sel)
+            self._stage_install_next(
+                Bytes(b"__codebox_chunk_") + op.itob(c2_idx),
+                self.chunk_lens[c2_idx])
+            self._stage_call(c2_sel)
+            self._stage_install_next(default_box, default_len)
+            itxn.submit_staged()
+            return op.GITxn.last_log(5)
+        elif chain_len == UInt64(4):
+            c0_idx = op.btoi(op.extract(entries, UInt64(0), UInt64(8)))
+            c0_sel = op.extract(entries, UInt64(8), UInt64(4))
+            c1_idx = op.btoi(op.extract(entries, UInt64(12), UInt64(8)))
+            c1_sel = op.extract(entries, UInt64(20), UInt64(4))
+            c2_idx = op.btoi(op.extract(entries, UInt64(24), UInt64(8)))
+            c2_sel = op.extract(entries, UInt64(32), UInt64(4))
+            c3_idx = op.btoi(op.extract(entries, UInt64(36), UInt64(8)))
+            c3_sel = op.extract(entries, UInt64(44), UInt64(4))
+            self._stage_install_first(
+                Bytes(b"__codebox_chunk_") + op.itob(c0_idx),
+                self.chunk_lens[c0_idx])
+            self._stage_call(c0_sel)
+            self._stage_install_next(
+                Bytes(b"__codebox_chunk_") + op.itob(c1_idx),
+                self.chunk_lens[c1_idx])
+            self._stage_call(c1_sel)
+            self._stage_install_next(
+                Bytes(b"__codebox_chunk_") + op.itob(c2_idx),
+                self.chunk_lens[c2_idx])
+            self._stage_call(c2_sel)
+            self._stage_install_next(
+                Bytes(b"__codebox_chunk_") + op.itob(c3_idx),
+                self.chunk_lens[c3_idx])
+            self._stage_call(c3_sel)
+            self._stage_install_next(default_box, default_len)
+            itxn.submit_staged()
+            return op.GITxn.last_log(7)
+        elif chain_len == UInt64(5):
+            c0_idx = op.btoi(op.extract(entries, UInt64(0), UInt64(8)))
+            c0_sel = op.extract(entries, UInt64(8), UInt64(4))
+            c1_idx = op.btoi(op.extract(entries, UInt64(12), UInt64(8)))
+            c1_sel = op.extract(entries, UInt64(20), UInt64(4))
+            c2_idx = op.btoi(op.extract(entries, UInt64(24), UInt64(8)))
+            c2_sel = op.extract(entries, UInt64(32), UInt64(4))
+            c3_idx = op.btoi(op.extract(entries, UInt64(36), UInt64(8)))
+            c3_sel = op.extract(entries, UInt64(44), UInt64(4))
+            c4_idx = op.btoi(op.extract(entries, UInt64(48), UInt64(8)))
+            c4_sel = op.extract(entries, UInt64(56), UInt64(4))
+            self._stage_install_first(
+                Bytes(b"__codebox_chunk_") + op.itob(c0_idx),
+                self.chunk_lens[c0_idx])
+            self._stage_call(c0_sel)
+            self._stage_install_next(
+                Bytes(b"__codebox_chunk_") + op.itob(c1_idx),
+                self.chunk_lens[c1_idx])
+            self._stage_call(c1_sel)
+            self._stage_install_next(
+                Bytes(b"__codebox_chunk_") + op.itob(c2_idx),
+                self.chunk_lens[c2_idx])
+            self._stage_call(c2_sel)
+            self._stage_install_next(
+                Bytes(b"__codebox_chunk_") + op.itob(c3_idx),
+                self.chunk_lens[c3_idx])
+            self._stage_call(c3_sel)
+            self._stage_install_next(
+                Bytes(b"__codebox_chunk_") + op.itob(c4_idx),
+                self.chunk_lens[c4_idx])
+            self._stage_call(c4_sel)
+            self._stage_install_next(default_box, default_len)
+            itxn.submit_staged()
+            return op.GITxn.last_log(9)
+        elif chain_len == UInt64(6):
+            c0_idx = op.btoi(op.extract(entries, UInt64(0), UInt64(8)))
+            c0_sel = op.extract(entries, UInt64(8), UInt64(4))
+            c1_idx = op.btoi(op.extract(entries, UInt64(12), UInt64(8)))
+            c1_sel = op.extract(entries, UInt64(20), UInt64(4))
+            c2_idx = op.btoi(op.extract(entries, UInt64(24), UInt64(8)))
+            c2_sel = op.extract(entries, UInt64(32), UInt64(4))
+            c3_idx = op.btoi(op.extract(entries, UInt64(36), UInt64(8)))
+            c3_sel = op.extract(entries, UInt64(44), UInt64(4))
+            c4_idx = op.btoi(op.extract(entries, UInt64(48), UInt64(8)))
+            c4_sel = op.extract(entries, UInt64(56), UInt64(4))
+            c5_idx = op.btoi(op.extract(entries, UInt64(60), UInt64(8)))
+            c5_sel = op.extract(entries, UInt64(68), UInt64(4))
+            self._stage_install_first(
+                Bytes(b"__codebox_chunk_") + op.itob(c0_idx),
+                self.chunk_lens[c0_idx])
+            self._stage_call(c0_sel)
+            self._stage_install_next(
+                Bytes(b"__codebox_chunk_") + op.itob(c1_idx),
+                self.chunk_lens[c1_idx])
+            self._stage_call(c1_sel)
+            self._stage_install_next(
+                Bytes(b"__codebox_chunk_") + op.itob(c2_idx),
+                self.chunk_lens[c2_idx])
+            self._stage_call(c2_sel)
+            self._stage_install_next(
+                Bytes(b"__codebox_chunk_") + op.itob(c3_idx),
+                self.chunk_lens[c3_idx])
+            self._stage_call(c3_sel)
+            self._stage_install_next(
+                Bytes(b"__codebox_chunk_") + op.itob(c4_idx),
+                self.chunk_lens[c4_idx])
+            self._stage_call(c4_sel)
+            self._stage_install_next(
+                Bytes(b"__codebox_chunk_") + op.itob(c5_idx),
+                self.chunk_lens[c5_idx])
+            self._stage_call(c5_sel)
+            self._stage_install_next(default_box, default_len)
+            itxn.submit_staged()
+            return op.GITxn.last_log(11)
         else:
-            c0_p0 = op.Box.extract(c0_box, UInt64(0), page)
-            c0_p1 = op.Box.extract(c0_box, page, page)
-            c0_p2 = op.Box.extract(c0_box, page * UInt64(2), page)
-            c0_p3 = op.Box.extract(c0_box, page * UInt64(3),
-                                   c0_len - page * UInt64(3))
-            itxn.ApplicationCall(
-                app_id=target_app,
-                on_completion=OnCompleteAction.UpdateApplication,
-                approval_program=(c0_p0, c0_p1, c0_p2, c0_p3),
-                clear_state_program=clear,
-                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
-                fee=0,
-            ).stage(begin_group=True)
-
-        # ── Stage call_0 (forwarded user args) ──
-        if n_user_args == UInt64(1):
-            itxn.ApplicationCall(
-                app_id=target_app,
-                on_completion=OnCompleteAction.NoOp,
-                app_args=(c0_sel,),
-                apps=(main_app,),
-                fee=0,
-            ).stage()
-        elif n_user_args == UInt64(2):
-            a1 = op.Txn.application_args(UInt64(2))
-            itxn.ApplicationCall(
-                app_id=target_app,
-                on_completion=OnCompleteAction.NoOp,
-                app_args=(c0_sel, a1),
-                apps=(main_app,),
-                fee=0,
-            ).stage()
-        elif n_user_args == UInt64(3):
-            a1 = op.Txn.application_args(UInt64(2))
-            a2 = op.Txn.application_args(UInt64(3))
-            itxn.ApplicationCall(
-                app_id=target_app,
-                on_completion=OnCompleteAction.NoOp,
-                app_args=(c0_sel, a1, a2),
-                apps=(main_app,),
-                fee=0,
-            ).stage()
-        else:
-            # Up to 5 user args (matches dispatch()'s ceiling for now).
-            a1 = op.Txn.application_args(UInt64(2))
-            a2 = op.Txn.application_args(UInt64(3))
-            a3 = op.Txn.application_args(UInt64(4))
-            a4 = op.Txn.application_args(UInt64(5))
-            itxn.ApplicationCall(
-                app_id=target_app,
-                on_completion=OnCompleteAction.NoOp,
-                app_args=(c0_sel, a1, a2, a3, a4),
-                apps=(main_app,),
-                fee=0,
-            ).stage()
-
-        # ── Stage install_1 (multi-page) ──
-        if c1_len <= page:
-            c1_p0 = op.Box.extract(c1_box, UInt64(0), c1_len)
-            itxn.ApplicationCall(
-                app_id=target_app,
-                on_completion=OnCompleteAction.UpdateApplication,
-                approval_program=c1_p0,
-                clear_state_program=clear,
-                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
-                fee=0,
-            ).stage()
-        elif c1_len <= page * UInt64(2):
-            c1_p0 = op.Box.extract(c1_box, UInt64(0), page)
-            c1_p1 = op.Box.extract(c1_box, page, c1_len - page)
-            itxn.ApplicationCall(
-                app_id=target_app,
-                on_completion=OnCompleteAction.UpdateApplication,
-                approval_program=(c1_p0, c1_p1),
-                clear_state_program=clear,
-                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
-                fee=0,
-            ).stage()
-        elif c1_len <= page * UInt64(3):
-            c1_p0 = op.Box.extract(c1_box, UInt64(0), page)
-            c1_p1 = op.Box.extract(c1_box, page, page)
-            c1_p2 = op.Box.extract(c1_box, page * UInt64(2),
-                                   c1_len - page * UInt64(2))
-            itxn.ApplicationCall(
-                app_id=target_app,
-                on_completion=OnCompleteAction.UpdateApplication,
-                approval_program=(c1_p0, c1_p1, c1_p2),
-                clear_state_program=clear,
-                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
-                fee=0,
-            ).stage()
-        else:
-            c1_p0 = op.Box.extract(c1_box, UInt64(0), page)
-            c1_p1 = op.Box.extract(c1_box, page, page)
-            c1_p2 = op.Box.extract(c1_box, page * UInt64(2), page)
-            c1_p3 = op.Box.extract(c1_box, page * UInt64(3),
-                                   c1_len - page * UInt64(3))
-            itxn.ApplicationCall(
-                app_id=target_app,
-                on_completion=OnCompleteAction.UpdateApplication,
-                approval_program=(c1_p0, c1_p1, c1_p2, c1_p3),
-                clear_state_program=clear,
-                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
-                fee=0,
-            ).stage()
-
-        # ── Stage call_1 (same arg-shape branch as call_0) ──
-        if n_user_args == UInt64(1):
-            itxn.ApplicationCall(
-                app_id=target_app,
-                on_completion=OnCompleteAction.NoOp,
-                app_args=(c1_sel,),
-                apps=(main_app,),
-                fee=0,
-            ).stage()
-        elif n_user_args == UInt64(2):
-            a1 = op.Txn.application_args(UInt64(2))
-            itxn.ApplicationCall(
-                app_id=target_app,
-                on_completion=OnCompleteAction.NoOp,
-                app_args=(c1_sel, a1),
-                apps=(main_app,),
-                fee=0,
-            ).stage()
-        elif n_user_args == UInt64(3):
-            a1 = op.Txn.application_args(UInt64(2))
-            a2 = op.Txn.application_args(UInt64(3))
-            itxn.ApplicationCall(
-                app_id=target_app,
-                on_completion=OnCompleteAction.NoOp,
-                app_args=(c1_sel, a1, a2),
-                apps=(main_app,),
-                fee=0,
-            ).stage()
-        else:
-            a1 = op.Txn.application_args(UInt64(2))
-            a2 = op.Txn.application_args(UInt64(3))
-            a3 = op.Txn.application_args(UInt64(4))
-            a4 = op.Txn.application_args(UInt64(5))
-            itxn.ApplicationCall(
-                app_id=target_app,
-                on_completion=OnCompleteAction.NoOp,
-                app_args=(c1_sel, a1, a2, a3, a4),
-                apps=(main_app,),
-                fee=0,
-            ).stage()
-
-        # ── Stage restore (multi-page for default) ──
-        if default_len <= page:
-            d_p0 = op.Box.extract(default_box, UInt64(0), default_len)
-            itxn.ApplicationCall(
-                app_id=target_app,
-                on_completion=OnCompleteAction.UpdateApplication,
-                approval_program=d_p0,
-                clear_state_program=clear,
-                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
-                fee=0,
-            ).stage()
-        elif default_len <= page * UInt64(2):
-            d_p0 = op.Box.extract(default_box, UInt64(0), page)
-            d_p1 = op.Box.extract(default_box, page, default_len - page)
-            itxn.ApplicationCall(
-                app_id=target_app,
-                on_completion=OnCompleteAction.UpdateApplication,
-                approval_program=(d_p0, d_p1),
-                clear_state_program=clear,
-                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
-                fee=0,
-            ).stage()
-        elif default_len <= page * UInt64(3):
-            d_p0 = op.Box.extract(default_box, UInt64(0), page)
-            d_p1 = op.Box.extract(default_box, page, page)
-            d_p2 = op.Box.extract(default_box, page * UInt64(2),
-                                  default_len - page * UInt64(2))
-            itxn.ApplicationCall(
-                app_id=target_app,
-                on_completion=OnCompleteAction.UpdateApplication,
-                approval_program=(d_p0, d_p1, d_p2),
-                clear_state_program=clear,
-                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
-                fee=0,
-            ).stage()
-        else:
-            d_p0 = op.Box.extract(default_box, UInt64(0), page)
-            d_p1 = op.Box.extract(default_box, page, page)
-            d_p2 = op.Box.extract(default_box, page * UInt64(2), page)
-            d_p3 = op.Box.extract(default_box, page * UInt64(3),
-                                  default_len - page * UInt64(3))
-            itxn.ApplicationCall(
-                app_id=target_app,
-                on_completion=OnCompleteAction.UpdateApplication,
-                approval_program=(d_p0, d_p1, d_p2, d_p3),
-                clear_state_program=clear,
-                app_args=(Bytes(DELEGATE_UPDATE_SELECTOR),),
-                fee=0,
-            ).stage()
-
-        itxn.submit_staged()
-
-        # Group layout (0-indexed): [install_0, call_0, install_1,
-        # call_1, restore]. Last piece's call is at index 3 — that's
-        # where the ABI return log lives.
-        return op.GITxn.last_log(3)
+            assert chain_len == UInt64(7), "dispatch_chain: chain_len must be 2..7"
+            c0_idx = op.btoi(op.extract(entries, UInt64(0), UInt64(8)))
+            c0_sel = op.extract(entries, UInt64(8), UInt64(4))
+            c1_idx = op.btoi(op.extract(entries, UInt64(12), UInt64(8)))
+            c1_sel = op.extract(entries, UInt64(20), UInt64(4))
+            c2_idx = op.btoi(op.extract(entries, UInt64(24), UInt64(8)))
+            c2_sel = op.extract(entries, UInt64(32), UInt64(4))
+            c3_idx = op.btoi(op.extract(entries, UInt64(36), UInt64(8)))
+            c3_sel = op.extract(entries, UInt64(44), UInt64(4))
+            c4_idx = op.btoi(op.extract(entries, UInt64(48), UInt64(8)))
+            c4_sel = op.extract(entries, UInt64(56), UInt64(4))
+            c5_idx = op.btoi(op.extract(entries, UInt64(60), UInt64(8)))
+            c5_sel = op.extract(entries, UInt64(68), UInt64(4))
+            c6_idx = op.btoi(op.extract(entries, UInt64(72), UInt64(8)))
+            c6_sel = op.extract(entries, UInt64(80), UInt64(4))
+            self._stage_install_first(
+                Bytes(b"__codebox_chunk_") + op.itob(c0_idx),
+                self.chunk_lens[c0_idx])
+            self._stage_call(c0_sel)
+            self._stage_install_next(
+                Bytes(b"__codebox_chunk_") + op.itob(c1_idx),
+                self.chunk_lens[c1_idx])
+            self._stage_call(c1_sel)
+            self._stage_install_next(
+                Bytes(b"__codebox_chunk_") + op.itob(c2_idx),
+                self.chunk_lens[c2_idx])
+            self._stage_call(c2_sel)
+            self._stage_install_next(
+                Bytes(b"__codebox_chunk_") + op.itob(c3_idx),
+                self.chunk_lens[c3_idx])
+            self._stage_call(c3_sel)
+            self._stage_install_next(
+                Bytes(b"__codebox_chunk_") + op.itob(c4_idx),
+                self.chunk_lens[c4_idx])
+            self._stage_call(c4_sel)
+            self._stage_install_next(
+                Bytes(b"__codebox_chunk_") + op.itob(c5_idx),
+                self.chunk_lens[c5_idx])
+            self._stage_call(c5_sel)
+            self._stage_install_next(
+                Bytes(b"__codebox_chunk_") + op.itob(c6_idx),
+                self.chunk_lens[c6_idx])
+            self._stage_call(c6_sel)
+            self._stage_install_next(default_box, default_len)
+            itxn.submit_staged()
+            return op.GITxn.last_log(13)
 
     @arc4.abimethod
     def dispatch(self) -> Bytes:

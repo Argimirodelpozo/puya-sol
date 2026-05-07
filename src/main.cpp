@@ -212,6 +212,20 @@ struct Options
 	// helper. Removes the helper's bytecode from the calling chunks
 	// (per-Contract DCE drops the now-unreached Subroutine).
 	bool deployPureHelpers = false;
+
+	// --force-inline-sub <Name>
+	//
+	// Set inlineOpt=true on every Subroutine OR ContractMethod whose
+	// memberName/name matches. Puya's inliner expands the body at every
+	// call site instead of emitting a callsub, so the subroutine itself
+	// can be DCE'd from chunks where it would otherwise show up as a
+	// reachable internal.
+	//
+	// Useful for breaking subroutine-reachability closures that bloat
+	// FunctionSplitter chunks (e.g. inlining a heavy non-pure helper
+	// like `_calculateUserAccountData` so its body can be sliced via
+	// `--fn-split` rather than dragged in whole). Repeatable.
+	std::vector<std::string> forceInlineSubs;
 };
 
 void printUsage(char const* _progName)
@@ -274,6 +288,13 @@ void printUsage(char const* _progName)
 		<< "                         chunks (per-Contract DCE), at the cost of one inner-txn\n"
 		<< "                         per call. Each helper gets a TMPL_PURE_HELPER_<name>_<n>\n"
 		<< "                         _APP_ID template var the deploy harness substitutes.\n"
+		<< "  --force-inline-sub <Name>  Set inlineOpt=true on every Subroutine or\n"
+		<< "                         ContractMethod whose name matches <Name>. Puya inlines\n"
+		<< "                         the body at every call site, so the subroutine itself\n"
+		<< "                         can be DCE'd from chunks. Useful for breaking subroutine-\n"
+		<< "                         reachability closures that bloat FunctionSplitter chunks\n"
+		<< "                         (e.g. inlining a heavy non-pure helper so its body can\n"
+		<< "                         be sliced via --fn-split). Repeatable.\n"
 		<< "  --help                 Show this help message\n";
 }
 
@@ -325,6 +346,8 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.urosOrchAppId = std::stoll(_argv[++i]);
 		else if (arg == "--deploy-pure-helpers")
 			opts.deployPureHelpers = true;
+		else if (arg == "--force-inline-sub" && i + 1 < _argc)
+			opts.forceInlineSubs.push_back(_argv[++i]);
 		else if (arg == "--fn-split" && i + 1 < _argc)
 		{
 			// Format: <Name>:<idx>,<idx>,...:g<N>[:cross]
@@ -800,6 +823,51 @@ int main(int _argc, char* _argv[])
 	}
 
 	logger.info("Generated " + std::to_string(roots.size()) + " AWST root node(s)");
+
+	// ─── --force-inline-sub: flip inlineOpt=true on matching nodes ──────
+	// Runs BEFORE --fn-split so the inlined body is visible at split time.
+	// We mutate inlineOpt on Subroutine root nodes AND on each Contract's
+	// methods (ContractMethod) — both have the field; puya treats them
+	// the same way (inline at every call site).
+	if (!opts.forceInlineSubs.empty())
+	{
+		std::set<std::string> wanted(
+			opts.forceInlineSubs.begin(), opts.forceInlineSubs.end());
+		std::set<std::string> hit;
+		for (auto& root : roots)
+		{
+			if (auto* sub = dynamic_cast<puyasol::awst::Subroutine*>(root.get()))
+			{
+				if (wanted.count(sub->name))
+				{
+					sub->inlineOpt = true;
+					hit.insert(sub->name);
+				}
+			}
+			else if (auto* contract = dynamic_cast<puyasol::awst::Contract*>(root.get()))
+			{
+				for (auto& m : contract->methods)
+				{
+					if (wanted.count(m.memberName))
+					{
+						m.inlineOpt = true;
+						hit.insert(m.memberName);
+					}
+				}
+			}
+		}
+		for (auto const& name : wanted)
+		{
+			if (!hit.count(name))
+				logger.warning(
+					"--force-inline-sub: '" + name + "' not found "
+					"as Subroutine or ContractMethod in any root");
+		}
+		if (!hit.empty())
+			logger.info(
+				"--force-inline-sub: marked " + std::to_string(hit.size())
+				+ " node(s) for inlining");
+	}
 
 	// ─── --fn-split: slice subroutine bodies into pieces ─────────────────
 	// Runs BEFORE --uros-splitter so the new piece subroutines are visible
