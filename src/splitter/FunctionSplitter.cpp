@@ -1040,11 +1040,25 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 				m.cref = cref;
 				m.memberName = bp.name;
 				m.pure = tgtPure;
-				// No arc4MethodConfig: pieces are internal-only,
-				// invoked via InstanceMethodTarget callsub from the
-				// rewritten original method. They don't need a
-				// router entry, and giving them one would expose them
-				// as ABI methods.
+				if (spec.crossChunk)
+				{
+					// Cross-chunk pieces need to be reachable BY
+					// SELECTOR from orch.dispatch_chain — orch's
+					// staged inner-txn calls the chunk with
+					// `app_args=(piece_sel, ...)` and expects the
+					// chunk's ABI router to dispatch. Without an
+					// arc4MethodConfig the piece is internal-only and
+					// has no router slot.
+					awst::ARC4ABIMethodConfig abi;
+					abi.sourceLocation = origLoc;
+					abi.allowedCompletionTypes = {0}; // NoOp only
+					abi.create = 3;                   // Disallow
+					abi.name = bp.name;
+					m.arc4MethodConfig = abi;
+				}
+				// else: in-program callsub mode — pieces are
+				// internal-only, invoked via InstanceMethodTarget
+				// from the rewritten original method.
 				parentContract->methods.push_back(std::move(m));
 				++result.newContractMethodPieces;
 			}

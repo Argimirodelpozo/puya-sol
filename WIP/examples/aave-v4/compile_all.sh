@@ -90,6 +90,34 @@ SPLIT_GROUPS[SpokeInstance]=$'__postInit,SPOKE_REVISION,SET_USER_POSITION_MANAGE
 declare -A DEPLOY_PURE_HELPERS
 DEPLOY_PURE_HELPERS[SpokeInstance]=1
 
+# Per-contract --fn-split specs. Space-separated list, one --fn-split
+# arg per token. Format: <Method>:<idx>,<idx>,...:g<N>[:cross]
+# - Without :cross — pieces share the same txn frame (load 100 prologue);
+#   pair with --uros-splitter to keep them in the SAME chunk.
+# - With :cross — pieces live on SEPARATE chunks and chain via
+#   orch.dispatch_chain (gload prologue). main.cpp emits chain_groups.json
+#   which the dance harness reads to register each chain with orch.
+#
+# SpokeInstance.liquidationCall (10878 B standalone, > 8 KB AVM cap)
+# splits into 2 cross-chunk pieces of ~5400 B each — fits the
+# dispatch_chain v2 4-page-per-piece cap. Split index 3 is the natural
+# midpoint of the 6-stmt body (3 ABI-decode ExpressionStatements
+# followed by 2 AssignmentStatements + a return).
+declare -A FN_SPLITS
+# SpokeInstance.liquidationCall is 10878 B standalone — needs splitting
+# but a 2-piece :cross split doesn't help: both pieces transitively call
+# `_calculateUserAccountData` (one in main body, one in else branch),
+# which pulls in `_processUserAccountData` (~7 KB internal). Either
+# branch's chunk ends up bigger than the AVM 8 KB cap.
+# Resolution path requires task #63 (dispatch_chain v3, chain_len ≥ 3)
+# AND a non-pure sidecar pattern for `_processUserAccountData` (state
+# reads via inner-call back to __storage), OR a source-level refactor
+# that reuses the first call's UserAccountData in the else branch.
+# Until then, liquidationCall stays as a single chunk and trips the
+# runtime size assertion in deploy_split_app — the 3 oracle tests that
+# need SpokeInstance deploy skip cleanly with a clear reason.
+# FN_SPLITS[SpokeInstance]="liquidationCall:3:g0:cross"  # DOESN'T FIT; awaits #63 + helper
+
 for c in "${CONTRACTS[@]}"; do
     src="$HERE/contracts/$c.sol"
     if [ ! -f "$src" ]; then
@@ -100,6 +128,14 @@ for c in "${CONTRACTS[@]}"; do
     args=(--source "$src" --output-dir "$OUT/$c" --puya-path "$PUYA_PATH")
     if [ -n "${DEPLOY_PURE_HELPERS[$c]:-}" ]; then
         args+=(--deploy-pure-helpers)
+    fi
+    # --fn-split must precede --uros-splitter so the emitted piece
+    # methods exist in AWST when the chunk groups reference them by name.
+    if [ -n "${FN_SPLITS[$c]:-}" ]; then
+        IFS=' ' read -ra splits <<< "${FN_SPLITS[$c]}"
+        for s in "${splits[@]}"; do
+            args+=(--fn-split "$s")
+        done
     fi
     if [ -n "${SPLIT_GROUPS[$c]:-}" ]; then
         IFS='|' read -ra groups <<< "${SPLIT_GROUPS[$c]}"
