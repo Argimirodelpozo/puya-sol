@@ -12,6 +12,7 @@
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ASTVisitor.h>
 
 namespace puyasol::builder::sol_ast
 {
@@ -202,9 +203,12 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	// callee returns the post-call memory value as an extra tuple slot;
 	// here we capture it and write back to the caller's local. Order
 	// must match AWSTBuilder.cpp's `memoryRefParamIndices` (storage
-	// params first, then memory params).
+	// params first, then memory params), AND the same use-def filter:
+	// only AUGMENT params actually mutated by the callee body. Walks
+	// the same root-of-LHS analysis as MemoryParamMutationDetector in
+	// AWSTBuilder.cpp.
 	std::vector<size_t> memoryRefParamIndices;
-	if (_funcDef
+	if (_funcDef && _funcDef->isImplemented()
 		&& ((calleeIsLibrary && !calleeIsPrivate) || calleeIsFree))
 	{
 		auto isMemRefType = [](Type const* t) {
@@ -212,6 +216,44 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 				return !arr->isByteArrayOrString();
 			return dynamic_cast<StructType const*>(t) != nullptr;
 		};
+		// Use-def: collect params written in the callee body. Mirrors
+		// AWSTBuilder.cpp's MemoryParamMutationDetector.
+		struct Detector : public ASTConstVisitor {
+			std::set<int64_t> paramIds;
+			std::set<int64_t> mutated;
+			bool visit(Assignment const& a) override
+			{
+				record(&a.leftHandSide());
+				return true;
+			}
+			void record(Expression const* lhs)
+			{
+				while (true)
+				{
+					if (auto const* ix = dynamic_cast<IndexAccess const*>(lhs))
+						{ lhs = &ix->baseExpression(); continue; }
+					if (auto const* mb = dynamic_cast<MemberAccess const*>(lhs))
+						{ lhs = &mb->expression(); continue; }
+					if (auto const* tup = dynamic_cast<TupleExpression const*>(lhs))
+					{
+						for (auto const& c : tup->components())
+							if (c) record(c.get());
+						return;
+					}
+					break;
+				}
+				if (auto const* id = dynamic_cast<Identifier const*>(lhs))
+				{
+					auto const* d = id->annotation().referencedDeclaration;
+					if (d && paramIds.count(d->id()))
+						mutated.insert(d->id());
+				}
+			}
+		};
+		Detector detector;
+		for (auto const& p : _funcDef->parameters())
+			detector.paramIds.insert(p->id());
+		_funcDef->body().accept(detector);
 		for (size_t pi = 0; pi < _funcDef->parameters().size() && pi < call->args.size(); ++pi)
 		{
 			auto const& p = _funcDef->parameters()[pi];
@@ -219,6 +261,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 				continue;
 			if (!p->type() || !isMemRefType(p->type()))
 				continue;
+			if (!detector.mutated.count(p->id()))
+				continue;  // read-only — callee didn't augment it either
 			memoryRefParamIndices.push_back(pi);
 		}
 	}

@@ -7,12 +7,66 @@
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ASTVisitor.h>
 
 namespace puyasol::builder
 {
 
 using awst::statementAlwaysTerminates;
 using awst::blockAlwaysTerminates;
+
+namespace {
+/// Walk a function body, identifying which `memory` ref params are
+/// actually written. A param is "mutated" if any assignment LHS roots
+/// back to that param's identifier (after peeling member / index
+/// accesses). Used to decide whether to augment the function's return
+/// type with that param — read-only memory-ref params skip the
+/// augmentation to keep the return tuple small (otherwise honk's
+/// transcript helpers, which take a ~14 KB Honk.Proof memory but only
+/// READ it, would have a 14 KB+ augmented return that overflows the
+/// AVM 4096 B stack-element cap and gets skipped from lifting).
+class MemoryParamMutationDetector
+	: public solidity::frontend::ASTConstVisitor
+{
+public:
+	std::set<int64_t> paramIds;        // input — set of param decl ids
+	std::set<int64_t> mutatedParams;   // output — subset of paramIds
+
+	bool visit(solidity::frontend::Assignment const& a) override
+	{
+		recordRoot(&a.leftHandSide());
+		return true;  // recurse so RHS's nested assignments also count
+	}
+
+private:
+	void recordRoot(solidity::frontend::Expression const* lhs)
+	{
+		using namespace solidity::frontend;
+		// Peel index / member accesses to find the root identifier.
+		while (true)
+		{
+			if (auto const* ix = dynamic_cast<IndexAccess const*>(lhs))
+				{ lhs = &ix->baseExpression(); continue; }
+			if (auto const* mb = dynamic_cast<MemberAccess const*>(lhs))
+				{ lhs = &mb->expression(); continue; }
+			if (auto const* tup = dynamic_cast<TupleExpression const*>(lhs))
+			{
+				// Tuple destructuring: each component is an LHS.
+				for (auto const& c : tup->components())
+					if (c) recordRoot(c.get());
+				return;
+			}
+			break;
+		}
+		if (auto const* id = dynamic_cast<Identifier const*>(lhs))
+		{
+			auto const* decl = id->annotation().referencedDeclaration;
+			if (decl && paramIds.count(decl->id()))
+				mutatedParams.insert(decl->id());
+		}
+	}
+};
+} // namespace
 
 /// Apply dead code elimination to all methods in a contract.
 static void eliminateDeadCode(awst::Contract& _contract)
@@ -396,14 +450,28 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	// Skipped on private functions for the same reason as storage refs
 	// (puya may thread these internally) and on bytes/string/mapping (those
 	// keep their existing translations).
+	//
+	// Augment ONLY params that are actually mutated. Use-def analysis
+	// catches assignments whose LHS root is a param after peeling
+	// member/index access; tuple destructuring counts each component
+	// as an LHS. Read-only memory-ref params (e.g. honk transcripts'
+	// `Honk.Proof memory proof`, used to extract challenges but never
+	// written) skip augmentation — otherwise the augmented return tuple
+	// grows by their full ARC4 size, which for the 14 KB Proof struct
+	// blows past the AVM 4096 B per-stack-element cap and the pure-
+	// helper extractor refuses to lift them.
 	std::vector<size_t> memoryRefParamIndices;
-	if (!isPrivate)
+	if (!isPrivate && _func.isImplemented())
 	{
 		auto isMemRefType = [](solidity::frontend::Type const* t) {
 			if (auto const* arr = dynamic_cast<solidity::frontend::ArrayType const*>(t))
 				return !arr->isByteArrayOrString();
 			return dynamic_cast<solidity::frontend::StructType const*>(t) != nullptr;
 		};
+		MemoryParamMutationDetector detector;
+		for (auto const& p : _func.parameters())
+			detector.paramIds.insert(p->id());
+		_func.body().accept(detector);
 		for (size_t pi = 0; pi < _func.parameters().size(); ++pi)
 		{
 			auto const& p = _func.parameters()[pi];
@@ -412,6 +480,8 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 				continue;
 			if (!p->type() || !isMemRefType(p->type()))
 				continue;
+			if (!detector.mutatedParams.count(p->id()))
+				continue;  // read-only — no need to thread the post-call value back
 			memoryRefParamIndices.push_back(pi);
 		}
 	}
