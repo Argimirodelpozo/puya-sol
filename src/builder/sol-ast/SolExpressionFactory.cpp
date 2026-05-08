@@ -452,10 +452,15 @@ std::unique_ptr<SolMemberAccess> SolExpressionFactory::createMemberAccess(
 	if (auto const* baseId = dynamic_cast<Identifier const*>(&baseExpr))
 	{
 		std::string baseName = baseId->name();
-		if (baseName == "block"
-			&& (member == "difficulty" || member == "prevrandao"
-				|| member == "basefee" || member == "blobbasefee"
-				|| member == "gaslimit"))
+		// Intrinsics whose AWST is built directly in SolIntrinsicAccess
+		// (no opcode mapping in IntrinsicMapper). Listed explicitly here so
+		// the factory routes them without relying on a truthy sentinel.
+		if ((baseName == "block"
+				&& (member == "difficulty" || member == "prevrandao"
+					|| member == "basefee" || member == "blobbasefee"
+					|| member == "gaslimit"))
+			|| (baseName == "msg"
+				&& (member == "value" || member == "sig" || member == "data")))
 			return std::make_unique<SolIntrinsicAccess>(m_ctx, _node);
 
 		if (builder::IntrinsicMapper::tryMapMemberAccess(baseName, member,

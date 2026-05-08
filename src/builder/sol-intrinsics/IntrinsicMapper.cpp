@@ -22,40 +22,6 @@ std::shared_ptr<awst::IntrinsicCall> IntrinsicMapper::tryMapMemberAccess(
 			call->wtype = awst::WType::accountType();
 			return call;
 		}
-		else if (_memberName == "value")
-		{
-			// msg.value is now handled in SolIntrinsicAccess.cpp with a
-			// conditional expression for safe GroupIndex access.
-			// This fallback is kept for non-member-access contexts.
-			call->opCode = "gtxns";
-			call->immediates = {std::string("Amount")};
-
-			auto groupIdx = awst::makeIntrinsicCall("txn", awst::WType::uint64Type(), _loc);
-			groupIdx->immediates = {std::string("GroupIndex")};
-			auto one = awst::makeIntegerConstant("1", _loc);
-			auto payIdx = awst::makeUInt64BinOp(std::move(groupIdx), awst::UInt64BinaryOperator::Sub, std::move(one), _loc);
-
-			call->stackArgs.push_back(std::move(payIdx));
-			call->wtype = awst::WType::uint64Type();
-			return call;
-		}
-		else if (_memberName == "data")
-		{
-			// msg.data → application args
-			call->opCode = "txna";
-			call->immediates = {std::string("ApplicationArgs"), 0};
-			call->wtype = awst::WType::bytesType();
-			return call;
-		}
-		else if (_memberName == "sig")
-		{
-			// msg.sig → first 4 bytes of msg.data (ARC4 selector).
-			// Routed through SolIntrinsicAccess for a bytes[4]-typed result.
-			call->opCode = "txna";
-			call->immediates = {std::string("ApplicationArgs"), 0};
-			call->wtype = awst::WType::bytesType();
-			return call;
-		}
 	}
 	else if (_objectName == "block")
 	{

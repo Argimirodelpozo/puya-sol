@@ -290,6 +290,35 @@ void ContractBuilder::buildStorageDispatch(
 		_contractNode->methods.push_back(std::move(writeSub));
 	}
 
+	// Move both dispatchers out of contract methods into root-level Subroutines.
+	// Library / free-function callers can't issue InstanceMethodTarget — puya
+	// rejects "invocation of instance method outside of a contract method" —
+	// and a SubroutineID call to a root-level Subroutine works in every
+	// context, including from contract methods themselves. The body uses only
+	// `app_global_get`, `box_extract`, etc. (global ops), which operate
+	// against the currently executing app's state regardless of caller scope.
+	std::vector<awst::ContractMethod> remainingMethods;
+	for (auto& m: _contractNode->methods)
+	{
+		if (m.memberName == "__storage_read" || m.memberName == "__storage_write")
+		{
+			auto sub = std::make_shared<awst::Subroutine>();
+			sub->sourceLocation = m.sourceLocation;
+			sub->id = std::string("__puyasol_") + m.memberName;
+			sub->name = m.memberName;
+			sub->returnType = m.returnType;
+			sub->args = m.args;
+			sub->body = m.body;
+			sub->pure = false;
+			m_dispatchSubroutines.push_back(std::move(sub));
+		}
+		else
+		{
+			remainingMethods.push_back(std::move(m));
+		}
+	}
+	_contractNode->methods = std::move(remainingMethods);
+
 	Logger::instance().debug(
 		"Generated __storage_read/__storage_write dispatch for "
 		+ std::to_string(layout.totalSlots()) + " slots", loc);

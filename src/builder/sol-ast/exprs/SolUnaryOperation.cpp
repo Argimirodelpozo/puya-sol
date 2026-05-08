@@ -649,7 +649,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 			auto call = std::make_shared<awst::SubroutineCallExpression>();
 			call->sourceLocation = m_loc;
 			call->wtype = awst::WType::voidType();
-			call->target = awst::InstanceMethodTarget{"__storage_write"};
+			call->target = awst::SubroutineID{"__puyasol___storage_write"};
 			{
 				awst::CallArg slotArg;
 				slotArg.name = "__slot";

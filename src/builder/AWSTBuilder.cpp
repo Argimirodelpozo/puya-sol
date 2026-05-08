@@ -701,7 +701,21 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 					{
 						auto tuple = awst::makeTupleExpression(sub->returnType, ret->sourceLocation);
 						if (ret->value)
-							tuple->items.push_back(ret->value);
+						{
+							// If author wrote `return (a, b, c);`, flatten the
+							// tuple's items into the new augmented tuple — the
+							// augmented return-type WTuple is flat, so nesting
+							// here would produce a shape mismatch.
+							if (auto* origTup = dynamic_cast<awst::TupleExpression*>(ret->value.get()))
+							{
+								for (auto& it: origTup->items)
+									tuple->items.push_back(it);
+							}
+							else
+							{
+								tuple->items.push_back(ret->value);
+							}
+						}
 						for (size_t idx: storageParamIndices)
 						{
 							auto pv = awst::makeVarExpression(

@@ -287,7 +287,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 				auto call = std::make_shared<awst::SubroutineCallExpression>();
 				call->sourceLocation = m_loc;
 				call->wtype = awst::WType::voidType();
-				call->target = awst::InstanceMethodTarget{"__storage_write"};
+				call->target = awst::SubroutineID{"__puyasol___storage_write"};
 				{
 					awst::CallArg slotArg;
 					slotArg.name = "__slot";
@@ -322,7 +322,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 			auto readCall = std::make_shared<awst::SubroutineCallExpression>();
 			readCall->sourceLocation = m_loc;
 			readCall->wtype = awst::WType::biguintType();
-			readCall->target = awst::InstanceMethodTarget{"__storage_read"};
+			readCall->target = awst::SubroutineID{"__puyasol___storage_read"};
 			awst::CallArg readArg;
 			readArg.name = "__slot";
 			readArg.value = std::move(readSlot);
@@ -343,7 +343,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 		auto call = std::make_shared<awst::SubroutineCallExpression>();
 		call->sourceLocation = m_loc;
 		call->wtype = awst::WType::voidType();
-		call->target = awst::InstanceMethodTarget{"__storage_write"};
+		call->target = awst::SubroutineID{"__puyasol___storage_write"};
 		{
 			awst::CallArg slotArg;
 			slotArg.name = "__slot";

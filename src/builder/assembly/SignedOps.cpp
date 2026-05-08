@@ -420,7 +420,7 @@ void AssemblyBuilder::handleSstore(
 	auto call = std::make_shared<awst::SubroutineCallExpression>();
 	call->sourceLocation = _loc;
 	call->wtype = awst::WType::voidType();
-	call->target = awst::InstanceMethodTarget{"__storage_write"};
+	call->target = awst::SubroutineID{"__puyasol___storage_write"};
 
 	awst::CallArg slotCA;
 	slotCA.name = "__slot";

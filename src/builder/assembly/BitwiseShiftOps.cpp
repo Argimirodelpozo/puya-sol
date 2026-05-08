@@ -30,7 +30,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSload(
 	auto call = std::make_shared<awst::SubroutineCallExpression>();
 	call->sourceLocation = _loc;
 	call->wtype = awst::WType::biguintType();
-	call->target = awst::InstanceMethodTarget{"__storage_read"};
+	call->target = awst::SubroutineID{"__puyasol___storage_read"};
 
 	awst::CallArg arg;
 	arg.name = "__slot";

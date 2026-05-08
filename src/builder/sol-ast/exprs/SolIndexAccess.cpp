@@ -137,7 +137,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 					auto call = std::make_shared<awst::SubroutineCallExpression>();
 					call->sourceLocation = m_loc;
 					call->wtype = awst::WType::biguintType();
-					call->target = awst::InstanceMethodTarget{"__storage_read"};
+					call->target = awst::SubroutineID{"__puyasol___storage_read"};
 					awst::CallArg arg;
 					arg.name = "__slot";
 					arg.value = std::move(btoi);
@@ -187,7 +187,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 						auto call = std::make_shared<awst::SubroutineCallExpression>();
 						call->sourceLocation = m_loc;
 						call->wtype = awst::WType::biguintType();
-						call->target = awst::InstanceMethodTarget{"__storage_read"};
+						call->target = awst::SubroutineID{"__puyasol___storage_read"};
 						awst::CallArg arg;
 						arg.name = "__slot";
 						arg.value = std::move(btoi);
