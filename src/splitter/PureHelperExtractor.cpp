@@ -3,8 +3,10 @@
 
 #include "splitter/PureHelperExtractor.h"
 #include "splitter/AwstWalker.h"
+#include "splitter/FunctionSplitter.h"
 #include "Logger.h"
 
+#include <algorithm>
 #include <sstream>
 
 namespace puyasol::splitter
@@ -744,6 +746,134 @@ std::shared_ptr<awst::Expression> buildInnerCallReplacement(
 	return comma;
 }
 
+/// Multi-piece variant of `buildInnerCallReplacement`: when a pure
+/// helper has been pre-sliced via `--pure-helper-split`, each piece is
+/// its own deployed sidecar Contract and the call becomes one inner-txn
+/// group with M piece-calls in sequence. State threads between pieces
+/// via FunctionSplitter's scratch-slot-100 + gload prologue (the
+/// pieces' bodies were emitted with `crossChunk=true,
+/// prevCallStride=1`). Chunked-return helpers (when the final piece's
+/// return exceeds 1024 B) attach to the same group, hitting the last
+/// piece's sidecar.
+std::shared_ptr<awst::Expression> buildChainedInnerCallReplacement(
+	std::vector<std::tuple<std::string, std::string,
+		std::vector<std::shared_ptr<awst::Expression>>,
+		std::vector<awst::WType const*>>> const& _pieceCalls,
+	std::string const& _lastPieceTemplateVar,
+	awst::WType const* _retType,
+	awst::SourceLocation const& _loc)
+{
+	static awst::WInnerTransactionFields s_applFieldsType(TxnTypeAppl);
+	static awst::WInnerTransaction s_applTxnType(TxnTypeAppl);
+	static std::vector<std::unique_ptr<awst::WTuple>> ownedTupleTypes;
+
+	auto submit = awst::makeSubmitInnerTransaction(&s_applTxnType, _loc);
+
+	for (auto const& [tmpl, sig, args, argTypes] : _pieceCalls)
+	{
+		auto argsTuple = awst::makeTupleExpression(nullptr, _loc);
+		argsTuple->items.push_back(selectorConst(sig, _loc));
+		for (size_t i = 0; i < args.size(); ++i)
+		{
+			auto encoded = encodeValueToBytes(
+				args[i], argTypes[i], _loc);
+			argsTuple->items.push_back(std::move(encoded));
+		}
+		std::vector<awst::WType const*> argT;
+		for (auto const& it : argsTuple->items)
+			argT.push_back(it->wtype);
+		ownedTupleTypes.push_back(std::make_unique<awst::WTuple>(
+			std::move(argT), std::nullopt));
+		argsTuple->wtype = ownedTupleTypes.back().get();
+
+		auto create = std::make_shared<awst::CreateInnerTransaction>();
+		create->sourceLocation = _loc;
+		create->wtype = &s_applFieldsType;
+		create->fields["TypeEnum"] = awst::makeIntegerConstant(
+			std::to_string(TxnTypeAppl), _loc);
+		create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
+		create->fields["OnCompletion"] = awst::makeIntegerConstant("0", _loc);
+		auto tmplVar = std::make_shared<awst::TemplateVar>();
+		tmplVar->sourceLocation = _loc;
+		tmplVar->wtype = awst::WType::uint64Type();
+		tmplVar->name = "TMPL_" + tmpl;
+		create->fields["ApplicationID"] = std::move(tmplVar);
+		create->fields["ApplicationArgs"] = std::move(argsTuple);
+
+		submit->itxns.push_back(std::move(create));
+	}
+
+	int retSize = staticEncodedSize(_retType);
+	int totalSize = (_retType && _retType != awst::WType::voidType())
+		? 4 + retSize : 0;
+	constexpr int kChunkSize = 1024;
+	int returnChunks = totalSize > 0
+		? (totalSize + kChunkSize - 1) / kChunkSize : 0;
+	int basePieces = static_cast<int>(_pieceCalls.size());
+
+	if (returnChunks > 1)
+	{
+		// Append (returnChunks - 1) helper inner txns hitting the LAST
+		// piece's sidecar, mirroring the single-piece chunked-return
+		// path. They `gloadss` chunk i from the last piece's scratch
+		// (slot 99 + GroupIndex within this inner group).
+		for (int i = 1; i < returnChunks; ++i)
+		{
+			auto helperArgs = awst::makeTupleExpression(nullptr, _loc);
+			helperArgs->items.push_back(selectorConst(kBigReturnHelperSig, _loc));
+			std::vector<awst::WType const*> at;
+			for (auto const& it : helperArgs->items) at.push_back(it->wtype);
+			ownedTupleTypes.push_back(std::make_unique<awst::WTuple>(
+				std::move(at), std::nullopt));
+			helperArgs->wtype = ownedTupleTypes.back().get();
+
+			auto hc = std::make_shared<awst::CreateInnerTransaction>();
+			hc->sourceLocation = _loc;
+			hc->wtype = &s_applFieldsType;
+			hc->fields["TypeEnum"] = awst::makeIntegerConstant(
+				std::to_string(TxnTypeAppl), _loc);
+			hc->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
+			hc->fields["OnCompletion"] = awst::makeIntegerConstant("0", _loc);
+			auto tv = std::make_shared<awst::TemplateVar>();
+			tv->sourceLocation = _loc;
+			tv->wtype = awst::WType::uint64Type();
+			tv->name = "TMPL_" + _lastPieceTemplateVar;
+			hc->fields["ApplicationID"] = std::move(tv);
+			hc->fields["ApplicationArgs"] = std::move(helperArgs);
+			submit->itxns.push_back(std::move(hc));
+		}
+	}
+
+	if (!_retType || _retType == awst::WType::voidType())
+		return submit;
+
+	// Read the LAST piece's logged return — chunk 0 sits at gitxn
+	// (basePieces - 1) LastLog; chunks 1..N-1 at gitxn (basePieces
+	// + i - 1) LastLog.
+	auto pickLog = [&](int idx) -> std::shared_ptr<awst::Expression>
+	{
+		auto c = awst::makeIntrinsicCall("gitxn", awst::WType::bytesType(), _loc);
+		c->immediates = {idx, std::string("LastLog")};
+		return c;
+	};
+	std::shared_ptr<awst::Expression> readLog = pickLog(basePieces - 1);
+	for (int i = 1; i < returnChunks; ++i)
+		readLog = awst::makeConcat(std::move(readLog),
+			pickLog(basePieces - 1 + i), _loc);
+
+	auto strip = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
+	strip->immediates = {4, 0};
+	strip->stackArgs.push_back(std::move(readLog));
+	auto decoded = decodeArgFromBytes(std::move(strip), _retType, _loc);
+
+	auto comma = std::make_shared<awst::CommaExpression>();
+	comma->sourceLocation = _loc;
+	comma->wtype = _retType;
+	comma->expressions.push_back(std::move(submit));
+	comma->expressions.push_back(std::move(decoded));
+	return comma;
+}
+
 /// Sanitize an arbitrary identifier-ish string into something safe for
 /// a TEAL template-var name: keep [A-Za-z0-9_], replace everything
 /// else with '_'.
@@ -765,10 +895,12 @@ std::string sanitizeIdent(std::string const& _s)
 } // namespace
 
 PureHelperExtractor::Result PureHelperExtractor::extract(
-	std::vector<std::shared_ptr<awst::RootNode>>& _roots)
+	std::vector<std::shared_ptr<awst::RootNode>>& _roots,
+	std::vector<HelperSplitSpec> const& _splitSpecs)
 {
 	auto& logger = Logger::instance();
 	Result out;
+	(void)_splitSpecs;  // overridden below; keep silenced for unused-warning-cleanliness
 
 	// Pass 1: identify pure subroutines that are candidates for
 	// extraction. Skip stubs / those whose return type doesn't fit
@@ -820,45 +952,120 @@ PureHelperExtractor::Result PureHelperExtractor::extract(
 		return out;
 	}
 
+	// Pass 1.5: apply user-supplied --pure-helper-split for the lifted
+	// Subs that won't fit in one 8 KB sidecar. FunctionSplitter slices
+	// each named Sub into N+1 pieces; we then deploy each piece as its
+	// own one-method sidecar Contract and chain them at the call site
+	// via an inner-txn group with `gload`-based live-vars threading
+	// (slot 100).
+	std::map<std::string, std::vector<size_t>> splitByName;
+	for (auto const& s : _splitSpecs)
+		splitByName[s.subroutineName] = s.splitPoints;
+
+	// originalSubId → vector of piece sub pointers. For unsplit Subs,
+	// vector has one entry: the original sub itself. For split Subs,
+	// vector has N+1 entries: the FunctionSplitter-emitted pieces in
+	// order (piece_0..piece_{N}).
+	std::map<std::string, std::vector<std::shared_ptr<awst::Subroutine>>> piecesBySubId;
+	for (auto const& sub : pureSubs)
+	{
+		auto sit = splitByName.find(sub->name);
+		if (sit == splitByName.end())
+		{
+			piecesBySubId[sub->id] = {sub};
+			continue;
+		}
+		FunctionSplitter fs;
+		FunctionSplitter::PieceSpec ps;
+		ps.subroutineName = sub->name;
+		ps.splitPoints = sit->second;
+		ps.groupId = 0;
+		ps.crossChunk = true;     // pieces run as siblings in inner-txn group
+		ps.prevCallStride = 1;    // each piece is one inner txn (no orch install)
+		auto sr = fs.splitAt(_roots, {ps});
+		if (!sr.didSplit)
+		{
+			logger.warning(
+				"--pure-helper-split: failed to split '" + sub->name +
+				"' — falling back to single sidecar");
+			piecesBySubId[sub->id] = {sub};
+			continue;
+		}
+		// FunctionSplitter pushes pieces onto _roots. Pull the ones
+		// belonging to this sub by name-prefix match.
+		std::vector<std::shared_ptr<awst::Subroutine>> pieces;
+		for (auto const& nr : sr.newSubroutines)
+			pieces.push_back(nr);
+		// Sort pieces by their name's __piece_N suffix (FunctionSplitter
+		// emits them in order, but be defensive).
+		std::sort(pieces.begin(), pieces.end(),
+			[](auto const& a, auto const& b) { return a->name < b->name; });
+		piecesBySubId[sub->id] = std::move(pieces);
+		logger.info(
+			"--pure-helper-split: '" + sub->name + "' → " +
+			std::to_string(piecesBySubId[sub->id].size()) + " pieces");
+	}
+
 	// Pass 2: build helper Contracts and call-site replacement table.
-	// Counter-based unique suffixes avoid collisions between
-	// same-named subs in different libraries (e.g. _validate in
-	// LiquidationLogic vs _validate in some other library).
-	std::map<std::string, std::tuple<std::string, std::string, std::string>> bySubId;
+	// Per-piece tracking — a split Sub yields N+1 ExtractedHelper
+	// entries, one sidecar per piece.
+	struct PieceInfo {
+		std::string templateVar;
+		std::string helperContractId;
+		std::string sig;
+		awst::WType const* returnType = nullptr;  // void for non-last pieces
+		std::shared_ptr<awst::Subroutine> sub;
+	};
+	std::map<std::string, std::vector<PieceInfo>> bySubId;
 	int counter = 0;
 	for (auto const& sub : pureSubs)
 	{
-		std::string sig = canonicalSig(*sub);
-		std::string suffix = std::to_string(counter++);
-		std::string templateVarName =
-			"PURE_HELPER_" + sanitizeIdent(sub->name) +
-			"_" + suffix + "_APP_ID";
-		std::string helperContractId =
-			"PureHelper__" + sanitizeIdent(sub->name) + "__" + suffix;
-		bySubId[sub->id] = {templateVarName, helperContractId, sig};
+		auto const& pieces = piecesBySubId[sub->id];
+		std::vector<PieceInfo> infos;
+		infos.reserve(pieces.size());
+		for (auto const& piece : pieces)
+		{
+			PieceInfo pi;
+			pi.sub = piece;
+			pi.sig = canonicalSig(*piece);
+			pi.returnType = piece->returnType;
+			std::string suffix = std::to_string(counter++);
+			pi.templateVar =
+				"PURE_HELPER_" + sanitizeIdent(piece->name) +
+				"_" + suffix + "_APP_ID";
+			pi.helperContractId =
+				"PureHelper__" + sanitizeIdent(piece->name) + "__" + suffix;
 
-		ExtractedHelper eh;
-		eh.subId = sub->id;
-		eh.templateVarName = templateVarName;
-		eh.helperContractId = helperContractId;
-		out.extracted.push_back(std::move(eh));
+			ExtractedHelper eh;
+			eh.subId = piece->id;
+			eh.templateVarName = pi.templateVar;
+			eh.helperContractId = pi.helperContractId;
+			out.extracted.push_back(std::move(eh));
 
-		logger.info(
-			"--deploy-pure-helpers: lifting '" + sub->name +
-			"' (sig='" + sig + "') to " + helperContractId);
+			logger.info(
+				"--deploy-pure-helpers: lifting '" + piece->name +
+				"' (sig='" + pi.sig + "') to " + pi.helperContractId);
+			infos.push_back(std::move(pi));
+		}
+		bySubId[sub->id] = std::move(infos);
 	}
 
-	// Pass 3: build the helper Contracts.
+	// Pass 3: build the helper Contracts (one per piece).
 	for (auto const& sub : pureSubs)
-	{
-		auto const& [_tv, hid, sig] = bySubId[sub->id];
-		out.helperContracts.push_back(
-			buildHelperContract(*sub, hid, sig));
-	}
+		for (auto const& pi : bySubId[sub->id])
+			out.helperContracts.push_back(
+				buildHelperContract(*pi.sub, pi.helperContractId, pi.sig));
 
 	// Pass 4: walk every body in every NON-helper root and rewrite
-	// SubroutineCall(SubroutineID(extracted_id), ...) sites to
-	// inner-txn ApplicationCall on the helper.
+	// SubroutineCall(SubroutineID(extracted_id), ...) sites. For
+	// unsplit Subs (pieces.size()==1) that's a single inner-app-call;
+	// for split Subs it's a chained inner-txn group of M piece-calls
+	// with the original args on piece 0 and the chunked-return helpers
+	// hung off the last piece.
+	std::set<std::string> allPieceIds;
+	for (auto const& [_, infos] : bySubId)
+		for (auto const& pi : infos)
+			allPieceIds.insert(pi.sub->id);
 	auto rewriteFn = [&bySubId](awst::Expression const& e)
 		-> std::shared_ptr<awst::Expression>
 	{
@@ -868,7 +1075,7 @@ PureHelperExtractor::Result PureHelperExtractor::extract(
 		if (!sid) return nullptr;
 		auto it = bySubId.find(sid->target);
 		if (it == bySubId.end()) return nullptr;
-		auto const& [tv, _hid, sig] = it->second;
+		auto const& infos = it->second;
 		std::vector<std::shared_ptr<awst::Expression>> args;
 		std::vector<awst::WType const*> argTypes;
 		for (auto const& a : sce->args)
@@ -876,9 +1083,37 @@ PureHelperExtractor::Result PureHelperExtractor::extract(
 			args.push_back(a.value);
 			argTypes.push_back(a.value ? a.value->wtype : nullptr);
 		}
-		return buildInnerCallReplacement(
-			tv, sig, std::move(args), argTypes,
-			sce->wtype, sce->sourceLocation);
+		if (infos.size() == 1)
+		{
+			auto const& pi = infos[0];
+			return buildInnerCallReplacement(
+				pi.templateVar, pi.sig, std::move(args), argTypes,
+				sce->wtype, sce->sourceLocation);
+		}
+		// Multi-piece: build chained inner-txn group. Args go to piece 0.
+		// Pieces 1..M-1 are invoked with empty args (their bodies start
+		// with the gload prologue that pulls live vars from the previous
+		// txn's scratch slot 100). The chunked-return helpers attach to
+		// the LAST piece's sidecar (since that's where the chunks live).
+		std::vector<std::tuple<std::string, std::string,
+			std::vector<std::shared_ptr<awst::Expression>>,
+			std::vector<awst::WType const*>>> pieceCalls;
+		pieceCalls.reserve(infos.size());
+		for (size_t i = 0; i < infos.size(); ++i)
+		{
+			auto const& pi = infos[i];
+			if (i == 0)
+				pieceCalls.emplace_back(pi.templateVar, pi.sig, args, argTypes);
+			else
+				pieceCalls.emplace_back(pi.templateVar, pi.sig,
+					std::vector<std::shared_ptr<awst::Expression>>{},
+					std::vector<awst::WType const*>{});
+		}
+		return buildChainedInnerCallReplacement(
+			pieceCalls,
+			infos.back().templateVar,  // chunked-return helpers hit last piece
+			sce->wtype,
+			sce->sourceLocation);
 	};
 
 	for (auto& root : _roots)

@@ -930,7 +930,8 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 			// (same txn frame).
 			if (!isFirst)
 			{
-				int prevCallTxnIdx = static_cast<int>(2 * pi - 1);
+				int prevCallTxnIdx = static_cast<int>(
+					spec.prevCallStride * pi - 1);
 				for (auto& s : makeScratchLoadStmts(
 					liveAt[pi - 1], prevCallTxnIdx,
 					spec.crossChunk, origLoc))
@@ -1070,7 +1071,16 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 				piece->name = bp.name;
 				piece->args = origArgs;
 				piece->returnType = bp.returnType;
-				piece->pure = tgtPure;
+				// Cross-chunk pieces have a scratch-store-100 epilogue
+				// that puya's DCE doesn't recognize as a side effect
+				// (scratch is per-app-call from puya's perspective; it
+				// doesn't know a sibling inner txn will `gload` it).
+				// Marking non-pure keeps puya from dropping the body.
+				// Last piece is naturally non-pure since it has a
+				// concrete return type the caller reads.
+				bool isLastPiece = (&bp == &built.back());
+				piece->pure = (spec.crossChunk && !isLastPiece)
+					? false : tgtPure;
 				piece->inlineOpt = false;
 				piece->body = bp.body;
 				result.newSubroutines.push_back(piece);

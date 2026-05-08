@@ -226,6 +226,24 @@ struct Options
 	// like `_calculateUserAccountData` so its body can be sliced via
 	// `--fn-split` rather than dragged in whole). Repeatable.
 	std::vector<std::string> forceInlineSubs;
+
+	// --pure-helper-split <SubName>:<idx>,<idx>,...
+	//
+	// Slice the named pure subroutine's body at the given statement
+	// indices BEFORE lifting it via --deploy-pure-helpers. With N
+	// indices the body splits into N+1 pieces; PureHelperExtractor
+	// builds one sidecar Contract per piece (so a 14 KB Sub split
+	// at one point yields two 7 KB sidecars, fitting the AVM 8 KB
+	// per-program cap). Live vars across each split flow through
+	// scratch slot 100 + `gload` from the previous inner txn.
+	//
+	// Repeatable: one flag invocation per Sub to split.
+	struct PureHelperSplitSpec
+	{
+		std::string subroutineName;
+		std::vector<size_t> splitPoints;
+	};
+	std::vector<PureHelperSplitSpec> pureHelperSplits;
 };
 
 void printUsage(char const* _progName)
@@ -288,6 +306,11 @@ void printUsage(char const* _progName)
 		<< "                         chunks (per-Contract DCE), at the cost of one inner-txn\n"
 		<< "                         per call. Each helper gets a TMPL_PURE_HELPER_<name>_<n>\n"
 		<< "                         _APP_ID template var the deploy harness substitutes.\n"
+		<< "  --pure-helper-split <Sub>:<idx>,...  Slice the lifted pure helper\n"
+		<< "                         into pieces at the given statement indices.\n"
+		<< "                         Each piece becomes its own sidecar Contract,\n"
+		<< "                         called as a chained inner-txn group at use sites.\n"
+		<< "                         Use to fit big helpers into the AVM 8 KB cap.\n"
 		<< "  --force-inline-sub <Name>  Set inlineOpt=true on every Subroutine or\n"
 		<< "                         ContractMethod whose name matches <Name>. Puya inlines\n"
 		<< "                         the body at every call site, so the subroutine itself\n"
@@ -348,6 +371,31 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.deployPureHelpers = true;
 		else if (arg == "--force-inline-sub" && i + 1 < _argc)
 			opts.forceInlineSubs.push_back(_argv[++i]);
+		else if (arg == "--pure-helper-split" && i + 1 < _argc)
+		{
+			std::string spec = _argv[++i];
+			auto colon = spec.find(':');
+			if (colon == std::string::npos)
+			{
+				std::cerr << "ERR: --pure-helper-split needs <Sub>:<idx>,...\n";
+				exit(1);
+			}
+			Options::PureHelperSplitSpec ps;
+			ps.subroutineName = spec.substr(0, colon);
+			std::string idxs = spec.substr(colon + 1);
+			size_t p = 0;
+			while (p <= idxs.size())
+			{
+				size_t comma = idxs.find(',', p);
+				size_t end = (comma == std::string::npos) ? idxs.size() : comma;
+				std::string tok = idxs.substr(p, end - p);
+				if (!tok.empty())
+					ps.splitPoints.push_back(std::stoul(tok));
+				if (comma == std::string::npos) break;
+				p = comma + 1;
+			}
+			opts.pureHelperSplits.push_back(std::move(ps));
+		}
 		else if (arg == "--fn-split" && i + 1 < _argc)
 		{
 			// Format: <Name>:<idx>,<idx>,...:g<N>[:cross]
@@ -953,7 +1001,11 @@ int main(int _argc, char* _argv[])
 	if (opts.deployPureHelpers)
 	{
 		puyasol::splitter::PureHelperExtractor ex;
-		pureHelperResult = ex.extract(roots);
+		std::vector<puyasol::splitter::PureHelperExtractor::HelperSplitSpec>
+			splitSpecs;
+		for (auto const& s : opts.pureHelperSplits)
+			splitSpecs.push_back({s.subroutineName, s.splitPoints});
+		pureHelperResult = ex.extract(roots, splitSpecs);
 	}
 	// pure_helpers.json: small artifact the deploy harness reads to
 	// (a) enumerate the synthesized helper Contracts, (b) deploy each

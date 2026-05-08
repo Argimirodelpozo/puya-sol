@@ -67,6 +67,14 @@ public:
 		std::vector<size_t> splitPoints;
 		int groupId = 0;
 		bool crossChunk = false;
+		/// Spacing between successive piece *call* txn indices in the
+		/// inner-txn group. Default 2 matches the uros orch convention
+		/// (interleaved install at 2N + call at 2N+1, so piece N's
+		/// call sits at 2N+1 and `gload`s from 2N-1, which is
+		/// piece (N-1)'s call). Set to 1 for direct-chain mode
+		/// (PureHelperExtractor's split sidecars: each piece is its
+		/// own deployed Contract, no install txns in between).
+		int prevCallStride = 2;
 	};
 
 	struct SplitResult

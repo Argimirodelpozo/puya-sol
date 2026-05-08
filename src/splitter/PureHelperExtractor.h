@@ -61,11 +61,32 @@ public:
 		bool didExtract = false;
 	};
 
+	/// User-supplied per-helper body split. When the lifted Subroutine's
+	/// bytecode would exceed the AVM 4-page cap (8 KB), the caller can
+	/// pre-slice its body into pieces; PureHelperExtractor then emits
+	/// one sidecar Contract per piece and rewrites call sites to
+	/// inner-txn-group all pieces in sequence (state threaded between
+	/// them via FunctionSplitter's scratch-slot-100 + gload prologue).
+	///
+	///   subroutineName: matches `awst::Subroutine::name` of the pure
+	///                   Sub to split (e.g. "RelationsLib.accumulateAuxillaryRelation").
+	///   splitPoints:    statement indices in the Sub's body. With N
+	///                   points, the body slices into N+1 pieces.
+	struct HelperSplitSpec
+	{
+		std::string subroutineName;
+		std::vector<size_t> splitPoints;
+	};
+
 	/// Lift every pure Subroutine reachable from `_roots` into its own
 	/// helper Contract; rewrite call sites in every body to inner-txn
 	/// the helper. Mutates `_roots` in place: removes the lifted
-	/// Subroutines, appends the new helper Contracts.
-	Result extract(std::vector<std::shared_ptr<awst::RootNode>>& _roots);
+	/// Subroutines, appends the new helper Contracts. Optional
+	/// `_splitSpecs` triggers FunctionSplitter on listed Subs, producing
+	/// multiple sidecars per Sub.
+	Result extract(
+		std::vector<std::shared_ptr<awst::RootNode>>& _roots,
+		std::vector<HelperSplitSpec> const& _splitSpecs = {});
 };
 
 } // namespace puyasol::splitter
