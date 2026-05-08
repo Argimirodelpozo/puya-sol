@@ -1,3 +1,42 @@
+# Semantic Test Status — v217
+
+**Totals**: 1092 PASS / 156 FAIL / 74 (57 compile_err + 17 deploy_err) = **1092/1322 (82.6%)**
+
+vs v216 = 1092 PASS: **±0 / no outcome diffs** (zero per-test diffs after stripping nonces).
+
+## v217 puya-sol changes (vs v216)
+
+Pure boilerplate-collapse refactor — no behaviour change.
+
+  - **`makeSubroutineCall(target, type, loc)` helper** (Node.h):
+    collapses the canonical 4-line `make_shared<SubroutineCallExpression>`
+    + `sourceLocation`/`wtype`/`target` shape to one call. 20 call
+    sites converted across BitwiseShiftOps, SignedOps, StatementOps,
+    ApprovalProgramBuilder, ModifierInliner, SolBuiltinCall,
+    SolInternalCall, SolAssignment, SolBinaryOperation, SolIndexAccess,
+    SolUnaryOperation, FunctionPointerBuilder (3 sites), InnerCallShapes,
+    InnerCallHandlers, FunctionSplitter, PureHelperExtractor,
+    UrosSplitter.
+  - **`pushCallArg(args, name?, value)` helper** (Node.h, two
+    overloads): collapses the 4-line `CallArg` construct + push_back
+    pattern. Used at named arg sites and an unnamed-positional overload
+    for assembly user-function calls and inner-call data forwarding.
+  - **`makeIntrinsicCall` adoption**: 6 remaining
+    `make_shared<IntrinsicCall>` sites in SolIdentifier, SolExternalCall,
+    SolIndexAccessHandlers, ApprovalProgramBuilder (×2),
+    InnerCallShapes, UrosSplitter switched to the existing helper.
+  - **Conditional target init**: in three places (FunctionSplitter,
+    FunctionPointerBuilder ×2) the target was set inside an
+    if/else after the SubroutineCallExpression existed; refactored to
+    compute `SubroutineTarget` first via a ternary, then call
+    `makeSubroutineCall`.
+
+Net diff: **+39 / −200 = −161 LOC** across 21 files, zero behavioural
+change. Per-test outcomes byte-identical to v216 after txid/nonce
+normalisation.
+
+---
+
 # Semantic Test Status — v216
 
 **Totals**: 1092 PASS / 156 FAIL / 74 (57 compile_err + 17 deploy_err) = **1092/1322 (82.6%)**
