@@ -385,14 +385,47 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		}
 	}
 
-	// Return type — augment with storage param types so callers can capture
-	// the mutated value.
+	// Detect `memory` reference params for return-type augmentation. Solidity
+	// passes memory refs by reference, but our value-typed translation copies
+	// at the boundary — mutations inside the callee don't propagate. To
+	// recover the by-ref semantics for the common pattern (callee mutates
+	// `Fr[N] memory evals` then returns void), we tag each memory-ref param
+	// as an extra return; SolInternalCall captures the tuple and writes the
+	// post-call value back to the caller's local. Applies regardless of
+	// `pure` — Solidity allows pure functions to mutate memory params.
+	// Skipped on private functions for the same reason as storage refs
+	// (puya may thread these internally) and on bytes/string/mapping (those
+	// keep their existing translations).
+	std::vector<size_t> memoryRefParamIndices;
+	if (!isPrivate)
+	{
+		auto isMemRefType = [](solidity::frontend::Type const* t) {
+			if (auto const* arr = dynamic_cast<solidity::frontend::ArrayType const*>(t))
+				return !arr->isByteArrayOrString();
+			return dynamic_cast<solidity::frontend::StructType const*>(t) != nullptr;
+		};
+		for (size_t pi = 0; pi < _func.parameters().size(); ++pi)
+		{
+			auto const& p = _func.parameters()[pi];
+			if (p->referenceLocation()
+				!= solidity::frontend::VariableDeclaration::Location::Memory)
+				continue;
+			if (!p->type() || !isMemRefType(p->type()))
+				continue;
+			memoryRefParamIndices.push_back(pi);
+		}
+	}
+
+	// Return type — augment with storage + memory param types so callers can
+	// capture the mutated value.
 	auto const& returnParams = _func.returnParameters();
 	{
 		std::vector<awst::WType const*> types;
 		for (auto const& rp: returnParams)
 			types.push_back(m_typeMapper.map(rp->type()));
 		for (size_t idx: storageParamIndices)
+			types.push_back(sub->args[idx].wtype);
+		for (size_t idx: memoryRefParamIndices)
 			types.push_back(sub->args[idx].wtype);
 
 		if (types.empty())
@@ -552,20 +585,21 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 
 	// Augment return statements: append storage param values so callers can
 	// write the modified struct back to their storage.
-	if (!storageParamIndices.empty())
+	if (!storageParamIndices.empty() || !memoryRefParamIndices.empty())
 	{
 		// sub->returnType is either:
 		//   - a WTuple (multi-element augmented return), OR
-		//   - a bare type (void function + exactly 1 storage arg → bare
-		//     storageArgType; one return param + zero storage args isn't
-		//     reachable here because we only enter this branch when
-		//     storageParamIndices is non-empty; one return + zero storage
-		//     args is the void+1 case).
+		//   - a bare type (void function + exactly 1 augmented arg → that
+		//     arg's type; one return param + zero augmented args isn't
+		//     reachable here because we only enter this branch when at
+		//     least one augmented index is present; one return + zero
+		//     augmented args is the void+1 case).
 		// Wrapping a single value in a TupleExpression with the bare
 		// element type as wtype produces invalid AWST (puya rejects
 		// `TupleExpression.wtype` non-WTuple). Branch on shape.
 		bool returnIsTuple =
 			(dynamic_cast<awst::WTuple const*>(sub->returnType) != nullptr);
+		size_t totalAugmented = storageParamIndices.size() + memoryRefParamIndices.size();
 
 		std::function<void(awst::Block&)> augmentReturns;
 		augmentReturns = [&](awst::Block& block) {
@@ -577,13 +611,15 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 					{
 						// sub->returnType is a bare type. There must be exactly
 						// one source: either ret->value (if author wrote
-						// `return val;`) OR the single storage arg (if author
+						// `return val;`) OR the single augmented arg (if author
 						// wrote bare `return;`). User-written `return val;` in
-						// a void+storage-augmented function isn't valid Solidity,
+						// a void+1-arg-augmented function isn't valid Solidity,
 						// so we only handle the bare-return case.
-						if (!ret->value && storageParamIndices.size() == 1)
+						if (!ret->value && totalAugmented == 1)
 						{
-							size_t idx = storageParamIndices[0];
+							size_t idx = !storageParamIndices.empty()
+								? storageParamIndices[0]
+								: memoryRefParamIndices[0];
 							ret->value = awst::makeVarExpression(
 								sub->args[idx].name, sub->args[idx].wtype,
 								ret->sourceLocation);
@@ -597,6 +633,13 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 						if (ret->value)
 							tuple->items.push_back(ret->value);
 						for (size_t idx: storageParamIndices)
+						{
+							auto pv = awst::makeVarExpression(
+								sub->args[idx].name, sub->args[idx].wtype,
+								ret->sourceLocation);
+							tuple->items.push_back(std::move(pv));
+						}
+						for (size_t idx: memoryRefParamIndices)
 						{
 							auto pv = awst::makeVarExpression(
 								sub->args[idx].name, sub->args[idx].wtype,
@@ -630,30 +673,38 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	}
 
 	// Synthesize an implicit return when the body falls through. Three cases:
-	//  1. Void return + storage augmentation → return (storage args).
-	//  2. Named returns                       → return named values.
-	//  3. Otherwise                           → return makeDefaultValue(returnType).
+	//  1. Void return + storage/memory augmentation → return augmented args.
+	//  2. Named returns                              → return named values.
+	//  3. Otherwise                                  → return makeDefaultValue(returnType).
 	if (!awst::blockAlwaysTerminates(*sub->body)
-		&& (!returnParams.empty() || !storageParamIndices.empty()))
+		&& (!returnParams.empty() || !storageParamIndices.empty()
+			|| !memoryRefParamIndices.empty()))
 	{
 		bool hasNamedReturns = false;
 		for (auto const& rp: returnParams)
 			if (!rp->name().empty())
 				hasNamedReturns = true;
 
-		if (!hasNamedReturns && returnParams.empty() && !storageParamIndices.empty())
+		size_t totalAugmented2 = storageParamIndices.size() + memoryRefParamIndices.size();
+		if (!hasNamedReturns && returnParams.empty() && totalAugmented2 > 0)
 		{
-			// Void return with storage augmentation — append return of (storage args).
+			// Void return with storage/memory augmentation — append return
+			// of the augmented args (in storage-then-memory order, matching
+			// the return-type tuple layout above).
 			auto implicitReturn = awst::makeReturnStatement(nullptr, loc);
-			if (storageParamIndices.size() == 1)
+			if (totalAugmented2 == 1)
 			{
-				size_t idx = storageParamIndices[0];
+				size_t idx = !storageParamIndices.empty()
+					? storageParamIndices[0]
+					: memoryRefParamIndices[0];
 				implicitReturn->value = awst::makeVarExpression(sub->args[idx].name, sub->args[idx].wtype, loc);
 			}
 			else
 			{
 				auto tuple = awst::makeTupleExpression(sub->returnType, loc);
 				for (size_t idx: storageParamIndices)
+					tuple->items.push_back(awst::makeVarExpression(sub->args[idx].name, sub->args[idx].wtype, loc));
+				for (size_t idx: memoryRefParamIndices)
 					tuple->items.push_back(awst::makeVarExpression(sub->args[idx].name, sub->args[idx].wtype, loc));
 				implicitReturn->value = std::move(tuple);
 			}
@@ -663,7 +714,10 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		{
 			auto implicitReturn = awst::makeReturnStatement(nullptr, loc);
 
-			if (returnParams.size() == 1)
+			// When the return type was augmented with storage / memory-ref
+			// args, we must include those after the named-return values so
+			// the synthesized return tuple matches `sub->returnType`.
+			if (returnParams.size() == 1 && totalAugmented2 == 0)
 			{
 				auto var = awst::makeVarExpression(returnParams[0]->name(), m_typeMapper.map(returnParams[0]->type()), loc);
 				implicitReturn->value = std::move(var);
@@ -672,13 +726,17 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			{
 				auto tuple = std::make_shared<awst::TupleExpression>();
 				tuple->sourceLocation = loc;
-				std::vector<awst::WType const*> types;
 				for (auto const& rp: returnParams)
 				{
 					auto var = awst::makeVarExpression(rp->name(), m_typeMapper.map(rp->type()), loc);
-					types.push_back(var->wtype);
 					tuple->items.push_back(std::move(var));
 				}
+				for (size_t idx: storageParamIndices)
+					tuple->items.push_back(awst::makeVarExpression(
+						sub->args[idx].name, sub->args[idx].wtype, loc));
+				for (size_t idx: memoryRefParamIndices)
+					tuple->items.push_back(awst::makeVarExpression(
+						sub->args[idx].name, sub->args[idx].wtype, loc));
 				tuple->wtype = sub->returnType;
 				implicitReturn->value = std::move(tuple);
 			}

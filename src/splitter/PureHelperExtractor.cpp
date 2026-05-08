@@ -51,10 +51,12 @@ std::string arc4TypeName(awst::WType const* _t)
 	return "?";
 }
 
-/// Estimate the static encoded size of a return wtype. Returns 0 if
-/// dynamic or unknown. The `LastLog` ABI return channel caps single-
-/// log size at AVM MaxLogSize (1024 B) — we surface a warning if a
-/// return type doesn't fit.
+/// Estimate the static encoded size of a return wtype in ABI-encoded
+/// bytes (matches the byte-count puya emits via `log` for the return
+/// value). Returns 0 if dynamic or unknown. Used to decide whether the
+/// return value fits in a single AVM log call (≤1024 B), needs the
+/// chunked-log path (1024 B–4096 B) or has to be skipped entirely
+/// (>4096 B can't be reassembled into a single stack value).
 int staticEncodedSize(awst::WType const* _t)
 {
 	if (!_t || _t == awst::WType::voidType()) return 0;
@@ -68,6 +70,31 @@ int staticEncodedSize(awst::WType const* _t)
 	{
 		int sum = 0;
 		for (auto const* ft : tup->types())
+		{
+			int s = staticEncodedSize(ft);
+			if (s == 0) return 0;
+			sum += s;
+		}
+		return sum;
+	}
+	// ARC4 fixed-width integer: bits / 8 bytes (e.g. arc4.uint256 = 32).
+	if (auto const* ui = dynamic_cast<awst::ARC4UIntN const*>(_t))
+		return (ui->n() + 7) / 8;
+	// ARC4 static array: elementCount × elementSize. Returns 0 when the
+	// element is itself dynamic.
+	if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(_t))
+	{
+		int es = staticEncodedSize(sa->elementType());
+		if (es == 0) return 0;
+		return static_cast<int>(sa->arraySize()) * es;
+	}
+	// ARC4 struct: sum of field sizes. Returns 0 if any field is
+	// dynamic. (puya packs static-only structs head-to-head with no
+	// per-field length prefix.)
+	if (auto const* st = dynamic_cast<awst::ARC4Struct const*>(_t))
+	{
+		int sum = 0;
+		for (auto const& [_, ft] : st->fields())
 		{
 			int s = staticEncodedSize(ft);
 			if (s == 0) return 0;
@@ -297,8 +324,52 @@ std::shared_ptr<awst::Expression> encodeReturnLogPayload(
 	return awst::makeConcat(std::move(prefix), std::move(encoded), _loc);
 }
 
-/// Build the helper Contract's hand-written approval body — routes
-/// the one selector to the lifted Subroutine. Anything else asserts.
+/// Selector signature for the per-helper "fetch next chunk" entry
+/// point used by the chunked-return path. Sidecars whose method's
+/// augmented return exceeds the per-program 1024 B log cap also expose
+/// this method; the caller bundles N-1 invocations of it after the
+/// main method into one inner-txn group, and each helper-txn `gloadss`
+/// the chunk stashed by the main method.
+constexpr char const* kBigReturnHelperSig = "__big_return_helper()void";
+
+/// Body of `__big_return_helper`: read this txn's GroupIndex; gloadss
+/// scratch slot (99 + GroupIndex) of txn 0 (the main method's call),
+/// `log` it, return.
+void appendBigReturnHelperBranch(
+	std::vector<std::shared_ptr<awst::Statement>>& _out,
+	awst::SourceLocation const& _loc)
+{
+	// gloadss takes the txn index (top-of-stack-1) and slot (top-of-
+	// stack) and pushes the chunk bytes. Build:
+	//   pushint 0           // txn 0 (main method)
+	//   txn GroupIndex      // my idx in inner group
+	//   pushint 99
+	//   +                   // slot = 99 + GroupIndex
+	//   gloadss
+	//   log
+	auto txnIdx = awst::makeIntegerConstant("0", _loc);
+	auto myIdx = awst::makeIntrinsicCall(
+		"txn", awst::WType::uint64Type(), _loc);
+	myIdx->immediates = {std::string("GroupIndex")};
+	auto base = awst::makeIntegerConstant("99", _loc);
+	auto slot = awst::makeUInt64BinOp(
+		std::move(myIdx), awst::UInt64BinaryOperator::Add,
+		std::move(base), _loc);
+	auto gloadss = awst::makeIntrinsicCall(
+		"gloadss", awst::WType::bytesType(), _loc);
+	gloadss->stackArgs.push_back(std::move(txnIdx));
+	gloadss->stackArgs.push_back(std::move(slot));
+	auto logCall = awst::makeIntrinsicCall(
+		"log", awst::WType::voidType(), _loc);
+	logCall->stackArgs.push_back(std::move(gloadss));
+	_out.push_back(awst::makeExpressionStatement(std::move(logCall), _loc));
+}
+
+/// Build the helper Contract's hand-written approval body. Routes one
+/// selector to the lifted Subroutine. When the lifted method's return
+/// exceeds the per-program log cap, also routes a second selector
+/// (`__big_return_helper`) for sibling inner txns to pull the stashed
+/// chunks out of the main method's scratch.
 std::shared_ptr<awst::Block> buildHelperApprovalBody(
 	awst::Subroutine const& _sub,
 	std::string const& _sig,
@@ -313,18 +384,52 @@ std::shared_ptr<awst::Block> buildHelperApprovalBody(
 	body->body.push_back(awst::makeIfElse(
 		isCreate(_loc), std::move(thenBlock), nullptr, _loc));
 
-	// Selector check (BytesComparisonExpression — selector and
-	// ApplicationArgs[0] are both 4-byte byte strings, not numeric
-	// types).
-	auto selectorMatches = std::make_shared<awst::BytesComparisonExpression>();
-	selectorMatches->sourceLocation = _loc;
-	selectorMatches->wtype = awst::WType::boolType();
-	selectorMatches->lhs = appArgAt(0, _loc);
-	selectorMatches->op = awst::EqualityComparison::Eq;
-	selectorMatches->rhs = selectorConst(_sig, _loc);
-	body->body.push_back(awst::makeExpressionStatement(
-		awst::makeAssert(std::move(selectorMatches), _loc,
-			std::string("helper: unknown selector")), _loc));
+	int retSize = staticEncodedSize(_sub.returnType);
+	bool needsBigReturnHelper =
+		_sub.returnType
+		&& _sub.returnType != awst::WType::voidType()
+		&& retSize > 0
+		&& (4 + retSize) > 1024;
+
+	auto makeSelectorEq = [&](std::string const& _sigToMatch) {
+		auto eq = std::make_shared<awst::BytesComparisonExpression>();
+		eq->sourceLocation = _loc;
+		eq->wtype = awst::WType::boolType();
+		eq->lhs = appArgAt(0, _loc);
+		eq->op = awst::EqualityComparison::Eq;
+		eq->rhs = selectorConst(_sigToMatch, _loc);
+		return eq;
+	};
+
+	if (!needsBigReturnHelper)
+	{
+		// Single-selector dispatch: assert match.
+		body->body.push_back(awst::makeExpressionStatement(
+			awst::makeAssert(makeSelectorEq(_sig), _loc,
+				std::string("helper: unknown selector")), _loc));
+	}
+	else
+	{
+		// Two-selector dispatch:
+		//   if selector == originalSig: fall through to original method body
+		//   else if selector == helperSig: emit chunk + return
+		//   else: assert false
+		// We emit the helper branch first as an early-return, then let
+		// the rest of the body be the original method's path.
+		auto helperBlock = awst::makeBlock(_loc);
+		appendBigReturnHelperBranch(helperBlock->body, _loc);
+		helperBlock->body.push_back(awst::makeReturnStatement(
+			awst::makeBoolConstant(true, _loc), _loc));
+		body->body.push_back(awst::makeIfElse(
+			makeSelectorEq(kBigReturnHelperSig),
+			std::move(helperBlock), nullptr, _loc));
+
+		// Past the helper-selector branch, only the original selector
+		// is valid. Assert that.
+		body->body.push_back(awst::makeExpressionStatement(
+			awst::makeAssert(makeSelectorEq(_sig), _loc,
+				std::string("helper: unknown selector")), _loc));
+	}
 
 	// Decode each ABI arg and bind to a local.
 	std::vector<std::shared_ptr<awst::Expression>> callArgs;
@@ -367,11 +472,76 @@ std::shared_ptr<awst::Block> buildHelperApprovalBody(
 			resultName, _sub.returnType, _loc);
 		auto payload = encodeReturnLogPayload(
 			std::move(resultRead), _sub.returnType, _loc);
-		auto logCall = awst::makeIntrinsicCall(
-			"log", awst::WType::voidType(), _loc);
-		logCall->stackArgs.push_back(std::move(payload));
-		body->body.push_back(awst::makeExpressionStatement(
-			std::move(logCall), _loc));
+
+		// Total payload size is `4 B prefix + retSize`. If it fits in
+		// the per-program log cap (1024 B total per program — confirmed
+		// empirically in localnet), emit a single `log`. Otherwise
+		// stash chunks 1..N-1 into scratch slots 100..100+N-2 and let
+		// the caller invoke `__big_return_helper` once per chunk in
+		// the same inner-txn group; each helper txn `gloadss` its
+		// chunk from txn 0 and emits it as its own log.
+		int retSize = staticEncodedSize(_sub.returnType);
+		int totalSize = 4 + retSize;
+		constexpr int kChunkSize = 1024;
+		constexpr int kChunkBaseSlot = 100;
+		if (totalSize <= kChunkSize)
+		{
+			auto logCall = awst::makeIntrinsicCall(
+				"log", awst::WType::voidType(), _loc);
+			logCall->stackArgs.push_back(std::move(payload));
+			body->body.push_back(awst::makeExpressionStatement(
+				std::move(logCall), _loc));
+		}
+		else
+		{
+			// Stash payload once.
+			std::string bufName = "__pure_helper_buf";
+			auto bufTarget = awst::makeVarExpression(
+				bufName, awst::WType::bytesType(), _loc);
+			body->body.push_back(awst::makeAssignmentStatement(
+				bufTarget, std::move(payload), _loc));
+
+			int chunks = (totalSize + kChunkSize - 1) / kChunkSize;
+			// Emit chunk 0 via log (caller reads via `gitxn 0 LastLog`).
+			{
+				auto bufRead = awst::makeVarExpression(
+					bufName, awst::WType::bytesType(), _loc);
+				auto extract = awst::makeIntrinsicCall(
+					"extract3", awst::WType::bytesType(), _loc);
+				extract->stackArgs.push_back(std::move(bufRead));
+				extract->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
+				extract->stackArgs.push_back(awst::makeIntegerConstant(
+					std::to_string(std::min(kChunkSize, totalSize)), _loc));
+				auto logCall = awst::makeIntrinsicCall(
+					"log", awst::WType::voidType(), _loc);
+				logCall->stackArgs.push_back(std::move(extract));
+				body->body.push_back(awst::makeExpressionStatement(
+					std::move(logCall), _loc));
+			}
+			// Stash chunks 1..N-1 to scratch slots kChunkBaseSlot+0..N-2.
+			// `__big_return_helper` (sibling inner txn) will gloadss each
+			// from this txn's scratch to emit them as its own log.
+			for (int i = 1; i < chunks; ++i)
+			{
+				int off = i * kChunkSize;
+				int len = std::min(kChunkSize, totalSize - off);
+				auto bufRead = awst::makeVarExpression(
+					bufName, awst::WType::bytesType(), _loc);
+				auto extract = awst::makeIntrinsicCall(
+					"extract3", awst::WType::bytesType(), _loc);
+				extract->stackArgs.push_back(std::move(bufRead));
+				extract->stackArgs.push_back(awst::makeIntegerConstant(
+					std::to_string(off), _loc));
+				extract->stackArgs.push_back(awst::makeIntegerConstant(
+					std::to_string(len), _loc));
+				auto storeOp = awst::makeIntrinsicCall(
+					"store", awst::WType::voidType(), _loc);
+				storeOp->immediates = {kChunkBaseSlot + (i - 1)};
+				storeOp->stackArgs.push_back(std::move(extract));
+				body->body.push_back(awst::makeExpressionStatement(
+					std::move(storeOp), _loc));
+			}
+		}
 	}
 	else
 	{
@@ -475,17 +645,89 @@ std::shared_ptr<awst::Expression> buildInnerCallReplacement(
 	create->fields["ApplicationID"] = std::move(tmplVar);
 	create->fields["ApplicationArgs"] = std::move(argsTuple);
 
+	int retSize = staticEncodedSize(_retType);
+	int totalSize = (_retType && _retType != awst::WType::voidType())
+		? 4 + retSize : 0;
+	constexpr int kChunkSize = 1024;
+	int chunks = totalSize > 0
+		? (totalSize + kChunkSize - 1) / kChunkSize : 0;
+
 	static awst::WInnerTransaction s_applTxnType(TxnTypeAppl);
 	auto submit = awst::makeSubmitInnerTransaction(
 		&s_applTxnType, _loc);
 	submit->itxns.push_back(std::move(create));
 
+	// Chunked-return case: append N-1 `__big_return_helper()` inner
+	// txns to the same inner-txn group. Each helper-txn `gloadss`es
+	// its assigned chunk from txn 0's scratch (slot 99 + GroupIndex)
+	// and emits it as its own LastLog. The caller then concatenates
+	// `gitxn 0..N-1 LastLog` to recover the full ABI-encoded return.
+	if (chunks > 1)
+	{
+		// Helper inner-txn args: just the helper selector. No data
+		// args — the chunk is fetched by groupIndex from txn 0.
+		auto helperArgs = awst::makeTupleExpression(nullptr, _loc);
+		helperArgs->items.push_back(selectorConst(kBigReturnHelperSig, _loc));
+		std::vector<awst::WType const*> helperArgTypes;
+		for (auto const& it : helperArgs->items)
+			helperArgTypes.push_back(it->wtype);
+		ownedTupleTypes.push_back(std::make_unique<awst::WTuple>(
+			std::move(helperArgTypes), std::nullopt));
+		helperArgs->wtype = ownedTupleTypes.back().get();
+
+		for (int i = 1; i < chunks; ++i)
+		{
+			auto helperCreate = std::make_shared<awst::CreateInnerTransaction>();
+			helperCreate->sourceLocation = _loc;
+			helperCreate->wtype = &s_applFieldsType;
+			helperCreate->fields["TypeEnum"] = awst::makeIntegerConstant(
+				std::to_string(TxnTypeAppl), _loc);
+			helperCreate->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
+			helperCreate->fields["OnCompletion"] = awst::makeIntegerConstant("0", _loc);
+			auto helperAppId = std::make_shared<awst::TemplateVar>();
+			helperAppId->sourceLocation = _loc;
+			helperAppId->wtype = awst::WType::uint64Type();
+			helperAppId->name = "TMPL_" + _templateVar;
+			helperCreate->fields["ApplicationID"] = std::move(helperAppId);
+			// Re-clone the args tuple per inner txn (puya
+			// disallows shared sub-AST in itxns field map).
+			auto haCopy = awst::makeTupleExpression(helperArgs->wtype, _loc);
+			haCopy->items.push_back(selectorConst(kBigReturnHelperSig, _loc));
+			helperCreate->fields["ApplicationArgs"] = std::move(haCopy);
+			submit->itxns.push_back(std::move(helperCreate));
+		}
+	}
+
 	if (!_retType || _retType == awst::WType::voidType())
 		return submit;
 
-	// Read itxn LastLog, strip 4-byte ABI return prefix, decode.
-	auto readLog = awst::makeIntrinsicCall("itxn", awst::WType::bytesType(), _loc);
-	readLog->immediates = {std::string("LastLog")};
+	// Read the inner-call's logged ABI return. ≤1024 B payloads come
+	// back in one log via `itxn LastLog`. Larger payloads were sliced
+	// across `chunks` inner txns (txn 0 logs chunk 0, helper txns 1..N-1
+	// log chunks 1..N-1) — stitch them via `gitxn i LastLog`.
+	std::shared_ptr<awst::Expression> readLog;
+	if (chunks <= 1)
+	{
+		auto last = awst::makeIntrinsicCall(
+			"itxn", awst::WType::bytesType(), _loc);
+		last->immediates = {std::string("LastLog")};
+		readLog = std::move(last);
+	}
+	else
+	{
+		auto pickLog = [&](int idx) -> std::shared_ptr<awst::Expression>
+		{
+			auto c = awst::makeIntrinsicCall(
+				"gitxn", awst::WType::bytesType(), _loc);
+			c->immediates = {idx, std::string("LastLog")};
+			return c;
+		};
+		readLog = pickLog(0);
+		for (int i = 1; i < chunks; ++i)
+			readLog = awst::makeConcat(std::move(readLog), pickLog(i), _loc);
+	}
+
+	// Strip 4-byte ABI return prefix, decode.
 	auto strip = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
 	strip->immediates = {4, 0};
 	strip->stackArgs.push_back(std::move(readLog));
@@ -555,13 +797,17 @@ PureHelperExtractor::Result PureHelperExtractor::extract(
 					"chunked-log support.");
 				continue;
 			}
-			if (retSize > 1024)
+			// 4 B ABI return prefix + payload. Caller materialises the
+			// concatenated chunks as one stack value, capped at the AVM
+			// max bytes-per-stack-element (4096 B).
+			int totalSize = 4 + retSize;
+			if (totalSize > 4096)
 			{
 				logger.warning(
 					"--deploy-pure-helpers: skipping '" + sub->name +
-					"': return size " + std::to_string(retSize) +
-					" B exceeds AVM MaxLogSize=1024 B. Need chunked-log "
-					"workaround.");
+					"': return size " + std::to_string(retSize) + " B + "
+					"4 B prefix > 4096 B AVM stack-element cap. Would "
+					"need chunked decode (out of scope for now).");
 				continue;
 			}
 		}

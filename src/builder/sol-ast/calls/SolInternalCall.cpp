@@ -197,7 +197,33 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		}
 	}
 
-	if (!storageParamIndices.empty())
+	// Memory-ref params: same library/free scope as storage, but `pure`
+	// is NOT excluded (Solidity pure can mutate memory params). The
+	// callee returns the post-call memory value as an extra tuple slot;
+	// here we capture it and write back to the caller's local. Order
+	// must match AWSTBuilder.cpp's `memoryRefParamIndices` (storage
+	// params first, then memory params).
+	std::vector<size_t> memoryRefParamIndices;
+	if (_funcDef
+		&& ((calleeIsLibrary && !calleeIsPrivate) || calleeIsFree))
+	{
+		auto isMemRefType = [](Type const* t) {
+			if (auto const* arr = dynamic_cast<ArrayType const*>(t))
+				return !arr->isByteArrayOrString();
+			return dynamic_cast<StructType const*>(t) != nullptr;
+		};
+		for (size_t pi = 0; pi < _funcDef->parameters().size() && pi < call->args.size(); ++pi)
+		{
+			auto const& p = _funcDef->parameters()[pi];
+			if (p->referenceLocation() != VariableDeclaration::Location::Memory)
+				continue;
+			if (!p->type() || !isMemRefType(p->type()))
+				continue;
+			memoryRefParamIndices.push_back(pi);
+		}
+	}
+
+	if (!storageParamIndices.empty() || !memoryRefParamIndices.empty())
 	{
 		// Per-storage-arg root tracing. Each storage arg may resolve to a
 		// different root (one might be `box.field`, another `appState`,
@@ -249,17 +275,35 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		}
 
 		// AWSTBuilder always augments the function's return type when it
-		// has any storage params:
-		//   - non-void return:  (R, sp0, sp1, ..., spN-1)
-		//   - void return:      sp0 if N==1; (sp0, sp1, ...) if N>1
+		// has any storage / memory-ref params:
+		//   - non-void return:  (r0, r1, ..., rK-1, sp0, ..., spN-1, mp0, ..., mpM-1)
+		//     where (r0..rK-1) is the FLATTENED original return (matching how
+		//     AWSTBuilder builds it from each return param's mapped type).
+		//     A multi-value return like `returns (Fr, Fr, Fr)` is K=3 here, NOT
+		//     a single nested WTuple.
+		//   - void return:      single bare type if N+M==1; tuple otherwise.
 		// We MUST unpack every time, even if some args don't resolve to a
 		// state root — otherwise the assignment-target wtype mismatches.
 		auto* origRetType = call->wtype;
 		bool voidReturn = (origRetType == awst::WType::voidType());
+		auto const* origRetTuple = voidReturn
+			? nullptr
+			: dynamic_cast<awst::WTuple const*>(origRetType);
 
 		std::vector<awst::WType const*> tupleTypes;
-		if (!voidReturn) tupleTypes.push_back(origRetType);
+		if (!voidReturn)
+		{
+			if (origRetTuple)
+				for (auto const* t: origRetTuple->types()) tupleTypes.push_back(t);
+			else
+				tupleTypes.push_back(origRetType);
+		}
 		for (auto const& sr: roots) tupleTypes.push_back(sr.storageArgType);
+		for (size_t pi: memoryRefParamIndices)
+			tupleTypes.push_back(call->args[pi].value->wtype);
+		size_t origRetCount = voidReturn
+			? 0
+			: (origRetTuple ? origRetTuple->types().size() : 1);
 
 		// callTupleType: the wtype the augmented call returns.
 		// 1 element → bare type (puya doesn't wrap a single-element return in
@@ -284,9 +328,10 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		// pickFromTuple: read element `idx` of typed `ty` from tempVar.
 		// In the single-element bare-type case (callTupleType == ty), tempVar
 		// IS the value — no TupleItemExpression needed.
+		size_t totalAugmented = roots.size() + memoryRefParamIndices.size();
 		bool isBareSingle = (
-			(voidReturn && roots.size() == 1) ||
-			(!voidReturn && roots.empty())
+			(voidReturn && totalAugmented == 1) ||
+			(!voidReturn && totalAugmented == 0)
 		);
 		auto pickFromTuple = [&](size_t idx, awst::WType const* ty)
 			-> std::shared_ptr<awst::Expression>
@@ -304,6 +349,15 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			origRet->sourceLocation = m_loc;
 			origRet->wtype = awst::WType::voidType();
 		}
+		else if (origRetTuple)
+		{
+			// Multi-value return: rebuild the original tuple from the
+			// flattened head of the augmented call (elements 0..K-1).
+			auto reTuple = awst::makeTupleExpression(origRetType, m_loc);
+			for (size_t i = 0; i < origRetCount; ++i)
+				reTuple->items.push_back(pickFromTuple(i, origRetTuple->types()[i]));
+			origRet = std::move(reTuple);
+		}
 		else
 		{
 			origRet = pickFromTuple(0, origRetType);
@@ -313,7 +367,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		// Args that didn't resolve (plain locals from the caller) get no
 		// writeback — they're forwarded copies, the call modified them but
 		// there's no source-of-truth to update.
-		size_t baseIdx = voidReturn ? 0 : 1;
+		size_t baseIdx = origRetCount;
 		for (size_t i = 0; i < roots.size(); ++i)
 		{
 			auto const& sr = roots[i];
@@ -390,6 +444,37 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 				auto stmt = awst::makeExpressionStatement(std::move(writeBack), m_loc);
 				m_ctx.pendingStatements.push_back(std::move(stmt));
 			}
+		}
+
+		// Memory-ref writeback: each memory-ref arg in the call corresponds
+		// to a tuple slot after the storage slots. The arg in the caller is
+		// (almost always) a simple VarExpression — the local variable that
+		// holds the memory ref. Assign the picked tuple slot back to that
+		// variable so subsequent reads see the post-call mutation. Skip if
+		// the arg isn't a plain VarExpression — those forms (struct field,
+		// array elem, expression result) don't have a stable lvalue we can
+		// write back to without re-evaluating side-effecting bases.
+		size_t memBaseIdx = baseIdx + roots.size();
+		for (size_t mi = 0; mi < memoryRefParamIndices.size(); ++mi)
+		{
+			size_t pi = memoryRefParamIndices[mi];
+			auto const* argVar = dynamic_cast<awst::VarExpression const*>(
+				call->args[pi].value.get());
+			if (!argVar || argVar->name.empty())
+				continue;
+
+			auto* memArgType = call->args[pi].value->wtype;
+			auto modifiedArg = pickFromTuple(memBaseIdx + mi, memArgType);
+
+			auto target = awst::makeVarExpression(argVar->name, memArgType, m_loc);
+			auto writeBack = std::make_shared<awst::AssignmentExpression>();
+			writeBack->sourceLocation = m_loc;
+			writeBack->wtype = memArgType;
+			writeBack->target = std::move(target);
+			writeBack->value = std::move(modifiedArg);
+
+			auto stmt = awst::makeExpressionStatement(std::move(writeBack), m_loc);
+			m_ctx.pendingStatements.push_back(std::move(stmt));
 		}
 
 		return origRet;
