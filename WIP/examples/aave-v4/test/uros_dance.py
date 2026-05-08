@@ -620,23 +620,62 @@ def deploy_split_app(
     main_id = int(wait_for_confirmation(algod, txid, 4)["application-index"])
     _fund(algod, sender, _app_addr(main_id), 1_000_000)
 
-    # 5b. Rekey main → __storage TEMPORARILY DISABLED while debugging the
-    # downstream "main unauthorized __storage" error. Tests that need
-    # Pass 5's payment-Sender override aren't currently in the suite, so
-    # disabling rekey only affects future payment-from-main scenarios.
-    # storage_pubkey = encoding.decode_address(_app_addr(storage_id))
-    # sp = algod.suggested_params()
-    # sp.fee = sp.min_fee * 2
-    # txn = ApplicationCallTxn(
-    #     sender=sender.address, sp=sp, index=main_id,
-    #     on_complete=OnComplete.NoOpOC,
-    #     app_args=[
-    #         _arc4_selector("__rekey_to_storage(address)void"),
-    #         storage_pubkey,
-    #     ],
-    # )
-    # wait_for_confirmation(algod,
-    #     algod.send_transaction(txn.sign(sender.private_key)), 4)
+    # 5b. Bidirectional mirror rekey: main <-> __storage.
+    # Each app rekeys its own account to the other, so:
+    #   * __storage->main: main can sign for __storage's account, used by
+    #     main's stub when issuing the dispatch itxn (Sender=storage_addr
+    #     override since main can't sign for itself post-rekey-to-storage).
+    #   * main->__storage: __storage can sign for main's account, used by
+    #     chunk-emitted itxns whose Sender is overridden to main_addr
+    #     (Pass 5 in UrosSplitter.cpp). External contracts called from
+    #     chunks therefore observe Sender=main_addr — main is both the
+    #     in-address and the out-address from any caller's POV.
+    #
+    # IMPORTANT ordering: rekey __storage -> main FIRST. After main rekeys
+    # to __storage, main loses authority over its own account; if we then
+    # try to issue a fresh top-level call to main.__rekey_to_storage(...),
+    # AVM still admits because the user (sponsor) signs that outer txn,
+    # but main's own outbound itxns (the rekey pay submitted by
+    # __rekey_to_storage's body) need authForSender(main_addr) which will
+    # only succeed if __storage is already main's auth — circular.
+    # Reverse the order: __storage->main first (uses default Sender,
+    # __storage hasn't been rekeyed so this works), then main->__storage
+    # (also uses default Sender, main hasn't been rekeyed yet).
+    main_pubkey = encoding.decode_address(_app_addr(main_id))
+    storage_pubkey = encoding.decode_address(_app_addr(storage_id))
+    sp = algod.suggested_params()
+    sp.fee = sp.min_fee * 2
+    txn = ApplicationCallTxn(
+        sender=sender.address, sp=sp, index=storage_id,
+        on_complete=OnComplete.NoOpOC,
+        app_args=[
+            _arc4_selector("__rekey_to_main(address)void"),
+            main_pubkey,
+        ],
+    )
+    wait_for_confirmation(algod,
+        algod.send_transaction(txn.sign(sender.private_key)), 4)
+    sp = algod.suggested_params()
+    sp.fee = sp.min_fee * 2
+    txn = ApplicationCallTxn(
+        sender=sender.address, sp=sp, index=main_id,
+        on_complete=OnComplete.NoOpOC,
+        app_args=[
+            _arc4_selector("__rekey_to_storage(address)void"),
+            storage_pubkey,
+        ],
+    )
+    wait_for_confirmation(algod,
+        algod.send_transaction(txn.sign(sender.private_key)), 4)
+    # Verify both auth_addrs are pinned correctly.
+    main_info = algod.account_info(_app_addr(main_id))
+    storage_info = algod.account_info(_app_addr(storage_id))
+    assert main_info.get("auth-addr") == _app_addr(storage_id), (
+        f"main.auth_addr={main_info.get('auth-addr')} != storage_addr={_app_addr(storage_id)}")
+    assert storage_info.get("auth-addr") == _app_addr(main_id), (
+        f"storage.auth_addr={storage_info.get('auth-addr')} != main_addr={_app_addr(main_id)}")
+    print(f"[uros_dance] mirror rekey complete: "
+          f"main.auth=storage, storage.auth=main")
 
     # 6. Build chunks list. Substitute orch_id, main_id, AND storage_id
     # — the chunk's app_global_get_ex(MAIN, ...) needs main, and any

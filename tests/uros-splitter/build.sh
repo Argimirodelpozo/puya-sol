@@ -18,15 +18,19 @@ rm -rf "$OUT"
 mkdir -p "$OUT"
 
 echo "=== compiling Smoke.sol with --uros-splitter ==="
-# `--uros-orch-app-id` defaults to 0 (placeholder). The end-to-end test
-# recompiles main with the real orch app id after the orch is deployed.
+# `--uros-orch-app-id` and `--uros-storage-app-id` default to 0
+# (placeholder). The end-to-end test recompiles main with the real
+# app ids after orch + storage are deployed (so the bidirectional-rekey
+# Sender override path can resolve __storage's address).
 ORCH_APP_ID="${UROS_ORCH_APP_ID:-0}"
+STORAGE_APP_ID="${UROS_STORAGE_APP_ID:-0}"
 "$PUYA_SOL" \
     --source "$HERE/Smoke/Smoke.sol" \
     --output-dir "$OUT/Smoke" \
     --puya-path "$PUYA_PATH" \
     --uros-splitter "dec" \
-    --uros-orch-app-id "$ORCH_APP_ID"
+    --uros-orch-app-id "$ORCH_APP_ID" \
+    --uros-storage-app-id "$STORAGE_APP_ID"
 
 echo
 echo "=== compiling orchestrator template ==="

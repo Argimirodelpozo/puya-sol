@@ -160,6 +160,7 @@ struct Options
 	// urosSplitGroups[i] is the methods that go into chunk i.
 	std::vector<std::vector<std::string>> urosSplitGroups;
 	int64_t urosOrchAppId = 0; // orchestrator app id baked into stub guards
+	int64_t urosStorageAppId = 0; // __storage app id for Sender override path
 
 	// --pin-to-main: methods that MUST stay on the main contract and never
 	// be moved into a uros chunk. The validator below rejects any
@@ -367,6 +368,8 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.evmVersion = _argv[++i];
 		else if (arg == "--uros-orch-app-id" && i + 1 < _argc)
 			opts.urosOrchAppId = std::stoll(_argv[++i]);
+		else if (arg == "--uros-storage-app-id" && i + 1 < _argc)
+			opts.urosStorageAppId = std::stoll(_argv[++i]);
 		else if (arg == "--deploy-pure-helpers")
 			opts.deployPureHelpers = true;
 		else if (arg == "--force-inline-sub" && i + 1 < _argc)
@@ -1122,12 +1125,13 @@ int main(int _argc, char* _argv[])
 	if (!splitResult.chunks.empty())
 	{
 		intTemplateVars["UROS_ORCH_APP_ID"] = opts.urosOrchAppId;
-		// Main's stub has a pay-forward shim that issues an inner pay
-		// to __storage's address (computed at runtime via
-		// app_params_get(STORAGE_APP_ID, AppAddress)). Default 0 here
-		// is a placeholder — the deploy harness substitutes the real
-		// __storage app id once it's deployed.
-		intTemplateVars["UROS_STORAGE_APP_ID"] = 0;
+		// Main's stub computes __storage's address via
+		// app_params_get(UROS_STORAGE_APP_ID, AppAddress) for the
+		// Sender=storage_addr override (bidirectional rekey design).
+		// Default 0 is a placeholder — the deploy harness can either
+		// pass --uros-storage-app-id explicitly OR (for the AAVE dance)
+		// post-process the TEAL/bytes to substitute the real id.
+		intTemplateVars["UROS_STORAGE_APP_ID"] = opts.urosStorageAppId;
 	}
 	// Each --deploy-pure-helpers extraction injects a TemplateVar at
 	// every rewritten call site. Declare each as an int placeholder

@@ -244,6 +244,16 @@ def test_smoke_dance_with_storage():
                                   app_args=[init_sel], extra_pages=3)
     _fund(_app_addr(storage_id), 50_000_000)
 
+    # 3b. Recompile main with both orch_id AND storage_id baked in. main's
+    # stub now resolves __storage's address via app_params_get for the
+    # bidirectional-rekey Sender override path (Pass 5), so the storage
+    # id must be the real one before main is deployed.
+    subprocess.run([str(HERE / "build.sh")],
+        env={**os.environ,
+             "UROS_ORCH_APP_ID": str(orch_id),
+             "UROS_STORAGE_APP_ID": str(storage_id)},
+        check=True, capture_output=True)
+
     # 4. Deploy main (just an entry-point with stubs forwarding to orch).
     deploy_tmpl = json.loads((OUT / "Smoke" / "deploy.uros.json").read_text())
     main_approval = bytes.fromhex(deploy_tmpl["main_approval_hex"])
@@ -270,6 +280,51 @@ def test_smoke_dance_with_storage():
     # 6. Run the orch + storage setup ceremony.
     _setup(orch_id, storage_id, sender, storage_approval, chunks)
 
+    # 6b. Bidirectional mirror rekey: __storage <-> main. Order matters —
+    # rekey __storage first (uses default Sender, __storage isn't rekeyed
+    # yet), then rekey main (also uses default Sender, main isn't rekeyed
+    # yet either). Both operations issue an inner pay txn from the rekeyed
+    # contract back to itself with RekeyTo set; AVM honours the rekey
+    # because the inner txn comes from the contract itself.
+    main_pubkey = encoding.decode_address(_app_addr(main_id))
+    storage_pubkey = encoding.decode_address(_app_addr(storage_id))
+    sp = _algod().suggested_params()
+    sp.fee = sp.min_fee * 2
+    txn = ApplicationCallTxn(
+        sender=sender.address, sp=sp, index=storage_id,
+        on_complete=OnComplete.NoOpOC,
+        app_args=[
+            _arc4_selector("__rekey_to_main(address)void"),
+            main_pubkey,
+        ],
+    )
+    wait_for_confirmation(_algod(),
+        _algod().send_transaction(txn.sign(sender.private_key)), 4)
+    sp = _algod().suggested_params()
+    sp.fee = sp.min_fee * 2
+    txn = ApplicationCallTxn(
+        sender=sender.address, sp=sp, index=main_id,
+        on_complete=OnComplete.NoOpOC,
+        app_args=[
+            _arc4_selector("__rekey_to_storage(address)void"),
+            storage_pubkey,
+        ],
+    )
+    wait_for_confirmation(_algod(),
+        _algod().send_transaction(txn.sign(sender.private_key)), 4)
+    main_info = _algod().account_info(_app_addr(main_id))
+    storage_info = _algod().account_info(_app_addr(storage_id))
+    assert main_info.get("auth-addr") == _app_addr(storage_id), (
+        f"main.auth_addr={main_info.get('auth-addr')} != storage_addr={_app_addr(storage_id)}")
+    assert storage_info.get("auth-addr") == _app_addr(main_id), (
+        f"storage.auth_addr={storage_info.get('auth-addr')} != main_addr={_app_addr(main_id)}")
+    print(f"[smoke] orch_id={orch_id} addr={_app_addr(orch_id)}")
+    print(f"[smoke] storage_id={storage_id} addr={_app_addr(storage_id)}")
+    print(f"[smoke] main_id={main_id} addr={_app_addr(main_id)}")
+    print(f"[smoke] main.auth_addr    = {main_info.get('auth-addr')}")
+    print(f"[smoke] storage.auth_addr = {storage_info.get('auth-addr')}")
+    print(f"[smoke] mirror rekey complete")
+
     # 7. Prime via main.inc(100). `inc` is non-split → real body on
     # main? Actually for this smoke test we split only `dec`, so `inc`
     # and `get` real bodies live on main. They mutate main's state.
@@ -294,6 +349,12 @@ def test_smoke_dance_with_storage():
     atc.execute(_algod(), 4)
 
     # 8. Call main.dec(10) — split method, must dance via inner-call to orch.
+    s_info = _algod().account_info(_app_addr(storage_id))
+    m_info = _algod().account_info(_app_addr(main_id))
+    print(f"[smoke] BEFORE dec: storage.auth={s_info.get('auth-addr')}")
+    print(f"[smoke] BEFORE dec: main.auth   ={m_info.get('auth-addr')}")
+    print(f"[smoke] storage_addr             ={_app_addr(storage_id)}")
+    print(f"[smoke] main_addr                ={_app_addr(main_id)}")
     dec_sel = _arc4_selector("dec(uint256)void")
     dec_amt = (10).to_bytes(32, "big")
     sp = _algod().suggested_params()

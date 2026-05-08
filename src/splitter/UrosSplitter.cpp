@@ -848,33 +848,27 @@ std::shared_ptr<awst::Expression> patchAddressThisExpr(
 	return makeMainAddressExpr(ic->sourceLocation);
 }
 
-/// Pass 5 rewriter: every pay-typed `CreateInnerTransaction` (TypeEnum=1)
-/// inside a chunk method body has its `Sender` field set to main's
-/// address. Combined with main's account being rekey'd-to __storage at
-/// deploy time, this lets chunk-emitted payments draw from main's
-/// balance — preserving the user-facing identity that "the contract"
-/// is main, not __storage.
+/// Pass 5 rewriter: every `CreateInnerTransaction` inside a chunk method
+/// body (regardless of TypeEnum) has its `Sender` field set to main's
+/// address. Combined with the bidirectional rekey
+/// (main->__storage and __storage->main) installed at deploy time:
+///   * main->__storage rekey: __storage signs for main, so chunk-emitted
+///     itxns with Sender=main_addr are authorised by AVM (the issuing app
+///     for these is __storage, since chunks run on __storage; AVM walks
+///     the rekey chain and admits because main.AuthAddr == __storage_addr).
+///   * __storage->main rekey: main signs for __storage, so main-stub-emitted
+///     itxns with Sender=__storage_addr are authorised symmetrically.
 ///
-/// We do NOT override Sender if the user code already set it (the only
-/// time that path is exercised today is the orch-dispatch itxn from
-/// main's stub, which doesn't run as chunk code, so this guard is
-/// mostly defensive).
+/// External contracts called by chunks therefore observe Sender=main_addr,
+/// preserving the "main is the in-address and the out-address" property
+/// the user wants regardless of inner-txn type (pay, appl, axfer, etc.).
 ///
-/// Only Pay txns (TypeEnum=1) get the override; outbound ApplicationCall
-/// txns (TypeEnum=6) keep `Sender = __storage`. External contracts will
-/// see __storage as the caller — accepted limitation for now.
-std::shared_ptr<awst::Expression> patchInnerPaySenderExpr(
+/// We do NOT override Sender if the user code already set it explicitly.
+std::shared_ptr<awst::Expression> patchInnerTxnSenderExpr(
 	awst::Expression const& _e)
 {
 	auto const* cit = dynamic_cast<awst::CreateInnerTransaction const*>(&_e);
 	if (!cit) return nullptr;
-
-	// Identify pay-typed by TypeEnum field = "1".
-	auto teIt = cit->fields.find("TypeEnum");
-	if (teIt == cit->fields.end()) return nullptr;
-	auto const* teConst = dynamic_cast<awst::IntegerConstant const*>(
-		teIt->second.get());
-	if (!teConst || teConst->value != "1") return nullptr;
 
 	// Don't overwrite a user-supplied Sender.
 	if (cit->fields.count("Sender")) return nullptr;
@@ -892,16 +886,12 @@ std::shared_ptr<awst::Expression> patchInnerPaySenderExpr(
 /// invocation per method — combined predicate ensures each Expression
 /// slot only gets visited once.
 ///
-/// Pass 5 (patchInnerPaySenderExpr) is INTENTIONALLY NOT INCLUDED: it
-/// only made sense in the rekey-main-to-storage design, which we
-/// abandoned because rekeying main strips it of authority over its
-/// own account (AVM `authForSender` checks `account.AuthAddr ==
-/// issuingAppAddr`, which fails for main's own outbound itxns post-
-/// rekey). With the current pay-forward shim in main's stub, the
-/// user's pay txn is forwarded to __storage at the start of every
-/// call, so chunks issuing payments naturally use Sender=__storage
-/// (the default — chunks run on __storage, so currentApp.address is
-/// __storage's address) and __storage has the funds.
+/// Pass 5 (patchInnerTxnSenderExpr) overrides Sender on every
+/// chunk-emitted inner txn to main_addr. This requires the bidirectional
+/// rekey to be installed at deploy time: main->__storage gives __storage
+/// authority over main, so chunks running on __storage can sign for
+/// main_addr; symmetrically __storage->main lets main's stubs sign for
+/// __storage_addr (see makeForwardingStubBody / makeForwardValueBody).
 void patchChunkMethodBody(awst::ContractMethod& _m)
 {
 	if (!_m.body) return;
@@ -909,6 +899,7 @@ void patchChunkMethodBody(awst::ContractMethod& _m)
 		if (auto r = patchMsgSenderExpr(e)) return r;
 		if (auto r = patchMsgValueExpr(e)) return r;
 		if (auto r = patchAddressThisExpr(e)) return r;
+		if (auto r = patchInnerTxnSenderExpr(e)) return r;
 		return nullptr;
 	};
 	walkBlock(*_m.body, fn);
@@ -939,13 +930,18 @@ std::shared_ptr<awst::Block> makeForwardingStubBody(
 {
 	auto block = awst::makeBlock(_loc);
 
-	// Pay-forward + og_setup are factored to internal callsub'd
-	// helpers on main (kForwardValueMethodName, kOgSetupMethodName).
-	// Inlining the bodies per-stub blew main's bytecode past the 8 KB
-	// cap on contracts with many split methods (AccessManagerEnumerable
-	// has 40+).
-	block->body.push_back(makeInternalCallsubStmt(
-		kForwardValueMethodName, _loc));
+	// og_setup is factored to an internal callsub'd helper on main
+	// (kOgSetupMethodName). Inlining its body per-stub blew main's
+	// bytecode past the 8 KB cap on contracts with many split methods
+	// (AccessManagerEnumerable has 40+).
+	//
+	// The pay-forward shim (kForwardValueMethodName) is no longer
+	// invoked: under the bidirectional rekey design, chunk-emitted
+	// itxns set Sender=main_addr (Pass 5), so they draw from main's
+	// balance directly. There's no need to move the user's paired
+	// pay-txn value over to __storage. The method body is left in
+	// place as dead code in case future variants want to re-enable
+	// the forward path.
 	block->body.push_back(makeInternalCallsubStmt(
 		kOgSetupMethodName, _loc));
 
@@ -1011,6 +1007,13 @@ std::shared_ptr<awst::Block> makeForwardingStubBody(
 	orchTmpl->name = "TMPL_UROS_ORCH_APP_ID";
 	create->fields["ApplicationID"] = std::move(orchTmpl);
 	create->fields["ApplicationArgs"] = std::move(argsTuple);
+	// Bidirectional rekey: main->__storage at deploy time strips main of
+	// authority over its own account, so the inner txn can't use the
+	// default Sender=main_addr. __storage->main rekey grants main signing
+	// authority over __storage's address, so we set Sender=storage_addr
+	// here. AVM walks the rekey chain (storage.AuthAddr == main_addr) and
+	// admits.
+	create->fields["Sender"] = makeStorageAddressExpr(_loc);
 
 	// Wrap in SubmitInnerTransaction.
 	static awst::WInnerTransaction s_applTxnType(
@@ -1338,13 +1341,13 @@ UrosSplitter::Result UrosSplitter::split(
 		makeOgSetupMethod(primary->id, primary->sourceLocation));
 	mainContract->methods.push_back(
 		makeOgCleanupMethod(primary->id, primary->sourceLocation));
-	// __rekey_to_storage(address)void was scaffolded for the abandoned
-	// rekey design (rekey breaks main's own outbound itxns; see commit
-	// b8c328316). Dropped from main's surface to save ~150 bytes of
-	// ABI router + body. The C++ helper makeRekeyToStorageMethod is
-	// kept defined for the rare case someone wants to bring it back
-	// (and the new design would need to relocate main's stub-issued
-	// itxns somehow first).
+	// __rekey_to_storage(address)void: bootstrap method called once at
+	// deploy time. After it runs, main.AuthAddr = __storage_addr and
+	// main can no longer sign for itself — every subsequent itxn from
+	// main uses Sender=__storage_addr (see makeForwardingStubBody) and
+	// the bidirectional rekey makes that authorisation succeed.
+	mainContract->methods.push_back(
+		makeRekeyToStorageMethod(primary->id, primary->sourceLocation));
 
 	// Pass 1 of the og_sender / og_value plumbing: declare the two
 	// app-global slots on main so puya emits the right state schema.

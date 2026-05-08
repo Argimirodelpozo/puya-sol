@@ -42,6 +42,7 @@ from algopy import (
     Txn,
     UInt64,
     arc4,
+    itxn,
     op,
 )
 
@@ -88,3 +89,24 @@ class UrosStorage(ARC4Contract):
         sender = Txn.sender
         orch_addr = Application(self.orch_app_id).address
         assert sender == orch_addr, "uros_storage: only orch may update"
+
+    @arc4.abimethod
+    def __rekey_to_main(self, main_addr: Account) -> None:  # noqa: N801
+        """Rekey __storage's app account to main_addr. After this,
+        main has signing authority over __storage's account, so
+        the dance can issue inner txns with Sender=__storage_addr
+        from main's stub (the bidirectional half of the mirror rekey
+        — main's other half is __rekey_to_storage on main itself).
+
+        Called once at deploy time, paired with the main->__storage
+        rekey. No caller-auth check; the deploy harness must call it
+        before any user-facing txns can land. After both rekeys are
+        in place, neither contract can re-rekey itself: any inner pay
+        txn with Sender=CurrentApplicationAddress no longer satisfies
+        AVM's authForSender check. So the bootstrap is a one-shot."""
+        itxn.Payment(
+            receiver=Global.current_application_address,
+            amount=UInt64(0),
+            rekey_to=main_addr,
+            fee=UInt64(0),
+        ).submit()
