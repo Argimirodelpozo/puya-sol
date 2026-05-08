@@ -284,21 +284,9 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 				}
 
 				// __storage_write(slot, value)
-				auto call = std::make_shared<awst::SubroutineCallExpression>();
-				call->sourceLocation = m_loc;
-				call->wtype = awst::WType::voidType();
-				call->target = awst::SubroutineID{"__puyasol___storage_write"};
-				{
-					awst::CallArg slotArg;
-					slotArg.name = "__slot";
-					slotArg.value = std::move(btoi);
-					call->args.push_back(std::move(slotArg));
-
-					awst::CallArg valArg;
-					valArg.name = "__value";
-					valArg.value = std::move(elemVal);
-					call->args.push_back(std::move(valArg));
-				}
+				auto call = awst::makeSubroutineCall(awst::SubroutineID{"__puyasol___storage_write"}, awst::WType::voidType(), m_loc);
+				awst::pushCallArg(call->args, "__slot", std::move(btoi));
+				awst::pushCallArg(call->args, "__value", std::move(elemVal));
 
 				auto stmt = awst::makeExpressionStatement(std::move(call), m_loc);
 				m_ctx.pendingStatements.push_back(std::move(stmt));
@@ -319,14 +307,8 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 		{
 			// __storage_read(btoi(slot))
 			auto readSlot = builder::StorageMapper::biguintSlotToBtoi(target, m_loc);
-			auto readCall = std::make_shared<awst::SubroutineCallExpression>();
-			readCall->sourceLocation = m_loc;
-			readCall->wtype = awst::WType::biguintType();
-			readCall->target = awst::SubroutineID{"__puyasol___storage_read"};
-			awst::CallArg readArg;
-			readArg.name = "__slot";
-			readArg.value = std::move(readSlot);
-			readCall->args.push_back(std::move(readArg));
+			auto readCall = awst::makeSubroutineCall(awst::SubroutineID{"__puyasol___storage_read"}, awst::WType::biguintType(), m_loc);
+			awst::pushCallArg(readCall->args, "__slot", std::move(readSlot));
 
 			auto* targetSolType = m_assignment.leftHandSide().annotation().type;
 			auto builderResult = eb::AssignmentHelper::tryComputeCompoundValue(
@@ -340,21 +322,9 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 
 		auto btoi = builder::StorageMapper::biguintSlotToBtoi(target, m_loc);
 
-		auto call = std::make_shared<awst::SubroutineCallExpression>();
-		call->sourceLocation = m_loc;
-		call->wtype = awst::WType::voidType();
-		call->target = awst::SubroutineID{"__puyasol___storage_write"};
-		{
-			awst::CallArg slotArg;
-			slotArg.name = "__slot";
-			slotArg.value = std::move(btoi);
-			call->args.push_back(std::move(slotArg));
-
-			awst::CallArg valArg;
-			valArg.name = "__value";
-			valArg.value = std::move(value);
-			call->args.push_back(std::move(valArg));
-		}
+		auto call = awst::makeSubroutineCall(awst::SubroutineID{"__puyasol___storage_write"}, awst::WType::voidType(), m_loc);
+		awst::pushCallArg(call->args, "__slot", std::move(btoi));
+		awst::pushCallArg(call->args, "__value", std::move(value));
 
 		auto stmt = awst::makeExpressionStatement(std::move(call), m_loc);
 		m_ctx.pendingStatements.push_back(std::move(stmt));

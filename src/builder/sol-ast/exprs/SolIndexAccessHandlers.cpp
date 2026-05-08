@@ -400,11 +400,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 		&& !m_indexAccess.annotation().willBeWrittenTo
 		&& index)
 	{
-		auto extract = std::make_shared<awst::IntrinsicCall>();
-		extract->sourceLocation = m_loc;
-		extract->opCode = "extract3";
 		auto* bytes1Type = m_ctx.typeMapper.createType<awst::BytesWType>(1);
-		extract->wtype = bytes1Type;
+		auto extract = awst::makeIntrinsicCall("extract3", bytes1Type, m_loc);
 		extract->stackArgs.push_back(std::move(base));
 		extract->stackArgs.push_back(std::move(index));
 		auto one = awst::makeIntegerConstant("1", m_loc);

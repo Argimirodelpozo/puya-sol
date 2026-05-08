@@ -251,11 +251,8 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 	readLog->immediates = {std::string("LastLog")};
 
 	// Strip 4-byte ARC4 return prefix
-	auto stripPrefix = std::make_shared<awst::IntrinsicCall>();
-	stripPrefix->sourceLocation = m_loc;
-	stripPrefix->opCode = "extract";
+	auto stripPrefix = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), m_loc);
 	stripPrefix->immediates = {4, 0};
-	stripPrefix->wtype = awst::WType::bytesType();
 	stripPrefix->stackArgs.push_back(std::move(readLog));
 
 	if (_returnType == awst::WType::biguintType())

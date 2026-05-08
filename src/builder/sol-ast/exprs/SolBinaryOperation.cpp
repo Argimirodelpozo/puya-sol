@@ -54,21 +54,9 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::tryUserDefinedOp()
 	auto right = buildExpr(m_binOp.rightExpression());
 	auto* resultType = m_ctx.typeMapper.map(m_binOp.annotation().type);
 
-	auto call = std::make_shared<awst::SubroutineCallExpression>();
-	call->sourceLocation = m_loc;
-	call->wtype = resultType;
-	call->target = awst::SubroutineID{subroutineId};
-
-	awst::CallArg argA;
-	argA.name = userFunc->parameters()[0]->name();
-	argA.value = std::move(left);
-	call->args.push_back(std::move(argA));
-
-	awst::CallArg argB;
-	argB.name = userFunc->parameters()[1]->name();
-	argB.value = std::move(right);
-	call->args.push_back(std::move(argB));
-
+	auto call = awst::makeSubroutineCall(awst::SubroutineID{subroutineId}, resultType, m_loc);
+	awst::pushCallArg(call->args, userFunc->parameters()[0]->name(), std::move(left));
+	awst::pushCallArg(call->args, userFunc->parameters()[1]->name(), std::move(right));
 	return call;
 }
 

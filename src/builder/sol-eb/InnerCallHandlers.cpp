@@ -373,21 +373,16 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 								foundEwSTarget:;
 								if (target)
 								{
-									auto call = std::make_shared<awst::SubroutineCallExpression>();
-									call->sourceLocation = _loc;
 									auto* retType = target->returnParameters().size() > 0
 										? _ctx.typeMapper.map(target->returnParameters()[0]->type())
 										: awst::WType::voidType();
 									if (!retType) retType = awst::WType::voidType();
-									call->wtype = retType;
-									call->target = awst::InstanceMethodTarget{target->name()};
+									auto call = awst::makeSubroutineCall(
+										awst::InstanceMethodTarget{target->name()},
+										retType, _loc);
 									for (size_t i = 1; i < encCallExpr->arguments().size(); ++i)
-									{
-										awst::CallArg ca;
-										ca.name = std::nullopt;
-										ca.value = _ctx.buildExpr(*encCallExpr->arguments()[i]);
-										call->args.push_back(std::move(ca));
-									}
+										awst::pushCallArg(call->args,
+											_ctx.buildExpr(*encCallExpr->arguments()[i]));
 									std::shared_ptr<awst::Expression> dataBytes;
 									if (retType == awst::WType::voidType())
 									{
@@ -510,17 +505,9 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 			bool fallbackTakesBytes = fallbackFunc->parameters().size() == 1;
 			bool fallbackReturnsBytes = !fallbackFunc->returnParameters().empty();
 
-			auto call = std::make_shared<awst::SubroutineCallExpression>();
-			call->sourceLocation = _loc;
-			call->wtype = fallbackReturnsBytes ? awst::WType::bytesType() : awst::WType::voidType();
-			call->target = awst::InstanceMethodTarget{"__fallback"};
+			auto call = awst::makeSubroutineCall(awst::InstanceMethodTarget{"__fallback"}, fallbackReturnsBytes ? awst::WType::bytesType() : awst::WType::voidType(), _loc);
 			if (fallbackTakesBytes)
-			{
-				awst::CallArg ca;
-				ca.name = std::nullopt;
-				ca.value = dataExpr;
-				call->args.push_back(std::move(ca));
-			}
+				awst::pushCallArg(call->args, dataExpr);
 
 			// When the fallback returns bytes, spill the subroutine call
 			// result into a named local so the caller's `retval` reads it.

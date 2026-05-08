@@ -565,10 +565,8 @@ awst::ContractMethod makeOgCleanupMethod(
 std::shared_ptr<awst::Statement> makeInternalCallsubStmt(
 	std::string const& _name, awst::SourceLocation const& _loc)
 {
-	auto call = std::make_shared<awst::SubroutineCallExpression>();
-	call->sourceLocation = _loc;
-	call->wtype = awst::WType::voidType();
-	call->target = awst::InstanceMethodTarget{_name};
+	auto call = awst::makeSubroutineCall(
+		awst::InstanceMethodTarget{_name}, awst::WType::voidType(), _loc);
 	return awst::makeExpressionStatement(std::move(call), _loc);
 }
 
@@ -1057,11 +1055,8 @@ std::shared_ptr<awst::Block> makeForwardingStubBody(
 	auto readLog = awst::makeIntrinsicCall("itxn", awst::WType::bytesType(), _loc);
 	readLog->immediates = {std::string("LastLog")};
 
-	auto stripPrefix = std::make_shared<awst::IntrinsicCall>();
-	stripPrefix->sourceLocation = _loc;
-	stripPrefix->opCode = "extract";
+	auto stripPrefix = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
 	stripPrefix->immediates = {10, 0};
-	stripPrefix->wtype = awst::WType::bytesType();
 	stripPrefix->stackArgs.push_back(std::move(readLog));
 
 	auto decoded = decodeFromBytes(std::move(stripPrefix), _m.returnType, _loc);

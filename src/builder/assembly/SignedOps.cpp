@@ -417,20 +417,10 @@ void AssemblyBuilder::handleSstore(
 	auto valueArg = ensureBiguint(_args[1], _loc);
 
 	// Call __storage_write(slot, value)
-	auto call = std::make_shared<awst::SubroutineCallExpression>();
-	call->sourceLocation = _loc;
-	call->wtype = awst::WType::voidType();
-	call->target = awst::SubroutineID{"__puyasol___storage_write"};
+	auto call = awst::makeSubroutineCall(awst::SubroutineID{"__puyasol___storage_write"}, awst::WType::voidType(), _loc);
 
-	awst::CallArg slotCA;
-	slotCA.name = "__slot";
-	slotCA.value = std::move(slotArg);
-	call->args.push_back(std::move(slotCA));
-
-	awst::CallArg valCA;
-	valCA.name = "__value";
-	valCA.value = std::move(valueArg);
-	call->args.push_back(std::move(valCA));
+	awst::pushCallArg(call->args, "__slot", std::move(slotArg));
+	awst::pushCallArg(call->args, "__value", std::move(valueArg));
 
 	auto stmt = awst::makeExpressionStatement(std::move(call), _loc);
 	_out.push_back(std::move(stmt));

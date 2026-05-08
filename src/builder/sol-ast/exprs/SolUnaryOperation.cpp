@@ -646,21 +646,9 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 
 			auto zeroVal = awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType());
 
-			auto call = std::make_shared<awst::SubroutineCallExpression>();
-			call->sourceLocation = m_loc;
-			call->wtype = awst::WType::voidType();
-			call->target = awst::SubroutineID{"__puyasol___storage_write"};
-			{
-				awst::CallArg slotArg;
-				slotArg.name = "__slot";
-				slotArg.value = std::move(btoi);
-				call->args.push_back(std::move(slotArg));
-
-				awst::CallArg valArg;
-				valArg.name = "__value";
-				valArg.value = std::move(zeroVal);
-				call->args.push_back(std::move(valArg));
-			}
+			auto call = awst::makeSubroutineCall(awst::SubroutineID{"__puyasol___storage_write"}, awst::WType::voidType(), m_loc);
+			awst::pushCallArg(call->args, "__slot", std::move(btoi));
+			awst::pushCallArg(call->args, "__value", std::move(zeroVal));
 
 			auto stmt = awst::makeExpressionStatement(std::move(call), m_loc);
 			m_ctx.pendingStatements.push_back(std::move(stmt));

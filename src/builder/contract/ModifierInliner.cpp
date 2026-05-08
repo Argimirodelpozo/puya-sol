@@ -642,18 +642,10 @@ void ContractBuilder::buildModifierChain(
 
 		{
 			// Build: returnVar = nextSub(args...)
-			auto call = std::make_shared<awst::SubroutineCallExpression>();
-			call->sourceLocation = modSub.sourceLocation;
-			call->wtype = _method.returnType;
-			call->target = awst::InstanceMethodTarget{nextSubName};
+			auto call = awst::makeSubroutineCall(awst::InstanceMethodTarget{nextSubName}, _method.returnType, modSub.sourceLocation);
 			for (auto const& arg: _method.args)
-			{
-				awst::CallArg ca;
-				ca.name = arg.name;
-				auto varRef = awst::makeVarExpression(arg.name, arg.wtype, modSub.sourceLocation);
-				ca.value = std::move(varRef);
-				call->args.push_back(std::move(ca));
-			}
+				awst::pushCallArg(call->args, arg.name,
+					awst::makeVarExpression(arg.name, arg.wtype, modSub.sourceLocation));
 
 			if (!retVarName.empty())
 			{
@@ -757,18 +749,10 @@ void ContractBuilder::buildModifierChain(
 	}
 
 	// Call outermost modifier sub
-	auto call = std::make_shared<awst::SubroutineCallExpression>();
-	call->sourceLocation = _method.sourceLocation;
-	call->wtype = _method.returnType;
-	call->target = awst::InstanceMethodTarget{nextSubName};
+	auto call = awst::makeSubroutineCall(awst::InstanceMethodTarget{nextSubName}, _method.returnType, _method.sourceLocation);
 	for (auto const& arg: _method.args)
-	{
-		awst::CallArg ca;
-		ca.name = arg.name;
-		auto varRef = awst::makeVarExpression(arg.name, arg.wtype, _method.sourceLocation);
-		ca.value = std::move(varRef);
-		call->args.push_back(std::move(ca));
-	}
+		awst::pushCallArg(call->args, arg.name,
+			awst::makeVarExpression(arg.name, arg.wtype, _method.sourceLocation));
 
 	if (_method.returnType != awst::WType::voidType())
 	{

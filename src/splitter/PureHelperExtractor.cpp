@@ -450,17 +450,10 @@ std::shared_ptr<awst::Block> buildHelperApprovalBody(
 	// approval is its sole caller post-rewrite, so per-Contract DCE
 	// keeps it for the helper and drops it from contexts that no
 	// longer reach it.
-	auto call = std::make_shared<awst::SubroutineCallExpression>();
-	call->sourceLocation = _loc;
-	call->wtype = _sub.returnType;
-	call->target = awst::SubroutineID{_sub.id};
+	auto call = awst::makeSubroutineCall(
+		awst::SubroutineID{_sub.id}, _sub.returnType, _loc);
 	for (size_t i = 0; i < _sub.args.size(); ++i)
-	{
-		awst::CallArg ca;
-		ca.name = _sub.args[i].name;
-		ca.value = std::move(callArgs[i]);
-		call->args.push_back(std::move(ca));
-	}
+		awst::pushCallArg(call->args, _sub.args[i].name, std::move(callArgs[i]));
 
 	if (_sub.returnType && _sub.returnType != awst::WType::voidType())
 	{

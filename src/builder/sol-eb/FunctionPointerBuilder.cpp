@@ -190,18 +190,13 @@ std::shared_ptr<awst::SubroutineCallExpression> FunctionPointerBuilder::buildDis
 	std::string dname = dispatchName(_funcType);
 	s_neededDispatches[dname] = _funcType;
 
-	auto call = std::make_shared<awst::SubroutineCallExpression>();
-	call->sourceLocation = _loc;
-	call->wtype = computeReturnType(_ctx, _funcType);
-	if (inLibraryContext(_ctx, s_currentCref))
-		call->target = awst::SubroutineID{s_currentCref + "." + dname};
-	else
-		call->target = awst::InstanceMethodTarget{dname};
+	awst::SubroutineTarget target = inLibraryContext(_ctx, s_currentCref)
+		? awst::SubroutineTarget{awst::SubroutineID{s_currentCref + "." + dname}}
+		: awst::SubroutineTarget{awst::InstanceMethodTarget{dname}};
+	auto call = awst::makeSubroutineCall(
+		std::move(target), computeReturnType(_ctx, _funcType), _loc);
 
-	awst::CallArg idArg;
-	idArg.name = "__funcptr_id";
-	idArg.value = std::move(_ptrIdExpr);
-	call->args.push_back(std::move(idArg));
+	awst::pushCallArg(call->args, "__funcptr_id", std::move(_ptrIdExpr));
 
 	for (size_t i = 0; i < _args.size(); ++i)
 	{
@@ -455,19 +450,12 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		std::string selToIdName = "__sel_to_id_" + dispatchName(_funcType);
 		s_neededDispatches[dispatchName(_funcType)] = _funcType;
 
-		auto selToIdCall = std::make_shared<awst::SubroutineCallExpression>();
-		selToIdCall->sourceLocation = _loc;
-		selToIdCall->wtype = awst::WType::uint64Type();
-		if (inLibraryContext(_ctx, s_currentCref))
-			selToIdCall->target = awst::SubroutineID{s_currentCref + "." + selToIdName};
-		else
-			selToIdCall->target = awst::InstanceMethodTarget{selToIdName};
-		{
-			awst::CallArg selArg;
-			selArg.name = "__sel";
-			selArg.value = extractSlice(8, 4);
-			selToIdCall->args.push_back(std::move(selArg));
-		}
+		awst::SubroutineTarget selToIdTarget = inLibraryContext(_ctx, s_currentCref)
+			? awst::SubroutineTarget{awst::SubroutineID{s_currentCref + "." + selToIdName}}
+			: awst::SubroutineTarget{awst::InstanceMethodTarget{selToIdName}};
+		auto selToIdCall = awst::makeSubroutineCall(
+			std::move(selToIdTarget), awst::WType::uint64Type(), _loc);
+		awst::pushCallArg(selToIdCall->args, "__sel", extractSlice(8, 4));
 
 		// Build internal dispatch call with the same args (shared with
 		// the inner-txn branch below — hence we pass _args by value)
@@ -760,13 +748,11 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 			// If branch: call the actual function and return result
 			auto ifBlock = awst::makeBlock(_loc);
 			{
-				auto call = std::make_shared<awst::SubroutineCallExpression>();
-				call->sourceLocation = _loc;
-				call->wtype = dispatch.returnType;
-				if (!entry->subroutineId.empty())
-					call->target = awst::SubroutineID{entry->subroutineId};
-				else
-					call->target = awst::InstanceMethodTarget{entry->name};
+				awst::SubroutineTarget target = !entry->subroutineId.empty()
+					? awst::SubroutineTarget{awst::SubroutineID{entry->subroutineId}}
+					: awst::SubroutineTarget{awst::InstanceMethodTarget{entry->name}};
+				auto call = awst::makeSubroutineCall(
+					std::move(target), dispatch.returnType, _loc);
 
 				// Check if target is public (has ARC4 wrapping)
 				bool isPublic = entry->funcDef && (

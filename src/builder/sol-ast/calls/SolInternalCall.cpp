@@ -73,10 +73,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	// External function-type params are passed as bytes (12-byte packed
 	// appId + selector). No guard needed — the dispatch handles them.
 
-	auto call = std::make_shared<awst::SubroutineCallExpression>();
-	call->sourceLocation = m_loc;
-	call->wtype = _returnType;
-	call->target = std::move(_target);
+	auto call = awst::makeSubroutineCall(std::move(_target), _returnType, m_loc);
 
 	// Collect parameter types for coercion + detect mapping storage-ref params
 	std::vector<awst::WType const*> paramTypes;

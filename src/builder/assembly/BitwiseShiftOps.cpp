@@ -27,15 +27,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSload(
 		slotArg = safeBtoi(std::move(slotArg), _loc);
 
 	// Call __storage_read(slot) → biguint
-	auto call = std::make_shared<awst::SubroutineCallExpression>();
-	call->sourceLocation = _loc;
-	call->wtype = awst::WType::biguintType();
-	call->target = awst::SubroutineID{"__puyasol___storage_read"};
+	auto call = awst::makeSubroutineCall(awst::SubroutineID{"__puyasol___storage_read"}, awst::WType::biguintType(), _loc);
 
-	awst::CallArg arg;
-	arg.name = "__slot";
-	arg.value = std::move(slotArg);
-	call->args.push_back(std::move(arg));
+	awst::pushCallArg(call->args, "__slot", std::move(slotArg));
 
 	return call;
 }

@@ -134,14 +134,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 					last8->stackArgs.push_back(std::move(eight2));
 					auto btoi = awst::makeBtoi(std::move(last8), m_loc);
 
-					auto call = std::make_shared<awst::SubroutineCallExpression>();
-					call->sourceLocation = m_loc;
-					call->wtype = awst::WType::biguintType();
-					call->target = awst::SubroutineID{"__puyasol___storage_read"};
-					awst::CallArg arg;
-					arg.name = "__slot";
-					arg.value = std::move(btoi);
-					call->args.push_back(std::move(arg));
+					auto call = awst::makeSubroutineCall(awst::SubroutineID{"__puyasol___storage_read"}, awst::WType::biguintType(), m_loc);
+					awst::pushCallArg(call->args, "__slot", std::move(btoi));
 					return call;
 				}
 			}
@@ -184,14 +178,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 
 						auto btoi = awst::makeBtoi(std::move(last8), m_loc);
 
-						auto call = std::make_shared<awst::SubroutineCallExpression>();
-						call->sourceLocation = m_loc;
-						call->wtype = awst::WType::biguintType();
-						call->target = awst::SubroutineID{"__puyasol___storage_read"};
-						awst::CallArg arg;
-						arg.name = "__slot";
-						arg.value = std::move(btoi);
-						call->args.push_back(std::move(arg));
+						auto call = awst::makeSubroutineCall(awst::SubroutineID{"__puyasol___storage_read"}, awst::WType::biguintType(), m_loc);
+						awst::pushCallArg(call->args, "__slot", std::move(btoi));
 						return call;
 					}
 					// Write: return computed slot for assignment handler

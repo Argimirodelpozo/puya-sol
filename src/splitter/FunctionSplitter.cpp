@@ -976,30 +976,16 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 		{
 			BuiltPiece const& bp = built[pi];
 
-			auto call = std::make_shared<awst::SubroutineCallExpression>();
-			call->sourceLocation = origLoc;
-			call->wtype = bp.returnType;
-			if (isContractMethod)
-			{
-				// Use InstanceMethodTarget — piece is a ContractMethod
-				// on the same contract, callable on `this`.
-				awst::InstanceMethodTarget imt;
-				imt.memberName = bp.name;
-				call->target = imt;
-			}
-			else
-			{
-				call->target = awst::SubroutineID{bp.id};
-			}
+			// Piece is a ContractMethod on the same contract → InstanceMethodTarget.
+			awst::SubroutineTarget target = isContractMethod
+				? awst::SubroutineTarget{awst::InstanceMethodTarget{bp.name}}
+				: awst::SubroutineTarget{awst::SubroutineID{bp.id}};
+			auto call = awst::makeSubroutineCall(
+				std::move(target), bp.returnType, origLoc);
 			// Pass through the original args verbatim.
 			for (auto const& arg : origArgs)
-			{
-				awst::CallArg ca;
-				ca.name = arg.name;
-				ca.value = awst::makeVarExpression(
-					arg.name, arg.wtype, origLoc);
-				call->args.push_back(std::move(ca));
-			}
+				awst::pushCallArg(call->args, arg.name,
+					awst::makeVarExpression(arg.name, arg.wtype, origLoc));
 
 			bool isLast = (pi == numPieces - 1);
 			if (isLast && bp.returnType != awst::WType::voidType())

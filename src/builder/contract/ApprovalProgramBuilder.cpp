@@ -263,11 +263,8 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 	// Create-time check: if (Txn.ApplicationID == 0) { base_ctors; ctor_body; return true; }
 	{
-		auto appIdCheck = std::make_shared<awst::IntrinsicCall>();
-		appIdCheck->sourceLocation = method.sourceLocation;
-		appIdCheck->opCode = "txn";
+		auto appIdCheck = awst::makeIntrinsicCall("txn", awst::WType::uint64Type(), method.sourceLocation);
 		appIdCheck->immediates = {std::string("ApplicationID")};
-		appIdCheck->wtype = awst::WType::uint64Type();
 
 		auto zero = awst::makeIntegerConstant("0", method.sourceLocation);
 
@@ -518,11 +515,8 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				auto* paramType = m_typeMapper.map(param->type());
 
 				// txna ApplicationArgs i → raw ARC4 bytes
-				auto readArg = std::make_shared<awst::IntrinsicCall>();
-				readArg->sourceLocation = method.sourceLocation;
-				readArg->opCode = "txna";
+				auto readArg = awst::makeIntrinsicCall("txna", awst::WType::bytesType(), method.sourceLocation);
 				readArg->immediates = {std::string("ApplicationArgs"), argIndex};
-				readArg->wtype = awst::WType::bytesType();
 
 				std::shared_ptr<awst::Expression> paramVal;
 
@@ -1383,10 +1377,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			bool _isBareCall)
 			-> std::shared_ptr<awst::Statement>
 		{
-			auto call = std::make_shared<awst::SubroutineCallExpression>();
-			call->sourceLocation = method.sourceLocation;
-			call->wtype = awst::WType::voidType();
-			call->target = awst::InstanceMethodTarget{_name};
+			auto call = awst::makeSubroutineCall(awst::InstanceMethodTarget{_name}, awst::WType::voidType(), method.sourceLocation);
 			// If the function takes a bytes parameter, pass the calldata.
 			// Fallback may take `bytes calldata _input`.
 			if (_func && _func->parameters().size() == 1)
@@ -1404,10 +1395,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					argExpr = std::move(argBytes);
 				}
 
-				awst::CallArg ca;
-				ca.name = std::nullopt;
-				ca.value = std::move(argExpr);
-				call->args.push_back(std::move(ca));
+				awst::pushCallArg(call->args, std::move(argExpr));
 			}
 
 			auto stmt = awst::makeExpressionStatement(call, method.sourceLocation);

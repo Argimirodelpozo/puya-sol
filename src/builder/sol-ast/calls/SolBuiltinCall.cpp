@@ -108,21 +108,13 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		// drops it when no contract uses it.
 		auto arg = buildExpr(*m_call.arguments()[0]);
 		auto* bytes20Type = m_ctx.typeMapper.createType<awst::BytesWType>(20);
-		auto call = std::make_shared<awst::SubroutineCallExpression>();
-		call->sourceLocation = m_loc;
-		call->wtype = awst::WType::bytesType();
-		call->target = awst::SubroutineID{builtin::ripemd160SubroutineId()};
-		awst::CallArg callArg;
-		callArg.name = "data";
+		auto call = awst::makeSubroutineCall(awst::SubroutineID{builtin::ripemd160SubroutineId()}, awst::WType::bytesType(), m_loc);
 		// Solidity's `ripemd160(bytes memory)` accepts string/bytes/etc.
-		// Coerce non-bytes to bytes via ReinterpretCast where the wtype
-		// already matches the bytes representation (bytes/string), and
-		// otherwise fall back to whatever buildExpr produced — non-bytes
-		// shapes shouldn't reach here per Solidity type rules.
+		// Coerce non-bytes to bytes via ReinterpretCast — non-bytes shapes
+		// shouldn't reach here per Solidity type rules.
 		if (arg && arg->wtype != awst::WType::bytesType())
 			arg = awst::makeReinterpretCast(std::move(arg), awst::WType::bytesType(), m_loc);
-		callArg.value = std::move(arg);
-		call->args.push_back(std::move(callArg));
+		awst::pushCallArg(call->args, "data", std::move(arg));
 		// Bytes20 result type: reinterpret the 20-byte return from the
 		// subroutine to bytes20 so callers' type expectations match.
 		return awst::makeReinterpretCast(std::move(call), bytes20Type, m_loc);

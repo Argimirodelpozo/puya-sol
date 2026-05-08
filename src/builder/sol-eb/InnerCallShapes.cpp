@@ -71,22 +71,15 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 		else
 			callArgs.push_back(_encodeCallExpr.arguments()[1]);
 
-		auto call = std::make_shared<awst::SubroutineCallExpression>();
-		call->sourceLocation = _loc;
 		auto* retType = _ctx.typeMapper.map(targetFuncDef->returnParameters().size() > 0
 			? targetFuncDef->returnParameters()[0]->type()
 			: nullptr);
 		if (!retType)
 			retType = awst::WType::voidType();
-		call->wtype = retType;
-		call->target = awst::InstanceMethodTarget{targetFuncDef->name()};
+		auto call = awst::makeSubroutineCall(
+			awst::InstanceMethodTarget{targetFuncDef->name()}, retType, _loc);
 		for (auto const& arg : callArgs)
-		{
-			awst::CallArg ca;
-			ca.name = std::nullopt;
-			ca.value = _ctx.buildExpr(*arg);
-			call->args.push_back(std::move(ca));
-		}
+			awst::pushCallArg(call->args, _ctx.buildExpr(*arg));
 
 		// Return (true, returnBytes) — the caller expects a (bool, bytes) tuple.
 		// For a direct internal call we don't have the raw log, so encode the
@@ -195,11 +188,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 	auto readLog = awst::makeIntrinsicCall("itxn", awst::WType::bytesType(), _loc);
 	readLog->immediates = {std::string("LastLog")};
 
-	auto stripPrefix = std::make_shared<awst::IntrinsicCall>();
-	stripPrefix->sourceLocation = _loc;
-	stripPrefix->opCode = "extract";
+	auto stripPrefix = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
 	stripPrefix->immediates = {4, 0};
-	stripPrefix->wtype = awst::WType::bytesType();
 	stripPrefix->stackArgs.push_back(std::move(readLog));
 
 	return std::make_unique<GenericResultBuilder>(_ctx,

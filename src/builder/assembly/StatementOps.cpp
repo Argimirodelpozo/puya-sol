@@ -915,18 +915,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 			return nullptr;
 		}
 
-		auto call = std::make_shared<awst::SubroutineCallExpression>();
-		call->sourceLocation = _loc;
-		call->wtype = funcDef.returnVariables.size() == 1
+		auto call = awst::makeSubroutineCall(awst::SubroutineID{subIt->second}, funcDef.returnVariables.size() == 1
 			? awst::WType::biguintType()
-			: awst::WType::voidType();
-		call->target = awst::SubroutineID{subIt->second};
+			: awst::WType::voidType(), _loc);
 		for (auto const& a: _args)
-		{
-			awst::CallArg ca;
-			ca.value = ensureBiguint(a, _loc);
-			call->args.push_back(std::move(ca));
-		}
+			awst::pushCallArg(call->args, ensureBiguint(a, _loc));
 
 		if (funcDef.returnVariables.size() == 1)
 		{

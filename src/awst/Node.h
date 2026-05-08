@@ -494,6 +494,45 @@ struct SubroutineCallExpression: Expression
 	std::vector<CallArg> args;
 };
 
+// Construct a SubroutineCallExpression header (sourceLocation/wtype/target).
+// Callers append CallArg entries to `args` afterwards. Reduces the canonical
+// 4-line construction (make_shared / sourceLocation / wtype / target) to one.
+inline std::shared_ptr<SubroutineCallExpression> makeSubroutineCall(
+	SubroutineTarget target,
+	WType const* returnType,
+	SourceLocation loc)
+{
+	auto node = std::make_shared<SubroutineCallExpression>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = returnType;
+	node->target = std::move(target);
+	return node;
+}
+
+// Append a named CallArg to a SubroutineCallExpression / PuyaLibCall args list.
+// Reduces the 4-line `CallArg ca; ca.name = ...; ca.value = ...; args.push_back(...);`
+// boilerplate to a single call.
+inline void pushCallArg(
+	std::vector<CallArg>& args,
+	std::string name,
+	std::shared_ptr<Expression> value)
+{
+	CallArg ca;
+	ca.name = std::move(name);
+	ca.value = std::move(value);
+	args.push_back(std::move(ca));
+}
+
+// Overload: append an unnamed (positional) CallArg.
+inline void pushCallArg(
+	std::vector<CallArg>& args,
+	std::shared_ptr<Expression> value)
+{
+	CallArg ca;
+	ca.value = std::move(value);
+	args.push_back(std::move(ca));
+}
+
 struct IntrinsicCall: Expression
 {
 	std::string nodeType() const override { return "IntrinsicCall"; }
