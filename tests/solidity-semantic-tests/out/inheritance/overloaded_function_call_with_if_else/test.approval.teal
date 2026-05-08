@@ -5,6 +5,7 @@
 main:
     intcblock 1 32 0 3
     bytecblock 0x151f7c75
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -27,12 +28,90 @@ main_after_if_else@2:
     assert
     pushbytess 0x2b9082ff 0x1928cd24 0xfbc085e1 // method "f(uint256,uint256)uint256", method "f(uint256)uint256", method "g(bool)uint256"
     txna ApplicationArgs 0
-    match f(u256,u256) f(u256) g
+    match main_f_route@5 main_f_route@6 main_g_route@7
     err
 
+main_g_route@7:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_2 // 0
+    getbit
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/overloaded_function_call_with_if_else.sol.test.f(u256,u256)[routing]() -> void:
-f(u256,u256):
+main_ternary_merge@14:
+    !
+    assert // not payable
+    dupn 2
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
+    bz main_else_body@16
+    intc_3 // 3
+    itob
+    callsub f(u256)
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/overloaded_function_call_with_if_else.sol.test.g@17:
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_else_body@16:
+    intc_3 // 3
+    itob
+    pushint 7
+    itob
+    callsub f(u256,u256)
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/overloaded_function_call_with_if_else.sol.test.g@17
+
+main_ternary_false@13:
+    intc_2 // 0
+    b main_ternary_merge@14
+
+main_f_route@6:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub f(u256)
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_f_route@5:
     txna ApplicationArgs 1
     dup
     len
@@ -45,109 +124,26 @@ f(u256,u256):
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/overloaded_function_call_with_if_else.sol.test.f(u256,u256)
+    callsub f(u256,u256)
     bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/overloaded_function_call_with_if_else.sol.test.f(u256)[routing]() -> void:
-f(u256):
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/overloaded_function_call_with_if_else.sol.test.f(u256)
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/overloaded_function_call_with_if_else.sol.test.g[routing]() -> void:
-g:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 1
-    ==
-    assert // invalid number of bytes for arc4.bool
-    intc_2 // 0
-    getbit
-    txn GroupIndex
-    bz g_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-g_ternary_merge@4:
-    !
-    assert // not payable
-    dupn 2
-    intc_0 // 1
-    <=
-    assert // ABI bool validation
-    bz g_else_body@6
-    intc_3 // 3
-    itob
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/overloaded_function_call_with_if_else.sol.test.f(u256)
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    b|
-
-g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/overloaded_function_call_with_if_else.sol.test.g@7:
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-g_else_body@6:
-    intc_3 // 3
-    itob
-    pushint 7
-    itob
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/overloaded_function_call_with_if_else.sol.test.f(u256,u256)
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    b|
-    b g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/overloaded_function_call_with_if_else.sol.test.g@7
-
-g_ternary_false@3:
-    intc_2 // 0
-    b g_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/overloaded_function_call_with_if_else.sol.test.f(u256,u256)(__arc4_a: bytes, __arc4_b: bytes) -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/overloaded_function_call_with_if_else.sol.test.f(u256,u256):
+f(u256,u256):
     proto 2 1
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/overloaded_function_call_with_if_else.sol.test.f(u256,u256)_ternary_false@2
+    bz f(u256,u256)_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/overloaded_function_call_with_if_else.sol.test.f(u256,u256)_ternary_merge@3:
+f(u256,u256)_ternary_merge@3:
     !
     assert // not payable
     frame_dig -2
@@ -163,27 +159,27 @@ g_ternary_false@3:
     b|
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/overloaded_function_call_with_if_else.sol.test.f(u256,u256)_ternary_false@2:
+f(u256,u256)_ternary_false@2:
     intc_2 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/overloaded_function_call_with_if_else.sol.test.f(u256,u256)_ternary_merge@3
+    b f(u256,u256)_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/overloaded_function_call_with_if_else.sol.test.f(u256)(__arc4_k: bytes) -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/overloaded_function_call_with_if_else.sol.test.f(u256):
+f(u256):
     proto 1 1
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/overloaded_function_call_with_if_else.sol.test.f(u256)_ternary_false@2
+    bz f(u256)_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/overloaded_function_call_with_if_else.sol.test.f(u256)_ternary_merge@3:
+f(u256)_ternary_merge@3:
     !
     assert // not payable
     frame_dig -1
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/overloaded_function_call_with_if_else.sol.test.f(u256)_ternary_false@2:
+f(u256)_ternary_false@2:
     intc_2 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/overloaded_function_call_with_if_else.sol.test.f(u256)_ternary_merge@3
+    b f(u256)_ternary_merge@3

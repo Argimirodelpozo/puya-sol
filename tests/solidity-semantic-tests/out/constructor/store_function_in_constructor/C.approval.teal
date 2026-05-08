@@ -24,7 +24,7 @@ main:
     app_global_put
     pushint 2
     itob
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.use
+    callsub use
     bytec_0 // "result_in_constructor"
     swap
     app_global_put
@@ -39,54 +39,18 @@ main_after_if_else@2:
     assert
     pushbytess 0x82fadf35 0x622cfe87 0x25dcf787 // method "double(uint256)uint256", method "use(uint256)uint256", method "result_in_constructor()uint256"
     txna ApplicationArgs 0
-    match double use result_in_constructor
+    match main_double_route@5 main_use_route@6 main_result_in_constructor_route@7
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.double[routing]() -> void:
-double:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.double
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.use[routing]() -> void:
-use:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.use
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.result_in_constructor[routing]() -> void:
-result_in_constructor:
+main_result_in_constructor_route@7:
     txn GroupIndex
-    bz result_in_constructor_ternary_false@3
+    bz main_ternary_false@13
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-result_in_constructor_ternary_merge@4:
+main_ternary_merge@14:
     !
     assert // not payable
     intc_2 // 0
@@ -108,22 +72,52 @@ result_in_constructor_ternary_merge@4:
     intc_0 // 1
     return
 
-result_in_constructor_ternary_false@3:
+main_ternary_false@13:
     intc_2 // 0
-    b result_in_constructor_ternary_merge@4
+    b main_ternary_merge@14
+
+main_use_route@6:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub use
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_double_route@5:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub double
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.double(__arc4__arg: bytes) -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.double:
+double:
     proto 1 1
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.double_ternary_false@2
+    bz double_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.double_ternary_merge@3:
+double_ternary_merge@3:
     !
     assert // not payable
     frame_dig -1
@@ -139,22 +133,22 @@ result_in_constructor_ternary_false@3:
     b|
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.double_ternary_false@2:
+double_ternary_false@2:
     intc_2 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.double_ternary_merge@3
+    b double_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.use(__arc4__arg: bytes) -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.use:
+use:
     proto 1 1
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.use_ternary_false@2
+    bz use_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.use_ternary_merge@3:
+use_ternary_merge@3:
     !
     assert // not payable
     intc_2 // 0
@@ -165,9 +159,9 @@ result_in_constructor_ternary_false@3:
     ==
     assert // invalid function pointer
     frame_dig -1
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.double
+    callsub double
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.use_ternary_false@2:
+use_ternary_false@2:
     intc_2 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.use_ternary_merge@3
+    b use_ternary_merge@3

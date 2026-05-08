@@ -48,264 +48,18 @@ main_after_if_else@2:
     bytec 8 // method "externalPure()uint256"
     pushbytess 0xff45d0bd 0xb88b20ee 0xb20ff76f // method "testViewToDefault()(uint256,uint256)", method "testPureToDefault()(uint256,uint256)", method "testPureToView()(uint256,uint256)"
     txna ApplicationArgs 0
-    match externalDefault externalView externalPure testViewToDefault testPureToDefault testPureToView
+    match main_externalDefault_route@5 main_externalView_route@6 main_externalPure_route@7 main_testViewToDefault_route@8 main_testPureToDefault_route@9 main_testPureToView_route@10
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.externalDefault[routing]() -> void:
-externalDefault:
+main_testPureToView_route@10:
     txn GroupIndex
-    bz externalDefault_ternary_false@3
+    bz main_ternary_false@16
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-externalDefault_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000b
-    log
-    intc_1 // 1
-    return
-
-externalDefault_ternary_false@3:
-    intc_0 // 0
-    b externalDefault_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.externalView[routing]() -> void:
-externalView:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.externalView
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.externalPure[routing]() -> void:
-externalPure:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.externalPure
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.testViewToDefault[routing]() -> void:
-testViewToDefault:
-    txn GroupIndex
-    bz testViewToDefault_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-testViewToDefault_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // "externalDefaultArray"
-    pushbytes 0x00000000000000006c72e23e
-    app_global_put
-    pushint 2
-    itob
-    bytec_2 // "internalDefaultArray"
-    swap
-    app_global_put
-    intc_0 // 0
-    bytec_0 // "externalDefaultArray"
-    app_global_get_ex
-    assert // check externalDefaultArray exists
-    extract 0 12 // on error: index access is out of bounds
-    intc_0 // 0
-    extract_uint64
-    bnz testViewToDefault_else_body@6
-    intc_0 // 0
-    bytec_0 // "externalDefaultArray"
-    app_global_get_ex
-    assert // check externalDefaultArray exists
-    extract 0 12 // on error: index access is out of bounds
-    extract 8 4
-    callsub __sel_to_id___funcptr_dispatch_ret_u256
-    callsub __funcptr_dispatch_ret_u256
-
-testViewToDefault_after_if_else@8:
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    swap
-    dig 1
-    b|
-    intc_0 // 0
-    bytec_2 // "internalDefaultArray"
-    app_global_get_ex
-    assert // check internalDefaultArray exists
-    intc_0 // 0
-    extract_uint64
-    callsub __funcptr_dispatch_ret_u256
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    uncover 2
-    b|
-    concat
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-testViewToDefault_else_body@6:
-    itxn_begin
-    intc_0 // 0
-    bytec_0 // "externalDefaultArray"
-    app_global_get_ex
-    assert // check externalDefaultArray exists
-    extract 0 12 // on error: index access is out of bounds
-    dup
-    extract 8 4
-    swap
-    intc_0 // 0
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    b testViewToDefault_after_if_else@8
-
-testViewToDefault_ternary_false@3:
-    intc_0 // 0
-    b testViewToDefault_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.testPureToDefault[routing]() -> void:
-testPureToDefault:
-    txn GroupIndex
-    bz testPureToDefault_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-testPureToDefault_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // "externalDefaultArray"
-    bytec 9 // 0x0000000000000000328c6da9
-    app_global_put
-    intc_3 // 4
-    itob
-    bytec_2 // "internalDefaultArray"
-    swap
-    app_global_put
-    intc_0 // 0
-    bytec_0 // "externalDefaultArray"
-    app_global_get_ex
-    assert // check externalDefaultArray exists
-    extract 0 12 // on error: index access is out of bounds
-    intc_0 // 0
-    extract_uint64
-    bnz testPureToDefault_else_body@6
-    intc_0 // 0
-    bytec_0 // "externalDefaultArray"
-    app_global_get_ex
-    assert // check externalDefaultArray exists
-    extract 0 12 // on error: index access is out of bounds
-    extract 8 4
-    callsub __sel_to_id___funcptr_dispatch_ret_u256
-    callsub __funcptr_dispatch_ret_u256
-
-testPureToDefault_after_if_else@8:
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    swap
-    dig 1
-    b|
-    intc_0 // 0
-    bytec_2 // "internalDefaultArray"
-    app_global_get_ex
-    assert // check internalDefaultArray exists
-    intc_0 // 0
-    extract_uint64
-    callsub __funcptr_dispatch_ret_u256
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    uncover 2
-    b|
-    concat
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-testPureToDefault_else_body@6:
-    itxn_begin
-    intc_0 // 0
-    bytec_0 // "externalDefaultArray"
-    app_global_get_ex
-    assert // check externalDefaultArray exists
-    extract 0 12 // on error: index access is out of bounds
-    dup
-    extract 8 4
-    swap
-    intc_0 // 0
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    b testPureToDefault_after_if_else@8
-
-testPureToDefault_ternary_false@3:
-    intc_0 // 0
-    b testPureToDefault_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.testPureToView[routing]() -> void:
-testPureToView:
-    txn GroupIndex
-    bz testPureToView_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-testPureToView_ternary_merge@4:
+main_ternary_merge@17:
     !
     assert // not payable
     bytec_1 // "externalViewArray"
@@ -323,7 +77,7 @@ testPureToView_ternary_merge@4:
     extract 0 12 // on error: index access is out of bounds
     intc_0 // 0
     extract_uint64
-    bnz testPureToView_else_body@6
+    bnz main_else_body@19
     intc_0 // 0
     bytec_1 // "externalViewArray"
     app_global_get_ex
@@ -333,7 +87,7 @@ testPureToView_ternary_merge@4:
     callsub __sel_to_id___funcptr_dispatch_ret_u256
     callsub __funcptr_dispatch_ret_u256
 
-testPureToView_after_if_else@8:
+main_after_if_else@20:
     dup
     len
     intc_2 // 32
@@ -366,7 +120,7 @@ testPureToView_after_if_else@8:
     intc_1 // 1
     return
 
-testPureToView_else_body@6:
+main_else_body@19:
     itxn_begin
     intc_0 // 0
     bytec_1 // "externalViewArray"
@@ -389,51 +143,285 @@ testPureToView_else_body@6:
     itxn_submit
     itxn LastLog
     extract 4 0
-    b testPureToView_after_if_else@8
+    b main_after_if_else@20
 
-testPureToView_ternary_false@3:
+main_ternary_false@16:
     intc_0 // 0
-    b testPureToView_ternary_merge@4
+    b main_ternary_merge@17
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.externalView() -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.externalView:
+main_testPureToDefault_route@9:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.externalView_ternary_false@2
+    bz main_ternary_false@24
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.externalView_ternary_merge@3:
+main_ternary_merge@25:
+    !
+    assert // not payable
+    bytec_0 // "externalDefaultArray"
+    bytec 9 // 0x0000000000000000328c6da9
+    app_global_put
+    intc_3 // 4
+    itob
+    bytec_2 // "internalDefaultArray"
+    swap
+    app_global_put
+    intc_0 // 0
+    bytec_0 // "externalDefaultArray"
+    app_global_get_ex
+    assert // check externalDefaultArray exists
+    extract 0 12 // on error: index access is out of bounds
+    intc_0 // 0
+    extract_uint64
+    bnz main_else_body@27
+    intc_0 // 0
+    bytec_0 // "externalDefaultArray"
+    app_global_get_ex
+    assert // check externalDefaultArray exists
+    extract 0 12 // on error: index access is out of bounds
+    extract 8 4
+    callsub __sel_to_id___funcptr_dispatch_ret_u256
+    callsub __funcptr_dispatch_ret_u256
+
+main_after_if_else@28:
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    intc_0 // 0
+    bytec_2 // "internalDefaultArray"
+    app_global_get_ex
+    assert // check internalDefaultArray exists
+    intc_0 // 0
+    extract_uint64
+    callsub __funcptr_dispatch_ret_u256
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_else_body@27:
+    itxn_begin
+    intc_0 // 0
+    bytec_0 // "externalDefaultArray"
+    app_global_get_ex
+    assert // check externalDefaultArray exists
+    extract 0 12 // on error: index access is out of bounds
+    dup
+    extract 8 4
+    swap
+    intc_0 // 0
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    b main_after_if_else@28
+
+main_ternary_false@24:
+    intc_0 // 0
+    b main_ternary_merge@25
+
+main_testViewToDefault_route@8:
+    txn GroupIndex
+    bz main_ternary_false@32
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@33:
+    !
+    assert // not payable
+    bytec_0 // "externalDefaultArray"
+    pushbytes 0x00000000000000006c72e23e
+    app_global_put
+    pushint 2
+    itob
+    bytec_2 // "internalDefaultArray"
+    swap
+    app_global_put
+    intc_0 // 0
+    bytec_0 // "externalDefaultArray"
+    app_global_get_ex
+    assert // check externalDefaultArray exists
+    extract 0 12 // on error: index access is out of bounds
+    intc_0 // 0
+    extract_uint64
+    bnz main_else_body@35
+    intc_0 // 0
+    bytec_0 // "externalDefaultArray"
+    app_global_get_ex
+    assert // check externalDefaultArray exists
+    extract 0 12 // on error: index access is out of bounds
+    extract 8 4
+    callsub __sel_to_id___funcptr_dispatch_ret_u256
+    callsub __funcptr_dispatch_ret_u256
+
+main_after_if_else@36:
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    intc_0 // 0
+    bytec_2 // "internalDefaultArray"
+    app_global_get_ex
+    assert // check internalDefaultArray exists
+    intc_0 // 0
+    extract_uint64
+    callsub __funcptr_dispatch_ret_u256
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_else_body@35:
+    itxn_begin
+    intc_0 // 0
+    bytec_0 // "externalDefaultArray"
+    app_global_get_ex
+    assert // check externalDefaultArray exists
+    extract 0 12 // on error: index access is out of bounds
+    dup
+    extract 8 4
+    swap
+    intc_0 // 0
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    b main_after_if_else@36
+
+main_ternary_false@32:
+    intc_0 // 0
+    b main_ternary_merge@33
+
+main_externalPure_route@7:
+    callsub externalPure
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_externalView_route@6:
+    callsub externalView
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_externalDefault_route@5:
+    txn GroupIndex
+    bz main_ternary_false@44
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@45:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000b
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@44:
+    intc_0 // 0
+    b main_ternary_merge@45
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.externalView() -> bytes:
+externalView:
+    txn GroupIndex
+    bz externalView_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+externalView_ternary_merge@3:
     !
     assert // not payable
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000c
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.externalView_ternary_false@2:
+externalView_ternary_false@2:
     intc_0 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.externalView_ternary_merge@3
+    b externalView_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.externalPure() -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.externalPure:
+externalPure:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.externalPure_ternary_false@2
+    bz externalPure_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.externalPure_ternary_merge@3:
+externalPure_ternary_merge@3:
     !
     assert // not payable
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000d
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.externalPure_ternary_false@2:
+externalPure_ternary_false@2:
     intc_0 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.externalPure_ternary_merge@3
+    b externalPure_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.__funcptr_dispatch_ret_u256(__funcptr_id: uint64) -> bytes:
@@ -461,7 +449,7 @@ __funcptr_dispatch_ret_u256_else_body@4:
     pushint 3
     ==
     bz __funcptr_dispatch_ret_u256_else_body@6
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.externalPure
+    callsub externalPure
     retsub
 
 __funcptr_dispatch_ret_u256_else_body@6:
@@ -469,7 +457,7 @@ __funcptr_dispatch_ret_u256_else_body@6:
     intc_1 // 1
     ==
     assert // invalid function pointer
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/function_type_array_to_storage.sol.C.externalView
+    callsub externalView
     retsub
 
 

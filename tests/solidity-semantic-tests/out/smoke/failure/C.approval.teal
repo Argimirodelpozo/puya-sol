@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/failure.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -26,31 +27,27 @@ main_after_if_else@2:
     assert
     pushbytess 0x277630fc 0x74c48465 0x666a2f25 0xafedb2e5 // method "e()void", method "f(bool)void", method "g(bool)void", method "h()uint256"
     txna ApplicationArgs 0
-    match e f g h
+    match main_e_route@5 main_f_route@6 main_g_route@7 main_h_route@8
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/failure.sol.C.e[routing]() -> void:
-e:
+main_h_route@8:
     txn GroupIndex
-    bz e_ternary_false@3
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-e_ternary_merge@4:
+main_ternary_merge@15:
     !
     assert // not payable
-    err // revert
+    err
 
-e_ternary_false@3:
+main_ternary_false@14:
     intc_1 // 0
-    b e_ternary_merge@4
+    b main_ternary_merge@15
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/failure.sol.C.f[routing]() -> void:
-f:
+main_g_route@7:
     txna ApplicationArgs 1
     dup
     len
@@ -59,47 +56,15 @@ f:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
+    bury 1
     txn GroupIndex
-    bz f_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-f_ternary_merge@4:
-    !
-    assert // not payable
-    dupn 2
-    intc_0 // 1
-    <=
-    assert // ABI bool validation
-    assert // assertion failed
-    intc_0 // 1
-    return
-
-f_ternary_false@3:
-    intc_1 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/failure.sol.C.g[routing]() -> void:
-g:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 1
-    ==
-    assert // invalid number of bytes for arc4.bool
-    intc_1 // 0
-    getbit
-    txn GroupIndex
-    bz g_ternary_false@3
+    bz main_ternary_false@19
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-g_ternary_merge@4:
+main_ternary_merge@20:
     !
     assert // not payable
     dupn 2
@@ -110,25 +75,55 @@ g_ternary_merge@4:
     intc_0 // 1
     return
 
-g_ternary_false@3:
+main_ternary_false@19:
     intc_1 // 0
-    b g_ternary_merge@4
+    b main_ternary_merge@20
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/failure.sol.C.h[routing]() -> void:
-h:
+main_f_route@6:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    bury 1
     txn GroupIndex
-    bz h_ternary_false@3
+    bz main_ternary_false@24
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-h_ternary_merge@4:
+main_ternary_merge@25:
     !
     assert // not payable
-    err
+    dupn 2
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
+    assert // assertion failed
+    intc_0 // 1
+    return
 
-h_ternary_false@3:
+main_ternary_false@24:
     intc_1 // 0
-    b h_ternary_merge@4
+    b main_ternary_merge@25
+
+main_e_route@5:
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
+    !
+    assert // not payable
+    err // revert
+
+main_ternary_false@29:
+    intc_1 // 0
+    b main_ternary_merge@30

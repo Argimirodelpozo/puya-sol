@@ -1,9 +1,10 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_7dxk_ap3/B.sol.C.approval_program() -> uint64:
+// /tmp/multisource_q9mmb9ax/B.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 32 0
+    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -30,43 +31,21 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b /tmp/multisource_7dxk_ap3/B.sol.C.f[routing]
-
-
-// /tmp/multisource_7dxk_ap3/B.sol.f(x: bytes) -> bytes:
-f:
-    proto 1 1
-    frame_dig -1
-    pushbytes 0x01
-    b+
-    retsub
-
-
-// /tmp/multisource_7dxk_ap3/B.sol.g(x: bytes) -> bytes:
-g:
-    proto 1 1
-    frame_dig -1
-    pushbytes 0x0a
-    b+
-    retsub
-
-
-// /tmp/multisource_7dxk_ap3/B.sol.C.f[routing]() -> void:
-/tmp/multisource_7dxk_ap3/B.sol.C.f[routing]:
     txna ApplicationArgs 1
     dup
+    bury 2
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz /tmp/multisource_7dxk_ap3/B.sol.C.f[routing]_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/tmp/multisource_7dxk_ap3/B.sol.C.f[routing]_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     dup
@@ -87,6 +66,24 @@ g:
     intc_0 // 1
     return
 
-/tmp/multisource_7dxk_ap3/B.sol.C.f[routing]_ternary_false@3:
-    pushint 0
-    b /tmp/multisource_7dxk_ap3/B.sol.C.f[routing]_ternary_merge@4
+main_ternary_false@8:
+    intc_2 // 0
+    b main_ternary_merge@9
+
+
+// /tmp/multisource_q9mmb9ax/B.sol.f(x: bytes) -> bytes:
+f:
+    proto 1 1
+    frame_dig -1
+    pushbytes 0x01
+    b+
+    retsub
+
+
+// /tmp/multisource_q9mmb9ax/B.sol.g(x: bytes) -> bytes:
+g:
+    proto 1 1
+    frame_dig -1
+    pushbytes 0x0a
+    b+
+    retsub

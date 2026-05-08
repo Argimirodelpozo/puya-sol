@@ -5,6 +5,7 @@
 main:
     intcblock 1 0
     bytecblock 0x151f7c75
+    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -27,42 +28,52 @@ main_after_if_else@2:
     assert
     pushbytess 0xcdcb8654 0x9d73c9c9 0xb8d71b89 // method "f()address", method "g()(bool,bool)", method "h(uint8[12])address"
     txna ApplicationArgs 0
-    match f g h
+    match main_f_route@5 main_g_route@6 main_h_route@7
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_address.sol.C.f[routing]() -> void:
-f:
+main_h_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    pushint 12
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 12>
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@13
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@14:
     !
     assert // not payable
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000001234
+    pushint 24
+    bzero
+    dig 1
+    extract 0 8
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-f_ternary_false@3:
+main_ternary_false@13:
     intc_1 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@14
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_address.sol.C.g[routing]() -> void:
-g:
+main_g_route@6:
     txn GroupIndex
-    bz g_ternary_false@3
+    bz main_ternary_false@18
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-g_ternary_merge@4:
+main_ternary_merge@19:
     !
     assert // not payable
     global CurrentApplicationAddress
@@ -82,41 +93,26 @@ g_ternary_merge@4:
     intc_0 // 1
     return
 
-g_ternary_false@3:
+main_ternary_false@18:
     intc_1 // 0
-    b g_ternary_merge@4
+    b main_ternary_merge@19
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_address.sol.C.h[routing]() -> void:
-h:
-    txna ApplicationArgs 1
-    dup
-    len
-    pushint 12
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 12>
+main_f_route@5:
     txn GroupIndex
-    bz h_ternary_false@3
+    bz main_ternary_false@23
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-h_ternary_merge@4:
+main_ternary_merge@24:
     !
     assert // not payable
-    pushint 24
-    bzero
-    dig 1
-    extract 0 8
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000001234
     log
     intc_0 // 1
     return
 
-h_ternary_false@3:
+main_ternary_false@23:
     intc_1 // 0
-    b h_ternary_merge@4
+    b main_ternary_merge@24

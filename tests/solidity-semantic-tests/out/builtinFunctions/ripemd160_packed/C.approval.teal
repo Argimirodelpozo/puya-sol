@@ -4,7 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/ripemd160_packed.sol.C.approval_program() -> uint64:
 main:
     intcblock 4294967295 255 0 1
-    bytecblock 0x0b0e0f0c050807090b0d0e0f060709080c0d0b0f060909070c0f0b0d070807070d0f0e0b070706080d0e0d0c050506090e0b0c0e080605050f0c0f0e090908060f0c0d0d090508060e0b0c0b08060505 0x068101
+    bytecblock 0x068101 0x0b0e0f0c050807090b0d0e0f060709080c0d0b0f060909070c0f0b0d070807070d0f0e0b070706080d0e0d0c050506090e0b0c0e080605050f0c0f0e090908060f0c0d0d090508060e0b0c0b08060505
+    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -31,7 +32,85 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+
+main_while_top@11:
+    pushint 170010
+    global OpcodeBudget
+    >
+    bz main_after_while@16
+    itxn_begin
+    pushint 6 // appl
+    itxn_field TypeEnum
+    pushint 5 // DeleteApplication
+    itxn_field OnCompletion
+    bytec_0 // 0x068101
+    itxn_field ApprovalProgram
+    bytec_0 // 0x068101
+    itxn_field ClearStateProgram
+    intc_2 // 0
+    itxn_field Fee
+    itxn_submit
+    b main_while_top@11
+
+main_after_while@16:
+    pushint 32
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    pushint 32
+    -
+    pushint 32
+    extract3
+    concat
+    dup
+    len
+    pushint 32
+    -
+    pushint 32
+    extract3
+    pushbytes 0x08
+    dig 1
+    concat
+    pushbytes 0x010000
+    concat
+    swap
+    concat
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000100
+    concat
+    callsub __builtin_ripemd160
+    pushint 12
+    bzero
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+main_ternary_false@8:
+    intc_2 // 0
+    b main_ternary_merge@9
 
 
 // __builtin_ripemd160(data: bytes) -> bytes:
@@ -189,7 +268,7 @@ __builtin_ripemd160_while_top@14:
     swap
     dig 1
     +
-    bytec_0 // 0x0b0e0f0c050807090b0d0e0f060709080c0d0b0f060909070c0f0b0d070807070d0f0e0b070706080d0e0d0c050506090e0b0c0e080605050f0c0f0e090908060f0c0d0d090508060e0b0c0b08060505
+    bytec_1 // 0x0b0e0f0c050807090b0d0e0f060709080c0d0b0f060909070c0f0b0d070807070d0f0e0b070706080d0e0d0c050506090e0b0c0e080605050f0c0f0e090908060f0c0d0d090508060e0b0c0b08060505
     swap
     getbyte
     frame_bury 15
@@ -451,7 +530,7 @@ __builtin_ripemd160_while_top@41:
     swap
     dig 1
     +
-    bytec_0 // 0x0b0e0f0c050807090b0d0e0f060709080c0d0b0f060909070c0f0b0d070807070d0f0e0b070706080d0e0d0c050506090e0b0c0e080605050f0c0f0e090908060f0c0d0d090508060e0b0c0b08060505
+    bytec_1 // 0x0b0e0f0c050807090b0d0e0f060709080c0d0b0f060909070c0f0b0d070807070d0f0e0b070706080d0e0d0c050506090e0b0c0e080605050f0c0f0e090908060f0c0d0d090508060e0b0c0b08060505
     swap
     getbyte
     frame_bury 15
@@ -897,85 +976,3 @@ __builtin_ripemd160_after_while@57:
     concat
     frame_bury 0
     retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/ripemd160_packed.sol.C.f[routing]() -> void:
-f:
-    txna ApplicationArgs 1
-    dup
-    len
-    pushint 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz f_ternary_false@3
-    txn GroupIndex
-    intc_3 // 1
-    -
-    gtxns Amount
-
-f_ternary_merge@4:
-    !
-    assert // not payable
-
-f_while_top@6:
-    pushint 170010
-    global OpcodeBudget
-    >
-    bz f_after_while@11
-    itxn_begin
-    pushint 6 // appl
-    itxn_field TypeEnum
-    pushint 5 // DeleteApplication
-    itxn_field OnCompletion
-    bytec_1 // 0x068101
-    itxn_field ApprovalProgram
-    bytec_1 // 0x068101
-    itxn_field ClearStateProgram
-    intc_2 // 0
-    itxn_field Fee
-    itxn_submit
-    b f_while_top@6
-
-f_after_while@11:
-    pushint 32
-    bzero
-    dup
-    dig 2
-    concat
-    dup
-    len
-    pushint 32
-    -
-    pushint 32
-    extract3
-    concat
-    dup
-    len
-    pushint 32
-    -
-    pushint 32
-    extract3
-    pushbytes 0x08
-    dig 1
-    concat
-    pushbytes 0x010000
-    concat
-    swap
-    concat
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000100
-    concat
-    callsub __builtin_ripemd160
-    pushint 12
-    bzero
-    concat
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_3 // 1
-    return
-
-f_ternary_false@3:
-    intc_2 // 0
-    b f_ternary_merge@4

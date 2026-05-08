@@ -4,7 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_uint_bytes.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 2 65535
-    bytecblock 0x151f7c75
+    bytecblock 0x151f7c75 ""
+    bytec_1 // ""
     pushint 4096
     bzero
     dup
@@ -27,24 +28,22 @@ main_after_if_else@2:
     assert
     pushbytess 0xd110edaf 0x07a5a31b 0xd27922c6 0x38b8b62f 0x12d76492 // method "removeSignature(byte[])byte[]", method "g(byte[2],byte[2],byte[2])void", method "h(uint64,uint64)void", method "f()byte[]", method "f2()byte[]"
     txna ApplicationArgs 0
-    match removeSignature g h f f2
+    match main_removeSignature_route@5 main_g_route@6 main_h_route@7 main_f_route@8 main_f2_route@9
     err
 
+main_f2_route@9:
+    txn GroupIndex
+    bz main_ternary_false@15
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_uint_bytes.sol.C.removeSignature[routing]() -> void:
-removeSignature:
-    txna ApplicationArgs 1
-    dup
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    intc_2 // 2
-    +
-    dig 1
-    len
-    ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    extract 2 0
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_uint_bytes.sol.C.removeSignature
+main_ternary_merge@16:
+    !
+    assert // not payable
+    pushbytes 0xd27922c600000000000000000000000000000000000000000000000000000000000012340000000000000000000000000000000000000000000000000000000000001234
+    callsub removeSignature
     dup
     len
     itob
@@ -58,9 +57,80 @@ removeSignature:
     intc_0 // 1
     return
 
+main_ternary_false@15:
+    intc_1 // 0
+    b main_ternary_merge@16
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_uint_bytes.sol.C.g[routing]() -> void:
-g:
+main_f_route@8:
+    txn GroupIndex
+    bz main_ternary_false@20
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@21:
+    !
+    assert // not payable
+    pushbytes 0x07a5a31b123400000000000000000000000000000000000000000000000000000000000061620000000000000000000000000000000000000000000000000000000000001234000000000000000000000000000000000000000000000000000000000000
+    callsub removeSignature
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@20:
+    intc_1 // 0
+    b main_ternary_merge@21
+
+main_h_route@7:
+    txna ApplicationArgs 1
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    txna ApplicationArgs 2
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    bytec_1 // ""
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@25
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@26:
+    !
+    assert // not payable
+    dupn 2
+    intc_3 // 65535
+    <=
+    assert // ABI validation
+    intc_3 // 65535
+    &
+    intc_3 // 65535
+    <=
+    assert // ABI validation
+    intc_0 // 1
+    return
+
+main_ternary_false@25:
+    intc_1 // 0
+    b main_ternary_merge@26
+
+main_g_route@6:
     txna ApplicationArgs 1
     len
     intc_2 // 2
@@ -77,77 +147,35 @@ g:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 2>
     txn GroupIndex
-    bz g_ternary_false@3
+    bz main_ternary_false@30
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-g_ternary_merge@4:
+main_ternary_merge@31:
     !
     assert // not payable
     intc_0 // 1
     return
 
-g_ternary_false@3:
+main_ternary_false@30:
     intc_1 // 0
-    b g_ternary_merge@4
+    b main_ternary_merge@31
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_uint_bytes.sol.C.h[routing]() -> void:
-h:
+main_removeSignature_route@5:
     txna ApplicationArgs 1
-    len
-    pushint 8
-    ==
-    assert // invalid number of bytes for arc4.uint64
-    txna ApplicationArgs 2
-    len
-    pushint 8
-    ==
-    assert // invalid number of bytes for arc4.uint64
-    pushbytes ""
-    txn GroupIndex
-    bz h_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-h_ternary_merge@4:
-    !
-    assert // not payable
-    dupn 2
-    intc_3 // 65535
-    <=
-    assert // ABI validation
-    intc_3 // 65535
-    &
-    intc_3 // 65535
-    <=
-    assert // ABI validation
-    intc_0 // 1
-    return
-
-h_ternary_false@3:
+    dup
     intc_1 // 0
-    b h_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_uint_bytes.sol.C.f[routing]() -> void:
-f:
-    txn GroupIndex
-    bz f_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-f_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x07a5a31b123400000000000000000000000000000000000000000000000000000000000061620000000000000000000000000000000000000000000000000000000000001234000000000000000000000000000000000000000000000000000000000000
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_uint_bytes.sol.C.removeSignature
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    callsub removeSignature
     dup
     len
     itob
@@ -160,55 +188,19 @@ f_ternary_merge@4:
     log
     intc_0 // 1
     return
-
-f_ternary_false@3:
-    intc_1 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_uint_bytes.sol.C.f2[routing]() -> void:
-f2:
-    txn GroupIndex
-    bz f2_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-f2_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0xd27922c600000000000000000000000000000000000000000000000000000000000012340000000000000000000000000000000000000000000000000000000000001234
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_uint_bytes.sol.C.removeSignature
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-f2_ternary_false@3:
-    intc_1 // 0
-    b f2_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_uint_bytes.sol.C.removeSignature(x: bytes) -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_uint_bytes.sol.C.removeSignature:
+removeSignature:
     proto 1 1
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_uint_bytes.sol.C.removeSignature_ternary_false@2
+    bz removeSignature_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_uint_bytes.sol.C.removeSignature_ternary_merge@3:
+removeSignature_ternary_merge@3:
     !
     assert // not payable
     frame_dig -1
@@ -220,6 +212,6 @@ f2_ternary_false@3:
     extract 4 0
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_uint_bytes.sol.C.removeSignature_ternary_false@2:
+removeSignature_ternary_false@2:
     intc_1 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_uint_bytes.sol.C.removeSignature_ternary_merge@3
+    b removeSignature_ternary_merge@3

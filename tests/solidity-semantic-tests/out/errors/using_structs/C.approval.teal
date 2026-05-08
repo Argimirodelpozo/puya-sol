@@ -5,6 +5,7 @@
 main:
     intcblock 1 0
     bytecblock "s"
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -34,11 +35,6 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/using_structs.sol.C.f[routing]() -> void:
-f:
     txna ApplicationArgs 1
     dup
     len
@@ -47,14 +43,15 @@ f:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
+    bury 1
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     dupn 2
@@ -83,6 +80,6 @@ f_ternary_merge@4:
     app_global_put
     err // E
 
-f_ternary_false@3:
+main_ternary_false@8:
     intc_1 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@9

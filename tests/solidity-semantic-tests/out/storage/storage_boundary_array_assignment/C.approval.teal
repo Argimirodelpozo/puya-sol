@@ -5,6 +5,7 @@
 main:
     intcblock 32 1 0 320
     bytecblock "__dyn_storage"
+    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -27,26 +28,69 @@ main_after_if_else@2:
     assert
     pushbytess 0xf7023fb6 0x3e40144f // method "assignArray(uint256[10])void", method "x()uint256[10]"
     txna ApplicationArgs 0
-    match assignArray x
+    match main_assignArray_route@5 main_x_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_assignment.sol.C.assignArray[routing]() -> void:
-assignArray:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_3 // 320
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 10>
+main_x_route@6:
     txn GroupIndex
-    bz assignArray_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-assignArray_ternary_merge@4:
+main_ternary_merge@13:
+    !
+    assert // not payable
+    load 0
+    pushint 24
+    bzero
+    dig 1
+    pushint 88
+    extract_uint64
+    intc_3 // 320
+    +
+    itob
+    concat
+    replace2 64
+    store 0
+    load 0
+    store 0
+    bytec_0 // "__dyn_storage"
+    pushint 8192
+    box_create
+    pop
+    bytec_0 // "__dyn_storage"
+    pushint 8032
+    intc_0 // 32
+    box_extract
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@12:
+    intc_2 // 0
+    b main_ternary_merge@13
+
+main_assignArray_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_3 // 320
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 10>
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
     !
     assert // not payable
     load 0
@@ -107,58 +151,12 @@ assignArray_ternary_merge@4:
     intc_1 // 1
     return
 
-assignArray_ternary_false@3:
+main_ternary_false@17:
     intc_2 // 0
-    b assignArray_ternary_merge@4
+    b main_ternary_merge@18
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_assignment.sol.C.x[routing]() -> void:
-x:
-    txn GroupIndex
-    bz x_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-x_ternary_merge@4:
-    !
-    assert // not payable
-    load 0
-    pushint 24
-    bzero
-    dig 1
-    pushint 88
-    extract_uint64
-    intc_3 // 320
-    +
-    itob
-    concat
-    replace2 64
-    store 0
-    load 0
-    store 0
-    bytec_0 // "__dyn_storage"
-    pushint 8192
-    box_create
-    pop
-    bytec_0 // "__dyn_storage"
-    pushint 8032
-    intc_0 // 32
-    box_extract
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-x_ternary_false@3:
-    intc_2 // 0
-    b x_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_assignment.sol.C.__storage_write(__slot: uint64, __value: bytes) -> void:
+// __puyasol___storage_write(__slot: uint64, __value: bytes) -> void:
 __storage_write:
     proto 2 0
     bytec_0 // "__dyn_storage"

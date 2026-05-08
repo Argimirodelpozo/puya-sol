@@ -30,23 +30,23 @@ main_ternary_merge@10:
     !
     assert // not payable
     txn GroupIndex
-    bz main_ternary_false@13
+    bz main_ternary_false@18
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@14:
+main_ternary_merge@19:
     !
     assert // not payable
     txn GroupIndex
-    bz main_ternary_false@16
+    bz main_ternary_false@21
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@17:
+main_ternary_merge@22:
     !
     assert // not payable
     bytec_0 // "data"
@@ -55,13 +55,13 @@ main_ternary_merge@17:
     intc_0 // 1
     return
 
-main_ternary_false@16:
+main_ternary_false@21:
     intc_1 // 0
-    b main_ternary_merge@17
+    b main_ternary_merge@22
 
-main_ternary_false@13:
+main_ternary_false@18:
     intc_1 // 0
-    b main_ternary_merge@14
+    b main_ternary_merge@19
 
 main_ternary_false@9:
     intc_1 // 0
@@ -79,19 +79,14 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol.D.f[routing]() -> void:
-f:
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@13
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@14:
     !
     assert // not payable
     intc_1 // 0
@@ -113,6 +108,6 @@ f_ternary_merge@4:
     intc_0 // 1
     return
 
-f_ternary_false@3:
+main_ternary_false@13:
     intc_1 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@14

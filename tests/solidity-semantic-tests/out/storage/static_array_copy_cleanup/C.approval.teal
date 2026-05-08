@@ -4,7 +4,9 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/static_array_copy_cleanup.sol.C.approval_program() -> uint64:
 main:
     intcblock 8 1 0 32 160
-    bytecblock 0x01 "source" "dest" 0x04 "__ctor_pending" 0x02 0x03 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 "canary" 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x01 "dest" 0x04 "source" "__ctor_pending" 0x02 0x03 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "canary" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    intc_2 // 0
+    dup
     pushint 4096
     bzero
     dup
@@ -30,119 +32,83 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x30df5fb9 0x356d5853 0xa0e79d05 0x8e21369f 0x7f05186a 0x5b6e5e89 0x751fd609 0x96e93f04 // method "__postInit()void", method "fillSource()void", method "fillDest()void", method "copySourceToDest()void", method "deleteSource()void", method "deleteDest()void", method "getSourceAsUint()uint64[20]", method "getDestAsUint()uint64[40]", method "canary()uint256"
     txna ApplicationArgs 0
-    match __postInit fillSource fillDest copySourceToDest deleteSource deleteDest getSourceAsUint getDestAsUint canary
+    match main___postInit_route@5 main_fillSource_route@6 main_fillDest_route@7 main_copySourceToDest_route@8 main_deleteSource_route@9 main_deleteDest_route@10 main_getSourceAsUint_route@11 main_getDestAsUint_route@12 main_canary_route@13
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/static_array_copy_cleanup.sol.C.__postInit[routing]() -> void:
-__postInit:
-    bytec 4 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec 4 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec_1 // "source"
-    intc 4 // 160
-    box_create
-    pop
-    bytec_2 // "dest"
-    pushint 320
-    box_create
-    pop
-    bytec 9 // "canary"
-    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    app_global_put
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/static_array_copy_cleanup.sol.C.fillSource[routing]() -> void:
-fillSource:
-    intc_2 // 0
+main_canary_route@13:
     txn GroupIndex
-    bz fillSource_ternary_false@3
+    bz main_ternary_false@19
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-fillSource_ternary_merge@4:
+main_ternary_merge@20:
     !
     assert // not payable
     intc_2 // 0
-    itob
-    bury 1
-
-fillSource_while_top@5:
+    bytec 8 // "canary"
+    app_global_get_ex
+    assert // check canary exists
     dup
-    pushbytes 0x05
-    b<
-    bz fillSource_after_while@7
-    intc_0 // 8
+    len
+    intc_3 // 32
+    <=
+    assert // overflow
+    intc_3 // 32
+    bzero
+    b|
+    bytec 9 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@19:
+    intc_2 // 0
+    b main_ternary_merge@20
+
+main_getDestAsUint_route@12:
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bury 1
+    load 0
+    pushint 24
     bzero
     dig 1
+    pushint 88
+    extract_uint64
+    pushint 320
+    +
+    itob
+    concat
+    replace2 64
+    store 0
+    intc_2 // 0
+    itob
+    bury 2
+
+main_while_top@26:
+    dig 1
+    pushbytes 0x0a
+    b<
+    bz main_after_while@36
+    intc_0 // 8
+    bzero
+    dup
+    dig 3
     dup
     cover 2
-    bytec_3 // 0x04
-    b*
-    bytec_0 // 0x01
-    dig 1
-    b+
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    intc_0 // 8
-    extract3
-    bytec 5 // 0x02
-    dig 2
-    b+
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    intc_0 // 8
-    extract3
-    bytec 6 // 0x03
-    dig 3
-    b+
-    dig 4
-    swap
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    intc_0 // 8
-    extract3
-    bytec_3 // 0x04
-    uncover 4
-    b+
-    dig 4
-    swap
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    intc_0 // 8
-    extract3
-    uncover 3
-    uncover 3
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    swap
-    dig 2
     concat
     dup
     len
@@ -151,52 +117,327 @@ fillSource_while_top@5:
     extract_uint64
     intc_3 // 32
     *
-    bytec_1 // "source"
+    bytec_1 // "dest"
     swap
-    uncover 2
-    box_replace // on error: index out of bounds
+    intc_3 // 32
+    box_extract // on error: index access is out of bounds
+    dup
+    extract 0 8
+    dig 2
+    bytec_2 // 0x04
+    b*
+    dig 4
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_0 // 8
+    *
+    dig 6
+    swap
+    uncover 3
+    replace3 // on error: index access is out of bounds
+    dig 2
+    extract 8 8
+    dig 2
     bytec_0 // 0x01
     b+
-    bury 1
-    b fillSource_while_top@5
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_0 // 8
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    dig 2
+    extract 16 8
+    dig 2
+    bytec 5 // 0x02
+    b+
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_0 // 8
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    uncover 2
+    extract 24 8
+    uncover 2
+    bytec 6 // 0x03
+    b+
+    uncover 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_0 // 8
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    bury 2
+    bytec_0 // 0x01
+    b+
+    bury 2
+    b main_while_top@26
 
-fillSource_after_while@7:
+main_after_while@36:
+    bytec 9 // 0x151f7c75
+    dig 1
+    concat
+    log
     intc_1 // 1
     return
 
-fillSource_ternary_false@3:
+main_ternary_false@24:
     intc_2 // 0
-    b fillSource_ternary_merge@4
+    b main_ternary_merge@25
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/static_array_copy_cleanup.sol.C.fillDest[routing]() -> void:
-fillDest:
-    intc_2 // 0
+main_getSourceAsUint_route@11:
     txn GroupIndex
-    bz fillDest_ternary_false@3
+    bz main_ternary_false@32
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-fillDest_ternary_merge@4:
+main_ternary_merge@33:
+    !
+    assert // not payable
+    bytec 7 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bury 1
+    load 0
+    pushint 24
+    bzero
+    dig 1
+    pushint 88
+    extract_uint64
+    intc 4 // 160
+    +
+    itob
+    concat
+    replace2 64
+    store 0
+    intc_2 // 0
+    itob
+    bury 2
+
+main_while_top@34:
+    dig 1
+    pushbytes 0x05
+    b<
+    bz main_after_while@36
+    intc_0 // 8
+    bzero
+    dup
+    dig 3
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_3 // 32
+    *
+    bytec_3 // "source"
+    swap
+    intc_3 // 32
+    box_extract // on error: index access is out of bounds
+    dup
+    extract 0 8
+    dig 2
+    bytec_2 // 0x04
+    b*
+    dig 4
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_0 // 8
+    *
+    dig 6
+    swap
+    uncover 3
+    replace3 // on error: index access is out of bounds
+    dig 2
+    extract 8 8
+    dig 2
+    bytec_0 // 0x01
+    b+
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_0 // 8
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    dig 2
+    extract 16 8
+    dig 2
+    bytec 5 // 0x02
+    b+
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_0 // 8
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    uncover 2
+    extract 24 8
+    uncover 2
+    bytec 6 // 0x03
+    b+
+    uncover 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_0 // 8
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    bury 2
+    bytec_0 // 0x01
+    b+
+    bury 2
+    b main_while_top@34
+
+main_ternary_false@32:
+    intc_2 // 0
+    b main_ternary_merge@33
+
+main_deleteDest_route@10:
+    txn GroupIndex
+    bz main_ternary_false@40
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@41:
+    !
+    assert // not payable
+    bytec_1 // "dest"
+    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    box_put
+    intc_1 // 1
+    return
+
+main_ternary_false@40:
+    intc_2 // 0
+    b main_ternary_merge@41
+
+main_deleteSource_route@9:
+    txn GroupIndex
+    bz main_ternary_false@45
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@46:
+    !
+    assert // not payable
+    bytec_3 // "source"
+    bytec 7 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    box_put
+    intc_1 // 1
+    return
+
+main_ternary_false@45:
+    intc_2 // 0
+    b main_ternary_merge@46
+
+main_copySourceToDest_route@8:
+    txn GroupIndex
+    bz main_ternary_false@50
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@51:
+    !
+    assert // not payable
+    bytec_3 // "source"
+    box_get
+    bytec 7 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc 4 // 160
+    bzero
+    concat
+    bytec_1 // "dest"
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+main_ternary_false@50:
+    intc_2 // 0
+    b main_ternary_merge@51
+
+main_fillDest_route@7:
+    txn GroupIndex
+    bz main_ternary_false@55
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@56:
     !
     assert // not payable
     intc_2 // 0
     itob
-    bury 1
+    bury 2
 
-fillDest_while_top@5:
-    dup
+main_while_top@57:
+    dig 1
     pushbytes 0x0a
     b<
-    bz fillDest_after_while@7
+    bz main_after_while@67
     intc_0 // 8
     bzero
-    dig 1
+    dig 2
     dup
     cover 2
-    bytec_3 // 0x04
+    bytec_2 // 0x04
     b*
     pushbytes 0x64
     dig 1
@@ -263,420 +504,145 @@ fillDest_while_top@5:
     extract_uint64
     intc_3 // 32
     *
-    bytec_2 // "dest"
+    bytec_1 // "dest"
     swap
     uncover 2
     box_replace // on error: index out of bounds
     bytec_0 // 0x01
     b+
-    bury 1
-    b fillDest_while_top@5
+    bury 2
+    b main_while_top@57
 
-fillDest_after_while@7:
+main_after_while@67:
     intc_1 // 1
     return
 
-fillDest_ternary_false@3:
+main_ternary_false@55:
     intc_2 // 0
-    b fillDest_ternary_merge@4
+    b main_ternary_merge@56
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/static_array_copy_cleanup.sol.C.copySourceToDest[routing]() -> void:
-copySourceToDest:
+main_fillSource_route@6:
     txn GroupIndex
-    bz copySourceToDest_ternary_false@3
+    bz main_ternary_false@63
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-copySourceToDest_ternary_merge@4:
+main_ternary_merge@64:
     !
     assert // not payable
-    bytec_1 // "source"
-    box_get
-    bytec 7 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    intc 4 // 160
-    bzero
-    concat
-    bytec_2 // "dest"
-    swap
-    box_put
-    intc_1 // 1
-    return
-
-copySourceToDest_ternary_false@3:
-    intc_2 // 0
-    b copySourceToDest_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/static_array_copy_cleanup.sol.C.deleteSource[routing]() -> void:
-deleteSource:
-    txn GroupIndex
-    bz deleteSource_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-deleteSource_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_1 // "source"
-    bytec 7 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    box_put
-    intc_1 // 1
-    return
-
-deleteSource_ternary_false@3:
-    intc_2 // 0
-    b deleteSource_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/static_array_copy_cleanup.sol.C.deleteDest[routing]() -> void:
-deleteDest:
-    txn GroupIndex
-    bz deleteDest_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-deleteDest_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_2 // "dest"
-    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    box_put
-    intc_1 // 1
-    return
-
-deleteDest_ternary_false@3:
-    intc_2 // 0
-    b deleteDest_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/static_array_copy_cleanup.sol.C.getSourceAsUint[routing]() -> void:
-getSourceAsUint:
-    intc_2 // 0
-    dup
-    txn GroupIndex
-    bz getSourceAsUint_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-getSourceAsUint_ternary_merge@4:
-    !
-    assert // not payable
-    bytec 7 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    bury 1
-    load 0
-    pushint 24
-    bzero
-    dig 1
-    pushint 88
-    extract_uint64
-    intc 4 // 160
-    +
-    itob
-    concat
-    replace2 64
-    store 0
     intc_2 // 0
     itob
     bury 2
 
-getSourceAsUint_while_top@5:
+main_while_top@65:
     dig 1
     pushbytes 0x05
     b<
-    bz getSourceAsUint_after_while@7
+    bz main_after_while@67
     intc_0 // 8
     bzero
-    dup
-    dig 3
+    dig 2
     dup
     cover 2
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
-    intc_3 // 32
-    *
-    bytec_1 // "source"
-    swap
-    intc_3 // 32
-    box_extract // on error: index access is out of bounds
-    dup
-    extract 0 8
-    dig 2
-    bytec_3 // 0x04
+    bytec_2 // 0x04
     b*
-    dig 4
-    dig 1
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
-    intc_0 // 8
-    *
-    dig 6
-    swap
-    uncover 3
-    replace3 // on error: index access is out of bounds
-    dig 2
-    extract 8 8
-    dig 2
     bytec_0 // 0x01
+    dig 1
     b+
-    dig 6
+    dig 2
     swap
     concat
     dup
     len
     intc_0 // 8
     -
-    extract_uint64
     intc_0 // 8
-    *
-    swap
-    replace3 // on error: index access is out of bounds
-    dig 2
-    extract 16 8
-    dig 2
+    extract3
     bytec 5 // 0x02
+    dig 2
     b+
-    dig 6
+    dig 3
     swap
     concat
     dup
     len
     intc_0 // 8
     -
-    extract_uint64
     intc_0 // 8
-    *
-    swap
-    replace3 // on error: index access is out of bounds
-    uncover 2
-    extract 24 8
-    uncover 2
+    extract3
     bytec 6 // 0x03
+    dig 3
     b+
-    uncover 4
+    dig 4
     swap
     concat
     dup
     len
     intc_0 // 8
     -
-    extract_uint64
     intc_0 // 8
-    *
+    extract3
+    bytec_2 // 0x04
+    uncover 4
+    b+
+    dig 4
     swap
-    replace3 // on error: index access is out of bounds
-    bury 2
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_3 // 32
+    *
+    bytec_3 // "source"
+    swap
+    uncover 2
+    box_replace // on error: index out of bounds
     bytec_0 // 0x01
     b+
     bury 2
-    b getSourceAsUint_while_top@5
+    b main_while_top@65
 
-getSourceAsUint_after_while@7:
-    bytec 8 // 0x151f7c75
-    dig 1
-    concat
-    log
-    intc_1 // 1
-    return
-
-getSourceAsUint_ternary_false@3:
+main_ternary_false@63:
     intc_2 // 0
-    b getSourceAsUint_ternary_merge@4
+    b main_ternary_merge@64
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/static_array_copy_cleanup.sol.C.getDestAsUint[routing]() -> void:
-getDestAsUint:
+main___postInit_route@5:
+    bytec 4 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 4 // "__ctor_pending"
     intc_2 // 0
-    dup
-    txn GroupIndex
-    bz getDestAsUint_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-getDestAsUint_ternary_merge@4:
-    !
-    assert // not payable
-    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    bury 1
-    load 0
-    pushint 24
-    bzero
-    dig 1
-    pushint 88
-    extract_uint64
+    app_global_put
+    bytec_3 // "source"
+    intc 4 // 160
+    box_create
+    pop
+    bytec_1 // "dest"
     pushint 320
-    +
-    itob
-    concat
-    replace2 64
-    store 0
-    intc_2 // 0
-    itob
-    bury 2
-
-getDestAsUint_while_top@5:
-    dig 1
-    pushbytes 0x0a
-    b<
-    bz getDestAsUint_after_while@7
-    intc_0 // 8
-    bzero
-    dup
-    dig 3
-    dup
-    cover 2
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
-    intc_3 // 32
-    *
-    bytec_2 // "dest"
-    swap
-    intc_3 // 32
-    box_extract // on error: index access is out of bounds
-    dup
-    extract 0 8
-    dig 2
-    bytec_3 // 0x04
-    b*
-    dig 4
-    dig 1
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
-    intc_0 // 8
-    *
-    dig 6
-    swap
-    uncover 3
-    replace3 // on error: index access is out of bounds
-    dig 2
-    extract 8 8
-    dig 2
-    bytec_0 // 0x01
-    b+
-    dig 6
-    swap
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
-    intc_0 // 8
-    *
-    swap
-    replace3 // on error: index access is out of bounds
-    dig 2
-    extract 16 8
-    dig 2
-    bytec 5 // 0x02
-    b+
-    dig 6
-    swap
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
-    intc_0 // 8
-    *
-    swap
-    replace3 // on error: index access is out of bounds
-    uncover 2
-    extract 24 8
-    uncover 2
-    bytec 6 // 0x03
-    b+
-    uncover 4
-    swap
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
-    intc_0 // 8
-    *
-    swap
-    replace3 // on error: index access is out of bounds
-    bury 2
-    bytec_0 // 0x01
-    b+
-    bury 2
-    b getDestAsUint_while_top@5
-
-getDestAsUint_after_while@7:
-    bytec 8 // 0x151f7c75
-    dig 1
-    concat
-    log
+    box_create
+    pop
+    bytec 8 // "canary"
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    app_global_put
     intc_1 // 1
     return
-
-getDestAsUint_ternary_false@3:
-    intc_2 // 0
-    b getDestAsUint_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/static_array_copy_cleanup.sol.C.canary[routing]() -> void:
-canary:
-    txn GroupIndex
-    bz canary_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-canary_ternary_merge@4:
-    !
-    assert // not payable
-    intc_2 // 0
-    bytec 9 // "canary"
-    app_global_get_ex
-    assert // check canary exists
-    dup
-    len
-    intc_3 // 32
-    <=
-    assert // overflow
-    intc_3 // 32
-    bzero
-    b|
-    bytec 8 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-canary_ternary_false@3:
-    intc_2 // 0
-    b canary_ternary_merge@4

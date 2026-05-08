@@ -1,10 +1,9 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_9wtadkny/s2.sol.C.approval_program() -> uint64:
+// /tmp/multisource_732a26lt/s2.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock 0x151f7c750003030102
     pushint 4096
     bzero
     dup
@@ -27,92 +26,18 @@ main_after_if_else@2:
     assert
     pushbytess 0x38b8b62f 0x4b25d408 0xafedb2e5 0xba05598b // method "f()byte[]", method "g()byte[]", method "h()uint256", method "i()byte[]"
     txna ApplicationArgs 0
-    match f g h i
+    match main_f_route@5 main_g_route@6 main_h_route@7 main_i_route@8
     err
 
-
-// /tmp/multisource_9wtadkny/s2.sol.fre_75() -> bytes:
-fre:
-    pushbytes 0x030102
-    retsub
-
-
-// /tmp/multisource_9wtadkny/s2.sol.C.f[routing]() -> void:
-f:
+main_i_route@8:
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // 0x151f7c750003030102
-    log
-    intc_0 // 1
-    return
-
-f_ternary_false@3:
-    intc_1 // 0
-    b f_ternary_merge@4
-
-
-// /tmp/multisource_9wtadkny/s2.sol.C.g[routing]() -> void:
-g:
-    txn GroupIndex
-    bz g_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-g_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // 0x151f7c750003030102
-    log
-    intc_0 // 1
-    return
-
-g_ternary_false@3:
-    intc_1 // 0
-    b g_ternary_merge@4
-
-
-// /tmp/multisource_9wtadkny/s2.sol.C.h[routing]() -> void:
-h:
-    txn GroupIndex
-    bz h_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-h_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000005
-    log
-    intc_0 // 1
-    return
-
-h_ternary_false@3:
-    intc_1 // 0
-    b h_ternary_merge@4
-
-
-// /tmp/multisource_9wtadkny/s2.sol.C.i[routing]() -> void:
-i:
-    txn GroupIndex
-    bz i_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-i_ternary_merge@4:
+main_ternary_merge@15:
     !
     assert // not payable
     callsub fre
@@ -129,6 +54,65 @@ i_ternary_merge@4:
     intc_0 // 1
     return
 
-i_ternary_false@3:
+main_ternary_false@14:
     intc_1 // 0
-    b i_ternary_merge@4
+    b main_ternary_merge@15
+
+main_h_route@7:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000005
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@19:
+    intc_1 // 0
+    b main_ternary_merge@20
+
+main_g_route@6:
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750003030102
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@24:
+    intc_1 // 0
+    b main_ternary_merge@30
+
+main_f_route@5:
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@30
+
+main_ternary_false@29:
+    intc_1 // 0
+    b main_ternary_merge@30
+
+
+// /tmp/multisource_732a26lt/s2.sol.fre_75() -> bytes:
+fre:
+    pushbytes 0x030102
+    retsub

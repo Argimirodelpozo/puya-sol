@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -26,52 +27,10 @@ main_after_if_else@2:
     assert
     pushbytess 0x2d4970c7 0xf2b65f27 0xb10b5ae3 // method "f()void", method "g()void", method "h(bool)byte[4]"
     txna ApplicationArgs 0
-    match f g h
+    match main_f_route@5 main_g_route@6 main_h_route@7
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary.sol.C.f[routing]() -> void:
-f:
-    txn GroupIndex
-    bz f_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-f_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 1
-    return
-
-f_ternary_false@3:
-    intc_1 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary.sol.C.g[routing]() -> void:
-g:
-    txn GroupIndex
-    bz g_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-g_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 1
-    return
-
-g_ternary_false@3:
-    intc_1 // 0
-    b g_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary.sol.C.h[routing]() -> void:
-h:
+main_h_route@7:
     txna ApplicationArgs 1
     dup
     len
@@ -80,24 +39,25 @@ h:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
+    bury 1
     txn GroupIndex
-    bz h_ternary_false@3
+    bz main_ternary_false@13
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-h_ternary_merge@4:
+main_ternary_merge@14:
     !
     assert // not payable
     dupn 2
     intc_0 // 1
     <=
     assert // ABI bool validation
-    bz h_ternary_false@6
+    bz main_ternary_false@16
     pushbytes 0x26121ff0
 
-h_ternary_merge@7:
+main_ternary_merge@17:
     pushbytes 0x151f7c75
     swap
     concat
@@ -105,10 +65,41 @@ h_ternary_merge@7:
     intc_0 // 1
     return
 
-h_ternary_false@6:
+main_ternary_false@16:
     pushbytes 0xe2179b8e
-    b h_ternary_merge@7
+    b main_ternary_merge@17
 
-h_ternary_false@3:
+main_ternary_false@13:
     intc_1 // 0
-    b h_ternary_merge@4
+    b main_ternary_merge@14
+
+main_g_route@6:
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@27:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
+
+main_ternary_false@21:
+    intc_1 // 0
+    b main_ternary_merge@27
+
+main_f_route@5:
+    txn GroupIndex
+    bz main_ternary_false@26
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@27
+
+main_ternary_false@26:
+    intc_1 // 0
+    b main_ternary_merge@27

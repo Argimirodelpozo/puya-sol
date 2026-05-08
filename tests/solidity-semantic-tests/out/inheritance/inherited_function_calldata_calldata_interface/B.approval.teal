@@ -3,8 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_calldata_interface.sol.B.approval_program() -> uint64:
 main:
-    intcblock 0 1 16 32 1000000
-    bytecblock 0x72a794c0 0x151f7c75 TMPL_APPROVAL_A TMPL_CLEAR_A
+    intcblock 0 1 16 6 1000000
+    bytecblock 0x72a794c0 TMPL_APPROVAL_A TMPL_CLEAR_A 0x151f7c75
+    intc_0 // 0
     pushint 4096
     bzero
     dup
@@ -28,64 +29,24 @@ main_after_if_else@2:
     bytec_0 // method "f(uint256[])uint256"
     pushbytes 0x4b2c0376 // method "g()uint256"
     txna ApplicationArgs 0
-    match f g
+    match main_f_route@5 main_g_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_calldata_interface.sol.B.f[routing]() -> void:
-f:
-    txna ApplicationArgs 1
-    dupn 2
-    intc_0 // 0
-    extract_uint16 // on error: invalid array length header
-    intc_3 // 32
-    *
-    pushint 2
-    +
-    swap
-    len
-    ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+main_g_route@6:
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
-    !
-    assert // not payable
-    dup
-    extract 34 32
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-f_ternary_false@3:
-    intc_0 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_calldata_interface.sol.B.g[routing]() -> void:
-g:
-    txn GroupIndex
-    bz g_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-g_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     itxn_begin
-    bytec_2 // TMPL_APPROVAL_A
-    bytec_3 // TMPL_CLEAR_A
-    pushint 6
+    bytec_1 // TMPL_APPROVAL_A
+    bytec_2 // TMPL_CLEAR_A
+    intc_3 // 6
     itxn_field TypeEnum
     intc_2 // 16
     itxn_field GlobalNumUint
@@ -111,9 +72,9 @@ g_ternary_merge@4:
     itxn_field Amount
     itxn_submit
     itxn_begin
-    bytec_2 // TMPL_APPROVAL_A
-    bytec_3 // TMPL_CLEAR_A
-    pushint 6
+    bytec_1 // TMPL_APPROVAL_A
+    bytec_2 // TMPL_CLEAR_A
+    intc_3 // 6
     itxn_field TypeEnum
     intc_2 // 16
     itxn_field GlobalNumUint
@@ -147,7 +108,7 @@ g_ternary_merge@4:
     itxn_begin
     pushint 24
     extract_uint64
-    pushint 6
+    intc_3 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -163,19 +124,57 @@ g_ternary_merge@4:
     extract 4 0
     dup
     len
-    intc_3 // 32
+    pushint 32
     <=
     assert // overflow
-    intc_3 // 32
+    pushint 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-g_ternary_false@3:
+main_ternary_false@12:
     intc_0 // 0
-    b g_ternary_merge@4
+    b main_ternary_merge@13
+
+main_f_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 32
+    *
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    dup
+    extract 34 32
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@17:
+    intc_0 // 0
+    b main_ternary_merge@18

@@ -5,6 +5,7 @@
 main:
     intcblock 32 1 0
     bytecblock "__ctor_pending" "m" 0x6d96de8fc8c256fa1e1556d41af431cace7dca68707c78dd88c3acab8b17164c47
+    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -30,36 +31,10 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0xe9e54956 // method "__postInit()void", method "getM(uint256,uint256)uint256"
     txna ApplicationArgs 0
-    match __postInit getM
+    match main___postInit_route@5 main_getM_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/struct_mapping_abstract_constructor_param.sol.C.__postInit[routing]() -> void:
-__postInit:
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_0 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec_1 // "m"
-    pushint 2
-    box_create
-    pop
-    pushint 16
-    itob
-    bytec_2 // 0x6d96de8fc8c256fa1e1556d41af431cace7dca68707c78dd88c3acab8b17164c47
-    box_del
-    pop
-    bytec_2 // 0x6d96de8fc8c256fa1e1556d41af431cace7dca68707c78dd88c3acab8b17164c47
-    swap
-    box_put
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/struct_mapping_abstract_constructor_param.sol.C.getM[routing]() -> void:
-getM:
+main_getM_route@6:
     txna ApplicationArgs 1
     len
     intc_0 // 32
@@ -67,18 +42,19 @@ getM:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
+    bury 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz getM_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-getM_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     intc_0 // 32
@@ -113,6 +89,28 @@ getM_ternary_merge@4:
     intc_1 // 1
     return
 
-getM_ternary_false@3:
+main_ternary_false@12:
     intc_2 // 0
-    b getM_ternary_merge@4
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_1 // "m"
+    pushint 2
+    box_create
+    pop
+    pushint 16
+    itob
+    bytec_2 // 0x6d96de8fc8c256fa1e1556d41af431cace7dca68707c78dd88c3acab8b17164c47
+    box_del
+    pop
+    bytec_2 // 0x6d96de8fc8c256fa1e1556d41af431cace7dca68707c78dd88c3acab8b17164c47
+    swap
+    box_put
+    intc_1 // 1
+    return

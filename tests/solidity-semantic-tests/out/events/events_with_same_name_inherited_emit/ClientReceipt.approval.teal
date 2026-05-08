@@ -5,6 +5,8 @@
 main:
     intcblock 1 0 32
     bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    intc_1 // 0
+    dup
     pushint 4096
     bzero
     dup
@@ -27,50 +29,66 @@ main_after_if_else@2:
     assert
     pushbytess 0x046ef2d5 0x24c1cdc8 0x8bd51f2f // method "deposit()uint256", method "deposit(address)uint256", method "deposit(address,uint256)uint256"
     txna ApplicationArgs 0
-    match deposit() deposit(addr) deposit(addr,u256)
+    match main_deposit_route@5 main_deposit_route@6 main_deposit_route@7
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/events_with_same_name_inherited_emit.sol.ClientReceipt.deposit()[routing]() -> void:
-deposit():
+main_deposit_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 3
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz deposit()_ternary_false@3
+    bz main_ternary_false@13
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-deposit()_ternary_merge@4:
+main_ternary_merge@14:
     !
     assert // not payable
-    pushbytes 0xed21248c
+    dup
+    dig 2
+    concat
+    pushbytes 0x6733cac3 // method "Deposit(uint8[32],uint256)"
+    swap
+    concat
     log
     bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     log
     intc_0 // 1
     return
 
-deposit()_ternary_false@3:
+main_ternary_false@13:
     intc_1 // 0
-    b deposit()_ternary_merge@4
+    b main_ternary_merge@14
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/events_with_same_name_inherited_emit.sol.ClientReceipt.deposit(addr)[routing]() -> void:
-deposit(addr):
+main_deposit_route@6:
     txna ApplicationArgs 1
     dup
+    bury 2
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz deposit(addr)_ternary_false@3
+    bz main_ternary_false@18
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-deposit(addr)_ternary_merge@4:
+main_ternary_merge@19:
     !
     assert // not payable
     pushbytes 0xe5a84a72 // method "Deposit(uint8[32])"
@@ -82,46 +100,28 @@ deposit(addr)_ternary_merge@4:
     intc_0 // 1
     return
 
-deposit(addr)_ternary_false@3:
+main_ternary_false@18:
     intc_1 // 0
-    b deposit(addr)_ternary_merge@4
+    b main_ternary_merge@19
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/events_with_same_name_inherited_emit.sol.ClientReceipt.deposit(addr,u256)[routing]() -> void:
-deposit(addr,u256):
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_2 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_2 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
+main_deposit_route@5:
     txn GroupIndex
-    bz deposit(addr,u256)_ternary_false@3
+    bz main_ternary_false@23
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-deposit(addr,u256)_ternary_merge@4:
+main_ternary_merge@24:
     !
     assert // not payable
-    dup2
-    concat
-    pushbytes 0x6733cac3 // method "Deposit(uint8[32],uint256)"
-    swap
-    concat
+    pushbytes 0xed21248c
     log
     bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     log
     intc_0 // 1
     return
 
-deposit(addr,u256)_ternary_false@3:
+main_ternary_false@23:
     intc_1 // 0
-    b deposit(addr,u256)_ternary_merge@4
+    b main_ternary_merge@24

@@ -37,19 +37,14 @@ main_test_route@4:
     txn ApplicationID
     &&
     assert
-    b test
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/packed_storage_structs_delete.sol.C.test[routing]() -> void:
-test:
     txn GroupIndex
-    bz test_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-test_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     bytec_2 // "x"
@@ -97,14 +92,14 @@ test_ternary_merge@4:
     assert // check x exists
     intc_1 // 1
     !=
-    bnz test_if_body@9
+    bnz main_if_body@14
     intc_0 // 0
     bytec_3 // "y"
     app_global_get_ex
     assert // check y exists
     intc_2 // 2
     !=
-    bnz test_if_body@9
+    bnz main_if_body@14
     bytec_0 // "data"
     box_get
     bytec_1 // 0x00000000
@@ -114,7 +109,7 @@ test_ternary_merge@4:
     getbyte
     intc_2 // 2
     !=
-    bnz test_if_body@9
+    bnz main_if_body@14
     bytec_0 // "data"
     box_get
     bytec_1 // 0x00000000
@@ -124,7 +119,7 @@ test_ternary_merge@4:
     extract_uint16
     pushint 43981
     !=
-    bnz test_if_body@9
+    bnz main_if_body@14
     bytec_0 // "data"
     box_get
     bytec_1 // 0x00000000
@@ -134,12 +129,12 @@ test_ternary_merge@4:
     getbyte
     pushint 250
     !=
-    bz test_after_if_else@10
+    bz main_after_if_else@15
 
-test_if_body@9:
+main_if_body@14:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
 
-test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/packed_storage_structs_delete.sol.C.test@17:
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/packed_storage_structs_delete.sol.C.test@22:
     pushbytes 0x151f7c75
     swap
     concat
@@ -147,7 +142,7 @@ test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     intc_1 // 1
     return
 
-test_after_if_else@10:
+main_after_if_else@15:
     intc_0 // 0
     bytec_3 // "y"
     app_global_get_ex
@@ -179,12 +174,12 @@ test_after_if_else@10:
     assert // check x exists
     intc_1 // 1
     !=
-    bnz test_if_body@15
+    bnz main_if_body@20
     intc_0 // 0
     bytec_3 // "y"
     app_global_get_ex
     assert // check y exists
-    bnz test_if_body@15
+    bnz main_if_body@20
     bytec_0 // "data"
     box_get
     bytec_1 // 0x00000000
@@ -194,7 +189,7 @@ test_after_if_else@10:
     getbyte
     intc_2 // 2
     !=
-    bnz test_if_body@15
+    bnz main_if_body@20
     bytec_0 // "data"
     box_get
     bytec_1 // 0x00000000
@@ -202,7 +197,7 @@ test_after_if_else@10:
     select
     intc_1 // 1
     extract_uint16
-    bnz test_if_body@15
+    bnz main_if_body@20
     bytec_0 // "data"
     box_get
     bytec_1 // 0x00000000
@@ -212,13 +207,13 @@ test_after_if_else@10:
     getbyte
     pushint 250
     !=
-    bz test_after_if_else@16
+    bz main_after_if_else@21
 
-test_if_body@15:
+main_if_body@20:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
-    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/packed_storage_structs_delete.sol.C.test@17
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/packed_storage_structs_delete.sol.C.test@22
 
-test_after_if_else@16:
+main_after_if_else@21:
     intc_0 // 0
     bytec_2 // "x"
     app_global_get_ex
@@ -231,8 +226,8 @@ test_after_if_else@16:
     bytec_1 // 0x00000000
     box_put
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
-    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/packed_storage_structs_delete.sol.C.test@17
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/packed_storage_structs_delete.sol.C.test@22
 
-test_ternary_false@3:
+main_ternary_false@8:
     intc_0 // 0
-    b test_ternary_merge@4
+    b main_ternary_merge@9

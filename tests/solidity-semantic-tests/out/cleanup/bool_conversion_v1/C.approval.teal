@@ -5,6 +5,8 @@
 main:
     intcblock 1 0
     bytecblock 0x151f7c75
+    intc_1 // 0
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -27,12 +29,39 @@ main_after_if_else@2:
     assert
     pushbytess 0xb168d7ea 0xda75597a // method "f(bool)uint256", method "g(bool)bool"
     txna ApplicationArgs 0
-    match f g
+    match main_f_route@5 main_g_route@6
     err
 
+main_g_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/bool_conversion_v1.sol.C.f[routing]() -> void:
-f:
+main_ternary_merge@13:
+    !
+    assert // not payable
+    bytec_0 // 0x151f7c75
+    dig 2
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@12:
+    intc_1 // 0
+    b main_ternary_merge@13
+
+main_f_route@5:
     txna ApplicationArgs 1
     dup
     len
@@ -41,21 +70,22 @@ f:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
+    bury 1
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@17
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@18:
     !
     assert // not payable
     dup
-    bz f_else_body@6
+    bz main_else_body@20
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
 
-f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/bool_conversion_v1.sol.C.f@7:
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/bool_conversion_v1.sol.C.f@21:
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -63,40 +93,10 @@ f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tes
     intc_0 // 1
     return
 
-f_else_body@6:
+main_else_body@20:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
-    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/bool_conversion_v1.sol.C.f@7
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/bool_conversion_v1.sol.C.f@21
 
-f_ternary_false@3:
+main_ternary_false@17:
     intc_1 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/bool_conversion_v1.sol.C.g[routing]() -> void:
-g:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 1
-    ==
-    assert // invalid number of bytes for arc4.bool
-    txn GroupIndex
-    bz g_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-g_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // 0x151f7c75
-    dig 1
-    concat
-    log
-    intc_0 // 1
-    return
-
-g_ternary_false@3:
-    intc_1 // 0
-    b g_ternary_merge@4
+    b main_ternary_merge@18

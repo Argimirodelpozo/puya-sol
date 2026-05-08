@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_multi_invocation_viair.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -30,11 +31,6 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_multi_invocation_viair.sol.C.f[routing]() -> void:
-f:
     txna ApplicationArgs 1
     dup
     len
@@ -43,24 +39,25 @@ f:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
+    bury 1
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     dup
-    bz f_after_if_else@7
+    bz main_after_if_else@12
     dup
     intc_0 // 1
     <=
     assert // ABI bool validation
 
-f_after_if_else@7:
+main_after_if_else@12:
     dup
     intc_0 // 1
     <=
@@ -70,6 +67,6 @@ f_after_if_else@7:
     intc_0 // 1
     return
 
-f_ternary_false@3:
+main_ternary_false@8:
     intc_1 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@9

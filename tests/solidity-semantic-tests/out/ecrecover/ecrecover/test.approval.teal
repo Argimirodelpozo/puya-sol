@@ -4,6 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/ecrecover.sol.test.approval_program() -> uint64:
 main:
     intcblock 1 32 0 255
+    intc_2 // 0
+    dupn 4
+    pushbytes ""
+    dup
     pushint 4096
     bzero
     dup
@@ -30,16 +34,9 @@ main_a_route@4:
     txn ApplicationID
     &&
     assert
-    b a
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/ecrecover.sol.test.a[routing]() -> void:
-a:
-    intc_2 // 0
-    dup
-    pushbytes ""
     txna ApplicationArgs 1
     dup
+    bury 6
     len
     intc_1 // 32
     ==
@@ -51,62 +48,64 @@ a:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    bury 1
     txna ApplicationArgs 3
     dup
+    bury 5
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 4
     dup
+    bury 4
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz a_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-a_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
-    dig 2
-    dup
+    dupn 2
     intc_3 // 255
     <=
     assert // ABI validation
     intc_3 // 255
     &
     dup
-    bury 4
+    bury 2
     pushint 27
     >=
     dup
-    bury 6
-    bz a_ternary_false@6
-    dig 2
+    bury 3
+    bz main_ternary_false@11
+    dup
     pushint 27
     -
 
-a_ternary_merge@7:
+main_ternary_merge@12:
     intc_0 // 1
     &
-    dig 4
+    dig 5
     swap
-    dig 3
-    dig 3
+    dig 5
+    dig 5
     ecdsa_pk_recover Secp256k1
     bury 7
     bury 7
-    dig 4
-    bz a_ternary_false@10
-    dig 2
+    dig 1
+    bz main_ternary_false@15
+    dup
     pushint 28
     <=
-    bz a_ternary_false@10
+    bz main_ternary_false@15
     pushint 12
     bzero
     dig 7
@@ -116,7 +115,7 @@ a_ternary_merge@7:
     extract 12 20
     concat
 
-a_ternary_merge@11:
+main_ternary_merge@16:
     pushbytes 0x151f7c75
     swap
     concat
@@ -124,15 +123,15 @@ a_ternary_merge@11:
     intc_0 // 1
     return
 
-a_ternary_false@10:
+main_ternary_false@15:
     intc_1 // 32
     bzero
-    b a_ternary_merge@11
+    b main_ternary_merge@16
 
-a_ternary_false@6:
+main_ternary_false@11:
     intc_2 // 0
-    b a_ternary_merge@7
+    b main_ternary_merge@12
 
-a_ternary_false@3:
+main_ternary_false@8:
     intc_2 // 0
-    b a_ternary_merge@4
+    b main_ternary_merge@9

@@ -4,6 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/ternary_contract_public_function.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 2 32
+    pushbytes ""
+    dup
     pushint 4096
     bzero
     dup
@@ -26,57 +28,10 @@ main_after_if_else@2:
     assert
     pushbytess 0xcd78b354 0x4b2c0376 0x6561c8ff // method "f()uint256", method "g()uint256", method "test(bool)uint256"
     txna ApplicationArgs 0
-    match f g test
+    match main_f_route@5 main_g_route@6 main_test_route@7
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/ternary_contract_public_function.sol.C.f[routing]() -> void:
-f:
-    txn GroupIndex
-    bz f_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-f_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
-    log
-    intc_0 // 1
-    return
-
-f_ternary_false@3:
-    intc_1 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/ternary_contract_public_function.sol.C.g[routing]() -> void:
-g:
-    txn GroupIndex
-    bz g_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-g_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
-    log
-    intc_0 // 1
-    return
-
-g_ternary_false@3:
-    intc_1 // 0
-    b g_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/ternary_contract_public_function.sol.C.test[routing]() -> void:
-test:
-    pushbytes ""
+main_test_route@7:
     txna ApplicationArgs 1
     dup
     len
@@ -85,14 +40,15 @@ test:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
+    bury 1
     txn GroupIndex
-    bz test_ternary_false@3
+    bz main_ternary_false@13
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-test_ternary_merge@4:
+main_ternary_merge@14:
     !
     assert // not payable
     dupn 2
@@ -107,20 +63,20 @@ test_ternary_merge@4:
     bury 3
     intc_2 // 2
     ==
-    bz test_else_body@10
+    bz main_else_body@30
     txn GroupIndex
-    bz test_ternary_false@8
+    bz main_ternary_false@28
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-test_ternary_merge@9:
+main_ternary_merge@29:
     !
     assert // not payable
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
 
-test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/ternary_contract_public_function.sol.C.__funcptr_dispatch_ret_u256@14:
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/ternary_contract_public_function.sol.C.__funcptr_dispatch_ret_u256@34:
     dup
     len
     intc_3 // 32
@@ -136,32 +92,72 @@ test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     intc_0 // 1
     return
 
-test_ternary_false@8:
+main_ternary_false@28:
     intc_1 // 0
-    b test_ternary_merge@9
+    b main_ternary_merge@29
 
-test_else_body@10:
+main_else_body@30:
     dig 1
     intc_0 // 1
     ==
     assert // invalid function pointer
     txn GroupIndex
-    bz test_ternary_false@12
+    bz main_ternary_false@32
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-test_ternary_merge@13:
+main_ternary_merge@33:
     !
     assert // not payable
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
-    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/ternary_contract_public_function.sol.C.__funcptr_dispatch_ret_u256@14
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/ternary_contract_public_function.sol.C.__funcptr_dispatch_ret_u256@34
 
-test_ternary_false@12:
+main_ternary_false@32:
     intc_1 // 0
-    b test_ternary_merge@13
+    b main_ternary_merge@33
 
-test_ternary_false@3:
+main_ternary_false@13:
     intc_1 // 0
-    b test_ternary_merge@4
+    b main_ternary_merge@14
+
+main_g_route@6:
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@18:
+    intc_1 // 0
+    b main_ternary_merge@19
+
+main_f_route@5:
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@23:
+    intc_1 // 0
+    b main_ternary_merge@24

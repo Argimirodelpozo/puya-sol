@@ -31,19 +31,14 @@ main_run_route@4:
     txn ApplicationID
     &&
     assert
-    b run
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/many_subassemblies.sol.D.run[routing]() -> void:
-run:
     txn GroupIndex
-    bz run_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-run_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     itxn_begin
@@ -357,6 +352,6 @@ run_ternary_merge@4:
     intc_2 // 1
     return
 
-run_ternary_false@3:
+main_ternary_false@8:
     intc_0 // 0
-    b run_ternary_merge@4
+    b main_ternary_merge@9

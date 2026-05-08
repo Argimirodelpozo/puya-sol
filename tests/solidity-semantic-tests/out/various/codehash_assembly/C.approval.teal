@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/codehash_assembly.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
+    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -26,69 +27,18 @@ main_after_if_else@2:
     assert
     pushbytess 0x4494bd16 0x3fc82556 0xcddc3345 // method "f()byte[32]", method "g()byte[32]", method "h()bool"
     txna ApplicationArgs 0
-    match f g h
+    match main_f_route@5 main_g_route@6 main_h_route@7
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/codehash_assembly.sol.C.f[routing]() -> void:
-f:
+main_h_route@7:
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@13
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
-    !
-    assert // not payable
-    load 0
-    store 0
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
-
-f_ternary_false@3:
-    intc_1 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/codehash_assembly.sol.C.g[routing]() -> void:
-g:
-    txn GroupIndex
-    bz g_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-g_ternary_merge@4:
-    !
-    assert // not payable
-    load 0
-    store 0
-    pushbytes 0x151f7c75c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
-    log
-    intc_0 // 1
-    return
-
-g_ternary_false@3:
-    intc_1 // 0
-    b g_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/codehash_assembly.sol.C.h[routing]() -> void:
-h:
-    intc_1 // 0
-    txn GroupIndex
-    bz h_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-h_ternary_merge@4:
+main_ternary_merge@14:
     !
     assert // not payable
     load 0
@@ -96,10 +46,10 @@ h_ternary_merge@4:
     global CurrentApplicationAddress
     pushbytes 0x
     b==
-    bz h_ternary_false@6
+    bz main_ternary_false@16
     pushbytes 0x
 
-h_ternary_merge@10:
+main_ternary_merge@20:
     pushbytes 0x
     b==
     !
@@ -116,21 +66,65 @@ h_ternary_merge@10:
     intc_0 // 1
     return
 
-h_ternary_false@6:
+main_ternary_false@16:
     global CurrentApplicationAddress
     pushbytes 0x64
     b>
-    bz h_ternary_false@8
+    bz main_ternary_false@18
     global CurrentApplicationID
     app_params_get AppApprovalProgram
     pop
     keccak256
-    b h_ternary_merge@10
+    b main_ternary_merge@20
 
-h_ternary_false@8:
+main_ternary_false@18:
     pushbytes 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
-    b h_ternary_merge@10
+    b main_ternary_merge@20
 
-h_ternary_false@3:
+main_ternary_false@13:
     intc_1 // 0
-    b h_ternary_merge@4
+    b main_ternary_merge@14
+
+main_g_route@6:
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    load 0
+    store 0
+    pushbytes 0x151f7c75c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@24:
+    intc_1 // 0
+    b main_ternary_merge@25
+
+main_f_route@5:
+    txn GroupIndex
+    bz main_ternary_false@33
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@34:
+    !
+    assert // not payable
+    load 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@33:
+    intc_1 // 0
+    b main_ternary_merge@34

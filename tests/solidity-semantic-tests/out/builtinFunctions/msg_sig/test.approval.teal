@@ -29,24 +29,19 @@ main_foo_route@4:
     txn ApplicationID
     &&
     assert
-    b foo
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/msg_sig.sol.test.foo[routing]() -> void:
-foo:
     txna ApplicationArgs 1
     len
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz foo_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     pushint 1
     -
     gtxns Amount
 
-foo_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     pushbytes 0x151f7c75
@@ -56,6 +51,6 @@ foo_ternary_merge@4:
     pushint 1
     return
 
-foo_ternary_false@3:
+main_ternary_false@8:
     pushint 0
-    b foo_ternary_merge@4
+    b main_ternary_merge@9

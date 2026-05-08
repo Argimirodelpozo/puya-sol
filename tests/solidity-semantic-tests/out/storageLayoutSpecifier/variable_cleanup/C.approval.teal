@@ -5,6 +5,9 @@
 main:
     intcblock 0 1 8 32
     bytecblock "y" "x" "b" 0xffffffff
+    intc_0 // 0
+    dupn 2
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -40,44 +43,41 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/variable_cleanup.sol.C.f[routing]() -> void:
-f:
-    pushbytes ""
     txna ApplicationArgs 1
     dup
+    bury 5
     len
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
+    bury 4
     len
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
+    bury 3
     len
     pushint 3
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 3>
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     intc_2 // 8
     bzero
     dup
-    dig 4
+    dig 5
     concat
     dup
     len
@@ -89,7 +89,7 @@ f_ternary_merge@4:
     bytec_1 // "x"
     swap
     app_global_put
-    dig 2
+    dig 3
     concat
     dup
     len
@@ -99,7 +99,7 @@ f_ternary_merge@4:
     bytec_0 // "y"
     swap
     app_global_put
-    dup
+    dig 1
     extract 0 2
     bytec_2 // "b"
     dig 1
@@ -113,7 +113,7 @@ f_ternary_merge@4:
     assert // check x exists
     pushint 65535
     &
-    bury 4
+    bury 1
     intc_0 // 0
     bytec_0 // "y"
     app_global_get_ex
@@ -123,7 +123,7 @@ f_ternary_merge@4:
     b&
     pushbytes 0x80000000
     b>=
-    bz f_ternary_false@6
+    bz main_ternary_false@11
     intc_0 // 0
     bytec_0 // "y"
     app_global_get_ex
@@ -136,7 +136,7 @@ f_ternary_merge@4:
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
-f_ternary_merge@7:
+main_ternary_merge@12:
     intc_0 // 0
     bytec_2 // "b"
     app_global_get_ex
@@ -144,7 +144,7 @@ f_ternary_merge@7:
     pushint 30
     bzero
     concat
-    dig 5
+    dig 2
     itob
     uncover 2
     dup
@@ -165,7 +165,7 @@ f_ternary_merge@7:
     intc_1 // 1
     return
 
-f_ternary_false@6:
+main_ternary_false@11:
     intc_0 // 0
     bytec_0 // "y"
     app_global_get_ex
@@ -173,8 +173,8 @@ f_ternary_false@6:
     itob
     bytec_3 // 0xffffffff
     b&
-    b f_ternary_merge@7
+    b main_ternary_merge@12
 
-f_ternary_false@3:
+main_ternary_false@8:
     intc_0 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@9

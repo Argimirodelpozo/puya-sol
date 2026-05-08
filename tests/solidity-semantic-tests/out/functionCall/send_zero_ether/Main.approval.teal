@@ -31,19 +31,14 @@ main_s_route@4:
     txn ApplicationID
     &&
     assert
-    b s
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/send_zero_ether.sol.Main.s[routing]() -> void:
-s:
     txn GroupIndex
-    bz s_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-s_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     itxn_begin
@@ -94,6 +89,6 @@ s_ternary_merge@4:
     intc_0 // 1
     return
 
-s_ternary_false@3:
+main_ternary_false@8:
     intc_1 // 0
-    b s_ternary_merge@4
+    b main_ternary_merge@9

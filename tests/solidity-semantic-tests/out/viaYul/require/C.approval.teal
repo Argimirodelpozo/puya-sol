@@ -5,6 +5,8 @@
 main:
     intcblock 1 0
     bytecblock 0x151f7c75
+    intc_1 // 0
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -27,106 +29,29 @@ main_after_if_else@2:
     assert
     pushbytess 0x8e9b83f0 0xb79ee1b5 0xc103576c 0x2f78db63 0x66d574e8 0xb5a8b033 // method "f(bool)bool", method "fail()bool", method "succeed()bool", method "f2(bool)bool", method "f3(bool)bool", method "f4(bool)bool"
     txna ApplicationArgs 0
-    match f fail succeed f2 f3 f4
+    match main_f_route@5 main_fail_route@6 main_succeed_route@7 main_f2_route@8 main_f3_route@9 main_f4_route@10
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/require.sol.C.f[routing]() -> void:
-f:
+main_f4_route@10:
     txna ApplicationArgs 1
-    dupn 2
+    dup
+    bury 3
+    dup
     len
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
+    bury 1
     txn GroupIndex
-    bz f_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-f_ternary_merge@4:
-    !
-    assert // not payable
-    dupn 2
-    intc_0 // 1
-    <=
-    assert // ABI bool validation
-    assert
-    bytec_0 // 0x151f7c75
-    dig 2
-    concat
-    log
-    intc_0 // 1
-    return
-
-f_ternary_false@3:
-    intc_1 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/require.sol.C.fail[routing]() -> void:
-fail:
-    txn GroupIndex
-    bz fail_ternary_false@3
+    bz main_ternary_false@16
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-fail_ternary_merge@4:
-    !
-    assert // not payable
-    err
-
-fail_ternary_false@3:
-    intc_1 // 0
-    b fail_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/require.sol.C.succeed[routing]() -> void:
-succeed:
-    txn GroupIndex
-    bz succeed_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-succeed_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c7580
-    log
-    intc_0 // 1
-    return
-
-succeed_ternary_false@3:
-    intc_1 // 0
-    b succeed_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/require.sol.C.f2[routing]() -> void:
-f2:
-    txna ApplicationArgs 1
-    dupn 2
-    len
-    intc_0 // 1
-    ==
-    assert // invalid number of bytes for arc4.bool
-    intc_1 // 0
-    getbit
-    txn GroupIndex
-    bz f2_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-f2_ternary_merge@4:
+main_ternary_merge@27:
     !
     assert // not payable
     dupn 2
@@ -141,29 +66,30 @@ f2_ternary_merge@4:
     intc_0 // 1
     return
 
-f2_ternary_false@3:
+main_ternary_false@16:
     intc_1 // 0
-    b f2_ternary_merge@4
+    b main_ternary_merge@27
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/require.sol.C.f3[routing]() -> void:
-f3:
+main_f3_route@9:
     txna ApplicationArgs 1
-    dupn 2
+    dup
+    bury 3
+    dup
     len
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
+    bury 1
     txn GroupIndex
-    bz f3_ternary_false@3
+    bz main_ternary_false@21
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f3_ternary_merge@4:
+main_ternary_merge@22:
     !
     assert // not payable
     dupn 2
@@ -178,36 +104,98 @@ f3_ternary_merge@4:
     intc_0 // 1
     return
 
-f3_ternary_false@3:
+main_ternary_false@21:
     intc_1 // 0
-    b f3_ternary_merge@4
+    b main_ternary_merge@22
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/require.sol.C.f4[routing]() -> void:
-f4:
+main_f2_route@8:
     txna ApplicationArgs 1
-    dupn 2
+    dup
+    bury 3
+    dup
     len
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
+    bury 1
     txn GroupIndex
-    bz f4_ternary_false@3
+    bz main_ternary_false@26
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@27
+
+main_ternary_false@26:
+    intc_1 // 0
+    b main_ternary_merge@27
+
+main_succeed_route@7:
+    txn GroupIndex
+    bz main_ternary_false@31
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f4_ternary_merge@4:
+main_ternary_merge@32:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@31:
+    intc_1 // 0
+    b main_ternary_merge@32
+
+main_fail_route@6:
+    txn GroupIndex
+    bz main_ternary_false@36
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@37:
+    !
+    assert // not payable
+    err
+
+main_ternary_false@36:
+    intc_1 // 0
+    b main_ternary_merge@37
+
+main_f_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@41
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@42:
     !
     assert // not payable
     dupn 2
     intc_0 // 1
     <=
     assert // ABI bool validation
-    assert // assertion failed
+    assert
     bytec_0 // 0x151f7c75
     dig 2
     concat
@@ -215,6 +203,6 @@ f4_ternary_merge@4:
     intc_0 // 1
     return
 
-f4_ternary_false@3:
+main_ternary_false@41:
     intc_1 // 0
-    b f4_ternary_merge@4
+    b main_ternary_merge@42

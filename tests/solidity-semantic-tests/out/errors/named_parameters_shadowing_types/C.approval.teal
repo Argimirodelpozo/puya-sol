@@ -26,43 +26,39 @@ main_after_if_else@2:
     assert
     pushbytess 0x2d4970c7 0xf2b65f27 // method "f()void", method "g()void"
     txna ApplicationArgs 0
-    match f g
+    match main_f_route@5 main_g_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/named_parameters_shadowing_types.sol.C.f[routing]() -> void:
-f:
+main_g_route@6:
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
-    !
-    assert // not payable
-    err // E1
-
-f_ternary_false@3:
-    intc_1 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/named_parameters_shadowing_types.sol.C.g[routing]() -> void:
-g:
-    txn GroupIndex
-    bz g_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-g_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     err // E2
 
-g_ternary_false@3:
+main_ternary_false@12:
     intc_1 // 0
-    b g_ternary_merge@4
+    b main_ternary_merge@13
+
+main_f_route@5:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    err // E1
+
+main_ternary_false@17:
+    intc_1 // 0
+    b main_ternary_merge@18

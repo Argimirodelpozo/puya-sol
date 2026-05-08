@@ -17,7 +17,7 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "s"
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     intc_1 // 1
     return
@@ -34,19 +34,14 @@ main_s_route@4:
     txn ApplicationID
     &&
     assert
-    b s
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_library_function.sol.A.s[routing]() -> void:
-s:
     txn GroupIndex
-    bz s_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-s_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     intc_0 // 0
@@ -80,6 +75,6 @@ s_ternary_merge@4:
     intc_1 // 1
     return
 
-s_ternary_false@3:
+main_ternary_false@8:
     intc_0 // 0
-    b s_ternary_merge@4
+    b main_ternary_merge@9

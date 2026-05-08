@@ -30,78 +30,18 @@ main_after_if_else@2:
     assert
     pushbytess 0xe1ff2398 0xe54503a7 0x7c1072af // method "f1()void", method "f2()void", method "x()uint256"
     txna ApplicationArgs 0
-    match f1 f2 x
+    match main_f1_route@5 main_f2_route@6 main_x_route@7
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_modifiers.sol.C.f1[routing]() -> void:
-f1:
+main_x_route@7:
     txn GroupIndex
-    bz f1_ternary_false@3
+    bz main_ternary_false@13
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f1_ternary_merge@4:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
-    pushbytes 0x08
-    b+
-    bytec_0 // "x"
-    swap
-    app_global_put
-    intc_0 // 1
-    return
-
-f1_ternary_false@3:
-    intc_1 // 0
-    b f1_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_modifiers.sol.C.f2[routing]() -> void:
-f2:
-    txn GroupIndex
-    bz f2_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-f2_ternary_merge@4:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
-    pushbytes 0x04
-    b+
-    bytec_0 // "x"
-    swap
-    app_global_put
-    intc_0 // 1
-    return
-
-f2_ternary_false@3:
-    intc_1 // 0
-    b f2_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_modifiers.sol.C.x[routing]() -> void:
-x:
-    txn GroupIndex
-    bz x_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-x_ternary_merge@4:
+main_ternary_merge@14:
     !
     assert // not payable
     intc_1 // 0
@@ -123,6 +63,60 @@ x_ternary_merge@4:
     intc_0 // 1
     return
 
-x_ternary_false@3:
+main_ternary_false@13:
     intc_1 // 0
-    b x_ternary_merge@4
+    b main_ternary_merge@14
+
+main_f2_route@6:
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    pushbytes 0x04
+    b+
+    bytec_0 // "x"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+main_ternary_false@18:
+    intc_1 // 0
+    b main_ternary_merge@19
+
+main_f1_route@5:
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    pushbytes 0x08
+    b+
+    bytec_0 // "x"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+main_ternary_false@23:
+    intc_1 // 0
+    b main_ternary_merge@24

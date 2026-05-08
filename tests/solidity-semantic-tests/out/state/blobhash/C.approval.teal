@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/blobhash.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 8 2
+    intcblock 1 0 8 2
+    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -30,45 +31,41 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/blobhash.sol.C.f[routing]() -> void:
-f:
     txna ApplicationArgs 1
     dup
+    bury 2
     len
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
-    intc_1 // 8
+    intc_2 // 8
     bzero
     dig 1
     concat
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     -
     extract_uint64
-    intc_2 // 2
+    intc_3 // 2
     <
-    bz f_ternary_false@6
+    bz main_ternary_false@11
     global Round
-    intc_2 // 2
+    intc_3 // 2
     -
     block BlkSeed
 
-f_ternary_merge@7:
+main_ternary_merge@12:
     pushbytes 0x151f7c75
     swap
     concat
@@ -76,10 +73,10 @@ f_ternary_merge@7:
     intc_0 // 1
     return
 
-f_ternary_false@6:
+main_ternary_false@11:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
-    b f_ternary_merge@7
+    b main_ternary_merge@12
 
-f_ternary_false@3:
-    pushint 0
-    b f_ternary_merge@4
+main_ternary_false@8:
+    intc_1 // 0
+    b main_ternary_merge@9

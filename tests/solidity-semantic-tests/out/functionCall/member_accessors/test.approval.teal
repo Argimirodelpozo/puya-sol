@@ -61,20 +61,96 @@ main_after_if_else@2:
     assert
     pushbytess 0xd93a53a3 0x4ba6bde2 0x8fed8df9 0xce9ccef0 // method "data()uint256", method "name()byte[6]", method "a_hash()byte[32]", method "an_address()address"
     txna ApplicationArgs 0
-    match data name a_hash an_address
+    match main_data_route@5 main_name_route@6 main_a_hash_route@7 main_an_address_route@8
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/member_accessors.sol.test.data[routing]() -> void:
-data:
+main_an_address_route@8:
     txn GroupIndex
-    bz data_ternary_false@3
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-data_ternary_merge@4:
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 4 // "an_address"
+    app_global_get_ex
+    assert // check an_address exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_a_hash_route@7:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_3 // "a_hash"
+    app_global_get_ex
+    assert // check a_hash exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@19:
+    intc_1 // 0
+    b main_ternary_merge@20
+
+main_name_route@6:
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_2 // "name"
+    app_global_get_ex
+    assert // check name exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@24:
+    intc_1 // 0
+    b main_ternary_merge@25
+
+main_data_route@5:
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
     !
     assert // not payable
     intc_1 // 0
@@ -96,90 +172,6 @@ data_ternary_merge@4:
     intc_0 // 1
     return
 
-data_ternary_false@3:
+main_ternary_false@29:
     intc_1 // 0
-    b data_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/member_accessors.sol.test.name[routing]() -> void:
-name:
-    txn GroupIndex
-    bz name_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-name_ternary_merge@4:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_2 // "name"
-    app_global_get_ex
-    assert // check name exists
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-name_ternary_false@3:
-    intc_1 // 0
-    b name_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/member_accessors.sol.test.a_hash[routing]() -> void:
-a_hash:
-    txn GroupIndex
-    bz a_hash_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-a_hash_ternary_merge@4:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_3 // "a_hash"
-    app_global_get_ex
-    assert // check a_hash exists
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-a_hash_ternary_false@3:
-    intc_1 // 0
-    b a_hash_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/member_accessors.sol.test.an_address[routing]() -> void:
-an_address:
-    txn GroupIndex
-    bz an_address_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-an_address_ternary_merge@4:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec 4 // "an_address"
-    app_global_get_ex
-    assert // check an_address exists
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-an_address_ternary_false@3:
-    intc_1 // 0
-    b an_address_ternary_merge@4
+    b main_ternary_merge@30

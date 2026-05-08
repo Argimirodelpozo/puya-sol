@@ -1,7 +1,7 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_wupup39i/B.sol.C.approval_program() -> uint64:
+// /tmp/multisource_d882daxd/B.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
     pushint 4096
@@ -33,19 +33,14 @@ main_getX_route@4:
     txn ApplicationID
     &&
     assert
-    b getX
-
-
-// /tmp/multisource_wupup39i/B.sol.C.getX[routing]() -> void:
-getX:
     txn GroupIndex
-    bz getX_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-getX_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     intc_1 // 0
@@ -67,6 +62,6 @@ getX_ternary_merge@4:
     intc_0 // 1
     return
 
-getX_ternary_false@3:
+main_ternary_false@8:
     intc_1 // 0
-    b getX_ternary_merge@4
+    b main_ternary_merge@9

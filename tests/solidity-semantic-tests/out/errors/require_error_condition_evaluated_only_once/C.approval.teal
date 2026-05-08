@@ -5,6 +5,7 @@
 main:
     intcblock 1 0 32
     bytecblock "counter"
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -32,20 +33,59 @@ main_after_if_else@2:
     assert
     pushbytess 0x61cb7650 0x74c48465 // method "getCounter()uint256", method "f(bool)void"
     txna ApplicationArgs 0
-    match getCounter f
+    match main_getCounter_route@5 main_f_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/require_error_condition_evaluated_only_once.sol.C.getCounter[routing]() -> void:
-getCounter:
+main_f_route@6:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    bury 1
     txn GroupIndex
-    bz getCounter_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-getCounter_ternary_merge@4:
+main_ternary_merge@13:
+    !
+    assert // not payable
+    dupn 2
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
+    intc_1 // 0
+    bytec_0 // "counter"
+    app_global_get_ex
+    assert // check counter exists
+    pushbytes 0x01
+    b+
+    bytec_0 // "counter"
+    swap
+    app_global_put
+    assert // CustomError
+    intc_0 // 1
+    return
+
+main_ternary_false@12:
+    intc_1 // 0
+    b main_ternary_merge@13
+
+main_getCounter_route@5:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
     !
     assert // not payable
     intc_1 // 0
@@ -67,48 +107,6 @@ getCounter_ternary_merge@4:
     intc_0 // 1
     return
 
-getCounter_ternary_false@3:
+main_ternary_false@17:
     intc_1 // 0
-    b getCounter_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/require_error_condition_evaluated_only_once.sol.C.f[routing]() -> void:
-f:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 1
-    ==
-    assert // invalid number of bytes for arc4.bool
-    intc_1 // 0
-    getbit
-    txn GroupIndex
-    bz f_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-f_ternary_merge@4:
-    !
-    assert // not payable
-    dupn 2
-    intc_0 // 1
-    <=
-    assert // ABI bool validation
-    intc_1 // 0
-    bytec_0 // "counter"
-    app_global_get_ex
-    assert // check counter exists
-    pushbytes 0x01
-    b+
-    bytec_0 // "counter"
-    swap
-    app_global_put
-    assert // CustomError
-    intc_0 // 1
-    return
-
-f_ternary_false@3:
-    intc_1 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@18

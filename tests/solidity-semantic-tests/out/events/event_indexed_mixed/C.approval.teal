@@ -29,19 +29,14 @@ main_deposit_route@4:
     txn ApplicationID
     &&
     assert
-    b deposit
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_indexed_mixed.sol.C.deposit[routing]() -> void:
-deposit:
     txn GroupIndex
-    bz deposit_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     pushint 1
     -
     gtxns Amount
 
-deposit_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     pushbytes 0xd08ac18d000000000000000100000000000000020000000000000003001a0003646566
@@ -49,6 +44,6 @@ deposit_ternary_merge@4:
     pushint 1
     return
 
-deposit_ternary_false@3:
+main_ternary_false@8:
     pushint 0
-    b deposit_ternary_merge@4
+    b main_ternary_merge@9

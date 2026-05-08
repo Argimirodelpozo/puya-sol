@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_with_zero_last_byte_of_inner_hash.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
-    bytecblock 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 "85" 0x06d0d983459328e82eacb1bf2d6fadfa38a6896e9d4cbfe0e1aa41c6281bab00
+    intcblock 1 0 32
+    bytecblock "85" 0x06d0d983459328e82eacb1bf2d6fadfa38a6896e9d4cbfe0e1aa41c6281bab00 0x01 0x010000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -31,67 +31,31 @@ main_builtinMatchesSolidityImplementation_route@4:
     txn ApplicationID
     &&
     assert
-    b builtinMatchesSolidityImplementation
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_with_zero_last_byte_of_inner_hash.sol.erc7201Mock(id: bytes) -> bytes:
-erc7201Mock:
-    proto 1 1
-    frame_dig -1
-    keccak256
-    dup
-    bytec_0 // 0x01
-    b>=
-    assert // underflow
-    intc_1 // 32
-    bzero
-    swap
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_0 // 0x01
-    b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    keccak256
-    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
-    b&
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_with_zero_last_byte_of_inner_hash.sol.C.builtinMatchesSolidityImplementation[routing]() -> void:
-builtinMatchesSolidityImplementation:
     txn GroupIndex
-    bz builtinMatchesSolidityImplementation_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-builtinMatchesSolidityImplementation_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
-    bytec_2 // "85"
+    bytec_0 // "85"
     callsub erc7201Mock
-    bytec_3 // 0x06d0d983459328e82eacb1bf2d6fadfa38a6896e9d4cbfe0e1aa41c6281bab00
+    bytec_1 // 0x06d0d983459328e82eacb1bf2d6fadfa38a6896e9d4cbfe0e1aa41c6281bab00
     b==
-    bz builtinMatchesSolidityImplementation_bool_false@7
-    bytec_2 // "85"
+    bz main_bool_false@12
+    bytec_0 // "85"
     callsub erc7201Mock
-    bytec_3 // 0x06d0d983459328e82eacb1bf2d6fadfa38a6896e9d4cbfe0e1aa41c6281bab00
+    bytec_1 // 0x06d0d983459328e82eacb1bf2d6fadfa38a6896e9d4cbfe0e1aa41c6281bab00
     b==
-    bz builtinMatchesSolidityImplementation_bool_false@7
+    bz main_bool_false@12
     intc_0 // 1
 
-builtinMatchesSolidityImplementation_bool_merge@8:
+main_bool_merge@13:
     pushbytes 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     pushbytes 0x151f7c75
@@ -101,10 +65,41 @@ builtinMatchesSolidityImplementation_bool_merge@8:
     intc_0 // 1
     return
 
-builtinMatchesSolidityImplementation_bool_false@7:
-    intc_2 // 0
-    b builtinMatchesSolidityImplementation_bool_merge@8
+main_bool_false@12:
+    intc_1 // 0
+    b main_bool_merge@13
 
-builtinMatchesSolidityImplementation_ternary_false@3:
-    intc_2 // 0
-    b builtinMatchesSolidityImplementation_ternary_merge@4
+main_ternary_false@8:
+    intc_1 // 0
+    b main_ternary_merge@9
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_with_zero_last_byte_of_inner_hash.sol.erc7201Mock(id: bytes) -> bytes:
+erc7201Mock:
+    proto 1 1
+    frame_dig -1
+    keccak256
+    dup
+    bytec_2 // 0x01
+    b>=
+    assert // underflow
+    intc_2 // 32
+    bzero
+    swap
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec_2 // 0x01
+    b-
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    keccak256
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b&
+    retsub

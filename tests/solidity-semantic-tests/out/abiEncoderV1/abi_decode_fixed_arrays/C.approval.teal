@@ -3,7 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_decode_fixed_arrays.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 8 1 2
+    intcblock 32 8 1 0
+    intc_3 // 0
+    dupn 4
     pushint 4096
     bzero
     dup
@@ -30,64 +32,64 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_decode_fixed_arrays.sol.C.f[routing]() -> void:
-f:
     txna ApplicationArgs 1
     dup
+    bury 3
     len
     pushint 6
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint16, 3>
     txna ApplicationArgs 2
     dup
+    bury 2
     len
     pushint 12
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.static_array<arc4.uint16, 2>, 3>
     txna ApplicationArgs 3
     dup
+    bury 6
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
     dup
+    bury 5
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 5
     dup
+    bury 4
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     intc_1 // 8
     bzero
     dup
-    dig 4
+    dig 6
     concat
     dup
     len
     intc_1 // 8
     -
     extract_uint64
-    intc_3 // 2
+    pushint 2
     *
-    dig 6
+    dig 3
     swap
     extract_uint16
     itob
@@ -97,7 +99,7 @@ f_ternary_merge@4:
     dig 1
     b|
     dig 2
-    dig 5
+    dig 7
     concat
     dup
     len
@@ -105,7 +107,7 @@ f_ternary_merge@4:
     -
     extract_uint64
     uncover 3
-    dig 4
+    dig 6
     concat
     dup
     len
@@ -115,12 +117,12 @@ f_ternary_merge@4:
     swap
     pushint 4
     *
-    dig 7
+    dig 4
     swap
     pushint 4
     extract3 // on error: index access is out of bounds
     swap
-    intc_3 // 2
+    pushint 2
     *
     extract_uint16
     itob
@@ -134,6 +136,6 @@ f_ternary_merge@4:
     intc_2 // 1
     return
 
-f_ternary_false@3:
-    pushint 0
-    b f_ternary_merge@4
+main_ternary_false@8:
+    intc_3 // 0
+    b main_ternary_merge@9

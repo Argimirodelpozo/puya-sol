@@ -27,40 +27,38 @@ main_after_if_else@2:
     assert
     pushbytess 0x89aac53b 0xc9c4c0c2 0xae045d73 // method "testFunction()void", method "testYul()address", method "testSol()address"
     txna ApplicationArgs 0
-    match testFunction testYul testSol
+    match main_testFunction_route@5 main_testYul_route@6 main_testSol_route@7
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_address.sol.C.testFunction[routing]() -> void:
-testFunction:
+main_testSol_route@7:
     txn GroupIndex
-    bz testFunction_ternary_false@3
+    bz main_ternary_false@13
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-testFunction_ternary_merge@4:
+main_ternary_merge@14:
     !
     assert // not payable
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000001234
+    log
     intc_0 // 1
     return
 
-testFunction_ternary_false@3:
+main_ternary_false@13:
     intc_1 // 0
-    b testFunction_ternary_merge@4
+    b main_ternary_merge@14
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_address.sol.C.testYul[routing]() -> void:
-testYul:
+main_testYul_route@6:
     txn GroupIndex
-    bz testYul_ternary_false@3
+    bz main_ternary_false@18
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-testYul_ternary_merge@4:
+main_ternary_merge@19:
     !
     assert // not payable
     load 0
@@ -70,28 +68,24 @@ testYul_ternary_merge@4:
     intc_0 // 1
     return
 
-testYul_ternary_false@3:
+main_ternary_false@18:
     intc_1 // 0
-    b testYul_ternary_merge@4
+    b main_ternary_merge@19
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_address.sol.C.testSol[routing]() -> void:
-testSol:
+main_testFunction_route@5:
     txn GroupIndex
-    bz testSol_ternary_false@3
+    bz main_ternary_false@23
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-testSol_ternary_merge@4:
+main_ternary_merge@24:
     !
     assert // not payable
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000001234
-    log
     intc_0 // 1
     return
 
-testSol_ternary_false@3:
+main_ternary_false@23:
     intc_1 // 0
-    b testSol_ternary_merge@4
+    b main_ternary_merge@24

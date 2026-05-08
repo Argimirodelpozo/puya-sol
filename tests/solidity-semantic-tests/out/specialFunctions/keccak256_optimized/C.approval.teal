@@ -26,42 +26,18 @@ main_after_if_else@2:
     assert
     pushbytess 0xe75dc517 0x99a77ea5 // method "short()bool", method "long()(bool,bool)"
     txna ApplicationArgs 0
-    match short long
+    match main_short_route@5 main_long_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/specialFunctions/keccak256_optimized.sol.C.short[routing]() -> void:
-short:
+main_long_route@6:
     txn GroupIndex
-    bz short_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-short_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c7580
-    log
-    intc_0 // 1
-    return
-
-short_ternary_false@3:
-    intc_1 // 0
-    b short_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/specialFunctions/keccak256_optimized.sol.C.long[routing]() -> void:
-long:
-    txn GroupIndex
-    bz long_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-long_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     pushbytes 0x151f7c75c0
@@ -69,6 +45,26 @@ long_ternary_merge@4:
     intc_0 // 1
     return
 
-long_ternary_false@3:
+main_ternary_false@12:
     intc_1 // 0
-    b long_ternary_merge@4
+    b main_ternary_merge@13
+
+main_short_route@5:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@17:
+    intc_1 // 0
+    b main_ternary_merge@18

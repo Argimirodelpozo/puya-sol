@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_calldata_struct.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 2
+    intc_0 // 0
     pushint 4096
     bzero
     dup
@@ -30,11 +31,6 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_calldata_struct.sol.C.f[routing]() -> void:
-f:
     txna ApplicationArgs 1
     dup
     len
@@ -50,7 +46,7 @@ f:
     dig 2
     substring3
     dup
-    cover 2
+    bury 3
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     intc_2 // 2
@@ -60,13 +56,13 @@ f:
     ==
     assert // invalid number of bytes for S
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     dup
@@ -90,6 +86,6 @@ f_ternary_merge@4:
     intc_1 // 1
     return
 
-f_ternary_false@3:
+main_ternary_false@8:
     intc_0 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@9

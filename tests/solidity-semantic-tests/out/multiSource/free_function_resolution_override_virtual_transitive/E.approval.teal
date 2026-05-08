@@ -1,7 +1,7 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_pixxvcgf/s3.sol.E.approval_program() -> uint64:
+// /tmp/multisource_i45etlmq/s3.sol.E.approval_program() -> uint64:
 main:
     intcblock 1 32 0
     pushint 4096
@@ -30,46 +30,34 @@ main_g_route@4:
     txn ApplicationID
     &&
     assert
-    b g
-
-
-// /tmp/multisource_pixxvcgf/s3.sol.f_63() -> bytes:
-f:
-    pushint 1337
-    itob
-    retsub
-
-
-// /tmp/multisource_pixxvcgf/s3.sol.E.g[routing]() -> void:
-g:
     txn GroupIndex
-    bz g_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-g_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     txn GroupIndex
-    bz g_ternary_false@7
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-g_ternary_merge@8:
+main_ternary_merge@13:
     !
     assert // not payable
     txn GroupIndex
-    bz g_ternary_false@10
+    bz main_ternary_false@15
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-g_ternary_merge@11:
+main_ternary_merge@16:
     !
     assert // not payable
     callsub f
@@ -107,14 +95,21 @@ g_ternary_merge@11:
     intc_0 // 1
     return
 
-g_ternary_false@10:
+main_ternary_false@15:
     intc_2 // 0
-    b g_ternary_merge@11
+    b main_ternary_merge@16
 
-g_ternary_false@7:
+main_ternary_false@12:
     intc_2 // 0
-    b g_ternary_merge@8
+    b main_ternary_merge@13
 
-g_ternary_false@3:
+main_ternary_false@8:
     intc_2 // 0
-    b g_ternary_merge@4
+    b main_ternary_merge@9
+
+
+// /tmp/multisource_i45etlmq/s3.sol.f_63() -> bytes:
+f:
+    pushint 1337
+    itob
+    retsub

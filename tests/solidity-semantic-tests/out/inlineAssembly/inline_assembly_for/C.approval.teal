@@ -5,6 +5,8 @@
 main:
     intcblock 1 64 0
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x01
+    intc_2 // 0
+    dupn 3
     pushint 4096
     bzero
     dup
@@ -31,63 +33,56 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_for.sol.C.f[routing]() -> void:
-f:
-    intc_2 // 0
-    dupn 2
     txna ApplicationArgs 1
     dup
+    bury 4
     len
     intc_1 // 64
     ==
     assert // invalid number of bytes for arc4.uint512
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     load 0
     bury 4
     bytec_1 // 0x01
-    bury 2
-    dup
-    bury 3
-
-f_while_top@5:
+    bury 1
     dig 2
+    bury 2
+
+main_while_top@10:
+    dig 1
     pushbytes 0x
     b>
-    bz f_after_while@7
-    dig 1
-    dig 3
+    bz main_after_while@12
+    dup
+    dig 2
     dup
     cover 2
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bury 3
+    bury 2
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     bytec_1 // 0x01
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bury 3
-    b f_while_top@5
+    bury 2
+    b main_while_top@10
 
-f_after_while@7:
+main_after_while@12:
     dig 3
     store 0
-    dig 1
-    dup
+    dupn 2
     len
     intc_1 // 64
     <=
@@ -102,6 +97,6 @@ f_after_while@7:
     intc_0 // 1
     return
 
-f_ternary_false@3:
+main_ternary_false@8:
     intc_2 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@9

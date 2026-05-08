@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.approval_program() -> uint64:
 main:
     intcblock 0 1 32
-    bytecblock 0x "data" "__ctor_pending" "balance" 0x151f7c75 "externalData"
+    bytecblock 0x "data" "__ctor_pending" "externalData" 0x151f7c75 "balance"
     bytec_0 // ""
     dup
     pushint 4096
@@ -27,7 +27,7 @@ main:
 main_after_if_else@2:
     txn NumAppArgs
     bnz main_after_if_else@4
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback
+    callsub __fallback
     intc_1 // 1
     return
 
@@ -38,7 +38,7 @@ main_after_if_else@4:
     !
     assert
     txn ApplicationID
-    bz main_create_NoOp@15
+    bz main_switch_case_next@14
     pushbytess 0xbacc49e3 0x1bf9882b 0xd93a53a3 0x76d8a28f 0xf1b614b7 // method "__postInit()void", method "__fallback()void", method "data()uint256", method "balance()uint256", method "externalData()byte[]"
     txna ApplicationArgs 0
     match main___postInit_route@9 main___fallback_route@10 main_data_route@11 main_balance_route@12 main_externalData_route@13
@@ -46,11 +46,9 @@ main_after_if_else@4:
 main_switch_case_next@14:
     dig 1
     bury 1
-
-main_after_if_else@16:
     dup
     bnz main_after_if_else@6
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback
+    callsub __fallback
     intc_1 // 1
     bury 1
 
@@ -58,147 +56,17 @@ main_after_if_else@6:
     return
 
 main_externalData_route@13:
-    callsub externalData
-    intc_1 // 1
-    bury 2
-    b main_switch_case_next@14
-
-main_balance_route@12:
-    callsub balance
-    intc_1 // 1
-    bury 2
-    b main_switch_case_next@14
-
-main_data_route@11:
-    callsub data
-    intc_1 // 1
-    bury 2
-    b main_switch_case_next@14
-
-main___fallback_route@10:
-    callsub __fallback
-    intc_1 // 1
-    bury 2
-    b main_switch_case_next@14
-
-main___postInit_route@9:
-    callsub __postInit
-    intc_1 // 1
-    bury 2
-    b main_switch_case_next@14
-
-main_create_NoOp@15:
-    dig 1
-    bury 1
-    b main_after_if_else@16
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__postInit[routing]() -> void:
-__postInit:
-    bytec_2 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_2 // "__ctor_pending"
-    intc_0 // 0
-    app_global_put
-    bytec_1 // "data"
-    bytec_0 // 0x
-    app_global_put
-    bytec_3 // "balance"
-    bytec_0 // 0x
-    app_global_put
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback[routing]() -> void:
-__fallback:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.data[routing]() -> void:
-data:
     txn GroupIndex
-    bz data_ternary_false@3
+    bz main_ternary_false@19
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-data_ternary_merge@4:
+main_ternary_merge@20:
     !
     assert // not payable
-    intc_0 // 0
-    bytec_1 // "data"
-    app_global_get_ex
-    assert // check data exists
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    bytec 4 // 0x151f7c75
-    swap
-    concat
-    log
-    retsub
-
-data_ternary_false@3:
-    intc_0 // 0
-    b data_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.balance[routing]() -> void:
-balance:
-    txn GroupIndex
-    bz balance_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-balance_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 0
-    bytec_3 // "balance"
-    app_global_get_ex
-    assert // check balance exists
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    bytec 4 // 0x151f7c75
-    swap
-    concat
-    log
-    retsub
-
-balance_ternary_false@3:
-    intc_0 // 0
-    b balance_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.externalData[routing]() -> void:
-externalData:
-    txn GroupIndex
-    bz externalData_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-externalData_ternary_merge@4:
-    !
-    assert // not payable
-    bytec 5 // "externalData"
+    bytec_3 // "externalData"
     box_get
     bytec_0 // 0x
     cover 2
@@ -213,15 +81,110 @@ externalData_ternary_merge@4:
     swap
     concat
     log
-    retsub
+    intc_1 // 1
+    bury 2
+    b main_switch_case_next@14
 
-externalData_ternary_false@3:
+main_ternary_false@19:
     intc_0 // 0
-    b externalData_ternary_merge@4
+    b main_ternary_merge@20
+
+main_balance_route@12:
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 5 // "balance"
+    app_global_get_ex
+    assert // check balance exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    bury 2
+    b main_switch_case_next@14
+
+main_ternary_false@24:
+    intc_0 // 0
+    b main_ternary_merge@25
+
+main_data_route@11:
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_1 // "data"
+    app_global_get_ex
+    assert // check data exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    bury 2
+    b main_switch_case_next@14
+
+main_ternary_false@29:
+    intc_0 // 0
+    b main_ternary_merge@30
+
+main___fallback_route@10:
+    callsub __fallback
+    intc_1 // 1
+    bury 2
+    b main_switch_case_next@14
+
+main___postInit_route@9:
+    bytec_2 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_2 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_1 // "data"
+    bytec_0 // 0x
+    app_global_put
+    bytec 5 // "balance"
+    bytec_0 // 0x
+    app_global_put
+    intc_1 // 1
+    bury 2
+    b main_switch_case_next@14
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback:
+__fallback:
     proto 0 0
     intc_0 // 0
     dupn 15
@@ -234,32 +197,32 @@ externalData_ternary_false@3:
     swap
     app_global_put
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@2
+    bz __fallback_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@3:
+__fallback_ternary_merge@3:
     itob
-    bytec_3 // "balance"
+    bytec 5 // "balance"
     swap
     app_global_put
     txn NumAppArgs
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@53
+    bz __fallback_ternary_false@53
     txn NumAppArgs
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@6
+    bz __fallback_ternary_false@6
     txna ApplicationArgs 0
     frame_bury 0
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@7:
+__fallback_ternary_merge@7:
     txn NumAppArgs
     intc_1 // 1
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@9
+    bz __fallback_ternary_false@9
     txna ApplicationArgs 1
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@10:
+__fallback_ternary_merge@10:
     frame_dig 0
     swap
     concat
@@ -267,10 +230,10 @@ externalData_ternary_false@3:
     txn NumAppArgs
     pushint 2
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@12
+    bz __fallback_ternary_false@12
     txna ApplicationArgs 2
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@13:
+__fallback_ternary_merge@13:
     frame_dig 1
     swap
     concat
@@ -278,10 +241,10 @@ externalData_ternary_false@3:
     txn NumAppArgs
     pushint 3
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@15
+    bz __fallback_ternary_false@15
     txna ApplicationArgs 3
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@16:
+__fallback_ternary_merge@16:
     frame_dig 2
     swap
     concat
@@ -289,10 +252,10 @@ externalData_ternary_false@3:
     txn NumAppArgs
     pushint 4
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@18
+    bz __fallback_ternary_false@18
     txna ApplicationArgs 4
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@19:
+__fallback_ternary_merge@19:
     frame_dig 3
     swap
     concat
@@ -300,10 +263,10 @@ externalData_ternary_false@3:
     txn NumAppArgs
     pushint 5
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@21
+    bz __fallback_ternary_false@21
     txna ApplicationArgs 5
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@22:
+__fallback_ternary_merge@22:
     frame_dig 4
     swap
     concat
@@ -311,10 +274,10 @@ externalData_ternary_false@3:
     txn NumAppArgs
     pushint 6
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@24
+    bz __fallback_ternary_false@24
     txna ApplicationArgs 6
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@25:
+__fallback_ternary_merge@25:
     frame_dig 5
     swap
     concat
@@ -322,10 +285,10 @@ externalData_ternary_false@3:
     txn NumAppArgs
     pushint 7
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@27
+    bz __fallback_ternary_false@27
     txna ApplicationArgs 7
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@28:
+__fallback_ternary_merge@28:
     frame_dig 6
     swap
     concat
@@ -333,10 +296,10 @@ externalData_ternary_false@3:
     txn NumAppArgs
     pushint 8
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@30
+    bz __fallback_ternary_false@30
     txna ApplicationArgs 8
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@31:
+__fallback_ternary_merge@31:
     frame_dig 7
     swap
     concat
@@ -344,10 +307,10 @@ externalData_ternary_false@3:
     txn NumAppArgs
     pushint 9
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@33
+    bz __fallback_ternary_false@33
     txna ApplicationArgs 9
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@34:
+__fallback_ternary_merge@34:
     frame_dig 8
     swap
     concat
@@ -355,10 +318,10 @@ externalData_ternary_false@3:
     txn NumAppArgs
     pushint 10
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@36
+    bz __fallback_ternary_false@36
     txna ApplicationArgs 10
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@37:
+__fallback_ternary_merge@37:
     frame_dig 9
     swap
     concat
@@ -366,10 +329,10 @@ externalData_ternary_false@3:
     txn NumAppArgs
     pushint 11
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@39
+    bz __fallback_ternary_false@39
     txna ApplicationArgs 11
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@40:
+__fallback_ternary_merge@40:
     frame_dig 10
     swap
     concat
@@ -377,10 +340,10 @@ externalData_ternary_false@3:
     txn NumAppArgs
     pushint 12
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@42
+    bz __fallback_ternary_false@42
     txna ApplicationArgs 12
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@43:
+__fallback_ternary_merge@43:
     frame_dig 11
     swap
     concat
@@ -388,10 +351,10 @@ externalData_ternary_false@3:
     txn NumAppArgs
     pushint 13
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@45
+    bz __fallback_ternary_false@45
     txna ApplicationArgs 13
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@46:
+__fallback_ternary_merge@46:
     frame_dig 12
     swap
     concat
@@ -399,10 +362,10 @@ externalData_ternary_false@3:
     txn NumAppArgs
     pushint 14
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@48
+    bz __fallback_ternary_false@48
     txna ApplicationArgs 14
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@49:
+__fallback_ternary_merge@49:
     frame_dig 13
     swap
     concat
@@ -410,109 +373,109 @@ externalData_ternary_false@3:
     txn NumAppArgs
     pushint 15
     >
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@51
+    bz __fallback_ternary_false@51
     txna ApplicationArgs 15
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@52:
+__fallback_ternary_merge@52:
     frame_dig 14
     swap
     concat
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@54:
-    bytec 5 // "externalData"
+__fallback_ternary_merge@54:
+    bytec_3 // "externalData"
     box_del
     pop
-    bytec 5 // "externalData"
+    bytec_3 // "externalData"
     swap
     box_put
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@51:
+__fallback_ternary_false@51:
     intc_0 // 0
     bzero
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@52
+    b __fallback_ternary_merge@52
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@48:
+__fallback_ternary_false@48:
     intc_0 // 0
     bzero
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@49
+    b __fallback_ternary_merge@49
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@45:
+__fallback_ternary_false@45:
     intc_0 // 0
     bzero
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@46
+    b __fallback_ternary_merge@46
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@42:
+__fallback_ternary_false@42:
     intc_0 // 0
     bzero
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@43
+    b __fallback_ternary_merge@43
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@39:
+__fallback_ternary_false@39:
     intc_0 // 0
     bzero
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@40
+    b __fallback_ternary_merge@40
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@36:
+__fallback_ternary_false@36:
     intc_0 // 0
     bzero
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@37
+    b __fallback_ternary_merge@37
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@33:
+__fallback_ternary_false@33:
     intc_0 // 0
     bzero
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@34
+    b __fallback_ternary_merge@34
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@30:
+__fallback_ternary_false@30:
     intc_0 // 0
     bzero
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@31
+    b __fallback_ternary_merge@31
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@27:
+__fallback_ternary_false@27:
     intc_0 // 0
     bzero
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@28
+    b __fallback_ternary_merge@28
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@24:
+__fallback_ternary_false@24:
     intc_0 // 0
     bzero
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@25
+    b __fallback_ternary_merge@25
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@21:
+__fallback_ternary_false@21:
     intc_0 // 0
     bzero
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@22
+    b __fallback_ternary_merge@22
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@18:
+__fallback_ternary_false@18:
     intc_0 // 0
     bzero
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@19
+    b __fallback_ternary_merge@19
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@15:
+__fallback_ternary_false@15:
     intc_0 // 0
     bzero
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@16
+    b __fallback_ternary_merge@16
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@12:
+__fallback_ternary_false@12:
     intc_0 // 0
     bzero
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@13
+    b __fallback_ternary_merge@13
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@9:
+__fallback_ternary_false@9:
     intc_0 // 0
     bzero
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@10
+    b __fallback_ternary_merge@10
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@6:
+__fallback_ternary_false@6:
     intc_0 // 0
     bzero
     frame_bury 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@7
+    b __fallback_ternary_merge@7
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@53:
+__fallback_ternary_false@53:
     intc_0 // 0
     bzero
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@54
+    b __fallback_ternary_merge@54
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_false@2:
+__fallback_ternary_false@2:
     intc_0 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback_ternary_merge@3
+    b __fallback_ternary_merge@3

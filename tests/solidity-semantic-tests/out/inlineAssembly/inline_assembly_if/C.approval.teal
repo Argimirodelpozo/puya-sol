@@ -4,6 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_if.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 64 0
+    intc_2 // 0
+    dupn 2
     pushint 4096
     bzero
     dup
@@ -30,45 +32,38 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_if.sol.C.f[routing]() -> void:
-f:
-    intc_2 // 0
-    dup
     txna ApplicationArgs 1
     dup
+    bury 3
     len
     intc_1 // 64
     ==
     assert // invalid number of bytes for arc4.uint512
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     pushbytes 0x
-    bury 2
+    bury 1
     load 0
     bury 3
-    dup
+    dig 1
     pushbytes 0x01
     b>
-    bz f_after_if_else@6
+    bz main_after_if_else@11
     pushbytes 0x02
-    bury 2
+    bury 1
 
-f_after_if_else@6:
+main_after_if_else@11:
     dig 2
     store 0
-    dig 1
-    dup
+    dupn 2
     len
     intc_1 // 64
     <=
@@ -83,6 +78,6 @@ f_after_if_else@6:
     intc_0 // 1
     return
 
-f_ternary_false@3:
+main_ternary_false@8:
     intc_2 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@9

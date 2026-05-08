@@ -4,7 +4,9 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32 31
-    bytecblock 0x151f7c75 "emptyBytes" "uninitializedString" "emptyString" "nonEmptyString" "__ctor_pending" 0x0004 0x0000000000000000000000000000000000000000000000000000000000000020 "nonEmptyString2"
+    bytecblock 0x151f7c75 "nonEmptyString" "uninitializedString" "emptyBytes" "emptyString" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000020 0x0004 "nonEmptyString2"
+    intc_0 // 0
+    dup
     pushint 4096
     bzero
     dup
@@ -30,174 +32,28 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x36b8a41c 0xf3d2904e 0x348621cf 0x5d16f89f 0xbe732f06 0x96ebd7d3 0x99969863 0x05d4c0a3 0x39e2f415 0x7a37d769 0x97d26e57 0xe861f374 0xf4efc58b 0x74ee17b8 0x1c663589 0x6139ec78 // method "__postInit()void", method "f()string", method "g()(string,string)", method "h()(string,string)", method "i()(string,string)", method "j(string)string", method "k()string", method "l(string)byte[]", method "m()string", method "n()void", method "o()void", method "p()void", method "q()byte[]", method "r()byte[]", method "s()byte[]", method "set(string)void", method "get()string"
     txna ApplicationArgs 0
-    match __postInit f g h i j k l m n o p q r s set get
+    match main___postInit_route@5 main_f_route@6 main_g_route@7 main_h_route@8 main_i_route@9 main_j_route@10 main_k_route@11 main_l_route@12 main_m_route@13 main_n_route@14 main_o_route@15 main_p_route@16 main_q_route@17 main_r_route@18 main_s_route@19 main_set_route@20 main_get_route@21
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.__postInit[routing]() -> void:
-__postInit:
-    bytec 5 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec 5 // "__ctor_pending"
-    intc_0 // 0
-    app_global_put
-    bytec_1 // "emptyBytes"
-    intc_0 // 0
-    box_create
-    pop
-    bytec_2 // "uninitializedString"
-    pushbytes 0x
-    app_global_put
-    bytec_3 // "emptyString"
-    pushbytes ""
-    app_global_put
-    bytec 4 // "nonEmptyString"
-    pushbytes "This is a non empty string"
-    app_global_put
-    bytec 8 // "nonEmptyString2"
-    pushbytes "Another string"
-    app_global_put
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.f[routing]() -> void:
-f:
+main_get_route@21:
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@27
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@28:
     !
     assert // not payable
     intc_0 // 0
-    bytec_2 // "uninitializedString"
-    app_global_get_ex
-    assert // check uninitializedString exists
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-f_ternary_false@3:
-    intc_0 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.g[routing]() -> void:
-g:
-    txn GroupIndex
-    bz g_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-g_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 0
-    bytec_2 // "uninitializedString"
-    app_global_get_ex
-    assert // check uninitializedString exists
-    intc_0 // 0
-    bytec_3 // "emptyString"
-    app_global_get_ex
-    assert // check emptyString exists
-    dig 1
-    len
-    itob
-    extract 6 2
-    uncover 2
-    concat
-    dup
-    len
-    pushint 4
-    +
-    dig 2
-    len
-    itob
-    extract 6 2
-    uncover 3
-    concat
-    swap
-    itob
-    extract 6 2
-    bytec 6 // 0x0004
-    swap
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-g_ternary_false@3:
-    intc_0 // 0
-    b g_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.h[routing]() -> void:
-h:
-    txn GroupIndex
-    bz h_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-h_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 0
-    bytec_2 // "uninitializedString"
-    app_global_get_ex
-    assert // check uninitializedString exists
-    intc_0 // 0
-    bytec 4 // "nonEmptyString"
+    bytec_1 // "nonEmptyString"
     app_global_get_ex
     assert // check nonEmptyString exists
-    dig 1
-    len
-    itob
-    extract 6 2
-    uncover 2
-    concat
     dup
     len
-    pushint 4
-    +
-    dig 2
-    len
     itob
     extract 6 2
-    uncover 3
-    concat
-    swap
-    itob
-    extract 6 2
-    bytec 6 // 0x0004
-    swap
-    concat
-    uncover 2
-    concat
     swap
     concat
     bytec_0 // 0x151f7c75
@@ -207,130 +63,11 @@ h_ternary_merge@4:
     intc_1 // 1
     return
 
-h_ternary_false@3:
+main_ternary_false@27:
     intc_0 // 0
-    b h_ternary_merge@4
+    b main_ternary_merge@28
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.i[routing]() -> void:
-i:
-    txn GroupIndex
-    bz i_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-i_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 0
-    bytec 4 // "nonEmptyString"
-    app_global_get_ex
-    assert // check nonEmptyString exists
-    intc_0 // 0
-    bytec_3 // "emptyString"
-    app_global_get_ex
-    assert // check emptyString exists
-    dig 1
-    len
-    itob
-    extract 6 2
-    uncover 2
-    concat
-    dup
-    len
-    pushint 4
-    +
-    dig 2
-    len
-    itob
-    extract 6 2
-    uncover 3
-    concat
-    swap
-    itob
-    extract 6 2
-    bytec 6 // 0x0004
-    swap
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-i_ternary_false@3:
-    intc_0 // 0
-    b i_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.j[routing]() -> void:
-j:
-    txna ApplicationArgs 1
-    dupn 2
-    intc_0 // 0
-    extract_uint16 // on error: invalid array length header
-    pushint 2
-    +
-    swap
-    len
-    ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    txn GroupIndex
-    bz j_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-j_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // 0x151f7c75
-    dig 1
-    concat
-    log
-    intc_1 // 1
-    return
-
-j_ternary_false@3:
-    intc_0 // 0
-    b j_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.k[routing]() -> void:
-k:
-    txn GroupIndex
-    bz k_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-k_ternary_merge@4:
-    !
-    assert // not payable
-    bytec 8 // "nonEmptyString2"
-    pushbytes ""
-    app_global_put
-    pushbytes 0x151f7c750000
-    log
-    intc_1 // 1
-    return
-
-k_ternary_false@3:
-    intc_0 // 0
-    b k_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.l[routing]() -> void:
-l:
+main_set_route@20:
     txna ApplicationArgs 1
     dup
     intc_0 // 0
@@ -342,52 +79,82 @@ l:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    bury 2
     txn GroupIndex
-    bz l_ternary_false@3
+    bz main_ternary_false@32
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-l_ternary_merge@4:
+main_ternary_merge@33:
+    !
+    assert // not payable
+    bytec_1 // "nonEmptyString"
+    dig 2
+    app_global_put
+    intc_1 // 1
+    return
+
+main_ternary_false@32:
+    intc_0 // 0
+    b main_ternary_merge@33
+
+main_s_route@19:
+    txn GroupIndex
+    bz main_ternary_false@37
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@38:
     !
     assert // not payable
     intc_2 // 32
     bzero
+    intc_0 // 0
+    bytec_2 // "uninitializedString"
+    app_global_get_ex
+    assert // check uninitializedString exists
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    intc_3 // 31
+    bzero
+    uncover 3
+    swap
+    concat
+    uncover 2
+    intc_3 // 31
+    +
+    intc_2 // 32
+    /
+    intc_2 // 32
+    *
+    intc_0 // 0
+    swap
+    extract3
+    concat
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    bytec_3 // "emptyBytes"
+    box_del
+    pop
+    bytec_3 // "emptyBytes"
     dig 1
-    dup
-    cover 2
-    len
-    dup
-    itob
-    uncover 2
-    swap
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    intc_3 // 31
-    bzero
-    uncover 3
-    swap
-    concat
-    uncover 2
-    intc_3 // 31
-    +
-    intc_2 // 32
-    /
-    intc_2 // 32
-    *
-    intc_0 // 0
-    swap
-    extract3
-    concat
-    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
+    box_put
     dup
     len
     itob
@@ -401,164 +168,45 @@ l_ternary_merge@4:
     intc_1 // 1
     return
 
-l_ternary_false@3:
+main_ternary_false@37:
     intc_0 // 0
-    b l_ternary_merge@4
+    b main_ternary_merge@38
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.m[routing]() -> void:
-m:
+main_r_route@18:
     txn GroupIndex
-    bz m_ternary_false@3
+    bz main_ternary_false@42
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-m_ternary_merge@4:
+main_ternary_merge@43:
     !
     assert // not payable
-    intc_2 // 32
-    bzero
-    intc_0 // 0
-    bytec_3 // "emptyString"
-    app_global_get_ex
-    assert // check emptyString exists
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    intc_3 // 31
-    bzero
-    uncover 3
-    swap
-    concat
-    uncover 2
-    intc_3 // 31
-    +
-    intc_2 // 32
-    /
-    intc_2 // 32
-    *
-    intc_0 // 0
-    swap
-    extract3
-    concat
-    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
+    bytec_3 // "emptyBytes"
+    box_del
+    pop
+    bytec_3 // "emptyBytes"
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000
+    box_put
+    pushbytes 0x151f7c75004000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
 
-m_ternary_false@3:
+main_ternary_false@42:
     intc_0 // 0
-    b m_ternary_merge@4
+    b main_ternary_merge@43
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.n[routing]() -> void:
-n:
+main_q_route@17:
     txn GroupIndex
-    bz n_ternary_false@3
+    bz main_ternary_false@47
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-n_ternary_merge@4:
-    !
-    assert // not payable
-    err // EmptyError
-
-n_ternary_false@3:
-    intc_0 // 0
-    b n_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.o[routing]() -> void:
-o:
-    txn GroupIndex
-    bz o_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-o_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 0
-    bytec_3 // "emptyString"
-    app_global_get_ex
-    assert // check emptyString exists
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    pushbytes 0x9ddaae290002
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-o_ternary_false@3:
-    intc_0 // 0
-    b o_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.p[routing]() -> void:
-p:
-    txn GroupIndex
-    bz p_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-p_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x9ddaae2900020000
-    log
-    intc_1 // 1
-    return
-
-p_ternary_false@3:
-    intc_0 // 0
-    b p_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.q[routing]() -> void:
-q:
-    txn GroupIndex
-    bz q_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-q_ternary_merge@4:
+main_ternary_merge@48:
     !
     assert // not payable
     pushbytes "uninitializedBytes"
@@ -579,57 +227,96 @@ q_ternary_merge@4:
     intc_1 // 1
     return
 
-q_ternary_false@3:
+main_ternary_false@47:
     intc_0 // 0
-    b q_ternary_merge@4
+    b main_ternary_merge@48
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.r[routing]() -> void:
-r:
+main_p_route@16:
     txn GroupIndex
-    bz r_ternary_false@3
+    bz main_ternary_false@52
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-r_ternary_merge@4:
+main_ternary_merge@53:
     !
     assert // not payable
-    bytec_1 // "emptyBytes"
-    box_del
-    pop
-    bytec_1 // "emptyBytes"
-    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000
-    box_put
-    pushbytes 0x151f7c75004000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x9ddaae2900020000
     log
     intc_1 // 1
     return
 
-r_ternary_false@3:
+main_ternary_false@52:
     intc_0 // 0
-    b r_ternary_merge@4
+    b main_ternary_merge@53
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.s[routing]() -> void:
-s:
+main_o_route@15:
     txn GroupIndex
-    bz s_ternary_false@3
+    bz main_ternary_false@57
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-s_ternary_merge@4:
+main_ternary_merge@58:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 4 // "emptyString"
+    app_global_get_ex
+    assert // check emptyString exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x9ddaae290002
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@57:
+    intc_0 // 0
+    b main_ternary_merge@58
+
+main_n_route@14:
+    txn GroupIndex
+    bz main_ternary_false@62
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@63:
+    !
+    assert // not payable
+    err // EmptyError
+
+main_ternary_false@62:
+    intc_0 // 0
+    b main_ternary_merge@63
+
+main_m_route@13:
+    txn GroupIndex
+    bz main_ternary_false@67
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@68:
     !
     assert // not payable
     intc_2 // 32
     bzero
     intc_0 // 0
-    bytec_2 // "uninitializedString"
+    bytec 4 // "emptyString"
     app_global_get_ex
-    assert // check uninitializedString exists
+    assert // check emptyString exists
     dup
     len
     dup
@@ -659,15 +346,9 @@ s_ternary_merge@4:
     swap
     extract3
     concat
-    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000020
     swap
     concat
-    bytec_1 // "emptyBytes"
-    box_del
-    pop
-    bytec_1 // "emptyBytes"
-    dig 1
-    box_put
     dup
     len
     itob
@@ -681,13 +362,11 @@ s_ternary_merge@4:
     intc_1 // 1
     return
 
-s_ternary_false@3:
+main_ternary_false@67:
     intc_0 // 0
-    b s_ternary_merge@4
+    b main_ternary_merge@68
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.set[routing]() -> void:
-set:
+main_l_route@12:
     txna ApplicationArgs 1
     dup
     intc_0 // 0
@@ -699,43 +378,53 @@ set:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    bury 2
     txn GroupIndex
-    bz set_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-set_ternary_merge@4:
-    !
-    assert // not payable
-    bytec 4 // "nonEmptyString"
-    dig 1
-    app_global_put
-    intc_1 // 1
-    return
-
-set_ternary_false@3:
-    intc_0 // 0
-    b set_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.get[routing]() -> void:
-get:
-    txn GroupIndex
-    bz get_ternary_false@3
+    bz main_ternary_false@72
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-get_ternary_merge@4:
+main_ternary_merge@73:
     !
     assert // not payable
+    intc_2 // 32
+    bzero
+    dig 2
+    dup
+    cover 2
+    len
+    dup
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    intc_3 // 31
+    bzero
+    uncover 3
+    swap
+    concat
+    uncover 2
+    intc_3 // 31
+    +
+    intc_2 // 32
+    /
+    intc_2 // 32
+    *
     intc_0 // 0
-    bytec 4 // "nonEmptyString"
-    app_global_get_ex
-    assert // check nonEmptyString exists
+    swap
+    extract3
+    concat
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
     dup
     len
     itob
@@ -749,6 +438,289 @@ get_ternary_merge@4:
     intc_1 // 1
     return
 
-get_ternary_false@3:
+main_ternary_false@72:
     intc_0 // 0
-    b get_ternary_merge@4
+    b main_ternary_merge@73
+
+main_k_route@11:
+    txn GroupIndex
+    bz main_ternary_false@77
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@78:
+    !
+    assert // not payable
+    bytec 8 // "nonEmptyString2"
+    pushbytes ""
+    app_global_put
+    pushbytes 0x151f7c750000
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@77:
+    intc_0 // 0
+    b main_ternary_merge@78
+
+main_j_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txn GroupIndex
+    bz main_ternary_false@82
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@83:
+    !
+    assert // not payable
+    bytec_0 // 0x151f7c75
+    dig 1
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@82:
+    intc_0 // 0
+    b main_ternary_merge@83
+
+main_i_route@9:
+    txn GroupIndex
+    bz main_ternary_false@87
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@88:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_1 // "nonEmptyString"
+    app_global_get_ex
+    assert // check nonEmptyString exists
+    intc_0 // 0
+    bytec 4 // "emptyString"
+    app_global_get_ex
+    assert // check emptyString exists
+    dig 1
+    len
+    itob
+    extract 6 2
+    uncover 2
+    concat
+    dup
+    len
+    pushint 4
+    +
+    dig 2
+    len
+    itob
+    extract 6 2
+    uncover 3
+    concat
+    swap
+    itob
+    extract 6 2
+    bytec 7 // 0x0004
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@87:
+    intc_0 // 0
+    b main_ternary_merge@88
+
+main_h_route@8:
+    txn GroupIndex
+    bz main_ternary_false@92
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@93:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_2 // "uninitializedString"
+    app_global_get_ex
+    assert // check uninitializedString exists
+    intc_0 // 0
+    bytec_1 // "nonEmptyString"
+    app_global_get_ex
+    assert // check nonEmptyString exists
+    dig 1
+    len
+    itob
+    extract 6 2
+    uncover 2
+    concat
+    dup
+    len
+    pushint 4
+    +
+    dig 2
+    len
+    itob
+    extract 6 2
+    uncover 3
+    concat
+    swap
+    itob
+    extract 6 2
+    bytec 7 // 0x0004
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@92:
+    intc_0 // 0
+    b main_ternary_merge@93
+
+main_g_route@7:
+    txn GroupIndex
+    bz main_ternary_false@97
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@98:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_2 // "uninitializedString"
+    app_global_get_ex
+    assert // check uninitializedString exists
+    intc_0 // 0
+    bytec 4 // "emptyString"
+    app_global_get_ex
+    assert // check emptyString exists
+    dig 1
+    len
+    itob
+    extract 6 2
+    uncover 2
+    concat
+    dup
+    len
+    pushint 4
+    +
+    dig 2
+    len
+    itob
+    extract 6 2
+    uncover 3
+    concat
+    swap
+    itob
+    extract 6 2
+    bytec 7 // 0x0004
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@97:
+    intc_0 // 0
+    b main_ternary_merge@98
+
+main_f_route@6:
+    txn GroupIndex
+    bz main_ternary_false@102
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@103:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_2 // "uninitializedString"
+    app_global_get_ex
+    assert // check uninitializedString exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@102:
+    intc_0 // 0
+    b main_ternary_merge@103
+
+main___postInit_route@5:
+    bytec 5 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 5 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_3 // "emptyBytes"
+    intc_0 // 0
+    box_create
+    pop
+    bytec_2 // "uninitializedString"
+    pushbytes 0x
+    app_global_put
+    bytec 4 // "emptyString"
+    pushbytes ""
+    app_global_put
+    bytec_1 // "nonEmptyString"
+    pushbytes "This is a non empty string"
+    app_global_put
+    bytec 8 // "nonEmptyString2"
+    pushbytes "Another string"
+    app_global_put
+    intc_1 // 1
+    return

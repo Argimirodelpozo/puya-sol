@@ -4,7 +4,6 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/codebalance_assembly.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -27,77 +26,53 @@ main_after_if_else@2:
     assert
     pushbytess 0xe03b32a4 0x5ed33a7f 0x24d97035 // method "f()uint512", method "g()uint512", method "h()uint512"
     txna ApplicationArgs 0
-    match f g h
+    match main_f_route@5 main_g_route@6 main_h_route@7
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/codebalance_assembly.sol.C.f[routing]() -> void:
-f:
+main_h_route@7:
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@13
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@24:
     !
     assert // not payable
     load 0
     store 0
-    bytec_0 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
 
-f_ternary_false@3:
+main_ternary_false@13:
     intc_1 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@24
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/codebalance_assembly.sol.C.g[routing]() -> void:
-g:
+main_g_route@6:
     txn GroupIndex
-    bz g_ternary_false@3
+    bz main_ternary_false@18
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
+    b main_ternary_merge@24
 
-g_ternary_merge@4:
-    !
-    assert // not payable
-    load 0
-    store 0
-    bytec_0 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
-
-g_ternary_false@3:
+main_ternary_false@18:
     intc_1 // 0
-    b g_ternary_merge@4
+    b main_ternary_merge@24
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/codebalance_assembly.sol.C.h[routing]() -> void:
-h:
+main_f_route@5:
     txn GroupIndex
-    bz h_ternary_false@3
+    bz main_ternary_false@23
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
+    b main_ternary_merge@24
 
-h_ternary_merge@4:
-    !
-    assert // not payable
-    load 0
-    store 0
-    bytec_0 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
-
-h_ternary_false@3:
+main_ternary_false@23:
     intc_1 // 0
-    b h_ternary_merge@4
+    b main_ternary_merge@24

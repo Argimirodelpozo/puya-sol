@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_dynamic_array_memory_v2.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 32 1 0
+    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -30,25 +31,21 @@ main_createEvent_route@4:
     txn ApplicationID
     &&
     assert
-    b createEvent
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_dynamic_array_memory_v2.sol.C.createEvent[routing]() -> void:
-createEvent:
     txna ApplicationArgs 1
     dup
+    bury 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz createEvent_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-createEvent_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     pushbytes 0x0003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -90,6 +87,6 @@ createEvent_ternary_merge@4:
     intc_1 // 1
     return
 
-createEvent_ternary_false@3:
-    pushint 0
-    b createEvent_ternary_merge@4
+main_ternary_false@8:
+    intc_2 // 0
+    b main_ternary_merge@9

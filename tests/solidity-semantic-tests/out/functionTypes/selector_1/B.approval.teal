@@ -26,45 +26,36 @@ main_after_if_else@2:
     assert
     pushbytess 0x0c88cb4e 0x11105f41 // method "ext()void", method "pub()void"
     txna ApplicationArgs 0
-    match ext pub
+    match main_ext_route@5 main_pub_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_1.sol.B.ext[routing]() -> void:
-ext:
+main_pub_route@6:
     txn GroupIndex
-    bz ext_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-ext_ternary_merge@4:
+main_ternary_merge@18:
     !
     assert // not payable
     intc_0 // 1
     return
 
-ext_ternary_false@3:
+main_ternary_false@12:
     intc_1 // 0
-    b ext_ternary_merge@4
+    b main_ternary_merge@18
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_1.sol.B.pub[routing]() -> void:
-pub:
+main_ext_route@5:
     txn GroupIndex
-    bz pub_ternary_false@3
+    bz main_ternary_false@17
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
+    b main_ternary_merge@18
 
-pub_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 1
-    return
-
-pub_ternary_false@3:
+main_ternary_false@17:
     intc_1 // 0
-    b pub_ternary_merge@4
+    b main_ternary_merge@18

@@ -49,92 +49,18 @@ main_after_if_else@2:
     assert
     pushbytess 0x6f8b6b7a 0x3f72e9ed 0x08ee23b1 // method "j()uint256", method "i()uint256", method "k()uint256"
     txna ApplicationArgs 0
-    match j i k
+    match main_j_route@5 main_i_route@6 main_k_route@7
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_with_params_diamond_inheritance.sol.D.j[routing]() -> void:
-j:
+main_k_route@7:
     txn GroupIndex
-    bz j_ternary_false@3
+    bz main_ternary_false@13
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-j_ternary_merge@4:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_3 // "j"
-    app_global_get_ex
-    assert // check j exists
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    bytec 4 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-j_ternary_false@3:
-    intc_1 // 0
-    b j_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_with_params_diamond_inheritance.sol.D.i[routing]() -> void:
-i:
-    txn GroupIndex
-    bz i_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-i_ternary_merge@4:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_0 // "i"
-    app_global_get_ex
-    assert // check i exists
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    bytec 4 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-i_ternary_false@3:
-    intc_1 // 0
-    b i_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_with_params_diamond_inheritance.sol.D.k[routing]() -> void:
-k:
-    txn GroupIndex
-    bz k_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-k_ternary_merge@4:
+main_ternary_merge@14:
     !
     assert // not payable
     intc_1 // 0
@@ -156,6 +82,74 @@ k_ternary_merge@4:
     intc_0 // 1
     return
 
-k_ternary_false@3:
+main_ternary_false@13:
     intc_1 // 0
-    b k_ternary_merge@4
+    b main_ternary_merge@14
+
+main_i_route@6:
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "i"
+    app_global_get_ex
+    assert // check i exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@18:
+    intc_1 // 0
+    b main_ternary_merge@19
+
+main_j_route@5:
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_3 // "j"
+    app_global_get_ex
+    assert // check j exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@23:
+    intc_1 // 0
+    b main_ternary_merge@24

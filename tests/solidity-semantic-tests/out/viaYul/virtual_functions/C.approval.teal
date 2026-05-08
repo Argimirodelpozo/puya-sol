@@ -27,31 +27,11 @@ main_after_if_else@2:
     assert
     pushbytess 0x08d05333 0xed371b95 0x0c192409 0x4b2c0376 0xcd78b354 // method "f1()uint256", method "f2()uint256", method "f3()uint256", method "g()uint256", method "f()uint256"
     txna ApplicationArgs 0
-    match f1 f2 f3 g f
+    match main_f1_route@5 main_f2_route@6 main_f3_route@7 main_g_route@8 main_f_route@9
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/virtual_functions.sol.C.f1[routing]() -> void:
-f1:
-    txn GroupIndex
-    bz f1_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-f1_ternary_merge@4:
-    !
-    assert // not payable
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/virtual_functions.sol.C.g
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    b|
+main_f_route@9:
+    callsub f
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -59,32 +39,8 @@ f1_ternary_merge@4:
     intc_0 // 1
     return
 
-f1_ternary_false@3:
-    intc_2 // 0
-    b f1_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/virtual_functions.sol.C.f2[routing]() -> void:
-f2:
-    txn GroupIndex
-    bz f2_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-f2_ternary_merge@4:
-    !
-    assert // not payable
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/virtual_functions.sol.C.f
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    b|
+main_g_route@8:
+    callsub g
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -92,21 +48,15 @@ f2_ternary_merge@4:
     intc_0 // 1
     return
 
-f2_ternary_false@3:
-    intc_2 // 0
-    b f2_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/virtual_functions.sol.C.f3[routing]() -> void:
-f3:
+main_f3_route@7:
     txn GroupIndex
-    bz f3_ternary_false@3
+    bz main_ternary_false@19
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f3_ternary_merge@4:
+main_ternary_merge@20:
     !
     assert // not payable
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
@@ -114,66 +64,106 @@ f3_ternary_merge@4:
     intc_0 // 1
     return
 
-f3_ternary_false@3:
+main_ternary_false@19:
     intc_2 // 0
-    b f3_ternary_merge@4
+    b main_ternary_merge@20
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/virtual_functions.sol.C.g[routing]() -> void:
-g:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/virtual_functions.sol.C.g
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/virtual_functions.sol.C.f[routing]() -> void:
-f:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/virtual_functions.sol.C.f
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/virtual_functions.sol.C.g() -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/virtual_functions.sol.C.g:
+main_f2_route@6:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/virtual_functions.sol.C.g_ternary_false@2
+    bz main_ternary_false@24
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/virtual_functions.sol.C.g_ternary_merge@3:
+main_ternary_merge@25:
+    !
+    assert // not payable
+    callsub f
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@24:
+    intc_2 // 0
+    b main_ternary_merge@25
+
+main_f1_route@5:
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
+    !
+    assert // not payable
+    callsub g
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@29:
+    intc_2 // 0
+    b main_ternary_merge@30
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/virtual_functions.sol.C.g() -> bytes:
+g:
+    txn GroupIndex
+    bz g_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@3:
     !
     assert // not payable
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/virtual_functions.sol.C.g_ternary_false@2:
+g_ternary_false@2:
     intc_2 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/virtual_functions.sol.C.g_ternary_merge@3
+    b g_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/virtual_functions.sol.C.f() -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/virtual_functions.sol.C.f:
+f:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/virtual_functions.sol.C.f_ternary_false@2
+    bz f_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/virtual_functions.sol.C.f_ternary_merge@3:
+f_ternary_merge@3:
     !
     assert // not payable
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/virtual_functions.sol.C.g
+    callsub g
     dup
     len
     intc_1 // 32
@@ -184,6 +174,6 @@ f:
     b|
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/virtual_functions.sol.C.f_ternary_false@2:
+f_ternary_false@2:
     intc_2 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/virtual_functions.sol.C.f_ternary_merge@3
+    b f_ternary_merge@3

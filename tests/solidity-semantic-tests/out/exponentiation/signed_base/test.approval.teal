@@ -5,6 +5,8 @@
 main:
     intcblock 1 64 0
     bytecblock 0x 0x01 0x03 0x02 0x80000000 0x0100000000
+    intc_2 // 0
+    dupn 5
     pushint 4096
     bzero
     dup
@@ -31,21 +33,14 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/exponentiation/signed_base.sol.test.f[routing]() -> void:
-f:
-    intc_2 // 0
-    dupn 5
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     load 0
@@ -58,23 +53,23 @@ f_ternary_merge@4:
     itob
     bury 4
 
-f_while_top@8:
+main_while_top@11:
     dig 3
     bytec_0 // 0x
     b>
-    bz f_after_while@12
+    bz main_after_while@15
     dig 3
     bytec_1 // 0x01
     b&
     bytec_0 // 0x
     b!=
-    bz f_after_if_else@11
+    bz main_after_if_else@14
     dig 1
     dig 6
     b*
     bury 2
 
-f_after_if_else@11:
+main_after_if_else@14:
     dig 3
     bytec_3 // 0x02
     b/
@@ -83,9 +78,9 @@ f_after_if_else@11:
     dup
     b*
     bury 6
-    b f_while_top@8
+    b main_while_top@11
 
-f_after_while@12:
+main_after_while@15:
     dig 1
     bytec 4 // 0x80000000
     b<
@@ -98,23 +93,23 @@ f_after_while@12:
     itob
     bury 3
 
-f_while_top@20:
+main_while_top@18:
     dig 2
     bytec_0 // 0x
     b>
-    bz f_after_while@24
+    bz main_after_while@22
     dig 2
     bytec_1 // 0x01
     b&
     bytec_0 // 0x
     b!=
-    bz f_after_if_else@23
+    bz main_after_if_else@21
     dup
     dig 5
     b*
     bury 1
 
-f_after_if_else@23:
+main_after_if_else@21:
     dig 2
     bytec_3 // 0x02
     b/
@@ -123,9 +118,9 @@ f_after_if_else@23:
     dup
     b*
     bury 5
-    b f_while_top@20
+    b main_while_top@18
 
-f_after_while@24:
+main_after_while@22:
     bytec 4 // 0x80000000
     dig 1
     dup
@@ -135,14 +130,14 @@ f_after_while@24:
     assert // signed exp overflow
     bytec_0 // 0x
     b==
-    bnz f_ternary_false@37
+    bnz main_ternary_false@27
     bytec 5 // 0x0100000000
     dig 1
     b-
     bytec 5 // 0x0100000000
     b%
 
-f_ternary_merge@38:
+main_ternary_merge@28:
     dig 2
     dup
     len
@@ -170,10 +165,10 @@ f_ternary_merge@38:
     intc_0 // 1
     return
 
-f_ternary_false@37:
+main_ternary_false@27:
     dup
-    b f_ternary_merge@38
+    b main_ternary_merge@28
 
-f_ternary_false@3:
+main_ternary_false@8:
     intc_2 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@9

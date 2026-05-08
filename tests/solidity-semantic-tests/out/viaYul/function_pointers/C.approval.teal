@@ -26,81 +26,65 @@ main_after_if_else@2:
     assert
     pushbytess 0x2d4970c7 0xf2b65f27 0x35841bcc 0x829312b1 // method "f()void", method "g()void", method "h2()void", method "k2()void"
     txna ApplicationArgs 0
-    match f g h2 k2
+    match main_f_route@5 main_g_route@6 main_h2_route@7 main_k2_route@8
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_pointers.sol.C.f[routing]() -> void:
-f:
+main_k2_route@8:
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
-    !
-    assert // not payable
-    err // invalid function pointer
-
-f_ternary_false@3:
-    intc_1 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_pointers.sol.C.g[routing]() -> void:
-g:
-    txn GroupIndex
-    bz g_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-g_ternary_merge@4:
+main_ternary_merge@28:
     !
     assert // not payable
     err // unknown function selector in self-call dispatch
 
-g_ternary_false@3:
+main_ternary_false@14:
     intc_1 // 0
-    b g_ternary_merge@4
+    b main_ternary_merge@28
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_pointers.sol.C.h2[routing]() -> void:
-h2:
+main_h2_route@7:
     txn GroupIndex
-    bz h2_ternary_false@3
+    bz main_ternary_false@22
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-h2_ternary_merge@4:
+main_ternary_merge@34:
     !
     assert // not payable
     err // invalid function pointer
 
-h2_ternary_false@3:
+main_ternary_false@22:
     intc_1 // 0
-    b h2_ternary_merge@4
+    b main_ternary_merge@34
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_pointers.sol.C.k2[routing]() -> void:
-k2:
+main_g_route@6:
     txn GroupIndex
-    bz k2_ternary_false@3
+    bz main_ternary_false@27
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
+    b main_ternary_merge@28
 
-k2_ternary_merge@4:
-    !
-    assert // not payable
-    err // unknown function selector in self-call dispatch
-
-k2_ternary_false@3:
+main_ternary_false@27:
     intc_1 // 0
-    b k2_ternary_merge@4
+    b main_ternary_merge@28
+
+main_f_route@5:
+    txn GroupIndex
+    bz main_ternary_false@33
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@34
+
+main_ternary_false@33:
+    intc_1 // 0
+    b main_ternary_merge@34

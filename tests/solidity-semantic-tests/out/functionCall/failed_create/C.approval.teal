@@ -30,46 +30,18 @@ main_after_if_else@2:
     assert
     pushbytess 0x8a37d29b 0xc608be41 0x7c1072af // method "f(uint256)void", method "stack(uint256)void", method "x()uint256"
     txna ApplicationArgs 0
-    match f stack x
+    match main_f_route@5 main_stack_route@6 main_x_route@7
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.f[routing]() -> void:
-f:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_2 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.f
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.stack[routing]() -> void:
-stack:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_2 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.stack
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.x[routing]() -> void:
-x:
+main_x_route@7:
     txn GroupIndex
-    bz x_ternary_false@3
+    bz main_ternary_false@13
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-x_ternary_merge@4:
+main_ternary_merge@14:
     !
     assert // not payable
     intc_1 // 0
@@ -91,22 +63,44 @@ x_ternary_merge@4:
     intc_0 // 1
     return
 
-x_ternary_false@3:
+main_ternary_false@13:
     intc_1 // 0
-    b x_ternary_merge@4
+    b main_ternary_merge@14
+
+main_stack_route@6:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub stack
+    intc_0 // 1
+    return
+
+main_f_route@5:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub f
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.f(__arc4_amount: bytes) -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.f:
+f:
     proto 1 0
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.f_ternary_false@2
+    bz f_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.f_ternary_merge@3:
+f_ternary_merge@3:
     !
     assert // not payable
     intc_1 // 0
@@ -159,18 +153,18 @@ x_ternary_false@3:
     itxn_submit
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.f_ternary_false@2:
+f_ternary_false@2:
     intc_1 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.f_ternary_merge@3
+    b f_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.stack(__arc4_depth: bytes) -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.stack:
+stack:
     proto 1 0
     frame_dig -1
     bytec_2 // 0x
     b>
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.stack_else_body@2
+    bz stack_else_body@2
     frame_dig -1
     bytec_1 // 0x01
     b>=
@@ -182,11 +176,11 @@ x_ternary_false@3:
     b-
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.stack
+    callsub stack
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.stack_else_body@2:
+stack_else_body@2:
     intc_1 // 0
     itob
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.f
+    callsub f
     retsub

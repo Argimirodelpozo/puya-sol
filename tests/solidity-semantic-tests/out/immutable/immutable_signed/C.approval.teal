@@ -40,19 +40,14 @@ main_viaasm_route@4:
     txn ApplicationID
     &&
     assert
-    b viaasm
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/immutable_signed.sol.C.viaasm[routing]() -> void:
-viaasm:
     txn GroupIndex
-    bz viaasm_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-viaasm_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     intc_2 // 0
@@ -103,6 +98,6 @@ viaasm_ternary_merge@4:
     intc_1 // 1
     return
 
-viaasm_ternary_false@3:
+main_ternary_false@8:
     intc_2 // 0
-    b viaasm_ternary_merge@4
+    b main_ternary_merge@9

@@ -3,8 +3,12 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/struct_member_access.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 66
+    intcblock 0 32 1 66
     bytecblock "s" 0x151f7c75 "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000000000
+    intc_0 // 0
+    dupn 5
+    pushbytes ""
+    dup
     pushint 4096
     bzero
     dup
@@ -30,17 +34,323 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x25c3572e 0x2ed6f14f 0x51bbc7bb 0xe147205e // method "__postInit()void", method "f((uint256,uint256[],uint256))(uint512,uint256[],uint512)", method "g((uint256,uint256[],uint256))(uint256,uint256,uint256,uint256,uint256,uint256)", method "g2((uint256,uint256[],uint256),(uint256,uint256[],uint256))(uint256,uint256,uint256,uint256,uint256,uint256)", method "h()(uint256,uint256,uint256,uint256,uint256,uint256)"
     txna ApplicationArgs 0
-    match __postInit f g g2 h
+    match main___postInit_route@5 main_f_route@6 main_g_route@7 main_g2_route@8 main_h_route@9
     err
 
+main_h_route@9:
+    txn GroupIndex
+    bz main_ternary_false@15
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/struct_member_access.sol.C.__postInit[routing]() -> void:
-__postInit:
+main_ternary_merge@16:
+    !
+    assert // not payable
+    bytec_0 // "s"
+    box_get
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 32
+    dig 1
+    intc_1 // 32
+    extract_uint16
+    dig 2
+    len
+    dig 3
+    cover 2
+    substring3
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    itob
+    intc_1 // 32
+    bzero
+    b|
+    uncover 3
+    extract 34 32
+    dig 2
+    extract 2 32
+    dig 3
+    extract 34 32
+    uncover 4
+    extract 66 32
+    uncover 5
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@15:
+    intc_0 // 0
+    b main_ternary_merge@16
+
+main_g2_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    dup
+    len
+    dig 1
+    intc_1 // 32
+    extract_uint16 // on error: invalid tuple encoding
+    dup
+    intc_3 // 66
+    ==
+    assert // invalid tail pointer at index 1 of (uint256,(len+uint256[]),uint256)
+    uncover 2
+    swap
+    dig 2
+    substring3
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 32
+    *
+    pushint 68
+    +
+    ==
+    assert // invalid number of bytes for S
+    txna ApplicationArgs 2
+    dup
+    bury 7
+    dup
+    len
+    dig 1
+    intc_1 // 32
+    extract_uint16 // on error: invalid tuple encoding
+    dup
+    intc_3 // 66
+    ==
+    assert // invalid tail pointer at index 1 of (uint256,(len+uint256[]),uint256)
+    uncover 2
+    swap
+    dig 2
+    substring3
+    dup
+    bury 5
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    bury 3
+    intc_1 // 32
+    *
+    pushint 68
+    +
+    ==
+    assert // invalid number of bytes for S
+    txn GroupIndex
+    bz main_ternary_false@20
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@21:
+    !
+    assert // not payable
+    dig 6
+    dup
+    extract 0 32
+    swap
+    extract 34 32
+    dig 7
+    dup
+    extract 0 32
+    dig 4
+    itob
+    intc_1 // 32
+    bzero
+    b|
+    uncover 2
+    extract 34 32
+    dig 7
+    extract 2 32
+    uncover 5
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@20:
+    intc_0 // 0
+    b main_ternary_merge@21
+
+main_g_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 9
+    dup
+    len
+    dig 1
+    intc_1 // 32
+    extract_uint16 // on error: invalid tuple encoding
+    dup
+    intc_3 // 66
+    ==
+    assert // invalid tail pointer at index 1 of (uint256,(len+uint256[]),uint256)
+    uncover 2
+    swap
+    dig 2
+    substring3
+    dup
+    bury 6
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    bury 4
+    intc_1 // 32
+    *
+    pushint 68
+    +
+    ==
+    assert // invalid number of bytes for S
+    txn GroupIndex
+    bz main_ternary_false@25
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@26:
+    !
+    assert // not payable
+    dig 7
+    dup
+    extract 0 32
+    dig 3
+    itob
+    intc_1 // 32
+    bzero
+    b|
+    uncover 2
+    extract 34 32
+    dig 6
+    dup
+    extract 2 32
+    dig 1
+    extract 34 32
+    uncover 2
+    extract 66 32
+    uncover 5
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@25:
+    intc_0 // 0
+    b main_ternary_merge@26
+
+main_f_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    dup
+    len
+    dig 1
+    intc_1 // 32
+    extract_uint16 // on error: invalid tuple encoding
+    dup
+    intc_3 // 66
+    ==
+    assert // invalid tail pointer at index 1 of (uint256,(len+uint256[]),uint256)
+    uncover 2
+    swap
+    dig 2
+    substring3
+    dup
+    bury 6
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 32
+    *
+    pushint 68
+    +
+    ==
+    assert // invalid number of bytes for S
+    txn GroupIndex
+    bz main_ternary_false@30
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@31:
+    !
+    assert // not payable
+    dig 4
+    dup
+    extract 0 32
+    swap
+    extract 34 32
+    pushint 64
+    bzero
+    uncover 2
+    dig 1
+    b|
+    pushbytes 0x0082
+    concat
+    cover 2
+    b|
+    concat
+    dig 4
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@30:
+    intc_0 // 0
+    b main_ternary_merge@31
+
+main___postInit_route@5:
     bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     bytec_2 // "__ctor_pending"
-    intc_1 // 0
+    intc_0 // 0
     app_global_put
     bytec_0 // "s"
     box_get
@@ -48,7 +358,7 @@ __postInit:
     cover 2
     select
     dup
-    intc_0 // 32
+    intc_1 // 32
     extract_uint16
     dig 1
     len
@@ -69,7 +379,7 @@ __postInit:
     dig 1
     box_put
     dup
-    intc_0 // 32
+    intc_1 // 32
     extract_uint16
     dig 1
     len
@@ -78,7 +388,7 @@ __postInit:
     uncover 2
     substring3
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16
     intc_2 // 1
     +
@@ -88,7 +398,7 @@ __postInit:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
     concat
     uncover 2
-    intc_1 // 0
+    intc_0 // 0
     uncover 3
     extract3
     swap
@@ -100,7 +410,7 @@ __postInit:
     dig 1
     box_put
     dup
-    intc_0 // 32
+    intc_1 // 32
     extract_uint16
     dig 1
     len
@@ -109,7 +419,7 @@ __postInit:
     uncover 2
     substring3
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16
     intc_2 // 1
     +
@@ -119,7 +429,7 @@ __postInit:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
     concat
     uncover 2
-    intc_1 // 0
+    intc_0 // 0
     uncover 3
     extract3
     swap
@@ -131,7 +441,7 @@ __postInit:
     dig 1
     box_put
     dup
-    intc_0 // 32
+    intc_1 // 32
     extract_uint16
     dig 1
     len
@@ -140,7 +450,7 @@ __postInit:
     uncover 2
     substring3
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16
     intc_2 // 1
     +
@@ -150,7 +460,7 @@ __postInit:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
     concat
     uncover 2
-    intc_1 // 0
+    intc_0 // 0
     uncover 3
     extract3
     swap
@@ -164,7 +474,7 @@ __postInit:
     dup
     extract 0 32
     dig 1
-    intc_0 // 32
+    intc_1 // 32
     extract_uint16
     dig 2
     len
@@ -184,311 +494,3 @@ __postInit:
     box_put
     intc_2 // 1
     return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/struct_member_access.sol.C.f[routing]() -> void:
-f:
-    txna ApplicationArgs 1
-    dupn 2
-    len
-    dig 1
-    intc_0 // 32
-    extract_uint16 // on error: invalid tuple encoding
-    dup
-    intc_3 // 66
-    ==
-    assert // invalid tail pointer at index 1 of (uint256,(len+uint256[]),uint256)
-    uncover 2
-    swap
-    dig 2
-    substring3
-    dup
-    cover 2
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    intc_0 // 32
-    *
-    pushint 68
-    +
-    ==
-    assert // invalid number of bytes for S
-    txn GroupIndex
-    bz f_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-f_ternary_merge@4:
-    !
-    assert // not payable
-    dig 1
-    dup
-    extract 0 32
-    swap
-    extract 34 32
-    pushint 64
-    bzero
-    uncover 2
-    dig 1
-    b|
-    pushbytes 0x0082
-    concat
-    cover 2
-    b|
-    concat
-    dig 1
-    concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-f_ternary_false@3:
-    intc_1 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/struct_member_access.sol.C.g[routing]() -> void:
-g:
-    txna ApplicationArgs 1
-    dupn 2
-    len
-    dig 1
-    intc_0 // 32
-    extract_uint16 // on error: invalid tuple encoding
-    dup
-    intc_3 // 66
-    ==
-    assert // invalid tail pointer at index 1 of (uint256,(len+uint256[]),uint256)
-    uncover 2
-    swap
-    dig 2
-    substring3
-    dup
-    cover 2
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    dup
-    cover 2
-    intc_0 // 32
-    *
-    pushint 68
-    +
-    ==
-    assert // invalid number of bytes for S
-    txn GroupIndex
-    bz g_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-g_ternary_merge@4:
-    !
-    assert // not payable
-    dig 2
-    dup
-    extract 0 32
-    dig 2
-    itob
-    intc_0 // 32
-    bzero
-    b|
-    uncover 2
-    extract 34 32
-    dig 4
-    dup
-    extract 2 32
-    dig 1
-    extract 34 32
-    uncover 2
-    extract 66 32
-    uncover 5
-    uncover 5
-    concat
-    uncover 4
-    concat
-    uncover 3
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-g_ternary_false@3:
-    intc_1 // 0
-    b g_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/struct_member_access.sol.C.g2[routing]() -> void:
-g2:
-    txna ApplicationArgs 1
-    dupn 2
-    len
-    dig 1
-    intc_0 // 32
-    extract_uint16 // on error: invalid tuple encoding
-    dup
-    intc_3 // 66
-    ==
-    assert // invalid tail pointer at index 1 of (uint256,(len+uint256[]),uint256)
-    uncover 2
-    swap
-    dig 2
-    substring3
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    intc_0 // 32
-    *
-    pushint 68
-    +
-    ==
-    assert // invalid number of bytes for S
-    txna ApplicationArgs 2
-    dupn 2
-    len
-    dig 1
-    intc_0 // 32
-    extract_uint16 // on error: invalid tuple encoding
-    dup
-    intc_3 // 66
-    ==
-    assert // invalid tail pointer at index 1 of (uint256,(len+uint256[]),uint256)
-    uncover 2
-    swap
-    dig 2
-    substring3
-    dup
-    cover 2
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    dup
-    cover 2
-    intc_0 // 32
-    *
-    pushint 68
-    +
-    ==
-    assert // invalid number of bytes for S
-    txn GroupIndex
-    bz g2_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-g2_ternary_merge@4:
-    !
-    assert // not payable
-    dig 3
-    dup
-    extract 0 32
-    swap
-    extract 34 32
-    dig 4
-    dup
-    extract 0 32
-    dig 4
-    itob
-    intc_0 // 32
-    bzero
-    b|
-    uncover 2
-    extract 34 32
-    dig 6
-    extract 2 32
-    uncover 5
-    uncover 5
-    concat
-    uncover 4
-    concat
-    uncover 3
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-g2_ternary_false@3:
-    intc_1 // 0
-    b g2_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/struct_member_access.sol.C.h[routing]() -> void:
-h:
-    txn GroupIndex
-    bz h_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-h_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // "s"
-    box_get
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 0 32
-    dig 1
-    intc_0 // 32
-    extract_uint16
-    dig 2
-    len
-    dig 3
-    cover 2
-    substring3
-    dup
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    itob
-    intc_0 // 32
-    bzero
-    b|
-    uncover 3
-    extract 34 32
-    dig 2
-    extract 2 32
-    dig 3
-    extract 34 32
-    uncover 4
-    extract 66 32
-    uncover 5
-    uncover 5
-    concat
-    uncover 4
-    concat
-    uncover 3
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-h_ternary_false@3:
-    intc_1 // 0
-    b h_ternary_merge@4

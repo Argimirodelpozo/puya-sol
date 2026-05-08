@@ -26,48 +26,44 @@ main_after_if_else@2:
     assert
     pushbytess 0xf2b65f27 0xa78000de // method "g()void", method "test()void"
     txna ApplicationArgs 0
-    match g test
+    match main_g_route@5 main_test_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/tstore_hidden_staticcall.sol.C.g[routing]() -> void:
-g:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/tstore_hidden_staticcall.sol.C.g
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/tstore_hidden_staticcall.sol.C.test[routing]() -> void:
-test:
+main_test_route@6:
     txn GroupIndex
-    bz test_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-test_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/tstore_hidden_staticcall.sol.C.g
+    callsub g
     intc_0 // 1
     return
 
-test_ternary_false@3:
+main_ternary_false@12:
     intc_1 // 0
-    b test_ternary_merge@4
+    b main_ternary_merge@13
+
+main_g_route@5:
+    callsub g
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/tstore_hidden_staticcall.sol.C.g() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/tstore_hidden_staticcall.sol.C.g:
+g:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/tstore_hidden_staticcall.sol.C.g_ternary_false@2
+    bz g_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/tstore_hidden_staticcall.sol.C.g_ternary_merge@3:
+g_ternary_merge@3:
     !
     assert // not payable
     load 0
@@ -80,6 +76,6 @@ test_ternary_false@3:
     store 0
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/tstore_hidden_staticcall.sol.C.g_ternary_false@2:
+g_ternary_false@2:
     intc_1 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/tstore_hidden_staticcall.sol.C.g_ternary_merge@3
+    b g_ternary_merge@3

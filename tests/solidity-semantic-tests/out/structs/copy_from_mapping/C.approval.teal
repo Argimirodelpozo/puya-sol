@@ -30,42 +30,58 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0xd11b88e5 0xa70b6958 0xaa0231b1 // method "__postInit()void", method "to_state()(byte[],uint16[],uint16)", method "to_storage()(byte[],uint16[],uint16)", method "to_memory()(byte[],uint16[],uint16)"
     txna ApplicationArgs 0
-    match __postInit to_state to_storage to_memory
+    match main___postInit_route@5 main_to_state_route@6 main_to_storage_route@7 main_to_memory_route@8
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/copy_from_mapping.sol.C.__postInit[routing]() -> void:
-__postInit:
-    bytec_1 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_1 // "__ctor_pending"
-    intc_1 // 0
-    app_global_put
-    pushbytes "m"
-    pushint 2
-    box_create
-    pop
-    bytec_0 // 0x6d48428bdb7ddd829410d6bbb924fdeb3a3d7e88c2577bffae073b990c6f061d08
-    box_del
-    pop
-    bytec_0 // 0x6d48428bdb7ddd829410d6bbb924fdeb3a3d7e88c2577bffae073b990c6f061d08
-    pushbytes 0x0006000b00070003666f6f0002000d000e
-    box_put
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/copy_from_mapping.sol.C.to_state[routing]() -> void:
-to_state:
+main_to_memory_route@8:
     txn GroupIndex
-    bz to_state_ternary_false@3
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-to_state_ternary_merge@4:
+main_ternary_merge@20:
+    !
+    assert // not payable
+    bytec_0 // 0x6d48428bdb7ddd829410d6bbb924fdeb3a3d7e88c2577bffae073b990c6f061d08
+    box_get
+    bytec_2 // 0x00060008000000000000
+    cover 2
+    select
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@20
+
+main_to_storage_route@7:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@20
+
+main_ternary_false@19:
+    intc_1 // 0
+    b main_ternary_merge@20
+
+main_to_state_route@6:
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
     !
     assert // not payable
     bytec_0 // 0x6d48428bdb7ddd829410d6bbb924fdeb3a3d7e88c2577bffae073b990c6f061d08
@@ -86,64 +102,26 @@ to_state_ternary_merge@4:
     intc_0 // 1
     return
 
-to_state_ternary_false@3:
+main_ternary_false@24:
     intc_1 // 0
-    b to_state_ternary_merge@4
+    b main_ternary_merge@25
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/copy_from_mapping.sol.C.to_storage[routing]() -> void:
-to_storage:
-    txn GroupIndex
-    bz to_storage_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-to_storage_ternary_merge@4:
-    !
-    assert // not payable
+main___postInit_route@5:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    pushbytes "m"
+    pushint 2
+    box_create
+    pop
     bytec_0 // 0x6d48428bdb7ddd829410d6bbb924fdeb3a3d7e88c2577bffae073b990c6f061d08
-    box_get
-    bytec_2 // 0x00060008000000000000
-    cover 2
-    select
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
+    box_del
+    pop
+    bytec_0 // 0x6d48428bdb7ddd829410d6bbb924fdeb3a3d7e88c2577bffae073b990c6f061d08
+    pushbytes 0x0006000b00070003666f6f0002000d000e
+    box_put
     intc_0 // 1
     return
-
-to_storage_ternary_false@3:
-    intc_1 // 0
-    b to_storage_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/copy_from_mapping.sol.C.to_memory[routing]() -> void:
-to_memory:
-    txn GroupIndex
-    bz to_memory_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-to_memory_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // 0x6d48428bdb7ddd829410d6bbb924fdeb3a3d7e88c2577bffae073b990c6f061d08
-    box_get
-    bytec_2 // 0x00060008000000000000
-    cover 2
-    select
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-to_memory_ternary_false@3:
-    intc_1 // 0
-    b to_memory_ternary_merge@4

@@ -27,65 +27,61 @@ main_after_if_else@2:
     assert
     pushbytess 0x922961d1 0x4494bd16 // method "blobhash(uint256)byte[32]", method "f()byte[32]"
     txna ApplicationArgs 0
-    match blobhash f
+    match main_blobhash_route@5 main_f_route@6
     err
 
+main_f_route@6:
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blobhash_shadow_resolution.sol.C.blobhash[routing]() -> void:
-blobhash:
+main_ternary_merge@13:
+    !
+    assert // not payable
+    pushint 3
+    itob
+    callsub blobhash
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@12:
+    intc_2 // 0
+    b main_ternary_merge@13
+
+main_blobhash_route@5:
     txna ApplicationArgs 1
     dup
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blobhash_shadow_resolution.sol.C.blobhash
+    callsub blobhash
     bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blobhash_shadow_resolution.sol.C.f[routing]() -> void:
-f:
-    txn GroupIndex
-    bz f_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-f_ternary_merge@4:
-    !
-    assert // not payable
-    pushint 3
-    itob
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blobhash_shadow_resolution.sol.C.blobhash
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-f_ternary_false@3:
-    intc_2 // 0
-    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blobhash_shadow_resolution.sol.C.blobhash(__arc4_index: bytes) -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blobhash_shadow_resolution.sol.C.blobhash:
+blobhash:
     proto 1 1
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blobhash_shadow_resolution.sol.C.blobhash_ternary_false@2
+    bz blobhash_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blobhash_shadow_resolution.sol.C.blobhash_ternary_merge@3:
+blobhash_ternary_merge@3:
     !
     assert // not payable
     intc_1 // 32
@@ -100,6 +96,6 @@ f_ternary_false@3:
     extract3
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blobhash_shadow_resolution.sol.C.blobhash_ternary_false@2:
+blobhash_ternary_false@2:
     intc_2 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blobhash_shadow_resolution.sol.C.blobhash_ternary_merge@3
+    b blobhash_ternary_merge@3

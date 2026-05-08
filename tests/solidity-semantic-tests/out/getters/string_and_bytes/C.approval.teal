@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/string_and_bytes.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock 0x151f7c75 "__ctor_pending" "a" 0x "b" "c"
+    bytecblock 0x151f7c75 "__ctor_pending" "c" 0x "b" "a"
     pushint 4096
     bzero
     dup
@@ -30,155 +30,18 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x87a1fe97 0x04f1eb1f 0x5ca8b74d 0xd3c2139f // method "__postInit()void", method "a()string", method "b()string", method "c()byte[]", method "d()string"
     txna ApplicationArgs 0
-    match __postInit a b c d
+    match main___postInit_route@5 main_a_route@6 main_b_route@7 main_c_route@8 main_d_route@9
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/string_and_bytes.sol.C.__postInit[routing]() -> void:
-__postInit:
-    bytec_1 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_1 // "__ctor_pending"
-    intc_1 // 0
-    app_global_put
-    bytec_2 // "a"
-    bytec_3 // 0x
-    app_global_put
-    bytec 4 // "b"
-    bytec_3 // 0x
-    app_global_put
-    pushbytess "d" "abcd"
-    app_global_put
-    bytec_2 // "a"
-    pushbytes "hello world"
-    app_global_put
-    bytec 4 // "b"
-    pushbytes 0x41424344
-    app_global_put
-    bytec 5 // "c"
-    box_del
-    pop
-    bytec 5 // "c"
-    pushbytes 0xff077fff
-    box_put
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/string_and_bytes.sol.C.a[routing]() -> void:
-a:
+main_d_route@9:
     txn GroupIndex
-    bz a_ternary_false@3
+    bz main_ternary_false@15
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-a_ternary_merge@4:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_2 // "a"
-    app_global_get_ex
-    assert // check a exists
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-a_ternary_false@3:
-    intc_1 // 0
-    b a_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/string_and_bytes.sol.C.b[routing]() -> void:
-b:
-    txn GroupIndex
-    bz b_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-b_ternary_merge@4:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec 4 // "b"
-    app_global_get_ex
-    assert // check b exists
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-b_ternary_false@3:
-    intc_1 // 0
-    b b_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/string_and_bytes.sol.C.c[routing]() -> void:
-c:
-    txn GroupIndex
-    bz c_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-c_ternary_merge@4:
-    !
-    assert // not payable
-    bytec 5 // "c"
-    box_get
-    bytec_3 // 0x
-    cover 2
-    select
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-c_ternary_false@3:
-    intc_1 // 0
-    b c_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/string_and_bytes.sol.C.d[routing]() -> void:
-d:
-    txn GroupIndex
-    bz d_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-d_ternary_merge@4:
+main_ternary_merge@16:
     !
     assert // not payable
     intc_1 // 0
@@ -198,6 +61,133 @@ d_ternary_merge@4:
     intc_0 // 1
     return
 
-d_ternary_false@3:
+main_ternary_false@15:
     intc_1 // 0
-    b d_ternary_merge@4
+    b main_ternary_merge@16
+
+main_c_route@8:
+    txn GroupIndex
+    bz main_ternary_false@20
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@21:
+    !
+    assert // not payable
+    bytec_2 // "c"
+    box_get
+    bytec_3 // 0x
+    cover 2
+    select
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@20:
+    intc_1 // 0
+    b main_ternary_merge@21
+
+main_b_route@7:
+    txn GroupIndex
+    bz main_ternary_false@25
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@26:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 4 // "b"
+    app_global_get_ex
+    assert // check b exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@25:
+    intc_1 // 0
+    b main_ternary_merge@26
+
+main_a_route@6:
+    txn GroupIndex
+    bz main_ternary_false@30
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@31:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 5 // "a"
+    app_global_get_ex
+    assert // check a exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@30:
+    intc_1 // 0
+    b main_ternary_merge@31
+
+main___postInit_route@5:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec 5 // "a"
+    bytec_3 // 0x
+    app_global_put
+    bytec 4 // "b"
+    bytec_3 // 0x
+    app_global_put
+    pushbytess "d" "abcd"
+    app_global_put
+    bytec 5 // "a"
+    pushbytes "hello world"
+    app_global_put
+    bytec 4 // "b"
+    pushbytes 0x41424344
+    app_global_put
+    bytec_2 // "c"
+    box_del
+    pop
+    bytec_2 // "c"
+    pushbytes 0xff077fff
+    box_put
+    intc_0 // 1
+    return

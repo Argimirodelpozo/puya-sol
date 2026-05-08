@@ -3,8 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/calldata_length_read.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 64
+    intcblock 0 1 2 64
     bytecblock 0x151f7c75
+    intc_0 // 0
+    dup
     pushint 4096
     bzero
     dup
@@ -16,7 +18,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -27,15 +29,13 @@ main_after_if_else@2:
     assert
     pushbytess 0x1abbebc2 0xa0462538 // method "lenBytesRead(byte[])uint512", method "lenStringRead(string)uint512"
     txna ApplicationArgs 0
-    match lenBytesRead lenStringRead
+    match main_lenBytesRead_route@5 main_lenStringRead_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/calldata_length_read.sol.C.lenBytesRead[routing]() -> void:
-lenBytesRead:
+main_lenStringRead_route@6:
     txna ApplicationArgs 1
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
     intc_2 // 2
     +
@@ -44,14 +44,58 @@ lenBytesRead:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    bury 2
     txn GroupIndex
-    bz lenBytesRead_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-lenBytesRead_ternary_merge@4:
+main_ternary_merge@13:
+    !
+    assert // not payable
+    load 0
+    dig 2
+    len
+    itob
+    swap
+    store 0
+    intc_3 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@12:
+    intc_0 // 0
+    b main_ternary_merge@13
+
+main_lenBytesRead_route@5:
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
     !
     assert // not payable
     load 0
@@ -67,53 +111,9 @@ lenBytesRead_ternary_merge@4:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
-lenBytesRead_ternary_false@3:
-    intc_1 // 0
-    b lenBytesRead_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/calldata_length_read.sol.C.lenStringRead[routing]() -> void:
-lenStringRead:
-    txna ApplicationArgs 1
-    dup
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    intc_2 // 2
-    +
-    dig 1
-    len
-    ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    extract 2 0
-    txn GroupIndex
-    bz lenStringRead_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-lenStringRead_ternary_merge@4:
-    !
-    assert // not payable
-    load 0
-    dig 1
-    len
-    itob
-    swap
-    store 0
-    intc_3 // 64
-    bzero
-    b|
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-lenStringRead_ternary_false@3:
-    intc_1 // 0
-    b lenStringRead_ternary_merge@4
+main_ternary_false@17:
+    intc_0 // 0
+    b main_ternary_merge@18

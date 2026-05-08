@@ -4,7 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_overload.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock "x" 0x0000000000000000000000000000000000000000000000000000000000000006 0x151f7c75
+    bytecblock "x" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000006
+    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -30,8 +31,88 @@ main_after_if_else@2:
     assert
     pushbytess 0x1928cd24 0x7c1072af // method "f(uint256)uint256", method "x()uint256"
     txna ApplicationArgs 0
-    match f x
+    match main_f_route@5 main_x_route@6
     err
+
+main_x_route@6:
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@12:
+    intc_2 // 0
+    b main_ternary_merge@13
+
+main_f_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    bytec_0 // "x"
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000006
+    app_global_put
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000006
+    dig 2
+    callsub D.mul
+    bytec_0 // "x"
+    swap
+    app_global_put
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@17:
+    intc_2 // 0
+    b main_ternary_merge@18
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_overload.sol.D.mul(2)_0(self: bytes, x: bytes) -> bytes, bytes:
@@ -54,86 +135,3 @@ D.mul:
     extract 0 32
     frame_dig -2
     retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_overload.sol.C.f[routing]() -> void:
-f:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz f_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-f_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    bytec_0 // "x"
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000006
-    app_global_put
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000006
-    dig 2
-    callsub D.mul
-    bytec_0 // "x"
-    swap
-    app_global_put
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    b|
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-f_ternary_false@3:
-    intc_2 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_overload.sol.C.x[routing]() -> void:
-x:
-    txn GroupIndex
-    bz x_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-x_ternary_merge@4:
-    !
-    assert // not payable
-    intc_2 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-x_ternary_false@3:
-    intc_2 // 0
-    b x_ternary_merge@4

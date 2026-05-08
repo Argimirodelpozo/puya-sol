@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.approval_program() -> uint64:
 main:
     intcblock 0 1 24 6
-    bytecblock "c" "__ctor_pending" "factory" 0x151f7c75 0x5ff16da4 0x0de0b6b3a7640000 TMPL_APPROVAL_Factory TMPL_CLEAR_Factory
+    bytecblock "c" "__ctor_pending" 0x151f7c75 "factory" 0x5ff16da4 0x0de0b6b3a7640000 TMPL_APPROVAL_Factory TMPL_CLEAR_Factory
     pushint 4096
     bzero
     dup
@@ -32,12 +32,119 @@ main_after_if_else@2:
     bytec 4 // method "terminate()void"
     pushbytess 0xc7047fb5 0x6974599f 0xa25cf4b6 0x082c5ced 0x394c401b 0xd7fc866d // method "test_deploy_and_terminate()void", method "test_balance_after_create()void", method "test_balance_after_selfdestruct()void", method "exists()bool", method "factory()address", method "c()address"
     txna ApplicationArgs 0
-    match __postInit deploy_create2 terminate test_deploy_and_terminate test_balance_after_create test_balance_after_selfdestruct exists factory c
+    match main___postInit_route@5 main_deploy_create2_route@6 main_terminate_route@7 main_test_deploy_and_terminate_route@8 main_test_balance_after_create_route@9 main_test_balance_after_selfdestruct_route@10 main_exists_route@11 main_factory_route@12 main_c_route@13
     err
 
+main_c_route@13:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.__postInit[routing]() -> void:
-__postInit:
+main_ternary_merge@20:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "c"
+    app_global_get_ex
+    assert // check c exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@19:
+    intc_0 // 0
+    b main_ternary_merge@20
+
+main_factory_route@12:
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_3 // "factory"
+    app_global_get_ex
+    assert // check factory exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@24:
+    intc_0 // 0
+    b main_ternary_merge@25
+
+main_exists_route@11:
+    callsub exists
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_test_balance_after_selfdestruct_route@10:
+    callsub test_balance_after_selfdestruct
+    intc_1 // 1
+    return
+
+main_test_balance_after_create_route@9:
+    callsub test_balance_after_create
+    intc_1 // 1
+    return
+
+main_test_deploy_and_terminate_route@8:
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    callsub deploy_create2
+    callsub exists
+    assert
+    callsub test_balance_after_create
+    callsub terminate
+    callsub test_balance_after_selfdestruct
+    intc_1 // 1
+    return
+
+main_ternary_false@35:
+    intc_0 // 0
+    b main_ternary_merge@36
+
+main_terminate_route@7:
+    callsub terminate
+    intc_1 // 1
+    return
+
+main_deploy_create2_route@6:
+    callsub deploy_create2
+    intc_1 // 1
+    return
+
+main___postInit_route@5:
     bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -78,7 +185,7 @@ __postInit:
     swap
     itob
     concat
-    bytec_2 // "factory"
+    bytec_3 // "factory"
     swap
     app_global_put
     bytec_0 // "c"
@@ -88,136 +195,11 @@ __postInit:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.deploy_create2[routing]() -> void:
-deploy_create2:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.deploy_create2
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.terminate[routing]() -> void:
-terminate:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.terminate
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.test_deploy_and_terminate[routing]() -> void:
-test_deploy_and_terminate:
-    txn GroupIndex
-    bz test_deploy_and_terminate_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-test_deploy_and_terminate_ternary_merge@4:
-    !
-    assert // not payable
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.deploy_create2
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.exists
-    assert
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.test_balance_after_create
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.terminate
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.test_balance_after_selfdestruct
-    intc_1 // 1
-    return
-
-test_deploy_and_terminate_ternary_false@3:
-    intc_0 // 0
-    b test_deploy_and_terminate_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.test_balance_after_create[routing]() -> void:
-test_balance_after_create:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.test_balance_after_create
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.test_balance_after_selfdestruct[routing]() -> void:
-test_balance_after_selfdestruct:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.test_balance_after_selfdestruct
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.exists[routing]() -> void:
-exists:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.exists
-    pushbytes 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.factory[routing]() -> void:
-factory:
-    txn GroupIndex
-    bz factory_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-factory_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 0
-    bytec_2 // "factory"
-    app_global_get_ex
-    assert // check factory exists
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-factory_ternary_false@3:
-    intc_0 // 0
-    b factory_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.c[routing]() -> void:
-c:
-    txn GroupIndex
-    bz c_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-c_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 0
-    bytec_0 // "c"
-    app_global_get_ex
-    assert // check c exists
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-c_ternary_false@3:
-    intc_0 // 0
-    b c_ternary_merge@4
-
-
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.deploy_create2() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.deploy_create2:
+deploy_create2:
     itxn_begin
     intc_0 // 0
-    bytec_2 // "factory"
+    bytec_3 // "factory"
     app_global_get_ex
     assert // check factory exists
     intc_2 // 24
@@ -243,15 +225,15 @@ c_ternary_false@3:
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.terminate() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.terminate:
+terminate:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.terminate_ternary_false@2
+    bz terminate_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.terminate_ternary_merge@3:
+terminate_ternary_merge@3:
     !
     assert // not payable
     itxn_begin
@@ -273,21 +255,21 @@ c_ternary_false@3:
     itxn_submit
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.terminate_ternary_false@2:
+terminate_ternary_false@2:
     intc_0 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.terminate_ternary_merge@3
+    b terminate_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.test_balance_after_create() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.test_balance_after_create:
+test_balance_after_create:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.test_balance_after_create_ternary_false@2
+    bz test_balance_after_create_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.test_balance_after_create_ternary_merge@3:
+test_balance_after_create_ternary_merge@3:
     !
     assert // not payable
     global CurrentApplicationAddress
@@ -313,21 +295,21 @@ c_ternary_false@3:
     assert
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.test_balance_after_create_ternary_false@2:
+test_balance_after_create_ternary_false@2:
     intc_0 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.test_balance_after_create_ternary_merge@3
+    b test_balance_after_create_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.test_balance_after_selfdestruct() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.test_balance_after_selfdestruct:
+test_balance_after_selfdestruct:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.test_balance_after_selfdestruct_ternary_false@2
+    bz test_balance_after_selfdestruct_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.test_balance_after_selfdestruct_ternary_merge@3:
+test_balance_after_selfdestruct_ternary_merge@3:
     !
     assert // not payable
     global CurrentApplicationAddress
@@ -353,21 +335,21 @@ c_ternary_false@3:
     assert
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.test_balance_after_selfdestruct_ternary_false@2:
+test_balance_after_selfdestruct_ternary_false@2:
     intc_0 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.test_balance_after_selfdestruct_ternary_merge@3
+    b test_balance_after_selfdestruct_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.exists() -> uint64:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.exists:
+exists:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.exists_ternary_false@2
+    bz exists_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.exists_ternary_merge@3:
+exists_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 0
@@ -384,6 +366,6 @@ c_ternary_false@3:
     b!=
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.exists_ternary_false@2:
+exists_ternary_false@2:
     intc_0 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_redeploy.sol.D.exists_ternary_merge@3
+    b exists_ternary_merge@3

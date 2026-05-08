@@ -4,7 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/use_scratch.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock "__ctor_pending" "m" "x" 0x "y" 0x151f7c75
+    bytecblock "__ctor_pending" "m" 0x "x" "y" 0x151f7c75
+    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -30,49 +31,31 @@ main_after_if_else@2:
     assert
     pushbytess 0xa5074cc7 0x219b312e 0x8338d04b // method "__postInit(uint256)void", method "f()(uint256,uint256)", method "m(uint256)uint256"
     txna ApplicationArgs 0
-    match __postInit f m
+    match main___postInit_route@5 main_f_route@6 main_m_route@7
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/use_scratch.sol.C.__postInit[routing]() -> void:
-__postInit:
+main_m_route@7:
     txna ApplicationArgs 1
     dup
+    bury 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_0 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec_1 // "m"
-    pushint 2
-    box_create
-    pop
-    bytec_2 // "x"
-    bytec_3 // 0x
-    app_global_put
-    bytec 4 // "y"
-    bytec_3 // 0x
-    app_global_put
-    pushint 42
-    itob
-    bytec_2 // "x"
-    swap
-    app_global_put
-    pushint 23
-    itob
-    bytec 4 // "y"
-    swap
-    app_global_put
-    pushint 7
-    itob
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
     intc_0 // 32
     bzero
-    uncover 2
+    dup
+    dig 2
     concat
     dup
     len
@@ -84,29 +67,40 @@ __postInit:
     bytec_1 // "m"
     swap
     concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
     dup
-    box_del
-    pop
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec 5 // 0x151f7c75
     swap
-    box_put
+    concat
+    log
     intc_1 // 1
     return
 
+main_ternary_false@13:
+    intc_2 // 0
+    b main_ternary_merge@14
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/use_scratch.sol.C.f[routing]() -> void:
-f:
+main_f_route@6:
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@18
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@19:
     !
     assert // not payable
     intc_2 // 0
-    bytec_2 // "x"
+    bytec_3 // "x"
     app_global_get_ex
     assert // check x exists
     dup
@@ -140,33 +134,48 @@ f_ternary_merge@4:
     intc_1 // 1
     return
 
-f_ternary_false@3:
+main_ternary_false@18:
     intc_2 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@19
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/use_scratch.sol.C.m[routing]() -> void:
-m:
+main___postInit_route@5:
     txna ApplicationArgs 1
     dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz m_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-m_ternary_merge@4:
-    !
-    assert // not payable
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_1 // "m"
+    pushint 2
+    box_create
+    pop
+    bytec_3 // "x"
+    bytec_2 // 0x
+    app_global_put
+    bytec 4 // "y"
+    bytec_2 // 0x
+    app_global_put
+    pushint 42
+    itob
+    bytec_3 // "x"
+    swap
+    app_global_put
+    pushint 23
+    itob
+    bytec 4 // "y"
+    swap
+    app_global_put
+    pushint 7
+    itob
     intc_0 // 32
     bzero
-    dup
-    dig 2
+    uncover 2
     concat
     dup
     len
@@ -178,23 +187,10 @@ m_ternary_merge@4:
     bytec_1 // "m"
     swap
     concat
-    box_get
-    bytec_3 // 0x
-    cover 2
-    select
     dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    b|
-    bytec 5 // 0x151f7c75
+    box_del
+    pop
     swap
-    concat
-    log
+    box_put
     intc_1 // 1
     return
-
-m_ternary_false@3:
-    intc_2 // 0
-    b m_ternary_merge@4

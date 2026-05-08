@@ -30,26 +30,14 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/new_operator.sol.test() -> bytes:
-test:
-    pushint 2
-    itob
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/new_operator.sol.D.f[routing]() -> void:
-f:
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     callsub test
@@ -68,6 +56,13 @@ f_ternary_merge@4:
     intc_0 // 1
     return
 
-f_ternary_false@3:
+main_ternary_false@8:
     pushint 0
-    b f_ternary_merge@4
+    b main_ternary_merge@9
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/new_operator.sol.test() -> bytes:
+test:
+    pushint 2
+    itob
+    retsub

@@ -27,51 +27,18 @@ main_after_if_else@2:
     assert
     pushbytess 0x4cd56a6b 0x595e23e2 // method "f(uint256,uint256[3][2],uint256)(uint256,uint256)", method "g()(uint256,uint256)"
     txna ApplicationArgs 0
-    match f g()
+    match main_f_route@5 main_g_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol.C.f[routing]() -> void:
-f:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_2 // 192
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.static_array<arc4.uint256, 3>, 2>
-    txna ApplicationArgs 3
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol.C.f
-    pop
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol.C.g()[routing]() -> void:
-g():
+main_g_route@6:
     txn GroupIndex
-    bz g()_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-g()_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     load 0
@@ -94,7 +61,7 @@ g()_ternary_merge@4:
     itob
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000070000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     swap
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol.C.f
+    callsub f
     pop
     swap
     dup
@@ -120,22 +87,51 @@ g()_ternary_merge@4:
     intc_1 // 1
     return
 
-g()_ternary_false@3:
+main_ternary_false@12:
     intc_3 // 0
-    b g()_ternary_merge@4
+    b main_ternary_merge@13
+
+main_f_route@5:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 192
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.static_array<arc4.uint256, 3>, 2>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub f
+    pop
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol.C.f(__arc4__param0: bytes, s: bytes, __arc4__param2: bytes) -> bytes, bytes, bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol.C.f:
+f:
     proto 3 3
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol.C.f_ternary_false@2
+    bz f_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol.C.f_ternary_merge@3:
+f_ternary_merge@3:
     !
     assert // not payable
     frame_dig -2
@@ -152,6 +148,6 @@ g()_ternary_false@3:
     frame_dig -2
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol.C.f_ternary_false@2:
+f_ternary_false@2:
     intc_3 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol.C.f_ternary_merge@3
+    b f_ternary_merge@3

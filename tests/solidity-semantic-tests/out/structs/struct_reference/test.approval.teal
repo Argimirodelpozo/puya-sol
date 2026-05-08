@@ -30,92 +30,18 @@ main_after_if_else@2:
     assert
     pushbytess 0xae34dd1b 0x0f76205a // method "check()bool", method "set()void"
     txna ApplicationArgs 0
-    match check set
+    match main_check_route@5 main_set_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_reference.sol.test.check[routing]() -> void:
-check:
+main_set_route@6:
     txn GroupIndex
-    bz check_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-check_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 0
-    bytec_2 // "data"
-    app_global_get_ex
-    assert // check data exists
-    intc_0 // 0
-    extract_uint32
-    pushint 2
-    ==
-    bz check_bool_false@9
-    bytec_1 // 0x726563757273697665af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
-    box_get
-    bytec_0 // 0x0000000000060000
-    cover 2
-    select
-    intc_0 // 0
-    extract_uint32
-    pushint 3
-    ==
-    bz check_bool_false@9
-    bytec 4 // 0x726563757273697665cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
-    box_get
-    bytec_0 // 0x0000000000060000
-    cover 2
-    select
-    intc_0 // 0
-    extract_uint32
-    bnz check_bool_false@9
-    bytec_1 // 0x726563757273697665af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
-    box_get
-    bytec_0 // 0x0000000000060000
-    cover 2
-    select
-    intc_0 // 0
-    extract_uint32
-    intc_1 // 1
-    ==
-    bz check_bool_false@9
-    intc_1 // 1
-
-check_bool_merge@10:
-    pushbytes 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-check_bool_false@9:
-    intc_0 // 0
-    b check_bool_merge@10
-
-check_ternary_false@3:
-    intc_0 // 0
-    b check_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_reference.sol.test.set[routing]() -> void:
-set:
-    txn GroupIndex
-    bz set_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-set_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     intc_0 // 0
@@ -221,6 +147,76 @@ set_ternary_merge@4:
     intc_1 // 1
     return
 
-set_ternary_false@3:
+main_ternary_false@12:
     intc_0 // 0
-    b set_ternary_merge@4
+    b main_ternary_merge@13
+
+main_check_route@5:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_2 // "data"
+    app_global_get_ex
+    assert // check data exists
+    intc_0 // 0
+    extract_uint32
+    pushint 2
+    ==
+    bz main_bool_false@23
+    bytec_1 // 0x726563757273697665af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
+    box_get
+    bytec_0 // 0x0000000000060000
+    cover 2
+    select
+    intc_0 // 0
+    extract_uint32
+    pushint 3
+    ==
+    bz main_bool_false@23
+    bytec 4 // 0x726563757273697665cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
+    box_get
+    bytec_0 // 0x0000000000060000
+    cover 2
+    select
+    intc_0 // 0
+    extract_uint32
+    bnz main_bool_false@23
+    bytec_1 // 0x726563757273697665af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
+    box_get
+    bytec_0 // 0x0000000000060000
+    cover 2
+    select
+    intc_0 // 0
+    extract_uint32
+    intc_1 // 1
+    ==
+    bz main_bool_false@23
+    intc_1 // 1
+
+main_bool_merge@24:
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_bool_false@23:
+    intc_0 // 0
+    b main_bool_merge@24
+
+main_ternary_false@17:
+    intc_0 // 0
+    b main_ternary_merge@18

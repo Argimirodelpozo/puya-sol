@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1
+    intcblock 1 0
     bytecblock 0x03 0x151f7c75 0x01 0x02 0x00 0x0000000000000000000000000000000000000000000000000000000000000001 0x0000000000000000000000000000000000000000000000000000000000000002 0x0000000000000000000000000000000000000000000000000000000000000003
     pushint 4096
     bzero
@@ -16,7 +16,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -27,13 +27,90 @@ main_after_if_else@2:
     assert
     pushbytess 0xa48ee382 0xd2896ae6 0x827c8623 0x31b51271 0x4b4fb052 // method "g()(uint256,uint256,uint256)", method "h()(uint256,uint256,uint256,uint256)", method "f1()bool", method "f2()bool", method "f()bool"
     txna ApplicationArgs 0
-    match g h f1 f2 f
+    match main_g_route@5 main_h_route@6 main_f1_route@7 main_f2_route@8 main_f_route@9
     err
 
+main_f_route@9:
+    txn GroupIndex
+    bz main_ternary_false@15
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.g[routing]() -> void:
-g:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.g
+main_ternary_merge@16:
+    !
+    assert // not payable
+    callsub f1
+    bz main_bool_false@19
+    callsub f2
+    bz main_bool_false@19
+    intc_0 // 1
+
+main_bool_merge@20:
+    bytec 4 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_bool_false@19:
+    intc_1 // 0
+    b main_bool_merge@20
+
+main_ternary_false@15:
+    intc_1 // 0
+    b main_ternary_merge@16
+
+main_f2_route@8:
+    callsub f2
+    bytec 4 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_f1_route@7:
+    callsub f1
+    bytec 4 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_h_route@6:
+    callsub h
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_g_route@5:
+    callsub g
     cover 2
     concat
     swap
@@ -42,107 +119,20 @@ g:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.h[routing]() -> void:
-h:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.h
-    uncover 3
-    uncover 3
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f1[routing]() -> void:
-f1:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f1
-    bytec 4 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2[routing]() -> void:
-f2:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2
-    bytec 4 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f[routing]() -> void:
-f:
-    txn GroupIndex
-    bz f_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-f_ternary_merge@4:
-    !
-    assert // not payable
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f1
-    bz f_bool_false@7
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2
-    bz f_bool_false@7
-    intc_1 // 1
-
-f_bool_merge@8:
-    bytec 4 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-f_bool_false@7:
-    intc_0 // 0
-    b f_bool_merge@8
-
-f_ternary_false@3:
-    intc_0 // 0
-    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.g() -> bytes, bytes, bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.g:
+g:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.g_ternary_false@2
+    bz g_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.g_ternary_merge@3:
+g_ternary_merge@3:
     !
     assert // not payable
     bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000001
@@ -150,21 +140,21 @@ f_ternary_false@3:
     bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000003
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.g_ternary_false@2:
-    intc_0 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.g_ternary_merge@3
+g_ternary_false@2:
+    intc_1 // 0
+    b g_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.h() -> bytes, bytes, bytes, bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.h:
+h:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.h_ternary_false@2
+    bz h_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.h_ternary_merge@3:
+h_ternary_merge@3:
     !
     assert // not payable
     bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000001
@@ -173,222 +163,179 @@ f_ternary_false@3:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.h_ternary_false@2:
-    intc_0 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.h_ternary_merge@3
+h_ternary_false@2:
+    intc_1 // 0
+    b h_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f1() -> uint64:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f1:
+f1:
     proto 0 1
-    intc_0 // 0
+    intc_1 // 0
     dup
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f1_ternary_false@2
+    bz f1_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f1_ternary_merge@3:
+f1_ternary_merge@3:
     !
     assert // not payable
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.g
+    callsub g
     popn 2
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.g
+    callsub g
     pop
     frame_bury 0
     pop
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.g
+    callsub g
     frame_bury 1
     popn 2
     bytec_2 // 0x01
     b!=
-    bnz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f1_if_body@6
+    bnz f1_if_body@6
     frame_dig 0
     bytec_3 // 0x02
     b!=
-    bnz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f1_if_body@6
+    bnz f1_if_body@6
     frame_dig 1
     bytec_0 // 0x03
     b!=
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f1_after_if_else@7
+    bz f1_after_if_else@7
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f1_if_body@6:
-    intc_0 // 0
+f1_if_body@6:
+    intc_1 // 0
     frame_bury 0
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f1_after_if_else@7:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.g
+f1_after_if_else@7:
+    callsub g
     pop
     bury 1
     bytec_3 // 0x02
     b!=
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f1_after_if_else@9
-    intc_0 // 0
-    frame_bury 0
-    retsub
-
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f1_after_if_else@9:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.g
+    bnz f1_if_body@6
+    callsub g
     popn 2
     bytec_2 // 0x01
     b!=
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f1_after_if_else@11
-    intc_0 // 0
-    frame_bury 0
-    retsub
-
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f1_after_if_else@11:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.g
+    bnz f1_if_body@6
+    callsub g
     cover 2
     popn 2
     bytec_0 // 0x03
     b!=
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f1_after_if_else@13
-    intc_0 // 0
+    bnz f1_if_body@6
+    intc_0 // 1
     frame_bury 0
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f1_after_if_else@13:
-    intc_1 // 1
-    frame_bury 0
-    retsub
-
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f1_ternary_false@2:
-    intc_0 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f1_ternary_merge@3
+f1_ternary_false@2:
+    intc_1 // 0
+    b f1_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2() -> uint64:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2:
+f2:
     proto 0 1
-    intc_0 // 0
+    intc_1 // 0
     dupn 5
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_ternary_false@2
+    bz f2_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_ternary_merge@3:
+f2_ternary_merge@3:
     !
     assert // not payable
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.h
+    callsub h
     popn 3
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.h
+    callsub h
     pop
     frame_bury 0
     popn 2
     bytec_2 // 0x01
     b!=
-    bnz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_if_body@5
+    bnz f2_if_body@5
     frame_dig 0
     bytec_0 // 0x03
     b!=
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_after_if_else@6
+    bz f2_after_if_else@6
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_if_body@5:
-    intc_0 // 0
+f2_if_body@5:
+    intc_1 // 0
     frame_bury 0
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_after_if_else@6:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.h
+f2_after_if_else@6:
+    callsub h
     popn 3
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.h
+    callsub h
     popn 2
     frame_bury 1
     pop
     bytec_2 // 0x01
     b!=
-    bnz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_if_body@8
+    bnz f2_if_body@5
     frame_dig 1
     bytec_3 // 0x02
     b!=
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_after_if_else@9
-
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_if_body@8:
-    intc_0 // 0
-    frame_bury 0
-    retsub
-
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_after_if_else@9:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.h
+    bnz f2_if_body@5
+    callsub h
     popn 2
     bury 1
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.h
+    callsub h
     pop
     frame_bury 2
     popn 2
     bytec_3 // 0x02
     b!=
-    bnz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_if_body@11
+    bnz f2_if_body@5
     frame_dig 2
     bytec_0 // 0x03
     b!=
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_after_if_else@12
-
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_if_body@11:
-    intc_0 // 0
-    frame_bury 0
-    retsub
-
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_after_if_else@12:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.h
+    bnz f2_if_body@5
+    callsub h
     pop
     cover 2
     popn 2
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.h
+    callsub h
     frame_bury 3
     popn 3
     bytec_0 // 0x03
     b!=
-    bnz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_if_body@14
+    bnz f2_if_body@5
     frame_dig 3
     pushbytes 0x04
     b!=
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_after_if_else@15
-
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_if_body@14:
-    intc_0 // 0
-    frame_bury 0
-    retsub
-
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_after_if_else@15:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.h
+    bnz f2_if_body@5
+    callsub h
     popn 3
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.h
+    callsub h
     pop
     frame_bury 4
     popn 2
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.h
+    callsub h
     frame_bury 5
     popn 3
     bytec_2 // 0x01
     b!=
-    bnz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_if_body@18
+    bnz f2_if_body@5
     frame_dig 4
     bytec_0 // 0x03
     b!=
-    bnz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_if_body@18
+    bnz f2_if_body@5
     frame_dig 5
     pushbytes 0x04
     b!=
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_after_if_else@19
-
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_if_body@18:
-    intc_0 // 0
+    bnz f2_if_body@5
+    intc_0 // 1
     frame_bury 0
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_after_if_else@19:
-    intc_1 // 1
-    frame_bury 0
-    retsub
-
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_ternary_false@2:
-    intc_0 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/multi_variable_declaration.sol.C.f2_ternary_merge@3
+f2_ternary_false@2:
+    intc_1 // 0
+    b f2_ternary_merge@3

@@ -4,7 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_mapping.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock "__ctor_pending" "map" 0x6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf 0x6d6170aa796dee6b6abca795103a49a9715b499482dcf870f9237b2a7b03a3c93fd310
+    bytecblock "__ctor_pending" 0x6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf 0x6d6170aa796dee6b6abca795103a49a9715b499482dcf870f9237b2a7b03a3c93fd310 "map"
+    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -30,8 +31,78 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x61df8e5d // method "__postInit()void", method "mapValue(uint256)uint256"
     txna ApplicationArgs 0
-    match __postInit mapValue
+    match main___postInit_route@5 main_mapValue_route@6
     err
+
+main_mapValue_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    pushint 36
+    itob
+    bytec_1 // 0x6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
+    box_del
+    pop
+    bytec_1 // 0x6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
+    swap
+    box_put
+    pushint 102
+    itob
+    bytec_2 // 0x6d6170aa796dee6b6abca795103a49a9715b499482dcf870f9237b2a7b03a3c93fd310
+    box_del
+    pop
+    bytec_2 // 0x6d6170aa796dee6b6abca795103a49a9715b499482dcf870f9237b2a7b03a3c93fd310
+    swap
+    box_put
+    bytec_3 // "map"
+    dig 1
+    callsub L.at
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@12:
+    intc_2 // 0
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_3 // "map"
+    pushint 2
+    box_create
+    pop
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_mapping.sol.L.at(a: bytes, i: bytes) -> bytes:
@@ -56,76 +127,3 @@ L.at:
     cover 2
     select
     retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_mapping.sol.C.__postInit[routing]() -> void:
-__postInit:
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_0 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec_1 // "map"
-    pushint 2
-    box_create
-    pop
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_mapping.sol.C.mapValue[routing]() -> void:
-mapValue:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz mapValue_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-mapValue_ternary_merge@4:
-    !
-    assert // not payable
-    pushint 36
-    itob
-    bytec_2 // 0x6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
-    box_del
-    pop
-    bytec_2 // 0x6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
-    swap
-    box_put
-    pushint 102
-    itob
-    bytec_3 // 0x6d6170aa796dee6b6abca795103a49a9715b499482dcf870f9237b2a7b03a3c93fd310
-    box_del
-    pop
-    bytec_3 // 0x6d6170aa796dee6b6abca795103a49a9715b499482dcf870f9237b2a7b03a3c93fd310
-    swap
-    box_put
-    bytec_1 // "map"
-    dig 1
-    callsub L.at
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-mapValue_ternary_false@3:
-    intc_2 // 0
-    b mapValue_ternary_merge@4

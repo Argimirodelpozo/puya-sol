@@ -3,8 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_dynamic_array.sol.A.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 2
+    intcblock 1 0 32 8
     bytecblock "__ctor_pending" "arrayA"
+    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -30,60 +31,43 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x5e2610e9 // method "__postInit()void", method "arrayA(uint256)uint256"
     txna ApplicationArgs 0
-    match __postInit arrayA
+    match main___postInit_route@5 main_arrayA_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_dynamic_array.sol.A.__postInit[routing]() -> void:
-__postInit:
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_0 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec_1 // "arrayA"
-    intc_3 // 2
-    box_create
-    pop
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_dynamic_array.sol.A.arrayA[routing]() -> void:
-arrayA:
+main_arrayA_route@6:
     txna ApplicationArgs 1
     dup
+    bury 2
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz arrayA_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-arrayA_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
-    pushint 8
+    intc_3 // 8
     bzero
     dig 1
     concat
     dup
     len
-    pushint 8
+    intc_3 // 8
     -
     extract_uint64
-    intc_1 // 32
+    intc_2 // 32
     *
-    intc_3 // 2
+    pushint 2
     +
     bytec_1 // "arrayA"
     swap
-    intc_1 // 32
+    intc_2 // 32
     box_extract // on error: index access is out of bounds
     pushbytes 0x151f7c75
     swap
@@ -92,6 +76,20 @@ arrayA_ternary_merge@4:
     intc_0 // 1
     return
 
-arrayA_ternary_false@3:
-    intc_2 // 0
-    b arrayA_ternary_merge@4
+main_ternary_false@12:
+    intc_1 // 0
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_1 // "arrayA"
+    pushint 2
+    box_create
+    pop
+    intc_0 // 1
+    return

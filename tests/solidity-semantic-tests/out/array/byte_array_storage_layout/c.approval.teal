@@ -5,6 +5,7 @@
 main:
     intcblock 0 1 32 64
     bytecblock "data" 0x "__dyn_storage" "__ctor_pending" 0x151f7c75
+    bytec_1 // ""
     pushint 4096
     bzero
     dup
@@ -30,12 +31,254 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0xc8badcd6 0x4ffcc12a 0xb2a89e84 // method "__postInit()void", method "test_short()uint512", method "test_long()uint512", method "test_pop()uint512"
     txna ApplicationArgs 0
-    match __postInit test_short test_long test_pop
+    match main___postInit_route@5 main_test_short_route@6 main_test_long_route@7 main_test_pop_route@8
     err
 
+main_test_pop_route@8:
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_storage_layout.sol.c.__postInit[routing]() -> void:
-__postInit:
+main_ternary_merge@15:
+    !
+    assert // not payable
+    load 0
+    intc_0 // 0
+    bytec_1 // 0x
+    callsub __storage_write
+    store 0
+    intc_0 // 0
+    bury 1
+
+main_while_top@16:
+    dup
+    intc_2 // 32
+    <
+    bz main_after_while@18
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dig 1
+    dup
+    cover 2
+    itob
+    extract 7 1
+    concat
+    bytec_0 // "data"
+    box_del
+    pop
+    bytec_0 // "data"
+    swap
+    box_put
+    intc_1 // 1
+    +
+    bury 1
+    b main_while_top@16
+
+main_after_while@18:
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 1
+    -
+    intc_0 // 0
+    swap
+    extract3
+    bytec_0 // "data"
+    box_del
+    pop
+    bytec_0 // "data"
+    dig 1
+    box_put
+    dup
+    len
+    intc_1 // 1
+    -
+    intc_0 // 0
+    swap
+    extract3
+    bytec_0 // "data"
+    box_del
+    pop
+    bytec_0 // "data"
+    swap
+    box_put
+    load 0
+    intc_0 // 0
+    callsub __storage_read
+    swap
+    store 0
+    dup
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    intc_3 // 64
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_0 // 0
+    b main_ternary_merge@15
+
+main_test_long_route@7:
+    txn GroupIndex
+    bz main_ternary_false@22
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@23:
+    !
+    assert // not payable
+    load 0
+    intc_0 // 0
+    bytec_1 // 0x
+    callsub __storage_write
+    store 0
+    intc_0 // 0
+    bury 1
+
+main_while_top@24:
+    dup
+    pushint 33
+    <
+    bz main_after_while@26
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dig 1
+    dup
+    cover 2
+    itob
+    extract 7 1
+    concat
+    bytec_0 // "data"
+    box_del
+    pop
+    bytec_0 // "data"
+    swap
+    box_put
+    intc_1 // 1
+    +
+    bury 1
+    b main_while_top@24
+
+main_after_while@26:
+    load 0
+    intc_0 // 0
+    callsub __storage_read
+    swap
+    store 0
+    dup
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    intc_3 // 64
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@22:
+    intc_0 // 0
+    b main_ternary_merge@23
+
+main_test_short_route@6:
+    txn GroupIndex
+    bz main_ternary_false@30
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@31:
+    !
+    assert // not payable
+    load 0
+    intc_0 // 0
+    bytec_1 // 0x
+    callsub __storage_write
+    store 0
+    intc_0 // 0
+    bury 1
+
+main_while_top@32:
+    dup
+    pushint 15
+    <
+    bz main_after_while@34
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dig 1
+    dup
+    cover 2
+    itob
+    extract 7 1
+    concat
+    bytec_0 // "data"
+    box_del
+    pop
+    bytec_0 // "data"
+    swap
+    box_put
+    intc_1 // 1
+    +
+    bury 1
+    b main_while_top@32
+
+main_after_while@34:
+    load 0
+    intc_0 // 0
+    callsub __storage_read
+    swap
+    store 0
+    dup
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    intc_3 // 64
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@30:
+    intc_0 // 0
+    b main_ternary_merge@31
+
+main___postInit_route@5:
     bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -46,260 +289,7 @@ __postInit:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_storage_layout.sol.c.test_short[routing]() -> void:
-test_short:
-    bytec_1 // ""
-    txn GroupIndex
-    bz test_short_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-test_short_ternary_merge@4:
-    !
-    assert // not payable
-    load 0
-    intc_0 // 0
-    bytec_1 // 0x
-    callsub __storage_write
-    store 0
-    intc_0 // 0
-    bury 1
-
-test_short_while_top@5:
-    dup
-    pushint 15
-    <
-    bz test_short_after_while@7
-    bytec_0 // "data"
-    box_get
-    bytec_1 // 0x
-    cover 2
-    select
-    dig 1
-    dup
-    cover 2
-    itob
-    extract 7 1
-    concat
-    bytec_0 // "data"
-    box_del
-    pop
-    bytec_0 // "data"
-    swap
-    box_put
-    intc_1 // 1
-    +
-    bury 1
-    b test_short_while_top@5
-
-test_short_after_while@7:
-    load 0
-    intc_0 // 0
-    callsub __storage_read
-    swap
-    store 0
-    dup
-    len
-    intc_3 // 64
-    <=
-    assert // overflow
-    intc_3 // 64
-    bzero
-    b|
-    bytec 4 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-test_short_ternary_false@3:
-    intc_0 // 0
-    b test_short_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_storage_layout.sol.c.test_long[routing]() -> void:
-test_long:
-    bytec_1 // ""
-    txn GroupIndex
-    bz test_long_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-test_long_ternary_merge@4:
-    !
-    assert // not payable
-    load 0
-    intc_0 // 0
-    bytec_1 // 0x
-    callsub __storage_write
-    store 0
-    intc_0 // 0
-    bury 1
-
-test_long_while_top@5:
-    dup
-    pushint 33
-    <
-    bz test_long_after_while@7
-    bytec_0 // "data"
-    box_get
-    bytec_1 // 0x
-    cover 2
-    select
-    dig 1
-    dup
-    cover 2
-    itob
-    extract 7 1
-    concat
-    bytec_0 // "data"
-    box_del
-    pop
-    bytec_0 // "data"
-    swap
-    box_put
-    intc_1 // 1
-    +
-    bury 1
-    b test_long_while_top@5
-
-test_long_after_while@7:
-    load 0
-    intc_0 // 0
-    callsub __storage_read
-    swap
-    store 0
-    dup
-    len
-    intc_3 // 64
-    <=
-    assert // overflow
-    intc_3 // 64
-    bzero
-    b|
-    bytec 4 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-test_long_ternary_false@3:
-    intc_0 // 0
-    b test_long_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_storage_layout.sol.c.test_pop[routing]() -> void:
-test_pop:
-    bytec_1 // ""
-    txn GroupIndex
-    bz test_pop_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-test_pop_ternary_merge@4:
-    !
-    assert // not payable
-    load 0
-    intc_0 // 0
-    bytec_1 // 0x
-    callsub __storage_write
-    store 0
-    intc_0 // 0
-    bury 1
-
-test_pop_while_top@5:
-    dup
-    intc_2 // 32
-    <
-    bz test_pop_after_while@7
-    bytec_0 // "data"
-    box_get
-    bytec_1 // 0x
-    cover 2
-    select
-    dig 1
-    dup
-    cover 2
-    itob
-    extract 7 1
-    concat
-    bytec_0 // "data"
-    box_del
-    pop
-    bytec_0 // "data"
-    swap
-    box_put
-    intc_1 // 1
-    +
-    bury 1
-    b test_pop_while_top@5
-
-test_pop_after_while@7:
-    bytec_0 // "data"
-    box_get
-    bytec_1 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_1 // 1
-    -
-    intc_0 // 0
-    swap
-    extract3
-    bytec_0 // "data"
-    box_del
-    pop
-    bytec_0 // "data"
-    dig 1
-    box_put
-    dup
-    len
-    intc_1 // 1
-    -
-    intc_0 // 0
-    swap
-    extract3
-    bytec_0 // "data"
-    box_del
-    pop
-    bytec_0 // "data"
-    swap
-    box_put
-    load 0
-    intc_0 // 0
-    callsub __storage_read
-    swap
-    store 0
-    dup
-    len
-    intc_3 // 64
-    <=
-    assert // overflow
-    intc_3 // 64
-    bzero
-    b|
-    bytec 4 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-test_pop_ternary_false@3:
-    intc_0 // 0
-    b test_pop_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_storage_layout.sol.c.__storage_read(__slot: uint64) -> bytes:
+// __puyasol___storage_read(__slot: uint64) -> bytes:
 __storage_read:
     proto 1 1
     frame_dig -1
@@ -334,7 +324,7 @@ __storage_read_else_body@2:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_storage_layout.sol.c.__storage_write(__slot: uint64, __value: bytes) -> void:
+// __puyasol___storage_write(__slot: uint64, __value: bytes) -> void:
 __storage_write:
     proto 2 0
     frame_dig -2

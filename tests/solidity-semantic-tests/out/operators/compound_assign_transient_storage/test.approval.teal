@@ -3,8 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/operators/compound_assign_transient_storage.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 0 1 32
     bytecblock "value1" 0x
+    intc_0 // 0
+    dup
     pushint 4096
     bzero
     dup
@@ -22,7 +24,7 @@ main:
     pushbytes "value2"
     bytec_1 // 0x
     app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -37,34 +39,31 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/operators/compound_assign_transient_storage.sol.test.f[routing]() -> void:
-f:
     txna ApplicationArgs 1
     dup
+    bury 3
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
+    bury 2
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
-    intc_2 // 0
+    intc_0 // 0
     bytec_0 // "value1"
     app_global_get_ex
     assert // check value1 exists
@@ -79,7 +78,7 @@ f_ternary_merge@4:
     uncover 2
     b*
     load 5
-    intc_1 // 32
+    intc_2 // 32
     bzero
     load 5
     extract 0 32
@@ -111,9 +110,9 @@ f_ternary_merge@4:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
-f_ternary_false@3:
-    intc_2 // 0
-    b f_ternary_merge@4
+main_ternary_false@8:
+    intc_0 // 0
+    b main_ternary_merge@9

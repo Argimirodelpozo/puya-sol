@@ -3,8 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol.Sample.approval_program() -> uint64:
 main:
-    intcblock 2 1 0 4
-    bytecblock "p" "__ctor_pending"
+    intcblock 2 1 0 8
+    bytecblock "p" "__ctor_pending" 0x
+    intc_2 // 0
+    dup
+    bytec_2 // ""
     pushint 4096
     bzero
     dup
@@ -30,121 +33,39 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x7b2184b3 // method "__postInit()void", method "p(uint256)(uint64,uint64,string,string)"
     txna ApplicationArgs 0
-    match __postInit p
+    match main___postInit_route@5 main_p_route@6
     err
 
-
-// _puya_lib.arc4.static_array_read_dynamic_element(array_head_and_tail: bytes, index: uint64, array_length: uint64) -> bytes:
-static_array_read_dynamic_element:
-    proto 3 1
-    frame_dig -2
-    intc_0 // 2
-    *
-    frame_dig -3
-    swap
-    extract_uint16
-    frame_dig -3
-    len
-    frame_dig -2
-    intc_1 // 1
-    +
-    dup
-    intc_0 // 2
-    *
-    frame_dig -3
-    swap
-    extract_uint16
-    frame_dig -1
-    uncover 2
-    -
-    select
-    frame_dig -3
-    cover 2
-    substring3
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol.Sample.__postInit[routing]() -> void:
-__postInit:
-    bytec_1 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_1 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec_0 // "p"
-    pushbytes 0x00040010000000000008000a00000000000000000008000a00000000
-    box_put
-    pushbytes 0x00040010bbbbcccc0008000f000568656c6c6f0005776f726c64000000000008000a00000000
-    intc_0 // 2
-
-__postInit_for_header@2:
-    dup
-    intc_3 // 4
-    <
-    bz __postInit_after_for@4
-    dig 1
-    dup
-    dig 2
-    dup
-    cover 3
-    extract_uint16
-    pushint 22
-    +
-    pushint 12
-    -
-    itob
-    extract 6 0
-    dig 2
-    swap
-    replace3
-    bury 3
-    intc_0 // 2
-    +
-    bury 1
-    b __postInit_for_header@2
-
-__postInit_after_for@4:
-    bytec_0 // "p"
-    box_del
-    pop
-    bytec_0 // "p"
-    dig 2
-    box_put
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol.Sample.p[routing]() -> void:
-p:
+main_p_route@6:
     txna ApplicationArgs 1
     dup
+    bury 4
     len
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz p_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-p_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     bytec_0 // "p"
     box_get
-    pushbytes 0x
+    bytec_2 // 0x
     cover 2
     select
-    pushint 8
+    intc_3 // 8
     bzero
-    dig 2
+    dig 4
     concat
     dup
     len
-    pushint 8
+    intc_3 // 8
     -
     extract_uint64
     dup2
@@ -163,7 +84,7 @@ p_ternary_merge@4:
     intc_0 // 2
     callsub static_array_read_dynamic_element
     dup
-    intc_3 // 4
+    pushint 4
     extract_uint16
     dig 1
     pushint 6
@@ -222,6 +143,87 @@ p_ternary_merge@4:
     intc_1 // 1
     return
 
-p_ternary_false@3:
+main_ternary_false@12:
     intc_2 // 0
-    b p_ternary_merge@4
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_0 // "p"
+    pushbytes 0x00040010000000000008000a00000000000000000008000a00000000
+    box_put
+    intc_0 // 2
+    pushbytes 0x00040010bbbbcccc0008000f000568656c6c6f0005776f726c64000000000008000a00000000
+    bury 3
+    bury 1
+
+main_for_header@15:
+    dup
+    pushint 4
+    <
+    bz main_after_for@17
+    dig 1
+    dup
+    dig 2
+    dup
+    cover 3
+    extract_uint16
+    pushint 22
+    +
+    pushint 12
+    -
+    itob
+    extract 6 0
+    dig 2
+    swap
+    replace3
+    bury 3
+    intc_0 // 2
+    +
+    bury 1
+    b main_for_header@15
+
+main_after_for@17:
+    bytec_0 // "p"
+    box_del
+    pop
+    bytec_0 // "p"
+    dig 2
+    box_put
+    intc_1 // 1
+    return
+
+
+// _puya_lib.arc4.static_array_read_dynamic_element(array_head_and_tail: bytes, index: uint64, array_length: uint64) -> bytes:
+static_array_read_dynamic_element:
+    proto 3 1
+    frame_dig -2
+    intc_0 // 2
+    *
+    frame_dig -3
+    swap
+    extract_uint16
+    frame_dig -3
+    len
+    frame_dig -2
+    intc_1 // 1
+    +
+    dup
+    intc_0 // 2
+    *
+    frame_dig -3
+    swap
+    extract_uint16
+    frame_dig -1
+    uncover 2
+    -
+    select
+    frame_dig -3
+    cover 2
+    substring3
+    retsub

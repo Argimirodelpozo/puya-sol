@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/create_random.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 20
+    intcblock 32 1 20 0
     bytecblock 0xffffffffffffffffffffffffffffffffffffffff 0x151f7c75
     pushint 4096
     bzero
@@ -27,74 +27,22 @@ main_after_if_else@2:
     assert
     pushbytess 0x0dd16624 0x7258ce6b 0xc91046aa // method "addr()address", method "testRunner()(address,address)", method "testCalc()(address,address)"
     txna ApplicationArgs 0
-    match addr testRunner testCalc
+    match main_addr_route@5 main_testRunner_route@6 main_testCalc_route@7
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/create_random.sol.C.addr[routing]() -> void:
-addr:
+main_testCalc_route@7:
     txn GroupIndex
-    bz addr_ternary_false@3
+    bz main_ternary_false@13
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-addr_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_1 // 0x151f7c75
-    global CurrentApplicationAddress
-    concat
-    log
-    intc_1 // 1
-    return
-
-addr_ternary_false@3:
-    intc_2 // 0
-    b addr_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/create_random.sol.C.testRunner[routing]() -> void:
-testRunner:
-    txn GroupIndex
-    bz testRunner_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-testRunner_ternary_merge@4:
-    !
-    assert // not payable
-    load 0
-    pushbytes 0x60016000f3000000000000000000000000000000000000000000000000000000
-    replace2 0
-    store 0
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_1 // 1
-    return
-
-testRunner_ternary_false@3:
-    intc_2 // 0
-    b testRunner_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/create_random.sol.C.testCalc[routing]() -> void:
-testCalc:
-    txn GroupIndex
-    bz testCalc_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-testCalc_ternary_merge@4:
+main_ternary_merge@14:
     !
     assert // not payable
     global CurrentApplicationAddress
-    intc_3 // 20
+    intc_2 // 20
     bzero
     swap
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffff
@@ -104,9 +52,9 @@ testCalc_ternary_merge@4:
     concat
     dup
     len
-    intc_3 // 20
+    intc_2 // 20
     -
-    intc_3 // 20
+    intc_2 // 20
     extract3
     pushbytes 0xd694
     swap
@@ -182,6 +130,52 @@ testCalc_ternary_merge@4:
     intc_1 // 1
     return
 
-testCalc_ternary_false@3:
-    intc_2 // 0
-    b testCalc_ternary_merge@4
+main_ternary_false@13:
+    intc_3 // 0
+    b main_ternary_merge@14
+
+main_testRunner_route@6:
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    load 0
+    pushbytes 0x60016000f3000000000000000000000000000000000000000000000000000000
+    replace2 0
+    store 0
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@18:
+    intc_3 // 0
+    b main_ternary_merge@19
+
+main_addr_route@5:
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    bytec_1 // 0x151f7c75
+    global CurrentApplicationAddress
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@23:
+    intc_3 // 0
+    b main_ternary_merge@24

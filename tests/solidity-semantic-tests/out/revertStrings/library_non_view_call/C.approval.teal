@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/library_non_view_call.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1
+    intc_0 // 0
     pushint 4096
     bzero
     dup
@@ -30,20 +31,16 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/library_non_view_call.sol.C.f[routing]() -> void:
-f:
     intc_0 // 0
+    bury 1
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     itxn_begin
@@ -78,6 +75,6 @@ f_ternary_merge@4:
     intc_1 // 1
     return
 
-f_ternary_false@3:
+main_ternary_false@8:
     intc_0 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@9

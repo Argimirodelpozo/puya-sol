@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/conditional_expression_tuples.sol.test.approval_program() -> uint64:
 main:
     intcblock 1 0
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -30,11 +31,6 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/conditional_expression_tuples.sol.test.f[routing]() -> void:
-f:
     txna ApplicationArgs 1
     dup
     len
@@ -43,24 +39,25 @@ f:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
+    bury 1
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     dupn 2
     intc_0 // 1
     <=
     assert // ABI bool validation
-    bz f_ternary_false@6
+    bz main_ternary_false@11
     pushbytess 0x0000000000000000000000000000000000000000000000000000000000000001 0x0000000000000000000000000000000000000000000000000000000000000002
 
-f_ternary_merge@7:
+main_ternary_merge@12:
     concat
     pushbytes 0x151f7c75
     swap
@@ -69,10 +66,10 @@ f_ternary_merge@7:
     intc_0 // 1
     return
 
-f_ternary_false@6:
+main_ternary_false@11:
     pushbytess 0x0000000000000000000000000000000000000000000000000000000000000003 0x0000000000000000000000000000000000000000000000000000000000000004
-    b f_ternary_merge@7
+    b main_ternary_merge@12
 
-f_ternary_false@3:
+main_ternary_false@8:
     intc_1 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@9

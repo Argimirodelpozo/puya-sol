@@ -4,6 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/test_underscore_in_hex.sol.test.approval_program() -> uint64:
 main:
     intcblock 1 0 32
+    intc_1 // 0
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -30,12 +32,6 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/test_underscore_in_hex.sol.test.f[routing]() -> void:
-f:
-    intc_1 // 0
     txna ApplicationArgs 1
     dup
     len
@@ -44,14 +40,15 @@ f:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
+    bury 1
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     dupn 2
@@ -61,11 +58,11 @@ f_ternary_merge@4:
     pushint 20017429942836
     itob
     bury 3
-    bz f_ternary_false@6
+    bz main_ternary_false@11
     pushint 1193131
     itob
 
-f_ternary_merge@7:
+main_ternary_merge@12:
     dup
     len
     intc_2 // 32
@@ -81,10 +78,10 @@ f_ternary_merge@7:
     intc_0 // 1
     return
 
-f_ternary_false@6:
+main_ternary_false@11:
     dig 1
-    b f_ternary_merge@7
+    b main_ternary_merge@12
 
-f_ternary_false@3:
+main_ternary_false@8:
     intc_1 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@9

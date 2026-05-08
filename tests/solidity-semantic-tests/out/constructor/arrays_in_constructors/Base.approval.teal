@@ -5,6 +5,7 @@
 main:
     intcblock 1 32 0 2
     bytecblock "m_s" "__ctor_pending" "m_x" 0x151f7c75
+    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -30,12 +31,90 @@ main_after_if_else@2:
     assert
     pushbytess 0xd6c6857b 0xc8283ac6 0xce7531ad // method "__postInit(uint256,uint8[32][])void", method "part(uint256)address", method "m_x()uint256"
     txna ApplicationArgs 0
-    match __postInit part m_x
+    match main___postInit_route@5 main_part_route@6 main_m_x_route@7
     err
 
+main_m_x_route@7:
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Base.__postInit[routing]() -> void:
-__postInit:
+main_ternary_merge@14:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_2 // "m_x"
+    app_global_get_ex
+    assert // check m_x exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@13:
+    intc_2 // 0
+    b main_ternary_merge@14
+
+main_part_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    pushint 8
+    bzero
+    dig 1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_1 // 32
+    *
+    intc_3 // 2
+    +
+    bytec_0 // "m_s"
+    swap
+    intc_1 // 32
+    box_extract // on error: index access is out of bounds
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@18:
+    intc_2 // 0
+    b main_ternary_merge@19
+
+main___postInit_route@5:
     txna ApplicationArgs 1
     dup
     len
@@ -75,86 +154,3 @@ __postInit:
     box_put
     intc_0 // 1
     return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Base.part[routing]() -> void:
-part:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz part_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-part_ternary_merge@4:
-    !
-    assert // not payable
-    pushint 8
-    bzero
-    dig 1
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    intc_1 // 32
-    *
-    intc_3 // 2
-    +
-    bytec_0 // "m_s"
-    swap
-    intc_1 // 32
-    box_extract // on error: index access is out of bounds
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-part_ternary_false@3:
-    intc_2 // 0
-    b part_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Base.m_x[routing]() -> void:
-m_x:
-    txn GroupIndex
-    bz m_x_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-m_x_ternary_merge@4:
-    !
-    assert // not payable
-    intc_2 // 0
-    bytec_2 // "m_x"
-    app_global_get_ex
-    assert // check m_x exists
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    b|
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-m_x_ternary_false@3:
-    intc_2 // 0
-    b m_x_ternary_merge@4

@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/calldata_struct_assign.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64
+    intcblock 1 0 64
+    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -30,11 +31,6 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/calldata_struct_assign.sol.C.f[routing]() -> void:
-f:
     txna ApplicationArgs 1
     len
     pushint 32
@@ -42,25 +38,26 @@ f:
     assert // invalid number of bytes for S
     txna ApplicationArgs 2
     dup
+    bury 2
     len
-    intc_1 // 64
+    intc_2 // 64
     ==
     assert // invalid number of bytes for S2
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     load 0
     store 0
     dup
     extract 0 32
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004
@@ -72,6 +69,6 @@ f_ternary_merge@4:
     intc_0 // 1
     return
 
-f_ternary_false@3:
-    pushint 0
-    b f_ternary_merge@4
+main_ternary_false@8:
+    intc_1 // 0
+    b main_ternary_merge@9

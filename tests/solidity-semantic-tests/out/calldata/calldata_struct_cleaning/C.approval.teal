@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_struct_cleaning.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 0 1 32
+    intc_0 // 0
     pushint 4096
     bzero
     dup
@@ -15,7 +16,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -30,36 +31,32 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_struct_cleaning.sol.C.f[routing]() -> void:
-f:
     txna ApplicationArgs 1
     dup
+    bury 2
     len
     pushint 2
     ==
     assert // invalid number of bytes for S
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     dupn 2
-    intc_2 // 0
+    intc_0 // 0
     getbyte
     swap
     extract 1 1
     load 0
     uncover 2
     itob
-    intc_1 // 32
+    intc_2 // 32
     bzero
     pushint 31
     bzero
@@ -69,9 +66,9 @@ f_ternary_merge@4:
     concat
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     -
-    intc_1 // 32
+    intc_2 // 32
     extract3
     extract 0 32
     uncover 2
@@ -86,9 +83,9 @@ f_ternary_merge@4:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
-f_ternary_false@3:
-    intc_2 // 0
-    b f_ternary_merge@4
+main_ternary_false@8:
+    intc_0 // 0
+    b main_ternary_merge@9

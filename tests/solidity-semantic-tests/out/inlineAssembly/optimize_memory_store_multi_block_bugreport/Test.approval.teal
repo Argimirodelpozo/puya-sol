@@ -34,19 +34,14 @@ main_test_route@4:
     txn ApplicationID
     &&
     assert
-    b test
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/optimize_memory_store_multi_block_bugreport.sol.Test.test[routing]() -> void:
-test:
     txn GroupIndex
-    bz test_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-test_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     callsub myGetX
@@ -76,9 +71,9 @@ test_ternary_merge@4:
     intc_0 // 1
     return
 
-test_ternary_false@3:
+main_ternary_false@8:
     intc_2 // 0
-    b test_ternary_merge@4
+    b main_ternary_merge@9
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/optimize_memory_store_multi_block_bugreport.sol.Test.myGetX() -> bytes:

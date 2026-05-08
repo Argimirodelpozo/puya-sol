@@ -5,6 +5,7 @@
 main:
     intcblock 1 0
     bytecblock "__ctor_pending" "supportedInterfaces"
+    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -30,94 +31,25 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x027c6bc8 0xf76e680b 0x4e22a3ba // method "__postInit()void", method "is2D()bool", method "skinColor()string", method "supportsInterface(byte[4])bool"
     txna ApplicationArgs 0
-    match __postInit is2D skinColor supportsInterface
+    match main___postInit_route@5 main_is2D_route@6 main_skinColor_route@7 main_supportsInterface_route@8
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/lisa_interfaceId.sol.Lisa.__postInit[routing]() -> void:
-__postInit:
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_0 // "__ctor_pending"
-    intc_1 // 0
-    app_global_put
-    bytec_1 // "supportedInterfaces"
-    pushint 2
-    box_create
-    pop
-    intc_0 // 1
-    itob
-    pushbytes 0x737570706f72746564496e746572666163657316b061ba4fe22ca3625396a2540313c9ec0d04ae32005fa73413bc91dc62859c
-    dig 1
-    box_put
-    pushbytes 0x737570706f72746564496e74657266616365730e4ffbbc0b8cdbe19a1d26da8646da547cbfcc66515c071407f16bc828bf2684
-    swap
-    box_put
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/lisa_interfaceId.sol.Lisa.is2D[routing]() -> void:
-is2D:
-    txn GroupIndex
-    bz is2D_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-is2D_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c7580
-    log
-    intc_0 // 1
-    return
-
-is2D_ternary_false@3:
-    intc_1 // 0
-    b is2D_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/lisa_interfaceId.sol.Lisa.skinColor[routing]() -> void:
-skinColor:
-    txn GroupIndex
-    bz skinColor_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-skinColor_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c75000679656c6c6f77
-    log
-    intc_0 // 1
-    return
-
-skinColor_ternary_false@3:
-    intc_1 // 0
-    b skinColor_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/lisa_interfaceId.sol.Lisa.supportsInterface[routing]() -> void:
-supportsInterface:
+main_supportsInterface_route@8:
     txna ApplicationArgs 1
     dup
+    bury 2
     len
     pushint 4
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
     txn GroupIndex
-    bz supportsInterface_ternary_false@3
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-supportsInterface_ternary_merge@4:
+main_ternary_merge@15:
     !
     assert // not payable
     dup
@@ -143,6 +75,68 @@ supportsInterface_ternary_merge@4:
     intc_0 // 1
     return
 
-supportsInterface_ternary_false@3:
+main_ternary_false@14:
     intc_1 // 0
-    b supportsInterface_ternary_merge@4
+    b main_ternary_merge@15
+
+main_skinColor_route@7:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75000679656c6c6f77
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@19:
+    intc_1 // 0
+    b main_ternary_merge@20
+
+main_is2D_route@6:
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@24:
+    intc_1 // 0
+    b main_ternary_merge@25
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_1 // "supportedInterfaces"
+    pushint 2
+    box_create
+    pop
+    intc_0 // 1
+    itob
+    pushbytes 0x737570706f72746564496e746572666163657316b061ba4fe22ca3625396a2540313c9ec0d04ae32005fa73413bc91dc62859c
+    dig 1
+    box_put
+    pushbytes 0x737570706f72746564496e74657266616365730e4ffbbc0b8cdbe19a1d26da8646da547cbfcc66515c071407f16bc828bf2684
+    swap
+    box_put
+    intc_0 // 1
+    return

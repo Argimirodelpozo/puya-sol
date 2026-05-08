@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/positive_integers_to_signed.sol.test.approval_program() -> uint64:
 main:
     intcblock 0 1 64
-    bytecblock 0xff "x" "y" "q" 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0xffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytecblock 0xff "x" "y" "q" 0xffff 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     pushint 4096
     bzero
     dup
@@ -36,150 +36,18 @@ main_after_if_else@2:
     assert
     pushbytess 0x3f4abdfd 0x60d68bc1 0x8ebe3a21 // method "x()uint512", method "y()uint512", method "q()uint512"
     txna ApplicationArgs 0
-    match x y q
+    match main_x_route@5 main_y_route@6 main_q_route@7
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/positive_integers_to_signed.sol.test.x[routing]() -> void:
-x:
+main_q_route@7:
     txn GroupIndex
-    bz x_ternary_false@3
+    bz main_ternary_false@13
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-x_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 0
-    bytec_1 // "x"
-    app_global_get_ex
-    assert // check x exists
-    itob
-    bytec_0 // 0xff
-    b&
-    pushbytes 0x80
-    b>=
-    bz x_ternary_false@6
-    intc_0 // 0
-    bytec_1 // "x"
-    app_global_get_ex
-    assert // check x exists
-    itob
-    bytec_0 // 0xff
-    b&
-    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
-    b+
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-
-x_ternary_merge@7:
-    dup
-    len
-    intc_2 // 64
-    <=
-    assert // overflow
-    intc_2 // 64
-    bzero
-    b|
-    bytec 5 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-x_ternary_false@6:
-    intc_0 // 0
-    bytec_1 // "x"
-    app_global_get_ex
-    assert // check x exists
-    itob
-    bytec_0 // 0xff
-    b&
-    b x_ternary_merge@7
-
-x_ternary_false@3:
-    intc_0 // 0
-    b x_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/positive_integers_to_signed.sol.test.y[routing]() -> void:
-y:
-    txn GroupIndex
-    bz y_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-y_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 0
-    bytec_2 // "y"
-    app_global_get_ex
-    assert // check y exists
-    itob
-    bytec_0 // 0xff
-    b&
-    pushbytes 0x80
-    b>=
-    bz y_ternary_false@6
-    intc_0 // 0
-    bytec_2 // "y"
-    app_global_get_ex
-    assert // check y exists
-    itob
-    bytec_0 // 0xff
-    b&
-    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
-    b+
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-
-y_ternary_merge@7:
-    dup
-    len
-    intc_2 // 64
-    <=
-    assert // overflow
-    intc_2 // 64
-    bzero
-    b|
-    bytec 5 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-y_ternary_false@6:
-    intc_0 // 0
-    bytec_2 // "y"
-    app_global_get_ex
-    assert // check y exists
-    itob
-    bytec_0 // 0xff
-    b&
-    b y_ternary_merge@7
-
-y_ternary_false@3:
-    intc_0 // 0
-    b y_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/positive_integers_to_signed.sol.test.q[routing]() -> void:
-q:
-    txn GroupIndex
-    bz q_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-q_ternary_merge@4:
+main_ternary_merge@14:
     !
     assert // not payable
     intc_0 // 0
@@ -187,24 +55,24 @@ q_ternary_merge@4:
     app_global_get_ex
     assert // check q exists
     itob
-    bytec 6 // 0xffff
+    bytec 4 // 0xffff
     b&
     pushbytes 0x8000
     b>=
-    bz q_ternary_false@6
+    bz main_ternary_false@16
     intc_0 // 0
     bytec_3 // "q"
     app_global_get_ex
     assert // check q exists
     itob
-    bytec 6 // 0xffff
+    bytec 4 // 0xffff
     b&
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
     b+
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
-q_ternary_merge@7:
+main_ternary_merge@17:
     dup
     len
     intc_2 // 64
@@ -213,23 +81,149 @@ q_ternary_merge@7:
     intc_2 // 64
     bzero
     b|
-    bytec 5 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-q_ternary_false@6:
+main_ternary_false@16:
     intc_0 // 0
     bytec_3 // "q"
     app_global_get_ex
     assert // check q exists
     itob
-    bytec 6 // 0xffff
+    bytec 4 // 0xffff
     b&
-    b q_ternary_merge@7
+    b main_ternary_merge@17
 
-q_ternary_false@3:
+main_ternary_false@13:
     intc_0 // 0
-    b q_ternary_merge@4
+    b main_ternary_merge@14
+
+main_y_route@6:
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_2 // "y"
+    app_global_get_ex
+    assert // check y exists
+    itob
+    bytec_0 // 0xff
+    b&
+    pushbytes 0x80
+    b>=
+    bz main_ternary_false@24
+    intc_0 // 0
+    bytec_2 // "y"
+    app_global_get_ex
+    assert // check y exists
+    itob
+    bytec_0 // 0xff
+    b&
+    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b+
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+main_ternary_merge@25:
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@24:
+    intc_0 // 0
+    bytec_2 // "y"
+    app_global_get_ex
+    assert // check y exists
+    itob
+    bytec_0 // 0xff
+    b&
+    b main_ternary_merge@25
+
+main_ternary_false@21:
+    intc_0 // 0
+    b main_ternary_merge@22
+
+main_x_route@5:
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_1 // "x"
+    app_global_get_ex
+    assert // check x exists
+    itob
+    bytec_0 // 0xff
+    b&
+    pushbytes 0x80
+    b>=
+    bz main_ternary_false@32
+    intc_0 // 0
+    bytec_1 // "x"
+    app_global_get_ex
+    assert // check x exists
+    itob
+    bytec_0 // 0xff
+    b&
+    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b+
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+main_ternary_merge@33:
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@32:
+    intc_0 // 0
+    bytec_1 // "x"
+    app_global_get_ex
+    assert // check x exists
+    itob
+    bytec_0 // 0xff
+    b&
+    b main_ternary_merge@33
+
+main_ternary_false@29:
+    intc_0 // 0
+    b main_ternary_merge@30

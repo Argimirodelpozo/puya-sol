@@ -4,7 +4,9 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/mapping_getters.sol.test.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2
-    bytecblock "__ctor_pending" "m1" "m2" 0x 0x151f7c75
+    bytecblock "__ctor_pending" "m2" "m1" 0x 0x151f7c75
+    intc_2 // 0
+    dupn 5
     pushint 4096
     bzero
     dup
@@ -30,109 +32,32 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x76a2115c 0xfa6f9035 0x249cf2cf 0x47cd50d7 // method "__postInit()void", method "set(uint256,uint256)void", method "set(uint256,uint256,uint256)void", method "m1(uint256)uint256", method "m2(uint256,uint256)uint256"
     txna ApplicationArgs 0
-    match __postInit set(u256,u256) set(u256,u256,u256) m1 m2
+    match main___postInit_route@5 main_set_route@6 main_set_route@7 main_m1_route@8 main_m2_route@9
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/mapping_getters.sol.test.__postInit[routing]() -> void:
-__postInit:
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_0 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec_1 // "m1"
-    intc_3 // 2
-    box_create
-    pop
-    bytec_2 // "m2"
-    intc_3 // 2
-    box_create
-    pop
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/mapping_getters.sol.test.set(u256,u256)[routing]() -> void:
-set(u256,u256):
+main_m2_route@9:
     txna ApplicationArgs 1
     dup
+    bury 4
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
+    bury 3
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz set(u256,u256)_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-set(u256,u256)_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    dig 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    sha256
-    bytec_1 // "m1"
-    swap
-    concat
-    dup
-    box_del
-    pop
-    dig 1
-    box_put
-    intc_1 // 1
-    return
-
-set(u256,u256)_ternary_false@3:
-    intc_2 // 0
-    b set(u256,u256)_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/mapping_getters.sol.test.set(u256,u256,u256)[routing]() -> void:
-set(u256,u256,u256):
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 3
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz set(u256,u256,u256)_ternary_false@3
+    bz main_ternary_false@15
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-set(u256,u256,u256)_ternary_merge@4:
+main_ternary_merge@16:
     !
     assert // not payable
     intc_0 // 32
@@ -146,8 +71,8 @@ set(u256,u256,u256)_ternary_merge@4:
     -
     intc_0 // 32
     extract3
-    swap
-    dig 3
+    dig 1
+    dig 4
     concat
     dup
     len
@@ -157,7 +82,139 @@ set(u256,u256,u256)_ternary_merge@4:
     extract3
     concat
     sha256
-    bytec_2 // "m2"
+    bytec_1 // "m2"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@15:
+    intc_2 // 0
+    b main_ternary_merge@16
+
+main_m1_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@20
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@21:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_2 // "m1"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@20:
+    intc_2 // 0
+    b main_ternary_merge@21
+
+main_set_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 5
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    bury 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@25
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@26:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 6
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    dig 5
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    sha256
+    bytec_1 // "m2"
     swap
     concat
     dup
@@ -168,94 +225,38 @@ set(u256,u256,u256)_ternary_merge@4:
     intc_1 // 1
     return
 
-set(u256,u256,u256)_ternary_false@3:
+main_ternary_false@25:
     intc_2 // 0
-    b set(u256,u256,u256)_ternary_merge@4
+    b main_ternary_merge@26
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/mapping_getters.sol.test.m1[routing]() -> void:
-m1:
+main_set_route@6:
     txna ApplicationArgs 1
     dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz m1_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-m1_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    dup
-    dig 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    sha256
-    bytec_1 // "m1"
-    swap
-    concat
-    box_get
-    bytec_3 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    b|
-    bytec 4 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-m1_ternary_false@3:
-    intc_2 // 0
-    b m1_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/mapping_getters.sol.test.m2[routing]() -> void:
-m2:
-    txna ApplicationArgs 1
-    dup
+    bury 7
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
+    bury 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz m2_ternary_false@3
+    bz main_ternary_false@30
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-m2_ternary_merge@4:
+main_ternary_merge@31:
     !
     assert // not payable
     intc_0 // 32
     bzero
-    dup
-    dig 3
+    dig 6
     concat
     dup
     len
@@ -263,37 +264,36 @@ m2_ternary_merge@4:
     -
     intc_0 // 32
     extract3
-    dig 1
-    dig 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
     sha256
-    bytec_2 // "m2"
+    bytec_2 // "m1"
     swap
     concat
-    box_get
-    bytec_3 // 0x
-    cover 2
-    select
     dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    b|
-    bytec 4 // 0x151f7c75
-    swap
-    concat
-    log
+    box_del
+    pop
+    dig 1
+    box_put
     intc_1 // 1
     return
 
-m2_ternary_false@3:
+main_ternary_false@30:
     intc_2 // 0
-    b m2_ternary_merge@4
+    b main_ternary_merge@31
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_2 // "m1"
+    intc_3 // 2
+    box_create
+    pop
+    bytec_1 // "m2"
+    intc_3 // 2
+    box_create
+    pop
+    intc_1 // 1
+    return

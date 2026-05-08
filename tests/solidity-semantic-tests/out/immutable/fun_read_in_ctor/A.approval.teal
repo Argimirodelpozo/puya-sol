@@ -25,7 +25,7 @@ main:
     bytec_0 // "a"
     pushint 3
     app_global_put
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/fun_read_in_ctor.sol.A.readA
+    callsub readA
     bytec_1 // "x"
     swap
     app_global_put
@@ -40,20 +40,28 @@ main_after_if_else@2:
     assert
     pushbytess 0x262726a2 0xe25c1ad5 // method "readX()uint64", method "readA()uint64"
     txna ApplicationArgs 0
-    match readX readA
+    match main_readX_route@5 main_readA_route@6
     err
 
+main_readA_route@6:
+    callsub readA
+    itob
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/fun_read_in_ctor.sol.A.readX[routing]() -> void:
-readX:
+main_readX_route@5:
     txn GroupIndex
-    bz readX_ternary_false@3
+    bz main_ternary_false@14
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-readX_ternary_merge@4:
+main_ternary_merge@15:
     !
     assert // not payable
     intc_0 // 0
@@ -70,33 +78,21 @@ readX_ternary_merge@4:
     intc_1 // 1
     return
 
-readX_ternary_false@3:
+main_ternary_false@14:
     intc_0 // 0
-    b readX_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/fun_read_in_ctor.sol.A.readA[routing]() -> void:
-readA:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/fun_read_in_ctor.sol.A.readA
-    itob
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
+    b main_ternary_merge@15
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/fun_read_in_ctor.sol.A.readA() -> uint64:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/fun_read_in_ctor.sol.A.readA:
+readA:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/fun_read_in_ctor.sol.A.readA_ternary_false@2
+    bz readA_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/fun_read_in_ctor.sol.A.readA_ternary_merge@3:
+readA_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 0
@@ -107,6 +103,6 @@ readA:
     &
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/fun_read_in_ctor.sol.A.readA_ternary_false@2:
+readA_ternary_false@2:
     intc_0 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/fun_read_in_ctor.sol.A.readA_ternary_merge@3
+    b readA_ternary_merge@3

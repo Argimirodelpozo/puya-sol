@@ -5,6 +5,8 @@
 main:
     intcblock 2 32 0 1
     bytecblock "storageArray" "__ctor_pending" 0x068101
+    intc_2 // 0
+    dup
     pushint 4096
     bzero
     dup
@@ -30,56 +32,40 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x1dba4875 // method "__postInit()void", method "test_boundary_check(uint256,uint256)uint256"
     txna ApplicationArgs 0
-    match __postInit test_boundary_check
+    match main___postInit_route@5 main_test_boundary_check_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_boundary_test.sol.C.__postInit[routing]() -> void:
-__postInit:
-    bytec_1 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_1 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec_0 // "storageArray"
-    intc_0 // 2
-    box_create
-    pop
-    intc_3 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_boundary_test.sol.C.test_boundary_check[routing]() -> void:
-test_boundary_check:
+main_test_boundary_check_route@6:
     txna ApplicationArgs 1
     dup
+    bury 2
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
+    bury 3
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz test_boundary_check_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_3 // 1
     -
     gtxns Amount
 
-test_boundary_check_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
 
-test_boundary_check_while_top@22:
+main_while_top@30:
     pushint 170010
     global OpcodeBudget
     >
-    bz test_boundary_check_while_top@5
+    bz main_while_top@14
     itxn_begin
     pushint 6 // appl
     itxn_field TypeEnum
@@ -92,28 +78,28 @@ test_boundary_check_while_top@22:
     intc_2 // 0
     itxn_field Fee
     itxn_submit
-    b test_boundary_check_while_top@22
+    b main_while_top@30
 
-test_boundary_check_while_top@5:
+main_while_top@14:
     bytec_0 // "storageArray"
     box_len
     pop
     intc_0 // 2
     >=
-    bz test_boundary_check_ternary_false@7
+    bz main_ternary_false@16
     bytec_0 // "storageArray"
     box_len
     pop
 
-test_boundary_check_ternary_merge@8:
+main_ternary_merge@17:
     intc_0 // 2
     -
     intc_1 // 32
     /
     itob
-    dig 2
+    dig 1
     b<
-    bz test_boundary_check_while_top@11
+    bz main_while_top@19
     bytec_0 // "storageArray"
     intc_2 // 0
     intc_0 // 2
@@ -145,28 +131,28 @@ test_boundary_check_ternary_merge@8:
     intc_2 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     box_splice
-    b test_boundary_check_while_top@5
+    b main_while_top@14
 
-test_boundary_check_while_top@11:
+main_while_top@19:
     bytec_0 // "storageArray"
     box_len
     pop
     intc_0 // 2
     >=
-    bz test_boundary_check_ternary_false@13
+    bz main_ternary_false@21
     bytec_0 // "storageArray"
     box_len
     pop
 
-test_boundary_check_ternary_merge@14:
+main_ternary_merge@22:
     intc_0 // 2
     -
     intc_1 // 32
     /
     itob
-    dig 2
+    dig 1
     b>
-    bz test_boundary_check_after_while@16
+    bz main_after_while@24
     bytec_0 // "storageArray"
     intc_2 // 0
     intc_0 // 2
@@ -198,12 +184,12 @@ test_boundary_check_ternary_merge@14:
     bytec_0 // "storageArray"
     swap
     box_resize
-    b test_boundary_check_while_top@11
+    b main_while_top@19
 
-test_boundary_check_after_while@16:
+main_after_while@24:
     pushint 8
     bzero
-    dig 1
+    dig 2
     concat
     dup
     len
@@ -225,14 +211,28 @@ test_boundary_check_after_while@16:
     intc_3 // 1
     return
 
-test_boundary_check_ternary_false@13:
+main_ternary_false@21:
     intc_0 // 2
-    b test_boundary_check_ternary_merge@14
+    b main_ternary_merge@22
 
-test_boundary_check_ternary_false@7:
+main_ternary_false@16:
     intc_0 // 2
-    b test_boundary_check_ternary_merge@8
+    b main_ternary_merge@17
 
-test_boundary_check_ternary_false@3:
+main_ternary_false@12:
     intc_2 // 0
-    b test_boundary_check_ternary_merge@4
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_0 // "storageArray"
+    intc_0 // 2
+    box_create
+    pop
+    intc_3 // 1
+    return

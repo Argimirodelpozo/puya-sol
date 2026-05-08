@@ -30,11 +30,6 @@ main_test_route@4:
     txn ApplicationID
     &&
     assert
-    b test
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/copy_struct_with_nested_array_from_memory_to_memory.sol.C.test[routing]() -> void:
-test:
     txna ApplicationArgs 1
     dup
     len
@@ -56,13 +51,13 @@ test:
     ==
     assert // invalid number of bytes for S
     txn GroupIndex
-    bz test_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-test_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     pushbytes 0x151f7c750000030000
@@ -70,6 +65,6 @@ test_ternary_merge@4:
     intc_0 // 1
     return
 
-test_ternary_false@3:
+main_ternary_false@8:
     intc_1 // 0
-    b test_ternary_merge@4
+    b main_ternary_merge@9

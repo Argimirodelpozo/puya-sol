@@ -5,6 +5,7 @@
 main:
     intcblock 1 32 0
     bytecblock "__ctor_pending" "m" 0x6d96de8fc8c256fa1e1556d41af431cace7dca68707c78dd88c3acab8b17164c47
+    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -30,50 +31,25 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x8338d04b // method "__postInit()void", method "m(uint256)uint256"
     txna ApplicationArgs 0
-    match __postInit m
+    match main___postInit_route@5 main_m_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_abstract_constructor_param.sol.C.__postInit[routing]() -> void:
-__postInit:
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_0 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec_1 // "m"
-    pushint 2
-    box_create
-    pop
-    pushint 20
-    itob
-    bytec_2 // 0x6d96de8fc8c256fa1e1556d41af431cace7dca68707c78dd88c3acab8b17164c47
-    box_del
-    pop
-    bytec_2 // 0x6d96de8fc8c256fa1e1556d41af431cace7dca68707c78dd88c3acab8b17164c47
-    swap
-    box_put
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_abstract_constructor_param.sol.C.m[routing]() -> void:
-m:
+main_m_route@6:
     txna ApplicationArgs 1
     dup
+    bury 2
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz m_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-m_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     intc_1 // 32
@@ -108,6 +84,28 @@ m_ternary_merge@4:
     intc_0 // 1
     return
 
-m_ternary_false@3:
+main_ternary_false@12:
     intc_2 // 0
-    b m_ternary_merge@4
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_1 // "m"
+    pushint 2
+    box_create
+    pop
+    pushint 20
+    itob
+    bytec_2 // 0x6d96de8fc8c256fa1e1556d41af431cace7dca68707c78dd88c3acab8b17164c47
+    box_del
+    pop
+    bytec_2 // 0x6d96de8fc8c256fa1e1556d41af431cace7dca68707c78dd88c3acab8b17164c47
+    swap
+    box_put
+    intc_0 // 1
+    return

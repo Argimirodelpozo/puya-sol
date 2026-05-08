@@ -5,6 +5,7 @@
 main:
     intcblock 1 0
     bytecblock "__ctor_pending" "x"
+    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -30,24 +31,10 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x44df049f // method "__postInit()void", method "set(byte[])void"
     txna ApplicationArgs 0
-    match __postInit set
+    match main___postInit_route@5 main_set_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/empty_nonempty_empty.sol.Test.__postInit[routing]() -> void:
-__postInit:
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_0 // "__ctor_pending"
-    intc_1 // 0
-    app_global_put
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/empty_nonempty_empty.sol.Test.set[routing]() -> void:
-set:
+main_set_route@6:
     txna ApplicationArgs 1
     dup
     intc_1 // 0
@@ -59,14 +46,15 @@ set:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    bury 1
     txn GroupIndex
-    bz set_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-set_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     bytec_1 // "x"
@@ -78,6 +66,16 @@ set_ternary_merge@4:
     intc_0 // 1
     return
 
-set_ternary_false@3:
+main_ternary_false@12:
     intc_1 // 0
-    b set_ternary_merge@4
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    intc_0 // 1
+    return

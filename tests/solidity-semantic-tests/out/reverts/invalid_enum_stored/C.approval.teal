@@ -30,74 +30,18 @@ main_after_if_else@2:
     assert
     pushbytess 0x42b4872e 0x7337ace6 0xdf01cac5 // method "test_store()uint512", method "test_store_ok()uint256", method "x()uint64"
     txna ApplicationArgs 0
-    match test_store test_store_ok x
+    match main_test_store_route@5 main_test_store_ok_route@6 main_x_route@7
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_stored.sol.C.test_store[routing]() -> void:
-test_store:
+main_x_route@7:
     txn GroupIndex
-    bz test_store_ternary_false@3
+    bz main_ternary_false@13
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-test_store_ternary_merge@4:
-    !
-    assert // not payable
-    load 0
-    store 0
-    intc_0 // 0
-    assert // enum out of range
-    bytec_0 // "x"
-    pushint 5
-    app_global_put
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001
-    log
-    intc_1 // 1
-    return
-
-test_store_ternary_false@3:
-    intc_0 // 0
-    b test_store_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_stored.sol.C.test_store_ok[routing]() -> void:
-test_store_ok:
-    txn GroupIndex
-    bz test_store_ok_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-test_store_ok_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // "x"
-    intc_0 // 0
-    app_global_put
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
-    log
-    intc_1 // 1
-    return
-
-test_store_ok_ternary_false@3:
-    intc_0 // 0
-    b test_store_ok_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_stored.sol.C.x[routing]() -> void:
-x:
-    txn GroupIndex
-    bz x_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-x_ternary_merge@4:
+main_ternary_merge@14:
     !
     assert // not payable
     intc_0 // 0
@@ -112,6 +56,56 @@ x_ternary_merge@4:
     intc_1 // 1
     return
 
-x_ternary_false@3:
+main_ternary_false@13:
     intc_0 // 0
-    b x_ternary_merge@4
+    b main_ternary_merge@14
+
+main_test_store_ok_route@6:
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    bytec_0 // "x"
+    intc_0 // 0
+    app_global_put
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@18:
+    intc_0 // 0
+    b main_ternary_merge@19
+
+main_test_store_route@5:
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    load 0
+    store 0
+    intc_0 // 0
+    assert // enum out of range
+    bytec_0 // "x"
+    pushint 5
+    app_global_put
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@23:
+    intc_0 // 0
+    b main_ternary_merge@24

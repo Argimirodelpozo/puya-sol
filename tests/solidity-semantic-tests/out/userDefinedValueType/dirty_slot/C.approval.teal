@@ -3,8 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 8
-    bytecblock "b" 0x151f7c75 "a" "x" 0xf00e0bbc0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0e0c0ba098076054032001 "__dyn_storage"
+    intcblock 32 1 0 8
+    bytecblock "b" 0x151f7c75 "a" "x" "__dyn_storage"
+    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -25,7 +26,7 @@ main:
     bytec_3 // "x"
     pushbytes 0x0000
     app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -36,76 +37,104 @@ main_after_if_else@2:
     assert
     pushbytess 0x6d91e1e1 0x2119ef26 0x7244714e 0xf9522e2f 0xa91d6dec 0xa57f4fbe // method "write_a()void", method "write_b()void", method "get_b(uint256)byte[1]", method "a()uint64", method "b()byte[2]", method "x()byte[2]"
     txna ApplicationArgs 0
-    match write_a write_b get_b a b x
+    match main_write_a_route@5 main_write_b_route@6 main_get_b_route@7 main_a_route@8 main_b_route@9 main_x_route@10
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol.C.write_a[routing]() -> void:
-write_a:
+main_x_route@10:
     txn GroupIndex
-    bz write_a_ternary_false@3
+    bz main_ternary_false@16
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-write_a_ternary_merge@4:
+main_ternary_merge@17:
     !
     assert // not payable
-    load 0
     intc_2 // 0
-    bytec 4 // 0xf00e0bbc0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0e0c0ba098076054032001
-    callsub __storage_write
-    store 0
-    intc_0 // 1
+    bytec_3 // "x"
+    app_global_get_ex
+    assert // check x exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
     return
 
-write_a_ternary_false@3:
+main_ternary_false@16:
     intc_2 // 0
-    b write_a_ternary_merge@4
+    b main_ternary_merge@17
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol.C.write_b[routing]() -> void:
-write_b:
+main_b_route@9:
     txn GroupIndex
-    bz write_b_ternary_false@3
+    bz main_ternary_false@21
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-write_b_ternary_merge@4:
+main_ternary_merge@22:
     !
     assert // not payable
-    load 0
     intc_2 // 0
-    bytec 4 // 0xf00e0bbc0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0e0c0ba098076054032001
-    callsub __storage_write
-    store 0
-    intc_0 // 1
+    bytec_0 // "b"
+    app_global_get_ex
+    assert // check b exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
     return
 
-write_b_ternary_false@3:
+main_ternary_false@21:
     intc_2 // 0
-    b write_b_ternary_merge@4
+    b main_ternary_merge@22
 
+main_a_route@8:
+    txn GroupIndex
+    bz main_ternary_false@26
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol.C.get_b[routing]() -> void:
-get_b:
+main_ternary_merge@27:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_2 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@26:
+    intc_2 // 0
+    b main_ternary_merge@27
+
+main_get_b_route@7:
     txna ApplicationArgs 1
     dup
+    bury 2
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz get_b_ternary_false@3
+    bz main_ternary_false@31
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-get_b_ternary_merge@4:
+main_ternary_merge@32:
     !
     assert // not payable
     intc_2 // 0
@@ -121,119 +150,70 @@ get_b_ternary_merge@4:
     intc_3 // 8
     -
     extract_uint64
-    intc_0 // 1
+    intc_1 // 1
     extract3
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
-get_b_ternary_false@3:
+main_ternary_false@31:
     intc_2 // 0
-    b get_b_ternary_merge@4
+    b main_ternary_merge@32
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol.C.a[routing]() -> void:
-a:
+main_write_b_route@6:
     txn GroupIndex
-    bz a_ternary_false@3
+    bz main_ternary_false@36
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-a_ternary_merge@4:
+main_ternary_merge@42:
     !
     assert // not payable
+    load 0
     intc_2 // 0
-    bytec_2 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
+    pushbytes 0xf00e0bbc0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0e0c0ba098076054032001
+    callsub __storage_write
+    store 0
+    intc_1 // 1
     return
 
-a_ternary_false@3:
+main_ternary_false@36:
     intc_2 // 0
-    b a_ternary_merge@4
+    b main_ternary_merge@42
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol.C.b[routing]() -> void:
-b:
+main_write_a_route@5:
     txn GroupIndex
-    bz b_ternary_false@3
+    bz main_ternary_false@41
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
+    b main_ternary_merge@42
 
-b_ternary_merge@4:
-    !
-    assert // not payable
+main_ternary_false@41:
     intc_2 // 0
-    bytec_0 // "b"
-    app_global_get_ex
-    assert // check b exists
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-b_ternary_false@3:
-    intc_2 // 0
-    b b_ternary_merge@4
+    b main_ternary_merge@42
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol.C.x[routing]() -> void:
-x:
-    txn GroupIndex
-    bz x_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-x_ternary_merge@4:
-    !
-    assert // not payable
-    intc_2 // 0
-    bytec_3 // "x"
-    app_global_get_ex
-    assert // check x exists
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-x_ternary_false@3:
-    intc_2 // 0
-    b x_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol.C.__storage_write(__slot: uint64, __value: bytes) -> void:
+// __puyasol___storage_write(__slot: uint64, __value: bytes) -> void:
 __storage_write:
     proto 2 0
     frame_dig -2
     bnz __storage_write_else_body@2
-    intc_1 // 32
+    intc_0 // 32
     bzero
     frame_dig -1
     concat
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    intc_0 // 32
     extract3
     bytec_3 // "x"
     swap
@@ -243,15 +223,15 @@ __storage_write:
 __storage_write_else_body@2:
     frame_dig -2
     bnz __storage_write_else_body@4
-    intc_1 // 32
+    intc_0 // 32
     bzero
     frame_dig -1
     concat
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    intc_0 // 32
     extract3
     bytec_0 // "b"
     swap
@@ -261,15 +241,15 @@ __storage_write_else_body@2:
 __storage_write_else_body@4:
     frame_dig -2
     bnz __storage_write_else_body@6
-    intc_1 // 32
+    intc_0 // 32
     bzero
     frame_dig -1
     concat
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    intc_0 // 32
     extract3
     bytec_2 // "a"
     swap
@@ -277,26 +257,26 @@ __storage_write_else_body@4:
     retsub
 
 __storage_write_else_body@6:
-    bytec 5 // "__dyn_storage"
+    bytec 4 // "__dyn_storage"
     pushint 8192
     box_create
     pop
     frame_dig -2
     pushint 256
     %
-    intc_1 // 32
+    intc_0 // 32
     *
-    intc_1 // 32
+    intc_0 // 32
     bzero
     frame_dig -1
     concat
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    intc_0 // 32
     extract3
-    bytec 5 // "__dyn_storage"
+    bytec 4 // "__dyn_storage"
     cover 2
     box_replace
     retsub

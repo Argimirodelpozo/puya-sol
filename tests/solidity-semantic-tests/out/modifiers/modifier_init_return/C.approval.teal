@@ -4,6 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifier_init_return.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
+    intc_1 // 0
+    dup
     pushint 4096
     bzero
     dup
@@ -30,34 +32,29 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifier_init_return.sol.C.f[routing]() -> void:
-f:
-    intc_1 // 0
     txna ApplicationArgs 1
     dup
+    bury 3
     len
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    bury 2
-    dup
+    bury 1
+    dig 1
     pushbytes 0x0a
     b>=
-    bz f_after_if_else@8
+    bz main_after_if_else@11
     load 0
     pushint 24
     bzero
@@ -71,16 +68,16 @@ f_ternary_merge@4:
     replace2 64
     store 0
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    bury 2
+    bury 1
 
-f_after_if_else@8:
+main_after_if_else@11:
     pushbytes 0x151f7c75
-    dig 2
+    dig 1
     concat
     log
     intc_0 // 1
     return
 
-f_ternary_false@3:
+main_ternary_false@8:
     intc_1 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@9

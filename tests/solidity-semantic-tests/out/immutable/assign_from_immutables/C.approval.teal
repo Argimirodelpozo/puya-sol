@@ -53,128 +53,18 @@ main_after_if_else@2:
     assert
     pushbytess 0xb5251388 0xddb04781 0x311e3db1 0x4075f398 // method "a()uint256", method "b()uint256", method "c()uint256", method "d()uint256"
     txna ApplicationArgs 0
-    match a b c d
+    match main_a_route@5 main_b_route@6 main_c_route@7 main_d_route@8
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/assign_from_immutables.sol.C.a[routing]() -> void:
-a:
+main_d_route@8:
     txn GroupIndex
-    bz a_ternary_false@3
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-a_ternary_merge@4:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_2 // "a"
-    app_global_get_ex
-    assert // check a exists
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-a_ternary_false@3:
-    intc_1 // 0
-    b a_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/assign_from_immutables.sol.C.b[routing]() -> void:
-b:
-    txn GroupIndex
-    bz b_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-b_ternary_merge@4:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_3 // "b"
-    app_global_get_ex
-    assert // check b exists
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-b_ternary_false@3:
-    intc_1 // 0
-    b b_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/assign_from_immutables.sol.C.c[routing]() -> void:
-c:
-    txn GroupIndex
-    bz c_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-c_ternary_merge@4:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec 4 // "c"
-    app_global_get_ex
-    assert // check c exists
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-c_ternary_false@3:
-    intc_1 // 0
-    b c_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/assign_from_immutables.sol.C.d[routing]() -> void:
-d:
-    txn GroupIndex
-    bz d_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-d_ternary_merge@4:
+main_ternary_merge@15:
     !
     assert // not payable
     intc_1 // 0
@@ -196,6 +86,108 @@ d_ternary_merge@4:
     intc_0 // 1
     return
 
-d_ternary_false@3:
+main_ternary_false@14:
     intc_1 // 0
-    b d_ternary_merge@4
+    b main_ternary_merge@15
+
+main_c_route@7:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 4 // "c"
+    app_global_get_ex
+    assert // check c exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@19:
+    intc_1 // 0
+    b main_ternary_merge@20
+
+main_b_route@6:
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_3 // "b"
+    app_global_get_ex
+    assert // check b exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@24:
+    intc_1 // 0
+    b main_ternary_merge@25
+
+main_a_route@5:
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_2 // "a"
+    app_global_get_ex
+    assert // check a exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@29:
+    intc_1 // 0
+    b main_ternary_merge@30

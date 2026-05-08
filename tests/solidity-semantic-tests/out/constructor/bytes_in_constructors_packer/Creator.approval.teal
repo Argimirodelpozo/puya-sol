@@ -5,6 +5,8 @@
 main:
     intcblock 0 1 32 6
     bytecblock TMPL_APPROVAL_Main TMPL_CLEAR_Main
+    intc_0 // 0
+    dup
     pushint 4096
     bzero
     dup
@@ -31,13 +33,9 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_packer.sol.Creator.f[routing]() -> void:
-f:
     txna ApplicationArgs 1
     dup
+    bury 3
     len
     intc_2 // 32
     ==
@@ -53,14 +51,15 @@ f:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    bury 1
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     itxn_begin
@@ -161,6 +160,6 @@ f_ternary_merge@4:
     intc_1 // 1
     return
 
-f_ternary_false@3:
+main_ternary_false@8:
     intc_0 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@9

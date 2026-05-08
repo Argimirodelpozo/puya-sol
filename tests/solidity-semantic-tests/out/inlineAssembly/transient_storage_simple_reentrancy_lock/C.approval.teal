@@ -30,11 +30,6 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_simple_reentrancy_lock.sol.C.f[routing]() -> void:
-f:
     txna ApplicationArgs 1
     dup
     len
@@ -43,22 +38,22 @@ f:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_simple_reentrancy_lock.sol.C.f
+    callsub f
     intc_0 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_simple_reentrancy_lock.sol.C.f(simulateReentrancy: uint64) -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_simple_reentrancy_lock.sol.C.f:
+f:
     proto 1 0
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_simple_reentrancy_lock.sol.C.f_ternary_false@2
+    bz f_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_simple_reentrancy_lock.sol.C.f_ternary_merge@3:
+f_ternary_merge@3:
     !
     assert // not payable
     load 0
@@ -78,11 +73,11 @@ f:
     <=
     assert // ABI bool validation
     frame_dig -1
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_simple_reentrancy_lock.sol.C.f_after_if_else@7
+    bz f_after_if_else@7
     intc_1 // 0
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_simple_reentrancy_lock.sol.C.f
+    callsub f
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_simple_reentrancy_lock.sol.C.f_after_if_else@7:
+f_after_if_else@7:
     load 0
     load 5
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -91,6 +86,6 @@ f:
     store 0
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_simple_reentrancy_lock.sol.C.f_ternary_false@2:
+f_ternary_false@2:
     intc_1 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_simple_reentrancy_lock.sol.C.f_ternary_merge@3
+    b f_ternary_merge@3

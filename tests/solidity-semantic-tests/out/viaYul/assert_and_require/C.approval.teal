@@ -4,7 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/assert_and_require.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock 0x151f7c75
+    intc_1 // 0
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -27,28 +28,29 @@ main_after_if_else@2:
     assert
     pushbytess 0x8e9b83f0 0x2f78db63 // method "f(bool)bool", method "f2(bool)bool"
     txna ApplicationArgs 0
-    match f f2
+    match main_f_route@5 main_f2_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/assert_and_require.sol.C.f[routing]() -> void:
-f:
+main_f2_route@6:
     txna ApplicationArgs 1
-    dupn 2
+    dup
+    bury 3
+    dup
     len
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
+    bury 1
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@18:
     !
     assert // not payable
     dupn 2
@@ -56,50 +58,37 @@ f_ternary_merge@4:
     <=
     assert // ABI bool validation
     assert
-    bytec_0 // 0x151f7c75
+    pushbytes 0x151f7c75
     dig 2
     concat
     log
     intc_0 // 1
     return
 
-f_ternary_false@3:
+main_ternary_false@12:
     intc_1 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@18
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/assert_and_require.sol.C.f2[routing]() -> void:
-f2:
+main_f_route@5:
     txna ApplicationArgs 1
-    dupn 2
+    dup
+    bury 3
+    dup
     len
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
+    bury 1
     txn GroupIndex
-    bz f2_ternary_false@3
+    bz main_ternary_false@17
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
+    b main_ternary_merge@18
 
-f2_ternary_merge@4:
-    !
-    assert // not payable
-    dupn 2
-    intc_0 // 1
-    <=
-    assert // ABI bool validation
-    assert
-    bytec_0 // 0x151f7c75
-    dig 2
-    concat
-    log
-    intc_0 // 1
-    return
-
-f2_ternary_false@3:
+main_ternary_false@17:
     intc_1 // 0
-    b f2_ternary_merge@4
+    b main_ternary_merge@18

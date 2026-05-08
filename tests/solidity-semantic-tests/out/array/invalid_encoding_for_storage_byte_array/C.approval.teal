@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "x" 0x "y" 0x151f7c75 "__ctor_pending" "abc" "1234567890123456789012345678901234567" "__dyn_storage"
+    bytecblock "x" 0x "y" 0x151f7c75 "__ctor_pending" "1234567890123456789012345678901234567" "abc" "__dyn_storage"
     pushint 4096
     bzero
     dup
@@ -30,101 +30,51 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x21a3e3ca 0xf7ec315e 0x63e41659 0x1f069c3d 0x4da6f8b5 0x5c30c8bb 0xf85c660f 0x6cfd3705 0x8f734345 0x805b3959 0xa76588a9 0xd2e5768f 0x4ddc30fd 0x4e2d5148 0x8f76f318 0x0bdce004 0xa5224bde // method "__postInit()void", method "invalidateXShort()void", method "invalidateXLong()void", method "abiEncode()byte[]", method "abiEncodePacked()byte[]", method "copyToMemory()byte[]", method "indexAccess()byte[1]", method "assignTo()void", method "assignToLong()void", method "copyToStorage()void", method "copyFromStorageShort()void", method "copyFromStorageLong()void", method "arrayPop()void", method "arrayPush()void", method "arrayPushEmpty()void", method "del()void", method "x()byte[]", method "y()byte[]"
     txna ApplicationArgs 0
-    match __postInit invalidateXShort invalidateXLong abiEncode abiEncodePacked copyToMemory indexAccess assignTo assignToLong copyToStorage copyFromStorageShort copyFromStorageLong arrayPop arrayPush arrayPushEmpty del x y
+    match main___postInit_route@5 main_invalidateXShort_route@6 main_invalidateXLong_route@7 main_abiEncode_route@8 main_abiEncodePacked_route@9 main_copyToMemory_route@10 main_indexAccess_route@11 main_assignTo_route@12 main_assignToLong_route@13 main_copyToStorage_route@14 main_copyFromStorageShort_route@15 main_copyFromStorageLong_route@16 main_arrayPop_route@17 main_arrayPush_route@18 main_arrayPushEmpty_route@19 main_del_route@20 main_x_route@21 main_y_route@22
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.__postInit[routing]() -> void:
-__postInit:
-    bytec 4 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec 4 // "__ctor_pending"
-    intc_1 // 0
-    app_global_put
-    bytec_0 // "x"
-    pushint 3
-    box_create
-    pop
-    bytec_0 // "x"
-    bytec 5 // "abc"
-    box_put
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.invalidateXShort[routing]() -> void:
-invalidateXShort:
+main_y_route@22:
     txn GroupIndex
-    bz invalidateXShort_ternary_false@3
+    bz main_ternary_false@28
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-invalidateXShort_ternary_merge@4:
+main_ternary_merge@29:
     !
     assert // not payable
-    load 0
-    intc_1 // 0
-    pushbytes 0x40
-    callsub __storage_write
-    store 0
     bytec_2 // "y"
-    box_del
-    pop
-    bytec_2 // "y"
+    box_get
     bytec_1 // 0x
-    box_put
+    cover 2
+    select
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
     intc_0 // 1
     return
 
-invalidateXShort_ternary_false@3:
+main_ternary_false@28:
     intc_1 // 0
-    b invalidateXShort_ternary_merge@4
+    b main_ternary_merge@29
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.invalidateXLong[routing]() -> void:
-invalidateXLong:
+main_x_route@21:
     txn GroupIndex
-    bz invalidateXLong_ternary_false@3
+    bz main_ternary_false@33
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-invalidateXLong_ternary_merge@4:
-    !
-    assert // not payable
-    load 0
-    intc_1 // 0
-    pushbytes 0x05
-    callsub __storage_write
-    store 0
-    bytec_2 // "y"
-    box_del
-    pop
-    bytec_2 // "y"
-    bytec_1 // 0x
-    box_put
-    intc_0 // 1
-    return
-
-invalidateXLong_ternary_false@3:
-    intc_1 // 0
-    b invalidateXLong_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.abiEncode[routing]() -> void:
-abiEncode:
-    txn GroupIndex
-    bz abiEncode_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-abiEncode_ternary_merge@4:
+main_ternary_merge@34:
     !
     assert // not payable
     bytec_0 // "x"
@@ -145,21 +95,43 @@ abiEncode_ternary_merge@4:
     intc_0 // 1
     return
 
-abiEncode_ternary_false@3:
+main_ternary_false@33:
     intc_1 // 0
-    b abiEncode_ternary_merge@4
+    b main_ternary_merge@34
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.abiEncodePacked[routing]() -> void:
-abiEncodePacked:
+main_del_route@20:
     txn GroupIndex
-    bz abiEncodePacked_ternary_false@3
+    bz main_ternary_false@38
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-abiEncodePacked_ternary_merge@4:
+main_ternary_merge@39:
+    !
+    assert // not payable
+    bytec_0 // "x"
+    box_del
+    pop
+    bytec_0 // "x"
+    bytec_1 // 0x
+    box_put
+    intc_0 // 1
+    return
+
+main_ternary_false@38:
+    intc_1 // 0
+    b main_ternary_merge@39
+
+main_arrayPushEmpty_route@19:
+    txn GroupIndex
+    bz main_ternary_false@43
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@44:
     !
     assert // not payable
     bytec_0 // "x"
@@ -167,34 +139,30 @@ abiEncodePacked_ternary_merge@4:
     bytec_1 // 0x
     cover 2
     select
-    dup
-    len
-    itob
-    extract 6 2
-    swap
+    pushbytes 0x00
     concat
-    bytec_3 // 0x151f7c75
+    bytec_0 // "x"
+    box_del
+    pop
+    bytec_0 // "x"
     swap
-    concat
-    log
+    box_put
     intc_0 // 1
     return
 
-abiEncodePacked_ternary_false@3:
+main_ternary_false@43:
     intc_1 // 0
-    b abiEncodePacked_ternary_merge@4
+    b main_ternary_merge@44
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.copyToMemory[routing]() -> void:
-copyToMemory:
+main_arrayPush_route@18:
     txn GroupIndex
-    bz copyToMemory_ternary_false@3
+    bz main_ternary_false@48
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-copyToMemory_ternary_merge@4:
+main_ternary_merge@49:
     !
     assert // not payable
     bytec_0 // "x"
@@ -202,211 +170,30 @@ copyToMemory_ternary_merge@4:
     bytec_1 // 0x
     cover 2
     select
-    dup
-    len
-    itob
-    extract 6 2
-    swap
+    pushbytes 0x74
     concat
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-copyToMemory_ternary_false@3:
-    intc_1 // 0
-    b copyToMemory_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.indexAccess[routing]() -> void:
-indexAccess:
-    txn GroupIndex
-    bz indexAccess_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-indexAccess_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // "x"
-    box_get
-    bytec_1 // 0x
-    cover 2
-    select
-    extract 0 1
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-indexAccess_ternary_false@3:
-    intc_1 // 0
-    b indexAccess_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.assignTo[routing]() -> void:
-assignTo:
-    txn GroupIndex
-    bz assignTo_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-assignTo_ternary_merge@4:
-    !
-    assert // not payable
     bytec_0 // "x"
     box_del
     pop
     bytec_0 // "x"
-    pushbytes "def"
-    box_put
-    intc_0 // 1
-    return
-
-assignTo_ternary_false@3:
-    intc_1 // 0
-    b assignTo_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.assignToLong[routing]() -> void:
-assignToLong:
-    txn GroupIndex
-    bz assignToLong_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-assignToLong_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // "x"
-    box_del
-    pop
-    bytec_0 // "x"
-    bytec 6 // "1234567890123456789012345678901234567"
-    box_put
-    intc_0 // 1
-    return
-
-assignToLong_ternary_false@3:
-    intc_1 // 0
-    b assignToLong_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.copyToStorage[routing]() -> void:
-copyToStorage:
-    txn GroupIndex
-    bz copyToStorage_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-copyToStorage_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // "x"
-    box_get
-    bytec_1 // 0x
-    cover 2
-    select
-    bytec_2 // "y"
-    box_del
-    pop
-    bytec_2 // "y"
     swap
     box_put
     intc_0 // 1
     return
 
-copyToStorage_ternary_false@3:
+main_ternary_false@48:
     intc_1 // 0
-    b copyToStorage_ternary_merge@4
+    b main_ternary_merge@49
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.copyFromStorageShort[routing]() -> void:
-copyFromStorageShort:
+main_arrayPop_route@17:
     txn GroupIndex
-    bz copyFromStorageShort_ternary_false@3
+    bz main_ternary_false@53
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-copyFromStorageShort_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_2 // "y"
-    box_del
-    pop
-    bytec_2 // "y"
-    bytec 5 // "abc"
-    box_put
-    bytec_0 // "x"
-    box_del
-    pop
-    bytec_0 // "x"
-    bytec 5 // "abc"
-    box_put
-    intc_0 // 1
-    return
-
-copyFromStorageShort_ternary_false@3:
-    intc_1 // 0
-    b copyFromStorageShort_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.copyFromStorageLong[routing]() -> void:
-copyFromStorageLong:
-    txn GroupIndex
-    bz copyFromStorageLong_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-copyFromStorageLong_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_2 // "y"
-    box_del
-    pop
-    bytec_2 // "y"
-    bytec 6 // "1234567890123456789012345678901234567"
-    box_put
-    bytec_0 // "x"
-    box_del
-    pop
-    bytec_0 // "x"
-    bytec 6 // "1234567890123456789012345678901234567"
-    box_put
-    intc_0 // 1
-    return
-
-copyFromStorageLong_ternary_false@3:
-    intc_1 // 0
-    b copyFromStorageLong_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.arrayPop[routing]() -> void:
-arrayPop:
-    txn GroupIndex
-    bz arrayPop_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-arrayPop_ternary_merge@4:
+main_ternary_merge@54:
     !
     assert // not payable
     bytec_0 // "x"
@@ -430,151 +217,187 @@ arrayPop_ternary_merge@4:
     intc_0 // 1
     return
 
-arrayPop_ternary_false@3:
+main_ternary_false@53:
     intc_1 // 0
-    b arrayPop_ternary_merge@4
+    b main_ternary_merge@54
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.arrayPush[routing]() -> void:
-arrayPush:
+main_copyFromStorageLong_route@16:
     txn GroupIndex
-    bz arrayPush_ternary_false@3
+    bz main_ternary_false@58
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-arrayPush_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // "x"
-    box_get
-    bytec_1 // 0x
-    cover 2
-    select
-    pushbytes 0x74
-    concat
-    bytec_0 // "x"
-    box_del
-    pop
-    bytec_0 // "x"
-    swap
-    box_put
-    intc_0 // 1
-    return
-
-arrayPush_ternary_false@3:
-    intc_1 // 0
-    b arrayPush_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.arrayPushEmpty[routing]() -> void:
-arrayPushEmpty:
-    txn GroupIndex
-    bz arrayPushEmpty_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-arrayPushEmpty_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // "x"
-    box_get
-    bytec_1 // 0x
-    cover 2
-    select
-    pushbytes 0x00
-    concat
-    bytec_0 // "x"
-    box_del
-    pop
-    bytec_0 // "x"
-    swap
-    box_put
-    intc_0 // 1
-    return
-
-arrayPushEmpty_ternary_false@3:
-    intc_1 // 0
-    b arrayPushEmpty_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.del[routing]() -> void:
-del:
-    txn GroupIndex
-    bz del_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-del_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // "x"
-    box_del
-    pop
-    bytec_0 // "x"
-    bytec_1 // 0x
-    box_put
-    intc_0 // 1
-    return
-
-del_ternary_false@3:
-    intc_1 // 0
-    b del_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.x[routing]() -> void:
-x:
-    txn GroupIndex
-    bz x_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-x_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // "x"
-    box_get
-    bytec_1 // 0x
-    cover 2
-    select
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-x_ternary_false@3:
-    intc_1 // 0
-    b x_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.y[routing]() -> void:
-y:
-    txn GroupIndex
-    bz y_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-y_ternary_merge@4:
+main_ternary_merge@59:
     !
     assert // not payable
     bytec_2 // "y"
+    box_del
+    pop
+    bytec_2 // "y"
+    bytec 5 // "1234567890123456789012345678901234567"
+    box_put
+    bytec_0 // "x"
+    box_del
+    pop
+    bytec_0 // "x"
+    bytec 5 // "1234567890123456789012345678901234567"
+    box_put
+    intc_0 // 1
+    return
+
+main_ternary_false@58:
+    intc_1 // 0
+    b main_ternary_merge@59
+
+main_copyFromStorageShort_route@15:
+    txn GroupIndex
+    bz main_ternary_false@63
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@64:
+    !
+    assert // not payable
+    bytec_2 // "y"
+    box_del
+    pop
+    bytec_2 // "y"
+    bytec 6 // "abc"
+    box_put
+    bytec_0 // "x"
+    box_del
+    pop
+    bytec_0 // "x"
+    bytec 6 // "abc"
+    box_put
+    intc_0 // 1
+    return
+
+main_ternary_false@63:
+    intc_1 // 0
+    b main_ternary_merge@64
+
+main_copyToStorage_route@14:
+    txn GroupIndex
+    bz main_ternary_false@68
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@69:
+    !
+    assert // not payable
+    bytec_0 // "x"
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    bytec_2 // "y"
+    box_del
+    pop
+    bytec_2 // "y"
+    swap
+    box_put
+    intc_0 // 1
+    return
+
+main_ternary_false@68:
+    intc_1 // 0
+    b main_ternary_merge@69
+
+main_assignToLong_route@13:
+    txn GroupIndex
+    bz main_ternary_false@73
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@74:
+    !
+    assert // not payable
+    bytec_0 // "x"
+    box_del
+    pop
+    bytec_0 // "x"
+    bytec 5 // "1234567890123456789012345678901234567"
+    box_put
+    intc_0 // 1
+    return
+
+main_ternary_false@73:
+    intc_1 // 0
+    b main_ternary_merge@74
+
+main_assignTo_route@12:
+    txn GroupIndex
+    bz main_ternary_false@78
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@79:
+    !
+    assert // not payable
+    bytec_0 // "x"
+    box_del
+    pop
+    bytec_0 // "x"
+    pushbytes "def"
+    box_put
+    intc_0 // 1
+    return
+
+main_ternary_false@78:
+    intc_1 // 0
+    b main_ternary_merge@79
+
+main_indexAccess_route@11:
+    txn GroupIndex
+    bz main_ternary_false@83
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@84:
+    !
+    assert // not payable
+    bytec_0 // "x"
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    extract 0 1
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@83:
+    intc_1 // 0
+    b main_ternary_merge@84
+
+main_copyToMemory_route@10:
+    txn GroupIndex
+    bz main_ternary_false@88
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@89:
+    !
+    assert // not payable
+    bytec_0 // "x"
     box_get
     bytec_1 // 0x
     cover 2
@@ -592,12 +415,153 @@ y_ternary_merge@4:
     intc_0 // 1
     return
 
-y_ternary_false@3:
+main_ternary_false@88:
     intc_1 // 0
-    b y_ternary_merge@4
+    b main_ternary_merge@89
+
+main_abiEncodePacked_route@9:
+    txn GroupIndex
+    bz main_ternary_false@93
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@94:
+    !
+    assert // not payable
+    bytec_0 // "x"
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@93:
+    intc_1 // 0
+    b main_ternary_merge@94
+
+main_abiEncode_route@8:
+    txn GroupIndex
+    bz main_ternary_false@98
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@99:
+    !
+    assert // not payable
+    bytec_0 // "x"
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@98:
+    intc_1 // 0
+    b main_ternary_merge@99
+
+main_invalidateXLong_route@7:
+    txn GroupIndex
+    bz main_ternary_false@103
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@104:
+    !
+    assert // not payable
+    load 0
+    intc_1 // 0
+    pushbytes 0x05
+    callsub __storage_write
+    store 0
+    bytec_2 // "y"
+    box_del
+    pop
+    bytec_2 // "y"
+    bytec_1 // 0x
+    box_put
+    intc_0 // 1
+    return
+
+main_ternary_false@103:
+    intc_1 // 0
+    b main_ternary_merge@104
+
+main_invalidateXShort_route@6:
+    txn GroupIndex
+    bz main_ternary_false@108
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@109:
+    !
+    assert // not payable
+    load 0
+    intc_1 // 0
+    pushbytes 0x40
+    callsub __storage_write
+    store 0
+    bytec_2 // "y"
+    box_del
+    pop
+    bytec_2 // "y"
+    bytec_1 // 0x
+    box_put
+    intc_0 // 1
+    return
+
+main_ternary_false@108:
+    intc_1 // 0
+    b main_ternary_merge@109
+
+main___postInit_route@5:
+    bytec 4 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 4 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_0 // "x"
+    pushint 3
+    box_create
+    pop
+    bytec_0 // "x"
+    bytec 6 // "abc"
+    box_put
+    intc_0 // 1
+    return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.__storage_write(__slot: uint64, __value: bytes) -> void:
+// __puyasol___storage_write(__slot: uint64, __value: bytes) -> void:
 __storage_write:
     proto 2 0
     frame_dig -2

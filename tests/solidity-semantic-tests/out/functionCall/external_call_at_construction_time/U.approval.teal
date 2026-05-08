@@ -14,7 +14,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_at_construction_time.sol.U.f
+    callsub f
     pop
     pushint 1
     return
@@ -31,12 +31,7 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_at_construction_time.sol.U.f[routing]() -> void:
-f:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_at_construction_time.sol.U.f
+    callsub f
     pushbytes 0x151f7c75
     swap
     concat
@@ -46,20 +41,20 @@ f:
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_at_construction_time.sol.U.f() -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_at_construction_time.sol.U.f:
+f:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_at_construction_time.sol.U.f_ternary_false@2
+    bz f_ternary_false@2
     txn GroupIndex
     pushint 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_at_construction_time.sol.U.f_ternary_merge@3:
+f_ternary_merge@3:
     !
     assert // not payable
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_at_construction_time.sol.U.f_ternary_false@2:
+f_ternary_false@2:
     pushint 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_at_construction_time.sol.U.f_ternary_merge@3
+    b f_ternary_merge@3

@@ -26,12 +26,30 @@ main_after_if_else@2:
     assert
     pushbytess 0xc5e435fe 0x6dd6bff0 // method "callMeMaybe((uint256[],uint256,string,byte[],uint8),uint256,string)void", method "callExternal()bool"
     txna ApplicationArgs 0
-    match callMeMaybe callExternal
+    match main_callMeMaybe_route@5 main_callExternal_route@6
     err
 
+main_callExternal_route@6:
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call.sol.C.callMeMaybe[routing]() -> void:
-callMeMaybe:
+main_ternary_merge@13:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@12:
+    intc_0 // 0
+    b main_ternary_merge@13
+
+main_callMeMaybe_route@5:
     txna ApplicationArgs 1
     dup
     len
@@ -103,25 +121,3 @@ callMeMaybe:
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     intc_1 // 1
     return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call.sol.C.callExternal[routing]() -> void:
-callExternal:
-    txn GroupIndex
-    bz callExternal_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-callExternal_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c7580
-    log
-    intc_1 // 1
-    return
-
-callExternal_ternary_false@3:
-    intc_0 // 0
-    b callExternal_ternary_merge@4

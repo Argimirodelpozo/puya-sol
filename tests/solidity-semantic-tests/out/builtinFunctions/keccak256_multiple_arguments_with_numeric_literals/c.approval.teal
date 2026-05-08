@@ -3,7 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/keccak256_multiple_arguments_with_numeric_literals.sol.c.approval_program() -> uint64:
 main:
-    intcblock 32 1 65535
+    intcblock 32 1 0 65535
+    intc_2 // 0
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -30,13 +32,9 @@ main_foo_route@4:
     txn ApplicationID
     &&
     assert
-    b foo
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/keccak256_multiple_arguments_with_numeric_literals.sol.c.foo[routing]() -> void:
-foo:
     txna ApplicationArgs 1
     dup
+    bury 3
     len
     intc_0 // 32
     ==
@@ -48,21 +46,22 @@ foo:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    bury 1
     txn GroupIndex
-    bz foo_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-foo_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     dupn 2
-    intc_2 // 65535
+    intc_3 // 65535
     <=
     assert // ABI validation
-    intc_2 // 65535
+    intc_3 // 65535
     &
     intc_0 // 32
     bzero
@@ -88,6 +87,6 @@ foo_ternary_merge@4:
     intc_1 // 1
     return
 
-foo_ternary_false@3:
-    pushint 0
-    b foo_ternary_merge@4
+main_ternary_false@8:
+    intc_2 // 0
+    b main_ternary_merge@9

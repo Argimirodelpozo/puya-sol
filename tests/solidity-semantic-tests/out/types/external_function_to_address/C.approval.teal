@@ -5,6 +5,7 @@
 main:
     intcblock 1 0
     bytecblock 0x151f7c75
+    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -27,20 +28,52 @@ main_after_if_else@2:
     assert
     pushbytess 0x4b4fb052 0x069291fa // method "f()bool", method "g(uint8[12])address"
     txna ApplicationArgs 0
-    match f g
+    match main_f_route@5 main_g_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/external_function_to_address.sol.C.f[routing]() -> void:
-f:
+main_g_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    pushint 12
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 12>
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@13:
+    !
+    assert // not payable
+    pushint 24
+    bzero
+    dig 1
+    extract 0 8
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@12:
+    intc_1 // 0
+    b main_ternary_merge@13
+
+main_f_route@5:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
     !
     assert // not payable
     global CurrentApplicationAddress
@@ -57,41 +90,6 @@ f_ternary_merge@4:
     intc_0 // 1
     return
 
-f_ternary_false@3:
+main_ternary_false@17:
     intc_1 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/external_function_to_address.sol.C.g[routing]() -> void:
-g:
-    txna ApplicationArgs 1
-    dup
-    len
-    pushint 12
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 12>
-    txn GroupIndex
-    bz g_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-g_ternary_merge@4:
-    !
-    assert // not payable
-    pushint 24
-    bzero
-    dig 1
-    extract 0 8
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-g_ternary_false@3:
-    intc_1 // 0
-    b g_ternary_merge@4
+    b main_ternary_merge@18

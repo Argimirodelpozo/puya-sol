@@ -4,6 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_switch.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 64 32 0
+    intc_3 // 0
+    dup
     pushint 4096
     bzero
     dup
@@ -30,26 +32,21 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_switch.sol.C.f[routing]() -> void:
-f:
-    intc_3 // 0
     txna ApplicationArgs 1
     dup
+    bury 2
     len
     intc_1 // 64
     ==
     assert // invalid number of bytes for arc4.uint512
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     load 0
@@ -66,10 +63,10 @@ f_ternary_merge@4:
     extract3
     pushbytess 0x0000000000000000000000000000000000000000000000000000000000000001 0x0000000000000000000000000000000000000000000000000000000000000002
     uncover 2
-    match f_switch_case_0@5 f_switch_case_1@6
+    match main_switch_case_0@10 main_switch_case_1@11
     pushbytes 0x02
 
-f_switch_case_next@8:
+main_switch_case_next@13:
     dig 2
     store 0
     dup
@@ -87,14 +84,14 @@ f_switch_case_next@8:
     intc_0 // 1
     return
 
-f_switch_case_1@6:
+main_switch_case_1@11:
     pushbytes 0x09
-    b f_switch_case_next@8
+    b main_switch_case_next@13
 
-f_switch_case_0@5:
+main_switch_case_0@10:
     pushbytes 0x08
-    b f_switch_case_next@8
+    b main_switch_case_next@13
 
-f_ternary_false@3:
+main_ternary_false@8:
     intc_3 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@9

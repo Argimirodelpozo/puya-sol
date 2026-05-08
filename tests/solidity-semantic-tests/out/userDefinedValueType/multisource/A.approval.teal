@@ -1,10 +1,12 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_jxty5xqx/B.sol.A.approval_program() -> uint64:
+// /tmp/multisource_x768077c/B.sol.A.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 0 32
     bytecblock 0x151f7c75
+    intc_1 // 0
+    dup
     pushint 4096
     bzero
     dup
@@ -27,56 +29,25 @@ main_after_if_else@2:
     assert
     pushbytess 0x1928cd24 0x6933f080 // method "f(uint256)uint256", method "f(address)address"
     txna ApplicationArgs 0
-    match f(i256) f(addr)
+    match main_f_route@5 main_f_route@6
     err
 
-
-// /tmp/multisource_jxty5xqx/B.sol.A.f(i256)[routing]() -> void:
-f(i256):
+main_f_route@6:
     txna ApplicationArgs 1
     dup
+    bury 2
     len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz f(i256)_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-f(i256)_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // 0x151f7c75
-    dig 1
-    concat
-    log
-    intc_0 // 1
-    return
-
-f(i256)_ternary_false@3:
-    intc_2 // 0
-    b f(i256)_ternary_merge@4
-
-
-// /tmp/multisource_jxty5xqx/B.sol.A.f(addr)[routing]() -> void:
-f(addr):
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz f(addr)_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f(addr)_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     bytec_0 // 0x151f7c75
@@ -86,6 +57,35 @@ f(addr)_ternary_merge@4:
     intc_0 // 1
     return
 
-f(addr)_ternary_false@3:
-    intc_2 // 0
-    b f(addr)_ternary_merge@4
+main_ternary_false@12:
+    intc_1 // 0
+    b main_ternary_merge@13
+
+main_f_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    bytec_0 // 0x151f7c75
+    dig 2
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@17:
+    intc_1 // 0
+    b main_ternary_merge@18

@@ -4,6 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/checked_modifier_called_by_unchecked.sol.C.approval_program() -> uint64:
 main:
     intcblock 65535 1 8
+    pushbytes ""
+    dupn 2
     pushint 4096
     bzero
     dup
@@ -30,11 +32,6 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/checked_modifier_called_by_unchecked.sol.C.f[routing]() -> void:
-f:
     txna ApplicationArgs 1
     dup
     len
@@ -42,6 +39,7 @@ f:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    bury 3
     txna ApplicationArgs 2
     dup
     len
@@ -49,6 +47,7 @@ f:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    bury 2
     txna ApplicationArgs 3
     dup
     len
@@ -56,14 +55,15 @@ f:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    bury 1
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     dig 2
@@ -99,6 +99,6 @@ f_ternary_merge@4:
     intc_1 // 1
     return
 
-f_ternary_false@3:
+main_ternary_false@8:
     pushint 0
-    b f_ternary_merge@4
+    b main_ternary_merge@9

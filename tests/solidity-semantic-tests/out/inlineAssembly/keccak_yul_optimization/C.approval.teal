@@ -3,8 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak_yul_optimization.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64 0
-    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75 0x
+    intcblock 1 0 64
+    bytecblock 0x 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75
+    intc_1 // 0
+    dupn 2
     pushint 4096
     bzero
     dup
@@ -27,73 +29,34 @@ main_after_if_else@2:
     assert
     pushbytess 0x5ed33a7f 0xe03b32a4 // method "g()uint512", method "f()uint512"
     txna ApplicationArgs 0
-    match g f
+    match main_g_route@5 main_f_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak_yul_optimization.sol.C.g[routing]() -> void:
-g:
+main_f_route@6:
     txn GroupIndex
-    bz g_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-g_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
-    load 0
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    replace2 32
-    dup
-    extract 32 16
-    keccak256
-    swap
-    store 0
-    intc_1 // 64
-    bzero
-    b|
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-g_ternary_false@3:
-    intc_2 // 0
-    b g_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak_yul_optimization.sol.C.f[routing]() -> void:
-f:
-    intc_2 // 0
-    dupn 2
-    txn GroupIndex
-    bz f_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-f_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_2 // 0x
+    bytec_0 // 0x
     bury 1
     load 0
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     replace2 32
     bury 3
-    bytec_2 // 0x
+    bytec_0 // 0x
     bury 2
 
-f_while_top@5:
+main_while_top@14:
     dig 1
     pushbytes 0x14
     b<
-    bz f_after_while@7
+    bz main_after_while@16
     dig 2
     extract 32 16
     keccak256
@@ -104,26 +67,59 @@ f_while_top@5:
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bury 2
-    b f_while_top@5
+    b main_while_top@14
 
-f_after_while@7:
+main_after_while@16:
     dig 2
     store 0
     dupn 2
     len
-    intc_1 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-f_ternary_false@3:
-    intc_2 // 0
-    b f_ternary_merge@4
+main_ternary_false@12:
+    intc_1 // 0
+    b main_ternary_merge@13
+
+main_g_route@5:
+    txn GroupIndex
+    bz main_ternary_false@20
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@21:
+    !
+    assert // not payable
+    load 0
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    replace2 32
+    dup
+    extract 32 16
+    keccak256
+    swap
+    store 0
+    intc_2 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@20:
+    intc_1 // 0
+    b main_ternary_merge@21

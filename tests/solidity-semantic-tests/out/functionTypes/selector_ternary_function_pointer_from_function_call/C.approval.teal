@@ -4,7 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary_function_pointer_from_function_call.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 16
-    bytecblock "__ctor_pending" "a" 0x151f7c75 TMPL_APPROVAL_A TMPL_CLEAR_A
+    bytecblock "__ctor_pending" 0x151f7c75 "a" TMPL_APPROVAL_A TMPL_CLEAR_A
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -30,12 +31,79 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x3cd4690e 0x5f67db17 // method "__postInit()void", method "getContract()address", method "test(bool)byte[4]"
     txna ApplicationArgs 0
-    match __postInit getContract test
+    match main___postInit_route@5 main_getContract_route@6 main_test_route@7
     err
 
+main_test_route@7:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary_function_pointer_from_function_call.sol.C.__postInit[routing]() -> void:
-__postInit:
+main_ternary_merge@14:
+    !
+    assert // not payable
+    dupn 2
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
+    bz main_ternary_false@16
+    pushbytes 0x26121ff0
+
+main_ternary_merge@17:
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@16:
+    pushbytes 0xe2179b8e
+    b main_ternary_merge@17
+
+main_ternary_false@13:
+    intc_1 // 0
+    b main_ternary_merge@14
+
+main_getContract_route@6:
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_2 // "a"
+    app_global_get_ex
+    assert // check a exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@21:
+    intc_1 // 0
+    b main_ternary_merge@22
+
+main___postInit_route@5:
     bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -76,80 +144,8 @@ __postInit:
     swap
     itob
     concat
-    bytec_1 // "a"
+    bytec_2 // "a"
     swap
     app_global_put
     intc_0 // 1
     return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary_function_pointer_from_function_call.sol.C.getContract[routing]() -> void:
-getContract:
-    txn GroupIndex
-    bz getContract_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-getContract_ternary_merge@4:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-getContract_ternary_false@3:
-    intc_1 // 0
-    b getContract_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary_function_pointer_from_function_call.sol.C.test[routing]() -> void:
-test:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 1
-    ==
-    assert // invalid number of bytes for arc4.bool
-    intc_1 // 0
-    getbit
-    txn GroupIndex
-    bz test_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-test_ternary_merge@4:
-    !
-    assert // not payable
-    dupn 2
-    intc_0 // 1
-    <=
-    assert // ABI bool validation
-    bz test_ternary_false@6
-    pushbytes 0x26121ff0
-
-test_ternary_merge@7:
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-test_ternary_false@6:
-    pushbytes 0xe2179b8e
-    b test_ternary_merge@7
-
-test_ternary_false@3:
-    intc_1 // 0
-    b test_ternary_merge@4

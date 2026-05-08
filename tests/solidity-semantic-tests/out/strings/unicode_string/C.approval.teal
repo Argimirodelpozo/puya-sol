@@ -4,7 +4,6 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/unicode_string.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock 0x151f7c750014f09f98832c20f09f98ad2c20616e6420f09f9888
     pushint 4096
     bzero
     dup
@@ -27,49 +26,38 @@ main_after_if_else@2:
     assert
     pushbytess 0x36b8a41c 0x201c81af // method "f()string", method "g()string"
     txna ApplicationArgs 0
-    match f g
+    match main_f_route@5 main_g_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/unicode_string.sol.C.f[routing]() -> void:
-f:
+main_g_route@6:
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@18:
     !
     assert // not payable
-    bytec_0 // 0x151f7c750014f09f98832c20f09f98ad2c20616e6420f09f9888
+    pushbytes 0x151f7c750014f09f98832c20f09f98ad2c20616e6420f09f9888
     log
     intc_0 // 1
     return
 
-f_ternary_false@3:
+main_ternary_false@12:
     intc_1 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@18
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/unicode_string.sol.C.g[routing]() -> void:
-g:
+main_f_route@5:
     txn GroupIndex
-    bz g_ternary_false@3
+    bz main_ternary_false@17
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
+    b main_ternary_merge@18
 
-g_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // 0x151f7c750014f09f98832c20f09f98ad2c20616e6420f09f9888
-    log
-    intc_0 // 1
-    return
-
-g_ternary_false@3:
+main_ternary_false@17:
     intc_1 // 0
-    b g_ternary_merge@4
+    b main_ternary_merge@18

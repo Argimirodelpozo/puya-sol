@@ -30,47 +30,18 @@ main_after_if_else@2:
     assert
     pushbytess 0xe03b32a4 0x7c1072af // method "f()uint512", method "x()uint256"
     txna ApplicationArgs 0
-    match f x
+    match main_f_route@5 main_x_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/return_does_not_skip_modifier.sol.C.f[routing]() -> void:
-f:
+main_x_route@6:
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
-    !
-    assert // not payable
-    pushint 9
-    itob
-    bytec_0 // "x"
-    swap
-    app_global_put
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002
-    log
-    intc_0 // 1
-    return
-
-f_ternary_false@3:
-    intc_1 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/return_does_not_skip_modifier.sol.C.x[routing]() -> void:
-x:
-    txn GroupIndex
-    bz x_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-x_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     intc_1 // 0
@@ -92,6 +63,31 @@ x_ternary_merge@4:
     intc_0 // 1
     return
 
-x_ternary_false@3:
+main_ternary_false@12:
     intc_1 // 0
-    b x_ternary_merge@4
+    b main_ternary_merge@13
+
+main_f_route@5:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    pushint 9
+    itob
+    bytec_0 // "x"
+    swap
+    app_global_put
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@17:
+    intc_1 // 0
+    b main_ternary_merge@18

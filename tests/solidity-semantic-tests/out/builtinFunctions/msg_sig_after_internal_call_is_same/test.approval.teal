@@ -27,39 +27,26 @@ main_after_if_else@2:
     assert
     pushbytess 0x6b878efb 0x233716f1 // method "boo()byte[4]", method "foo(uint256)byte[4]"
     txna ApplicationArgs 0
-    match boo foo
+    match main_boo_route@5 main_foo_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/msg_sig_after_internal_call_is_same.sol.test.boo[routing]() -> void:
-boo:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/msg_sig_after_internal_call_is_same.sol.test.boo
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/msg_sig_after_internal_call_is_same.sol.test.foo[routing]() -> void:
-foo:
+main_foo_route@6:
     txna ApplicationArgs 1
     len
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz foo_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-foo_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/msg_sig_after_internal_call_is_same.sol.test.boo
+    callsub boo
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -67,26 +54,35 @@ foo_ternary_merge@4:
     intc_0 // 1
     return
 
-foo_ternary_false@3:
+main_ternary_false@12:
     intc_1 // 0
-    b foo_ternary_merge@4
+    b main_ternary_merge@13
+
+main_boo_route@5:
+    callsub boo
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/msg_sig_after_internal_call_is_same.sol.test.boo() -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/msg_sig_after_internal_call_is_same.sol.test.boo:
+boo:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/msg_sig_after_internal_call_is_same.sol.test.boo_ternary_false@2
+    bz boo_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/msg_sig_after_internal_call_is_same.sol.test.boo_ternary_merge@3:
+boo_ternary_merge@3:
     !
     assert // not payable
     txna ApplicationArgs 0
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/msg_sig_after_internal_call_is_same.sol.test.boo_ternary_false@2:
+boo_ternary_false@2:
     intc_1 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/msg_sig_after_internal_call_is_same.sol.test.boo_ternary_merge@3
+    b boo_ternary_merge@3

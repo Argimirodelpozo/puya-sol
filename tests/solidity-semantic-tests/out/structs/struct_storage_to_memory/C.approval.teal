@@ -30,39 +30,18 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0xdb4bd076 // method "__postInit()void", method "f()(uint64,uint128,uint256)"
     txna ApplicationArgs 0
-    match __postInit f
+    match main___postInit_route@5 main_f_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_storage_to_memory.sol.C.__postInit[routing]() -> void:
-__postInit:
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_0 // "__ctor_pending"
-    intc_1 // 0
-    app_global_put
-    pushbytes "arr"
-    pushint 2528
-    box_create
-    pop
-    bytec_1 // "x"
-    pushbytes 0x0000000c0000002a000000000000000000000000000000170000000000000000000000000000000000000000000000000000000000000022
-    box_put
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_storage_to_memory.sol.C.f[routing]() -> void:
-f:
+main_f_route@6:
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     bytec_1 // "x"
@@ -93,6 +72,23 @@ f_ternary_merge@4:
     intc_0 // 1
     return
 
-f_ternary_false@3:
+main_ternary_false@12:
     intc_1 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    pushbytes "arr"
+    pushint 2528
+    box_create
+    pop
+    bytec_1 // "x"
+    pushbytes 0x0000000c0000002a000000000000000000000000000000170000000000000000000000000000000000000000000000000000000000000022
+    box_put
+    intc_0 // 1
+    return

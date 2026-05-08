@@ -1,7 +1,62 @@
-# Semantic Test Status — v215
+# Semantic Test Status — v216
 
-**Totals**: 1089 PASS / 158 FAIL / 75 (56 compile_err + 19 deploy_err) = **1089/1322 (82.4%)**
-*(flake-affected run — solo reproductions of all 3 differing tests pass; true ceiling is 1092)*
+**Totals**: 1092 PASS / 156 FAIL / 74 (57 compile_err + 17 deploy_err) = **1092/1322 (82.6%)**
+*(flake-affected run — 3 PASS-in-v215 tests now FAIL due to a pre-v216 commit; see below)*
+
+vs v215 = 1089 PASS: **+3 PASS / -2 FAIL / +1 compile_err / -2 deploy_err**
+
+8 tests differ from v215:
+
+  - **Recovered (6)** — were ✗/⚠ in v215, now ✓:
+    `builtinFunctions/blobhash`, `state/blobhash`,
+    `types/mapping_contract_key` (the 3 v215 throughput flakes settled),
+    `state_variable_struct`, `storage_reference_inheritance`,
+    `storage_reference_library_function` (also flake recoveries),
+    `snark` (was ⚠ compile_err — now ✓, real improvement: today's
+    storage-dispatch refactor moves `__storage_read/__storage_write`
+    out of contract methods to root Subroutines, so library-internal
+    inline-assembly sload/sstore now compiles).
+
+  - **Regressed (3)** — were ✓ in v215, now ✗:
+    `state/msg_sender`, `state/tx_origin`, `userDefinedValueType/ownable`.
+    Root cause is **commit 80d7f9714** *"address-equality bridge for
+    hash-form vs convention-form"* (committed 2026-05-05 12:36, 1h52min
+    AFTER v215 was tagged). The bridge over-fires on
+    `msg.sender != address(0)`: it expands to
+    `!((sender == 0) || (\x00*24+CallerApplicationID == 0))`, which
+    is false for top-level calls (CallerApplicationID == 0) regardless
+    of the actual sender. Same shape breaks `tx.origin != address(0)`
+    and ownable's `owner != msg.sender` after a renounce. Not from any
+    v216 work — the bridge was pre-existing latent.
+
+## v216 puya-sol changes (vs v215)
+
+  - **`__storage_read/__storage_write` are now root-level Subroutines**
+    (`__puyasol___storage_read`, `__puyasol___storage_write`) rather
+    than per-contract `ContractMethod` instances. Library/free-function
+    inline-asm sload/sstore could not previously emit
+    `InstanceMethodTarget` — puya rejects "invocation of instance
+    method outside of a contract method". 8 call sites in
+    BitwiseShiftOps / SignedOps / SolAssignment / SolIndexAccess /
+    SolUnaryOperation switched to `SubroutineID` dispatch. Body is
+    identical (uses `app_global_get` / `box_extract` / `box_replace`
+    which work in any caller context). Net: `snark` now compiles and
+    passes; no regressions vs v215 in any other suite.
+  - **Augmented-return tuple flatten** (AWSTBuilder.cpp): when a
+    function with a multi-value `return (a, b, c);` also has memory-ref
+    params, the augmenter previously nested the original tuple as
+    item 0 of the new tuple — producing a 2-element tuple where the
+    augmented return type expected 4+. Fixed to flatten the items into
+    the new tuple.
+  - **`msg.value`/`msg.sig`/`msg.data` routing** (IntrinsicMapper.cpp +
+    SolExpressionFactory.cpp): the IntrinsicMapper branches for these
+    were dead body — only used as a truthy sentinel by the factory's
+    member-access check. Removed the dead bodies and added an explicit
+    list in SolExpressionFactory so the factory routes them straight
+    to `SolIntrinsicAccess` (which has the actual handlers). No
+    behavioural change; cleaner indirection.
+
+## v215 sentinel notes (preserved)
 
 v215 sentinel for the `makeARC4Encode / makeARC4Decode` helpers
 (commit 1bbc25fb1). Three tests differ from v208-v214:
@@ -111,6 +166,10 @@ of the semantic suite, so v208/v209 also reconfirm that surface.
   (1bbc25fb1). 61 sites collapsed across 21 files: 33 ARC4Encode,
   28 ARC4Decode. 22 files, -161 lines. The -3 PASS vs v214 is
   flake (all 3 reproduce as PASS solo). Refactor is byte-equivalent.
+- v216 = 1092 — net +3 PASS vs v215 from storage-dispatch refactor
+  unblocking `snark` (compile_err → PASS) plus 5 v215 throughput-flake
+  recoveries; 3 ✓→✗ regressions are pre-existing from address-equality
+  bridge (80d7f9714) committed AFTER v215 was tagged.
 
 ## v195 reference (preserved below)
 

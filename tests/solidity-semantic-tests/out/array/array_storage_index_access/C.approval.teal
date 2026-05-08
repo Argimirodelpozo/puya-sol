@@ -3,8 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_access.sol.C.approval_program() -> uint64:
 main:
-    intcblock 2 32 0 1
+    intcblock 32 2 0 1
     bytecblock "storageArray" "__ctor_pending" 0x068101 0x01
+    intc_2 // 0
+    dupn 3
     pushint 4096
     bzero
     dup
@@ -30,52 +32,33 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x06071aa5 // method "__postInit()void", method "test_indices(uint256)void"
     txna ApplicationArgs 0
-    match __postInit test_indices
+    match main___postInit_route@5 main_test_indices_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_access.sol.C.__postInit[routing]() -> void:
-__postInit:
-    bytec_1 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_1 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec_0 // "storageArray"
-    intc_0 // 2
-    box_create
-    pop
-    intc_3 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_access.sol.C.test_indices[routing]() -> void:
-test_indices:
-    intc_2 // 0
-    dupn 2
+main_test_indices_route@6:
     txna ApplicationArgs 1
     dup
+    bury 5
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz test_indices_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_3 // 1
     -
     gtxns Amount
 
-test_indices_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
 
-test_indices_while_top@28:
+main_while_top@36:
     pushint 170010
     global OpcodeBudget
     >
-    bz test_indices_while_top@5
+    bz main_while_top@14
     itxn_begin
     pushint 6 // appl
     itxn_field TypeEnum
@@ -88,37 +71,37 @@ test_indices_while_top@28:
     intc_2 // 0
     itxn_field Fee
     itxn_submit
-    b test_indices_while_top@28
+    b main_while_top@36
 
-test_indices_while_top@5:
+main_while_top@14:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_0 // 2
+    intc_1 // 2
     >=
-    bz test_indices_ternary_false@7
+    bz main_ternary_false@16
     bytec_0 // "storageArray"
     box_len
     pop
 
-test_indices_ternary_merge@8:
-    intc_0 // 2
+main_ternary_merge@17:
+    intc_1 // 2
     -
-    intc_1 // 32
+    intc_0 // 32
     /
     itob
-    dig 1
+    dig 4
     b<
-    bz test_indices_while_top@11
+    bz main_while_top@19
     bytec_0 // "storageArray"
     intc_2 // 0
-    intc_0 // 2
+    intc_1 // 2
     box_extract
     btoi
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 32
+    intc_0 // 32
     +
     bytec_0 // "storageArray"
     swap
@@ -132,40 +115,40 @@ test_indices_ternary_merge@8:
     intc_2 // 0
     uncover 2
     box_replace
-    intc_1 // 32
+    intc_0 // 32
     *
-    intc_0 // 2
+    intc_1 // 2
     +
     bytec_0 // "storageArray"
     swap
     intc_2 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     box_splice
-    b test_indices_while_top@5
+    b main_while_top@14
 
-test_indices_while_top@11:
+main_while_top@19:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_0 // 2
+    intc_1 // 2
     >=
-    bz test_indices_ternary_false@13
+    bz main_ternary_false@21
     bytec_0 // "storageArray"
     box_len
     pop
 
-test_indices_ternary_merge@14:
-    intc_0 // 2
+main_ternary_merge@22:
+    intc_1 // 2
     -
-    intc_1 // 32
+    intc_0 // 32
     /
     itob
-    dig 1
+    dig 4
     b>
-    bz test_indices_after_while@16
+    bz main_after_while@24
     bytec_0 // "storageArray"
     intc_2 // 0
-    intc_0 // 2
+    intc_1 // 2
     box_extract
     btoi
     intc_3 // 1
@@ -177,47 +160,47 @@ test_indices_ternary_merge@14:
     intc_2 // 0
     uncover 2
     box_replace
-    intc_1 // 32
+    intc_0 // 32
     *
-    intc_0 // 2
+    intc_1 // 2
     +
     bytec_0 // "storageArray"
     swap
-    intc_1 // 32
+    intc_0 // 32
     pushbytes 0x
     box_splice
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 32
+    intc_0 // 32
     -
     bytec_0 // "storageArray"
     swap
     box_resize
-    b test_indices_while_top@11
+    b main_while_top@19
 
-test_indices_after_while@16:
+main_after_while@24:
     intc_2 // 0
     itob
     dup
-    bury 5
-    bury 3
+    bury 4
+    bury 2
 
-test_indices_while_top@17:
-    dig 2
+main_while_top@25:
     dig 1
+    dig 4
     b<
-    bz test_indices_after_while@19
-    dig 2
+    bz main_after_while@27
+    dig 1
     dup
     bytec_3 // 0x01
     b+
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
     dig 1
     b|
@@ -230,28 +213,29 @@ test_indices_while_top@17:
     pushint 8
     -
     extract_uint64
-    intc_1 // 32
+    intc_0 // 32
     *
-    intc_0 // 2
+    intc_1 // 2
     +
     bytec_0 // "storageArray"
     swap
     uncover 2
     box_replace // on error: index out of bounds
-    bury 3
-    b test_indices_while_top@17
-
-test_indices_after_while@19:
-    dig 3
     bury 2
+    b main_while_top@25
 
-test_indices_while_top@20:
-    dup2
+main_after_while@27:
+    dig 2
+    bury 1
+
+main_while_top@28:
+    dup
+    dig 4
     b<
-    bz test_indices_after_while@22
+    bz main_after_while@30
     pushint 8
     bzero
-    dig 2
+    dig 1
     dup
     cover 2
     concat
@@ -260,35 +244,49 @@ test_indices_while_top@20:
     pushint 8
     -
     extract_uint64
-    intc_1 // 32
+    intc_0 // 32
     *
-    intc_0 // 2
+    intc_1 // 2
     +
     bytec_0 // "storageArray"
     swap
-    intc_1 // 32
+    intc_0 // 32
     box_extract // on error: index access is out of bounds
     swap
     bytec_3 // 0x01
     b+
     dup
-    bury 4
+    bury 3
     b==
     assert
-    b test_indices_while_top@20
+    b main_while_top@28
 
-test_indices_after_while@22:
+main_after_while@30:
     intc_3 // 1
     return
 
-test_indices_ternary_false@13:
-    intc_0 // 2
-    b test_indices_ternary_merge@14
+main_ternary_false@21:
+    intc_1 // 2
+    b main_ternary_merge@22
 
-test_indices_ternary_false@7:
-    intc_0 // 2
-    b test_indices_ternary_merge@8
+main_ternary_false@16:
+    intc_1 // 2
+    b main_ternary_merge@17
 
-test_indices_ternary_false@3:
+main_ternary_false@12:
     intc_2 // 0
-    b test_indices_ternary_merge@4
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_0 // "storageArray"
+    intc_1 // 2
+    box_create
+    pop
+    intc_3 // 1
+    return

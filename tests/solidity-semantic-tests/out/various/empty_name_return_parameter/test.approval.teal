@@ -3,6 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/empty_name_return_parameter.sol.test.approval_program() -> uint64:
 main:
+    intcblock 1 0
+    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -14,7 +16,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -29,34 +31,30 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/empty_name_return_parameter.sol.test.f[routing]() -> void:
-f:
     txna ApplicationArgs 1
     dup
+    bury 2
     len
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
-    pushint 1
+    intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     pushbytes 0x151f7c75
     dig 1
     concat
     log
-    pushint 1
+    intc_0 // 1
     return
 
-f_ternary_false@3:
-    pushint 0
-    b f_ternary_merge@4
+main_ternary_false@8:
+    intc_1 // 0
+    b main_ternary_merge@9

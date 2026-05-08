@@ -3,8 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/inline_array_strings_from_document.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 8 2
+    intcblock 1 0 8 2
     bytecblock 0x0008000e00120016000454686973000269730002616e00056172726179
+    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -31,41 +32,37 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/inline_array_strings_from_document.sol.C.f[routing]() -> void:
-f:
     txna ApplicationArgs 1
     dup
+    bury 2
     len
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
-    intc_1 // 8
+    intc_2 // 8
     bzero
     dig 1
     concat
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     -
     extract_uint64
     dup
     pushint 4
     <
     assert // index access is out of bounds
-    intc_2 // 2
+    intc_3 // 2
     *
     bytec_0 // 0x0008000e00120016000454686973000269730002616e00056172726179
     swap
@@ -73,7 +70,7 @@ f_ternary_merge@4:
     bytec_0 // 0x0008000e00120016000454686973000269730002616e00056172726179
     dig 1
     extract_uint16
-    intc_2 // 2
+    intc_3 // 2
     +
     bytec_0 // 0x0008000e00120016000454686973000269730002616e00056172726179
     cover 2
@@ -85,6 +82,6 @@ f_ternary_merge@4:
     intc_0 // 1
     return
 
-f_ternary_false@3:
-    pushint 0
-    b f_ternary_merge@4
+main_ternary_false@8:
+    intc_1 // 0
+    b main_ternary_merge@9

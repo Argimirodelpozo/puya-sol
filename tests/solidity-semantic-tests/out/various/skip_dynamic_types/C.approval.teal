@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64 32 0
+    intcblock 1 32 64 0
     bytecblock 0x151f7c75
     pushint 4096
     bzero
@@ -27,19 +27,62 @@ main_after_if_else@2:
     assert
     pushbytess 0xa17f2645 0x595e23e2 // method "f()(uint512,uint256[],uint512)", method "g()(uint256,uint256)"
     txna ApplicationArgs 0
-    match f g
+    match main_f_route@5 main_g_route@6
     err
 
+main_g_route@6:
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types.sol.C.f[routing]() -> void:
-f:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types.sol.C.f
-    dig 2
+main_ternary_merge@13:
+    !
+    assert // not payable
+    callsub f
+    popn 2
+    callsub f
+    cover 3
+    popn 2
+    dup
     len
-    intc_1 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_1 // 64
+    intc_1 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    dig 2
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@12:
+    intc_3 // 0
+    b main_ternary_merge@13
+
+main_f_route@5:
+    callsub f
+    dig 2
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
     bzero
     uncover 3
     dig 1
@@ -48,7 +91,7 @@ f:
     concat
     dig 2
     len
-    intc_1 // 64
+    intc_2 // 64
     <=
     assert // overflow
     cover 2
@@ -62,65 +105,18 @@ f:
     log
     intc_0 // 1
     return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types.sol.C.g[routing]() -> void:
-g:
-    txn GroupIndex
-    bz g_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-g_ternary_merge@4:
-    !
-    assert // not payable
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types.sol.C.f
-    popn 2
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types.sol.C.f
-    cover 3
-    popn 2
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    swap
-    dig 1
-    b|
-    dig 2
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    cover 2
-    b|
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-g_ternary_false@3:
-    intc_3 // 0
-    b g_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types.sol.C.f() -> bytes, bytes, bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types.sol.C.f:
+f:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types.sol.C.f_ternary_false@2
+    bz f_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types.sol.C.f_ternary_merge@3:
+f_ternary_merge@3:
     !
     assert // not payable
     pushint 7
@@ -131,6 +127,6 @@ g_ternary_false@3:
     swap
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types.sol.C.f_ternary_false@2:
+f_ternary_false@2:
     intc_3 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types.sol.C.f_ternary_merge@3
+    b f_ternary_merge@3

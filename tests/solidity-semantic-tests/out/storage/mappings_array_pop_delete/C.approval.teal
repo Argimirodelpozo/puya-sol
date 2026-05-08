@@ -5,6 +5,8 @@
 main:
     intcblock 0 1 32
     bytecblock "a" 0x010000000000000000000000000000000000000000000000000000000000000000 0x 0x01 "__ctor_pending"
+    intc_0 // 0
+    dupn 5
     pushint 4096
     bzero
     dup
@@ -30,50 +32,44 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x2eb8d5fd 0xb5288a7b 0xd2e971a4 0x97d26e57 0x4075f398 // method "__postInit()void", method "n1(uint256,uint256)void", method "n2()void", method "map(uint256)uint256", method "p()void", method "d()uint256"
     txna ApplicationArgs 0
-    match __postInit n1 n2 map p d
+    match main___postInit_route@5 main_n1_route@6 main_n2_route@7 main_map_route@8 main_p_route@9 main_d_route@10
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mappings_array_pop_delete.sol.C.__postInit[routing]() -> void:
-__postInit:
-    bytec 4 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec 4 // "__ctor_pending"
-    intc_0 // 0
-    app_global_put
-    bytec_0 // "a"
-    pushint 2
-    box_create
-    pop
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mappings_array_pop_delete.sol.C.n1[routing]() -> void:
-n1:
-    intc_0 // 0
-    dup
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_2 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_2 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
+main_d_route@10:
     txn GroupIndex
-    bz n1_ternary_false@3
+    bz main_ternary_false@16
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-n1_ternary_merge@4:
+main_ternary_merge@17:
+    !
+    assert // not payable
+    bytec_0 // "a"
+    box_del
+    pop
+    bytec_0 // "a"
+    pushbytes 0x0000
+    box_put
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@16:
+    intc_0 // 0
+    b main_ternary_merge@17
+
+main_p_route@9:
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
     !
     assert // not payable
     bytec_0 // "a"
@@ -82,7 +78,7 @@ n1_ternary_merge@4:
     cover 2
     select
     len
-    bz n1_ternary_false@6
+    bz main_ternary_false@27
     bytec_0 // "a"
     box_get
     bytec_2 // 0x
@@ -91,25 +87,54 @@ n1_ternary_merge@4:
     intc_0 // 0
     extract_uint16
 
-n1_ternary_merge@7:
+main_ternary_merge@28:
     intc_1 // 1
-    +
+    -
     itob
     extract 6 2
     bytec_0 // "a"
     swap
     box_put
+    intc_1 // 1
+    return
+
+main_ternary_false@27:
+    intc_0 // 0
+    b main_ternary_merge@28
+
+main_ternary_false@24:
+    intc_0 // 0
+    b main_ternary_merge@25
+
+main_map_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 7
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@32
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@33:
+    !
+    assert // not payable
     bytec_0 // "a"
     box_len
     bury 1
-    bz n1_ternary_false@9
+    bz main_ternary_false@35
     bytec_0 // "a"
     box_get
     pop
     intc_0 // 0
     extract_uint16
 
-n1_ternary_merge@10:
+main_ternary_merge@36:
     itob
     bytec_3 // 0x01
     b>=
@@ -120,14 +145,14 @@ n1_ternary_merge@10:
     bytec_0 // "a"
     box_len
     bury 1
-    bz n1_ternary_false@12
+    bz main_ternary_false@38
     bytec_0 // "a"
     box_get
     pop
     intc_0 // 0
     extract_uint16
 
-n1_ternary_merge@13:
+main_ternary_merge@39:
     itob
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
@@ -136,199 +161,20 @@ n1_ternary_merge@13:
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dig 4
-    swap
-    concat
-    bury 3
-    bytec_0 // "a"
-    box_len
-    bury 1
-    bz n1_ternary_false@15
-    bytec_0 // "a"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-n1_ternary_merge@16:
-    itob
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_3 // 0x01
-    b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dig 4
-    dup
-    uncover 2
-    concat
-    len
-    intc_2 // 32
-    -
-    dig 4
-    swap
-    intc_2 // 32
-    extract3
-    swap
-    dig 3
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    concat
-    sha256
-    bytec_0 // "a"
-    swap
-    concat
-    dup
-    box_del
-    pop
-    dig 1
-    box_put
-    intc_1 // 1
-    return
-
-n1_ternary_false@15:
-    intc_0 // 0
-    b n1_ternary_merge@16
-
-n1_ternary_false@12:
-    intc_0 // 0
-    b n1_ternary_merge@13
-
-n1_ternary_false@9:
-    intc_0 // 0
-    b n1_ternary_merge@10
-
-n1_ternary_false@6:
-    intc_0 // 0
-    b n1_ternary_merge@7
-
-n1_ternary_false@3:
-    intc_0 // 0
-    b n1_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mappings_array_pop_delete.sol.C.n2[routing]() -> void:
-n2:
-    txn GroupIndex
-    bz n2_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-n2_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // "a"
-    box_get
-    bytec_2 // 0x
-    cover 2
-    select
-    len
-    bz n2_ternary_false@6
-    bytec_0 // "a"
-    box_get
-    bytec_2 // 0x
-    cover 2
-    select
-    intc_0 // 0
-    extract_uint16
-
-n2_ternary_merge@7:
-    intc_1 // 1
-    +
-    itob
-    extract 6 2
-    bytec_0 // "a"
-    swap
-    box_put
-    intc_1 // 1
-    return
-
-n2_ternary_false@6:
-    intc_0 // 0
-    b n2_ternary_merge@7
-
-n2_ternary_false@3:
-    intc_0 // 0
-    b n2_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mappings_array_pop_delete.sol.C.map[routing]() -> void:
-map:
-    intc_0 // 0
-    dup
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_2 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz map_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-map_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // "a"
-    box_len
-    bury 1
-    bz map_ternary_false@6
-    bytec_0 // "a"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-map_ternary_merge@7:
-    itob
-    bytec_3 // 0x01
-    b>=
-    assert // underflow
-    intc_2 // 32
-    bzero
-    bury 3
-    bytec_0 // "a"
-    box_len
-    bury 1
-    bz map_ternary_false@9
-    bytec_0 // "a"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-map_ternary_merge@10:
-    itob
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_3 // 0x01
-    b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dig 3
     swap
     concat
     bury 2
     bytec_0 // "a"
     box_len
     bury 1
-    bz map_ternary_false@12
+    bz main_ternary_false@41
     bytec_0 // "a"
     box_get
     pop
     intc_0 // 0
     extract_uint16
 
-map_ternary_merge@13:
+main_ternary_merge@42:
     itob
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
@@ -336,7 +182,7 @@ map_ternary_merge@13:
     b-
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    dig 3
+    dig 4
     dup
     uncover 2
     concat
@@ -348,7 +194,7 @@ map_ternary_merge@13:
     intc_2 // 32
     extract3
     dig 1
-    dig 3
+    dig 8
     concat
     dup
     len
@@ -378,33 +224,31 @@ map_ternary_merge@13:
     intc_1 // 1
     return
 
-map_ternary_false@12:
+main_ternary_false@41:
     intc_0 // 0
-    b map_ternary_merge@13
+    b main_ternary_merge@42
 
-map_ternary_false@9:
+main_ternary_false@38:
     intc_0 // 0
-    b map_ternary_merge@10
+    b main_ternary_merge@39
 
-map_ternary_false@6:
+main_ternary_false@35:
     intc_0 // 0
-    b map_ternary_merge@7
+    b main_ternary_merge@36
 
-map_ternary_false@3:
+main_ternary_false@32:
     intc_0 // 0
-    b map_ternary_merge@4
+    b main_ternary_merge@33
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mappings_array_pop_delete.sol.C.p[routing]() -> void:
-p:
+main_n2_route@7:
     txn GroupIndex
-    bz p_ternary_false@3
+    bz main_ternary_false@46
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-p_ternary_merge@4:
+main_ternary_merge@47:
     !
     assert // not payable
     bytec_0 // "a"
@@ -413,7 +257,7 @@ p_ternary_merge@4:
     cover 2
     select
     len
-    bz p_ternary_false@6
+    bz main_ternary_false@49
     bytec_0 // "a"
     box_get
     bytec_2 // 0x
@@ -422,9 +266,9 @@ p_ternary_merge@4:
     intc_0 // 0
     extract_uint16
 
-p_ternary_merge@7:
+main_ternary_merge@50:
     intc_1 // 1
-    -
+    +
     itob
     extract 6 2
     bytec_0 // "a"
@@ -433,38 +277,183 @@ p_ternary_merge@7:
     intc_1 // 1
     return
 
-p_ternary_false@6:
+main_ternary_false@49:
     intc_0 // 0
-    b p_ternary_merge@7
+    b main_ternary_merge@50
 
-p_ternary_false@3:
+main_ternary_false@46:
     intc_0 // 0
-    b p_ternary_merge@4
+    b main_ternary_merge@47
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mappings_array_pop_delete.sol.C.d[routing]() -> void:
-d:
+main_n1_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 7
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 6
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz d_ternary_false@3
+    bz main_ternary_false@54
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-d_ternary_merge@4:
+main_ternary_merge@55:
     !
     assert // not payable
     bytec_0 // "a"
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    len
+    bz main_ternary_false@57
+    bytec_0 // "a"
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@58:
+    intc_1 // 1
+    +
+    itob
+    extract 6 2
+    bytec_0 // "a"
+    swap
+    box_put
+    bytec_0 // "a"
+    box_len
+    bury 1
+    bz main_ternary_false@60
+    bytec_0 // "a"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@61:
+    itob
+    bytec_3 // 0x01
+    b>=
+    assert // underflow
+    intc_2 // 32
+    bzero
+    bury 3
+    bytec_0 // "a"
+    box_len
+    bury 1
+    bz main_ternary_false@63
+    bytec_0 // "a"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@64:
+    itob
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec_3 // 0x01
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 3
+    swap
+    concat
+    bury 1
+    bytec_0 // "a"
+    box_len
+    bury 1
+    bz main_ternary_false@66
+    bytec_0 // "a"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@67:
+    itob
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec_3 // 0x01
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 3
+    dup
+    uncover 2
+    concat
+    len
+    intc_2 // 32
+    -
+    dig 2
+    swap
+    intc_2 // 32
+    extract3
+    swap
+    dig 7
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    concat
+    sha256
+    bytec_0 // "a"
+    swap
+    concat
+    dup
     box_del
     pop
-    bytec_0 // "a"
-    pushbytes 0x0000
+    dig 5
     box_put
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
-    log
     intc_1 // 1
     return
 
-d_ternary_false@3:
+main_ternary_false@66:
     intc_0 // 0
-    b d_ternary_merge@4
+    b main_ternary_merge@67
+
+main_ternary_false@63:
+    intc_0 // 0
+    b main_ternary_merge@64
+
+main_ternary_false@60:
+    intc_0 // 0
+    b main_ternary_merge@61
+
+main_ternary_false@57:
+    intc_0 // 0
+    b main_ternary_merge@58
+
+main_ternary_false@54:
+    intc_0 // 0
+    b main_ternary_merge@55
+
+main___postInit_route@5:
+    bytec 4 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 4 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "a"
+    pushint 2
+    box_create
+    pop
+    intc_1 // 1
+    return

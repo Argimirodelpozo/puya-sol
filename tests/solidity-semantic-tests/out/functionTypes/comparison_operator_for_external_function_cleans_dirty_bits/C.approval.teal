@@ -26,40 +26,18 @@ main_after_if_else@2:
     assert
     pushbytess 0xf2b65f27 0xb1965aa8 // method "g()void", method "comparison_operators_for_external_function_pointers_with_dirty_bits()bool"
     txna ApplicationArgs 0
-    match g comparison_operators_for_external_function_pointers_with_dirty_bits
+    match main_g_route@5 main_comparison_operators_for_external_function_pointers_with_dirty_bits_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/comparison_operator_for_external_function_cleans_dirty_bits.sol.C.g[routing]() -> void:
-g:
+main_comparison_operators_for_external_function_pointers_with_dirty_bits_route@6:
     txn GroupIndex
-    bz g_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-g_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 1
-    return
-
-g_ternary_false@3:
-    intc_1 // 0
-    b g_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/comparison_operator_for_external_function_cleans_dirty_bits.sol.C.comparison_operators_for_external_function_pointers_with_dirty_bits[routing]() -> void:
-comparison_operators_for_external_function_pointers_with_dirty_bits:
-    txn GroupIndex
-    bz comparison_operators_for_external_function_pointers_with_dirty_bits_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-comparison_operators_for_external_function_pointers_with_dirty_bits_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     load 0
@@ -69,6 +47,24 @@ comparison_operators_for_external_function_pointers_with_dirty_bits_ternary_merg
     intc_0 // 1
     return
 
-comparison_operators_for_external_function_pointers_with_dirty_bits_ternary_false@3:
+main_ternary_false@12:
     intc_1 // 0
-    b comparison_operators_for_external_function_pointers_with_dirty_bits_ternary_merge@4
+    b main_ternary_merge@13
+
+main_g_route@5:
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
+
+main_ternary_false@21:
+    intc_1 // 0
+    b main_ternary_merge@22

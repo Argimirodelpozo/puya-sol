@@ -3,8 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/calldata_array_dynamic_invalid_static_middle.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 2 1 32
-    bytecblock "" 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
+    intcblock 2 0 1 32
+    intc_1 // 0
+    dup
+    pushbytes ""
+    dupn 7
     pushint 4096
     bzero
     dup
@@ -27,70 +30,67 @@ main_after_if_else@2:
     assert
     pushbytess 0xa3cde016 0x65b39e32 0x86efa2ab // method "f(uint256[][1][])uint256", method "g(uint256[][1][])uint256", method "h(uint256[][1][])uint256"
     txna ApplicationArgs 0
-    match f g h
+    match main_f_route@5 main_g_route@6 main_h_route@7
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/calldata_array_dynamic_invalid_static_middle.sol.C.f[routing]() -> void:
-f:
-    intc_0 // 0
-    bytec_0 // ""
-    dup
+main_h_route@7:
     txna ApplicationArgs 1
     dup
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    cover 2
-    intc_1 // 2
+    bury 8
+    intc_0 // 2
     *
-    swap
+    bury 4
     dup
     len
-    swap
+    bury 2
     extract 2 0
-    intc_0 // 0
+    bury 10
+    intc_1 // 0
+    bury 5
 
-f_for_header@1:
-    dup
-    dig 5
+main_for_header@12:
+    dig 4
+    dig 6
     <
-    bz f_after_for@8
-    dup
-    intc_1 // 2
+    bz main_after_for@17
+    dig 4
+    intc_0 // 2
     *
-    dig 2
+    dig 10
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 6
+    dig 5
     ==
     assert // invalid tail pointer for (len+(len+uint256[])[1][])
     dig 1
     len
     substring3
-    bury 8
-    intc_1 // 2
-    bury 6
-    intc_0 // 0
-    bury 7
+    bury 9
+    intc_0 // 2
+    bury 2
+    intc_1 // 0
+    bury 4
 
-f_for_header@3:
-    dig 6
+main_for_header@14:
+    dig 3
     intc_2 // 1
     <
-    bz f_after_for@6
-    dig 6
+    bz main_after_for@16
+    dig 3
     dup
-    intc_1 // 2
+    intc_0 // 2
     *
-    dig 9
+    dig 10
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 9
+    dig 5
     dup
     cover 4
     ==
@@ -98,117 +98,114 @@ f_for_header@3:
     dig 1
     len
     substring3
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_3 // 32
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     +
-    bury 7
+    bury 3
     intc_2 // 1
-    +
-    bury 7
-    b f_for_header@3
-
-f_after_for@6:
-    dig 3
-    dig 6
     +
     bury 4
-    dup
+    b main_for_header@14
+
+main_after_for@16:
+    dig 2
+    dig 2
+    +
+    bury 3
+    dig 4
     intc_2 // 1
     +
-    bury 1
-    b f_for_header@1
+    bury 5
+    b main_for_header@12
 
-f_after_for@8:
-    dig 3
-    intc_1 // 2
+main_after_for@17:
+    dig 2
+    intc_0 // 2
     +
-    dig 3
+    dig 1
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.dynamic_array<arc4.uint256>, 1>>
     txn GroupIndex
-    bz f_ternary_false@11
+    bz main_ternary_false@19
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-f_ternary_merge@12:
+main_ternary_merge@42:
     !
     assert // not payable
-    bytec_1 // 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
     log
     intc_2 // 1
     return
 
-f_ternary_false@11:
-    intc_0 // 0
-    b f_ternary_merge@12
+main_ternary_false@19:
+    intc_1 // 0
+    b main_ternary_merge@42
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/calldata_array_dynamic_invalid_static_middle.sol.C.g[routing]() -> void:
-g:
-    intc_0 // 0
-    bytec_0 // ""
-    dup
+main_g_route@6:
     txna ApplicationArgs 1
     dup
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    cover 2
-    intc_1 // 2
+    bury 9
+    intc_0 // 2
     *
-    swap
+    bury 4
     dup
     len
-    swap
+    bury 2
     extract 2 0
-    intc_0 // 0
+    bury 10
+    intc_1 // 0
+    bury 5
 
-g_for_header@1:
-    dup
-    dig 5
+main_for_header@23:
+    dig 4
+    dig 7
     <
-    bz g_after_for@8
-    dup
-    intc_1 // 2
+    bz main_after_for@28
+    dig 4
+    intc_0 // 2
     *
-    dig 2
+    dig 10
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 6
+    dig 5
     ==
     assert // invalid tail pointer for (len+(len+uint256[])[1][])
     dig 1
     len
     substring3
-    bury 8
-    intc_1 // 2
-    bury 6
-    intc_0 // 0
-    bury 7
+    bury 9
+    intc_0 // 2
+    bury 2
+    intc_1 // 0
+    bury 4
 
-g_for_header@3:
-    dig 6
+main_for_header@25:
+    dig 3
     intc_2 // 1
     <
-    bz g_after_for@6
-    dig 6
+    bz main_after_for@27
+    dig 3
     dup
-    intc_1 // 2
+    intc_0 // 2
     *
-    dig 9
+    dig 10
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 9
+    dig 5
     dup
     cover 4
     ==
@@ -216,117 +213,107 @@ g_for_header@3:
     dig 1
     len
     substring3
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_3 // 32
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     +
-    bury 7
+    bury 3
     intc_2 // 1
-    +
-    bury 7
-    b g_for_header@3
-
-g_after_for@6:
-    dig 3
-    dig 6
     +
     bury 4
-    dup
+    b main_for_header@25
+
+main_after_for@27:
+    dig 2
+    dig 2
+    +
+    bury 3
+    dig 4
     intc_2 // 1
     +
-    bury 1
-    b g_for_header@1
+    bury 5
+    b main_for_header@23
 
-g_after_for@8:
-    dig 3
-    intc_1 // 2
+main_after_for@28:
+    dig 2
+    intc_0 // 2
     +
-    dig 3
+    dig 1
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.dynamic_array<arc4.uint256>, 1>>
     txn GroupIndex
-    bz g_ternary_false@11
+    bz main_ternary_false@30
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
+    b main_ternary_merge@42
 
-g_ternary_merge@12:
-    !
-    assert // not payable
-    bytec_1 // 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
-    log
-    intc_2 // 1
-    return
+main_ternary_false@30:
+    intc_1 // 0
+    b main_ternary_merge@42
 
-g_ternary_false@11:
-    intc_0 // 0
-    b g_ternary_merge@12
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/calldata_array_dynamic_invalid_static_middle.sol.C.h[routing]() -> void:
-h:
-    intc_0 // 0
-    bytec_0 // ""
-    dup
+main_f_route@5:
     txna ApplicationArgs 1
     dup
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    cover 2
-    intc_1 // 2
+    bury 10
+    intc_0 // 2
     *
-    swap
+    bury 4
     dup
     len
-    swap
+    bury 2
     extract 2 0
-    intc_0 // 0
+    bury 10
+    intc_1 // 0
+    bury 5
 
-h_for_header@1:
-    dup
-    dig 5
+main_for_header@34:
+    dig 4
+    dig 8
     <
-    bz h_after_for@8
-    dup
-    intc_1 // 2
+    bz main_after_for@39
+    dig 4
+    intc_0 // 2
     *
-    dig 2
+    dig 10
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 6
+    dig 5
     ==
     assert // invalid tail pointer for (len+(len+uint256[])[1][])
     dig 1
     len
     substring3
-    bury 8
-    intc_1 // 2
-    bury 6
-    intc_0 // 0
-    bury 7
+    bury 9
+    intc_0 // 2
+    bury 2
+    intc_1 // 0
+    bury 4
 
-h_for_header@3:
-    dig 6
+main_for_header@36:
+    dig 3
     intc_2 // 1
     <
-    bz h_after_for@6
-    dig 6
+    bz main_after_for@38
+    dig 3
     dup
-    intc_1 // 2
+    intc_0 // 2
     *
-    dig 9
+    dig 10
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 9
+    dig 5
     dup
     cover 4
     ==
@@ -334,52 +321,45 @@ h_for_header@3:
     dig 1
     len
     substring3
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_3 // 32
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     +
-    bury 7
+    bury 3
     intc_2 // 1
-    +
-    bury 7
-    b h_for_header@3
-
-h_after_for@6:
-    dig 3
-    dig 6
     +
     bury 4
-    dup
+    b main_for_header@36
+
+main_after_for@38:
+    dig 2
+    dig 2
+    +
+    bury 3
+    dig 4
     intc_2 // 1
     +
-    bury 1
-    b h_for_header@1
+    bury 5
+    b main_for_header@34
 
-h_after_for@8:
-    dig 3
-    intc_1 // 2
+main_after_for@39:
+    dig 2
+    intc_0 // 2
     +
-    dig 3
+    dig 1
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.dynamic_array<arc4.uint256>, 1>>
     txn GroupIndex
-    bz h_ternary_false@11
+    bz main_ternary_false@41
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
+    b main_ternary_merge@42
 
-h_ternary_merge@12:
-    !
-    assert // not payable
-    bytec_1 // 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
-    log
-    intc_2 // 1
-    return
-
-h_ternary_false@11:
-    intc_0 // 0
-    b h_ternary_merge@12
+main_ternary_false@41:
+    intc_1 // 0
+    b main_ternary_merge@42

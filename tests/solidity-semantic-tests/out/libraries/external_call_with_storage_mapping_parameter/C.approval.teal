@@ -3,8 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/external_call_with_storage_mapping_parameter.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
-    bytecblock "__ctor_pending" 0x "x" 0x78ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5 0x7866687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    intcblock 1 0 32
+    bytecblock "__ctor_pending" 0x78ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5 0x7866687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925 "x"
+    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -30,87 +31,49 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0xc14ad39f // method "__postInit()void", method "g(uint256)uint256"
     txna ApplicationArgs 0
-    match __postInit g
+    match main___postInit_route@5 main_g_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/external_call_with_storage_mapping_parameter.sol.L.f(_a: bytes) -> bytes:
-L.f:
-    proto 1 1
-    frame_dig -1
-    pushbytes 0x66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
-    concat
-    box_get
-    bytec_1 // 0x
-    cover 2
-    select
-    frame_dig -1
-    pushbytes 0xec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
-    concat
-    box_get
-    bytec_1 // 0x
-    cover 2
-    select
-    b*
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/external_call_with_storage_mapping_parameter.sol.C.__postInit[routing]() -> void:
-__postInit:
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_0 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec_2 // "x"
-    pushint 2
-    box_create
-    pop
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/external_call_with_storage_mapping_parameter.sol.C.g[routing]() -> void:
-g:
+main_g_route@6:
     txna ApplicationArgs 1
     dup
+    bury 2
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz g_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-g_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
-    bytec_3 // 0x78ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
+    bytec_1 // 0x78ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
     box_del
     pop
-    bytec_3 // 0x78ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
+    bytec_1 // 0x78ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
     dig 1
     dup
     cover 2
     box_put
-    bytec 4 // 0x7866687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    bytec_2 // 0x7866687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
     box_del
     pop
-    bytec 4 // 0x7866687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    bytec_2 // 0x7866687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
     swap
     box_put
-    bytec_2 // "x"
+    bytec_3 // "x"
     callsub L.f
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -120,6 +83,41 @@ g_ternary_merge@4:
     intc_0 // 1
     return
 
-g_ternary_false@3:
-    intc_2 // 0
-    b g_ternary_merge@4
+main_ternary_false@12:
+    intc_1 // 0
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_3 // "x"
+    pushint 2
+    box_create
+    pop
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/external_call_with_storage_mapping_parameter.sol.L.f(_a: bytes) -> bytes:
+L.f:
+    proto 1 1
+    frame_dig -1
+    pushbytes 0x66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    frame_dig -1
+    pushbytes 0xec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    b*
+    retsub

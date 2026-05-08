@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library_named.sol.Test.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2
-    bytecblock 0x "__ctor_pending" "a" "b" 0xec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5 0x9267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2 0x6166687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925 0x61ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5 0x619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2 0x6266687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925 0x62ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5 0x629267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2 0x151f7c75
+    bytecblock 0x "__ctor_pending" "a" "b" 0x9267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2 0x6166687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925 0x61ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5 0x619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2 0x6266687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925 0x62ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5 0x629267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2 0x151f7c75 0xec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
     pushint 4096
     bzero
     dup
@@ -30,39 +30,251 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x8fb5753f 0xdfc678d0 // method "__postInit()void", method "f()(uint256,uint256,uint256,uint256,uint256,uint256)", method "g()(uint256,uint256,uint256,uint256,uint256,uint256)"
     txna ApplicationArgs 0
-    match __postInit f g
+    match main___postInit_route@5 main_f_route@6 main_g_route@7
     err
 
+main_g_route@7:
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library_named.sol.Lib.f(a: bytes, b: bytes) -> bytes:
-Lib.f:
-    proto 2 1
-    pushint 42
+main_ternary_merge@14:
+    !
+    assert // not payable
+    bytec_2 // "a"
+    bytec_3 // "b"
+    callsub Lib.f
+    pushint 17
     itob
-    frame_dig -2
-    bytec 4 // 0xec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
+    swap
+    bytec 4 // 0x9267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
     concat
     dup
     box_del
     pop
     swap
     box_put
-    pushint 21
+    bytec 5 // 0x6166687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    bytec 6 // 0x61ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    bytec 7 // 0x619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 3
+    b|
+    bytec 8 // 0x6266687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 4
+    b|
+    bytec 9 // 0x62ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 5
+    b|
+    bytec 10 // 0x629267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 6
+    b|
+    uncover 5
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec 11 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@13:
+    intc_2 // 0
+    b main_ternary_merge@14
+
+main_f_route@6:
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    pushint 84
     itob
-    frame_dig -1
-    bytec 4 // 0xec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
+    bytec_2 // "a"
+    bytec_3 // "b"
+    callsub Lib.f
+    bytec 4 // 0x9267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
     concat
     dup
     box_del
     pop
     swap
     box_put
-    frame_dig -1
-    retsub
+    bytec 5 // 0x6166687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    bytec 6 // 0x61ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    bytec 7 // 0x619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 3
+    b|
+    bytec 8 // 0x6266687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 4
+    b|
+    bytec 9 // 0x62ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 5
+    b|
+    bytec 10 // 0x629267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 6
+    b|
+    uncover 5
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec 11 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
 
+main_ternary_false@18:
+    intc_2 // 0
+    b main_ternary_merge@19
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library_named.sol.Test.__postInit[routing]() -> void:
-__postInit:
+main___postInit_route@5:
     bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -81,246 +293,28 @@ __postInit:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library_named.sol.Test.f[routing]() -> void:
-f:
-    txn GroupIndex
-    bz f_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-f_ternary_merge@4:
-    !
-    assert // not payable
-    pushint 84
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library_named.sol.Lib.f(a: bytes, b: bytes) -> bytes:
+Lib.f:
+    proto 2 1
+    pushint 42
     itob
-    bytec_2 // "a"
-    bytec_3 // "b"
-    callsub Lib.f
-    bytec 5 // 0x9267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    frame_dig -2
+    bytec 12 // 0xec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
     concat
     dup
     box_del
     pop
     swap
     box_put
-    bytec 6 // 0x6166687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    swap
-    dig 1
-    b|
-    bytec 7 // 0x61ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 2
-    b|
-    bytec 8 // 0x619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 3
-    b|
-    bytec 9 // 0x6266687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 4
-    b|
-    bytec 10 // 0x62ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 5
-    b|
-    bytec 11 // 0x629267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 6
-    b|
-    uncover 5
-    uncover 5
-    concat
-    uncover 4
-    concat
-    uncover 3
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    bytec 12 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-f_ternary_false@3:
-    intc_2 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library_named.sol.Test.g[routing]() -> void:
-g:
-    txn GroupIndex
-    bz g_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-g_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_2 // "a"
-    bytec_3 // "b"
-    callsub Lib.f
-    pushint 17
+    pushint 21
     itob
-    swap
-    bytec 5 // 0x9267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    frame_dig -1
+    bytec 12 // 0xec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
     concat
     dup
     box_del
     pop
     swap
     box_put
-    bytec 6 // 0x6166687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    swap
-    dig 1
-    b|
-    bytec 7 // 0x61ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 2
-    b|
-    bytec 8 // 0x619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 3
-    b|
-    bytec 9 // 0x6266687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 4
-    b|
-    bytec 10 // 0x62ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 5
-    b|
-    bytec 11 // 0x629267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 6
-    b|
-    uncover 5
-    uncover 5
-    concat
-    uncover 4
-    concat
-    uncover 3
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    bytec 12 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-g_ternary_false@3:
-    intc_2 // 0
-    b g_ternary_merge@4
+    frame_dig -1
+    retsub

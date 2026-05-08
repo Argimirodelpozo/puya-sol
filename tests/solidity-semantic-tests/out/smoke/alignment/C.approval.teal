@@ -36,19 +36,14 @@ main_stateDecimal_route@4:
     txn ApplicationID
     &&
     assert
-    b stateDecimal
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/alignment.sol.C.stateDecimal[routing]() -> void:
-stateDecimal:
     txn GroupIndex
-    bz stateDecimal_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-stateDecimal_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     intc_2 // 0
@@ -70,6 +65,6 @@ stateDecimal_ternary_merge@4:
     intc_1 // 1
     return
 
-stateDecimal_ternary_false@3:
+main_ternary_false@8:
     intc_2 // 0
-    b stateDecimal_ternary_merge@4
+    b main_ternary_merge@9

@@ -31,7 +31,34 @@ main_builtinMatchesSolidityImplementation_route@4:
     txn ApplicationID
     &&
     assert
-    b builtinMatchesSolidityImplementation
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    pushbytes "85"
+    callsub erc7201Mock
+    pushbytes 0x06d0d983459328e82eacb1bf2d6fadfa38a6896e9d4cbfe0e1aa41c6281bab00
+    b==
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@8:
+    intc_2 // 0
+    b main_ternary_merge@9
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_with_zero_last_byte_of_inner_hash_comptime.sol.erc7201Mock(id: bytes) -> bytes:
@@ -63,35 +90,3 @@ erc7201Mock:
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b&
     retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_with_zero_last_byte_of_inner_hash_comptime.sol.C.builtinMatchesSolidityImplementation[routing]() -> void:
-builtinMatchesSolidityImplementation:
-    txn GroupIndex
-    bz builtinMatchesSolidityImplementation_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-builtinMatchesSolidityImplementation_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes "85"
-    callsub erc7201Mock
-    pushbytes 0x06d0d983459328e82eacb1bf2d6fadfa38a6896e9d4cbfe0e1aa41c6281bab00
-    b==
-    pushbytes 0x00
-    intc_2 // 0
-    uncover 2
-    setbit
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-builtinMatchesSolidityImplementation_ternary_false@3:
-    intc_2 // 0
-    b builtinMatchesSolidityImplementation_ternary_merge@4

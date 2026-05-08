@@ -5,6 +5,7 @@
 main:
     intcblock 0 1 32 8
     bytecblock "data" 0x 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    intc_0 // 0
     pushint 4096
     bzero
     dup
@@ -36,28 +37,51 @@ main_after_if_else@2:
     assert
     pushbytess 0x5cd3f78a 0x44977246 // method "fill()void", method "clear()void"
     txna ApplicationArgs 0
-    match fill clear
+    match main_fill_route@5 main_clear_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/short_fixed_array_cleanup.sol.c.fill[routing]() -> void:
-fill:
-    intc_0 // 0
+main_clear_route@6:
     txn GroupIndex
-    bz fill_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-fill_ternary_merge@4:
+main_ternary_merge@13:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    bury 1
+    assert // check data exists
+    bytec_0 // "data"
+    bytec_2 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    intc_1 // 1
+    return
+
+main_ternary_false@12:
+    intc_0 // 0
+    b main_ternary_merge@13
+
+main_fill_route@5:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
     !
     assert // not payable
     intc_0 // 0
     itob
     bury 1
 
-fill_while_top@5:
+main_while_top@19:
     intc_0 // 0
     bytec_0 // "data"
     app_global_get_ex
@@ -67,7 +91,7 @@ fill_while_top@5:
     itob
     dig 1
     b>
-    bz fill_after_while@7
+    bz main_after_while@21
     dupn 2
     pushbytes 0x01
     b+
@@ -101,40 +125,12 @@ fill_while_top@5:
     swap
     app_global_put
     bury 1
-    b fill_while_top@5
+    b main_while_top@19
 
-fill_after_while@7:
+main_after_while@21:
     intc_1 // 1
     return
 
-fill_ternary_false@3:
+main_ternary_false@17:
     intc_0 // 0
-    b fill_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/short_fixed_array_cleanup.sol.c.clear[routing]() -> void:
-clear:
-    txn GroupIndex
-    bz clear_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-clear_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 0
-    bytec_0 // "data"
-    app_global_get_ex
-    bury 1
-    assert // check data exists
-    bytec_0 // "data"
-    bytec_2 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    app_global_put
-    intc_1 // 1
-    return
-
-clear_ternary_false@3:
-    intc_0 // 0
-    b clear_ternary_merge@4
+    b main_ternary_merge@18

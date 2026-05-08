@@ -30,11 +30,6 @@ main_e_route@4:
     txn ApplicationID
     &&
     assert
-    b e
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/short_input_bytes.sol.C.e[routing]() -> void:
-e:
     txna ApplicationArgs 1
     dup
     intc_1 // 0
@@ -46,13 +41,13 @@ e:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     txn GroupIndex
-    bz e_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-e_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000007
@@ -60,6 +55,6 @@ e_ternary_merge@4:
     intc_0 // 1
     return
 
-e_ternary_false@3:
+main_ternary_false@8:
     intc_1 // 0
-    b e_ternary_merge@4
+    b main_ternary_merge@9

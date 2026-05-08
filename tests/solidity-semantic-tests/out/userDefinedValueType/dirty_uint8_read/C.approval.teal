@@ -30,20 +30,122 @@ main_after_if_else@2:
     assert
     pushbytess 0x9172775d 0x0232350d 0x3f4abdfd // method "create_dirty_slot()void", method "read_unclean_value()byte[32]", method "x()uint512"
     txna ApplicationArgs 0
-    match create_dirty_slot read_unclean_value x
+    match main_create_dirty_slot_route@5 main_read_unclean_value_route@6 main_x_route@7
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_uint8_read.sol.C.create_dirty_slot[routing]() -> void:
-create_dirty_slot:
+main_x_route@7:
     txn GroupIndex
-    bz create_dirty_slot_ternary_false@3
+    bz main_ternary_false@13
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-create_dirty_slot_ternary_merge@4:
+main_ternary_merge@14:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    itob
+    bytec_1 // 0xff
+    b&
+    pushbytes 0x80
+    b>=
+    bz main_ternary_false@16
+    intc_2 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    itob
+    bytec_1 // 0xff
+    b&
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b+
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+main_ternary_merge@17:
+    dup
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    intc_3 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@16:
+    intc_2 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    itob
+    bytec_1 // 0xff
+    b&
+    b main_ternary_merge@17
+
+main_ternary_false@13:
+    intc_2 // 0
+    b main_ternary_merge@14
+
+main_read_unclean_value_route@6:
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    load 0
+    intc_0 // 32
+    bzero
+    uncover 2
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 32
+    swap
+    store 0
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
+
+main_create_dirty_slot_route@5:
+    txn GroupIndex
+    bz main_ternary_false@26
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@27:
     !
     assert // not payable
     load 0
@@ -76,114 +178,6 @@ create_dirty_slot_ternary_merge@4:
     intc_1 // 1
     return
 
-create_dirty_slot_ternary_false@3:
+main_ternary_false@26:
     intc_2 // 0
-    b create_dirty_slot_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_uint8_read.sol.C.read_unclean_value[routing]() -> void:
-read_unclean_value:
-    txn GroupIndex
-    bz read_unclean_value_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-read_unclean_value_ternary_merge@4:
-    !
-    assert // not payable
-    intc_2 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
-    load 0
-    intc_0 // 32
-    bzero
-    uncover 2
-    itob
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 0 32
-    swap
-    store 0
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-read_unclean_value_ternary_false@3:
-    intc_2 // 0
-    b read_unclean_value_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_uint8_read.sol.C.x[routing]() -> void:
-x:
-    txn GroupIndex
-    bz x_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-x_ternary_merge@4:
-    !
-    assert // not payable
-    intc_2 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
-    itob
-    bytec_1 // 0xff
-    b&
-    pushbytes 0x80
-    b>=
-    bz x_ternary_false@6
-    intc_2 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
-    itob
-    bytec_1 // 0xff
-    b&
-    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
-    b+
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-
-x_ternary_merge@7:
-    dup
-    len
-    intc_3 // 64
-    <=
-    assert // overflow
-    intc_3 // 64
-    bzero
-    b|
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-x_ternary_false@6:
-    intc_2 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
-    itob
-    bytec_1 // 0xff
-    b&
-    b x_ternary_merge@7
-
-x_ternary_false@3:
-    intc_2 // 0
-    b x_ternary_merge@4
+    b main_ternary_merge@27

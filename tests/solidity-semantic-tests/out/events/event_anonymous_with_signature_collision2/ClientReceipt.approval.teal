@@ -3,7 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_anonymous_with_signature_collision2.sol.ClientReceipt.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 0 32
+    intc_1 // 0
+    dup
     pushint 4096
     bzero
     dup
@@ -30,27 +32,24 @@ main_deposit_route@4:
     txn ApplicationID
     &&
     assert
-    b deposit
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_anonymous_with_signature_collision2.sol.ClientReceipt.deposit[routing]() -> void:
-deposit:
     txna ApplicationArgs 1
     dup
+    bury 3
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    intc_1 // 32
+    intc_2 // 32
     bzero
+    bury 1
     txn GroupIndex
-    bz deposit_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-deposit_ternary_merge@4:
+main_ternary_merge@9:
     itob
     dig 1
     b|
@@ -66,6 +65,6 @@ deposit_ternary_merge@4:
     intc_0 // 1
     return
 
-deposit_ternary_false@3:
-    pushint 0
-    b deposit_ternary_merge@4
+main_ternary_false@8:
+    intc_1 // 0
+    b main_ternary_merge@9

@@ -4,6 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_2d_new.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 2 8
+    intc_1 // 0
+    dupn 4
+    pushbytes ""
+    dupn 2
     pushint 4096
     bzero
     dup
@@ -30,56 +34,48 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_2d_new.sol.C.f[routing]() -> void:
-f:
-    intc_1 // 0
-    dupn 3
-    pushbytes ""
-    dupn 2
     txna ApplicationArgs 1
     dup
+    bury 9
     len
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     pushbytes 0x00020004000600000000
-    bury 8
+    bury 7
     intc_1 // 0
     itob
-    bury 7
+    bury 6
 
-f_while_top@5:
-    dig 6
+main_while_top@10:
+    dig 5
     pushbytes 0x02
     b<
-    bz f_after_while@7
+    bz main_after_while@12
     intc_3 // 8
     bzero
-    dig 7
+    dig 6
     concat
     dup
     len
     intc_3 // 8
     -
     extract_uint64
-    dig 8
+    dig 7
     dup
     substring 0 2
     dup
-    bury 8
+    bury 7
     btoi
     swap
     extract 2 0
@@ -109,7 +105,7 @@ f_while_top@5:
     extract_uint16
     dup2
     -
-    bury 9
+    bury 8
     dig 4
     intc_1 // 0
     uncover 2
@@ -121,58 +117,58 @@ f_while_top@5:
     uncover 4
     substring3
     concat
-    bury 8
+    bury 7
     swap
     intc_2 // 2
     *
+    bury 2
     bury 3
-    bury 4
 
-f_for_header@9:
-    dig 3
+main_for_header@14:
     dig 2
+    dig 1
     <
-    bz f_after_for@11
-    dig 5
+    bz main_after_for@16
+    dig 4
     dup
-    dig 5
+    dig 4
     dup
     cover 3
     extract_uint16
     pushint 98
     +
-    dig 5
+    dig 4
     -
     itob
     extract 6 0
     dig 2
     swap
     replace3
-    bury 7
+    bury 6
     intc_2 // 2
     +
-    bury 4
-    b f_for_header@9
+    bury 3
+    b main_for_header@14
 
-f_after_for@11:
-    dig 4
-    dig 6
+main_after_for@16:
+    dig 3
+    dig 5
     concat
-    bury 8
-    dig 6
+    bury 7
+    dig 5
     pushbytes 0x01
     b+
-    bury 7
-    b f_while_top@5
+    bury 6
+    b main_while_top@10
 
-f_after_while@7:
+main_after_while@12:
     pushbytes 0x151f7c75
-    dig 1
+    dig 8
     concat
     log
     intc_0 // 1
     return
 
-f_ternary_false@3:
+main_ternary_false@8:
     intc_1 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@9

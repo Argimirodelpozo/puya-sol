@@ -30,12 +30,45 @@ main_after_if_else@2:
     assert
     pushbytess 0x66b94fc8 0x4b4fb052 // method "c(uint256,uint256[])void", method "f()bool"
     txna ApplicationArgs 0
-    match c f
+    match main_c_route@5 main_f_route@6
     err
 
+main_f_route@6:
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_encode_call.sol.C.c[routing]() -> void:
-c:
+main_ternary_merge@13:
+    !
+    assert // not payable
+    pushint 5
+    itob
+    pushbytes 0x000200000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000007
+    callsub c
+    pop
+    intc_0 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@12:
+    intc_0 // 0
+    b main_ternary_merge@13
+
+main_c_route@5:
     txna ApplicationArgs 1
     dup
     len
@@ -54,60 +87,23 @@ c:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_encode_call.sol.C.c
+    callsub c
     pop
     intc_1 // 1
     return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_encode_call.sol.C.f[routing]() -> void:
-f:
-    txn GroupIndex
-    bz f_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-f_ternary_merge@4:
-    !
-    assert // not payable
-    pushint 5
-    itob
-    pushbytes 0x000200000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000007
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_encode_call.sol.C.c
-    pop
-    intc_0 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
-    pushbytes 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-f_ternary_false@3:
-    intc_0 // 0
-    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_encode_call.sol.C.c(__arc4_a: bytes, b: bytes) -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_encode_call.sol.C.c:
+c:
     proto 2 1
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_encode_call.sol.C.c_ternary_false@2
+    bz c_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_encode_call.sol.C.c_ternary_merge@3:
+c_ternary_merge@3:
     !
     assert // not payable
     frame_dig -2
@@ -137,6 +133,6 @@ f_ternary_false@3:
     frame_dig -1
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_encode_call.sol.C.c_ternary_false@2:
+c_ternary_false@2:
     intc_0 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_encode_call.sol.C.c_ternary_merge@3
+    b c_ternary_merge@3

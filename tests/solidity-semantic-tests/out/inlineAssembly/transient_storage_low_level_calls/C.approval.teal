@@ -27,57 +27,20 @@ main_after_if_else@2:
     assert
     pushbytess 0xd5fa9f39 0x1337d041 0x680b106e 0x84322d27 0x05fd7bc1 0xfe8eda34 // method "set(uint512)void", method "get()uint512", method "testDelegateCall()bool", method "testCall()bool", method "tloadAllowedStaticCall()bool", method "tstoreNotAllowedStaticCall()bool"
     txna ApplicationArgs 0
-    match set get testDelegateCall testCall tloadAllowedStaticCall tstoreNotAllowedStaticCall
+    match main_set_route@5 main_get_route@6 main_testDelegateCall_route@7 main_testCall_route@8 main_tloadAllowedStaticCall_route@9 main_tstoreNotAllowedStaticCall_route@10
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.set[routing]() -> void:
-set:
-    txna ApplicationArgs 1
-    dup
-    len
-    pushint 64
-    ==
-    assert // invalid number of bytes for arc4.uint512
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.set
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.get[routing]() -> void:
-get:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.get
-    dup
-    len
-    pushint 64
-    <=
-    assert // overflow
-    pushint 64
-    bzero
-    b|
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.testDelegateCall[routing]() -> void:
-testDelegateCall:
+main_tstoreNotAllowedStaticCall_route@10:
     txn GroupIndex
-    bz testDelegateCall_ternary_false@3
+    bz main_ternary_false@16
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-testDelegateCall_ternary_merge@4:
+main_ternary_merge@17:
     !
     assert // not payable
-    pushint 5
-    itob
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.set
     itxn_begin
     bytec_0 // TMPL_APPROVAL_D
     bytec_1 // TMPL_CLEAR_D
@@ -106,35 +69,82 @@ testDelegateCall_ternary_merge@4:
     intc 4 // 1000000
     itxn_field Amount
     itxn_submit
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.get
-    pushbytes 0x06
-    b==
+    intc_0 // 0
     assert
     bytec_2 // 0x151f7c7580
     log
     intc_1 // 1
     return
 
-testDelegateCall_ternary_false@3:
+main_ternary_false@16:
     intc_0 // 0
-    b testDelegateCall_ternary_merge@4
+    b main_ternary_merge@17
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.testCall[routing]() -> void:
-testCall:
+main_tloadAllowedStaticCall_route@9:
     txn GroupIndex
-    bz testCall_ternary_false@3
+    bz main_ternary_false@21
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-testCall_ternary_merge@4:
+main_ternary_merge@22:
     !
     assert // not payable
     pushint 5
     itob
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.set
+    callsub set
+    itxn_begin
+    bytec_0 // TMPL_APPROVAL_D
+    bytec_1 // TMPL_CLEAR_D
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_2 // 16
+    itxn_field GlobalNumUint
+    intc_2 // 16
+    itxn_field GlobalNumByteSlice
+    intc_0 // 0
+    itxn_field Fee
+    pushint 3
+    itxn_field ExtraProgramPages
+    itxn_field ClearStateProgram
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    intc 4 // 1000000
+    itxn_field Amount
+    itxn_submit
+    bytec_2 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@21:
+    intc_0 // 0
+    b main_ternary_merge@22
+
+main_testCall_route@8:
+    txn GroupIndex
+    bz main_ternary_false@26
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@27:
+    !
+    assert // not payable
+    pushint 5
+    itob
+    callsub set
     itxn_begin
     bytec_0 // TMPL_APPROVAL_D
     bytec_1 // TMPL_CLEAR_D
@@ -204,26 +214,24 @@ testCall_ternary_merge@4:
     intc_1 // 1
     return
 
-testCall_ternary_false@3:
+main_ternary_false@26:
     intc_0 // 0
-    b testCall_ternary_merge@4
+    b main_ternary_merge@27
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.tloadAllowedStaticCall[routing]() -> void:
-tloadAllowedStaticCall:
+main_testDelegateCall_route@7:
     txn GroupIndex
-    bz tloadAllowedStaticCall_ternary_false@3
+    bz main_ternary_false@31
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-tloadAllowedStaticCall_ternary_merge@4:
+main_ternary_merge@32:
     !
     assert // not payable
     pushint 5
     itob
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.set
+    callsub set
     itxn_begin
     bytec_0 // TMPL_APPROVAL_D
     bytec_1 // TMPL_CLEAR_D
@@ -252,79 +260,59 @@ tloadAllowedStaticCall_ternary_merge@4:
     intc 4 // 1000000
     itxn_field Amount
     itxn_submit
-    bytec_2 // 0x151f7c7580
-    log
-    intc_1 // 1
-    return
-
-tloadAllowedStaticCall_ternary_false@3:
-    intc_0 // 0
-    b tloadAllowedStaticCall_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.tstoreNotAllowedStaticCall[routing]() -> void:
-tstoreNotAllowedStaticCall:
-    txn GroupIndex
-    bz tstoreNotAllowedStaticCall_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-tstoreNotAllowedStaticCall_ternary_merge@4:
-    !
-    assert // not payable
-    itxn_begin
-    bytec_0 // TMPL_APPROVAL_D
-    bytec_1 // TMPL_CLEAR_D
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_2 // 16
-    itxn_field GlobalNumUint
-    intc_2 // 16
-    itxn_field GlobalNumByteSlice
-    intc_0 // 0
-    itxn_field Fee
-    pushint 3
-    itxn_field ExtraProgramPages
-    itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
-    itxn_submit
-    itxn CreatedApplicationID
-    app_params_get AppAddress
-    pop
-    itxn_begin
-    intc_1 // 1
-    itxn_field TypeEnum
-    itxn_field Receiver
-    intc_0 // 0
-    itxn_field Fee
-    intc 4 // 1000000
-    itxn_field Amount
-    itxn_submit
-    intc_0 // 0
+    callsub get
+    pushbytes 0x06
+    b==
     assert
     bytec_2 // 0x151f7c7580
     log
     intc_1 // 1
     return
 
-tstoreNotAllowedStaticCall_ternary_false@3:
+main_ternary_false@31:
     intc_0 // 0
-    b tstoreNotAllowedStaticCall_ternary_merge@4
+    b main_ternary_merge@32
+
+main_get_route@6:
+    callsub get
+    dup
+    len
+    pushint 64
+    <=
+    assert // overflow
+    pushint 64
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_set_route@5:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub set
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.set(x: bytes) -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.set:
+set:
     proto 1 0
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.set_ternary_false@2
+    bz set_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.set_ternary_merge@3:
+set_ternary_merge@3:
     !
     assert // not payable
     load 0
@@ -338,21 +326,21 @@ tstoreNotAllowedStaticCall_ternary_false@3:
     store 0
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.set_ternary_false@2:
+set_ternary_false@2:
     intc_0 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.set_ternary_merge@3
+    b set_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.get() -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.get:
+get:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.get_ternary_false@2
+    bz get_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.get_ternary_merge@3:
+get_ternary_merge@3:
     !
     assert // not payable
     load 0
@@ -362,6 +350,6 @@ tstoreNotAllowedStaticCall_ternary_false@3:
     store 0
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.get_ternary_false@2:
+get_ternary_false@2:
     intc_0 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.get_ternary_merge@3
+    b get_ternary_merge@3

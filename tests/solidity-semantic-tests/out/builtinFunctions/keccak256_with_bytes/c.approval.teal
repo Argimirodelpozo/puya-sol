@@ -30,32 +30,18 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0xe159b9db // method "__postInit()void", method "foo()bool"
     txna ApplicationArgs 0
-    match __postInit foo
+    match main___postInit_route@5 main_foo_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/keccak256_with_bytes.sol.c.__postInit[routing]() -> void:
-__postInit:
-    bytec_1 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_1 // "__ctor_pending"
-    intc_1 // 0
-    app_global_put
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/keccak256_with_bytes.sol.c.foo[routing]() -> void:
-foo:
+main_foo_route@6:
     txn GroupIndex
-    bz foo_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-foo_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     bytec_0 // "data"
@@ -101,6 +87,16 @@ foo_ternary_merge@4:
     intc_0 // 1
     return
 
-foo_ternary_false@3:
+main_ternary_false@12:
     intc_1 // 0
-    b foo_ternary_merge@4
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    intc_0 // 1
+    return

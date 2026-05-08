@@ -33,20 +33,44 @@ main_after_if_else@2:
     assert
     pushbytess 0x9939b21d 0x66a35e97 // method "setAndClear()void", method "getFlags()bool[3]"
     txna ApplicationArgs 0
-    match setAndClear getFlags
+    match main_setAndClear_route@5 main_getFlags_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_delete_different_base_type.sol.C.setAndClear[routing]() -> void:
-setAndClear:
+main_getFlags_route@6:
     txn GroupIndex
-    bz setAndClear_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-setAndClear_ternary_merge@4:
+main_ternary_merge@13:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "flags"
+    app_global_get_ex
+    assert // check flags exists
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@12:
+    intc_1 // 0
+    b main_ternary_merge@13
+
+main_setAndClear_route@5:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
     !
     assert // not payable
     load 5
@@ -73,34 +97,6 @@ setAndClear_ternary_merge@4:
     intc_0 // 1
     return
 
-setAndClear_ternary_false@3:
+main_ternary_false@17:
     intc_1 // 0
-    b setAndClear_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_delete_different_base_type.sol.C.getFlags[routing]() -> void:
-getFlags:
-    txn GroupIndex
-    bz getFlags_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-getFlags_ternary_merge@4:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_0 // "flags"
-    app_global_get_ex
-    assert // check flags exists
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-getFlags_ternary_false@3:
-    intc_1 // 0
-    b getFlags_ternary_merge@4
+    b main_ternary_merge@18

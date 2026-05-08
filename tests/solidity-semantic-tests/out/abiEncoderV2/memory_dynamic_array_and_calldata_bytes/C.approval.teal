@@ -5,6 +5,8 @@
 main:
     intcblock 32 0 1 2
     bytecblock 0x151f7c75
+    intc_1 // 0
+    dup
     pushint 4096
     bzero
     dup
@@ -27,55 +29,14 @@ main_after_if_else@2:
     assert
     pushbytess 0x3788be3a 0x74d6451c // method "f(uint256[],byte[])byte[]", method "g(uint256[],byte[])byte[]"
     txna ApplicationArgs 0
-    match f g
+    match main_f_route@5 main_g_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/memory_dynamic_array_and_calldata_bytes.sol.C.f[routing]() -> void:
-f:
+main_g_route@6:
     txna ApplicationArgs 1
     dup
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    intc_0 // 32
-    *
-    intc_3 // 2
-    +
-    dig 1
-    len
-    ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
-    txna ApplicationArgs 2
+    bury 3
     dup
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    intc_3 // 2
-    +
-    dig 1
-    len
-    ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    extract 2 0
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/memory_dynamic_array_and_calldata_bytes.sol.C.f
-    pop
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/memory_dynamic_array_and_calldata_bytes.sol.C.g[routing]() -> void:
-g:
-    txna ApplicationArgs 1
-    dupn 2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
@@ -97,18 +58,19 @@ g:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    bury 1
     txn GroupIndex
-    bz g_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-g_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     dup2
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/memory_dynamic_array_and_calldata_bytes.sol.C.f
+    callsub f
     pop
     dup
     len
@@ -123,22 +85,61 @@ g_ternary_merge@4:
     intc_2 // 1
     return
 
-g_ternary_false@3:
+main_ternary_false@12:
     intc_1 // 0
-    b g_ternary_merge@4
+    b main_ternary_merge@13
+
+main_f_route@5:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txna ApplicationArgs 2
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    callsub f
+    pop
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/memory_dynamic_array_and_calldata_bytes.sol.C.f(a: bytes, b: bytes) -> bytes, bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/memory_dynamic_array_and_calldata_bytes.sol.C.f:
+f:
     proto 2 2
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/memory_dynamic_array_and_calldata_bytes.sol.C.f_ternary_false@2
+    bz f_ternary_false@2
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/memory_dynamic_array_and_calldata_bytes.sol.C.f_ternary_merge@3:
+f_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 32
@@ -215,6 +216,6 @@ g_ternary_false@3:
     frame_dig -2
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/memory_dynamic_array_and_calldata_bytes.sol.C.f_ternary_false@2:
+f_ternary_false@2:
     intc_1 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/memory_dynamic_array_and_calldata_bytes.sol.C.f_ternary_merge@3
+    b f_ternary_merge@3

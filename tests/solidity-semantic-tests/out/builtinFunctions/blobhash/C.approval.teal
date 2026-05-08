@@ -3,8 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blobhash.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2
-    bytecblock 0x151f7c75
+    intcblock 1 0
     pushint 4096
     bzero
     dup
@@ -27,76 +26,18 @@ main_after_if_else@2:
     assert
     pushbytess 0x4494bd16 0x3fc82556 0x06603fbe // method "f()byte[32]", method "g()byte[32]", method "h()byte[32]"
     txna ApplicationArgs 0
-    match f g h
+    match main_f_route@5 main_g_route@6 main_h_route@7
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blobhash.sol.C.f[routing]() -> void:
-f:
+main_h_route@7:
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@13
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
-    !
-    assert // not payable
-    global Round
-    intc_2 // 2
-    -
-    block BlkSeed
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-f_ternary_false@3:
-    intc_1 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blobhash.sol.C.g[routing]() -> void:
-g:
-    txn GroupIndex
-    bz g_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-g_ternary_merge@4:
-    !
-    assert // not payable
-    global Round
-    intc_2 // 2
-    -
-    block BlkSeed
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-g_ternary_false@3:
-    intc_1 // 0
-    b g_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blobhash.sol.C.h[routing]() -> void:
-h:
-    txn GroupIndex
-    bz h_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-h_ternary_merge@4:
+main_ternary_merge@14:
     !
     assert // not payable
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
@@ -104,6 +45,45 @@ h_ternary_merge@4:
     intc_0 // 1
     return
 
-h_ternary_false@3:
+main_ternary_false@13:
     intc_1 // 0
-    b h_ternary_merge@4
+    b main_ternary_merge@14
+
+main_g_route@6:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@26:
+    !
+    assert // not payable
+    global Round
+    pushint 2
+    -
+    block BlkSeed
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@19:
+    intc_1 // 0
+    b main_ternary_merge@26
+
+main_f_route@5:
+    txn GroupIndex
+    bz main_ternary_false@25
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@26
+
+main_ternary_false@25:
+    intc_1 // 0
+    b main_ternary_merge@26

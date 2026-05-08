@@ -30,61 +30,20 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0xcd78b354 0x4b2c0376 0xafedb2e5 // method "__postInit()void", method "f()uint256", method "g()uint256", method "h()uint256"
     txna ApplicationArgs 0
-    match __postInit f g h
+    match main___postInit_route@5 main_f_route@6 main_g_route@7 main_h_route@8
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.D.__postInit[routing]() -> void:
-__postInit:
-    bytec_1 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_1 // "__ctor_pending"
-    intc_0 // 0
-    app_global_put
-    itxn_begin
-    bytec 5 // TMPL_APPROVAL_C
-    bytec 6 // TMPL_CLEAR_C
-    intc_2 // 6
-    itxn_field TypeEnum
-    pushint 16
-    itxn_field GlobalNumUint
-    pushint 16
-    itxn_field GlobalNumByteSlice
-    intc_0 // 0
-    itxn_field Fee
-    pushint 3
-    itxn_field ExtraProgramPages
-    itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
-    itxn_submit
-    itxn CreatedApplicationID
-    dup
-    app_params_get AppAddress
-    pop
-    itxn_begin
+main_h_route@8:
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
     intc_1 // 1
-    itxn_field TypeEnum
-    itxn_field Receiver
-    intc_0 // 0
-    itxn_field Fee
-    pushint 1000000
-    itxn_field Amount
-    itxn_submit
-    pushint 24
-    bzero
-    swap
-    itob
-    concat
-    bytec_0 // "c"
-    swap
-    app_global_put
-    intc_1 // 1
-    return
+    -
+    gtxns Amount
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.D.f[routing]() -> void:
-f:
+main_ternary_merge@15:
+    !
+    assert // not payable
     itxn_begin
     intc_0 // 0
     bytec_0 // "c"
@@ -100,9 +59,7 @@ f:
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec 4 // method "g(uint256)void"
-    itxn_field ApplicationArgs
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
+    pushbytes 0x0a449f0b // method "h()void"
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
@@ -133,17 +90,19 @@ f:
     intc_1 // 1
     return
 
+main_ternary_false@14:
+    intc_0 // 0
+    b main_ternary_merge@15
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.D.g[routing]() -> void:
-g:
+main_g_route@7:
     txn GroupIndex
-    bz g_ternary_false@3
+    bz main_ternary_false@19
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-g_ternary_merge@4:
+main_ternary_merge@20:
     !
     assert // not payable
     itxn_begin
@@ -194,23 +153,11 @@ g_ternary_merge@4:
     intc_1 // 1
     return
 
-g_ternary_false@3:
+main_ternary_false@19:
     intc_0 // 0
-    b g_ternary_merge@4
+    b main_ternary_merge@20
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.D.h[routing]() -> void:
-h:
-    txn GroupIndex
-    bz h_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-h_ternary_merge@4:
-    !
-    assert // not payable
+main_f_route@6:
     itxn_begin
     intc_0 // 0
     bytec_0 // "c"
@@ -226,7 +173,9 @@ h_ternary_merge@4:
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    pushbytes 0x0a449f0b // method "h()void"
+    bytec 4 // method "g(uint256)void"
+    itxn_field ApplicationArgs
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
@@ -257,6 +206,49 @@ h_ternary_merge@4:
     intc_1 // 1
     return
 
-h_ternary_false@3:
+main___postInit_route@5:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
     intc_0 // 0
-    b h_ternary_merge@4
+    app_global_put
+    itxn_begin
+    bytec 5 // TMPL_APPROVAL_C
+    bytec 6 // TMPL_CLEAR_C
+    intc_2 // 6
+    itxn_field TypeEnum
+    pushint 16
+    itxn_field GlobalNumUint
+    pushint 16
+    itxn_field GlobalNumByteSlice
+    intc_0 // 0
+    itxn_field Fee
+    pushint 3
+    itxn_field ExtraProgramPages
+    itxn_field ClearStateProgram
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    dup
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    pushint 1000000
+    itxn_field Amount
+    itxn_submit
+    pushint 24
+    bzero
+    swap
+    itob
+    concat
+    bytec_0 // "c"
+    swap
+    app_global_put
+    intc_1 // 1
+    return

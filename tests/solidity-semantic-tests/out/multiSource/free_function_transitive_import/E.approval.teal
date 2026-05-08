@@ -1,7 +1,7 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_jdi14x_z/s3.sol.E.approval_program() -> uint64:
+// /tmp/multisource_qka78fml/s3.sol.E.approval_program() -> uint64:
 main:
     intcblock 1 32 0
     bytecblock 0x151f7c75
@@ -27,104 +27,98 @@ main_after_if_else@2:
     assert
     pushbytess 0x3f72e9ed 0xafedb2e5 0x4b2c0376 // method "i()uint256", method "h()uint256", method "g()uint256"
     txna ApplicationArgs 0
-    match i h g
+    match main_i_route@5 main_h_route@6 main_g_route@7
     err
 
+main_g_route@7:
+    callsub g
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
 
-// /tmp/multisource_jdi14x_z/s3.sol.f_57() -> bytes:
+main_h_route@6:
+    txn GroupIndex
+    bz main_ternary_false@15
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@16:
+    !
+    assert // not payable
+    callsub g
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@15:
+    intc_2 // 0
+    b main_ternary_merge@16
+
+main_i_route@5:
+    txn GroupIndex
+    bz main_ternary_false@20
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@21:
+    !
+    assert // not payable
+    callsub f
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@20:
+    intc_2 // 0
+    b main_ternary_merge@21
+
+
+// /tmp/multisource_qka78fml/s3.sol.f_57() -> bytes:
 f:
     pushint 1337
     itob
     retsub
 
 
-// /tmp/multisource_jdi14x_z/s3.sol.E.i[routing]() -> void:
-i:
-    txn GroupIndex
-    bz i_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-i_ternary_merge@4:
-    !
-    assert // not payable
-    callsub f
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    b|
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-i_ternary_false@3:
-    intc_2 // 0
-    b i_ternary_merge@4
-
-
-// /tmp/multisource_jdi14x_z/s3.sol.E.h[routing]() -> void:
-h:
-    txn GroupIndex
-    bz h_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-h_ternary_merge@4:
-    !
-    assert // not payable
-    callsub /tmp/multisource_jdi14x_z/s3.sol.E.g
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    b|
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-h_ternary_false@3:
-    intc_2 // 0
-    b h_ternary_merge@4
-
-
-// /tmp/multisource_jdi14x_z/s3.sol.E.g[routing]() -> void:
+// /tmp/multisource_qka78fml/s3.sol.E.g() -> bytes:
 g:
-    callsub /tmp/multisource_jdi14x_z/s3.sol.E.g
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-
-// /tmp/multisource_jdi14x_z/s3.sol.E.g() -> bytes:
-/tmp/multisource_jdi14x_z/s3.sol.E.g:
     txn GroupIndex
-    bz /tmp/multisource_jdi14x_z/s3.sol.E.g_ternary_false@2
+    bz g_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/tmp/multisource_jdi14x_z/s3.sol.E.g_ternary_merge@3:
+g_ternary_merge@3:
     !
     assert // not payable
     callsub f
@@ -138,6 +132,6 @@ g:
     b|
     retsub
 
-/tmp/multisource_jdi14x_z/s3.sol.E.g_ternary_false@2:
+g_ternary_false@2:
     intc_2 // 0
-    b /tmp/multisource_jdi14x_z/s3.sol.E.g_ternary_merge@3
+    b g_ternary_merge@3

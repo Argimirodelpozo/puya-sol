@@ -42,20 +42,44 @@ main_after_if_else@2:
     assert
     pushbytess 0x8cd7bc25 0x950b7cd9 // method "r()uint256", method "ch()address"
     txna ApplicationArgs 0
-    match r ch
+    match main_r_route@5 main_ch_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_constructors.sol.Creator.r[routing]() -> void:
-r:
+main_ch_route@6:
     txn GroupIndex
-    bz r_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-r_ternary_merge@4:
+main_ternary_merge@13:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_1 // "ch"
+    app_global_get_ex
+    assert // check ch exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@12:
+    intc_1 // 0
+    b main_ternary_merge@13
+
+main_r_route@5:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
     !
     assert // not payable
     intc_1 // 0
@@ -77,34 +101,6 @@ r_ternary_merge@4:
     intc_0 // 1
     return
 
-r_ternary_false@3:
+main_ternary_false@17:
     intc_1 // 0
-    b r_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_constructors.sol.Creator.ch[routing]() -> void:
-ch:
-    txn GroupIndex
-    bz ch_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-ch_ternary_merge@4:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_1 // "ch"
-    app_global_get_ex
-    assert // check ch exists
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-ch_ternary_false@3:
-    intc_1 // 0
-    b ch_ternary_merge@4
+    b main_ternary_merge@18

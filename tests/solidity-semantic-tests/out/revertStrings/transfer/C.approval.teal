@@ -36,7 +36,7 @@ main_after_if_else@4:
     !
     assert
     txn ApplicationID
-    bz main_create_NoOp@13
+    bz main_switch_case_next@12
     pushbytess 0xbacc49e3 0xc599eb05 0x2d4970c7 0x0a449f0b 0x4b2c0376 // method "__postInit()void", method "__receive()void", method "f()void", method "h()void", method "g()uint256"
     txna ApplicationArgs 0
     match main___postInit_route@7 main___receive_route@8 main_f_route@9 main_h_route@10 main_g_route@11
@@ -45,22 +45,98 @@ main_switch_case_next@12:
     return
 
 main_g_route@11:
-    callsub g
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    global CurrentApplicationAddress
+    acct_params_get AcctBalance
+    pop
+    itob
+    pushint 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
     intc_0 // 1
     bury 1
     b main_switch_case_next@12
+
+main_ternary_false@17:
+    intc_1 // 0
+    b main_ternary_merge@18
 
 main_h_route@10:
-    callsub h
+    txn GroupIndex
+    bz main_ternary_false@22
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@23:
+    !
+    assert // not payable
+    itxn_begin
+    intc_1 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    intc_0 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_1 // 0
+    itxn_field Fee
+    pushint 7766279631452241920
+    itxn_field Amount
+    itxn_submit
     intc_0 // 1
     bury 1
     b main_switch_case_next@12
 
+main_ternary_false@22:
+    intc_1 // 0
+    b main_ternary_merge@23
+
 main_f_route@9:
-    callsub f
+    txn GroupIndex
+    bz main_ternary_false@27
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@28:
+    !
+    assert // not payable
+    itxn_begin
+    intc_1 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    intc_0 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_1 // 0
+    itxn_field Fee
+    intc_0 // 1
+    itxn_field Amount
+    itxn_submit
     intc_0 // 1
     bury 1
     b main_switch_case_next@12
+
+main_ternary_false@27:
+    intc_1 // 0
+    b main_ternary_merge@28
 
 main___receive_route@8:
     intc_0 // 1
@@ -68,18 +144,6 @@ main___receive_route@8:
     b main_switch_case_next@12
 
 main___postInit_route@7:
-    callsub __postInit
-    intc_0 // 1
-    bury 1
-    b main_switch_case_next@12
-
-main_create_NoOp@13:
-    dup
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/transfer.sol.C.__postInit[routing]() -> void:
-__postInit:
     bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -123,98 +187,6 @@ __postInit:
     bytec_1 // "a"
     swap
     app_global_put
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/transfer.sol.C.f[routing]() -> void:
-f:
-    txn GroupIndex
-    bz f_ternary_false@3
-    txn GroupIndex
     intc_0 // 1
-    -
-    gtxns Amount
-
-f_ternary_merge@4:
-    !
-    assert // not payable
-    itxn_begin
-    intc_1 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    intc_0 // 1
-    itxn_field TypeEnum
-    itxn_field Receiver
-    intc_1 // 0
-    itxn_field Fee
-    intc_0 // 1
-    itxn_field Amount
-    itxn_submit
-    retsub
-
-f_ternary_false@3:
-    intc_1 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/transfer.sol.C.h[routing]() -> void:
-h:
-    txn GroupIndex
-    bz h_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-h_ternary_merge@4:
-    !
-    assert // not payable
-    itxn_begin
-    intc_1 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
-    intc_0 // 1
-    itxn_field TypeEnum
-    itxn_field Receiver
-    intc_1 // 0
-    itxn_field Fee
-    pushint 7766279631452241920
-    itxn_field Amount
-    itxn_submit
-    retsub
-
-h_ternary_false@3:
-    intc_1 // 0
-    b h_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/transfer.sol.C.g[routing]() -> void:
-g:
-    txn GroupIndex
-    bz g_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-g_ternary_merge@4:
-    !
-    assert // not payable
-    global CurrentApplicationAddress
-    acct_params_get AcctBalance
-    pop
-    itob
-    pushint 32
-    bzero
-    b|
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    retsub
-
-g_ternary_false@3:
-    intc_1 // 0
-    b g_ternary_merge@4
+    bury 1
+    b main_switch_case_next@12

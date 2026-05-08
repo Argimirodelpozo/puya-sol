@@ -5,6 +5,8 @@
 main:
     intcblock 1 255 0 8
     bytecblock "__ctor_pending" "table"
+    pushbytes ""
+    dup
     pushint 4096
     bzero
     dup
@@ -30,28 +32,10 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0xb4369c36 0xced1bdc6 // method "__postInit()void", method "get(uint64)uint64", method "set(uint64,uint64)void"
     txna ApplicationArgs 0
-    match __postInit get set
+    match main___postInit_route@5 main_get_route@6 main_set_route@7
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_simple.sol.test.__postInit[routing]() -> void:
-__postInit:
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_0 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec_1 // "table"
-    pushint 2
-    box_create
-    pop
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_simple.sol.test.get[routing]() -> void:
-get:
+main_set_route@7:
     txna ApplicationArgs 1
     dup
     len
@@ -59,58 +43,7 @@ get:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    txn GroupIndex
-    bz get_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-get_ternary_merge@4:
-    !
-    assert // not payable
-    dupn 2
-    intc_1 // 255
-    <=
-    assert // ABI validation
-    intc_1 // 255
-    &
-    itob
-    sha256
-    bytec_1 // "table"
-    swap
-    concat
-    box_get
-    swap
-    btoi
-    intc_2 // 0
-    swap
-    uncover 2
-    select
-    intc_1 // 255
-    &
-    itob
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-get_ternary_false@3:
-    intc_2 // 0
-    b get_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_simple.sol.test.set[routing]() -> void:
-set:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_3 // 8
-    ==
-    assert // invalid number of bytes for arc4.uint64
-    btoi
+    bury 2
     txna ApplicationArgs 2
     dup
     len
@@ -118,14 +51,15 @@ set:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    bury 1
     txn GroupIndex
-    bz set_ternary_false@3
+    bz main_ternary_false@13
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-set_ternary_merge@4:
+main_ternary_merge@14:
     !
     assert // not payable
     dig 1
@@ -154,6 +88,72 @@ set_ternary_merge@4:
     intc_0 // 1
     return
 
-set_ternary_false@3:
+main_ternary_false@13:
     intc_2 // 0
-    b set_ternary_merge@4
+    b main_ternary_merge@14
+
+main_get_route@6:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 2
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    dig 1
+    dup
+    intc_1 // 255
+    <=
+    assert // ABI validation
+    intc_1 // 255
+    &
+    itob
+    sha256
+    bytec_1 // "table"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 255
+    &
+    itob
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@18:
+    intc_2 // 0
+    b main_ternary_merge@19
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_1 // "table"
+    pushint 2
+    box_create
+    pop
+    intc_0 // 1
+    return

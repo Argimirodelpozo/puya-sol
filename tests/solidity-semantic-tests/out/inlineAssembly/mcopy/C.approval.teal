@@ -3,8 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/mcopy.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 8 1 0
+    intcblock 32 8 0 1
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000
+    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -16,7 +17,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 1
+    intc_3 // 1
     return
 
 main_after_if_else@2:
@@ -31,14 +32,9 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/mcopy.sol.C.f[routing]() -> void:
-f:
     txna ApplicationArgs 1
     dup
-    intc_3 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -47,14 +43,15 @@ f:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    bury 1
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
-    intc_2 // 1
+    intc_3 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     load 0
@@ -163,9 +160,9 @@ f_ternary_merge@4:
     store 0
     pushbytes 0x151f7c750000
     log
-    intc_2 // 1
+    intc_3 // 1
     return
 
-f_ternary_false@3:
-    intc_3 // 0
-    b f_ternary_merge@4
+main_ternary_false@8:
+    intc_2 // 0
+    b main_ternary_merge@9

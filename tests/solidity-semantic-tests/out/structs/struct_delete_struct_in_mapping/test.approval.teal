@@ -30,39 +30,18 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x31b2714a // method "__postInit()void", method "deleteIt()uint256"
     txna ApplicationArgs 0
-    match __postInit deleteIt
+    match main___postInit_route@5 main_deleteIt_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_struct_in_mapping.sol.test.__postInit[routing]() -> void:
-__postInit:
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_0 // "__ctor_pending"
-    intc_1 // 0
-    app_global_put
-    pushbytes "campaigns"
-    pushint 2
-    box_create
-    pop
-    bytec_1 // 0x63616d706169676e7366687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
-    box_put
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_struct_in_mapping.sol.test.deleteIt[routing]() -> void:
-deleteIt:
+main_deleteIt_route@6:
     txn GroupIndex
-    bz deleteIt_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-deleteIt_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     bytec_1 // 0x63616d706169676e7366687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
@@ -81,6 +60,23 @@ deleteIt_ternary_merge@4:
     intc_0 // 1
     return
 
-deleteIt_ternary_false@3:
+main_ternary_false@12:
     intc_1 // 0
-    b deleteIt_ternary_merge@4
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    pushbytes "campaigns"
+    pushint 2
+    box_create
+    pop
+    bytec_1 // 0x63616d706169676e7366687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+    box_put
+    intc_0 // 1
+    return

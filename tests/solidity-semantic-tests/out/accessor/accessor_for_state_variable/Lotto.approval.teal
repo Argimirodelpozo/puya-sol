@@ -36,19 +36,14 @@ main_ticketPrice_route@4:
     txn ApplicationID
     &&
     assert
-    b ticketPrice
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/accessor/accessor_for_state_variable.sol.Lotto.ticketPrice[routing]() -> void:
-ticketPrice:
     txn GroupIndex
-    bz ticketPrice_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-ticketPrice_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     intc_1 // 0
@@ -70,6 +65,6 @@ ticketPrice_ternary_merge@4:
     intc_0 // 1
     return
 
-ticketPrice_ternary_false@3:
+main_ternary_false@8:
     intc_1 // 0
-    b ticketPrice_ternary_merge@4
+    b main_ternary_merge@9

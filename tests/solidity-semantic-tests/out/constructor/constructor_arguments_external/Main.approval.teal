@@ -46,48 +46,18 @@ main_after_if_else@2:
     assert
     pushbytess 0x0a5c26e3 0x2fe85e04 // method "getName()byte[3]", method "getFlag()bool"
     txna ApplicationArgs 0
-    match getName getFlag
+    match main_getName_route@5 main_getFlag_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_arguments_external.sol.Main.getName[routing]() -> void:
-getName:
+main_getFlag_route@6:
     txn GroupIndex
-    bz getName_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-getName_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 0
-    bytec_0 // "name"
-    app_global_get_ex
-    assert // check name exists
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-getName_ternary_false@3:
-    intc_0 // 0
-    b getName_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_arguments_external.sol.Main.getFlag[routing]() -> void:
-getFlag:
-    txn GroupIndex
-    bz getFlag_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-getFlag_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     intc_0 // 0
@@ -105,6 +75,32 @@ getFlag_ternary_merge@4:
     intc_1 // 1
     return
 
-getFlag_ternary_false@3:
+main_ternary_false@12:
     intc_0 // 0
-    b getFlag_ternary_merge@4
+    b main_ternary_merge@13
+
+main_getName_route@5:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "name"
+    app_global_get_ex
+    assert // check name exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@17:
+    intc_0 // 0
+    b main_ternary_merge@18

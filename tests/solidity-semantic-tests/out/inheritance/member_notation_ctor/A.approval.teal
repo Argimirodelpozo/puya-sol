@@ -1,10 +1,11 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_wupup39i/B.sol.A.approval_program() -> uint64:
+// /tmp/multisource_d882daxd/B.sol.A.approval_program() -> uint64:
 main:
     intcblock 0 1 32 6
     bytecblock TMPL_APPROVAL_D TMPL_CLEAR_D
+    intc_0 // 0
     pushint 4096
     bzero
     dup
@@ -31,25 +32,21 @@ main_g_route@4:
     txn ApplicationID
     &&
     assert
-    b g
-
-
-// /tmp/multisource_wupup39i/B.sol.A.g[routing]() -> void:
-g:
     txna ApplicationArgs 1
     dup
+    bury 2
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz g_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-g_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     itxn_begin
@@ -118,6 +115,6 @@ g_ternary_merge@4:
     intc_1 // 1
     return
 
-g_ternary_false@3:
+main_ternary_false@8:
     intc_0 // 0
-    b g_ternary_merge@4
+    b main_ternary_merge@9

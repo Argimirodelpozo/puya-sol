@@ -29,34 +29,79 @@ main_after_if_else@2:
     assert
     pushbytess 0x2d4970c7 0x4b2c0376 0xafedb2e5 0x7c1072af // method "f()void", method "g()uint256", method "h()uint256", method "x()uint256"
     txna ApplicationArgs 0
-    match f g h x
+    match main_f_route@5 main_g_route@6 main_h_route@7 main_x_route@8
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable.sol.C.f[routing]() -> void:
-f:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable.sol.C.f
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable.sol.C.g[routing]() -> void:
-g:
+main_x_route@8:
     txn GroupIndex
-    bz g_ternary_false@3
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-g_ternary_merge@4:
+main_ternary_merge@15:
+    !
+    assert // not payable
+    load 5
+    extract 0 32
+    intc_2 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_h_route@7:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    load 5
+    extract 0 32
+    intc_2 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@19:
+    intc_1 // 0
+    b main_ternary_merge@20
+
+main_g_route@6:
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
     !
     assert // not payable
     load 5
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 0
     store 5
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable.sol.C.f
+    callsub f
     load 5
     extract 0 32
     intc_2 // 32
@@ -69,79 +114,26 @@ g_ternary_merge@4:
     intc_0 // 1
     return
 
-g_ternary_false@3:
+main_ternary_false@24:
     intc_1 // 0
-    b g_ternary_merge@4
+    b main_ternary_merge@25
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable.sol.C.h[routing]() -> void:
-h:
-    txn GroupIndex
-    bz h_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-h_ternary_merge@4:
-    !
-    assert // not payable
-    load 5
-    extract 0 32
-    intc_2 // 32
-    bzero
-    b|
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+main_f_route@5:
+    callsub f
     intc_0 // 1
     return
-
-h_ternary_false@3:
-    intc_1 // 0
-    b h_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable.sol.C.x[routing]() -> void:
-x:
-    txn GroupIndex
-    bz x_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-x_ternary_merge@4:
-    !
-    assert // not payable
-    load 5
-    extract 0 32
-    intc_2 // 32
-    bzero
-    b|
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-x_ternary_false@3:
-    intc_1 // 0
-    b x_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable.sol.C.f() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable.sol.C.f:
+f:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable.sol.C.f_ternary_false@2
+    bz f_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable.sol.C.f_ternary_merge@3:
+f_ternary_merge@3:
     !
     assert // not payable
     load 5
@@ -150,6 +142,6 @@ x_ternary_false@3:
     store 5
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable.sol.C.f_ternary_false@2:
+f_ternary_false@2:
     intc_1 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable.sol.C.f_ternary_merge@3
+    b f_ternary_merge@3

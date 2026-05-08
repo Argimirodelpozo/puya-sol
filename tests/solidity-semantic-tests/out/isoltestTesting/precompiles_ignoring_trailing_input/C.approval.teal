@@ -5,6 +5,7 @@
 main:
     intcblock 32 1 0 128
     bytecblock 0x151f7c75
+    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -27,26 +28,195 @@ main_after_if_else@2:
     assert
     pushbytess 0xd2d56d08 0x25852b35 0x93d3a521 // method "ecRecover(uint256[4])byte[]", method "ecAdd(uint256[4])byte[]", method "ecMul(uint256[3])byte[]"
     txna ApplicationArgs 0
-    match ecRecover ecAdd ecMul
+    match main_ecRecover_route@5 main_ecAdd_route@6 main_ecMul_route@7
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/precompiles_ignoring_trailing_input.sol.C.ecRecover[routing]() -> void:
-ecRecover:
+main_ecMul_route@7:
     txna ApplicationArgs 1
     dup
+    bury 2
     len
-    intc_3 // 128
+    pushint 96
     ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 4>
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 3>
     txn GroupIndex
-    bz ecRecover_ternary_false@3
+    bz main_ternary_false@13
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-ecRecover_ternary_merge@4:
+main_ternary_merge@14:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 1
+    dup
+    cover 2
+    extract 0 32 // on error: index access is out of bounds
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 32 // on error: index access is out of bounds
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    uncover 2
+    extract 64 32 // on error: index access is out of bounds
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dup
+    extract 0 64
+    swap
+    extract 64 32
+    ec_scalar_mul BN254g1
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@13:
+    intc_2 // 0
+    b main_ternary_merge@14
+
+main_ecAdd_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_3 // 128
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 4>
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 1
+    dup
+    cover 2
+    extract 0 32 // on error: index access is out of bounds
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 32 // on error: index access is out of bounds
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 2
+    extract 64 32 // on error: index access is out of bounds
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    uncover 2
+    extract 96 32 // on error: index access is out of bounds
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dup
+    extract 0 64
+    swap
+    extract 64 64
+    ec_add BN254g1
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@18:
+    intc_2 // 0
+    b main_ternary_merge@19
+
+main_ecRecover_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_3 // 128
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 4>
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
     !
     assert // not payable
     intc_0 // 32
@@ -132,178 +302,6 @@ ecRecover_ternary_merge@4:
     intc_1 // 1
     return
 
-ecRecover_ternary_false@3:
+main_ternary_false@23:
     intc_2 // 0
-    b ecRecover_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/precompiles_ignoring_trailing_input.sol.C.ecAdd[routing]() -> void:
-ecAdd:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_3 // 128
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 4>
-    txn GroupIndex
-    bz ecAdd_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-ecAdd_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    dig 1
-    dup
-    cover 2
-    extract 0 32 // on error: index access is out of bounds
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 2
-    extract 32 32 // on error: index access is out of bounds
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    dig 2
-    extract 64 32 // on error: index access is out of bounds
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    uncover 2
-    extract 96 32 // on error: index access is out of bounds
-    uncover 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    dup
-    extract 0 64
-    swap
-    extract 64 64
-    ec_add BN254g1
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-ecAdd_ternary_false@3:
-    intc_2 // 0
-    b ecAdd_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/precompiles_ignoring_trailing_input.sol.C.ecMul[routing]() -> void:
-ecMul:
-    txna ApplicationArgs 1
-    dup
-    len
-    pushint 96
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 3>
-    txn GroupIndex
-    bz ecMul_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-ecMul_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    dig 1
-    dup
-    cover 2
-    extract 0 32 // on error: index access is out of bounds
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 2
-    extract 32 32 // on error: index access is out of bounds
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    uncover 2
-    extract 64 32 // on error: index access is out of bounds
-    uncover 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    dup
-    extract 0 64
-    swap
-    extract 64 32
-    ec_scalar_mul BN254g1
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-ecMul_ternary_false@3:
-    intc_2 // 0
-    b ecMul_ternary_merge@4
+    b main_ternary_merge@24

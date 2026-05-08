@@ -5,6 +5,7 @@
 main:
     intcblock 2 32 0 1
     bytecblock "storageArray" "__ctor_pending" 0x068101 0x
+    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -30,50 +31,33 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0xd46ebdf4 // method "__postInit()void", method "set_get_length(uint256)uint256"
     txna ApplicationArgs 0
-    match __postInit set_get_length
+    match main___postInit_route@5 main_set_get_length_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_push_pop.sol.C.__postInit[routing]() -> void:
-__postInit:
-    bytec_1 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_1 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec_0 // "storageArray"
-    intc_0 // 2
-    box_create
-    pop
-    intc_3 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_push_pop.sol.C.set_get_length[routing]() -> void:
-set_get_length:
+main_set_get_length_route@6:
     txna ApplicationArgs 1
     dup
+    bury 2
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz set_get_length_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_3 // 1
     -
     gtxns Amount
 
-set_get_length_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
 
-set_get_length_while_top@25:
+main_while_top@33:
     pushint 170010
     global OpcodeBudget
     >
-    bz set_get_length_while_top@5
+    bz main_while_top@14
     itxn_begin
     pushint 6 // appl
     itxn_field TypeEnum
@@ -86,20 +70,20 @@ set_get_length_while_top@25:
     intc_2 // 0
     itxn_field Fee
     itxn_submit
-    b set_get_length_while_top@25
+    b main_while_top@33
 
-set_get_length_while_top@5:
+main_while_top@14:
     bytec_0 // "storageArray"
     box_len
     pop
     intc_0 // 2
     >=
-    bz set_get_length_ternary_false@7
+    bz main_ternary_false@16
     bytec_0 // "storageArray"
     box_len
     pop
 
-set_get_length_ternary_merge@8:
+main_ternary_merge@17:
     intc_0 // 2
     -
     intc_1 // 32
@@ -107,7 +91,7 @@ set_get_length_ternary_merge@8:
     itob
     dig 1
     b<
-    bz set_get_length_while_top@11
+    bz main_while_top@19
     bytec_0 // "storageArray"
     intc_2 // 0
     intc_0 // 2
@@ -139,20 +123,20 @@ set_get_length_ternary_merge@8:
     intc_2 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     box_splice
-    b set_get_length_while_top@5
+    b main_while_top@14
 
-set_get_length_while_top@11:
+main_while_top@19:
     bytec_0 // "storageArray"
     box_len
     pop
     intc_0 // 2
     >=
-    bz set_get_length_ternary_false@13
+    bz main_ternary_false@21
     bytec_0 // "storageArray"
     box_len
     pop
 
-set_get_length_ternary_merge@14:
+main_ternary_merge@22:
     intc_0 // 2
     -
     intc_1 // 32
@@ -160,7 +144,7 @@ set_get_length_ternary_merge@14:
     itob
     bytec_3 // 0x
     b>
-    bz set_get_length_after_while@16
+    bz main_after_while@24
     bytec_0 // "storageArray"
     intc_2 // 0
     intc_0 // 2
@@ -192,20 +176,20 @@ set_get_length_ternary_merge@14:
     bytec_0 // "storageArray"
     swap
     box_resize
-    b set_get_length_while_top@11
+    b main_while_top@19
 
-set_get_length_after_while@16:
+main_after_while@24:
     bytec_0 // "storageArray"
     box_len
     pop
     intc_0 // 2
     >=
-    bz set_get_length_ternary_false@18
+    bz main_ternary_false@26
     bytec_0 // "storageArray"
     box_len
     pop
 
-set_get_length_ternary_merge@19:
+main_ternary_merge@27:
     intc_0 // 2
     -
     intc_1 // 32
@@ -221,18 +205,32 @@ set_get_length_ternary_merge@19:
     intc_3 // 1
     return
 
-set_get_length_ternary_false@18:
+main_ternary_false@26:
     intc_0 // 2
-    b set_get_length_ternary_merge@19
+    b main_ternary_merge@27
 
-set_get_length_ternary_false@13:
+main_ternary_false@21:
     intc_0 // 2
-    b set_get_length_ternary_merge@14
+    b main_ternary_merge@22
 
-set_get_length_ternary_false@7:
+main_ternary_false@16:
     intc_0 // 2
-    b set_get_length_ternary_merge@8
+    b main_ternary_merge@17
 
-set_get_length_ternary_false@3:
+main_ternary_false@12:
     intc_2 // 0
-    b set_get_length_ternary_merge@4
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_0 // "storageArray"
+    intc_0 // 2
+    box_create
+    pop
+    intc_3 // 1
+    return

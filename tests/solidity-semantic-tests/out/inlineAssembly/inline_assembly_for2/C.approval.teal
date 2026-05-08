@@ -5,6 +5,8 @@
 main:
     intcblock 0 64 32 1
     bytecblock "st" 0x 0x010000000000000000000000000000000000000000000000000000000000000000
+    intc_0 // 0
+    dupn 5
     pushint 4096
     bzero
     dup
@@ -34,34 +36,29 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_for2.sol.C.f[routing]() -> void:
-f:
-    intc_0 // 0
-    dupn 3
     txna ApplicationArgs 1
     dup
+    bury 6
     len
     intc_1 // 64
     ==
     assert // invalid number of bytes for arc4.uint512
     intc_0 // 0
+    bury 1
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_3 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     bytec_1 // 0x
-    bury 5
-    bytec_1 // 0x
     bury 4
+    bytec_1 // 0x
+    bury 3
     intc_0 // 0
     itob
     bytec_0 // "st"
@@ -69,14 +66,13 @@ f_ternary_merge@4:
     app_global_put
     load 0
     bury 6
-    dig 1
-    bury 3
+    dig 4
+    bury 2
 
-f_while_top@5:
-    dig 2
-    dig 1
+main_while_top@10:
+    dup2
     b==
-    bz f_after_while@7
+    bz main_after_while@12
     intc_2 // 32
     bzero
     bytec_0 // "st"
@@ -107,25 +103,25 @@ f_while_top@5:
     pushbytes 0x01
     bury 1
     bytec_1 // 0x
-    dig 4
+    dig 3
     pushbytes 0x03
     b+
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    bury 4
+    dig 2
     bury 5
-    dig 3
-    bury 6
-    bury 3
-    b f_while_top@5
+    bury 2
+    b main_while_top@10
 
-f_after_while@7:
+main_after_while@12:
     dig 5
     store 0
     intc_0 // 0
     bytec_0 // "st"
     app_global_get_ex
     assert // check st exists
-    dig 5
+    dig 4
     dup
     len
     intc_1 // 64
@@ -145,7 +141,7 @@ f_after_while@7:
     dig 2
     b|
     concat
-    dig 5
+    dig 4
     dup
     len
     intc_1 // 64
@@ -161,6 +157,6 @@ f_after_while@7:
     intc_3 // 1
     return
 
-f_ternary_false@3:
+main_ternary_false@8:
     intc_0 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@9

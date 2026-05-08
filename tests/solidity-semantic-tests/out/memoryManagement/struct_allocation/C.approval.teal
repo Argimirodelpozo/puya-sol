@@ -27,72 +27,18 @@ main_after_if_else@2:
     assert
     pushbytess 0xa415bc68 0x1bc056a4 // method "withValue()uint256", method "withoutValue()uint256"
     txna ApplicationArgs 0
-    match withValue withoutValue
+    match main_withValue_route@5 main_withoutValue_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol.C.withValue[routing]() -> void:
-withValue:
+main_withoutValue_route@6:
     txn GroupIndex
-    bz withValue_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-withValue_ternary_merge@4:
-    !
-    assert // not payable
-    load 0
-    dup
-    extract 64 32
-    swap
-    store 0
-    load 0
-    dup
-    extract 64 32
-    swap
-    store 0
-    dup
-    dig 2
-    b>=
-    assert // underflow
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    swap
-    b-
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    b|
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-withValue_ternary_false@3:
-    intc_2 // 0
-    b withValue_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol.C.withoutValue[routing]() -> void:
-withoutValue:
-    txn GroupIndex
-    bz withoutValue_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-withoutValue_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     load 0
@@ -142,6 +88,56 @@ withoutValue_ternary_merge@4:
     intc_0 // 1
     return
 
-withoutValue_ternary_false@3:
+main_ternary_false@12:
     intc_2 // 0
-    b withoutValue_ternary_merge@4
+    b main_ternary_merge@13
+
+main_withValue_route@5:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    load 0
+    dup
+    extract 64 32
+    swap
+    store 0
+    load 0
+    dup
+    extract 64 32
+    swap
+    store 0
+    dup
+    dig 2
+    b>=
+    assert // underflow
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@17:
+    intc_2 // 0
+    b main_ternary_merge@18

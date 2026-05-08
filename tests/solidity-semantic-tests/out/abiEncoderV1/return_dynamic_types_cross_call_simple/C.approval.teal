@@ -27,40 +27,21 @@ main_after_if_else@2:
     assert
     pushbytess 0x6b2c0e15 0x38b8b62f // method "dyn()byte[]", method "f()byte[]"
     txna ApplicationArgs 0
-    match dyn f
+    match main_dyn_route@5 main_f_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_simple.sol.C.dyn[routing]() -> void:
-dyn:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_simple.sol.C.dyn
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_simple.sol.C.f[routing]() -> void:
-f:
+main_f_route@6:
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_simple.sol.C.dyn
+    callsub dyn
     dup
     len
     itob
@@ -74,26 +55,41 @@ f_ternary_merge@4:
     intc_0 // 1
     return
 
-f_ternary_false@3:
+main_ternary_false@12:
     intc_1 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@13
+
+main_dyn_route@5:
+    callsub dyn
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_simple.sol.C.dyn() -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_simple.sol.C.dyn:
+dyn:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_simple.sol.C.dyn_ternary_false@2
+    bz dyn_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_simple.sol.C.dyn_ternary_merge@3:
+dyn_ternary_merge@3:
     !
     assert // not payable
     pushbytes "1234567890123456789012345678901234567890"
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_simple.sol.C.dyn_ternary_false@2:
+dyn_ternary_false@2:
     intc_1 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_simple.sol.C.dyn_ternary_merge@3
+    b dyn_ternary_merge@3

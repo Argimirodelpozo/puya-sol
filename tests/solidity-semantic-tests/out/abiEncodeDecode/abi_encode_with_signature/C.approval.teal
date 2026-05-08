@@ -30,64 +30,38 @@ main_after_if_else@2:
     assert
     pushbytess 0x329c8739 0x3f35ad11 0x035ca5a9 0x63f240f0 // method "f0()byte[]", method "f1()byte[]", method "f1s()byte[]", method "f2()(byte[],uint256[])"
     txna ApplicationArgs 0
-    match f0 f1 f1s f2
+    match main_f0_route@5 main_f1_route@6 main_f1s_route@7 main_f2_route@8
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_with_signature.sol.C.f0[routing]() -> void:
-f0:
+main_f2_route@8:
     txn GroupIndex
-    bz f0_ternary_false@3
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f0_ternary_merge@4:
+main_ternary_merge@15:
     !
     assert // not payable
-    pushbytes 0x151f7c750004b3de648b
+    pushbytes 0x151f7c75000400ca00c4e9c921cd00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000004fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
 
-f0_ternary_false@3:
+main_ternary_false@14:
     intc_1 // 0
-    b f0_ternary_merge@4
+    b main_ternary_merge@15
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_with_signature.sol.C.f1[routing]() -> void:
-f1:
+main_f1s_route@7:
     txn GroupIndex
-    bz f1_ternary_false@3
+    bz main_ternary_false@19
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f1_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_1 // 0x151f7c750064b3de648b000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000036162630000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
-
-f1_ternary_false@3:
-    intc_1 // 0
-    b f1_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_with_signature.sol.C.f1s[routing]() -> void:
-f1s:
-    txn GroupIndex
-    bz f1s_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-f1s_ternary_merge@4:
+main_ternary_merge@20:
     !
     assert // not payable
     bytec_0 // "xstor"
@@ -98,28 +72,46 @@ f1s_ternary_merge@4:
     intc_0 // 1
     return
 
-f1s_ternary_false@3:
+main_ternary_false@19:
     intc_1 // 0
-    b f1s_ternary_merge@4
+    b main_ternary_merge@20
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_with_signature.sol.C.f2[routing]() -> void:
-f2:
+main_f1_route@6:
     txn GroupIndex
-    bz f2_ternary_false@3
+    bz main_ternary_false@24
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f2_ternary_merge@4:
+main_ternary_merge@25:
     !
     assert // not payable
-    pushbytes 0x151f7c75000400ca00c4e9c921cd00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000004fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x151f7c750064b3de648b000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000036162630000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
 
-f2_ternary_false@3:
+main_ternary_false@24:
     intc_1 // 0
-    b f2_ternary_merge@4
+    b main_ternary_merge@25
+
+main_f0_route@5:
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750004b3de648b
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@29:
+    intc_1 // 0
+    b main_ternary_merge@30

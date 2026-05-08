@@ -27,7 +27,7 @@ main:
 main_after_if_else@2:
     txn NumAppArgs
     bnz main_after_if_else@4
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.__fallback
+    callsub __fallback
     intc_0 // 1
     return
 
@@ -38,7 +38,7 @@ main_after_if_else@4:
     !
     assert
     txn ApplicationID
-    bz main_create_NoOp@13
+    bz main_switch_case_next@12
     pushbytess 0x12b87db6 0x1bf9882b 0x7c1072af // method "fow()void", method "__fallback()void", method "x()uint256"
     txna ApplicationArgs 0
     match main_fow_route@9 main___fallback_route@10 main_x_route@11
@@ -46,11 +46,9 @@ main_after_if_else@4:
 main_switch_case_next@12:
     dig 1
     bury 1
-
-main_after_if_else@14:
     dup
     bnz main_after_if_else@6
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.__fallback
+    callsub __fallback
     intc_0 // 1
     bury 1
 
@@ -58,69 +56,14 @@ main_after_if_else@6:
     return
 
 main_x_route@11:
-    callsub x
-    intc_0 // 1
-    bury 2
-    b main_switch_case_next@12
-
-main___fallback_route@10:
-    callsub __fallback
-    intc_0 // 1
-    bury 2
-    b main_switch_case_next@12
-
-main_fow_route@9:
-    callsub fow
-    intc_0 // 1
-    bury 2
-    b main_switch_case_next@12
-
-main_create_NoOp@13:
-    dig 1
-    bury 1
-    b main_after_if_else@14
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.fow[routing]() -> void:
-fow:
     txn GroupIndex
-    bz fow_ternary_false@3
+    bz main_ternary_false@17
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-fow_ternary_merge@4:
-    !
-    assert // not payable
-    pushint 3
-    itob
-    bytec_0 // "x"
-    swap
-    app_global_put
-    retsub
-
-fow_ternary_false@3:
-    intc_1 // 0
-    b fow_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.__fallback[routing]() -> void:
-__fallback:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.__fallback
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.x[routing]() -> void:
-x:
-    txn GroupIndex
-    bz x_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-x_ternary_merge@4:
+main_ternary_merge@18:
     !
     assert // not payable
     intc_1 // 0
@@ -139,23 +82,55 @@ x_ternary_merge@4:
     swap
     concat
     log
-    retsub
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@12
 
-x_ternary_false@3:
+main_ternary_false@17:
     intc_1 // 0
-    b x_ternary_merge@4
+    b main_ternary_merge@18
 
+main___fallback_route@10:
+    callsub __fallback
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@12
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.__fallback() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.__fallback:
+main_fow_route@9:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.__fallback_ternary_false@2
+    bz main_ternary_false@24
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.__fallback_ternary_merge@3:
+main_ternary_merge@25:
+    !
+    assert // not payable
+    pushint 3
+    itob
+    bytec_0 // "x"
+    swap
+    app_global_put
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@12
+
+main_ternary_false@24:
+    intc_1 // 0
+    b main_ternary_merge@25
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.__fallback() -> void:
+__fallback:
+    txn GroupIndex
+    bz __fallback_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__fallback_ternary_merge@3:
     !
     assert // not payable
     pushint 2
@@ -165,6 +140,6 @@ x_ternary_false@3:
     app_global_put
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.__fallback_ternary_false@2:
+__fallback_ternary_false@2:
     intc_1 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/short_data_calls_fallback.sol.A.__fallback_ternary_merge@3
+    b __fallback_ternary_merge@3

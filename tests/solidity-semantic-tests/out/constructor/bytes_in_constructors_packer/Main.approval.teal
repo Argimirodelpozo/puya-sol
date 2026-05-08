@@ -3,8 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_packer.sol.Main.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 2
-    bytecblock "__ctor_pending" "m_x" "m_s" 0x151f7c75
+    intcblock 1 0 32 8
+    bytecblock "__ctor_pending" "m_s" 0x151f7c75 "m_x"
+    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -30,17 +31,120 @@ main_after_if_else@2:
     assert
     pushbytess 0xd7fd1ca3 0xff3b09c8 0xce7531ad 0xe73cd39c // method "__postInit(byte[],uint256)void", method "f(byte[])byte[]", method "m_x()uint256", method "part(uint256)byte[1]"
     txna ApplicationArgs 0
-    match __postInit f m_x part
+    match main___postInit_route@5 main_f_route@6 main_m_x_route@7 main_part_route@8
     err
 
+main_part_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_packer.sol.Main.__postInit[routing]() -> void:
-__postInit:
+main_ternary_merge@15:
+    !
+    assert // not payable
+    bytec_1 // "m_s"
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    intc_3 // 8
+    bzero
+    dig 2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc_0 // 1
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_m_x_route@7:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_3 // "m_x"
+    app_global_get_ex
+    assert // check m_x exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@19:
+    intc_1 // 0
+    b main_ternary_merge@20
+
+main_f_route@6:
     txna ApplicationArgs 1
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    callsub f
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main___postInit_route@5:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
     +
     dig 1
     len
@@ -59,150 +163,40 @@ __postInit:
     bytec_0 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    bytec_1 // "m_x"
+    bytec_3 // "m_x"
     pushbytes 0x
     app_global_put
     swap
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_packer.sol.Main.f
-    bytec_1 // "m_x"
+    callsub f
+    bytec_3 // "m_x"
     uncover 2
     app_global_put
-    bytec_2 // "m_s"
+    bytec_1 // "m_s"
     box_del
     pop
-    bytec_2 // "m_s"
+    bytec_1 // "m_s"
     swap
     box_put
     intc_0 // 1
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_packer.sol.Main.f[routing]() -> void:
-f:
-    txna ApplicationArgs 1
-    dup
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    intc_3 // 2
-    +
-    dig 1
-    len
-    ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    extract 2 0
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_packer.sol.Main.f
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_packer.sol.Main.m_x[routing]() -> void:
-m_x:
-    txn GroupIndex
-    bz m_x_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-m_x_ternary_merge@4:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_1 // "m_x"
-    app_global_get_ex
-    assert // check m_x exists
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-m_x_ternary_false@3:
-    intc_1 // 0
-    b m_x_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_packer.sol.Main.part[routing]() -> void:
-part:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_2 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz part_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-part_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_2 // "m_s"
-    box_get
-    pushbytes 0x
-    cover 2
-    select
-    pushint 8
-    bzero
-    dig 2
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    intc_0 // 1
-    extract3
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-part_ternary_false@3:
-    intc_1 // 0
-    b part_ternary_merge@4
-
-
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_packer.sol.Main.f(s: bytes) -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_packer.sol.Main.f:
+f:
     proto 1 1
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_packer.sol.Main.f_ternary_false@2
+    bz f_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_packer.sol.Main.f_ternary_merge@3:
+f_ternary_merge@3:
     !
     assert // not payable
     frame_dig -1
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_packer.sol.Main.f_ternary_false@2:
+f_ternary_false@2:
     intc_1 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_packer.sol.Main.f_ternary_merge@3
+    b f_ternary_merge@3

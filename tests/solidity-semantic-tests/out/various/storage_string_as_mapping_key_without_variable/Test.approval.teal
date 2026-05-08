@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/storage_string_as_mapping_key_without_variable.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 0 2
+    intcblock 1 2 0
     bytecblock "__ctor_pending" 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
     pushint 4096
     bzero
@@ -30,39 +30,21 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0xcd78b354 // method "__postInit()void", method "f()uint256"
     txna ApplicationArgs 0
-    match __postInit f
+    match main___postInit_route@5 main_f_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/storage_string_as_mapping_key_without_variable.sol.Test.__postInit[routing]() -> void:
-__postInit:
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_0 // "__ctor_pending"
-    intc_1 // 0
-    app_global_put
-    pushbytes "data"
-    intc_2 // 2
-    box_create
-    pop
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/storage_string_as_mapping_key_without_variable.sol.Test.f[routing]() -> void:
-f:
+main_f_route@6:
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
-    intc_2 // 2
+    intc_1 // 2
     itob
     bytec_1 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
     box_del
@@ -75,6 +57,20 @@ f_ternary_merge@4:
     intc_0 // 1
     return
 
-f_ternary_false@3:
-    intc_1 // 0
-    b f_ternary_merge@4
+main_ternary_false@12:
+    intc_2 // 0
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    pushbytes "data"
+    intc_1 // 2
+    box_create
+    pop
+    intc_0 // 1
+    return

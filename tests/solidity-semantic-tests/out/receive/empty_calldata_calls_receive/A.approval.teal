@@ -26,7 +26,7 @@ main:
 main_after_if_else@2:
     txn NumAppArgs
     bnz main_after_if_else@4
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/receive/empty_calldata_calls_receive.sol.A.__receive
+    callsub __receive
     intc_0 // 1
     return
 
@@ -37,7 +37,7 @@ main_after_if_else@4:
     !
     assert
     txn ApplicationID
-    bz main_create_NoOp@10
+    bz main_switch_case_next@9
     pushbytess 0xc599eb05 0x7c1072af // method "__receive()void", method "x()uint256"
     txna ApplicationArgs 0
     match main___receive_route@7 main_x_route@8
@@ -46,38 +46,14 @@ main_switch_case_next@9:
     return
 
 main_x_route@8:
-    callsub x
-    intc_0 // 1
-    bury 1
-    b main_switch_case_next@9
-
-main___receive_route@7:
-    callsub __receive
-    intc_0 // 1
-    bury 1
-    b main_switch_case_next@9
-
-main_create_NoOp@10:
-    dup
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/receive/empty_calldata_calls_receive.sol.A.__receive[routing]() -> void:
-__receive:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/receive/empty_calldata_calls_receive.sol.A.__receive
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/receive/empty_calldata_calls_receive.sol.A.x[routing]() -> void:
-x:
     txn GroupIndex
-    bz x_ternary_false@3
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-x_ternary_merge@4:
+main_ternary_merge@15:
     !
     assert // not payable
     intc_1 // 0
@@ -96,15 +72,23 @@ x_ternary_merge@4:
     swap
     concat
     log
-    retsub
+    intc_0 // 1
+    bury 1
+    b main_switch_case_next@9
 
-x_ternary_false@3:
+main_ternary_false@14:
     intc_1 // 0
-    b x_ternary_merge@4
+    b main_ternary_merge@15
+
+main___receive_route@7:
+    callsub __receive
+    intc_0 // 1
+    bury 1
+    b main_switch_case_next@9
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/receive/empty_calldata_calls_receive.sol.A.__receive() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/receive/empty_calldata_calls_receive.sol.A.__receive:
+__receive:
     intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex

@@ -4,7 +4,6 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_internal_function_via_expression.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
     pushint 4096
     bzero
     dup
@@ -27,49 +26,38 @@ main_after_if_else@2:
     assert
     pushbytess 0xbf744572 0xc39de092 // method "associated()uint256", method "unassociated()uint256"
     txna ApplicationArgs 0
-    match associated unassociated
+    match main_associated_route@5 main_unassociated_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_internal_function_via_expression.sol.C.associated[routing]() -> void:
-associated:
+main_unassociated_route@6:
     txn GroupIndex
-    bz associated_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-associated_ternary_merge@4:
+main_ternary_merge@18:
     !
     assert // not payable
-    bytec_0 // 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
     log
     intc_0 // 1
     return
 
-associated_ternary_false@3:
+main_ternary_false@12:
     intc_1 // 0
-    b associated_ternary_merge@4
+    b main_ternary_merge@18
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_internal_function_via_expression.sol.C.unassociated[routing]() -> void:
-unassociated:
+main_associated_route@5:
     txn GroupIndex
-    bz unassociated_ternary_false@3
+    bz main_ternary_false@17
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
+    b main_ternary_merge@18
 
-unassociated_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
-    log
-    intc_0 // 1
-    return
-
-unassociated_ternary_false@3:
+main_ternary_false@17:
     intc_1 // 0
-    b unassociated_ternary_merge@4
+    b main_ternary_merge@18

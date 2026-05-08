@@ -5,6 +5,8 @@
 main:
     intcblock 32 1 0
     bytecblock "m" "__ctor_pending" 0x151f7c75
+    intc_2 // 0
+    dup
     pushint 4096
     bzero
     dup
@@ -30,8 +32,115 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x16f9c32b 0x96f3d936 // method "__postInit()void", method "set(uint256,uint256)uint256", method "get(uint256)uint256"
     txna ApplicationArgs 0
-    match __postInit set get
+    match main___postInit_route@5 main_set_route@6 main_get_route@7
     err
+
+main_get_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
+    bytec_0 // "m"
+    dig 2
+    callsub Lib.get
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@13:
+    intc_2 // 0
+    b main_ternary_merge@14
+
+main_set_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    bytec_0 // "m"
+    dig 2
+    dup
+    cover 2
+    callsub Lib.get
+    bytec_0 // "m"
+    uncover 2
+    dig 3
+    callsub Lib.set
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@18:
+    intc_2 // 0
+    b main_ternary_merge@19
+
+main___postInit_route@5:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_0 // "m"
+    pushint 2
+    box_create
+    pop
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_arguments_in_library.sol.Lib.set(m: bytes, key: bytes, value: bytes) -> void:
@@ -81,113 +190,3 @@ Lib.get:
     cover 2
     select
     retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_arguments_in_library.sol.Test.__postInit[routing]() -> void:
-__postInit:
-    bytec_1 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_1 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec_0 // "m"
-    pushint 2
-    box_create
-    pop
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_arguments_in_library.sol.Test.set[routing]() -> void:
-set:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz set_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-set_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // "m"
-    dig 2
-    dup
-    cover 2
-    callsub Lib.get
-    bytec_0 // "m"
-    uncover 2
-    dig 3
-    callsub Lib.set
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-set_ternary_false@3:
-    intc_2 // 0
-    b set_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_arguments_in_library.sol.Test.get[routing]() -> void:
-get:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz get_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-get_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // "m"
-    dig 1
-    callsub Lib.get
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-get_ternary_false@3:
-    intc_2 // 0
-    b get_ternary_merge@4

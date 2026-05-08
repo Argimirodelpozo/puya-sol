@@ -4,7 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/mapping_storage_end.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32
-    bytecblock "__ctor_pending" "m" 0x068101 0x03e8
+    bytecblock "__ctor_pending" "m" 0x03e8 0x01 0x068101
+    intc_0 // 0
     pushint 4096
     bzero
     dup
@@ -30,125 +31,29 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x83f14748 0xc121d597 // method "__postInit()void", method "init()void", method "validate()void"
     txna ApplicationArgs 0
-    match __postInit init validate
+    match main___postInit_route@5 main_init_route@6 main_validate_route@7
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/mapping_storage_end.sol.C.__postInit[routing]() -> void:
-__postInit:
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_0 // "__ctor_pending"
-    intc_0 // 0
-    app_global_put
-    bytec_1 // "m"
-    pushint 2
-    box_create
-    pop
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/mapping_storage_end.sol.C.init[routing]() -> void:
-init:
-    intc_0 // 0
+main_validate_route@7:
     txn GroupIndex
-    bz init_ternary_false@3
+    bz main_ternary_false@13
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-init_ternary_merge@4:
-    !
-    assert // not payable
-
-init_while_top@9:
-    pushint 170010
-    global OpcodeBudget
-    >
-    bz init_after_while@14
-    itxn_begin
-    pushint 6 // appl
-    itxn_field TypeEnum
-    pushint 5 // DeleteApplication
-    itxn_field OnCompletion
-    bytec_2 // 0x068101
-    itxn_field ApprovalProgram
-    bytec_2 // 0x068101
-    itxn_field ClearStateProgram
-    intc_0 // 0
-    itxn_field Fee
-    itxn_submit
-    b init_while_top@9
-
-init_after_while@14:
-    intc_0 // 0
-    itob
-    bury 1
-
-init_while_top@5:
-    dup
-    bytec_3 // 0x03e8
-    b<
-    bz init_after_while@7
-    dupn 2
-    pushbytes 0x01
-    b+
-    intc_2 // 32
-    bzero
-    uncover 2
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    sha256
-    bytec_1 // "m"
-    swap
-    concat
-    dup
-    box_del
-    pop
-    dig 1
-    box_put
-    bury 1
-    b init_while_top@5
-
-init_after_while@7:
-    intc_1 // 1
-    return
-
-init_ternary_false@3:
-    intc_0 // 0
-    b init_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/mapping_storage_end.sol.C.validate[routing]() -> void:
-validate:
-    intc_0 // 0
-    txn GroupIndex
-    bz validate_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-validate_ternary_merge@4:
+main_ternary_merge@14:
     !
     assert // not payable
     intc_0 // 0
     itob
     bury 1
 
-validate_while_top@5:
+main_while_top@15:
     dup
-    bytec_3 // 0x03e8
+    bytec_2 // 0x03e8
     b<
-    bz validate_after_while@7
+    bz main_after_while@25
     intc_2 // 32
     bzero
     dig 1
@@ -170,18 +75,102 @@ validate_while_top@5:
     cover 2
     select
     swap
-    pushbytes 0x01
+    bytec_3 // 0x01
     b+
     dup
     bury 3
     b==
     assert
-    b validate_while_top@5
+    b main_while_top@15
 
-validate_after_while@7:
+main_after_while@25:
     intc_1 // 1
     return
 
-validate_ternary_false@3:
+main_ternary_false@13:
     intc_0 // 0
-    b validate_ternary_merge@4
+    b main_ternary_merge@14
+
+main_init_route@6:
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+
+main_while_top@27:
+    pushint 170010
+    global OpcodeBudget
+    >
+    bz main_after_while@32
+    itxn_begin
+    pushint 6 // appl
+    itxn_field TypeEnum
+    pushint 5 // DeleteApplication
+    itxn_field OnCompletion
+    bytec 4 // 0x068101
+    itxn_field ApprovalProgram
+    bytec 4 // 0x068101
+    itxn_field ClearStateProgram
+    intc_0 // 0
+    itxn_field Fee
+    itxn_submit
+    b main_while_top@27
+
+main_after_while@32:
+    intc_0 // 0
+    itob
+    bury 1
+
+main_while_top@23:
+    dup
+    bytec_2 // 0x03e8
+    b<
+    bz main_after_while@25
+    dupn 2
+    bytec_3 // 0x01
+    b+
+    intc_2 // 32
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    sha256
+    bytec_1 // "m"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    bury 1
+    b main_while_top@23
+
+main_ternary_false@21:
+    intc_0 // 0
+    b main_ternary_merge@22
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_1 // "m"
+    pushint 2
+    box_create
+    pop
+    intc_1 // 1
+    return

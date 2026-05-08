@@ -27,40 +27,18 @@ main_after_if_else@2:
     assert
     pushbytess 0x40e33532 0x32064c45 // method "something()void", method "test()byte[4]"
     txna ApplicationArgs 0
-    match something test
+    match main_something_route@5 main_test_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_memory.sol.C.something[routing]() -> void:
-something:
+main_test_route@6:
     txn GroupIndex
-    bz something_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-something_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 1
-    return
-
-something_ternary_false@3:
-    intc_1 // 0
-    b something_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_memory.sol.C.test[routing]() -> void:
-test:
-    txn GroupIndex
-    bz test_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-test_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     load 0
@@ -112,6 +90,24 @@ test_ternary_merge@4:
     intc_0 // 1
     return
 
-test_ternary_false@3:
+main_ternary_false@12:
     intc_1 // 0
-    b test_ternary_merge@4
+    b main_ternary_merge@13
+
+main_something_route@5:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
+
+main_ternary_false@19:
+    intc_1 // 0
+    b main_ternary_merge@20

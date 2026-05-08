@@ -3,8 +3,12 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/exp_various.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 255 32 0
-    bytecblock 0x151f7c75 0x01 0x
+    intcblock 1 32 255 0
+    bytecblock 0x 0x01 0x151f7c75
+    intc_3 // 0
+    dupn 4
+    bytec_0 // ""
+    dup
     pushint 4096
     bzero
     dup
@@ -27,131 +31,58 @@ main_after_if_else@2:
     assert
     pushbytess 0x8906c82f 0x6a732b8a // method "f(uint64,uint64)uint256", method "g(uint256,uint256)uint256"
     txna ApplicationArgs 0
-    match f g
+    match main_f_route@5 main_g_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/exp_various.sol.C.f[routing]() -> void:
-f:
+main_g_route@6:
     txna ApplicationArgs 1
     dup
+    bury 8
     len
-    pushint 8
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint64
-    btoi
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
+    bury 7
     len
-    pushint 8
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint64
-    btoi
+    assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
-    !
-    assert // not payable
-    dig 1
-    dup
-    intc_1 // 255
-    <=
-    assert // ABI validation
-    intc_1 // 255
-    &
-    bury 2
-    dupn 2
-    intc_1 // 255
-    <=
-    assert // ABI validation
-    intc_1 // 255
-    &
-    dup
-    bury 2
-    bnz f_ternary_false@6
-    intc_0 // 1
-
-f_ternary_merge@7:
-    dup
-    intc_1 // 255
-    <=
-    assert // overflow
-    itob
-    intc_2 // 32
-    bzero
-    b|
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-f_ternary_false@6:
-    dup2
-    exp
-    b f_ternary_merge@7
-
-f_ternary_false@3:
-    intc_3 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/exp_various.sol.C.g[routing]() -> void:
-g:
-    intc_3 // 0
-    dupn 2
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_2 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_2 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz g_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-g_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     bytec_1 // 0x01
     bury 3
-    dig 1
+    dig 6
     bury 5
-    dup
+    dig 5
     bury 4
 
-g_while_top@5:
+main_while_top@14:
     dig 3
-    bytec_2 // 0x
+    bytec_0 // 0x
     b>
-    bz g_after_while@9
+    bz main_after_while@18
     dig 3
     bytec_1 // 0x01
     b&
-    bytec_2 // 0x
+    bytec_0 // 0x
     b!=
-    bz g_after_if_else@8
+    bz main_after_if_else@17
     dig 2
     dig 5
     b*
     bury 3
 
-g_after_if_else@8:
+main_after_if_else@17:
     dig 3
     pushbytes 0x02
     b/
@@ -160,25 +91,96 @@ g_after_if_else@8:
     dup
     b*
     bury 5
-    b g_while_top@5
+    b main_while_top@14
 
-g_after_while@9:
+main_after_while@18:
     dig 2
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-g_ternary_false@3:
+main_ternary_false@12:
     intc_3 // 0
-    b g_ternary_merge@4
+    b main_ternary_merge@13
+
+main_f_route@5:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 2
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@22
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@23:
+    !
+    assert // not payable
+    dig 1
+    dup
+    intc_2 // 255
+    <=
+    assert // ABI validation
+    intc_2 // 255
+    &
+    bury 2
+    dupn 2
+    intc_2 // 255
+    <=
+    assert // ABI validation
+    intc_2 // 255
+    &
+    dup
+    bury 2
+    bnz main_ternary_false@25
+    intc_0 // 1
+
+main_ternary_merge@26:
+    dup
+    intc_2 // 255
+    <=
+    assert // overflow
+    itob
+    intc_1 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@25:
+    dup2
+    exp
+    b main_ternary_merge@26
+
+main_ternary_false@22:
+    intc_3 // 0
+    b main_ternary_merge@23

@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.B.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 0 32
+    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -28,30 +29,56 @@ main_after_if_else@2:
     assert
     pushbytess 0xc46a4b39 0x75d12918 // method "setValue(uint256)void", method "value()uint256"
     txna ApplicationArgs 0
-    match setValue value
+    match main_setValue_route@5 main_value_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.B.setValue[routing]() -> void:
-setValue:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
+main_value_route@6:
     txn GroupIndex
-    bz setValue_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-setValue_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     load 5
-    intc_1 // 32
+    extract 0 32
+    intc_2 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@12:
+    intc_1 // 0
+    b main_ternary_merge@13
+
+main_setValue_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    load 5
+    intc_2 // 32
     bzero
     load 5
     extract 0 32
@@ -64,35 +91,6 @@ setValue_ternary_merge@4:
     intc_0 // 1
     return
 
-setValue_ternary_false@3:
-    intc_2 // 0
-    b setValue_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.B.value[routing]() -> void:
-value:
-    txn GroupIndex
-    bz value_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-value_ternary_merge@4:
-    !
-    assert // not payable
-    load 5
-    extract 0 32
-    intc_1 // 32
-    bzero
-    b|
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-value_ternary_false@3:
-    intc_2 // 0
-    b value_ternary_merge@4
+main_ternary_false@17:
+    intc_1 // 0
+    b main_ternary_merge@18

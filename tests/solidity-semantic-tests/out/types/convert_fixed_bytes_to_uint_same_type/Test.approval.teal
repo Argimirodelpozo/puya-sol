@@ -3,7 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/convert_fixed_bytes_to_uint_same_type.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 32 0
+    intc_2 // 0
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -30,26 +32,23 @@ main_bytesToUint_route@4:
     txn ApplicationID
     &&
     assert
-    b bytesToUint
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/convert_fixed_bytes_to_uint_same_type.sol.Test.bytesToUint[routing]() -> void:
-bytesToUint:
     txna ApplicationArgs 1
     dup
+    bury 3
     len
     dup
+    bury 2
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz bytesToUint_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-bytesToUint_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     dup
@@ -67,6 +66,6 @@ bytesToUint_ternary_merge@4:
     intc_0 // 1
     return
 
-bytesToUint_ternary_false@3:
-    pushint 0
-    b bytesToUint_ternary_merge@4
+main_ternary_false@8:
+    intc_2 // 0
+    b main_ternary_merge@9

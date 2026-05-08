@@ -15,16 +15,14 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
+
+main_if_body@1:
     pushint 1
     return
 
 main_after_if_else@2:
     txn NumAppArgs
-    bnz main_after_if_else@4
-    pushint 1
-    return
-
-main_after_if_else@4:
+    bz main_if_body@1
     pushint 0
     bury 1
     pushbytes 0xc599eb05 // method "__receive()void"

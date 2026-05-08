@@ -3,8 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/enum_with_256_members.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 255 0 8
+    intcblock 1 255 0 256
     bytecblock 0x151f7c75
+    intc_2 // 0
+    pushbytes ""
+    dup
     pushint 4096
     bzero
     dup
@@ -27,59 +30,38 @@ main_after_if_else@2:
     assert
     pushbytess 0x0a63a401 0xae705e3d 0x77f5c0ba 0x250e5423 // method "getMinMax()(uint64,uint64)", method "intToEnum(uint64)uint64", method "enumToInt(uint64)uint64", method "decodeEnum(byte[])uint64"
     txna ApplicationArgs 0
-    match getMinMax intToEnum enumToInt decodeEnum
+    match main_getMinMax_route@5 main_intToEnum_route@6 main_enumToInt_route@7 main_decodeEnum_route@8
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/enum_with_256_members.sol.C.getMinMax[routing]() -> void:
-getMinMax:
-    txn GroupIndex
-    bz getMinMax_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-getMinMax_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c75000000000000000000000000000000ff
-    log
-    intc_0 // 1
-    return
-
-getMinMax_ternary_false@3:
-    intc_2 // 0
-    b getMinMax_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/enum_with_256_members.sol.C.intToEnum[routing]() -> void:
-intToEnum:
+main_decodeEnum_route@8:
     txna ApplicationArgs 1
     dup
+    bury 4
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
     len
-    intc_3 // 8
     ==
-    assert // invalid number of bytes for arc4.uint64
-    btoi
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     txn GroupIndex
-    bz intToEnum_ternary_false@3
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-intToEnum_ternary_merge@4:
+main_ternary_merge@15:
     !
     assert // not payable
-    dupn 2
-    intc_1 // 255
-    <=
-    assert // ABI validation
-    intc_1 // 255
-    &
+    dig 2
+    extract 2 32
+    pushint 24
+    extract_uint64
     dup
-    pushint 256
+    intc_3 // 256
     <
     assert // enum out of range
     intc_1 // 255
@@ -92,31 +74,31 @@ intToEnum_ternary_merge@4:
     intc_0 // 1
     return
 
-intToEnum_ternary_false@3:
+main_ternary_false@14:
     intc_2 // 0
-    b intToEnum_ternary_merge@4
+    b main_ternary_merge@15
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/enum_with_256_members.sol.C.enumToInt[routing]() -> void:
-enumToInt:
+main_enumToInt_route@7:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 8
+    pushint 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    bury 2
     txn GroupIndex
-    bz enumToInt_ternary_false@3
+    bz main_ternary_false@19
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-enumToInt_ternary_merge@4:
+main_ternary_merge@20:
     !
     assert // not payable
-    dupn 2
+    dig 1
+    dup
     intc_1 // 255
     <=
     assert // ABI validation
@@ -136,39 +118,37 @@ enumToInt_ternary_merge@4:
     intc_0 // 1
     return
 
-enumToInt_ternary_false@3:
+main_ternary_false@19:
     intc_2 // 0
-    b enumToInt_ternary_merge@4
+    b main_ternary_merge@20
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/enum_with_256_members.sol.C.decodeEnum[routing]() -> void:
-decodeEnum:
+main_intToEnum_route@6:
     txna ApplicationArgs 1
-    dupn 2
-    intc_2 // 0
-    extract_uint16 // on error: invalid array length header
-    pushint 2
-    +
-    swap
+    dup
     len
+    pushint 8
     ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 1
     txn GroupIndex
-    bz decodeEnum_ternary_false@3
+    bz main_ternary_false@24
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-decodeEnum_ternary_merge@4:
+main_ternary_merge@25:
     !
     assert // not payable
+    dupn 2
+    intc_1 // 255
+    <=
+    assert // ABI validation
+    intc_1 // 255
+    &
     dup
-    extract 2 32
-    pushint 24
-    extract_uint64
-    dup
-    pushint 256
+    intc_3 // 256
     <
     assert // enum out of range
     intc_1 // 255
@@ -181,6 +161,26 @@ decodeEnum_ternary_merge@4:
     intc_0 // 1
     return
 
-decodeEnum_ternary_false@3:
+main_ternary_false@24:
     intc_2 // 0
-    b decodeEnum_ternary_merge@4
+    b main_ternary_merge@25
+
+main_getMinMax_route@5:
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75000000000000000000000000000000ff
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@29:
+    intc_2 // 0
+    b main_ternary_merge@30

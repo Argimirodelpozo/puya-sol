@@ -5,6 +5,8 @@
 main:
     intcblock 0 2 1 32
     bytecblock "storageArray" "__ctor_pending" 0x068101
+    intc_0 // 0
+    dup
     pushint 4096
     bzero
     dup
@@ -30,51 +32,33 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x1e3ddb1a // method "__postInit()void", method "pushEmpty(uint256)void"
     txna ApplicationArgs 0
-    match __postInit pushEmpty
+    match main___postInit_route@5 main_pushEmpty_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_push_empty.sol.C.__postInit[routing]() -> void:
-__postInit:
-    bytec_1 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_1 // "__ctor_pending"
-    intc_0 // 0
-    app_global_put
-    bytec_0 // "storageArray"
-    intc_1 // 2
-    box_create
-    pop
-    intc_2 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_push_empty.sol.C.pushEmpty[routing]() -> void:
-pushEmpty:
-    intc_0 // 0
+main_pushEmpty_route@6:
     txna ApplicationArgs 1
     dup
+    bury 3
     len
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz pushEmpty_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-pushEmpty_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
 
-pushEmpty_while_top@17:
+main_while_top@26:
     pushint 170010
     global OpcodeBudget
     >
-    bz pushEmpty_while_top@5
+    bz main_while_top@14
     itxn_begin
     pushint 6 // appl
     itxn_field TypeEnum
@@ -87,28 +71,28 @@ pushEmpty_while_top@17:
     intc_0 // 0
     itxn_field Fee
     itxn_submit
-    b pushEmpty_while_top@17
+    b main_while_top@26
 
-pushEmpty_while_top@5:
+main_while_top@14:
     bytec_0 // "storageArray"
     box_len
     pop
     intc_1 // 2
     >=
-    bz pushEmpty_ternary_false@7
+    bz main_ternary_false@16
     bytec_0 // "storageArray"
     box_len
     pop
 
-pushEmpty_ternary_merge@8:
+main_ternary_merge@17:
     intc_1 // 2
     -
     intc_3 // 32
     /
     itob
-    dig 1
+    dig 2
     b<
-    bz pushEmpty_after_while@10
+    bz main_after_while@19
     bytec_0 // "storageArray"
     intc_0 // 0
     intc_1 // 2
@@ -140,20 +124,21 @@ pushEmpty_ternary_merge@8:
     intc_0 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     box_splice
-    b pushEmpty_while_top@5
+    b main_while_top@14
 
-pushEmpty_after_while@10:
+main_after_while@19:
     intc_0 // 0
     itob
-    bury 2
+    bury 1
 
-pushEmpty_while_top@11:
-    dup2
+main_while_top@20:
+    dup
+    dig 2
     b<
-    bz pushEmpty_after_while@13
+    bz main_after_while@22
     pushint 8
     bzero
-    dig 2
+    dig 1
     dup
     cover 2
     concat
@@ -175,17 +160,31 @@ pushEmpty_while_top@11:
     assert
     pushbytes 0x01
     b+
-    bury 2
-    b pushEmpty_while_top@11
+    bury 1
+    b main_while_top@20
 
-pushEmpty_after_while@13:
+main_after_while@22:
     intc_2 // 1
     return
 
-pushEmpty_ternary_false@7:
+main_ternary_false@16:
     intc_1 // 2
-    b pushEmpty_ternary_merge@8
+    b main_ternary_merge@17
 
-pushEmpty_ternary_false@3:
+main_ternary_false@12:
     intc_0 // 0
-    b pushEmpty_ternary_merge@4
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "storageArray"
+    intc_1 // 2
+    box_create
+    pop
+    intc_2 // 1
+    return

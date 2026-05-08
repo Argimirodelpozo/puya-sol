@@ -30,163 +30,18 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0xb34655fa 0x561ed45e 0x7b6ea079 0x2942dd81 0x4da3f16f // method "__postInit()void", method "getFirst()uint256", method "getSecond()uint256", method "getThird()uint256", method "getLast()string", method "bug()(uint512,uint512,uint512,string)"
     txna ApplicationArgs 0
-    match __postInit getFirst getSecond getThird getLast bug
+    match main___postInit_route@5 main_getFirst_route@6 main_getSecond_route@7 main_getThird_route@8 main_getLast_route@9 main_bug_route@10
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.__postInit[routing]() -> void:
-__postInit:
-    bytec_3 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_3 // "__ctor_pending"
-    intc_1 // 0
-    app_global_put
-    bytec_0 // "bug"
-    box_del
-    pop
-    bytec_0 // "bug"
-    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000014000000000000000000000000000000000000000000000000000000000000001e006200096173646667686a6b6c
-    box_put
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.getFirst[routing]() -> void:
-getFirst:
+main_bug_route@10:
     txn GroupIndex
-    bz getFirst_ternary_false@3
+    bz main_ternary_false@16
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-getFirst_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // "bug"
-    box_get
-    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000620000
-    cover 2
-    select
-    extract 0 32
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-getFirst_ternary_false@3:
-    intc_1 // 0
-    b getFirst_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.getSecond[routing]() -> void:
-getSecond:
-    txn GroupIndex
-    bz getSecond_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-getSecond_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // "bug"
-    box_get
-    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000620000
-    cover 2
-    select
-    extract 32 32
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-getSecond_ternary_false@3:
-    intc_1 // 0
-    b getSecond_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.getThird[routing]() -> void:
-getThird:
-    txn GroupIndex
-    bz getThird_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-getThird_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // "bug"
-    box_get
-    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000620000
-    cover 2
-    select
-    extract 64 32
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-getThird_ternary_false@3:
-    intc_1 // 0
-    b getThird_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.getLast[routing]() -> void:
-getLast:
-    txn GroupIndex
-    bz getLast_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-getLast_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // "bug"
-    box_get
-    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000620000
-    cover 2
-    select
-    dup
-    intc_2 // 96
-    extract_uint16
-    dig 1
-    len
-    substring3
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-getLast_ternary_false@3:
-    intc_1 // 0
-    b getLast_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.bug[routing]() -> void:
-bug:
-    txn GroupIndex
-    bz bug_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-bug_ternary_merge@4:
+main_ternary_merge@17:
     !
     assert // not payable
     bytec_0 // "bug"
@@ -240,6 +95,139 @@ bug_ternary_merge@4:
     intc_0 // 1
     return
 
-bug_ternary_false@3:
+main_ternary_false@16:
     intc_1 // 0
-    b bug_ternary_merge@4
+    b main_ternary_merge@17
+
+main_getLast_route@9:
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    bytec_0 // "bug"
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000620000
+    cover 2
+    select
+    dup
+    intc_2 // 96
+    extract_uint16
+    dig 1
+    len
+    substring3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@21:
+    intc_1 // 0
+    b main_ternary_merge@22
+
+main_getThird_route@8:
+    txn GroupIndex
+    bz main_ternary_false@26
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@27:
+    !
+    assert // not payable
+    bytec_0 // "bug"
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000620000
+    cover 2
+    select
+    extract 64 32
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@26:
+    intc_1 // 0
+    b main_ternary_merge@27
+
+main_getSecond_route@7:
+    txn GroupIndex
+    bz main_ternary_false@31
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@32:
+    !
+    assert // not payable
+    bytec_0 // "bug"
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000620000
+    cover 2
+    select
+    extract 32 32
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@31:
+    intc_1 // 0
+    b main_ternary_merge@32
+
+main_getFirst_route@6:
+    txn GroupIndex
+    bz main_ternary_false@36
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@37:
+    !
+    assert // not payable
+    bytec_0 // "bug"
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000620000
+    cover 2
+    select
+    extract 0 32
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@36:
+    intc_1 // 0
+    b main_ternary_merge@37
+
+main___postInit_route@5:
+    bytec_3 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_3 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_0 // "bug"
+    box_del
+    pop
+    bytec_0 // "bug"
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000014000000000000000000000000000000000000000000000000000000000000001e006200096173646667686a6b6c
+    box_put
+    intc_0 // 1
+    return

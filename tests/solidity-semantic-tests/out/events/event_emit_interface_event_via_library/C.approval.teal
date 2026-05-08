@@ -29,7 +29,23 @@ main_g_route@4:
     txn ApplicationID
     &&
     assert
-    b g
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    callsub L.f
+    pushint 1
+    return
+
+main_ternary_false@8:
+    pushint 0
+    b main_ternary_merge@9
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_emit_interface_event_via_library.sol.L.f() -> void:
@@ -37,24 +53,3 @@ L.f:
     pushbytes 0x57050ab7
     log
     retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_emit_interface_event_via_library.sol.C.g[routing]() -> void:
-g:
-    txn GroupIndex
-    bz g_ternary_false@3
-    txn GroupIndex
-    pushint 1
-    -
-    gtxns Amount
-
-g_ternary_merge@4:
-    !
-    assert // not payable
-    callsub L.f
-    pushint 1
-    return
-
-g_ternary_false@3:
-    pushint 0
-    b g_ternary_merge@4

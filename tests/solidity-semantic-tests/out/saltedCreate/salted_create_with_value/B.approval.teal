@@ -33,19 +33,14 @@ main_getBalance_route@4:
     txn ApplicationID
     &&
     assert
-    b getBalance
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/saltedCreate/salted_create_with_value.sol.B.getBalance[routing]() -> void:
-getBalance:
     txn GroupIndex
-    bz getBalance_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-getBalance_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     global CurrentApplicationAddress
@@ -74,6 +69,6 @@ getBalance_ternary_merge@4:
     intc_0 // 1
     return
 
-getBalance_ternary_false@3:
+main_ternary_false@8:
     intc_1 // 0
-    b getBalance_ternary_merge@4
+    b main_ternary_merge@9

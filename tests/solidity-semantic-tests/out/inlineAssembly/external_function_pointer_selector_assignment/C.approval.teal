@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_selector_assignment.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 4294967295 0 8
+    intcblock 1 4294967295 8 0
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -26,47 +27,26 @@ main_after_if_else@2:
     assert
     pushbytess 0x89aac53b 0x8c829a67 // method "testFunction()void", method "testYul(uint64)uint64"
     txna ApplicationArgs 0
-    match testFunction testYul
+    match main_testFunction_route@5 main_testYul_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_selector_assignment.sol.C.testFunction[routing]() -> void:
-testFunction:
-    txn GroupIndex
-    bz testFunction_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-testFunction_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 1
-    return
-
-testFunction_ternary_false@3:
-    intc_2 // 0
-    b testFunction_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_selector_assignment.sol.C.testYul[routing]() -> void:
-testYul:
+main_testYul_route@6:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    bury 1
     txn GroupIndex
-    bz testYul_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-testYul_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     dupn 2
@@ -84,7 +64,7 @@ testYul_ternary_merge@4:
     replace2 8
     swap
     store 0
-    intc_3 // 8
+    intc_2 // 8
     extract_uint32
     intc_1 // 4294967295
     &
@@ -96,6 +76,24 @@ testYul_ternary_merge@4:
     intc_0 // 1
     return
 
-testYul_ternary_false@3:
-    intc_2 // 0
-    b testYul_ternary_merge@4
+main_ternary_false@12:
+    intc_3 // 0
+    b main_ternary_merge@13
+
+main_testFunction_route@5:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
+
+main_ternary_false@17:
+    intc_3 // 0
+    b main_ternary_merge@18

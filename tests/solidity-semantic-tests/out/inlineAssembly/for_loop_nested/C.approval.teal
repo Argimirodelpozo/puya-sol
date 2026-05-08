@@ -4,7 +4,9 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/for_loop_nested.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 64 0
-    bytecblock 0x 0x02 0x01 0x11
+    bytecblock 0x 0x02 0x01
+    intc_2 // 0
+    dupn 2
     pushint 4096
     bzero
     dup
@@ -31,27 +33,21 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/for_loop_nested.sol.C.f[routing]() -> void:
-f:
-    intc_2 // 0
-    dup
     txna ApplicationArgs 1
     dup
+    bury 2
     len
     intc_1 // 64
     ==
     assert // invalid number of bytes for arc4.uint512
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     bytec_0 // 0x
@@ -59,19 +55,19 @@ f_ternary_merge@4:
     load 0
     bury 3
 
-f_while_top@5:
+main_while_top@10:
     dig 1
     pushbytes 0x0a
     b<
-    bz f_after_while@18
+    bz main_after_while@22
     dup
     bytec_0 // 0x
     b==
-    bz f_while_top@9
+    bz main_while_top@14
     bytec_1 // 0x02
     bury 2
 
-f_after_while@18:
+main_after_while@22:
     dig 2
     store 0
     dig 1
@@ -90,49 +86,46 @@ f_after_while@18:
     intc_0 // 1
     return
 
-f_while_top@9:
+main_while_top@14:
     dup
     pushbytes 0x03
     b<
-    bz f_after_while@15
+    bz main_after_while@19
     dup
     bytec_2 // 0x01
     b==
-    bz f_after_if_else@12
-    bytec_3 // 0x11
+    bz main_after_if_else@17
+
+main_if_body@16:
+    pushbytes 0x11
     bury 2
     pushbytes 0x09
     bury 1
-    b f_while_top@9
+    b main_while_top@14
 
-f_after_if_else@12:
+main_after_if_else@17:
     dup
     bytec_1 // 0x02
     b==
-    bnz f_after_while@15
-    bytec_3 // 0x11
-    bury 2
-    pushbytes 0x09
-    bury 1
-    b f_while_top@9
+    bz main_if_body@16
 
-f_after_while@15:
+main_after_while@19:
     dup
     pushbytes 0x04
     b==
-    bz f_after_if_else@17
+    bz main_after_if_else@21
     pushbytes 0x5a
     bury 2
 
-f_after_if_else@17:
+main_after_if_else@21:
     dig 1
     bytec_2 // 0x01
     b+
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bury 2
-    b f_while_top@5
+    b main_while_top@10
 
-f_ternary_false@3:
+main_ternary_false@8:
     intc_2 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@9

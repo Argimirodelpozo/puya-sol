@@ -30,60 +30,18 @@ main_after_if_else@2:
     assert
     pushbytess 0x10b04df6 0x4b4fb052 0xfc32fe40 // method "f0()void", method "f()bool", method "flag()bool"
     txna ApplicationArgs 0
-    match f0 f flag
+    match main_f0_route@5 main_f_route@6 main_flag_route@7
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.f0[routing]() -> void:
-f0:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.f0
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.f[routing]() -> void:
-f:
+main_flag_route@7:
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@13
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
-    !
-    assert // not payable
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.f0
-    intc_0 // 0
-    bytec_0 // "flag"
-    app_global_get_ex
-    assert // check flag exists
-    bytec_1 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-f_ternary_false@3:
-    intc_0 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.flag[routing]() -> void:
-flag:
-    txn GroupIndex
-    bz flag_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-flag_ternary_merge@4:
+main_ternary_merge@14:
     !
     assert // not payable
     intc_0 // 0
@@ -101,21 +59,57 @@ flag_ternary_merge@4:
     intc_1 // 1
     return
 
-flag_ternary_false@3:
+main_ternary_false@13:
     intc_0 // 0
-    b flag_ternary_merge@4
+    b main_ternary_merge@14
+
+main_f_route@6:
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    callsub f0
+    intc_0 // 0
+    bytec_0 // "flag"
+    app_global_get_ex
+    assert // check flag exists
+    bytec_1 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@18:
+    intc_0 // 0
+    b main_ternary_merge@19
+
+main_f0_route@5:
+    callsub f0
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.f0() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.f0:
+f0:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.f0_ternary_false@2
+    bz f0_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.f0_ternary_merge@3:
+f0_ternary_merge@3:
     !
     assert // not payable
     bytec_0 // "flag"
@@ -123,6 +117,6 @@ flag_ternary_false@3:
     app_global_put
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.f0_ternary_false@2:
+f0_ternary_false@2:
     intc_0 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.f0_ternary_merge@3
+    b f0_ternary_merge@3

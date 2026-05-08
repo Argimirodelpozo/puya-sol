@@ -36,92 +36,18 @@ main_after_if_else@2:
     assert
     pushbytess 0x15810d3b 0xd9d12b48 // method "direct()(uint512,byte[2])", method "viaasm()(byte[32],byte[32])"
     txna ApplicationArgs 0
-    match direct viaasm
+    match main_direct_route@5 main_viaasm_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/immutable_signed.sol.C.direct[routing]() -> void:
-direct:
+main_viaasm_route@6:
     txn GroupIndex
-    bz direct_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-direct_ternary_merge@4:
-    !
-    assert // not payable
-    intc_0 // 0
-    bytec_0 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_2 // 0xffff
-    b&
-    pushbytes 0x8000
-    b>=
-    bz direct_ternary_false@6
-    intc_0 // 0
-    bytec_0 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_2 // 0xffff
-    b&
-    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
-    b+
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-
-direct_ternary_merge@7:
-    intc_0 // 0
-    bytec_1 // "b"
-    app_global_get_ex
-    assert // check b exists
-    swap
-    dup
-    len
-    intc_3 // 64
-    <=
-    assert // overflow
-    intc_3 // 64
-    bzero
-    b|
-    swap
-    concat
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-direct_ternary_false@6:
-    intc_0 // 0
-    bytec_0 // "a"
-    app_global_get_ex
-    assert // check a exists
-    itob
-    bytec_2 // 0xffff
-    b&
-    b direct_ternary_merge@7
-
-direct_ternary_false@3:
-    intc_0 // 0
-    b direct_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/immutable_signed.sol.C.viaasm[routing]() -> void:
-viaasm:
-    txn GroupIndex
-    bz viaasm_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-viaasm_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     intc_0 // 0
@@ -172,6 +98,76 @@ viaasm_ternary_merge@4:
     intc_1 // 1
     return
 
-viaasm_ternary_false@3:
+main_ternary_false@12:
     intc_0 // 0
-    b viaasm_ternary_merge@4
+    b main_ternary_merge@13
+
+main_direct_route@5:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_2 // 0xffff
+    b&
+    pushbytes 0x8000
+    b>=
+    bz main_ternary_false@20
+    intc_0 // 0
+    bytec_0 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_2 // 0xffff
+    b&
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
+    b+
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+main_ternary_merge@21:
+    intc_0 // 0
+    bytec_1 // "b"
+    app_global_get_ex
+    assert // check b exists
+    swap
+    dup
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    intc_3 // 64
+    bzero
+    b|
+    swap
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@20:
+    intc_0 // 0
+    bytec_0 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_2 // 0xffff
+    b&
+    b main_ternary_merge@21
+
+main_ternary_false@17:
+    intc_0 // 0
+    b main_ternary_merge@18

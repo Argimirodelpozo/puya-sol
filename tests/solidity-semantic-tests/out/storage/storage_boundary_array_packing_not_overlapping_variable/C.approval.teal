@@ -5,6 +5,7 @@
 main:
     intcblock 1 0 32 8 18446744073709551615
     bytecblock 0x "__dyn_storage"
+    bytec_0 // ""
     pushint 4096
     bzero
     dup
@@ -29,68 +30,132 @@ main_after_if_else@2:
     assert
     pushbytess 0x2bbf0199 0x31f9d671 0x963090af 0xdd84bb7d 0xc67bf355 // method "fillArray()void", method "shrinkTo5()void", method "clearArray()void", method "x()uint64[10]", method "canaryValue()uint256"
     txna ApplicationArgs 0
-    match fillArray shrinkTo5 clearArray x canaryValue
+    match main_fillArray_route@5 main_shrinkTo5_route@6 main_clearArray_route@7 main_x_route@8 main_canaryValue_route@9
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_packing_not_overlapping_variable.sol.C.fillArray[routing]() -> void:
-fillArray:
-    bytec_0 // ""
+main_canaryValue_route@9:
     txn GroupIndex
-    bz fillArray_ternary_false@3
+    bz main_ternary_false@15
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-fillArray_ternary_merge@4:
+main_ternary_merge@16:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@15:
+    intc_1 // 0
+    b main_ternary_merge@16
+
+main_x_route@8:
+    txn GroupIndex
+    bz main_ternary_false@20
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@21:
+    !
+    assert // not payable
+    load 0
+    pushint 24
+    bzero
+    dig 1
+    pushint 88
+    extract_uint64
+    pushint 80
+    +
+    itob
+    concat
+    replace2 64
+    store 0
+    load 0
+    store 0
+    bytec_1 // "__dyn_storage"
+    pushint 8192
+    box_create
+    pop
+    bytec_1 // "__dyn_storage"
+    pushint 8160
+    intc_2 // 32
+    box_extract
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@20:
+    intc_1 // 0
+    b main_ternary_merge@21
+
+main_clearArray_route@7:
+    txn GroupIndex
+    bz main_ternary_false@25
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@26:
     !
     assert // not payable
     load 0
     store 0
+    intc 4 // 18446744073709551615
+    bytec_0 // 0x
+    callsub __storage_write
     intc_1 // 0
-    bury 1
-
-fillArray_while_top@5:
-    dup
-    pushint 10
-    <
-    bz fillArray_after_while@7
-    dupn 2
-    itob
-    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b+
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    dig 1
+    bytec_0 // 0x
     callsub __storage_write
     intc_0 // 1
-    +
-    bury 1
-    b fillArray_while_top@5
-
-fillArray_after_while@7:
+    bytec_0 // 0x
+    callsub __storage_write
+    pushint 2
+    bytec_0 // 0x
+    callsub __storage_write
+    pushint 3
+    bytec_0 // 0x
+    callsub __storage_write
+    pushint 4
+    bytec_0 // 0x
+    callsub __storage_write
+    pushint 5
+    bytec_0 // 0x
+    callsub __storage_write
+    pushint 6
+    bytec_0 // 0x
+    callsub __storage_write
+    pushint 7
+    bytec_0 // 0x
+    callsub __storage_write
+    intc_3 // 8
+    bytec_0 // 0x
+    callsub __storage_write
     intc_0 // 1
     return
 
-fillArray_ternary_false@3:
+main_ternary_false@25:
     intc_1 // 0
-    b fillArray_ternary_merge@4
+    b main_ternary_merge@26
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_packing_not_overlapping_variable.sol.C.shrinkTo5[routing]() -> void:
-shrinkTo5:
+main_shrinkTo5_route@6:
     txn GroupIndex
-    bz shrinkTo5_ternary_false@3
+    bz main_ternary_false@30
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-shrinkTo5_ternary_merge@4:
+main_ternary_merge@31:
     !
     assert // not payable
     load 0
@@ -128,132 +193,57 @@ shrinkTo5_ternary_merge@4:
     intc_0 // 1
     return
 
-shrinkTo5_ternary_false@3:
+main_ternary_false@30:
     intc_1 // 0
-    b shrinkTo5_ternary_merge@4
+    b main_ternary_merge@31
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_packing_not_overlapping_variable.sol.C.clearArray[routing]() -> void:
-clearArray:
+main_fillArray_route@5:
     txn GroupIndex
-    bz clearArray_ternary_false@3
+    bz main_ternary_false@35
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-clearArray_ternary_merge@4:
+main_ternary_merge@36:
     !
     assert // not payable
     load 0
     store 0
-    intc 4 // 18446744073709551615
-    bytec_0 // 0x
-    callsub __storage_write
     intc_1 // 0
-    bytec_0 // 0x
-    callsub __storage_write
-    intc_0 // 1
-    bytec_0 // 0x
-    callsub __storage_write
-    pushint 2
-    bytec_0 // 0x
-    callsub __storage_write
-    pushint 3
-    bytec_0 // 0x
-    callsub __storage_write
-    pushint 4
-    bytec_0 // 0x
-    callsub __storage_write
-    pushint 5
-    bytec_0 // 0x
-    callsub __storage_write
-    pushint 6
-    bytec_0 // 0x
-    callsub __storage_write
-    pushint 7
-    bytec_0 // 0x
-    callsub __storage_write
-    intc_3 // 8
-    bytec_0 // 0x
-    callsub __storage_write
-    intc_0 // 1
-    return
+    bury 1
 
-clearArray_ternary_false@3:
-    intc_1 // 0
-    b clearArray_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_packing_not_overlapping_variable.sol.C.x[routing]() -> void:
-x:
-    txn GroupIndex
-    bz x_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-x_ternary_merge@4:
-    !
-    assert // not payable
-    load 0
-    pushint 24
-    bzero
-    dig 1
-    pushint 88
-    extract_uint64
-    pushint 80
-    +
+main_while_top@37:
+    dup
+    pushint 10
+    <
+    bz main_after_while@39
+    dupn 2
     itob
-    concat
-    replace2 64
-    store 0
-    load 0
-    store 0
-    bytec_1 // "__dyn_storage"
-    pushint 8192
-    box_create
-    pop
-    bytec_1 // "__dyn_storage"
-    pushint 8160
-    intc_2 // 32
-    box_extract
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-x_ternary_false@3:
-    intc_1 // 0
-    b x_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_packing_not_overlapping_variable.sol.C.canaryValue[routing]() -> void:
-canaryValue:
-    txn GroupIndex
-    bz canaryValue_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b+
+    dup
+    len
+    intc_3 // 8
     -
-    gtxns Amount
+    extract_uint64
+    dig 1
+    callsub __storage_write
+    intc_0 // 1
+    +
+    bury 1
+    b main_while_top@37
 
-canaryValue_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
-    log
+main_after_while@39:
     intc_0 // 1
     return
 
-canaryValue_ternary_false@3:
+main_ternary_false@35:
     intc_1 // 0
-    b canaryValue_ternary_merge@4
+    b main_ternary_merge@36
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_packing_not_overlapping_variable.sol.C.__storage_write(__slot: uint64, __value: bytes) -> void:
+// __puyasol___storage_write(__slot: uint64, __value: bytes) -> void:
 __storage_write:
     proto 2 0
     bytec_1 // "__dyn_storage"

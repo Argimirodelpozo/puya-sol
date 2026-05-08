@@ -1,7 +1,7 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource__9qutiz7/s2.sol.D.approval_program() -> uint64:
+// /tmp/multisource_35c9zznv/s2.sol.D.approval_program() -> uint64:
 main:
     intcblock 1 32
     pushint 4096
@@ -30,36 +30,17 @@ main_h_route@4:
     txn ApplicationID
     &&
     assert
-    b h
-
-
-// /tmp/multisource__9qutiz7/s2.sol.f_19() -> bytes:
-f:
-    pushint 6
-    itob
-    retsub
-
-
-// /tmp/multisource__9qutiz7/s2.sol.f_43() -> bytes:
-/tmp/multisource__9qutiz7/s2.sol.f_43:
-    pushint 1337
-    itob
-    retsub
-
-
-// /tmp/multisource__9qutiz7/s2.sol.D.h[routing]() -> void:
-h:
     txn GroupIndex
-    bz h_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-h_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
-    callsub /tmp/multisource__9qutiz7/s2.sol.f_43
+    callsub /tmp/multisource_35c9zznv/s2.sol.f_43
     callsub f
     pushbytes 0x2710
     b*
@@ -79,6 +60,20 @@ h_ternary_merge@4:
     intc_0 // 1
     return
 
-h_ternary_false@3:
+main_ternary_false@8:
     pushint 0
-    b h_ternary_merge@4
+    b main_ternary_merge@9
+
+
+// /tmp/multisource_35c9zznv/s2.sol.f_19() -> bytes:
+f:
+    pushint 6
+    itob
+    retsub
+
+
+// /tmp/multisource_35c9zznv/s2.sol.f_43() -> bytes:
+/tmp/multisource_35c9zznv/s2.sol.f_43:
+    pushint 1337
+    itob
+    retsub

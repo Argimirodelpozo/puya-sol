@@ -39,27 +39,18 @@ main_after_if_else@2:
     assert
     pushbytess 0xf2b65f27 0x7404354e // method "g()void", method "f()(uint512,uint512,uint512,uint512)"
     txna ApplicationArgs 0
-    match g f
+    match main_g_route@5 main_f_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable_abstract_contract.sol.C.g[routing]() -> void:
-g:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable_abstract_contract.sol.C.g
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable_abstract_contract.sol.C.f[routing]() -> void:
-f:
+main_f_route@6:
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     load 5
@@ -82,7 +73,7 @@ f_ternary_merge@4:
     bytec_1 // "y"
     swap
     app_global_put
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable_abstract_contract.sol.C.g
+    callsub g
     load 5
     extract 0 32
     intc_0 // 0
@@ -128,21 +119,26 @@ f_ternary_merge@4:
     intc_1 // 1
     return
 
-f_ternary_false@3:
+main_ternary_false@12:
     intc_0 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@13
+
+main_g_route@5:
+    callsub g
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable_abstract_contract.sol.C.g() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable_abstract_contract.sol.C.g:
+g:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable_abstract_contract.sol.C.g_ternary_false@2
+    bz g_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable_abstract_contract.sol.C.g_ternary_merge@3:
+g_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 0
@@ -167,6 +163,6 @@ f_ternary_false@3:
     store 5
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable_abstract_contract.sol.C.g_ternary_false@2:
+g_ternary_false@2:
     intc_0 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable_abstract_contract.sol.C.g_ternary_merge@3
+    b g_ternary_merge@3

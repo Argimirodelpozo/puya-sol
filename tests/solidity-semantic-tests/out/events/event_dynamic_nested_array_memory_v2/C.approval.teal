@@ -5,6 +5,7 @@
 main:
     intcblock 0 1 2 32
     bytecblock 0x000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    intc_0 // 0
     pushint 4096
     bzero
     dup
@@ -31,115 +32,21 @@ main_createEvent_route@4:
     txn ApplicationID
     &&
     assert
-    b createEvent
-
-
-// _puya_lib.arc4.dynamic_array_replace_dynamic_element(source: bytes, new_item: bytes, index: uint64) -> bytes:
-dynamic_array_replace_dynamic_element:
-    proto 3 1
-    frame_dig -3
-    substring 0 2
-    dup
-    btoi
-    frame_dig -3
-    extract 2 0
-    frame_dig -2
-    len
-    cover 2
-    dup
-    len
-    frame_dig -1
-    intc_1 // 1
-    +
-    intc_2 // 2
-    *
-    dig 2
-    dig 1
-    extract_uint16
-    dig 4
-    frame_dig -1
-    -
-    intc_1 // 1
-    -
-    dig 3
-    cover 2
-    select
-    frame_dig -1
-    intc_2 // 2
-    *
-    dig 4
-    swap
-    extract_uint16
-    dup2
-    -
-    cover 6
-    dig 4
-    intc_0 // 0
-    uncover 2
-    substring3
-    frame_dig -2
-    concat
-    uncover 4
-    uncover 2
-    uncover 4
-    substring3
-    concat
-    cover 2
-    swap
-    intc_2 // 2
-    *
-    swap
-
-dynamic_array_replace_dynamic_element_for_header@2:
-    frame_dig 5
-    frame_dig 4
-    <
-    bz dynamic_array_replace_dynamic_element_after_for@5
-    frame_dig 3
-    dup
-    frame_dig 5
-    dup
-    cover 3
-    extract_uint16
-    frame_dig 1
-    +
-    frame_dig 2
-    -
-    itob
-    extract 6 0
-    dig 2
-    swap
-    replace3
-    frame_bury 3
-    intc_2 // 2
-    +
-    frame_bury 5
-    b dynamic_array_replace_dynamic_element_for_header@2
-
-dynamic_array_replace_dynamic_element_after_for@5:
-    frame_dig 0
-    frame_dig 3
-    concat
-    frame_bury 0
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_dynamic_nested_array_memory_v2.sol.C.createEvent[routing]() -> void:
-createEvent:
     txna ApplicationArgs 1
     dup
+    bury 2
     len
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz createEvent_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-createEvent_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     pushbytes 0x00020004000600000000
@@ -279,6 +186,96 @@ createEvent_ternary_merge@4:
     intc_1 // 1
     return
 
-createEvent_ternary_false@3:
+main_ternary_false@8:
     intc_0 // 0
-    b createEvent_ternary_merge@4
+    b main_ternary_merge@9
+
+
+// _puya_lib.arc4.dynamic_array_replace_dynamic_element(source: bytes, new_item: bytes, index: uint64) -> bytes:
+dynamic_array_replace_dynamic_element:
+    proto 3 1
+    frame_dig -3
+    substring 0 2
+    dup
+    btoi
+    frame_dig -3
+    extract 2 0
+    frame_dig -2
+    len
+    cover 2
+    dup
+    len
+    frame_dig -1
+    intc_1 // 1
+    +
+    intc_2 // 2
+    *
+    dig 2
+    dig 1
+    extract_uint16
+    dig 4
+    frame_dig -1
+    -
+    intc_1 // 1
+    -
+    dig 3
+    cover 2
+    select
+    frame_dig -1
+    intc_2 // 2
+    *
+    dig 4
+    swap
+    extract_uint16
+    dup2
+    -
+    cover 6
+    dig 4
+    intc_0 // 0
+    uncover 2
+    substring3
+    frame_dig -2
+    concat
+    uncover 4
+    uncover 2
+    uncover 4
+    substring3
+    concat
+    cover 2
+    swap
+    intc_2 // 2
+    *
+    swap
+
+dynamic_array_replace_dynamic_element_for_header@2:
+    frame_dig 5
+    frame_dig 4
+    <
+    bz dynamic_array_replace_dynamic_element_after_for@5
+    frame_dig 3
+    dup
+    frame_dig 5
+    dup
+    cover 3
+    extract_uint16
+    frame_dig 1
+    +
+    frame_dig 2
+    -
+    itob
+    extract 6 0
+    dig 2
+    swap
+    replace3
+    frame_bury 3
+    intc_2 // 2
+    +
+    frame_bury 5
+    b dynamic_array_replace_dynamic_element_for_header@2
+
+dynamic_array_replace_dynamic_element_after_for@5:
+    frame_dig 0
+    frame_dig 3
+    concat
+    frame_bury 0
+    retsub

@@ -29,29 +29,24 @@ main_t_route@4:
     txn ApplicationID
     &&
     assert
-    b t
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/function_entry_checks_v2.sol.C.t[routing]() -> void:
-t:
     txna ApplicationArgs 1
     len
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz t_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     pushint 1
     -
     gtxns Amount
 
-t_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     pushint 1
     return
 
-t_ternary_false@3:
+main_ternary_false@8:
     pushint 0
-    b t_ternary_merge@4
+    b main_ternary_merge@9

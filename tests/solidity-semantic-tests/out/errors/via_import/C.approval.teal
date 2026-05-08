@@ -1,7 +1,7 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_55kxo6iw/s3.sol.C.approval_program() -> uint64:
+// /tmp/multisource_gaqqr6is/s3.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
     pushint 4096
@@ -26,62 +26,48 @@ main_after_if_else@2:
     assert
     pushbytess 0xb13faba1 0x598118aa 0x1db3c594 // method "x()void", method "y()void", method "z()void"
     txna ApplicationArgs 0
-    match x y z
+    match main_x_route@5 main_y_route@6 main_z_route@7
     err
 
-
-// /tmp/multisource_55kxo6iw/s3.sol.C.x[routing]() -> void:
-x:
+main_z_route@7:
     txn GroupIndex
-    bz x_ternary_false@3
+    bz main_ternary_false@13
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-x_ternary_merge@4:
+main_ternary_merge@24:
     !
     assert // not payable
     err // E
 
-x_ternary_false@3:
+main_ternary_false@13:
     intc_1 // 0
-    b x_ternary_merge@4
+    b main_ternary_merge@24
 
-
-// /tmp/multisource_55kxo6iw/s3.sol.C.y[routing]() -> void:
-y:
+main_y_route@6:
     txn GroupIndex
-    bz y_ternary_false@3
+    bz main_ternary_false@18
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
+    b main_ternary_merge@24
 
-y_ternary_merge@4:
-    !
-    assert // not payable
-    err // E
-
-y_ternary_false@3:
+main_ternary_false@18:
     intc_1 // 0
-    b y_ternary_merge@4
+    b main_ternary_merge@24
 
-
-// /tmp/multisource_55kxo6iw/s3.sol.C.z[routing]() -> void:
-z:
+main_x_route@5:
     txn GroupIndex
-    bz z_ternary_false@3
+    bz main_ternary_false@23
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
+    b main_ternary_merge@24
 
-z_ternary_merge@4:
-    !
-    assert // not payable
-    err // E
-
-z_ternary_false@3:
+main_ternary_false@23:
     intc_1 // 0
-    b z_ternary_merge@4
+    b main_ternary_merge@24

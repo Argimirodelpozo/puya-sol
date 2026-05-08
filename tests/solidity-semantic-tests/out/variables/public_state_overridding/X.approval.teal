@@ -30,45 +30,18 @@ main_after_if_else@2:
     assert
     pushbytess 0x0f76205a 0xc95a9d21 // method "set()void", method "test()uint256"
     txna ApplicationArgs 0
-    match set test
+    match main_set_route@5 main_test_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding.sol.X.set[routing]() -> void:
-set:
+main_test_route@6:
     txn GroupIndex
-    bz set_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-set_ternary_merge@4:
-    !
-    assert // not payable
-    pushint 2
-    itob
-    bytec_0 // "test"
-    swap
-    app_global_put
-    intc_0 // 1
-    return
-
-set_ternary_false@3:
-    intc_1 // 0
-    b set_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding.sol.X.test[routing]() -> void:
-test:
-    txn GroupIndex
-    bz test_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-test_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     intc_1 // 0
@@ -90,6 +63,29 @@ test_ternary_merge@4:
     intc_0 // 1
     return
 
-test_ternary_false@3:
+main_ternary_false@12:
     intc_1 // 0
-    b test_ternary_merge@4
+    b main_ternary_merge@13
+
+main_set_route@5:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    pushint 2
+    itob
+    bytec_0 // "test"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+main_ternary_false@17:
+    intc_1 // 0
+    b main_ternary_merge@18

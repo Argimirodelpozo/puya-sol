@@ -5,6 +5,8 @@
 main:
     intcblock 1 0 32 2
     bytecblock "__ctor_pending" "canVote" "voteCount" "voted" 0x151f7c75
+    intc_1 // 0
+    dupn 4
     pushint 4096
     bzero
     dup
@@ -30,53 +32,159 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0xaf08416b 0x81890f0b 0x39830387 // method "__postInit()void", method "getVoteCount(address)uint256", method "grantVoteRight(address)void", method "vote(address,address)bool"
     txna ApplicationArgs 0
-    match __postInit getVoteCount grantVoteRight vote
+    match main___postInit_route@5 main_getVoteCount_route@6 main_grantVoteRight_route@7 main_vote_route@8
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mapping_state.sol.Ballot.__postInit[routing]() -> void:
-__postInit:
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_0 // "__ctor_pending"
-    intc_1 // 0
-    app_global_put
-    bytec_1 // "canVote"
-    intc_3 // 2
-    box_create
-    pop
-    bytec_2 // "voteCount"
-    intc_3 // 2
-    box_create
-    pop
-    bytec_3 // "voted"
-    intc_3 // 2
-    box_create
-    pop
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mapping_state.sol.Ballot.getVoteCount[routing]() -> void:
-getVoteCount:
+main_vote_route@8:
     txna ApplicationArgs 1
     dup
+    bury 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 3
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz getVoteCount_ternary_false@3
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-getVoteCount_ternary_merge@4:
+main_ternary_merge@15:
     !
     assert // not payable
     dup
+    sha256
+    dup
+    bury 4
+    bytec_1 // "canVote"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bz main_if_body@17
+    bytec_3 // "voted"
+    dig 3
+    concat
+    dup
+    bury 5
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bz main_after_if_else@18
+
+main_if_body@17:
+    intc_1 // 0
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mapping_state.sol.Ballot.vote@19:
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_after_if_else@18:
+    intc_0 // 1
+    itob
+    dig 4
+    swap
+    box_put
+    dig 1
+    sha256
+    bytec_2 // "voteCount"
+    swap
+    concat
+    dup
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    pushbytes 0x01
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_0 // 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mapping_state.sol.Ballot.vote@19
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_grantVoteRight_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    dig 4
+    sha256
+    bytec_1 // "canVote"
+    swap
+    concat
+    intc_0 // 1
+    itob
+    box_put
+    intc_0 // 1
+    return
+
+main_ternary_false@23:
+    intc_1 // 0
+    b main_ternary_merge@24
+
+main_getVoteCount_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    dig 4
     sha256
     bytec_2 // "voteCount"
     swap
@@ -100,140 +208,28 @@ getVoteCount_ternary_merge@4:
     intc_0 // 1
     return
 
-getVoteCount_ternary_false@3:
+main_ternary_false@28:
     intc_1 // 0
-    b getVoteCount_ternary_merge@4
+    b main_ternary_merge@29
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mapping_state.sol.Ballot.grantVoteRight[routing]() -> void:
-grantVoteRight:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_2 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz grantVoteRight_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-grantVoteRight_ternary_merge@4:
-    !
-    assert // not payable
-    dup
-    sha256
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
     bytec_1 // "canVote"
-    swap
-    concat
-    intc_0 // 1
-    itob
-    box_put
-    intc_0 // 1
-    return
-
-grantVoteRight_ternary_false@3:
-    intc_1 // 0
-    b grantVoteRight_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mapping_state.sol.Ballot.vote[routing]() -> void:
-vote:
-    intc_1 // 0
-    dup
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_2 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_2 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz vote_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-vote_ternary_merge@4:
-    !
-    assert // not payable
-    dig 1
-    sha256
-    dup
-    bury 4
-    bytec_1 // "canVote"
-    swap
-    concat
-    box_get
-    swap
-    btoi
-    intc_1 // 0
-    swap
-    uncover 2
-    select
-    bz vote_if_body@6
-    bytec_3 // "voted"
-    dig 3
-    concat
-    dup
-    bury 5
-    box_get
-    swap
-    btoi
-    intc_1 // 0
-    swap
-    uncover 2
-    select
-    bz vote_after_if_else@7
-
-vote_if_body@6:
-    intc_1 // 0
-
-vote_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mapping_state.sol.Ballot.vote@8:
-    pushbytes 0x00
-    intc_1 // 0
-    uncover 2
-    setbit
-    bytec 4 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-vote_after_if_else@7:
-    intc_0 // 1
-    itob
-    dig 4
-    swap
-    box_put
-    dup
-    sha256
-    bytec_2 // "voteCount"
-    swap
-    concat
-    dup
-    box_get
-    pushbytes 0x
-    cover 2
-    select
-    pushbytes 0x01
-    b+
-    dig 1
-    box_del
+    intc_3 // 2
+    box_create
     pop
-    box_put
+    bytec_2 // "voteCount"
+    intc_3 // 2
+    box_create
+    pop
+    bytec_3 // "voted"
+    intc_3 // 2
+    box_create
+    pop
     intc_0 // 1
-    b vote_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mapping_state.sol.Ballot.vote@8
-
-vote_ternary_false@3:
-    intc_1 // 0
-    b vote_ternary_merge@4
+    return

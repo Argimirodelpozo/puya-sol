@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64
+    intcblock 1 0 64
+    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -30,35 +31,31 @@ main_getOne_route@4:
     txn ApplicationID
     &&
     assert
-    b getOne
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier.sol.C.getOne[routing]() -> void:
-getOne:
     pushbytes 0x
+    bury 1
     txn GroupIndex
-    bz getOne_ternary_false@5
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-getOne_ternary_merge@6:
+main_ternary_merge@9:
     itob
     pushbytes 0x
     b>
-    bz getOne_after_if_else@8
+    bz main_after_if_else@11
     intc_0 // 1
     itob
     bury 1
 
-getOne_after_if_else@8:
+main_after_if_else@11:
     dupn 2
     len
-    intc_1 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
     pushbytes 0x151f7c75
@@ -68,6 +65,6 @@ getOne_after_if_else@8:
     intc_0 // 1
     return
 
-getOne_ternary_false@5:
-    pushint 0
-    b getOne_ternary_merge@6
+main_ternary_false@8:
+    intc_1 // 0
+    b main_ternary_merge@9

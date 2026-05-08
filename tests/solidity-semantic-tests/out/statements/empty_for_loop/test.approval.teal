@@ -30,31 +30,26 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/statements/empty_for_loop.sol.test.f[routing]() -> void:
-f:
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     intc_0 // 1
     itob
 
-f_while_top@5:
+main_while_top@10:
     pushbytes 0x01
     b+
     dup
     pushbytes 0x0a
     b>=
-    bz f_while_top@5
+    bz main_while_top@10
     dup
     len
     intc_1 // 32
@@ -70,6 +65,6 @@ f_while_top@5:
     intc_0 // 1
     return
 
-f_ternary_false@3:
+main_ternary_false@8:
     pushint 0
-    b f_ternary_merge@4
+    b main_ternary_merge@9

@@ -4,7 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/delegatecall_return_value.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "value" 0x 0x151f7c758000030000
+    bytecblock "value" 0x
+    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -30,49 +31,76 @@ main_after_if_else@2:
     assert
     pushbytess 0x7cb116cd 0xf08d7860 0x2dde089f 0xa0d1025d 0x8bfbfc88 // method "set(uint256)void", method "get()uint256", method "get_delegated()(bool,byte[])", method "assert0()void", method "assert0_delegated()(bool,byte[])"
     txna ApplicationArgs 0
-    match set get get_delegated assert0 assert0_delegated
+    match main_set_route@5 main_get_route@6 main_get_delegated_route@7 main_assert0_route@8 main_assert0_delegated_route@9
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/delegatecall_return_value.sol.C.set[routing]() -> void:
-set:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_2 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
+main_assert0_delegated_route@9:
     txn GroupIndex
-    bz set_ternary_false@3
+    bz main_ternary_false@15
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-set_ternary_merge@4:
+main_ternary_merge@26:
     !
     assert // not payable
-    bytec_0 // "value"
-    dig 1
-    app_global_put
+    pushbytes 0x151f7c758000030000
+    log
     intc_0 // 1
     return
 
-set_ternary_false@3:
+main_ternary_false@15:
     intc_1 // 0
-    b set_ternary_merge@4
+    b main_ternary_merge@26
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/delegatecall_return_value.sol.C.get[routing]() -> void:
-get:
+main_assert0_route@8:
     txn GroupIndex
-    bz get_ternary_false@3
+    bz main_ternary_false@20
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-get_ternary_merge@4:
+main_ternary_merge@21:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "value"
+    app_global_get_ex
+    assert // check value exists
+    bytec_1 // 0x
+    b==
+    assert
+    intc_0 // 1
+    return
+
+main_ternary_false@20:
+    intc_1 // 0
+    b main_ternary_merge@21
+
+main_get_delegated_route@7:
+    txn GroupIndex
+    bz main_ternary_false@25
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@26
+
+main_ternary_false@25:
+    intc_1 // 0
+    b main_ternary_merge@26
+
+main_get_route@6:
+    txn GroupIndex
+    bz main_ternary_false@30
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@31:
     !
     assert // not payable
     intc_1 // 0
@@ -94,77 +122,34 @@ get_ternary_merge@4:
     intc_0 // 1
     return
 
-get_ternary_false@3:
+main_ternary_false@30:
     intc_1 // 0
-    b get_ternary_merge@4
+    b main_ternary_merge@31
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/delegatecall_return_value.sol.C.get_delegated[routing]() -> void:
-get_delegated:
+main_set_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz get_delegated_ternary_false@3
+    bz main_ternary_false@35
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-get_delegated_ternary_merge@4:
+main_ternary_merge@36:
     !
     assert // not payable
-    bytec_2 // 0x151f7c758000030000
-    log
-    intc_0 // 1
-    return
-
-get_delegated_ternary_false@3:
-    intc_1 // 0
-    b get_delegated_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/delegatecall_return_value.sol.C.assert0[routing]() -> void:
-assert0:
-    txn GroupIndex
-    bz assert0_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-assert0_ternary_merge@4:
-    !
-    assert // not payable
-    intc_1 // 0
     bytec_0 // "value"
-    app_global_get_ex
-    assert // check value exists
-    bytec_1 // 0x
-    b==
-    assert
+    dig 1
+    app_global_put
     intc_0 // 1
     return
 
-assert0_ternary_false@3:
+main_ternary_false@35:
     intc_1 // 0
-    b assert0_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/delegatecall_return_value.sol.C.assert0_delegated[routing]() -> void:
-assert0_delegated:
-    txn GroupIndex
-    bz assert0_delegated_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-assert0_delegated_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_2 // 0x151f7c758000030000
-    log
-    intc_0 // 1
-    return
-
-assert0_delegated_ternary_false@3:
-    intc_1 // 0
-    b assert0_delegated_ternary_merge@4
+    b main_ternary_merge@36

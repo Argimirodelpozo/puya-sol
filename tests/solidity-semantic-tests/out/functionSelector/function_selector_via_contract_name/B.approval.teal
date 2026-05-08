@@ -4,7 +4,6 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionSelector/function_selector_via_contract_name.sol.B.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -27,54 +26,43 @@ main_after_if_else@2:
     assert
     pushbytess 0xcd78b354 0xc14ad39f // method "f()uint256", method "g(uint256)uint256"
     txna ApplicationArgs 0
-    match f g
+    match main_f_route@5 main_g_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionSelector/function_selector_via_contract_name.sol.B.f[routing]() -> void:
-f:
-    txn GroupIndex
-    bz f_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-f_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
-
-f_ternary_false@3:
-    intc_1 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionSelector/function_selector_via_contract_name.sol.B.g[routing]() -> void:
-g:
+main_g_route@6:
     txna ApplicationArgs 1
     len
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz g_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-g_ternary_merge@4:
+main_ternary_merge@18:
     !
     assert // not payable
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
 
-g_ternary_false@3:
+main_ternary_false@12:
     intc_1 // 0
-    b g_ternary_merge@4
+    b main_ternary_merge@18
+
+main_f_route@5:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@18
+
+main_ternary_false@17:
+    intc_1 // 0
+    b main_ternary_merge@18

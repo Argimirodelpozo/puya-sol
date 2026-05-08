@@ -30,37 +30,28 @@ main_after_if_else@2:
     assert
     pushbytess 0xb5251388 0x90f88440 0x4075f398 0x96576474 // method "a()uint256", method "set()uint256", method "d()uint256", method "ca()uint256"
     txna ApplicationArgs 0
-    match a set d ca
+    match main_a_route@5 main_set_route@6 main_d_route@7 main_ca_route@8
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_delete_storage.sol.C.a[routing]() -> void:
-a:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_delete_storage.sol.C.a
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_delete_storage.sol.C.set[routing]() -> void:
-set:
+main_ca_route@8:
     txn GroupIndex
-    bz set_ternary_false@3
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-set_ternary_merge@4:
+main_ternary_merge@15:
     !
     assert // not payable
+    intc_1 // 0
     bytec_0 // "y"
+    app_global_get_ex
+    assert // check y exists
     intc_0 // 1
-    app_global_put
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_delete_storage.sol.C.a
+    ==
+    assert // invalid function pointer
+    callsub a
     dup
     len
     intc_2 // 32
@@ -76,21 +67,19 @@ set_ternary_merge@4:
     intc_0 // 1
     return
 
-set_ternary_false@3:
+main_ternary_false@14:
     intc_1 // 0
-    b set_ternary_merge@4
+    b main_ternary_merge@15
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_delete_storage.sol.C.d[routing]() -> void:
-d:
+main_d_route@7:
     txn GroupIndex
-    bz d_ternary_false@3
+    bz main_ternary_false@19
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-d_ternary_merge@4:
+main_ternary_merge@20:
     !
     assert // not payable
     intc_1 // 0
@@ -106,31 +95,25 @@ d_ternary_merge@4:
     intc_0 // 1
     return
 
-d_ternary_false@3:
+main_ternary_false@19:
     intc_1 // 0
-    b d_ternary_merge@4
+    b main_ternary_merge@20
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_delete_storage.sol.C.ca[routing]() -> void:
-ca:
+main_set_route@6:
     txn GroupIndex
-    bz ca_ternary_false@3
+    bz main_ternary_false@24
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-ca_ternary_merge@4:
+main_ternary_merge@25:
     !
     assert // not payable
-    intc_1 // 0
     bytec_0 // "y"
-    app_global_get_ex
-    assert // check y exists
     intc_0 // 1
-    ==
-    assert // invalid function pointer
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_delete_storage.sol.C.a
+    app_global_put
+    callsub a
     dup
     len
     intc_2 // 32
@@ -146,26 +129,35 @@ ca_ternary_merge@4:
     intc_0 // 1
     return
 
-ca_ternary_false@3:
+main_ternary_false@24:
     intc_1 // 0
-    b ca_ternary_merge@4
+    b main_ternary_merge@25
+
+main_a_route@5:
+    callsub a
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_delete_storage.sol.C.a() -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_delete_storage.sol.C.a:
+a:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_delete_storage.sol.C.a_ternary_false@2
+    bz a_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_delete_storage.sol.C.a_ternary_merge@3:
+a_ternary_merge@3:
     !
     assert // not payable
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_delete_storage.sol.C.a_ternary_false@2:
+a_ternary_false@2:
     intc_1 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_delete_storage.sol.C.a_ternary_merge@3
+    b a_ternary_merge@3

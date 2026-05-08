@@ -5,6 +5,7 @@
 main:
     intcblock 1 0 255 8 511
     bytecblock 0x151f7c75 "a" "c" "b"
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -36,57 +37,55 @@ main_after_if_else@2:
     assert
     pushbytess 0x27439992 0x0fe30569 0x8bee4680 0xc37f81de // method "ret()uint64", method "f(uint64)uint64", method "mem()uint8[]", method "stor()(uint64,uint64,uint64)"
     txna ApplicationArgs 0
-    match ret f mem stor
+    match main_ret_route@5 main_f_route@6 main_mem_route@7 main_stor_route@8
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup.sol.wrap(x: bytes) -> uint64:
-wrap:
-    proto 1 1
-    load 0
-    intc_3 // 8
-    bzero
-    frame_dig -1
-    pushbytes 0xff
-    b&
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    swap
-    store 0
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup.sol.unwrap(x: uint64) -> uint64:
-unwrap:
-    proto 1 1
-    load 0
-    store 0
-    frame_dig -1
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup.sol.C.ret[routing]() -> void:
-ret:
+main_stor_route@8:
     txn GroupIndex
-    bz ret_ternary_false@3
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-ret_ternary_merge@4:
+main_ternary_merge@15:
     !
     assert // not payable
+    bytec_1 // "a"
+    intc_0 // 1
+    app_global_put
+    bytec_2 // "c"
+    pushint 2
+    app_global_put
     intc 4 // 511
     itob
     callsub wrap
+    bytec_3 // "b"
+    dig 1
+    app_global_put
+    intc_1 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
     intc_2 // 255
     &
+    swap
+    intc_2 // 255
+    &
+    intc_1 // 0
+    bytec_2 // "c"
+    app_global_get_ex
+    assert // check c exists
+    intc_2 // 255
+    &
+    uncover 2
     itob
+    uncover 2
+    itob
+    concat
+    swap
+    itob
+    concat
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -94,59 +93,19 @@ ret_ternary_merge@4:
     intc_0 // 1
     return
 
-ret_ternary_false@3:
+main_ternary_false@14:
     intc_1 // 0
-    b ret_ternary_merge@4
+    b main_ternary_merge@15
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup.sol.C.f[routing]() -> void:
-f:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_3 // 8
-    ==
-    assert // invalid number of bytes for arc4.uint64
-    btoi
+main_mem_route@7:
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@19
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
-    !
-    assert // not payable
-    dupn 2
-    intc_2 // 255
-    <=
-    assert // ABI validation
-    intc_2 // 255
-    &
-    itob
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-f_ternary_false@3:
-    intc_1 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup.sol.C.mem[routing]() -> void:
-mem:
-    txn GroupIndex
-    bz mem_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-mem_ternary_merge@4:
+main_ternary_merge@20:
     !
     assert // not payable
     intc 4 // 511
@@ -203,58 +162,36 @@ mem_ternary_merge@4:
     intc_0 // 1
     return
 
-mem_ternary_false@3:
+main_ternary_false@19:
     intc_1 // 0
-    b mem_ternary_merge@4
+    b main_ternary_merge@20
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup.sol.C.stor[routing]() -> void:
-stor:
+main_f_route@6:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 1
     txn GroupIndex
-    bz stor_ternary_false@3
+    bz main_ternary_false@24
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-stor_ternary_merge@4:
+main_ternary_merge@25:
     !
     assert // not payable
-    bytec_1 // "a"
-    intc_0 // 1
-    app_global_put
-    bytec_2 // "c"
-    pushint 2
-    app_global_put
-    intc 4 // 511
-    itob
-    callsub wrap
-    bytec_3 // "b"
-    dig 1
-    app_global_put
-    intc_1 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    assert // check a exists
+    dupn 2
+    intc_2 // 255
+    <=
+    assert // ABI validation
     intc_2 // 255
     &
-    swap
-    intc_2 // 255
-    &
-    intc_1 // 0
-    bytec_2 // "c"
-    app_global_get_ex
-    assert // check c exists
-    intc_2 // 255
-    &
-    uncover 2
     itob
-    uncover 2
-    itob
-    concat
-    swap
-    itob
-    concat
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -262,6 +199,63 @@ stor_ternary_merge@4:
     intc_0 // 1
     return
 
-stor_ternary_false@3:
+main_ternary_false@24:
     intc_1 // 0
-    b stor_ternary_merge@4
+    b main_ternary_merge@25
+
+main_ret_route@5:
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
+    !
+    assert // not payable
+    intc 4 // 511
+    itob
+    callsub wrap
+    intc_2 // 255
+    &
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@29:
+    intc_1 // 0
+    b main_ternary_merge@30
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup.sol.wrap(x: bytes) -> uint64:
+wrap:
+    proto 1 1
+    load 0
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    pushbytes 0xff
+    b&
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    swap
+    store 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup.sol.unwrap(x: uint64) -> uint64:
+unwrap:
+    proto 1 1
+    load 0
+    store 0
+    frame_dig -1
+    retsub

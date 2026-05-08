@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_attached_to_static_array.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 32 1 0
+    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -30,22 +31,6 @@ main_test_route@4:
     txn ApplicationID
     &&
     assert
-    b test
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_attached_to_static_array.sol.L.reverse(_a: bytes) -> bytes, bytes, bytes:
-L.reverse:
-    proto 1 3
-    frame_dig -1
-    extract 32 32 // on error: index access is out of bounds
-    frame_dig -1
-    extract 0 32 // on error: index access is out of bounds
-    frame_dig -1
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_attached_to_static_array.sol.C.test[routing]() -> void:
-test:
     txna ApplicationArgs 1
     len
     intc_0 // 32
@@ -53,6 +38,7 @@ test:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
+    bury 2
     len
     pushint 64
     ==
@@ -63,13 +49,13 @@ test:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz test_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-test_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     dup
@@ -101,6 +87,17 @@ test_ternary_merge@4:
     intc_1 // 1
     return
 
-test_ternary_false@3:
-    pushint 0
-    b test_ternary_merge@4
+main_ternary_false@8:
+    intc_2 // 0
+    b main_ternary_merge@9
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_attached_to_static_array.sol.L.reverse(_a: bytes) -> bytes, bytes, bytes:
+L.reverse:
+    proto 1 3
+    frame_dig -1
+    extract 32 32 // on error: index access is out of bounds
+    frame_dig -1
+    extract 0 32 // on error: index access is out of bounds
+    frame_dig -1
+    retsub

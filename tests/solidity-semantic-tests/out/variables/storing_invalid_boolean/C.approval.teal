@@ -30,97 +30,18 @@ main_after_if_else@2:
     assert
     pushbytess 0x73bb1403 0xb257502d 0xa800241b 0xef4cbd06 // method "set()uint512", method "ret()bool", method "ev()uint512", method "perm()bool"
     txna ApplicationArgs 0
-    match set ret ev perm
+    match main_set_route@5 main_ret_route@6 main_ev_route@7 main_perm_route@8
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/storing_invalid_boolean.sol.C.set[routing]() -> void:
-set:
+main_perm_route@8:
     txn GroupIndex
-    bz set_ternary_false@3
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-set_ternary_merge@4:
-    !
-    assert // not payable
-    load 0
-    store 0
-    bytec_0 // "perm"
-    intc_0 // 1
-    app_global_put
-    bytec_1 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001
-    log
-    intc_0 // 1
-    return
-
-set_ternary_false@3:
-    intc_1 // 0
-    b set_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/storing_invalid_boolean.sol.C.ret[routing]() -> void:
-ret:
-    txn GroupIndex
-    bz ret_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-ret_ternary_merge@4:
-    !
-    assert // not payable
-    load 0
-    store 0
-    pushbytes 0x151f7c7580
-    log
-    intc_0 // 1
-    return
-
-ret_ternary_false@3:
-    intc_1 // 0
-    b ret_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/storing_invalid_boolean.sol.C.ev[routing]() -> void:
-ev:
-    txn GroupIndex
-    bz ev_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-ev_ternary_merge@4:
-    !
-    assert // not payable
-    load 0
-    store 0
-    pushbytes 0x803bd84c80
-    log
-    bytec_1 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001
-    log
-    intc_0 // 1
-    return
-
-ev_ternary_false@3:
-    intc_1 // 0
-    b ev_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/storing_invalid_boolean.sol.C.perm[routing]() -> void:
-perm:
-    txn GroupIndex
-    bz perm_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-perm_ternary_merge@4:
+main_ternary_merge@15:
     !
     assert // not payable
     intc_1 // 0
@@ -138,6 +59,77 @@ perm_ternary_merge@4:
     intc_0 // 1
     return
 
-perm_ternary_false@3:
+main_ternary_false@14:
     intc_1 // 0
-    b perm_ternary_merge@4
+    b main_ternary_merge@15
+
+main_ev_route@7:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    load 0
+    store 0
+    pushbytes 0x803bd84c80
+    log
+    bytec_1 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@19:
+    intc_1 // 0
+    b main_ternary_merge@20
+
+main_ret_route@6:
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    load 0
+    store 0
+    pushbytes 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@24:
+    intc_1 // 0
+    b main_ternary_merge@25
+
+main_set_route@5:
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
+    !
+    assert // not payable
+    load 0
+    store 0
+    bytec_0 // "perm"
+    intc_0 // 1
+    app_global_put
+    bytec_1 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@29:
+    intc_1 // 0
+    b main_ternary_merge@30

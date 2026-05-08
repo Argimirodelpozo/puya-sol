@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/bytes_and_strings.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
+    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -26,14 +27,74 @@ main_after_if_else@2:
     assert
     pushbytess 0x3f6e79ee 0x12c392a7 0x653b757a 0x42d0ae76 // method "e(byte[])byte[]", method "f()(string,string)", method "g()(string,uint512,string)", method "h()string"
     txna ApplicationArgs 0
-    match e f g h
+    match main_e_route@5 main_f_route@6 main_g_route@7 main_h_route@8
     err
 
+main_h_route@8:
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/bytes_and_strings.sol.C.e[routing]() -> void:
-e:
+main_ternary_merge@15:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750003616e79
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_g_route@7:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7500440000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002a00490003616e790003616e79
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@19:
+    intc_1 // 0
+    b main_ternary_merge@20
+
+main_f_route@6:
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75000400090003616e790003616e79
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@24:
+    intc_1 // 0
+    b main_ternary_merge@25
+
+main_e_route@5:
     txna ApplicationArgs 1
-    dupn 2
+    dup
+    bury 2
+    dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
@@ -43,13 +104,13 @@ e:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     txn GroupIndex
-    bz e_ternary_false@3
+    bz main_ternary_false@29
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-e_ternary_merge@4:
+main_ternary_merge@30:
     !
     assert // not payable
     pushbytes 0x151f7c75
@@ -59,72 +120,6 @@ e_ternary_merge@4:
     intc_0 // 1
     return
 
-e_ternary_false@3:
+main_ternary_false@29:
     intc_1 // 0
-    b e_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/bytes_and_strings.sol.C.f[routing]() -> void:
-f:
-    txn GroupIndex
-    bz f_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-f_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c75000400090003616e790003616e79
-    log
-    intc_0 // 1
-    return
-
-f_ternary_false@3:
-    intc_1 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/bytes_and_strings.sol.C.g[routing]() -> void:
-g:
-    txn GroupIndex
-    bz g_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-g_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c7500440000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002a00490003616e790003616e79
-    log
-    intc_0 // 1
-    return
-
-g_ternary_false@3:
-    intc_1 // 0
-    b g_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/bytes_and_strings.sol.C.h[routing]() -> void:
-h:
-    txn GroupIndex
-    bz h_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-h_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c750003616e79
-    log
-    intc_0 // 1
-    return
-
-h_ternary_false@3:
-    intc_1 // 0
-    b h_ternary_merge@4
+    b main_ternary_merge@30

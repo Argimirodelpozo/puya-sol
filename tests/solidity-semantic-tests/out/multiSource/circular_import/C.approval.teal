@@ -1,7 +1,7 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_kwljrnye/s2.sol.C.approval_program() -> uint64:
+// /tmp/multisource_8tgmalek/s2.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -31,43 +31,24 @@ main_foo_route@4:
     txn ApplicationID
     &&
     assert
-    b foo
-
-
-// /tmp/multisource_kwljrnye/s2.sol.f_21() -> bytes:
-f:
-    pushint 2
-    itob
-    retsub
-
-
-// /tmp/multisource_kwljrnye/s2.sol.f_69() -> bytes:
-/tmp/multisource_kwljrnye/s2.sol.f_69:
-    intc_0 // 1
-    itob
-    retsub
-
-
-// /tmp/multisource_kwljrnye/s2.sol.C.foo[routing]() -> void:
-foo:
     txn GroupIndex
-    bz foo_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-foo_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     callsub f
-    callsub /tmp/multisource_kwljrnye/s2.sol.f_69
+    callsub /tmp/multisource_8tgmalek/s2.sol.f_69
     b>=
     assert // underflow
     callsub f
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    callsub /tmp/multisource_kwljrnye/s2.sol.f_69
+    callsub /tmp/multisource_8tgmalek/s2.sol.f_69
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -86,6 +67,20 @@ foo_ternary_merge@4:
     intc_0 // 1
     return
 
-foo_ternary_false@3:
+main_ternary_false@8:
     pushint 0
-    b foo_ternary_merge@4
+    b main_ternary_merge@9
+
+
+// /tmp/multisource_8tgmalek/s2.sol.f_21() -> bytes:
+f:
+    pushint 2
+    itob
+    retsub
+
+
+// /tmp/multisource_8tgmalek/s2.sol.f_69() -> bytes:
+/tmp/multisource_8tgmalek/s2.sol.f_69:
+    intc_0 // 1
+    itob
+    retsub

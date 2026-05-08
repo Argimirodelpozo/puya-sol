@@ -27,37 +27,17 @@ main_after_if_else@2:
     assert
     pushbytess 0x633a2d01 0xc65797c8 // method "g(uint256)(uint256,uint256)", method "f(uint256)(uint256,uint256)"
     txna ApplicationArgs 0
-    match g f
+    match main_g_route@5 main_f_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_value.sol.C.g[routing]() -> void:
-g:
+main_f_route@6:
     txna ApplicationArgs 1
     dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_value.sol.C.g
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_value.sol.C.f[routing]() -> void:
-f:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_value.sol.C.g
+    callsub g
     dig 1
     len
     intc_0 // 32
@@ -83,18 +63,34 @@ f:
     intc_1 // 1
     return
 
+main_g_route@5:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub g
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_value.sol.C.g(__arc4_n: bytes) -> bytes, bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_value.sol.C.g:
+g:
     proto 1 2
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_value.sol.C.g_ternary_false@2
+    bz g_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_value.sol.C.g_ternary_merge@3:
+g_ternary_merge@3:
     itob
     pushbytes 0x03e8
     b*
@@ -109,6 +105,6 @@ f:
     frame_dig -1
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_value.sol.C.g_ternary_false@2:
+g_ternary_false@2:
     pushint 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_value.sol.C.g_ternary_merge@3
+    b g_ternary_merge@3

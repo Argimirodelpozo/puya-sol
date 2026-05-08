@@ -27,83 +27,10 @@ main_after_if_else@2:
     assert
     pushbytess 0x2d4970c7 0x4b2c0376 // method "f()void", method "g()uint256"
     txna ApplicationArgs 0
-    match f g
+    match main_f_route@5 main_g_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/check_var_init.sol.D.f[routing]() -> void:
-f:
-    txn GroupIndex
-    bz f_ternary_false@3
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-f_ternary_merge@4:
-    !
-    assert // not payable
-    itxn_begin
-    bytec_0 // TMPL_APPROVAL_C
-    bytec_1 // TMPL_CLEAR_C
-    intc_2 // 6
-    itxn_field TypeEnum
-    intc_3 // 16
-    itxn_field GlobalNumUint
-    intc_3 // 16
-    itxn_field GlobalNumByteSlice
-    intc_0 // 0
-    itxn_field Fee
-    pushint 3
-    itxn_field ExtraProgramPages
-    itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
-    itxn_submit
-    itxn CreatedApplicationID
-    dup
-    app_params_get AppAddress
-    pop
-    itxn_begin
-    intc_1 // 1
-    itxn_field TypeEnum
-    itxn_field Receiver
-    intc_0 // 0
-    itxn_field Fee
-    pushint 1000000
-    itxn_field Amount
-    itxn_submit
-    dup
-    app_params_get AppAddress
-    pop
-    itxn_begin
-    intc_1 // 1
-    itxn_field TypeEnum
-    itxn_field Receiver
-    intc_0 // 0
-    itxn_field Fee
-    intc_0 // 0
-    itxn_field Amount
-    itxn_next
-    intc_2 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_2 // method "__postInit()void"
-    itxn_field ApplicationArgs
-    itxn_submit
-    intc_1 // 1
-    return
-
-f_ternary_false@3:
-    intc_0 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/check_var_init.sol.D.g[routing]() -> void:
-g:
+main_g_route@6:
     itxn_begin
     bytec_0 // TMPL_APPROVAL_C
     bytec_1 // TMPL_CLEAR_C
@@ -183,3 +110,72 @@ g:
     log
     intc_1 // 1
     return
+
+main_f_route@5:
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    itxn_begin
+    bytec_0 // TMPL_APPROVAL_C
+    bytec_1 // TMPL_CLEAR_C
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_3 // 16
+    itxn_field GlobalNumUint
+    intc_3 // 16
+    itxn_field GlobalNumByteSlice
+    intc_0 // 0
+    itxn_field Fee
+    pushint 3
+    itxn_field ExtraProgramPages
+    itxn_field ClearStateProgram
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    dup
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    pushint 1000000
+    itxn_field Amount
+    itxn_submit
+    dup
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    intc_0 // 0
+    itxn_field Amount
+    itxn_next
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "__postInit()void"
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_0 // 0
+    b main_ternary_merge@15

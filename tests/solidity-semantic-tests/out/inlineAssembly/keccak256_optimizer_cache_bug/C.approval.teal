@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak256_optimizer_cache_bug.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 8
+    intcblock 32 1 8 0
     bytecblock "__ctor_pending" "data" 0x7b "__dyn_storage"
     pushint 4096
     bzero
@@ -30,42 +30,24 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x2ea443e5 // method "__postInit()void", method "val()bool"
     txna ApplicationArgs 0
-    match __postInit val
+    match main___postInit_route@5 main_val_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak256_optimizer_cache_bug.sol.C.__postInit[routing]() -> void:
-__postInit:
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_0 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec_1 // "data"
-    pushint 2
-    box_create
-    pop
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak256_optimizer_cache_bug.sol.C.val[routing]() -> void:
-val:
+main_val_route@6:
     txn GroupIndex
-    bz val_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-val_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     load 0
-    intc_3 // 8
+    intc_2 // 8
     bzero
-    intc_2 // 0
+    intc_3 // 0
     pushbytes 0x02
     callsub __storage_write
     swap
@@ -79,7 +61,7 @@ val_ternary_merge@4:
     concat
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     -
     extract_uint64
     pushbytes 0xea
@@ -96,7 +78,7 @@ val_ternary_merge@4:
     concat
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     -
     extract_uint64
     bytec_2 // 0x7b
@@ -118,12 +100,26 @@ val_ternary_merge@4:
     intc_1 // 1
     return
 
-val_ternary_false@3:
-    intc_2 // 0
-    b val_ternary_merge@4
+main_ternary_false@12:
+    intc_3 // 0
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_3 // 0
+    app_global_put
+    bytec_1 // "data"
+    pushint 2
+    box_create
+    pop
+    intc_1 // 1
+    return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak256_optimizer_cache_bug.sol.C.__storage_write(__slot: uint64, __value: bytes) -> void:
+// __puyasol___storage_write(__slot: uint64, __value: bytes) -> void:
 __storage_write:
     proto 2 0
     frame_dig -2

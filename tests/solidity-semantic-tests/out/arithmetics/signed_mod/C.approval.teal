@@ -5,6 +5,10 @@
 main:
     intcblock 1 0 32
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x 0x8000000000000000000000000000000000000000000000000000000000000000
+    intc_1 // 0
+    dupn 4
+    bytec_1 // ""
+    dupn 2
     pushint 4096
     bzero
     dup
@@ -27,89 +31,124 @@ main_after_if_else@2:
     assert
     pushbytess 0x2b9082ff 0xfbc085e1 // method "f(uint256,uint256)uint256", method "g(bool)uint256"
     txna ApplicationArgs 0
-    match f g
+    match main_f_route@5 main_g_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.f[routing]() -> void:
-f:
-    intc_1 // 0
-    dupn 2
-    bytec_1 // ""
-    dup
+main_g_route@6:
     txna ApplicationArgs 1
     dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    bury 3
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    dig 2
+    dup
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
+    bz main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.g@25
+    intc_1 // 0
+    assert // signed division overflow
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.g@25:
+    pushbytes 0x151f7c758000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@12:
+    intc_1 // 0
+    b main_ternary_merge@13
+
+main_f_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 9
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
+    bury 8
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@29
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@30:
     !
     assert // not payable
-    dup
+    dig 6
     bytec_1 // 0x
     b!=
     assert // division by zero
-    dig 1
-    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b<
-    dup
-    bury 4
-    bnz f_ternary_false@19
-    dig 2
-    bnz f_ternary_false@7
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    dig 2
-    b-
-    bury 7
-
-f_ternary_merge@8:
-    dup
-    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b<
-    dup
-    bury 5
-    bnz f_ternary_false@10
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    dig 1
-    b-
-
-f_ternary_merge@11:
     dig 7
+    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    dup
+    bury 2
+    bnz main_ternary_false@45
+    dup
+    bnz main_ternary_false@33
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 8
+    b-
+    bury 6
+
+main_ternary_merge@34:
+    dig 6
+    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    dup
+    bury 3
+    bnz main_ternary_false@36
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 7
+    b-
+
+main_ternary_merge@37:
+    dig 6
     swap
     b%
     bytec_1 // 0x
     b==
-    bnz f_ternary_false@19
-    dig 2
-    bnz f_ternary_false@14
+    bnz main_ternary_false@45
+    dup
+    bnz main_ternary_false@40
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    dig 2
+    dig 8
     b-
-    bury 6
+    bury 5
 
-f_ternary_merge@15:
-    dig 3
-    bnz f_ternary_false@17
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+main_ternary_merge@41:
     dig 1
+    bnz main_ternary_false@43
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 7
     b-
 
-f_ternary_merge@18:
-    dig 6
+main_ternary_merge@44:
+    dig 5
     swap
     b%
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -118,7 +157,7 @@ f_ternary_merge@18:
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
-f_ternary_merge@26:
+main_ternary_merge@52:
     dup
     len
     intc_2 // 32
@@ -134,95 +173,56 @@ f_ternary_merge@26:
     intc_0 // 1
     return
 
-f_ternary_false@17:
-    dup
-    b f_ternary_merge@18
+main_ternary_false@43:
+    dig 6
+    b main_ternary_merge@44
 
-f_ternary_false@14:
-    dig 1
-    bury 6
-    b f_ternary_merge@15
-
-f_ternary_false@19:
-    dig 2
-    bnz f_ternary_false@21
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    dig 2
-    b-
+main_ternary_false@40:
+    dig 7
     bury 5
+    b main_ternary_merge@41
 
-f_ternary_merge@22:
+main_ternary_false@45:
     dup
+    bnz main_ternary_false@47
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 8
+    b-
+    bury 4
+
+main_ternary_merge@48:
+    dig 6
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
-    bnz f_ternary_false@24
+    bnz main_ternary_false@50
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    dig 1
+    dig 7
     b-
 
-f_ternary_merge@25:
-    dig 5
+main_ternary_merge@51:
+    dig 4
     swap
     b%
-    b f_ternary_merge@26
+    b main_ternary_merge@52
 
-f_ternary_false@24:
-    dup
-    b f_ternary_merge@25
+main_ternary_false@50:
+    dig 6
+    b main_ternary_merge@51
 
-f_ternary_false@21:
-    dig 1
-    bury 5
-    b f_ternary_merge@22
+main_ternary_false@47:
+    dig 7
+    bury 4
+    b main_ternary_merge@48
 
-f_ternary_false@10:
-    dup
-    b f_ternary_merge@11
+main_ternary_false@36:
+    dig 6
+    b main_ternary_merge@37
 
-f_ternary_false@7:
-    dig 1
-    bury 7
-    b f_ternary_merge@8
+main_ternary_false@33:
+    dig 7
+    bury 6
+    b main_ternary_merge@34
 
-f_ternary_false@3:
+main_ternary_false@29:
     intc_1 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.g[routing]() -> void:
-g:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 1
-    ==
-    assert // invalid number of bytes for arc4.bool
-    intc_1 // 0
-    getbit
-    txn GroupIndex
-    bz g_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-g_ternary_merge@4:
-    !
-    assert // not payable
-    dupn 2
-    intc_0 // 1
-    <=
-    assert // ABI bool validation
-    bz g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.g@55
-    intc_1 // 0
-    assert // signed division overflow
-
-g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.g@55:
-    pushbytes 0x151f7c758000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
-
-g_ternary_false@3:
-    intc_1 // 0
-    b g_ternary_merge@4
+    b main_ternary_merge@30

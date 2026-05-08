@@ -43,19 +43,14 @@ main_readX_route@4:
     txn ApplicationID
     &&
     assert
-    b readX
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/read_in_ctor.sol.A.readX[routing]() -> void:
-readX:
     txn GroupIndex
-    bz readX_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-readX_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     intc_0 // 0
@@ -72,6 +67,6 @@ readX_ternary_merge@4:
     intc_1 // 1
     return
 
-readX_ternary_false@3:
+main_ternary_false@8:
     intc_0 // 0
-    b readX_ternary_merge@4
+    b main_ternary_merge@9

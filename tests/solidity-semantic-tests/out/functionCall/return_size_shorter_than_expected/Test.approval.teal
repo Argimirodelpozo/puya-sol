@@ -31,19 +31,14 @@ main_test_route@4:
     txn ApplicationID
     &&
     assert
-    b test
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/return_size_shorter_than_expected.sol.Test.test[routing]() -> void:
-test:
     txn GroupIndex
-    bz test_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-test_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     itxn_begin
@@ -129,6 +124,6 @@ test_ternary_merge@4:
     intc_1 // 1
     return
 
-test_ternary_false@3:
+main_ternary_false@8:
     intc_0 // 0
-    b test_ternary_merge@4
+    b main_ternary_merge@9

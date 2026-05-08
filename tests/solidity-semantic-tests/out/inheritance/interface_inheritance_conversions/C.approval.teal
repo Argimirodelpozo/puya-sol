@@ -27,89 +27,21 @@ main_after_if_else@2:
     assert
     pushbytess 0xe9e76f25 0xecb66829 0x9a55e4c8 0x53cd411f 0xb4e2b703 0xa31afe56 // method "parentFun()uint256", method "subAFun()uint256", method "subBFun()uint256", method "convertParent()uint256", method "convertSubA()(uint256,uint256)", method "convertSubB()(uint256,uint256)"
     txna ApplicationArgs 0
-    match parentFun subAFun subBFun convertParent convertSubA convertSubB
+    match main_parentFun_route@5 main_subAFun_route@6 main_subBFun_route@7 main_convertParent_route@8 main_convertSubA_route@9 main_convertSubB_route@10
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.parentFun[routing]() -> void:
-parentFun:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.parentFun
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.subAFun[routing]() -> void:
-subAFun:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.subAFun
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.subBFun[routing]() -> void:
-subBFun:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.subBFun
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.convertParent[routing]() -> void:
-convertParent:
+main_convertSubB_route@10:
     txn GroupIndex
-    bz convertParent_ternary_false@3
+    bz main_ternary_false@16
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-convertParent_ternary_merge@4:
+main_ternary_merge@17:
     !
     assert // not payable
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.parentFun
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    b|
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-convertParent_ternary_false@3:
-    intc_2 // 0
-    b convertParent_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.convertSubA[routing]() -> void:
-convertSubA:
-    txn GroupIndex
-    bz convertSubA_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-convertSubA_ternary_merge@4:
-    !
-    assert // not payable
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.parentFun
+    callsub parentFun
     dup
     len
     intc_1 // 32
@@ -120,7 +52,7 @@ convertSubA_ternary_merge@4:
     swap
     dig 1
     b|
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.subAFun
+    callsub subBFun
     dup
     len
     intc_1 // 32
@@ -136,24 +68,22 @@ convertSubA_ternary_merge@4:
     intc_0 // 1
     return
 
-convertSubA_ternary_false@3:
+main_ternary_false@16:
     intc_2 // 0
-    b convertSubA_ternary_merge@4
+    b main_ternary_merge@17
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.convertSubB[routing]() -> void:
-convertSubB:
+main_convertSubA_route@9:
     txn GroupIndex
-    bz convertSubB_ternary_false@3
+    bz main_ternary_false@21
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-convertSubB_ternary_merge@4:
+main_ternary_merge@22:
     !
     assert // not payable
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.parentFun
+    callsub parentFun
     dup
     len
     intc_1 // 32
@@ -164,7 +94,7 @@ convertSubB_ternary_merge@4:
     swap
     dig 1
     b|
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.subBFun
+    callsub subAFun
     dup
     len
     intc_1 // 32
@@ -180,66 +110,124 @@ convertSubB_ternary_merge@4:
     intc_0 // 1
     return
 
-convertSubB_ternary_false@3:
+main_ternary_false@21:
     intc_2 // 0
-    b convertSubB_ternary_merge@4
+    b main_ternary_merge@22
+
+main_convertParent_route@8:
+    txn GroupIndex
+    bz main_ternary_false@26
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@27:
+    !
+    assert // not payable
+    callsub parentFun
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@26:
+    intc_2 // 0
+    b main_ternary_merge@27
+
+main_subBFun_route@7:
+    callsub subBFun
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_subAFun_route@6:
+    callsub subAFun
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_parentFun_route@5:
+    callsub parentFun
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.parentFun() -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.parentFun:
+parentFun:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.parentFun_ternary_false@2
+    bz parentFun_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.parentFun_ternary_merge@3:
+parentFun_ternary_merge@3:
     !
     assert // not payable
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.parentFun_ternary_false@2:
+parentFun_ternary_false@2:
     intc_2 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.parentFun_ternary_merge@3
+    b parentFun_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.subAFun() -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.subAFun:
+subAFun:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.subAFun_ternary_false@2
+    bz subAFun_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.subAFun_ternary_merge@3:
+subAFun_ternary_merge@3:
     !
     assert // not payable
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.subAFun_ternary_false@2:
+subAFun_ternary_false@2:
     intc_2 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.subAFun_ternary_merge@3
+    b subAFun_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.subBFun() -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.subBFun:
+subBFun:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.subBFun_ternary_false@2
+    bz subBFun_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.subBFun_ternary_merge@3:
+subBFun_ternary_merge@3:
     !
     assert // not payable
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.subBFun_ternary_false@2:
+subBFun_ternary_false@2:
     intc_2 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.subBFun_ternary_merge@3
+    b subBFun_ternary_merge@3

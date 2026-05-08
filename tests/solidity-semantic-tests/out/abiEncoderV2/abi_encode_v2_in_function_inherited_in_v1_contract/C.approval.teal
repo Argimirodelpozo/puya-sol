@@ -1,7 +1,7 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_z6n66l6d/B.sol.C.approval_program() -> uint64:
+// /tmp/multisource_tqtlho5f/B.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32 6
     bytecblock 0x151f7c75 TMPL_APPROVAL_A TMPL_CLEAR_A
@@ -27,20 +27,33 @@ main_after_if_else@2:
     assert
     pushbytess 0xc95a9d21 0xa7cfec26 // method "test()uint256", method "foo(address)uint256"
     txna ApplicationArgs 0
-    match test foo
+    match main_test_route@5 main_foo_route@6
     err
 
+main_foo_route@6:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub foo
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
 
-// /tmp/multisource_z6n66l6d/B.sol.C.test[routing]() -> void:
-test:
+main_test_route@5:
     txn GroupIndex
-    bz test_ternary_false@3
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-test_ternary_merge@4:
+main_ternary_merge@15:
     !
     assert // not payable
     itxn_begin
@@ -72,7 +85,7 @@ test_ternary_merge@4:
     pushint 1000000
     itxn_field Amount
     itxn_submit
-    callsub /tmp/multisource_z6n66l6d/B.sol.C.foo
+    callsub foo
     dup
     len
     intc_2 // 32
@@ -88,39 +101,22 @@ test_ternary_merge@4:
     intc_0 // 1
     return
 
-test_ternary_false@3:
+main_ternary_false@14:
     intc_1 // 0
-    b test_ternary_merge@4
+    b main_ternary_merge@15
 
 
-// /tmp/multisource_z6n66l6d/B.sol.C.foo[routing]() -> void:
+// /tmp/multisource_tqtlho5f/B.sol.C.foo(_a: bytes) -> bytes:
 foo:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_2 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub /tmp/multisource_z6n66l6d/B.sol.C.foo
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-
-// /tmp/multisource_z6n66l6d/B.sol.C.foo(_a: bytes) -> bytes:
-/tmp/multisource_z6n66l6d/B.sol.C.foo:
     proto 1 1
     txn GroupIndex
-    bz /tmp/multisource_z6n66l6d/B.sol.C.foo_ternary_false@2
+    bz foo_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/tmp/multisource_z6n66l6d/B.sol.C.foo_ternary_merge@3:
+foo_ternary_merge@3:
     !
     assert // not payable
     itxn_begin
@@ -142,6 +138,6 @@ foo:
     extract 32 32 // on error: index access is out of bounds
     retsub
 
-/tmp/multisource_z6n66l6d/B.sol.C.foo_ternary_false@2:
+foo_ternary_false@2:
     intc_1 // 0
-    b /tmp/multisource_z6n66l6d/B.sol.C.foo_ternary_merge@3
+    b foo_ternary_merge@3

@@ -4,7 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 0 1 8
-    bytecblock 0x01 0x151f7c75
+    bytecblock 0x151f7c75 0x01
+    intc_1 // 0
+    dupn 6
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -27,143 +30,10 @@ main_after_if_else@2:
     assert
     pushbytess 0x5b15d901 0xc6fcb306 // method "test(uint256,uint256)uint256", method "receiver(uint256[],uint256)uint256"
     txna ApplicationArgs 0
-    match test receiver
+    match main_test_route@5 main_receiver_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.test[routing]() -> void:
-test:
-    intc_1 // 0
-    dupn 4
-    pushbytes ""
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz test_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-test_ternary_merge@4:
-    !
-    assert // not payable
-    intc_1 // 0
-    itob
-    bury 6
-    pushbytes 0x0000
-    bury 8
-    intc_1 // 0
-    bury 3
-
-test_while_top@5:
-    intc_3 // 8
-    bzero
-    dup
-    bury 5
-    dig 2
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    dig 3
-    >
-    bz test_after_while@7
-    dig 7
-    dup
-    intc_1 // 0
-    extract_uint16
-    intc_2 // 1
-    +
-    itob
-    extract 6 0
-    replace2 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
-    concat
-    bury 8
-    dig 2
-    intc_2 // 1
-    +
-    bury 3
-    b test_while_top@5
-
-test_after_while@7:
-    dig 7
-    dig 1
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver
-    bury 8
-    bury 5
-
-test_while_top@8:
-    dig 6
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    itob
-    dig 6
-    b>
-    bz test_after_while@10
-    dig 3
-    dig 6
-    dup
-    cover 2
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    dig 8
-    extract 2 0
-    swap
-    intc_0 // 32
-    *
-    intc_0 // 32
-    extract3 // on error: index access is out of bounds
-    swap
-    bytec_0 // 0x01
-    b+
-    dup
-    bury 8
-    b==
-    assert
-    b test_while_top@8
-
-test_after_while@10:
-    dig 4
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-test_ternary_false@3:
-    intc_1 // 0
-    b test_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver[routing]() -> void:
-receiver:
+main_receiver_route@6:
     txna ApplicationArgs 1
     dup
     intc_1 // 0
@@ -182,45 +52,173 @@ receiver:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver
+    callsub receiver
     pop
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver(array: bytes, __arc4_idx: bytes) -> bytes, bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver:
-    proto 2 2
-    intc_1 // 0
+main_test_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 9
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver_ternary_false@2
+    bz main_ternary_false@14
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver_ternary_merge@3:
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_1 // 0
+    itob
+    bury 4
+    pushbytes 0x0000
+    bury 6
+    intc_1 // 0
+    bury 1
+
+main_while_top@16:
+    intc_3 // 8
+    bzero
+    dup
+    bury 3
+    dig 7
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dig 1
+    >
+    bz main_after_while@18
+    dig 5
+    dup
+    intc_1 // 0
+    extract_uint16
+    intc_2 // 1
+    +
+    itob
+    extract 6 0
+    replace2 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat
+    bury 6
+    dup
+    intc_2 // 1
+    +
+    bury 1
+    b main_while_top@16
+
+main_after_while@18:
+    dig 5
+    dig 8
+    callsub receiver
+    bury 6
+    bury 3
+
+main_while_top@19:
+    dig 4
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    itob
+    dig 4
+    b>
+    bz main_after_while@21
+    dig 1
+    dig 4
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dig 6
+    extract 2 0
+    swap
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    swap
+    bytec_1 // 0x01
+    b+
+    dup
+    bury 6
+    b==
+    assert
+    b main_while_top@19
+
+main_after_while@21:
+    dig 2
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver(array: bytes, __arc4_idx: bytes) -> bytes, bytes:
+receiver:
+    proto 2 2
+    intc_1 // 0
+    txn GroupIndex
+    bz receiver_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+receiver_ternary_merge@3:
     !
     assert // not payable
     intc_1 // 0
     itob
     frame_bury 0
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver_while_top@4:
+receiver_while_top@4:
     frame_dig -2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     itob
     frame_dig 0
     b>
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver_after_while@8
+    bz receiver_after_while@8
     frame_dig 0
     dup
-    bytec_0 // 0x01
+    bytec_1 // 0x01
     b+
     dup
     len
@@ -250,9 +248,9 @@ receiver:
     replace3 // on error: index access is out of bounds
     frame_bury -2
     frame_bury 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver_while_top@4
+    b receiver_while_top@4
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver_after_while@8:
+receiver_after_while@8:
     intc_3 // 8
     bzero
     frame_dig -1
@@ -273,6 +271,6 @@ receiver:
     uncover 2
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver_ternary_false@2:
+receiver_ternary_false@2:
     intc_1 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver_ternary_merge@3
+    b receiver_ternary_merge@3

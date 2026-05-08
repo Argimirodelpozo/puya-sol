@@ -30,8 +30,144 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x219b312e // method "__postInit()void", method "f()(uint256,uint256)"
     txna ApplicationArgs 0
-    match __postInit f
+    match main___postInit_route@5 main_f_route@6
     err
+
+main_f_route@6:
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+
+main_while_top@14:
+    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    box_get
+    bytec_1 // 0x0000
+    cover 2
+    select
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    itob
+    pushbytes 0x14
+    b<
+    bz main_after_while@18
+    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    box_len
+    bury 1
+    bnz main_after_if_else@17
+    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    intc_1 // 2
+    box_create
+    pop
+
+main_after_if_else@17:
+    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    intc_0 // 0
+    intc_1 // 2
+    box_extract
+    btoi
+    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    box_len
+    pop
+    intc_1 // 2
+    +
+    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    swap
+    box_resize
+    dup
+    intc_2 // 1
+    +
+    itob
+    extract 6 2
+    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    intc_0 // 0
+    uncover 2
+    box_replace
+    intc_1 // 2
+    *
+    intc_1 // 2
+    +
+    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    swap
+    intc_0 // 0
+    bytec_1 // 0x0000
+    box_splice
+    b main_while_top@14
+
+main_after_while@18:
+    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    pushint 10
+    pushbytes 0x0009
+    box_replace // on error: index out of bounds
+    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    pushint 36
+    pushbytes 0x0003
+    box_replace // on error: index out of bounds
+    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    box_get
+    bytec_1 // 0x0000
+    cover 2
+    select
+    pushint 9
+    callsub Lib.find
+    pop
+    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    box_get
+    bytec_1 // 0x0000
+    cover 2
+    select
+    pushint 3
+    callsub Lib.find
+    pop
+    swap
+    dup
+    len
+    intc_3 // 32
+    <=
+    assert // overflow
+    intc_3 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    dig 2
+    len
+    intc_3 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@12:
+    intc_0 // 0
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_2 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_2 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    pushbytes "data"
+    intc_1 // 2
+    box_create
+    pop
+    intc_2 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_types_in_library.sol.Lib.find(_haystack: bytes, _needle: uint64) -> bytes, bytes:
@@ -83,143 +219,3 @@ Lib.find_after_while@5:
     frame_dig -2
     uncover 2
     retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_types_in_library.sol.Test.__postInit[routing]() -> void:
-__postInit:
-    bytec_2 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_2 // "__ctor_pending"
-    intc_0 // 0
-    app_global_put
-    pushbytes "data"
-    intc_1 // 2
-    box_create
-    pop
-    intc_2 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_types_in_library.sol.Test.f[routing]() -> void:
-f:
-    txn GroupIndex
-    bz f_ternary_false@3
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-f_ternary_merge@4:
-    !
-    assert // not payable
-
-f_while_top@5:
-    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
-    box_get
-    bytec_1 // 0x0000
-    cover 2
-    select
-    intc_0 // 0
-    extract_uint16 // on error: invalid array length header
-    itob
-    pushbytes 0x14
-    b<
-    bz f_after_while@9
-    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
-    box_len
-    bury 1
-    bnz f_after_if_else@8
-    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
-    intc_1 // 2
-    box_create
-    pop
-
-f_after_if_else@8:
-    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
-    intc_0 // 0
-    intc_1 // 2
-    box_extract
-    btoi
-    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
-    box_len
-    pop
-    intc_1 // 2
-    +
-    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
-    swap
-    box_resize
-    dup
-    intc_2 // 1
-    +
-    itob
-    extract 6 2
-    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
-    intc_0 // 0
-    uncover 2
-    box_replace
-    intc_1 // 2
-    *
-    intc_1 // 2
-    +
-    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
-    swap
-    intc_0 // 0
-    bytec_1 // 0x0000
-    box_splice
-    b f_while_top@5
-
-f_after_while@9:
-    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
-    pushint 10
-    pushbytes 0x0009
-    box_replace // on error: index out of bounds
-    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
-    pushint 36
-    pushbytes 0x0003
-    box_replace // on error: index out of bounds
-    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
-    box_get
-    bytec_1 // 0x0000
-    cover 2
-    select
-    pushint 9
-    callsub Lib.find
-    pop
-    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
-    box_get
-    bytec_1 // 0x0000
-    cover 2
-    select
-    pushint 3
-    callsub Lib.find
-    pop
-    swap
-    dup
-    len
-    intc_3 // 32
-    <=
-    assert // overflow
-    intc_3 // 32
-    bzero
-    swap
-    dig 1
-    b|
-    dig 2
-    len
-    intc_3 // 32
-    <=
-    assert // overflow
-    cover 2
-    b|
-    concat
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-f_ternary_false@3:
-    intc_0 // 0
-    b f_ternary_merge@4

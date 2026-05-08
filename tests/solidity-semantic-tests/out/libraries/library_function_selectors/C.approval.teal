@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 2 32
-    bytecblock "s" "__ctor_pending" 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000
+    bytecblock "s" "__ctor_pending"
     pushint 4096
     bzero
     dup
@@ -30,12 +30,65 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0x48202399 0xaad134cd 0xfd6894cd // method "__postInit()void", method "f()(bool,bool,uint256)", method "g()(bool,bool,uint512)", method "h()(bool,bool,uint256)"
     txna ApplicationArgs 0
-    match __postInit f g h
+    match main___postInit_route@5 main_f_route@6 main_g_route@7 main_h_route@8
     err
 
+main_h_route@8:
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.__postInit[routing]() -> void:
-__postInit:
+main_ternary_merge@25:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@25
+
+main_g_route@7:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    load 0
+    store 0
+    pushbytes 0x151f7c754000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@19:
+    intc_1 // 0
+    b main_ternary_merge@20
+
+main_f_route@6:
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@25
+
+main_ternary_false@24:
+    intc_1 // 0
+    b main_ternary_merge@25
+
+main___postInit_route@5:
     bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -47,18 +100,18 @@ __postInit:
     box_create
     pop
 
-__postInit_while_top@2:
+main_while_top@28:
     bytec_0 // "s"
     box_len
     pop
     intc_2 // 2
     >=
-    bz __postInit_ternary_false@4
+    bz main_ternary_false@30
     bytec_0 // "s"
     box_len
     pop
 
-__postInit_ternary_merge@5:
+main_ternary_merge@31:
     intc_2 // 2
     -
     intc_3 // 32
@@ -66,7 +119,7 @@ __postInit_ternary_merge@5:
     itob
     pushbytes 0x2a
     b<
-    bz __postInit_after_while@7
+    bz main_after_while@33
     bytec_0 // "s"
     intc_1 // 0
     intc_2 // 2
@@ -98,80 +151,12 @@ __postInit_ternary_merge@5:
     intc_1 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     box_splice
-    b __postInit_while_top@2
+    b main_while_top@28
 
-__postInit_after_while@7:
+main_after_while@33:
     intc_0 // 1
     return
 
-__postInit_ternary_false@4:
+main_ternary_false@30:
     intc_2 // 2
-    b __postInit_ternary_merge@5
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.f[routing]() -> void:
-f:
-    txn GroupIndex
-    bz f_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-f_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_2 // 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
-
-f_ternary_false@3:
-    intc_1 // 0
-    b f_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.g[routing]() -> void:
-g:
-    txn GroupIndex
-    bz g_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-g_ternary_merge@4:
-    !
-    assert // not payable
-    load 0
-    store 0
-    pushbytes 0x151f7c754000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
-
-g_ternary_false@3:
-    intc_1 // 0
-    b g_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.h[routing]() -> void:
-h:
-    txn GroupIndex
-    bz h_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-h_ternary_merge@4:
-    !
-    assert // not payable
-    bytec_2 // 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
-
-h_ternary_false@3:
-    intc_1 // 0
-    b h_ternary_merge@4
+    b main_ternary_merge@31

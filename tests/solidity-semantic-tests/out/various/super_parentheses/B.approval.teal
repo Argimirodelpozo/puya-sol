@@ -30,29 +30,24 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/super_parentheses.sol.B.f[routing]() -> void:
-f:
     txn GroupIndex
-    bz f_ternary_false@3
+    bz main_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@4:
+main_ternary_merge@9:
     !
     assert // not payable
     txn GroupIndex
-    bz f_ternary_false@7
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@8:
+main_ternary_merge@13:
     !
     assert // not payable
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000003
@@ -60,10 +55,10 @@ f_ternary_merge@8:
     intc_0 // 1
     return
 
-f_ternary_false@7:
+main_ternary_false@12:
     intc_1 // 0
-    b f_ternary_merge@8
+    b main_ternary_merge@13
 
-f_ternary_false@3:
+main_ternary_false@8:
     intc_1 // 0
-    b f_ternary_merge@4
+    b main_ternary_merge@9

@@ -27,20 +27,53 @@ main_after_if_else@2:
     assert
     pushbytess 0x1cdf30bf 0x1f8fcaf3 0x9759faee // method "test()(address,address)", method "t1(address)address", method "t2()address"
     txna ApplicationArgs 0
-    match test t1 t2
+    match main_test_route@5 main_t1_route@6 main_t2_route@7
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/external_types_in_calls.sol.C.test[routing]() -> void:
-test:
+main_t2_route@7:
     txn GroupIndex
-    bz test_ternary_false@3
+    bz main_ternary_false@13
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-test_ternary_merge@4:
+main_ternary_merge@14:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000009
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@13:
+    intc_1 // 0
+    b main_ternary_merge@14
+
+main_t1_route@6:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub t1
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_test_route@5:
+    txn GroupIndex
+    bz main_ternary_false@20
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@21:
     !
     assert // not payable
     itxn_begin
@@ -95,7 +128,7 @@ test_ternary_merge@4:
     itxn LastLog
     extract 4 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/external_types_in_calls.sol.C.t1
+    callsub t1
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -104,66 +137,27 @@ test_ternary_merge@4:
     intc_0 // 1
     return
 
-test_ternary_false@3:
+main_ternary_false@20:
     intc_1 // 0
-    b test_ternary_merge@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/external_types_in_calls.sol.C.t1[routing]() -> void:
-t1:
-    txna ApplicationArgs 1
-    dup
-    len
-    pushint 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/external_types_in_calls.sol.C.t1
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/external_types_in_calls.sol.C.t2[routing]() -> void:
-t2:
-    txn GroupIndex
-    bz t2_ternary_false@3
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-t2_ternary_merge@4:
-    !
-    assert // not payable
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000009
-    log
-    intc_0 // 1
-    return
-
-t2_ternary_false@3:
-    intc_1 // 0
-    b t2_ternary_merge@4
+    b main_ternary_merge@21
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/external_types_in_calls.sol.C.t1(a: bytes) -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/external_types_in_calls.sol.C.t1:
+t1:
     proto 1 1
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/external_types_in_calls.sol.C.t1_ternary_false@2
+    bz t1_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/external_types_in_calls.sol.C.t1_ternary_merge@3:
+t1_ternary_merge@3:
     !
     assert // not payable
     frame_dig -1
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/external_types_in_calls.sol.C.t1_ternary_false@2:
+t1_ternary_false@2:
     intc_1 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/external_types_in_calls.sol.C.t1_ternary_merge@3
+    b t1_ternary_merge@3

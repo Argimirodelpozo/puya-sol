@@ -21,7 +21,7 @@ main:
     bytec_0 // "x"
     swap
     app_global_put
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_2.sol.A.f
+    callsub f
     pushbytes "y"
     swap
     app_global_put
@@ -36,31 +36,18 @@ main_after_if_else@2:
     assert
     pushbytess 0xcd78b354 0x7c1072af // method "f()uint256", method "x()uint256"
     txna ApplicationArgs 0
-    match f x
+    match main_f_route@5 main_x_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_2.sol.A.f[routing]() -> void:
-f:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_2.sol.A.f
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_2.sol.A.x[routing]() -> void:
-x:
+main_x_route@6:
     txn GroupIndex
-    bz x_ternary_false@3
+    bz main_ternary_false@12
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-x_ternary_merge@4:
+main_ternary_merge@13:
     !
     assert // not payable
     intc_0 // 0
@@ -82,21 +69,30 @@ x_ternary_merge@4:
     intc_1 // 1
     return
 
-x_ternary_false@3:
+main_ternary_false@12:
     intc_0 // 0
-    b x_ternary_merge@4
+    b main_ternary_merge@13
+
+main_f_route@5:
+    callsub f
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_2.sol.A.f() -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_2.sol.A.f:
+f:
     txn GroupIndex
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_2.sol.A.f_ternary_false@2
+    bz f_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_2.sol.A.f_ternary_merge@3:
+f_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 0
@@ -111,6 +107,6 @@ x_ternary_false@3:
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000002a
     retsub
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_2.sol.A.f_ternary_false@2:
+f_ternary_false@2:
     intc_0 // 0
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_2.sol.A.f_ternary_merge@3
+    b f_ternary_merge@3
