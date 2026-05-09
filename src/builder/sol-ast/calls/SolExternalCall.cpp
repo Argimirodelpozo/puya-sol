@@ -133,18 +133,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 	{
 		// biguint → 32 bytes, left-padded
 		auto cast = awst::makeReinterpretCast(std::move(_argExpr), awst::WType::bytesType(), m_loc);
-		auto padded = awst::makeLeftPad(std::move(cast), 32, m_loc);
-		auto lenCall = awst::makeLen(padded, m_loc);
-
-		auto offset = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), m_loc);
-		offset->stackArgs.push_back(std::move(lenCall));
-		offset->stackArgs.push_back(awst::makeIntegerConstant("32", m_loc));
-
-		auto extracted = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
-		extracted->stackArgs.push_back(std::move(padded));
-		extracted->stackArgs.push_back(std::move(offset));
-		extracted->stackArgs.push_back(awst::makeIntegerConstant("32", m_loc));
-		return extracted;
+		return awst::makeLeftPadToN(std::move(cast), 32, m_loc);
 	}
 	else if (_argExpr->wtype == awst::WType::boolType())
 	{
@@ -502,17 +491,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 					std::move(elem), awst::WType::biguintType(), m_loc);
 
 				auto cast = awst::makeReinterpretCast(std::move(elem), awst::WType::bytesType(), m_loc);
-				auto padded = awst::makeLeftPad(std::move(cast), 32, m_loc);
-				auto lenCall = awst::makeLen(padded, m_loc);
-
-				auto off = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), m_loc);
-				off->stackArgs.push_back(std::move(lenCall));
-				off->stackArgs.push_back(awst::makeIntegerConstant("32", m_loc));
-
-				auto extracted = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
-				extracted->stackArgs.push_back(std::move(padded));
-				extracted->stackArgs.push_back(std::move(off));
-				extracted->stackArgs.push_back(awst::makeIntegerConstant("32", m_loc));
+				auto extracted = awst::makeLeftPadToN(std::move(cast), 32, m_loc);
 
 				if (!acc)
 					acc = std::move(extracted);

@@ -446,18 +446,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleBiguintToBytes(
 std::shared_ptr<awst::Expression> SolTypeConversion::leftPadToN(
 	std::shared_ptr<awst::Expression> _expr, int _n)
 {
-	auto cat = awst::makeLeftPad(std::move(_expr), _n, m_loc);
-
-	auto lenExpr = awst::makeLen(cat, m_loc);
-
-	auto offset = awst::makeUInt64BinOp(std::move(lenExpr), awst::UInt64BinaryOperator::Sub,
-		awst::makeIntegerConstant(std::to_string(_n), m_loc), m_loc);
-
-	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
-	extract->stackArgs.push_back(std::move(cat));
-	extract->stackArgs.push_back(std::move(offset));
-	extract->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(_n), m_loc));
-	return extract;
+	return awst::makeLeftPadToN(std::move(_expr), _n, m_loc);
 }
 
 std::shared_ptr<awst::Expression> SolTypeConversion::extractLastN(

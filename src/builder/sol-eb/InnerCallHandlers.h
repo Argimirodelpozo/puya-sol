@@ -120,10 +120,6 @@ private:
 		std::shared_ptr<awst::Expression> _a, std::shared_ptr<awst::Expression> _b,
 		awst::SourceLocation const& _loc);
 
-	/// Left-pad bytes to N using bzero+concat+extract3.
-	static std::shared_ptr<awst::Expression> leftPadToN(
-		std::shared_ptr<awst::Expression> _expr, int _n,
-		awst::SourceLocation const& _loc);
 };
 
 } // namespace puyasol::builder::eb

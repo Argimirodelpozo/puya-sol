@@ -669,6 +669,25 @@ inline std::shared_ptr<IntrinsicCall> makeRightPad(
 	return makeConcat(std::move(value), std::move(pad), std::move(loc));
 }
 
+// Left-pad `value` to *exactly* `n` bytes — `extract3(bzero(n) ++ value,
+// len - n, n)`. Required for ABI-encoding values whose minimal AVM
+// representation is shorter than the target ABI width (biguint, etc.):
+// makeLeftPad alone produces `n + len(value)` bytes; this helper trims
+// to `n` via dynamic-offset extract3.
+inline std::shared_ptr<IntrinsicCall> makeLeftPadToN(
+	std::shared_ptr<Expression> value, int n, SourceLocation loc)
+{
+	auto padded = makeLeftPad(std::move(value), n, loc);
+	auto offset = makeUInt64BinOp(makeLen(padded, loc),
+		UInt64BinaryOperator::Sub,
+		makeIntegerConstant(std::to_string(n), loc), loc);
+	auto extract = makeIntrinsicCall("extract3", WType::bytesType(), loc);
+	extract->stackArgs.push_back(std::move(padded));
+	extract->stackArgs.push_back(std::move(offset));
+	extract->stackArgs.push_back(makeIntegerConstant(std::to_string(n), std::move(loc)));
+	return extract;
+}
+
 // `keccak256(bytes)` → 32-byte hash.
 inline std::shared_ptr<IntrinsicCall> makeKeccak256(
 	std::shared_ptr<Expression> input, SourceLocation loc)

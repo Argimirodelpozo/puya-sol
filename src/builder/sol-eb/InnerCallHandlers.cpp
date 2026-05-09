@@ -58,15 +58,6 @@ std::shared_ptr<awst::IntrinsicCall> InnerCallHandlers::makeConcat(
 	return c;
 }
 
-std::shared_ptr<awst::Expression> InnerCallHandlers::leftPadToN(
-	std::shared_ptr<awst::Expression> _expr, int _n, awst::SourceLocation const& _loc)
-{
-	auto padded = awst::makeLeftPad(std::move(_expr), _n, _loc);
-	return makeExtract(std::move(padded), 0, _n, _loc);
-	// FIXME: should use dynamic extract3(padded, offset, N) — but for now
-	// the actual FunctionCallBuilder code uses this pattern. Let's match it.
-}
-
 std::shared_ptr<awst::Expression> InnerCallHandlers::addressToAppId(
 	std::shared_ptr<awst::Expression> _receiver, awst::SourceLocation const& _loc)
 {
@@ -115,11 +106,10 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 
 	if (wtype == awst::WType::biguintType())
 	{
+		// AVM biguint is variable-length minimal big-endian; ABI uint256 is
+		// exactly 32 bytes. Pad-then-trim via dynamic-offset extract3.
 		auto cast = awst::makeReinterpretCast(std::move(_arg), awst::WType::bytesType(), _loc);
-		auto padded = awst::makeLeftPad(std::move(cast), 32, _loc);
-		return makeExtract(std::move(padded), 0, 0, _loc);
-		// FIXME: should be extract3(padded, offset, 32) with dynamic offset
-		// For now, replicate the pattern from FunctionCallBuilder.
+		return awst::makeLeftPadToN(std::move(cast), 32, _loc);
 	}
 
 	if (wtype == awst::WType::boolType())

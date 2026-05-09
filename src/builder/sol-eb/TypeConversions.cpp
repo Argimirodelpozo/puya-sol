@@ -215,17 +215,7 @@ std::shared_ptr<awst::Expression> TypeConversionRegistry::leftPadToN(
 	int _n,
 	awst::SourceLocation const& _loc)
 {
-	auto padded = awst::makeLeftPad(std::move(_expr), _n, _loc);
-	auto paddedLen = awst::makeLen(padded, _loc);
-
-	auto offset = awst::makeUInt64BinOp(std::move(paddedLen), awst::UInt64BinaryOperator::Sub,
-		awst::makeIntegerConstant(std::to_string(_n), _loc), _loc);
-
-	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	extract->stackArgs.push_back(std::move(padded));
-	extract->stackArgs.push_back(std::move(offset));
-	extract->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(_n), _loc));
-	return extract;
+	return awst::makeLeftPadToN(std::move(_expr), _n, _loc);
 }
 
 std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToAddress(
