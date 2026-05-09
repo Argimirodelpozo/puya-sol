@@ -1,3 +1,40 @@
+# Semantic Test Status — v222
+
+**Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**
+
+vs v221 = 1095 PASS: **+1 PASS / −1 FAIL** — `functionCall/mapping_internal_argument`
+flips via the input-param mapping-storage-ref registration fix.
+
+## v222 puya-sol changes (vs v221)
+
+**Mapping-storage-ref input params now bound** (FunctionBuilder.cpp).
+
+Background: when a contract method declares `function f(mapping(K=>V) storage m, ...)`,
+calls to `f(a, ...)` and `f(b, ...)` from the same contract pass the
+state-var name as a bytes value through `m`. SolIndexAccess uses
+`findMappingKeyParam(m.id)` to locate the binding and emit a
+`VarExpression(m, bytes)` as the dynamic box-key prefix.
+
+Bug: only RETURN params were registered for the binding; input params
+fell through to the static fallback in SolIndexAccessHandlers, which
+used `varName` (the param's textual name "m") as a literal utf8
+constant prefix. Both `f(a, ...)` and `f(b, ...)` then wrote to the
+same box namespace `m + sha256(key)`, mixing storage between mappings.
+
+Fix: register input params with mapping-storage-ref the same way
+return params are registered — collect them in
+`m_currentMappingKeyParams` and let `buildBlock` install the binding
+on the FunctionContext after the scope is pushed.
+
+  functionCall/mapping_internal_argument         ✗ → ✓ (4 sub-checks)
+
+The sibling test `mapping_array_internal_argument` (mapping[2] storage
+array — array of mappings) doesn't flip; it goes through a different
+SolIndexAccess path (multi-dim indexing into array-of-mappings)
+that doesn't yet read the dynamic prefix.
+
+---
+
 # Semantic Test Status — v221
 
 **Totals**: 1095 PASS / 153 FAIL / 74 (57 compile_err + 17 deploy_err) = **1095/1322 (82.8%)**
