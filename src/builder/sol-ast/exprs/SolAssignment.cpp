@@ -122,12 +122,7 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleStorage
 		}
 		auto var = awst::makeVarExpression(
 			lhsIdent->name(), awst::WType::bytesType(), m_loc);
-		auto e = std::make_shared<awst::AssignmentExpression>();
-		e->sourceLocation = m_loc;
-		e->wtype = awst::WType::bytesType();
-		e->target = std::move(var);
-		e->value = std::move(rhsExpr);
-		return std::shared_ptr<awst::Expression>(e);
+		return awst::makeAssignmentExpression(std::move(var), std::move(rhsExpr), m_loc);
 	}
 
 	auto rhsExpr = buildExpr(m_assignment.rightHandSide());
@@ -240,13 +235,9 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 
 				// Safe truncate biguint slot to uint64: extract last 8 bytes then btoi
 				auto lenOp = awst::makeLen(castBytes, m_loc);
-				auto sub8 = std::make_shared<awst::UInt64BinaryOperation>();
-				sub8->sourceLocation = m_loc;
-				sub8->wtype = awst::WType::uint64Type();
-				sub8->left = std::move(lenOp);
-				sub8->op = awst::UInt64BinaryOperator::Sub;
-				auto eight = awst::makeIntegerConstant("8", m_loc);
-				sub8->right = std::move(eight);
+				auto sub8 = awst::makeUInt64BinOp(std::move(lenOp),
+					awst::UInt64BinaryOperator::Sub,
+					awst::makeIntegerConstant("8", m_loc), m_loc);
 				auto last8 = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 				last8->stackArgs.push_back(std::move(castBytes));
 				last8->stackArgs.push_back(std::move(sub8));
@@ -392,12 +383,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 			if (auto const* sg = dynamic_cast<awst::StateGet const*>(base.get()))
 				writeTarget = sg->field;
 
-			auto e = std::make_shared<awst::AssignmentExpression>();
-			e->sourceLocation = m_loc;
-			e->wtype = writeTarget->wtype;
-			e->target = std::move(writeTarget);
-			e->value = std::move(newTuple);
-
+			auto e = awst::makeAssignmentExpression(std::move(writeTarget), std::move(newTuple), m_loc);
 			auto fieldExtract = awst::makeFieldExpression(std::move(e), fieldName, fieldExpr->wtype, m_loc);
 			return fieldExtract;
 		}
@@ -620,12 +606,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 		}
 	}
 
-	auto e = std::make_shared<awst::AssignmentExpression>();
-	e->sourceLocation = m_loc;
-	e->wtype = target->wtype;
-	e->target = std::move(target);
-	e->value = std::move(value);
-	return e;
+	return awst::makeAssignmentExpression(std::move(target), std::move(value), m_loc);
 }
 
 } // namespace puyasol::builder::sol_ast

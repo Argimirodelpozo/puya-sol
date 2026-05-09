@@ -476,11 +476,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 					sr.rootBox ? std::static_pointer_cast<awst::Expression>(sr.rootBox)
 							: std::static_pointer_cast<awst::Expression>(sr.rootAppState);
 
-				auto writeBack = std::make_shared<awst::AssignmentExpression>();
-				writeBack->sourceLocation = m_loc;
-				writeBack->wtype = sr.rootType;
-				writeBack->target = std::move(writeTarget);
-				writeBack->value = std::move(writeValue);
+				auto writeBack = awst::makeAssignmentExpression(
+					std::move(writeTarget), std::move(writeValue), m_loc, sr.rootType);
 
 				auto stmt = awst::makeExpressionStatement(std::move(writeBack), m_loc);
 				m_ctx.pendingStatements.push_back(std::move(stmt));
@@ -508,11 +505,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			auto modifiedArg = pickFromTuple(memBaseIdx + mi, memArgType);
 
 			auto target = awst::makeVarExpression(argVar->name, memArgType, m_loc);
-			auto writeBack = std::make_shared<awst::AssignmentExpression>();
-			writeBack->sourceLocation = m_loc;
-			writeBack->wtype = memArgType;
-			writeBack->target = std::move(target);
-			writeBack->value = std::move(modifiedArg);
+			auto writeBack = awst::makeAssignmentExpression(
+				std::move(target), std::move(modifiedArg), m_loc);
 
 			auto stmt = awst::makeExpressionStatement(std::move(writeBack), m_loc);
 			m_ctx.pendingStatements.push_back(std::move(stmt));

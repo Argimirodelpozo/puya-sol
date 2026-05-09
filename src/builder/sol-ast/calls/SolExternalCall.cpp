@@ -472,8 +472,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 	methodConst->value = methodSelector;
 
 	// Build ApplicationArgs tuple
-	auto argsTuple = std::make_shared<awst::TupleExpression>();
-	argsTuple->sourceLocation = m_loc;
+	auto argsTuple = awst::makeTupleExpression(nullptr, m_loc);
 	argsTuple->items.push_back(std::move(methodConst));
 
 	// Get parameter types for encoding

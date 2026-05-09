@@ -468,8 +468,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		auto sel4 = extractSlice(8, 4);
 
 		// Build ApplicationArgs tuple: [selector, arg0_encoded, arg1_encoded, ...]
-		auto argsTuple = std::make_shared<awst::TupleExpression>();
-		argsTuple->sourceLocation = _loc;
+		auto argsTuple = awst::makeTupleExpression(nullptr, _loc);
 		argsTuple->items.push_back(std::move(sel4));
 		for (size_t i = 0; i < _args.size(); ++i)
 		{
@@ -905,12 +904,8 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 				methodConst->value = AbiEncoderBuilder::buildARC4MethodSelector(_ctx, entry->funcDef);
 
 				auto selVar = awst::makeVarExpression("__sel", awst::WType::bytesType(), _loc);
-				auto cmp = std::make_shared<awst::BytesComparisonExpression>();
-				cmp->sourceLocation = _loc;
-				cmp->wtype = awst::WType::boolType();
-				cmp->lhs = std::move(selVar);
-				cmp->rhs = std::move(methodConst);
-				cmp->op = awst::EqualityComparison::Eq;
+				auto cmp = awst::makeBytesComparison(std::move(selVar),
+					awst::EqualityComparison::Eq, std::move(methodConst), _loc);
 
 				auto thenBlock = awst::makeBlock(_loc);
 				thenBlock->body.push_back(awst::makeReturnStatement(

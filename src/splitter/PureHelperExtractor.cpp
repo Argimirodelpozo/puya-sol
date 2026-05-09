@@ -394,13 +394,9 @@ std::shared_ptr<awst::Block> buildHelperApprovalBody(
 		&& (4 + retSize) > 1024;
 
 	auto makeSelectorEq = [&](std::string const& _sigToMatch) {
-		auto eq = std::make_shared<awst::BytesComparisonExpression>();
-		eq->sourceLocation = _loc;
-		eq->wtype = awst::WType::boolType();
-		eq->lhs = appArgAt(0, _loc);
-		eq->op = awst::EqualityComparison::Eq;
-		eq->rhs = selectorConst(_sigToMatch, _loc);
-		return eq;
+		return awst::makeBytesComparison(appArgAt(0, _loc),
+			awst::EqualityComparison::Eq,
+			selectorConst(_sigToMatch, _loc), _loc);
 	};
 
 	if (!needsBigReturnHelper)

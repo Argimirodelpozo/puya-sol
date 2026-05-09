@@ -808,8 +808,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			}
 			else
 			{
-				auto tuple = std::make_shared<awst::TupleExpression>();
-				tuple->sourceLocation = loc;
+				auto tuple = awst::makeTupleExpression(nullptr, loc);
 				for (auto const& rp: returnParams)
 				{
 					auto var = awst::makeVarExpression(rp->name(), m_typeMapper.map(rp->type()), loc);

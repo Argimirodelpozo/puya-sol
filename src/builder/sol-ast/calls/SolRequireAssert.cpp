@@ -1,5 +1,4 @@
 #include "builder/sol-ast/calls/SolRequireAssert.h"
-#include "builder/sol-intrinsics/IntrinsicMapper.h"
 
 namespace puyasol::builder::sol_ast
 {
@@ -55,7 +54,7 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 		}
 	}
 
-	return IntrinsicMapper::createAssert(std::move(condition), std::move(message), m_loc);
+	return awst::makeAssert(std::move(condition), m_loc, std::move(message));
 }
 
 } // namespace puyasol::builder::sol_ast

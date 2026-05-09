@@ -119,8 +119,7 @@ std::shared_ptr<awst::Expression> SolTupleExpression::toAwst()
 	for (auto const& comp: m_tuple.components())
 		if (!comp) hasNulls = true;
 
-	auto e = std::make_shared<awst::TupleExpression>();
-	e->sourceLocation = m_loc;
+	auto e = awst::makeTupleExpression(nullptr, m_loc);
 	std::vector<awst::WType const*> types;
 
 	if (hasNulls)

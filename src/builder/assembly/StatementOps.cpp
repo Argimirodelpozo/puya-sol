@@ -168,13 +168,9 @@ void AssemblyBuilder::buildStatement(
 
 					auto lenCall = awst::makeLen(bor, loc);
 
-					auto minus = std::make_shared<awst::UInt64BinaryOperation>();
-					minus->sourceLocation = loc;
-					minus->wtype = awst::WType::uint64Type();
-					minus->left = std::move(lenCall);
-					minus->op = awst::UInt64BinaryOperator::Sub;
-					auto thirtyTwo = awst::makeIntegerConstant("32", loc);
-					minus->right = thirtyTwo;
+					auto minus = awst::makeUInt64BinOp(std::move(lenCall),
+						awst::UInt64BinaryOperator::Sub,
+						awst::makeIntegerConstant("32", loc), loc);
 
 					auto width = awst::makeIntegerConstant("32", loc);
 

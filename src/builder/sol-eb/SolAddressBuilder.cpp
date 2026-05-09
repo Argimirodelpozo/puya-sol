@@ -70,13 +70,7 @@ std::shared_ptr<awst::Expression> makeBytesEq(
 	std::shared_ptr<awst::Expression> a, std::shared_ptr<awst::Expression> b,
 	awst::EqualityComparison op, awst::SourceLocation const& loc)
 {
-	auto e = std::make_shared<awst::BytesComparisonExpression>();
-	e->sourceLocation = loc;
-	e->wtype = awst::WType::boolType();
-	e->lhs = std::move(a);
-	e->rhs = std::move(b);
-	e->op = op;
-	return e;
+	return awst::makeBytesComparison(std::move(a), op, std::move(b), loc);
 }
 
 } // namespace
@@ -181,12 +175,9 @@ std::unique_ptr<InstanceBuilder> SolAddressBuilder::bool_eval(
 		std::vector<uint8_t>(32, 0), _loc, awst::BytesEncoding::Base16,
 		awst::WType::accountType());
 
-	auto e = std::make_shared<awst::BytesComparisonExpression>();
-	e->sourceLocation = _loc;
-	e->wtype = awst::WType::boolType();
-	e->lhs = resolve();
-	e->rhs = std::move(zero);
-	e->op = _negate ? awst::EqualityComparison::Eq : awst::EqualityComparison::Ne;
+	auto e = awst::makeBytesComparison(resolve(),
+		_negate ? awst::EqualityComparison::Eq : awst::EqualityComparison::Ne,
+		std::move(zero), _loc);
 	return std::make_unique<SolAddressBuilder>(m_ctx, m_solType, std::move(e));
 }
 

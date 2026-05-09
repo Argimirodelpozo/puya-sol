@@ -315,8 +315,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				auto encodedArgs = buildEncodedCtorArgs();
 				if (!encodedArgs.empty())
 				{
-					auto argsTuple = std::make_shared<awst::TupleExpression>();
-					argsTuple->sourceLocation = m_loc;
+					auto argsTuple = awst::makeTupleExpression(nullptr, m_loc);
 					std::vector<awst::WType const*> argTypes;
 					for (auto& a: encodedArgs)
 					{
@@ -447,8 +446,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				methodConst->wtype = awst::WType::bytesType();
 				methodConst->value = postInitSig;
 
-				auto argsTuple = std::make_shared<awst::TupleExpression>();
-				argsTuple->sourceLocation = m_loc;
+				auto argsTuple = awst::makeTupleExpression(nullptr, m_loc);
 				argsTuple->items.push_back(std::move(methodConst));
 
 				auto encodedArgs = buildEncodedCtorArgs();

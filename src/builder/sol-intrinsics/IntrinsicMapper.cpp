@@ -97,23 +97,4 @@ std::shared_ptr<awst::IntrinsicCall> IntrinsicMapper::tryMapMemberAccess(
 	return nullptr;
 }
 
-std::shared_ptr<awst::IntrinsicCall> IntrinsicMapper::createLog(
-	std::vector<std::shared_ptr<awst::Expression>> _args,
-	awst::SourceLocation const& _loc
-)
-{
-	auto call = awst::makeIntrinsicCall("log", awst::WType::voidType(), _loc);
-	call->stackArgs = std::move(_args);
-	return call;
-}
-
-std::shared_ptr<awst::AssertExpression> IntrinsicMapper::createAssert(
-	std::shared_ptr<awst::Expression> _condition,
-	std::optional<std::string> _message,
-	awst::SourceLocation const& _loc
-)
-{
-	return awst::makeAssert(std::move(_condition), _loc, std::move(_message));
-}
-
 } // namespace puyasol::builder

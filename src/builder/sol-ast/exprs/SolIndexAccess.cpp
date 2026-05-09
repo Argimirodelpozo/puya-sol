@@ -120,13 +120,9 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 
 					// Safe truncate biguint to uint64: extract last 8 bytes then btoi
 					auto lenOp = awst::makeLen(castToBytes, m_loc);
-					auto sub8 = std::make_shared<awst::UInt64BinaryOperation>();
-					sub8->sourceLocation = m_loc;
-					sub8->wtype = awst::WType::uint64Type();
-					sub8->left = std::move(lenOp);
-					sub8->op = awst::UInt64BinaryOperator::Sub;
-					auto eight = awst::makeIntegerConstant("8", m_loc);
-					sub8->right = std::move(eight);
+					auto sub8 = awst::makeUInt64BinOp(std::move(lenOp),
+						awst::UInt64BinaryOperator::Sub,
+						awst::makeIntegerConstant("8", m_loc), m_loc);
 					auto last8 = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 					last8->stackArgs.push_back(std::move(castToBytes));
 					last8->stackArgs.push_back(std::move(sub8));

@@ -178,8 +178,7 @@ public:
 				else
 				{
 					// Multiple returns: tuple-unpack into named locals.
-					auto tupleTarget = std::make_shared<awst::TupleExpression>();
-					tupleTarget->sourceLocation = loc;
+					auto tupleTarget = awst::makeTupleExpression(nullptr, loc);
 					std::vector<awst::WType const*> tupleTypes;
 					for (auto const& p : params)
 					{

@@ -255,12 +255,7 @@ std::shared_ptr<awst::Expression> StorageMapper::createStateWrite(
 	}
 	}
 
-	auto assign = std::make_shared<awst::AssignmentExpression>();
-	assign->sourceLocation = _loc;
-	assign->wtype = _type;
-	assign->target = target;
-	assign->value = std::move(_value);
-	return assign;
+	return awst::makeAssignmentExpression(target, std::move(_value), _loc, _type);
 }
 
 std::shared_ptr<awst::Expression> StorageMapper::biguintSlotToBtoi(
@@ -275,13 +270,9 @@ std::shared_ptr<awst::Expression> StorageMapper::biguintSlotToBtoi(
 	auto lenOp = awst::makeLen(castToBytes, _loc);
 
 	// len - 8
-	auto sub8 = std::make_shared<awst::UInt64BinaryOperation>();
-	sub8->sourceLocation = _loc;
-	sub8->wtype = awst::WType::uint64Type();
-	sub8->left = std::move(lenOp);
-	sub8->op = awst::UInt64BinaryOperator::Sub;
-	auto eight = awst::makeIntegerConstant("8", _loc);
-	sub8->right = std::move(eight);
+	auto sub8 = awst::makeUInt64BinOp(std::move(lenOp),
+		awst::UInt64BinaryOperator::Sub,
+		awst::makeIntegerConstant("8", _loc), _loc);
 
 	// extract3(castToBytes, len-8, 8)
 	auto last8 = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);

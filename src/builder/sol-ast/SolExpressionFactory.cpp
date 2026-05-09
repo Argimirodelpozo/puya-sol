@@ -28,7 +28,6 @@
 #include "builder/sol-ast/members/SolFieldAccess.h"
 #include "builder/sol-ast/members/SolAddressProperty.h"
 #include "builder/sol-ast/members/SolConstantAccess.h"
-#include "builder/sol-intrinsics/IntrinsicMapper.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/ASTAnnotations.h>
@@ -449,22 +448,21 @@ std::unique_ptr<SolMemberAccess> SolExpressionFactory::createMemberAccess(
 	auto const* baseType = baseExpr.annotation().type;
 
 	// 1. Intrinsics: msg.sender, block.timestamp, block.difficulty, block.prevrandao
+	// SolIntrinsicAccess builds the AWST — directly for some members, via
+	// IntrinsicMapper::tryMapMemberAccess for others. Recognise the union
+	// here so the factory dispatches without an exploratory call.
 	if (auto const* baseId = dynamic_cast<Identifier const*>(&baseExpr))
 	{
-		std::string baseName = baseId->name();
-		// Intrinsics whose AWST is built directly in SolIntrinsicAccess
-		// (no opcode mapping in IntrinsicMapper). Listed explicitly here so
-		// the factory routes them without relying on a truthy sentinel.
-		if ((baseName == "block"
-				&& (member == "difficulty" || member == "prevrandao"
-					|| member == "basefee" || member == "blobbasefee"
-					|| member == "gaslimit"))
-			|| (baseName == "msg"
-				&& (member == "value" || member == "sig" || member == "data")))
-			return std::make_unique<SolIntrinsicAccess>(m_ctx, _node);
-
-		if (builder::IntrinsicMapper::tryMapMemberAccess(baseName, member,
-				awst::SourceLocation{}))
+		std::string const& baseName = baseId->name();
+		bool isIntrinsic =
+			(baseName == "block" && (member == "difficulty" || member == "prevrandao"
+				|| member == "basefee" || member == "blobbasefee" || member == "gaslimit"
+				|| member == "timestamp" || member == "number" || member == "chainid"
+				|| member == "coinbase"))
+			|| (baseName == "msg" && (member == "value" || member == "sig"
+				|| member == "data" || member == "sender"))
+			|| (baseName == "tx" && (member == "origin" || member == "gasprice"));
+		if (isIntrinsic)
 			return std::make_unique<SolIntrinsicAccess>(m_ctx, _node);
 	}
 

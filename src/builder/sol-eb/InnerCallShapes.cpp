@@ -134,8 +134,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 	methodConst->value = methodSel;
 
 	// Build ApplicationArgs tuple
-	auto argsTuple = std::make_shared<awst::TupleExpression>();
-	argsTuple->sourceLocation = _loc;
+	auto argsTuple = awst::makeTupleExpression(nullptr, _loc);
 	argsTuple->items.push_back(std::move(methodConst));
 
 	// Extract call arguments
@@ -260,8 +259,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 		awst::makeBytesConstant({}, _loc),
 		awst::WType::bytesType(), _loc);
 
-	auto argsTuple = std::make_shared<awst::TupleExpression>();
-	argsTuple->sourceLocation = _loc;
+	auto argsTuple = awst::makeTupleExpression(nullptr, _loc);
 	argsTuple->items.push_back(std::move(selector));
 	argsTuple->items.push_back(std::move(rest));
 

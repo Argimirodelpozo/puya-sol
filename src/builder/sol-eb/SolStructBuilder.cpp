@@ -30,14 +30,9 @@ std::unique_ptr<InstanceBuilder> SolStructBuilder::compare(
 
 		auto rhsBytes = awst::makeReinterpretCast(std::move(rhs), awst::WType::bytesType(), _loc);
 
-		auto e = std::make_shared<awst::BytesComparisonExpression>();
-		e->sourceLocation = _loc;
-		e->wtype = awst::WType::boolType();
-		e->lhs = std::move(lhsBytes);
-		e->rhs = std::move(rhsBytes);
-		e->op = (_op == BuilderComparisonOp::Eq)
-			? awst::EqualityComparison::Eq
-			: awst::EqualityComparison::Ne;
+		auto e = awst::makeBytesComparison(std::move(lhsBytes),
+			(_op == BuilderComparisonOp::Eq) ? awst::EqualityComparison::Eq : awst::EqualityComparison::Ne,
+			std::move(rhsBytes), _loc);
 		return std::make_unique<SolStructBuilder>(m_ctx, m_structType, std::move(e));
 	}
 

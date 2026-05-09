@@ -78,13 +78,9 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgsHeadTail(
 		auto tail = encodeDynamicTail(_ctx, std::move(expr), solType, _loc);
 		auto tailLen = awst::makeLen(tail, _loc);
 
-		auto newOffset = std::make_shared<awst::UInt64BinaryOperation>();
-		newOffset->sourceLocation = _loc;
-		newOffset->wtype = awst::WType::uint64Type();
-		newOffset->op = awst::UInt64BinaryOperator::Add;
-		newOffset->left = std::move(currentOffset);
-		newOffset->right = std::move(tailLen);
-		currentOffset = std::move(newOffset);
+		currentOffset = awst::makeUInt64BinOp(
+			std::move(currentOffset), awst::UInt64BinaryOperator::Add,
+			std::move(tailLen), _loc);
 		tailParts.push_back(std::move(tail));
 	}
 
@@ -293,26 +289,17 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::rightPadTo32(
 	auto lenCall = awst::makeLen(_expr, _loc);
 
 	// padded_len = ((len + 31) / 32) * 32
-	auto len31 = std::make_shared<awst::UInt64BinaryOperation>();
-	len31->sourceLocation = _loc;
-	len31->wtype = awst::WType::uint64Type();
-	len31->op = awst::UInt64BinaryOperator::Add;
-	len31->left = std::move(lenCall);
-	len31->right = awst::makeIntegerConstant("31", _loc);
+	auto len31 = awst::makeUInt64BinOp(std::move(lenCall),
+		awst::UInt64BinaryOperator::Add,
+		awst::makeIntegerConstant("31", _loc), _loc);
 
-	auto div32 = std::make_shared<awst::UInt64BinaryOperation>();
-	div32->sourceLocation = _loc;
-	div32->wtype = awst::WType::uint64Type();
-	div32->op = awst::UInt64BinaryOperator::FloorDiv;
-	div32->left = std::move(len31);
-	div32->right = awst::makeIntegerConstant("32", _loc);
+	auto div32 = awst::makeUInt64BinOp(std::move(len31),
+		awst::UInt64BinaryOperator::FloorDiv,
+		awst::makeIntegerConstant("32", _loc), _loc);
 
-	auto paddedLen = std::make_shared<awst::UInt64BinaryOperation>();
-	paddedLen->sourceLocation = _loc;
-	paddedLen->wtype = awst::WType::uint64Type();
-	paddedLen->op = awst::UInt64BinaryOperator::Mult;
-	paddedLen->left = std::move(div32);
-	paddedLen->right = awst::makeIntegerConstant("32", _loc);
+	auto paddedLen = awst::makeUInt64BinOp(std::move(div32),
+		awst::UInt64BinaryOperator::Mult,
+		awst::makeIntegerConstant("32", _loc), _loc);
 
 	// concat(expr, bzero(31)) — ensure enough zeros for any padding
 	auto padded = awst::makeRightPad(std::move(_expr), 31, _loc);
@@ -562,13 +549,9 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 					auto tail = encodeDynamicTail(_ctx, std::move(fieldValue), fieldSolType, _loc);
 					auto tailLen = awst::makeLen(tail, _loc);
 
-					auto newOffset = std::make_shared<awst::UInt64BinaryOperation>();
-					newOffset->sourceLocation = _loc;
-					newOffset->wtype = awst::WType::uint64Type();
-					newOffset->op = awst::UInt64BinaryOperator::Add;
-					newOffset->left = std::move(currentOffset);
-					newOffset->right = std::move(tailLen);
-					currentOffset = std::move(newOffset);
+					currentOffset = awst::makeUInt64BinOp(
+						std::move(currentOffset), awst::UInt64BinaryOperator::Add,
+						std::move(tailLen), _loc);
 					tailParts.push_back(std::move(tail));
 				}
 			}

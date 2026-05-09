@@ -305,8 +305,7 @@ void ContractBuilder::inlineModifiers(
 					{
 						// Non-tuple value returning a tuple (e.g. multi-return call):
 						// use a TupleExpression target to destructure via assignment.
-						auto tupleTarget = std::make_shared<awst::TupleExpression>();
-						tupleTarget->sourceLocation = retStmt->sourceLocation;
+						auto tupleTarget = awst::makeTupleExpression(nullptr, retStmt->sourceLocation);
 						std::vector<awst::WType const*> tupleTypes;
 						for (auto const& [n, t]: syntheticRets)
 						{
@@ -322,8 +321,7 @@ void ContractBuilder::inlineModifiers(
 					}
 
 					// Rebuild return as a tuple of the captured vars
-					auto deferTuple = std::make_shared<awst::TupleExpression>();
-					deferTuple->sourceLocation = retStmt->sourceLocation;
+					auto deferTuple = awst::makeTupleExpression(nullptr, retStmt->sourceLocation);
 					std::vector<awst::WType const*> tupleTypes;
 					for (auto const& [n, t]: syntheticRets)
 					{

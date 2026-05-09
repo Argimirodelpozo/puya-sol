@@ -483,12 +483,8 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 	if (isPrefix)
 	{
 		auto newValue = makeNewValue(_operand);
-		auto assignExpr = std::make_shared<awst::AssignmentExpression>();
-		assignExpr->sourceLocation = m_loc;
-		assignExpr->wtype = _operand->wtype;
-		assignExpr->target = makeWriteTarget();
-		assignExpr->value = std::move(newValue);
-		return assignExpr;
+		return awst::makeAssignmentExpression(
+			makeWriteTarget(), std::move(newValue), m_loc, _operand->wtype);
 	}
 	else
 	{

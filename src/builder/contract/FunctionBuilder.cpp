@@ -578,8 +578,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				}
 				else
 				{
-					auto tuple = std::make_shared<awst::TupleExpression>();
-					tuple->sourceLocation = method.sourceLocation;
+					auto tuple = awst::makeTupleExpression(nullptr, method.sourceLocation);
 					for (auto const& rp: retParams)
 					{
 						auto var = awst::makeVarExpression(rp->name(), m_typeMapper.map(rp->type()), method.sourceLocation);
@@ -802,8 +801,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 								auto assign = awst::makeAssignmentStatement(tmpVar, std::move(ret->value), ret->sourceLocation);
 
-								auto newTuple = std::make_shared<awst::TupleExpression>();
-								newTuple->sourceLocation = assign->sourceLocation;
+								auto newTuple = awst::makeTupleExpression(nullptr, assign->sourceLocation);
 								for (size_t i = 0; i < arc4Types.size() && i < subTupleType->types().size(); ++i)
 								{
 									auto item = awst::makeTupleItem(tmpVar, static_cast<int>(i), subTupleType->types()[i], assign->sourceLocation);

@@ -409,6 +409,22 @@ struct BytesComparisonExpression: Expression
 	std::shared_ptr<Expression> rhs;
 };
 
+// Construct a BytesComparisonExpression. wtype is always boolType().
+inline std::shared_ptr<BytesComparisonExpression> makeBytesComparison(
+	std::shared_ptr<Expression> lhs,
+	EqualityComparison op,
+	std::shared_ptr<Expression> rhs,
+	SourceLocation loc)
+{
+	auto node = std::make_shared<BytesComparisonExpression>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = WType::boolType();
+	node->lhs = std::move(lhs);
+	node->op = op;
+	node->rhs = std::move(rhs);
+	return node;
+}
+
 struct BooleanBinaryOperation: Expression
 {
 	std::string nodeType() const override { return "BooleanBinaryOperation"; }
@@ -478,6 +494,24 @@ struct AssignmentExpression: Expression
 	std::shared_ptr<Expression> target;
 	std::shared_ptr<Expression> value;
 };
+
+// Construct an AssignmentExpression. wtype defaults to target->wtype, which
+// is correct for ~all sites; pass an explicit wtype only when the assignment
+// type differs from the target type (e.g. tuple LHS, library-storage write).
+inline std::shared_ptr<AssignmentExpression> makeAssignmentExpression(
+	std::shared_ptr<Expression> target,
+	std::shared_ptr<Expression> value,
+	SourceLocation loc,
+	WType const* wtype = nullptr)
+{
+	if (!wtype && target) wtype = target->wtype;
+	auto node = std::make_shared<AssignmentExpression>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->target = std::move(target);
+	node->value = std::move(value);
+	return node;
+}
 
 struct ConditionalExpression: Expression
 {

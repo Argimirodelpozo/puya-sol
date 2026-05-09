@@ -116,14 +116,9 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::compare(
 			coerceToBytes(rhs);
 		}
 
-		auto e = std::make_shared<awst::BytesComparisonExpression>();
-		e->sourceLocation = _loc;
-		e->wtype = awst::WType::boolType();
-		e->lhs = std::move(lhs);
-		e->rhs = std::move(rhs);
-		e->op = (_op == BuilderComparisonOp::Eq)
-			? awst::EqualityComparison::Eq
-			: awst::EqualityComparison::Ne;
+		auto e = awst::makeBytesComparison(std::move(lhs),
+			(_op == BuilderComparisonOp::Eq) ? awst::EqualityComparison::Eq : awst::EqualityComparison::Ne,
+			std::move(rhs), _loc);
 		return std::make_unique<SolFixedBytesBuilder>(m_ctx, m_bytesType, std::move(e));
 	}
 
@@ -152,12 +147,9 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::bool_eval(
 		std::vector<uint8_t>(m_numBytes, 0), _loc, awst::BytesEncoding::Base16,
 		m_expr->wtype); // same bytes[N] type
 
-	auto e = std::make_shared<awst::BytesComparisonExpression>();
-	e->sourceLocation = _loc;
-	e->wtype = awst::WType::boolType();
-	e->lhs = resolve();
-	e->rhs = std::move(zero);
-	e->op = _negate ? awst::EqualityComparison::Eq : awst::EqualityComparison::Ne;
+	auto e = awst::makeBytesComparison(resolve(),
+		_negate ? awst::EqualityComparison::Eq : awst::EqualityComparison::Ne,
+		std::move(zero), _loc);
 	return std::make_unique<SolFixedBytesBuilder>(m_ctx, m_bytesType, std::move(e));
 }
 

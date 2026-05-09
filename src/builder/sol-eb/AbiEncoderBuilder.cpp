@@ -803,13 +803,9 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncode(
 			// Update running offset: currentTailOffset += len(tail_i)
 			auto tailLen = awst::makeLen(argInfos[i].tailPart, _loc);
 
-			auto newOffset = std::make_shared<awst::UInt64BinaryOperation>();
-			newOffset->sourceLocation = _loc;
-			newOffset->wtype = awst::WType::uint64Type();
-			newOffset->op = awst::UInt64BinaryOperator::Add;
-			newOffset->left = std::move(currentTailOffset);
-			newOffset->right = std::move(tailLen);
-			currentTailOffset = std::move(newOffset);
+			currentTailOffset = awst::makeUInt64BinOp(
+				std::move(currentTailOffset), awst::UInt64BinaryOperator::Add,
+				std::move(tailLen), _loc);
 
 			tailConcatParts.push_back(std::move(argInfos[i].tailPart));
 		}

@@ -41,14 +41,9 @@ std::unique_ptr<InstanceBuilder> SolStringBuilder::compare(
 		coerceToBytes(rhs);
 	}
 
-	auto e = std::make_shared<awst::BytesComparisonExpression>();
-	e->sourceLocation = _loc;
-	e->wtype = awst::WType::boolType();
-	e->lhs = std::move(lhs);
-	e->rhs = std::move(rhs);
-	e->op = (_op == BuilderComparisonOp::Eq)
-		? awst::EqualityComparison::Eq
-		: awst::EqualityComparison::Ne;
+	auto e = awst::makeBytesComparison(std::move(lhs),
+		(_op == BuilderComparisonOp::Eq) ? awst::EqualityComparison::Eq : awst::EqualityComparison::Ne,
+		std::move(rhs), _loc);
 	return std::make_unique<SolStringBuilder>(m_ctx, m_solType, std::move(e));
 }
 
@@ -97,14 +92,9 @@ std::unique_ptr<InstanceBuilder> SolDynamicBytesBuilder::compare(
 		coerceToBytes(rhs);
 	}
 
-	auto e = std::make_shared<awst::BytesComparisonExpression>();
-	e->sourceLocation = _loc;
-	e->wtype = awst::WType::boolType();
-	e->lhs = std::move(lhs);
-	e->rhs = std::move(rhs);
-	e->op = (_op == BuilderComparisonOp::Eq)
-		? awst::EqualityComparison::Eq
-		: awst::EqualityComparison::Ne;
+	auto e = awst::makeBytesComparison(std::move(lhs),
+		(_op == BuilderComparisonOp::Eq) ? awst::EqualityComparison::Eq : awst::EqualityComparison::Ne,
+		std::move(rhs), _loc);
 	return std::make_unique<SolDynamicBytesBuilder>(m_ctx, m_solType, std::move(e));
 }
 

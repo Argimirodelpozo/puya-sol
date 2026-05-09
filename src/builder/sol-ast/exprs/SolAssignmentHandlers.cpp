@@ -148,8 +148,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 		if (allLocalVars || allScalars || (hasSideEffectingRhs && lhsHasStateIndex))
 		{
 			std::vector<awst::WType const*> tmpTypes;
-			auto newTuple = std::make_shared<awst::TupleExpression>();
-			newTuple->sourceLocation = _value->sourceLocation;
+			auto newTuple = awst::makeTupleExpression(nullptr, _value->sourceLocation);
 			for (size_t i = 0; i < rhsTuple->items.size(); ++i)
 			{
 				auto const& rhsItem = rhsTuple->items[i];
@@ -158,11 +157,8 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 
 				auto tmpTarget = awst::makeVarExpression(tmpName, rhsItem->wtype, _value->sourceLocation);
 
-				auto tmpAssign = std::make_shared<awst::AssignmentExpression>();
-				tmpAssign->sourceLocation = _value->sourceLocation;
-				tmpAssign->wtype = rhsItem->wtype;
-				tmpAssign->target = tmpTarget;
-				tmpAssign->value = rhsItem;
+				auto tmpAssign = awst::makeAssignmentExpression(
+					tmpTarget, rhsItem, _value->sourceLocation);
 
 				auto stmt = awst::makeExpressionStatement(std::move(tmpAssign), _value->sourceLocation);
 				// Snapshot writes must run BEFORE the bare-RHS-tuple expression
@@ -366,11 +362,8 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 			}
 		}
 
-		auto e = std::make_shared<awst::AssignmentExpression>();
-		e->sourceLocation = m_loc;
-		e->wtype = assignTarget->wtype;
-		e->target = std::move(assignTarget);
-		e->value = std::move(assignValue);
+		auto e = awst::makeAssignmentExpression(
+			std::move(assignTarget), std::move(assignValue), m_loc);
 		auto stmt = awst::makeExpressionStatement(e, m_loc);
 		m_ctx.pendingStatements.push_back(std::move(stmt));
 	}
@@ -458,12 +451,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleBytesElementAssignment(
 		replaceValue = std::move(adaptCast);
 	}
 
-	auto e = std::make_shared<awst::AssignmentExpression>();
-	e->sourceLocation = m_loc;
-	e->wtype = target->wtype;
-	e->target = target;
-	e->value = std::move(replaceValue);
-	return e;
+	return awst::makeAssignmentExpression(target, std::move(replaceValue), m_loc);
 }
 
 std::shared_ptr<awst::Expression> SolAssignment::buildStructFieldBytesWrite(
@@ -559,12 +547,8 @@ std::shared_ptr<awst::Expression> SolAssignment::buildStructFieldBytesWrite(
 		}
 	}
 
-	auto e = std::make_shared<awst::AssignmentExpression>();
-	e->sourceLocation = m_loc;
-	e->wtype = assignTarget->wtype;
-	e->target = std::move(assignTarget);
-	e->value = std::move(assignValue);
-	return e;
+	return awst::makeAssignmentExpression(
+		std::move(assignTarget), std::move(assignValue), m_loc);
 }
 
 std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
@@ -753,11 +737,8 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 		}
 	}
 
-	auto e = std::make_shared<awst::AssignmentExpression>();
-	e->sourceLocation = m_loc;
-	e->wtype = assignTarget2->wtype;
-	e->target = std::move(assignTarget2);
-	e->value = std::move(assignValue2);
+	auto e = awst::makeAssignmentExpression(
+		std::move(assignTarget2), std::move(assignValue2), m_loc);
 
 	if (arc4FieldType)
 	{

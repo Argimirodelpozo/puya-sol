@@ -115,13 +115,9 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 				castToBytes(_left);
 				castToBytes(_right);
 			}
-			auto e = std::make_shared<awst::BytesComparisonExpression>();
-			e->sourceLocation = _loc;
-			e->wtype = awst::WType::boolType();
-			e->lhs = std::move(_left);
-			e->rhs = std::move(_right);
-			e->op = (_op == Token::Equal) ? awst::EqualityComparison::Eq : awst::EqualityComparison::Ne;
-			return e;
+			return awst::makeBytesComparison(std::move(_left),
+				(_op == Token::Equal) ? awst::EqualityComparison::Eq : awst::EqualityComparison::Ne,
+				std::move(_right), _loc);
 		}
 
 		// Bytes ordering comparisons use AVM intrinsics (b<, b>, b<=, b>=)

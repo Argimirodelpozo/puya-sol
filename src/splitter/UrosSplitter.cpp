@@ -944,8 +944,7 @@ std::shared_ptr<awst::Block> makeForwardingStubBody(
 		kOgSetupMethodName, _loc));
 
 	// Build the inner-txn ApplicationArgs tuple.
-	auto argsTuple = std::make_shared<awst::TupleExpression>();
-	argsTuple->sourceLocation = _loc;
+	auto argsTuple = awst::makeTupleExpression(nullptr, _loc);
 
 	// [0]: orch.dispatch() ARC4 selector. MethodConstant lets puya
 	// compute the 4-byte selector from the canonical signature.
