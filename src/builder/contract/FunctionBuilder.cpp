@@ -488,20 +488,33 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				namedReturnDecls.push_back(rp.get());
 		setNamedReturns(namedReturnDecls);
 
-		// Register mapping-storage-ref return params as mapping-key-params:
-		// `function f() returns (mapping(K=>V) storage r)` — `r` is a local
-		// pointer; r[k] resolves to box access prefixed by `r`'s runtime
-		// bytes value (the holder name). The actual `setMappingKeyParam`
+		// Register mapping-storage-ref params as mapping-key-params so that
+		// `m[k]` inside the body resolves the dynamic box-key prefix from
+		// the runtime bytes value of `m` (the holder name passed by the
+		// caller). Both input params and return params need this binding:
+		//
+		//   function f(mapping(K=>V) storage m, ...) → m is bound to the
+		//     bytes value passed by callers (state-var name).
+		//   function f() returns (mapping(K=>V) storage r) → r is a local
+		//     pointer assigned via `r = m1;` — same dynamic-prefix shape.
+		//
+		// AWSTBuilder's freestanding-subroutine path handles input-param
+		// registration for library/free functions, but contract methods
+		// reach here, so we must register them too. The actual setMappingKeyParam
 		// calls happen inside `buildBlock` after the FunctionContext is
 		// pushed — stash the decls in `m_currentMappingKeyParams` for it
-		// to pick up. (Match the v185 behaviour: only return-params are
-		// registered here; input params for library functions are handled
-		// by AWSTBuilder's freestanding-subroutine path.)
+		// to pick up.
 		std::vector<solidity::frontend::VariableDeclaration const*> mappingKeyParamDecls;
+		auto isMappingStorageRef = [](solidity::frontend::VariableDeclaration const* p) {
+			return p->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
+				&& dynamic_cast<solidity::frontend::MappingType const*>(p->type())
+				&& !p->name().empty();
+		};
+		for (auto const& p: _func.parameters())
+			if (isMappingStorageRef(p.get()))
+				mappingKeyParamDecls.push_back(p.get());
 		for (auto const& rp: returnParams)
-			if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-				&& dynamic_cast<solidity::frontend::MappingType const*>(rp->type())
-				&& !rp->name().empty())
+			if (isMappingStorageRef(rp.get()))
 				mappingKeyParamDecls.push_back(rp.get());
 		setMappingKeyParams(mappingKeyParamDecls);
 
