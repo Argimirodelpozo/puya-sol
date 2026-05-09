@@ -1381,7 +1381,7 @@
                 },
                 "op": "or",
                 "right": {
-                  "_type": "BytesComparisonExpression",
+                  "_type": "BooleanBinaryOperation",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/msg_sender.sol",
                     "line": 131,
@@ -1395,8 +1395,8 @@
                     "name": "bool",
                     "immutable": true
                   },
-                  "lhs": {
-                    "_type": "ReinterpretCast",
+                  "left": {
+                    "_type": "NumericComparisonExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/msg_sender.sol",
                       "line": 131,
@@ -1407,10 +1407,10 @@
                     },
                     "wtype": {
                       "_type": "WType",
-                      "name": "account",
+                      "name": "bool",
                       "immutable": true
                     },
-                    "expr": {
+                    "lhs": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/msg_sender.sol",
@@ -1421,115 +1421,188 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "BytesWType",
-                        "name": "bytes",
-                        "immutable": true,
-                        "length": null
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
                       },
-                      "op_code": "concat",
-                      "immediates": [],
-                      "stack_args": [
-                        {
-                          "_type": "IntrinsicCall",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/msg_sender.sol",
-                            "line": 131,
-                            "end_line": 146,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "op_code": "bzero",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "IntegerConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/msg_sender.sol",
-                                "line": 131,
-                                "end_line": 146,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "uint64",
-                                "immutable": true
-                              },
-                              "value": 24,
-                              "teal_alias": null
-                            }
-                          ]
-                        },
-                        {
-                          "_type": "IntrinsicCall",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/msg_sender.sol",
-                            "line": 131,
-                            "end_line": 146,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "op_code": "itob",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "IntrinsicCall",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/msg_sender.sol",
-                                "line": 131,
-                                "end_line": 146,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "uint64",
-                                "immutable": true
-                              },
-                              "op_code": "global",
-                              "immediates": [
-                                "CallerApplicationID"
-                              ],
-                              "stack_args": []
-                            }
-                          ]
-                        }
-                      ]
+                      "op_code": "global",
+                      "immediates": [
+                        "CallerApplicationID"
+                      ],
+                      "stack_args": []
+                    },
+                    "operator": "!=",
+                    "rhs": {
+                      "_type": "IntegerConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/msg_sender.sol",
+                        "line": 131,
+                        "end_line": 146,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "value": 0,
+                      "teal_alias": null
                     }
                   },
-                  "operator": "==",
-                  "rhs": {
-                    "_type": "VarExpression",
+                  "op": "and",
+                  "right": {
+                    "_type": "BytesComparisonExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/msg_sender.sol",
                       "line": 131,
-                      "end_line": 132,
+                      "end_line": 146,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
                     },
                     "wtype": {
                       "_type": "WType",
-                      "name": "account",
+                      "name": "bool",
                       "immutable": true
                     },
-                    "name": "x"
+                    "lhs": {
+                      "_type": "ReinterpretCast",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/msg_sender.sol",
+                        "line": 131,
+                        "end_line": 146,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "account",
+                        "immutable": true
+                      },
+                      "expr": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/msg_sender.sol",
+                          "line": 131,
+                          "end_line": 146,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "concat",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/msg_sender.sol",
+                              "line": 131,
+                              "end_line": 146,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "bzero",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/msg_sender.sol",
+                                  "line": 131,
+                                  "end_line": 146,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 24,
+                                "teal_alias": null
+                              }
+                            ]
+                          },
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/msg_sender.sol",
+                              "line": 131,
+                              "end_line": 146,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "itob",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/msg_sender.sol",
+                                  "line": 131,
+                                  "end_line": 146,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "op_code": "global",
+                                "immediates": [
+                                  "CallerApplicationID"
+                                ],
+                                "stack_args": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    "operator": "==",
+                    "rhs": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/msg_sender.sol",
+                        "line": 131,
+                        "end_line": 132,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "account",
+                        "immutable": true
+                      },
+                      "name": "x"
+                    }
                   }
                 }
               }

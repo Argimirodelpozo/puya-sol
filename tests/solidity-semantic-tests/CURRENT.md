@@ -1,3 +1,59 @@
+# Semantic Test Status — v221
+
+**Totals**: 1095 PASS / 153 FAIL / 74 (57 compile_err + 17 deploy_err) = **1095/1322 (82.8%)**
+
+vs v220 = 1092 PASS: **+3 PASS / −3 FAIL** — fixes the 3 known regressions
+documented in v216's CURRENT.md as introduced by commit 80d7f9714.
+
+## v221 puya-sol changes (vs v220)
+
+**Address-equality bridge: gate conventional-form arm on appId != 0**
+(SolAddressBuilder.cpp).
+
+Background: commit 80d7f9714 added a hash-form / convention-form
+address-equality bridge so `addr == address(this)` and `msg.sender == addr`
+patterns succeed when `addr` is stored in the puya-sol convention form
+(`\x00*24 + itob(app_id)`). The bridge expands the comparison to:
+
+  direct       = sender == addr
+  conventional = \x00*24 + itob(callerAppId) == addr
+  result       = direct || conventional
+
+The bug: when caller is a user account, `CallerApplicationID == 0`,
+so the conventional-form expression collapses to `\x00*32` (the zero
+address). For comparisons against `address(0)` literals — the dominant
+zero-check pattern in Solidity (uninit-address sentinel, ownable's
+renounce, tx.origin/msg.sender zero checks) — both the direct and
+conventional arms become `\x00*32 == \x00*32` → true. So
+`msg.sender == address(0)` returns true for ALL user-account callers,
+and `msg.sender != address(0)` is correspondingly always false. Same
+shape breaks `tx.origin != address(0)` and ownable's `owner != msg.sender`
+after a renounce.
+
+Fix: gate the conventional arm on `appId != 0`. CallerApplicationID
+returns 0 only for user-account callers; gating disables the
+convention-form check there, falling back to the direct sender-hash
+comparison (which is correctly false against the zero address).
+CurrentApplicationID is always > 0 inside an app's program, so the
+guard is a no-op for `address(this)` comparisons (preserves the AAVE V4
+auth pattern this bridge was originally added for).
+
+Rewrite:
+
+  direct       = sender == addr
+  appIdNZ      = appId != 0
+  conventional = appIdNZ && (\x00*24 + itob(appId) == addr)
+  result       = direct || conventional
+
+Per-test outcomes:
+  state/msg_sender                  ✗ → ✓
+  state/tx_origin                   ✗ → ✓ (3 sub-checks)
+  userDefinedValueType/ownable      ✗ → ✓ (1 sub-check)
+
+No regressions — 1092 prior passes all still pass, +3 new passes.
+
+---
+
 # Semantic Test Status — v220
 
 **Totals**: 1092 PASS / 156 FAIL / 74 (57 compile_err + 17 deploy_err) = **1092/1322 (82.6%)**

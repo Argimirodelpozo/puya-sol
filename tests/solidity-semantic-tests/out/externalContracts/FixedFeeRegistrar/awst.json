@@ -2909,7 +2909,7 @@
                       },
                       "op": "or",
                       "right": {
-                        "_type": "BytesComparisonExpression",
+                        "_type": "BooleanBinaryOperation",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                           "line": 774,
@@ -2923,8 +2923,8 @@
                           "name": "bool",
                           "immutable": true
                         },
-                        "lhs": {
-                          "_type": "ReinterpretCast",
+                        "left": {
+                          "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                             "line": 774,
@@ -2935,10 +2935,10 @@
                           },
                           "wtype": {
                             "_type": "WType",
-                            "name": "account",
+                            "name": "bool",
                             "immutable": true
                           },
-                          "expr": {
+                          "lhs": {
                             "_type": "IntrinsicCall",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
@@ -2949,116 +2949,173 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
                             },
-                            "op_code": "concat",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                  "line": 774,
-                                  "end_line": 809,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "bzero",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntegerConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                      "line": 774,
-                                      "end_line": 809,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "value": 24,
-                                    "teal_alias": null
-                                  }
-                                ]
-                              },
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                  "line": 774,
-                                  "end_line": 809,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "itob",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                      "line": 774,
-                                      "end_line": 809,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "op_code": "global",
-                                    "immediates": [
-                                      "CallerApplicationID"
-                                    ],
-                                    "stack_args": []
-                                  }
-                                ]
-                              }
-                            ]
+                            "op_code": "global",
+                            "immediates": [
+                              "CallerApplicationID"
+                            ],
+                            "stack_args": []
+                          },
+                          "operator": "!=",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                              "line": 774,
+                              "end_line": 809,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 0,
+                            "teal_alias": null
                           }
                         },
-                        "operator": "==",
-                        "rhs": {
-                          "_type": "ARC4Decode",
+                        "op": "and",
+                        "right": {
+                          "_type": "BytesComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                             "line": 774,
-                            "end_line": 795,
+                            "end_line": 809,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
                           },
                           "wtype": {
                             "_type": "WType",
-                            "name": "account",
+                            "name": "bool",
                             "immutable": true
                           },
-                          "value": {
-                            "_type": "FieldExpression",
+                          "lhs": {
+                            "_type": "ReinterpretCast",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                              "line": 774,
+                              "end_line": 809,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "account",
+                              "immutable": true
+                            },
+                            "expr": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                "line": 774,
+                                "end_line": 809,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "concat",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                    "line": 774,
+                                    "end_line": 809,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "bzero",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                        "line": 774,
+                                        "end_line": 809,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 24,
+                                      "teal_alias": null
+                                    }
+                                  ]
+                                },
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                    "line": 774,
+                                    "end_line": 809,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "itob",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                        "line": 774,
+                                        "end_line": 809,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "op_code": "global",
+                                      "immediates": [
+                                        "CallerApplicationID"
+                                      ],
+                                      "stack_args": []
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          },
+                          "operator": "==",
+                          "rhs": {
+                            "_type": "ARC4Decode",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                               "line": 774,
@@ -3068,136 +3125,152 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "ARC4StaticArray",
-                              "name": "arc4.static_array<arc4.uint8, 32>",
-                              "immutable": false,
-                              "element_type": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint8",
-                                "immutable": true,
-                                "n": 8,
-                                "arc4_alias": null,
-                                "source_location": null
-                              },
-                              "array_size": 32,
-                              "arc4_alias": null,
-                              "source_location": null
+                              "_type": "WType",
+                              "name": "account",
+                              "immutable": true
                             },
-                            "base": {
-                              "_type": "SubroutineCallExpression",
+                            "value": {
+                              "_type": "FieldExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                                 "line": 774,
-                                "end_line": 789,
+                                "end_line": 795,
                                 "comment_lines": 0,
                                 "column": null,
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "ARC4Struct",
-                                "name": "Record",
+                                "_type": "ARC4StaticArray",
+                                "name": "arc4.static_array<arc4.uint8, 32>",
                                 "immutable": false,
-                                "fields": {
-                                  "addr": {
-                                    "_type": "ARC4StaticArray",
-                                    "name": "arc4.static_array<arc4.uint8, 32>",
-                                    "immutable": false,
-                                    "element_type": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint8",
-                                      "immutable": true,
-                                      "n": 8,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "array_size": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "subRegistrar": {
-                                    "_type": "ARC4StaticArray",
-                                    "name": "arc4.static_array<arc4.uint8, 32>",
-                                    "immutable": false,
-                                    "element_type": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint8",
-                                      "immutable": true,
-                                      "n": 8,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "array_size": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "content": {
-                                    "_type": "ARC4StaticArray",
-                                    "name": "arc4.static_array<arc4.uint8, 32>",
-                                    "immutable": false,
-                                    "element_type": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint8",
-                                      "immutable": true,
-                                      "n": 8,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "array_size": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "owner": {
-                                    "_type": "ARC4StaticArray",
-                                    "name": "arc4.static_array<arc4.uint8, 32>",
-                                    "immutable": false,
-                                    "element_type": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint8",
-                                      "immutable": true,
-                                      "n": 8,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "array_size": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  }
+                                "element_type": {
+                                  "_type": "ARC4UIntN",
+                                  "name": "arc4.uint8",
+                                  "immutable": true,
+                                  "n": 8,
+                                  "arc4_alias": null,
+                                  "source_location": null
                                 },
-                                "frozen": true,
+                                "array_size": 32,
                                 "arc4_alias": null,
-                                "source_location": null,
-                                "desc": null
+                                "source_location": null
                               },
-                              "target": {
-                                "_type": "InstanceMethodTarget",
-                                "member_name": "m_record"
-                              },
-                              "args": [
-                                {
-                                  "name": null,
-                                  "value": {
-                                    "_type": "VarExpression",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                      "line": 783,
-                                      "end_line": 788,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
+                              "base": {
+                                "_type": "SubroutineCallExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                  "line": 774,
+                                  "end_line": 789,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "ARC4Struct",
+                                  "name": "Record",
+                                  "immutable": false,
+                                  "fields": {
+                                    "addr": {
+                                      "_type": "ARC4StaticArray",
+                                      "name": "arc4.static_array<arc4.uint8, 32>",
+                                      "immutable": false,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint8",
+                                        "immutable": true,
+                                        "n": 8,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "array_size": 32,
+                                      "arc4_alias": null,
+                                      "source_location": null
                                     },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "string",
-                                      "immutable": true
+                                    "subRegistrar": {
+                                      "_type": "ARC4StaticArray",
+                                      "name": "arc4.static_array<arc4.uint8, 32>",
+                                      "immutable": false,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint8",
+                                        "immutable": true,
+                                        "n": 8,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "array_size": 32,
+                                      "arc4_alias": null,
+                                      "source_location": null
                                     },
-                                    "name": "__mod__name_0"
+                                    "content": {
+                                      "_type": "ARC4StaticArray",
+                                      "name": "arc4.static_array<arc4.uint8, 32>",
+                                      "immutable": false,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint8",
+                                        "immutable": true,
+                                        "n": 8,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "array_size": 32,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "owner": {
+                                      "_type": "ARC4StaticArray",
+                                      "name": "arc4.static_array<arc4.uint8, 32>",
+                                      "immutable": false,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint8",
+                                        "immutable": true,
+                                        "n": 8,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "array_size": 32,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    }
+                                  },
+                                  "frozen": true,
+                                  "arc4_alias": null,
+                                  "source_location": null,
+                                  "desc": null
+                                },
+                                "target": {
+                                  "_type": "InstanceMethodTarget",
+                                  "member_name": "m_record"
+                                },
+                                "args": [
+                                  {
+                                    "name": null,
+                                    "value": {
+                                      "_type": "VarExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                        "line": 783,
+                                        "end_line": 788,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "string",
+                                        "immutable": true
+                                      },
+                                      "name": "__mod__name_0"
+                                    }
                                   }
-                                }
-                              ]
+                                ]
+                              },
+                              "name": "owner"
                             },
-                            "name": "owner"
-                          },
-                          "error_message": null
+                            "error_message": null
+                          }
                         }
                       }
                     },
@@ -6018,7 +6091,7 @@
                       },
                       "op": "or",
                       "right": {
-                        "_type": "BytesComparisonExpression",
+                        "_type": "BooleanBinaryOperation",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                           "line": 774,
@@ -6032,8 +6105,8 @@
                           "name": "bool",
                           "immutable": true
                         },
-                        "lhs": {
-                          "_type": "ReinterpretCast",
+                        "left": {
+                          "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                             "line": 774,
@@ -6044,10 +6117,10 @@
                           },
                           "wtype": {
                             "_type": "WType",
-                            "name": "account",
+                            "name": "bool",
                             "immutable": true
                           },
-                          "expr": {
+                          "lhs": {
                             "_type": "IntrinsicCall",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
@@ -6058,116 +6131,173 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
                             },
-                            "op_code": "concat",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                  "line": 774,
-                                  "end_line": 809,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "bzero",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntegerConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                      "line": 774,
-                                      "end_line": 809,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "value": 24,
-                                    "teal_alias": null
-                                  }
-                                ]
-                              },
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                  "line": 774,
-                                  "end_line": 809,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "itob",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                      "line": 774,
-                                      "end_line": 809,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "op_code": "global",
-                                    "immediates": [
-                                      "CallerApplicationID"
-                                    ],
-                                    "stack_args": []
-                                  }
-                                ]
-                              }
-                            ]
+                            "op_code": "global",
+                            "immediates": [
+                              "CallerApplicationID"
+                            ],
+                            "stack_args": []
+                          },
+                          "operator": "!=",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                              "line": 774,
+                              "end_line": 809,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 0,
+                            "teal_alias": null
                           }
                         },
-                        "operator": "==",
-                        "rhs": {
-                          "_type": "ARC4Decode",
+                        "op": "and",
+                        "right": {
+                          "_type": "BytesComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                             "line": 774,
-                            "end_line": 795,
+                            "end_line": 809,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
                           },
                           "wtype": {
                             "_type": "WType",
-                            "name": "account",
+                            "name": "bool",
                             "immutable": true
                           },
-                          "value": {
-                            "_type": "FieldExpression",
+                          "lhs": {
+                            "_type": "ReinterpretCast",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                              "line": 774,
+                              "end_line": 809,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "account",
+                              "immutable": true
+                            },
+                            "expr": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                "line": 774,
+                                "end_line": 809,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "concat",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                    "line": 774,
+                                    "end_line": 809,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "bzero",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                        "line": 774,
+                                        "end_line": 809,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 24,
+                                      "teal_alias": null
+                                    }
+                                  ]
+                                },
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                    "line": 774,
+                                    "end_line": 809,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "itob",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                        "line": 774,
+                                        "end_line": 809,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "op_code": "global",
+                                      "immediates": [
+                                        "CallerApplicationID"
+                                      ],
+                                      "stack_args": []
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          },
+                          "operator": "==",
+                          "rhs": {
+                            "_type": "ARC4Decode",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                               "line": 774,
@@ -6177,136 +6307,152 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "ARC4StaticArray",
-                              "name": "arc4.static_array<arc4.uint8, 32>",
-                              "immutable": false,
-                              "element_type": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint8",
-                                "immutable": true,
-                                "n": 8,
-                                "arc4_alias": null,
-                                "source_location": null
-                              },
-                              "array_size": 32,
-                              "arc4_alias": null,
-                              "source_location": null
+                              "_type": "WType",
+                              "name": "account",
+                              "immutable": true
                             },
-                            "base": {
-                              "_type": "SubroutineCallExpression",
+                            "value": {
+                              "_type": "FieldExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                                 "line": 774,
-                                "end_line": 789,
+                                "end_line": 795,
                                 "comment_lines": 0,
                                 "column": null,
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "ARC4Struct",
-                                "name": "Record",
+                                "_type": "ARC4StaticArray",
+                                "name": "arc4.static_array<arc4.uint8, 32>",
                                 "immutable": false,
-                                "fields": {
-                                  "addr": {
-                                    "_type": "ARC4StaticArray",
-                                    "name": "arc4.static_array<arc4.uint8, 32>",
-                                    "immutable": false,
-                                    "element_type": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint8",
-                                      "immutable": true,
-                                      "n": 8,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "array_size": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "subRegistrar": {
-                                    "_type": "ARC4StaticArray",
-                                    "name": "arc4.static_array<arc4.uint8, 32>",
-                                    "immutable": false,
-                                    "element_type": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint8",
-                                      "immutable": true,
-                                      "n": 8,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "array_size": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "content": {
-                                    "_type": "ARC4StaticArray",
-                                    "name": "arc4.static_array<arc4.uint8, 32>",
-                                    "immutable": false,
-                                    "element_type": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint8",
-                                      "immutable": true,
-                                      "n": 8,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "array_size": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "owner": {
-                                    "_type": "ARC4StaticArray",
-                                    "name": "arc4.static_array<arc4.uint8, 32>",
-                                    "immutable": false,
-                                    "element_type": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint8",
-                                      "immutable": true,
-                                      "n": 8,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "array_size": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  }
+                                "element_type": {
+                                  "_type": "ARC4UIntN",
+                                  "name": "arc4.uint8",
+                                  "immutable": true,
+                                  "n": 8,
+                                  "arc4_alias": null,
+                                  "source_location": null
                                 },
-                                "frozen": true,
+                                "array_size": 32,
                                 "arc4_alias": null,
-                                "source_location": null,
-                                "desc": null
+                                "source_location": null
                               },
-                              "target": {
-                                "_type": "InstanceMethodTarget",
-                                "member_name": "m_record"
-                              },
-                              "args": [
-                                {
-                                  "name": null,
-                                  "value": {
-                                    "_type": "VarExpression",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                      "line": 783,
-                                      "end_line": 788,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
+                              "base": {
+                                "_type": "SubroutineCallExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                  "line": 774,
+                                  "end_line": 789,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "ARC4Struct",
+                                  "name": "Record",
+                                  "immutable": false,
+                                  "fields": {
+                                    "addr": {
+                                      "_type": "ARC4StaticArray",
+                                      "name": "arc4.static_array<arc4.uint8, 32>",
+                                      "immutable": false,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint8",
+                                        "immutable": true,
+                                        "n": 8,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "array_size": 32,
+                                      "arc4_alias": null,
+                                      "source_location": null
                                     },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "string",
-                                      "immutable": true
+                                    "subRegistrar": {
+                                      "_type": "ARC4StaticArray",
+                                      "name": "arc4.static_array<arc4.uint8, 32>",
+                                      "immutable": false,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint8",
+                                        "immutable": true,
+                                        "n": 8,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "array_size": 32,
+                                      "arc4_alias": null,
+                                      "source_location": null
                                     },
-                                    "name": "__mod__name_1"
+                                    "content": {
+                                      "_type": "ARC4StaticArray",
+                                      "name": "arc4.static_array<arc4.uint8, 32>",
+                                      "immutable": false,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint8",
+                                        "immutable": true,
+                                        "n": 8,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "array_size": 32,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "owner": {
+                                      "_type": "ARC4StaticArray",
+                                      "name": "arc4.static_array<arc4.uint8, 32>",
+                                      "immutable": false,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint8",
+                                        "immutable": true,
+                                        "n": 8,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "array_size": 32,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    }
+                                  },
+                                  "frozen": true,
+                                  "arc4_alias": null,
+                                  "source_location": null,
+                                  "desc": null
+                                },
+                                "target": {
+                                  "_type": "InstanceMethodTarget",
+                                  "member_name": "m_record"
+                                },
+                                "args": [
+                                  {
+                                    "name": null,
+                                    "value": {
+                                      "_type": "VarExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                        "line": 783,
+                                        "end_line": 788,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "string",
+                                        "immutable": true
+                                      },
+                                      "name": "__mod__name_1"
+                                    }
                                   }
-                                }
-                              ]
+                                ]
+                              },
+                              "name": "owner"
                             },
-                            "name": "owner"
-                          },
-                          "error_message": null
+                            "error_message": null
+                          }
                         }
                       }
                     },
@@ -7954,7 +8100,7 @@
                       },
                       "op": "or",
                       "right": {
-                        "_type": "BytesComparisonExpression",
+                        "_type": "BooleanBinaryOperation",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                           "line": 774,
@@ -7968,8 +8114,8 @@
                           "name": "bool",
                           "immutable": true
                         },
-                        "lhs": {
-                          "_type": "ReinterpretCast",
+                        "left": {
+                          "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                             "line": 774,
@@ -7980,10 +8126,10 @@
                           },
                           "wtype": {
                             "_type": "WType",
-                            "name": "account",
+                            "name": "bool",
                             "immutable": true
                           },
-                          "expr": {
+                          "lhs": {
                             "_type": "IntrinsicCall",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
@@ -7994,116 +8140,173 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
                             },
-                            "op_code": "concat",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                  "line": 774,
-                                  "end_line": 809,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "bzero",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntegerConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                      "line": 774,
-                                      "end_line": 809,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "value": 24,
-                                    "teal_alias": null
-                                  }
-                                ]
-                              },
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                  "line": 774,
-                                  "end_line": 809,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "itob",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                      "line": 774,
-                                      "end_line": 809,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "op_code": "global",
-                                    "immediates": [
-                                      "CallerApplicationID"
-                                    ],
-                                    "stack_args": []
-                                  }
-                                ]
-                              }
-                            ]
+                            "op_code": "global",
+                            "immediates": [
+                              "CallerApplicationID"
+                            ],
+                            "stack_args": []
+                          },
+                          "operator": "!=",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                              "line": 774,
+                              "end_line": 809,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 0,
+                            "teal_alias": null
                           }
                         },
-                        "operator": "==",
-                        "rhs": {
-                          "_type": "ARC4Decode",
+                        "op": "and",
+                        "right": {
+                          "_type": "BytesComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                             "line": 774,
-                            "end_line": 795,
+                            "end_line": 809,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
                           },
                           "wtype": {
                             "_type": "WType",
-                            "name": "account",
+                            "name": "bool",
                             "immutable": true
                           },
-                          "value": {
-                            "_type": "FieldExpression",
+                          "lhs": {
+                            "_type": "ReinterpretCast",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                              "line": 774,
+                              "end_line": 809,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "account",
+                              "immutable": true
+                            },
+                            "expr": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                "line": 774,
+                                "end_line": 809,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "concat",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                    "line": 774,
+                                    "end_line": 809,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "bzero",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                        "line": 774,
+                                        "end_line": 809,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 24,
+                                      "teal_alias": null
+                                    }
+                                  ]
+                                },
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                    "line": 774,
+                                    "end_line": 809,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "itob",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                        "line": 774,
+                                        "end_line": 809,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "op_code": "global",
+                                      "immediates": [
+                                        "CallerApplicationID"
+                                      ],
+                                      "stack_args": []
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          },
+                          "operator": "==",
+                          "rhs": {
+                            "_type": "ARC4Decode",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                               "line": 774,
@@ -8113,136 +8316,152 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "ARC4StaticArray",
-                              "name": "arc4.static_array<arc4.uint8, 32>",
-                              "immutable": false,
-                              "element_type": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint8",
-                                "immutable": true,
-                                "n": 8,
-                                "arc4_alias": null,
-                                "source_location": null
-                              },
-                              "array_size": 32,
-                              "arc4_alias": null,
-                              "source_location": null
+                              "_type": "WType",
+                              "name": "account",
+                              "immutable": true
                             },
-                            "base": {
-                              "_type": "SubroutineCallExpression",
+                            "value": {
+                              "_type": "FieldExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                                 "line": 774,
-                                "end_line": 789,
+                                "end_line": 795,
                                 "comment_lines": 0,
                                 "column": null,
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "ARC4Struct",
-                                "name": "Record",
+                                "_type": "ARC4StaticArray",
+                                "name": "arc4.static_array<arc4.uint8, 32>",
                                 "immutable": false,
-                                "fields": {
-                                  "addr": {
-                                    "_type": "ARC4StaticArray",
-                                    "name": "arc4.static_array<arc4.uint8, 32>",
-                                    "immutable": false,
-                                    "element_type": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint8",
-                                      "immutable": true,
-                                      "n": 8,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "array_size": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "subRegistrar": {
-                                    "_type": "ARC4StaticArray",
-                                    "name": "arc4.static_array<arc4.uint8, 32>",
-                                    "immutable": false,
-                                    "element_type": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint8",
-                                      "immutable": true,
-                                      "n": 8,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "array_size": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "content": {
-                                    "_type": "ARC4StaticArray",
-                                    "name": "arc4.static_array<arc4.uint8, 32>",
-                                    "immutable": false,
-                                    "element_type": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint8",
-                                      "immutable": true,
-                                      "n": 8,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "array_size": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "owner": {
-                                    "_type": "ARC4StaticArray",
-                                    "name": "arc4.static_array<arc4.uint8, 32>",
-                                    "immutable": false,
-                                    "element_type": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint8",
-                                      "immutable": true,
-                                      "n": 8,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "array_size": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  }
+                                "element_type": {
+                                  "_type": "ARC4UIntN",
+                                  "name": "arc4.uint8",
+                                  "immutable": true,
+                                  "n": 8,
+                                  "arc4_alias": null,
+                                  "source_location": null
                                 },
-                                "frozen": true,
+                                "array_size": 32,
                                 "arc4_alias": null,
-                                "source_location": null,
-                                "desc": null
+                                "source_location": null
                               },
-                              "target": {
-                                "_type": "InstanceMethodTarget",
-                                "member_name": "m_record"
-                              },
-                              "args": [
-                                {
-                                  "name": null,
-                                  "value": {
-                                    "_type": "VarExpression",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                      "line": 783,
-                                      "end_line": 788,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
+                              "base": {
+                                "_type": "SubroutineCallExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                  "line": 774,
+                                  "end_line": 789,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "ARC4Struct",
+                                  "name": "Record",
+                                  "immutable": false,
+                                  "fields": {
+                                    "addr": {
+                                      "_type": "ARC4StaticArray",
+                                      "name": "arc4.static_array<arc4.uint8, 32>",
+                                      "immutable": false,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint8",
+                                        "immutable": true,
+                                        "n": 8,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "array_size": 32,
+                                      "arc4_alias": null,
+                                      "source_location": null
                                     },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "string",
-                                      "immutable": true
+                                    "subRegistrar": {
+                                      "_type": "ARC4StaticArray",
+                                      "name": "arc4.static_array<arc4.uint8, 32>",
+                                      "immutable": false,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint8",
+                                        "immutable": true,
+                                        "n": 8,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "array_size": 32,
+                                      "arc4_alias": null,
+                                      "source_location": null
                                     },
-                                    "name": "__mod__name_2"
+                                    "content": {
+                                      "_type": "ARC4StaticArray",
+                                      "name": "arc4.static_array<arc4.uint8, 32>",
+                                      "immutable": false,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint8",
+                                        "immutable": true,
+                                        "n": 8,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "array_size": 32,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "owner": {
+                                      "_type": "ARC4StaticArray",
+                                      "name": "arc4.static_array<arc4.uint8, 32>",
+                                      "immutable": false,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint8",
+                                        "immutable": true,
+                                        "n": 8,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "array_size": 32,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    }
+                                  },
+                                  "frozen": true,
+                                  "arc4_alias": null,
+                                  "source_location": null,
+                                  "desc": null
+                                },
+                                "target": {
+                                  "_type": "InstanceMethodTarget",
+                                  "member_name": "m_record"
+                                },
+                                "args": [
+                                  {
+                                    "name": null,
+                                    "value": {
+                                      "_type": "VarExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                        "line": 783,
+                                        "end_line": 788,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "string",
+                                        "immutable": true
+                                      },
+                                      "name": "__mod__name_2"
+                                    }
                                   }
-                                }
-                              ]
+                                ]
+                              },
+                              "name": "owner"
                             },
-                            "name": "owner"
-                          },
-                          "error_message": null
+                            "error_message": null
+                          }
                         }
                       }
                     },
@@ -9890,7 +10109,7 @@
                       },
                       "op": "or",
                       "right": {
-                        "_type": "BytesComparisonExpression",
+                        "_type": "BooleanBinaryOperation",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                           "line": 774,
@@ -9904,8 +10123,8 @@
                           "name": "bool",
                           "immutable": true
                         },
-                        "lhs": {
-                          "_type": "ReinterpretCast",
+                        "left": {
+                          "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                             "line": 774,
@@ -9916,10 +10135,10 @@
                           },
                           "wtype": {
                             "_type": "WType",
-                            "name": "account",
+                            "name": "bool",
                             "immutable": true
                           },
-                          "expr": {
+                          "lhs": {
                             "_type": "IntrinsicCall",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
@@ -9930,116 +10149,173 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
                             },
-                            "op_code": "concat",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                  "line": 774,
-                                  "end_line": 809,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "bzero",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntegerConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                      "line": 774,
-                                      "end_line": 809,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "value": 24,
-                                    "teal_alias": null
-                                  }
-                                ]
-                              },
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                  "line": 774,
-                                  "end_line": 809,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "itob",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                      "line": 774,
-                                      "end_line": 809,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "op_code": "global",
-                                    "immediates": [
-                                      "CallerApplicationID"
-                                    ],
-                                    "stack_args": []
-                                  }
-                                ]
-                              }
-                            ]
+                            "op_code": "global",
+                            "immediates": [
+                              "CallerApplicationID"
+                            ],
+                            "stack_args": []
+                          },
+                          "operator": "!=",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                              "line": 774,
+                              "end_line": 809,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 0,
+                            "teal_alias": null
                           }
                         },
-                        "operator": "==",
-                        "rhs": {
-                          "_type": "ARC4Decode",
+                        "op": "and",
+                        "right": {
+                          "_type": "BytesComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                             "line": 774,
-                            "end_line": 795,
+                            "end_line": 809,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
                           },
                           "wtype": {
                             "_type": "WType",
-                            "name": "account",
+                            "name": "bool",
                             "immutable": true
                           },
-                          "value": {
-                            "_type": "FieldExpression",
+                          "lhs": {
+                            "_type": "ReinterpretCast",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                              "line": 774,
+                              "end_line": 809,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "account",
+                              "immutable": true
+                            },
+                            "expr": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                "line": 774,
+                                "end_line": 809,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "concat",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                    "line": 774,
+                                    "end_line": 809,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "bzero",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                        "line": 774,
+                                        "end_line": 809,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 24,
+                                      "teal_alias": null
+                                    }
+                                  ]
+                                },
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                    "line": 774,
+                                    "end_line": 809,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "itob",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                        "line": 774,
+                                        "end_line": 809,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "op_code": "global",
+                                      "immediates": [
+                                        "CallerApplicationID"
+                                      ],
+                                      "stack_args": []
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          },
+                          "operator": "==",
+                          "rhs": {
+                            "_type": "ARC4Decode",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                               "line": 774,
@@ -10049,136 +10325,152 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "ARC4StaticArray",
-                              "name": "arc4.static_array<arc4.uint8, 32>",
-                              "immutable": false,
-                              "element_type": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint8",
-                                "immutable": true,
-                                "n": 8,
-                                "arc4_alias": null,
-                                "source_location": null
-                              },
-                              "array_size": 32,
-                              "arc4_alias": null,
-                              "source_location": null
+                              "_type": "WType",
+                              "name": "account",
+                              "immutable": true
                             },
-                            "base": {
-                              "_type": "SubroutineCallExpression",
+                            "value": {
+                              "_type": "FieldExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                                 "line": 774,
-                                "end_line": 789,
+                                "end_line": 795,
                                 "comment_lines": 0,
                                 "column": null,
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "ARC4Struct",
-                                "name": "Record",
+                                "_type": "ARC4StaticArray",
+                                "name": "arc4.static_array<arc4.uint8, 32>",
                                 "immutable": false,
-                                "fields": {
-                                  "addr": {
-                                    "_type": "ARC4StaticArray",
-                                    "name": "arc4.static_array<arc4.uint8, 32>",
-                                    "immutable": false,
-                                    "element_type": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint8",
-                                      "immutable": true,
-                                      "n": 8,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "array_size": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "subRegistrar": {
-                                    "_type": "ARC4StaticArray",
-                                    "name": "arc4.static_array<arc4.uint8, 32>",
-                                    "immutable": false,
-                                    "element_type": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint8",
-                                      "immutable": true,
-                                      "n": 8,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "array_size": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "content": {
-                                    "_type": "ARC4StaticArray",
-                                    "name": "arc4.static_array<arc4.uint8, 32>",
-                                    "immutable": false,
-                                    "element_type": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint8",
-                                      "immutable": true,
-                                      "n": 8,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "array_size": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "owner": {
-                                    "_type": "ARC4StaticArray",
-                                    "name": "arc4.static_array<arc4.uint8, 32>",
-                                    "immutable": false,
-                                    "element_type": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint8",
-                                      "immutable": true,
-                                      "n": 8,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "array_size": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  }
+                                "element_type": {
+                                  "_type": "ARC4UIntN",
+                                  "name": "arc4.uint8",
+                                  "immutable": true,
+                                  "n": 8,
+                                  "arc4_alias": null,
+                                  "source_location": null
                                 },
-                                "frozen": true,
+                                "array_size": 32,
                                 "arc4_alias": null,
-                                "source_location": null,
-                                "desc": null
+                                "source_location": null
                               },
-                              "target": {
-                                "_type": "InstanceMethodTarget",
-                                "member_name": "m_record"
-                              },
-                              "args": [
-                                {
-                                  "name": null,
-                                  "value": {
-                                    "_type": "VarExpression",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                      "line": 783,
-                                      "end_line": 788,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
+                              "base": {
+                                "_type": "SubroutineCallExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                  "line": 774,
+                                  "end_line": 789,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "ARC4Struct",
+                                  "name": "Record",
+                                  "immutable": false,
+                                  "fields": {
+                                    "addr": {
+                                      "_type": "ARC4StaticArray",
+                                      "name": "arc4.static_array<arc4.uint8, 32>",
+                                      "immutable": false,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint8",
+                                        "immutable": true,
+                                        "n": 8,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "array_size": 32,
+                                      "arc4_alias": null,
+                                      "source_location": null
                                     },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "string",
-                                      "immutable": true
+                                    "subRegistrar": {
+                                      "_type": "ARC4StaticArray",
+                                      "name": "arc4.static_array<arc4.uint8, 32>",
+                                      "immutable": false,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint8",
+                                        "immutable": true,
+                                        "n": 8,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "array_size": 32,
+                                      "arc4_alias": null,
+                                      "source_location": null
                                     },
-                                    "name": "__mod__name_3"
+                                    "content": {
+                                      "_type": "ARC4StaticArray",
+                                      "name": "arc4.static_array<arc4.uint8, 32>",
+                                      "immutable": false,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint8",
+                                        "immutable": true,
+                                        "n": 8,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "array_size": 32,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "owner": {
+                                      "_type": "ARC4StaticArray",
+                                      "name": "arc4.static_array<arc4.uint8, 32>",
+                                      "immutable": false,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint8",
+                                        "immutable": true,
+                                        "n": 8,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "array_size": 32,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    }
+                                  },
+                                  "frozen": true,
+                                  "arc4_alias": null,
+                                  "source_location": null,
+                                  "desc": null
+                                },
+                                "target": {
+                                  "_type": "InstanceMethodTarget",
+                                  "member_name": "m_record"
+                                },
+                                "args": [
+                                  {
+                                    "name": null,
+                                    "value": {
+                                      "_type": "VarExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                        "line": 783,
+                                        "end_line": 788,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "string",
+                                        "immutable": true
+                                      },
+                                      "name": "__mod__name_3"
+                                    }
                                   }
-                                }
-                              ]
+                                ]
+                              },
+                              "name": "owner"
                             },
-                            "name": "owner"
-                          },
-                          "error_message": null
+                            "error_message": null
+                          }
                         }
                       }
                     },
@@ -11827,7 +12119,7 @@
                       },
                       "op": "or",
                       "right": {
-                        "_type": "BytesComparisonExpression",
+                        "_type": "BooleanBinaryOperation",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                           "line": 774,
@@ -11841,8 +12133,8 @@
                           "name": "bool",
                           "immutable": true
                         },
-                        "lhs": {
-                          "_type": "ReinterpretCast",
+                        "left": {
+                          "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                             "line": 774,
@@ -11853,10 +12145,10 @@
                           },
                           "wtype": {
                             "_type": "WType",
-                            "name": "account",
+                            "name": "bool",
                             "immutable": true
                           },
-                          "expr": {
+                          "lhs": {
                             "_type": "IntrinsicCall",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
@@ -11867,116 +12159,173 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
                             },
-                            "op_code": "concat",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                  "line": 774,
-                                  "end_line": 809,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "bzero",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntegerConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                      "line": 774,
-                                      "end_line": 809,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "value": 24,
-                                    "teal_alias": null
-                                  }
-                                ]
-                              },
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                  "line": 774,
-                                  "end_line": 809,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "itob",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                      "line": 774,
-                                      "end_line": 809,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "op_code": "global",
-                                    "immediates": [
-                                      "CallerApplicationID"
-                                    ],
-                                    "stack_args": []
-                                  }
-                                ]
-                              }
-                            ]
+                            "op_code": "global",
+                            "immediates": [
+                              "CallerApplicationID"
+                            ],
+                            "stack_args": []
+                          },
+                          "operator": "!=",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                              "line": 774,
+                              "end_line": 809,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 0,
+                            "teal_alias": null
                           }
                         },
-                        "operator": "==",
-                        "rhs": {
-                          "_type": "ARC4Decode",
+                        "op": "and",
+                        "right": {
+                          "_type": "BytesComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                             "line": 774,
-                            "end_line": 795,
+                            "end_line": 809,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
                           },
                           "wtype": {
                             "_type": "WType",
-                            "name": "account",
+                            "name": "bool",
                             "immutable": true
                           },
-                          "value": {
-                            "_type": "FieldExpression",
+                          "lhs": {
+                            "_type": "ReinterpretCast",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                              "line": 774,
+                              "end_line": 809,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "account",
+                              "immutable": true
+                            },
+                            "expr": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                "line": 774,
+                                "end_line": 809,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "concat",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                    "line": 774,
+                                    "end_line": 809,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "bzero",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                        "line": 774,
+                                        "end_line": 809,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 24,
+                                      "teal_alias": null
+                                    }
+                                  ]
+                                },
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                    "line": 774,
+                                    "end_line": 809,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "itob",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                        "line": 774,
+                                        "end_line": 809,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "op_code": "global",
+                                      "immediates": [
+                                        "CallerApplicationID"
+                                      ],
+                                      "stack_args": []
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          },
+                          "operator": "==",
+                          "rhs": {
+                            "_type": "ARC4Decode",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                               "line": 774,
@@ -11986,136 +12335,152 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "ARC4StaticArray",
-                              "name": "arc4.static_array<arc4.uint8, 32>",
-                              "immutable": false,
-                              "element_type": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint8",
-                                "immutable": true,
-                                "n": 8,
-                                "arc4_alias": null,
-                                "source_location": null
-                              },
-                              "array_size": 32,
-                              "arc4_alias": null,
-                              "source_location": null
+                              "_type": "WType",
+                              "name": "account",
+                              "immutable": true
                             },
-                            "base": {
-                              "_type": "SubroutineCallExpression",
+                            "value": {
+                              "_type": "FieldExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
                                 "line": 774,
-                                "end_line": 789,
+                                "end_line": 795,
                                 "comment_lines": 0,
                                 "column": null,
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "ARC4Struct",
-                                "name": "Record",
+                                "_type": "ARC4StaticArray",
+                                "name": "arc4.static_array<arc4.uint8, 32>",
                                 "immutable": false,
-                                "fields": {
-                                  "addr": {
-                                    "_type": "ARC4StaticArray",
-                                    "name": "arc4.static_array<arc4.uint8, 32>",
-                                    "immutable": false,
-                                    "element_type": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint8",
-                                      "immutable": true,
-                                      "n": 8,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "array_size": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "subRegistrar": {
-                                    "_type": "ARC4StaticArray",
-                                    "name": "arc4.static_array<arc4.uint8, 32>",
-                                    "immutable": false,
-                                    "element_type": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint8",
-                                      "immutable": true,
-                                      "n": 8,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "array_size": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "content": {
-                                    "_type": "ARC4StaticArray",
-                                    "name": "arc4.static_array<arc4.uint8, 32>",
-                                    "immutable": false,
-                                    "element_type": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint8",
-                                      "immutable": true,
-                                      "n": 8,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "array_size": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "owner": {
-                                    "_type": "ARC4StaticArray",
-                                    "name": "arc4.static_array<arc4.uint8, 32>",
-                                    "immutable": false,
-                                    "element_type": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint8",
-                                      "immutable": true,
-                                      "n": 8,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "array_size": 32,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  }
+                                "element_type": {
+                                  "_type": "ARC4UIntN",
+                                  "name": "arc4.uint8",
+                                  "immutable": true,
+                                  "n": 8,
+                                  "arc4_alias": null,
+                                  "source_location": null
                                 },
-                                "frozen": true,
+                                "array_size": 32,
                                 "arc4_alias": null,
-                                "source_location": null,
-                                "desc": null
+                                "source_location": null
                               },
-                              "target": {
-                                "_type": "InstanceMethodTarget",
-                                "member_name": "m_record"
-                              },
-                              "args": [
-                                {
-                                  "name": null,
-                                  "value": {
-                                    "_type": "VarExpression",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
-                                      "line": 783,
-                                      "end_line": 788,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
+                              "base": {
+                                "_type": "SubroutineCallExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                  "line": 774,
+                                  "end_line": 789,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "ARC4Struct",
+                                  "name": "Record",
+                                  "immutable": false,
+                                  "fields": {
+                                    "addr": {
+                                      "_type": "ARC4StaticArray",
+                                      "name": "arc4.static_array<arc4.uint8, 32>",
+                                      "immutable": false,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint8",
+                                        "immutable": true,
+                                        "n": 8,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "array_size": 32,
+                                      "arc4_alias": null,
+                                      "source_location": null
                                     },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "string",
-                                      "immutable": true
+                                    "subRegistrar": {
+                                      "_type": "ARC4StaticArray",
+                                      "name": "arc4.static_array<arc4.uint8, 32>",
+                                      "immutable": false,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint8",
+                                        "immutable": true,
+                                        "n": 8,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "array_size": 32,
+                                      "arc4_alias": null,
+                                      "source_location": null
                                     },
-                                    "name": "__mod__name_4"
+                                    "content": {
+                                      "_type": "ARC4StaticArray",
+                                      "name": "arc4.static_array<arc4.uint8, 32>",
+                                      "immutable": false,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint8",
+                                        "immutable": true,
+                                        "n": 8,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "array_size": 32,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "owner": {
+                                      "_type": "ARC4StaticArray",
+                                      "name": "arc4.static_array<arc4.uint8, 32>",
+                                      "immutable": false,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint8",
+                                        "immutable": true,
+                                        "n": 8,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "array_size": 32,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    }
+                                  },
+                                  "frozen": true,
+                                  "arc4_alias": null,
+                                  "source_location": null,
+                                  "desc": null
+                                },
+                                "target": {
+                                  "_type": "InstanceMethodTarget",
+                                  "member_name": "m_record"
+                                },
+                                "args": [
+                                  {
+                                    "name": null,
+                                    "value": {
+                                      "_type": "VarExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/FixedFeeRegistrar.sol",
+                                        "line": 783,
+                                        "end_line": 788,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "string",
+                                        "immutable": true
+                                      },
+                                      "name": "__mod__name_4"
+                                    }
                                   }
-                                }
-                              ]
+                                ]
+                              },
+                              "name": "owner"
                             },
-                            "name": "owner"
-                          },
-                          "error_message": null
+                            "error_message": null
+                          }
                         }
                       }
                     },

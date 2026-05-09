@@ -62,7 +62,9 @@ main_ternary_merge@9:
     store 0
     txn Sender
     ==
-    bnz main_bool_true@11
+    bnz main_bool_true@12
+    global CallerApplicationID
+    bz main_bool_false@13
     pushint 24
     bzero
     global CallerApplicationID
@@ -70,12 +72,12 @@ main_ternary_merge@9:
     concat
     dig 1
     ==
-    bz main_bool_false@12
+    bz main_bool_false@13
 
-main_bool_true@11:
+main_bool_true@12:
     intc_1 // 1
 
-main_bool_merge@13:
+main_bool_merge@14:
     pushbytes 0x00
     intc_0 // 0
     uncover 2
@@ -87,9 +89,9 @@ main_bool_merge@13:
     intc_1 // 1
     return
 
-main_bool_false@12:
+main_bool_false@13:
     intc_0 // 0
-    b main_bool_merge@13
+    b main_bool_merge@14
 
 main_ternary_false@8:
     intc_0 // 0

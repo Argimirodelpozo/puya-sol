@@ -1332,7 +1332,7 @@
                         },
                         "op": "or",
                         "right": {
-                          "_type": "BytesComparisonExpression",
+                          "_type": "BooleanBinaryOperation",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
                             "line": 587,
@@ -1346,8 +1346,8 @@
                             "name": "bool",
                             "immutable": true
                           },
-                          "lhs": {
-                            "_type": "ReinterpretCast",
+                          "left": {
+                            "_type": "NumericComparisonExpression",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
                               "line": 587,
@@ -1358,10 +1358,10 @@
                             },
                             "wtype": {
                               "_type": "WType",
-                              "name": "account",
+                              "name": "bool",
                               "immutable": true
                             },
-                            "expr": {
+                            "lhs": {
                               "_type": "IntrinsicCall",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
@@ -1372,116 +1372,173 @@
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
                               },
-                              "op_code": "concat",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "IntrinsicCall",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
-                                    "line": 587,
-                                    "end_line": 620,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "op_code": "bzero",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntegerConstant",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
-                                        "line": 587,
-                                        "end_line": 620,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "uint64",
-                                        "immutable": true
-                                      },
-                                      "value": 24,
-                                      "teal_alias": null
-                                    }
-                                  ]
-                                },
-                                {
-                                  "_type": "IntrinsicCall",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
-                                    "line": 587,
-                                    "end_line": 620,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "op_code": "itob",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntrinsicCall",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
-                                        "line": 587,
-                                        "end_line": 620,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "uint64",
-                                        "immutable": true
-                                      },
-                                      "op_code": "global",
-                                      "immediates": [
-                                        "CallerApplicationID"
-                                      ],
-                                      "stack_args": []
-                                    }
-                                  ]
-                                }
-                              ]
+                              "op_code": "global",
+                              "immediates": [
+                                "CallerApplicationID"
+                              ],
+                              "stack_args": []
+                            },
+                            "operator": "!=",
+                            "rhs": {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
+                                "line": 587,
+                                "end_line": 620,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 0,
+                              "teal_alias": null
                             }
                           },
-                          "operator": "==",
-                          "rhs": {
-                            "_type": "AppStateExpression",
+                          "op": "and",
+                          "right": {
+                            "_type": "BytesComparisonExpression",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
-                              "line": 600,
-                              "end_line": 605,
+                              "line": 587,
+                              "end_line": 620,
                               "comment_lines": 0,
                               "column": null,
                               "end_column": null
                             },
                             "wtype": {
                               "_type": "WType",
-                              "name": "account",
+                              "name": "bool",
                               "immutable": true
                             },
-                            "key": {
-                              "_type": "BytesConstant",
+                            "lhs": {
+                              "_type": "ReinterpretCast",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
+                                "line": 587,
+                                "end_line": 620,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "account",
+                                "immutable": true
+                              },
+                              "expr": {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
+                                  "line": 587,
+                                  "end_line": 620,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "concat",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
+                                      "line": 587,
+                                      "end_line": 620,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "bzero",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
+                                          "line": 587,
+                                          "end_line": 620,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "value": 24,
+                                        "teal_alias": null
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
+                                      "line": 587,
+                                      "end_line": 620,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "itob",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
+                                          "line": 587,
+                                          "end_line": 620,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "op_code": "global",
+                                        "immediates": [
+                                          "CallerApplicationID"
+                                        ],
+                                        "stack_args": []
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            },
+                            "operator": "==",
+                            "rhs": {
+                              "_type": "AppStateExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
                                 "line": 600,
@@ -1492,13 +1549,29 @@
                               },
                               "wtype": {
                                 "_type": "WType",
-                                "name": "state_key",
+                                "name": "account",
                                 "immutable": true
                               },
-                              "value": "Z+C8Gas",
-                              "encoding": "utf8"
-                            },
-                            "exists_assertion_message": "check owner exists"
+                              "key": {
+                                "_type": "BytesConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
+                                  "line": 600,
+                                  "end_line": 605,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "state_key",
+                                  "immutable": true
+                                },
+                                "value": "Z+C8Gas",
+                                "encoding": "utf8"
+                              },
+                              "exists_assertion_message": "check owner exists"
+                            }
                           }
                         }
                       }
@@ -2359,7 +2432,7 @@
                         },
                         "op": "or",
                         "right": {
-                          "_type": "BytesComparisonExpression",
+                          "_type": "BooleanBinaryOperation",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
                             "line": 587,
@@ -2373,8 +2446,8 @@
                             "name": "bool",
                             "immutable": true
                           },
-                          "lhs": {
-                            "_type": "ReinterpretCast",
+                          "left": {
+                            "_type": "NumericComparisonExpression",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
                               "line": 587,
@@ -2385,10 +2458,10 @@
                             },
                             "wtype": {
                               "_type": "WType",
-                              "name": "account",
+                              "name": "bool",
                               "immutable": true
                             },
-                            "expr": {
+                            "lhs": {
                               "_type": "IntrinsicCall",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
@@ -2399,116 +2472,173 @@
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
                               },
-                              "op_code": "concat",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "IntrinsicCall",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
-                                    "line": 587,
-                                    "end_line": 620,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "op_code": "bzero",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntegerConstant",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
-                                        "line": 587,
-                                        "end_line": 620,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "uint64",
-                                        "immutable": true
-                                      },
-                                      "value": 24,
-                                      "teal_alias": null
-                                    }
-                                  ]
-                                },
-                                {
-                                  "_type": "IntrinsicCall",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
-                                    "line": 587,
-                                    "end_line": 620,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "op_code": "itob",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntrinsicCall",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
-                                        "line": 587,
-                                        "end_line": 620,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "uint64",
-                                        "immutable": true
-                                      },
-                                      "op_code": "global",
-                                      "immediates": [
-                                        "CallerApplicationID"
-                                      ],
-                                      "stack_args": []
-                                    }
-                                  ]
-                                }
-                              ]
+                              "op_code": "global",
+                              "immediates": [
+                                "CallerApplicationID"
+                              ],
+                              "stack_args": []
+                            },
+                            "operator": "!=",
+                            "rhs": {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
+                                "line": 587,
+                                "end_line": 620,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 0,
+                              "teal_alias": null
                             }
                           },
-                          "operator": "==",
-                          "rhs": {
-                            "_type": "AppStateExpression",
+                          "op": "and",
+                          "right": {
+                            "_type": "BytesComparisonExpression",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
-                              "line": 600,
-                              "end_line": 605,
+                              "line": 587,
+                              "end_line": 620,
                               "comment_lines": 0,
                               "column": null,
                               "end_column": null
                             },
                             "wtype": {
                               "_type": "WType",
-                              "name": "account",
+                              "name": "bool",
                               "immutable": true
                             },
-                            "key": {
-                              "_type": "BytesConstant",
+                            "lhs": {
+                              "_type": "ReinterpretCast",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
+                                "line": 587,
+                                "end_line": 620,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "account",
+                                "immutable": true
+                              },
+                              "expr": {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
+                                  "line": 587,
+                                  "end_line": 620,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "concat",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
+                                      "line": 587,
+                                      "end_line": 620,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "bzero",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
+                                          "line": 587,
+                                          "end_line": 620,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "value": 24,
+                                        "teal_alias": null
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
+                                      "line": 587,
+                                      "end_line": 620,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "itob",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
+                                          "line": 587,
+                                          "end_line": 620,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "op_code": "global",
+                                        "immediates": [
+                                          "CallerApplicationID"
+                                        ],
+                                        "stack_args": []
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            },
+                            "operator": "==",
+                            "rhs": {
+                              "_type": "AppStateExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
                                 "line": 600,
@@ -2519,13 +2649,29 @@
                               },
                               "wtype": {
                                 "_type": "WType",
-                                "name": "state_key",
+                                "name": "account",
                                 "immutable": true
                               },
-                              "value": "Z+C8Gas",
-                              "encoding": "utf8"
-                            },
-                            "exists_assertion_message": "check owner exists"
+                              "key": {
+                                "_type": "BytesConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol",
+                                  "line": 600,
+                                  "end_line": 605,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "state_key",
+                                  "immutable": true
+                                },
+                                "value": "Z+C8Gas",
+                                "encoding": "utf8"
+                              },
+                              "exists_assertion_message": "check owner exists"
+                            }
                           }
                         }
                       }
