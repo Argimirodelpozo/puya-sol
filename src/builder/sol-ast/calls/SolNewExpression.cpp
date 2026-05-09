@@ -293,18 +293,12 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			create->fields["GlobalNumByteSlice"] = makeU64("16");
 
 			// ApprovalProgram = TemplateVar("TMPL_APPROVAL_ChildName")
-			auto approvalTmpl = std::make_shared<awst::TemplateVar>();
-			approvalTmpl->sourceLocation = m_loc;
-			approvalTmpl->wtype = awst::WType::bytesType();
-			approvalTmpl->name = "TMPL_APPROVAL_" + childName;
-			create->fields["ApprovalProgram"] = std::move(approvalTmpl);
+			create->fields["ApprovalProgram"] = awst::makeTemplateVar(
+				"TMPL_APPROVAL_" + childName, awst::WType::bytesType(), m_loc);
 
 			// ClearStateProgram = TemplateVar("TMPL_CLEAR_ChildName")
-			auto clearTmpl = std::make_shared<awst::TemplateVar>();
-			clearTmpl->sourceLocation = m_loc;
-			clearTmpl->wtype = awst::WType::bytesType();
-			clearTmpl->name = "TMPL_CLEAR_" + childName;
-			create->fields["ClearStateProgram"] = std::move(clearTmpl);
+			create->fields["ClearStateProgram"] = awst::makeTemplateVar(
+				"TMPL_CLEAR_" + childName, awst::WType::bytesType(), m_loc);
 
 			// Child has no __postInit: its ctor runs during AppCreate, reading
 			// ApplicationArgs[0..N-1] directly (same pattern as any ARC4
@@ -441,10 +435,8 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				}
 				postInitSig += ")void";
 
-				auto methodConst = std::make_shared<awst::MethodConstant>();
-				methodConst->sourceLocation = m_loc;
-				methodConst->wtype = awst::WType::bytesType();
-				methodConst->value = postInitSig;
+				auto methodConst = awst::makeMethodConstant(
+					postInitSig, awst::WType::bytesType(), m_loc);
 
 				auto argsTuple = awst::makeTupleExpression(nullptr, m_loc);
 				argsTuple->items.push_back(std::move(methodConst));

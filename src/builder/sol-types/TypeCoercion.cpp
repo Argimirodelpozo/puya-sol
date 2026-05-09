@@ -309,9 +309,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 		// bools at a dynamic offset, this path will still hit the puya
 		// bug. None of AAVE V4's mapping value types reach here today.
 		auto const* structType = static_cast<awst::ARC4Struct const*>(_type);
-		auto expr = std::make_shared<awst::NewStruct>();
-		expr->sourceLocation = _loc;
-		expr->wtype = _type;
+		auto expr = awst::makeNewStruct(_type, _loc);
 		for (auto const& [name, fieldType]: structType->fields())
 			expr->values[name] = makeDefaultValue(fieldType, _loc);
 		return expr;

@@ -82,9 +82,7 @@ std::shared_ptr<awst::Expression> SolStructConstruction::toAwst()
 				it->second = std::move(encode);
 			}
 		}
-		auto newStruct = std::make_shared<awst::NewStruct>();
-		newStruct->sourceLocation = m_loc;
-		newStruct->wtype = wtype;
+		auto newStruct = awst::makeNewStruct(wtype, m_loc);
 		newStruct->values = std::move(fieldValues);
 		return newStruct;
 	}

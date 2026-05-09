@@ -69,12 +69,8 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 			m_ctx.prePendingStatements.push_back(
 				awst::makeAssignmentStatement(rootVar, rootBase, m_loc));
 
-			auto makeLen = [&](std::shared_ptr<awst::Expression> arr) {
-				auto lenNode = std::make_shared<awst::ArrayLength>();
-				lenNode->sourceLocation = m_loc;
-				lenNode->wtype = awst::WType::uint64Type();
-				lenNode->array = std::move(arr);
-				return std::static_pointer_cast<awst::Expression>(lenNode);
+			auto makeLen = [&](std::shared_ptr<awst::Expression> arr) -> std::shared_ptr<awst::Expression> {
+				return awst::makeArrayLength(std::move(arr), awst::WType::uint64Type(), m_loc);
 			};
 
 			std::string lenVarName = "__slice_rootlen_" + idSuffix;
@@ -293,11 +289,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 		return awst::makeLen(std::move(base), m_loc);
 
 	// array.length → ArrayLength node
-	auto e = std::make_shared<awst::ArrayLength>();
-	e->sourceLocation = m_loc;
-	e->wtype = awst::WType::uint64Type();
-	e->array = std::move(base);
-	return e;
+	return awst::makeArrayLength(std::move(base), awst::WType::uint64Type(), m_loc);
 }
 
 } // namespace puyasol::builder::sol_ast

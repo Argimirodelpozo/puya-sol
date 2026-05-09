@@ -425,10 +425,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				boxKey->prefix = prefix;
 				boxKey->key = std::move(hashCall);
 
-				auto boxExpr = std::make_shared<awst::BoxValueExpression>();
-				boxExpr->sourceLocation = loc;
-				boxExpr->wtype = storedWType;
-				boxExpr->key = std::move(boxKey);
+				auto boxExpr = awst::makeBoxValueExpression(std::move(boxKey), storedWType, loc);
 
 				auto defaultVal = StorageMapper::makeDefaultValue(storedWType, loc);
 

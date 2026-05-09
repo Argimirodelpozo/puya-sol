@@ -136,10 +136,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					// element (so `arr.push().field = v` works). Lower it as
 					// IndexExpression(arr, ArrayLength(arr) - 1) evaluated
 					// after the extend statement above.
-					auto lenNode = std::make_shared<awst::ArrayLength>();
-					lenNode->sourceLocation = m_loc;
-					lenNode->wtype = awst::WType::uint64Type();
-					lenNode->array = baseAwst;
+					auto lenNode = awst::makeArrayLength(baseAwst, awst::WType::uint64Type(), m_loc);
 
 					auto lastIndex = awst::makeUInt64BinOp(
 						std::move(lenNode),
@@ -632,11 +629,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 	// Build BoxValueExpression
 	auto boxKey = awst::makeUtf8BytesConstant(arrayVarName, m_loc, awst::WType::boxKeyType());
 
-	auto boxExpr = std::make_shared<awst::BoxValueExpression>();
-	boxExpr->sourceLocation = m_loc;
-	boxExpr->wtype = arrWType;
-	boxExpr->key = boxKey;
-	boxExpr->existsAssertionMessage = std::nullopt;
+	auto boxExpr = awst::makeBoxValueExpression(boxKey, arrWType, m_loc);
 
 	// StateGet wrapper for reads (returns empty array if box missing)
 	auto emptyArr = awst::makeNewArray(arrWType, m_loc);
@@ -825,12 +818,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMappingElementArrayLengt
 
 	// Read box bytes (or empty if missing).
 	auto boxRead = [&]() -> std::shared_ptr<awst::Expression> {
-		auto box = std::make_shared<awst::BoxValueExpression>();
-		box->sourceLocation = m_loc;
-		box->wtype = awst::WType::bytesType();
-		box->key = boxKey;
-		auto sg = awst::makeStateGet(box, awst::makeBytesConstant({}, m_loc), awst::WType::bytesType(), m_loc);
-		return sg;
+		auto box = awst::makeBoxValueExpression(boxKey, awst::WType::bytesType(), m_loc);
+		return awst::makeStateGet(box, awst::makeBytesConstant({}, m_loc), awst::WType::bytesType(), m_loc);
 	};
 
 	// uint64 currentLen = (box_bytes.length() >= 2) ? extract_uint16(box, 0) : 0

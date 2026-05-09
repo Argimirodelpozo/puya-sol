@@ -281,7 +281,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 			auto retVar = awst::makeVarExpression(retName, awst::WType::biguintType(), loc);
 			return retVar;
 		}
-		return std::make_shared<awst::VoidConstant>();
+		return awst::makeVoidConstant(loc);
 	}
 
 	// Builtin dispatch
@@ -616,18 +616,18 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	if (funcName == "returndatacopy")
 	{
 		// returndatacopy(destOffset, offset, size) — no-op on AVM (no return data)
-		return std::make_shared<awst::VoidConstant>();
+		return awst::makeVoidConstant(loc);
 	}
 	if (funcName == "pop")
 	{
 		// pop(x) — discard value, no-op
-		return std::make_shared<awst::VoidConstant>();
+		return awst::makeVoidConstant(loc);
 	}
 	if (funcName == "tstore")
 	{
 		// tstore in expression context — should be a statement
 		Logger::instance().warning("tstore() in expression context, treating as no-op", loc);
-		return std::make_shared<awst::VoidConstant>();
+		return awst::makeVoidConstant(loc);
 	}
 	if (funcName == "call" || funcName == "staticcall")
 	{
@@ -663,7 +663,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 			return retVar;
 		}
 
-		return std::make_shared<awst::VoidConstant>();
+		return awst::makeVoidConstant(loc);
 	}
 
 	// delegatecall → stub: return 1 (success)

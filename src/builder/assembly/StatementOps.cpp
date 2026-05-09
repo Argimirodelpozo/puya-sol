@@ -929,7 +929,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 
 		auto exprStmt = awst::makeExpressionStatement(call, _loc);
 		_out.push_back(std::move(exprStmt));
-		return std::make_shared<awst::VoidConstant>();
+		return awst::makeVoidConstant(_loc);
 	}
 
 	// Recursion guard: Yul function inlining expands each call at the AST

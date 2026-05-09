@@ -25,6 +25,12 @@ namespace
 
 /// AST visitor: collect AST IDs of base functions reached via `super.f()`
 /// (MRO-dependent) or `Base.f()` (fixed target).
+///
+/// Classification leans on Solidity's MemberAccessAnnotation::requiredLookup
+/// (set during semantic analysis):
+///   Super  → super.f() — MRO-dependent; resolve at codegen via the MRO chain.
+///   Static → Base.f() qualified — fixed target; emit directly.
+///   Virtual → ordinary virtual call — handled by ARC4 router dispatch.
 class SuperCallCollector: public solidity::frontend::ASTConstVisitor
 {
 public:
@@ -33,40 +39,36 @@ public:
 
 	bool visit(solidity::frontend::MemberAccess const& _node) override
 	{
-		auto const* baseType = _node.expression().annotation().type;
-		if (!baseType)
+		auto const* refDecl = _node.annotation().referencedDeclaration;
+		if (!refDecl)
 			return true;
-		// Unwrap TypeType (super has type TypeType(ContractType(isSuper=true)))
-		if (baseType->category() == solidity::frontend::Type::Category::TypeType)
-		{
-			auto const* typeType = dynamic_cast<solidity::frontend::TypeType const*>(baseType);
-			if (typeType)
-				baseType = typeType->actualType();
-		}
-		if (baseType->category() == solidity::frontend::Type::Category::Contract)
-		{
-			auto const* contractType = dynamic_cast<solidity::frontend::ContractType const*>(baseType);
-			if (contractType)
-			{
-				auto const* refDecl = _node.annotation().referencedDeclaration;
-				if (!refDecl)
-					return true;
+		if (!_node.annotation().requiredLookup.set())
+			return true;
 
-				if (contractType->isSuper())
-				{
-					// super.f() — MRO-dependent resolution
-					superTargetIds.insert(refDecl->id());
-				}
-				else
-				{
-					// Explicit Base.f() — always calls the specific base version
-					bool isExplicitBase = _node.expression().annotation().type
-						&& _node.expression().annotation().type->category()
-							== solidity::frontend::Type::Category::TypeType;
-					if (isExplicitBase)
-						explicitBaseTargetIds.insert(refDecl->id());
-				}
-			}
+		using solidity::frontend::VirtualLookup;
+		switch (*_node.annotation().requiredLookup)
+		{
+		case VirtualLookup::Super:
+			superTargetIds.insert(refDecl->id());
+			break;
+		case VirtualLookup::Static:
+		{
+			// Static-resolved member access. Only count as explicit-base when
+			// the base expression is a contract-typed TypeType (`Base.f()`),
+			// not other static cases like `Lib.f()`.
+			auto const* baseType = _node.expression().annotation().type;
+			if (!baseType
+				|| baseType->category() != solidity::frontend::Type::Category::TypeType)
+				break;
+			auto const* tt = dynamic_cast<solidity::frontend::TypeType const*>(baseType);
+			if (tt
+				&& tt->actualType()
+				&& tt->actualType()->category() == solidity::frontend::Type::Category::Contract)
+				explicitBaseTargetIds.insert(refDecl->id());
+			break;
+		}
+		case VirtualLookup::Virtual:
+			break;
 		}
 		return true;
 	}

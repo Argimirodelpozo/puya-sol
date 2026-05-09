@@ -102,10 +102,7 @@ std::unique_ptr<NodeBuilder> SolArrayBuilder::member_access(
 			|| kind == awst::WTypeKind::ARC4StaticArray
 			|| kind == awst::WTypeKind::ARC4DynamicArray)
 		{
-			auto e = std::make_shared<awst::ArrayLength>();
-			e->sourceLocation = _loc;
-			e->wtype = awst::WType::uint64Type();
-			e->array = std::move(base);
+			auto e = awst::makeArrayLength(std::move(base), awst::WType::uint64Type(), _loc);
 			return std::make_unique<SolArrayBuilder>(m_ctx, m_arrayType, std::move(e));
 		}
 		// For other types (bytes): use len intrinsic

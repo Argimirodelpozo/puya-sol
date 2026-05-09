@@ -294,19 +294,9 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 				} else if (auto const* sg = dynamic_cast<awst::StateGet const*>(e)) {
 					traceToRoot(sg->field.get());
 				} else if (auto const* box = dynamic_cast<awst::BoxValueExpression const*>(e)) {
-					auto b = std::make_shared<awst::BoxValueExpression>();
-					b->sourceLocation = box->sourceLocation;
-					b->wtype = box->wtype;
-					b->key = box->key;
-					b->existsAssertionMessage = std::nullopt;
-					sr.rootBox = b;
+					sr.rootBox = awst::makeBoxValueExpression(box->key, box->wtype, box->sourceLocation);
 				} else if (auto const* app = dynamic_cast<awst::AppStateExpression const*>(e)) {
-					auto a = std::make_shared<awst::AppStateExpression>();
-					a->sourceLocation = app->sourceLocation;
-					a->wtype = app->wtype;
-					a->key = app->key;
-					a->existsAssertionMessage = std::nullopt;
-					sr.rootAppState = a;
+					sr.rootAppState = awst::makeAppStateExpression(app->key, app->wtype, app->sourceLocation);
 				}
 			};
 			traceToRoot(call->args[pi].value.get());
@@ -386,7 +376,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		std::shared_ptr<awst::Expression> origRet;
 		if (voidReturn)
 		{
-			origRet = std::make_shared<awst::VoidConstant>();
+			origRet = awst::makeVoidConstant(m_loc);
 			origRet->sourceLocation = m_loc;
 			origRet->wtype = awst::WType::voidType();
 		}
@@ -444,9 +434,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 							readStruct = sr.rootAppState;
 						}
 
-						auto newStruct = std::make_shared<awst::NewStruct>();
-						newStruct->sourceLocation = m_loc;
-						newStruct->wtype = structType;
+						auto newStruct = awst::makeNewStruct(structType, m_loc);
 						for (auto const& [fn, ft]: structType->fields())
 						{
 							if (fn == fieldPath[0])

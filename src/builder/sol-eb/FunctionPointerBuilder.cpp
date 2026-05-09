@@ -358,10 +358,9 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 			// Store the target's ARC4 method selector in the selector slot.
 			// At call-time with appId != 0 we emit an inner app txn with
 			// ApplicationArgs[0] = this selector.
-			auto selectorConst = std::make_shared<awst::MethodConstant>();
-			selectorConst->sourceLocation = _loc;
-			selectorConst->wtype = awst::WType::bytesType();
-			selectorConst->value = AbiEncoderBuilder::buildARC4MethodSelector(_ctx, _funcDef);
+			auto selectorConst = awst::makeMethodConstant(
+				AbiEncoderBuilder::buildARC4MethodSelector(_ctx, _funcDef),
+				awst::WType::bytesType(), _loc);
 			selectorBytes = std::move(selectorConst);
 		}
 		else
@@ -385,10 +384,9 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 				registerTarget(_funcDef, internalFuncType, _awstName);
 
 			appIdBytes = makeItobConst("0");
-			auto selectorConst = std::make_shared<awst::MethodConstant>();
-			selectorConst->sourceLocation = _loc;
-			selectorConst->wtype = awst::WType::bytesType();
-			selectorConst->value = AbiEncoderBuilder::buildARC4MethodSelector(_ctx, _funcDef);
+			auto selectorConst = awst::makeMethodConstant(
+				AbiEncoderBuilder::buildARC4MethodSelector(_ctx, _funcDef),
+				awst::WType::bytesType(), _loc);
 			selectorBytes = std::move(selectorConst);
 		}
 
@@ -898,10 +896,9 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 				// lowering time — same value puya's router matches in the
 				// approval program, and the same value we store in the
 				// fn-ptr's selector slot (cross-call path). Byte equality.
-				auto methodConst = std::make_shared<awst::MethodConstant>();
-				methodConst->sourceLocation = _loc;
-				methodConst->wtype = awst::WType::bytesType();
-				methodConst->value = AbiEncoderBuilder::buildARC4MethodSelector(_ctx, entry->funcDef);
+				auto methodConst = awst::makeMethodConstant(
+					AbiEncoderBuilder::buildARC4MethodSelector(_ctx, entry->funcDef),
+					awst::WType::bytesType(), _loc);
 
 				auto selVar = awst::makeVarExpression("__sel", awst::WType::bytesType(), _loc);
 				auto cmp = awst::makeBytesComparison(std::move(selVar),

@@ -592,9 +592,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 			auto zeroVal = builder::StorageMapper::makeDefaultValue(
 				arc4FieldType ? arc4FieldType : fieldExpr->wtype, m_loc);
 
-			auto newStruct = std::make_shared<awst::NewStruct>();
-			newStruct->sourceLocation = m_loc;
-			newStruct->wtype = arc4StructType;
+			auto newStruct = awst::makeNewStruct(arc4StructType, m_loc);
 			for (auto const& [fname, ftype]: arc4StructType->fields())
 			{
 				if (fname == fieldName)

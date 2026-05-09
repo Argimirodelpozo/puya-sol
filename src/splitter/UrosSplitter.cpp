@@ -56,9 +56,7 @@ std::shared_ptr<awst::Expression> makeDefaultValue(
 	// to: <synthName>)".
 	if (auto const* sct = dynamic_cast<awst::ARC4Struct const*>(_t))
 	{
-		auto ns = std::make_shared<awst::NewStruct>();
-		ns->sourceLocation = _loc;
-		ns->wtype = _t;
+		auto ns = awst::makeNewStruct(_t, _loc);
 		for (auto const& [fname, ftype] : sct->fields())
 		{
 			auto fv = makeDefaultValue(ftype, _loc);
@@ -346,11 +344,9 @@ std::shared_ptr<awst::Statement> makeAppGlobalPutStmt(
 	std::shared_ptr<awst::Expression> _value,
 	awst::SourceLocation const& _loc)
 {
-	auto target = std::make_shared<awst::AppStateExpression>();
-	target->sourceLocation = _loc;
-	target->wtype = _valueType;
-	target->key = awst::makeUtf8BytesConstant(
-		_keyName, _loc, awst::WType::stateKeyType());
+	auto target = awst::makeAppStateExpression(
+		awst::makeUtf8BytesConstant(_keyName, _loc, awst::WType::stateKeyType()),
+		_valueType, _loc);
 	return awst::makeAssignmentStatement(
 		std::move(target), std::move(_value), _loc);
 }
@@ -406,10 +402,8 @@ std::shared_ptr<awst::Expression> makeMsgValueUint64Expr(
 std::shared_ptr<awst::Expression> makeStorageAddressExpr(
 	awst::SourceLocation const& _loc)
 {
-	auto storageTmpl = std::make_shared<awst::TemplateVar>();
-	storageTmpl->sourceLocation = _loc;
-	storageTmpl->wtype = awst::WType::uint64Type();
-	storageTmpl->name = kStorageAppIdTmpl;
+	auto storageTmpl = awst::makeTemplateVar(
+		kStorageAppIdTmpl, awst::WType::uint64Type(), _loc);
 
 	auto* tupleType = makeOwnedType<awst::WTuple>(
 		std::vector<awst::WType const*>{
@@ -679,10 +673,8 @@ std::shared_ptr<awst::Expression> makeMainGlobalRead(
 	awst::WType const* _resultWType,  // accountType / uint64Type
 	awst::SourceLocation const& _loc)
 {
-	auto mainTmpl = std::make_shared<awst::TemplateVar>();
-	mainTmpl->sourceLocation = _loc;
-	mainTmpl->wtype = awst::WType::uint64Type();
-	mainTmpl->name = kMainAppIdTmpl;
+	auto mainTmpl = awst::makeTemplateVar(
+		kMainAppIdTmpl, awst::WType::uint64Type(), _loc);
 
 	auto keyConst = awst::makeUtf8BytesConstant(_keyName, _loc);
 
@@ -815,10 +807,8 @@ std::shared_ptr<awst::Expression> patchMsgValueExpr(
 std::shared_ptr<awst::Expression> makeMainAddressExpr(
 	awst::SourceLocation const& _loc)
 {
-	auto mainTmpl = std::make_shared<awst::TemplateVar>();
-	mainTmpl->sourceLocation = _loc;
-	mainTmpl->wtype = awst::WType::uint64Type();
-	mainTmpl->name = kMainAppIdTmpl;
+	auto mainTmpl = awst::makeTemplateVar(
+		kMainAppIdTmpl, awst::WType::uint64Type(), _loc);
 
 	auto* tupleType = makeOwnedType<awst::WTuple>(
 		std::vector<awst::WType const*>{
@@ -948,20 +938,14 @@ std::shared_ptr<awst::Block> makeForwardingStubBody(
 
 	// [0]: orch.dispatch() ARC4 selector. MethodConstant lets puya
 	// compute the 4-byte selector from the canonical signature.
-	auto dispatchSel = std::make_shared<awst::MethodConstant>();
-	dispatchSel->sourceLocation = _loc;
-	dispatchSel->wtype = awst::WType::bytesType();
-	dispatchSel->value = "dispatch()byte[]";
-	argsTuple->items.push_back(std::move(dispatchSel));
+	argsTuple->items.push_back(awst::makeMethodConstant(
+		"dispatch()byte[]", awst::WType::bytesType(), _loc));
 
 	// [1]: this method's ARC4 selector. The orch reads this from its
 	// own ApplicationArgs[1], looks up the matching chunk, and
 	// forwards the call.
-	auto userSel = std::make_shared<awst::MethodConstant>();
-	userSel->sourceLocation = _loc;
-	userSel->wtype = awst::WType::bytesType();
-	userSel->value = buildSelectorSig(_m);
-	argsTuple->items.push_back(std::move(userSel));
+	argsTuple->items.push_back(awst::makeMethodConstant(
+		buildSelectorSig(_m), awst::WType::bytesType(), _loc));
 
 	// [2..N+1]: forward Txn.ApplicationArgs[1..N] verbatim. Reading
 	// raw bytes via `txna ApplicationArgs i` is cheaper than
@@ -998,11 +982,8 @@ std::shared_ptr<awst::Block> makeForwardingStubBody(
 		std::to_string(TXN_TYPE_APPL), _loc);
 	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
 	create->fields["OnCompletion"] = awst::makeIntegerConstant("0", _loc);
-	auto orchTmpl = std::make_shared<awst::TemplateVar>();
-	orchTmpl->sourceLocation = _loc;
-	orchTmpl->wtype = awst::WType::uint64Type();
-	orchTmpl->name = "TMPL_UROS_ORCH_APP_ID";
-	create->fields["ApplicationID"] = std::move(orchTmpl);
+	create->fields["ApplicationID"] = awst::makeTemplateVar(
+		"TMPL_UROS_ORCH_APP_ID", awst::WType::uint64Type(), _loc);
 	create->fields["ApplicationArgs"] = std::move(argsTuple);
 	// Bidirectional rekey: main->__storage at deploy time strips main of
 	// authority over its own account, so the inner txn can't use the

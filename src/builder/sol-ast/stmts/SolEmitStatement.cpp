@@ -144,9 +144,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 	auto const* structType = m_blk.typeMapper().createType<awst::ARC4Struct>(
 		eventName, std::move(structFields), true);
 
-	auto newStruct = std::make_shared<awst::NewStruct>();
-	newStruct->sourceLocation = m_loc;
-	newStruct->wtype = structType;
+	auto newStruct = awst::makeNewStruct(structType, m_loc);
 	for (auto& f: fields)
 		newStruct->values[f.name] = std::move(f.value);
 

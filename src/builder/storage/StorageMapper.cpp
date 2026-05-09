@@ -180,10 +180,7 @@ std::shared_ptr<awst::Expression> StorageMapper::createStateRead(
 	{
 	case awst::AppStorageKind::AppGlobal:
 	{
-		auto expr = std::make_shared<awst::AppStateExpression>();
-		expr->sourceLocation = _loc;
-		expr->wtype = _type;
-		expr->key = key;
+		auto expr = awst::makeAppStateExpression(key, _type, _loc);
 		expr->existsAssertionMessage = "check " + _varName + " exists";
 		return expr;
 	}
@@ -191,12 +188,7 @@ std::shared_ptr<awst::Expression> StorageMapper::createStateRead(
 	{
 		// Use StateGet with a default value so that missing boxes return the
 		// Solidity default (0/false/empty) instead of asserting existence.
-		auto boxExpr = std::make_shared<awst::BoxValueExpression>();
-		boxExpr->sourceLocation = _loc;
-		boxExpr->wtype = _type;
-		boxExpr->key = key;
-		boxExpr->existsAssertionMessage = std::nullopt;
-
+		auto boxExpr = awst::makeBoxValueExpression(key, _type, _loc);
 		auto defaultVal = makeDefaultValue(_type, _loc);
 
 		auto stateGet = awst::makeStateGet(boxExpr, defaultVal, _type, _loc);
@@ -204,11 +196,7 @@ std::shared_ptr<awst::Expression> StorageMapper::createStateRead(
 	}
 	default:
 	{
-		auto expr = std::make_shared<awst::AppStateExpression>();
-		expr->sourceLocation = _loc;
-		expr->wtype = _type;
-		expr->key = key;
-		return expr;
+		return awst::makeAppStateExpression(key, _type, _loc);
 	}
 	}
 }
@@ -228,29 +216,17 @@ std::shared_ptr<awst::Expression> StorageMapper::createStateWrite(
 	{
 	case awst::AppStorageKind::AppGlobal:
 	{
-		auto expr = std::make_shared<awst::AppStateExpression>();
-		expr->sourceLocation = _loc;
-		expr->wtype = _type;
-		expr->key = key;
-		target = expr;
+		target = awst::makeAppStateExpression(key, _type, _loc);
 		break;
 	}
 	case awst::AppStorageKind::Box:
 	{
-		auto expr = std::make_shared<awst::BoxValueExpression>();
-		expr->sourceLocation = _loc;
-		expr->wtype = _type;
-		expr->key = key;
-		target = expr;
+		target = awst::makeBoxValueExpression(key, _type, _loc);
 		break;
 	}
 	default:
 	{
-		auto expr = std::make_shared<awst::AppStateExpression>();
-		expr->sourceLocation = _loc;
-		expr->wtype = _type;
-		expr->key = key;
-		target = expr;
+		target = awst::makeAppStateExpression(key, _type, _loc);
 		break;
 	}
 	}

@@ -454,11 +454,8 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 	auto baseTranslated = buildExpr(memberAccess->expression());
 
 	// Build method selector
-	std::string methodSelector = buildMethodSelector(*memberAccess);
-	auto methodConst = std::make_shared<awst::MethodConstant>();
-	methodConst->sourceLocation = m_loc;
-	methodConst->wtype = awst::WType::bytesType();
-	methodConst->value = methodSelector;
+	auto methodConst = awst::makeMethodConstant(
+		buildMethodSelector(*memberAccess), awst::WType::bytesType(), m_loc);
 
 	// Build ApplicationArgs tuple
 	auto argsTuple = awst::makeTupleExpression(nullptr, m_loc);

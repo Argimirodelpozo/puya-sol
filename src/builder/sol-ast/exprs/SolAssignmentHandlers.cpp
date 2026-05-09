@@ -479,9 +479,7 @@ std::shared_ptr<awst::Expression> SolAssignment::buildStructFieldBytesWrite(
 	}
 
 	// Build NewStruct with replaced field
-	auto newStruct = std::make_shared<awst::NewStruct>();
-	newStruct->sourceLocation = m_loc;
-	newStruct->wtype = _structType;
+	auto newStruct = awst::makeNewStruct(_structType, m_loc);
 	for (auto const& [fname, ftype]: _structType->fields())
 	{
 		if (fname == fieldName)
@@ -520,9 +518,7 @@ std::shared_ptr<awst::Expression> SolAssignment::buildStructFieldBytesWrite(
 
 		std::string outerFieldName = outerField->name;
 
-		auto outerNewStruct = std::make_shared<awst::NewStruct>();
-		outerNewStruct->sourceLocation = m_loc;
-		outerNewStruct->wtype = outerStructType;
+		auto outerNewStruct = awst::makeNewStruct(outerStructType, m_loc);
 		for (auto const& [fn, ft]: outerStructType->fields())
 		{
 			if (fn == outerFieldName)
@@ -607,9 +603,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 	}
 
 	// Build NewStruct with copy-on-write
-	auto newStruct = std::make_shared<awst::NewStruct>();
-	newStruct->sourceLocation = m_loc;
-	newStruct->wtype = arc4StructType;
+	auto newStruct = awst::makeNewStruct(arc4StructType, m_loc);
 	for (auto const& [fname, ftype]: arc4StructType->fields())
 	{
 		if (fname == fieldName)
@@ -650,9 +644,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 			if (fn == outerFieldName) { outerFieldWtype = ft; break; }
 		fieldChain.push_back({outerFieldName, outerFieldWtype});
 
-		auto outerNewStruct = std::make_shared<awst::NewStruct>();
-		outerNewStruct->sourceLocation = m_loc;
-		outerNewStruct->wtype = outerStructType;
+		auto outerNewStruct = awst::makeNewStruct(outerStructType, m_loc);
 		for (auto const& [fn, ft]: outerStructType->fields())
 		{
 			if (fn == outerFieldName)

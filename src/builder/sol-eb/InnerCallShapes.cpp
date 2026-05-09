@@ -127,11 +127,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 	}
 
 	// Build ARC4 method selector
-	std::string methodSel = buildMethodSelector(_ctx, targetFuncDef);
-	auto methodConst = std::make_shared<awst::MethodConstant>();
-	methodConst->sourceLocation = _loc;
-	methodConst->wtype = awst::WType::bytesType();
-	methodConst->value = methodSel;
+	auto methodConst = awst::makeMethodConstant(
+		buildMethodSelector(_ctx, targetFuncDef), awst::WType::bytesType(), _loc);
 
 	// Build ApplicationArgs tuple
 	auto argsTuple = awst::makeTupleExpression(nullptr, _loc);

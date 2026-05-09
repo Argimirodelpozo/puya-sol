@@ -304,11 +304,7 @@ std::shared_ptr<awst::Expression> SolIndexRangeAccess::toAwst()
 			|| dynamic_cast<awst::ARC4DynamicArray const*>(bt)
 			|| dynamic_cast<awst::ARC4StaticArray const*>(bt))
 		{
-			auto lenNode = std::make_shared<awst::ArrayLength>();
-			lenNode->sourceLocation = m_loc;
-			lenNode->wtype = awst::WType::uint64Type();
-			lenNode->array = base;
-			lenExpr = std::move(lenNode);
+			lenExpr = awst::makeArrayLength(base, awst::WType::uint64Type(), m_loc);
 		}
 
 		if (lenExpr)

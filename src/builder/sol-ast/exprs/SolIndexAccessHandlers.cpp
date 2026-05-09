@@ -35,11 +35,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 
 	auto boxKey = awst::makeUtf8BytesConstant(arrayVarName, m_loc, awst::WType::boxKeyType());
 
-	auto boxExpr = std::make_shared<awst::BoxValueExpression>();
-	boxExpr->sourceLocation = m_loc;
-	boxExpr->wtype = arrWType;
-	boxExpr->key = boxKey;
-	boxExpr->existsAssertionMessage = std::nullopt;
+	auto boxExpr = awst::makeBoxValueExpression(boxKey, arrWType, m_loc);
 
 	std::shared_ptr<awst::Expression> baseExprForRead = boxExpr;
 	if (!m_indexAccess.annotation().willBeWrittenTo)
@@ -518,12 +514,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 	m_ctx.prePendingStatements.push_back(
 		awst::makeAssignmentStatement(rootVar, rootBase, m_loc));
 
-	auto makeLen = [&](std::shared_ptr<awst::Expression> arr) {
-		auto lenNode = std::make_shared<awst::ArrayLength>();
-		lenNode->sourceLocation = m_loc;
-		lenNode->wtype = awst::WType::uint64Type();
-		lenNode->array = std::move(arr);
-		return std::static_pointer_cast<awst::Expression>(lenNode);
+	auto makeLen = [&](std::shared_ptr<awst::Expression> arr) -> std::shared_ptr<awst::Expression> {
+		return awst::makeArrayLength(std::move(arr), awst::WType::uint64Type(), m_loc);
 	};
 
 	// Initial cumulative offset = 0, length = len(root)

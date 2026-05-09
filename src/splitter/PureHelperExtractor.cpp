@@ -147,11 +147,7 @@ std::shared_ptr<awst::Expression> appArgAt(int _i, awst::SourceLocation const& _
 std::shared_ptr<awst::Expression> selectorConst(
 	std::string const& _sig, awst::SourceLocation const& _loc)
 {
-	auto mc = std::make_shared<awst::MethodConstant>();
-	mc->sourceLocation = _loc;
-	mc->wtype = awst::WType::bytesType();
-	mc->value = _sig;
-	return mc;
+	return awst::makeMethodConstant(_sig, awst::WType::bytesType(), _loc);
 }
 
 /// Decode a single fixed-size scalar slice — helper for tuple decode.
@@ -625,15 +621,12 @@ std::shared_ptr<awst::Expression> buildInnerCallReplacement(
 		std::to_string(TxnTypeAppl), _loc);
 	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
 	create->fields["OnCompletion"] = awst::makeIntegerConstant("0", _loc);
-	auto tmplVar = std::make_shared<awst::TemplateVar>();
-	tmplVar->sourceLocation = _loc;
-	tmplVar->wtype = awst::WType::uint64Type();
 	// AWST convention (mirrors UrosSplitter): include the TMPL_
 	// prefix in the AWST name. main.cpp's intTemplateVars uses the
 	// prefix-stripped form, which puya re-prefixes via
 	// template_vars_prefix when building options.template_variables.
-	tmplVar->name = "TMPL_" + _templateVar;
-	create->fields["ApplicationID"] = std::move(tmplVar);
+	create->fields["ApplicationID"] = awst::makeTemplateVar(
+		"TMPL_" + _templateVar, awst::WType::uint64Type(), _loc);
 	create->fields["ApplicationArgs"] = std::move(argsTuple);
 
 	int retSize = staticEncodedSize(_retType);
@@ -675,11 +668,8 @@ std::shared_ptr<awst::Expression> buildInnerCallReplacement(
 				std::to_string(TxnTypeAppl), _loc);
 			helperCreate->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
 			helperCreate->fields["OnCompletion"] = awst::makeIntegerConstant("0", _loc);
-			auto helperAppId = std::make_shared<awst::TemplateVar>();
-			helperAppId->sourceLocation = _loc;
-			helperAppId->wtype = awst::WType::uint64Type();
-			helperAppId->name = "TMPL_" + _templateVar;
-			helperCreate->fields["ApplicationID"] = std::move(helperAppId);
+			helperCreate->fields["ApplicationID"] = awst::makeTemplateVar(
+				"TMPL_" + _templateVar, awst::WType::uint64Type(), _loc);
 			// Re-clone the args tuple per inner txn (puya
 			// disallows shared sub-AST in itxns field map).
 			auto haCopy = awst::makeTupleExpression(helperArgs->wtype, _loc);
@@ -782,11 +772,8 @@ std::shared_ptr<awst::Expression> buildChainedInnerCallReplacement(
 			std::to_string(TxnTypeAppl), _loc);
 		create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
 		create->fields["OnCompletion"] = awst::makeIntegerConstant("0", _loc);
-		auto tmplVar = std::make_shared<awst::TemplateVar>();
-		tmplVar->sourceLocation = _loc;
-		tmplVar->wtype = awst::WType::uint64Type();
-		tmplVar->name = "TMPL_" + tmpl;
-		create->fields["ApplicationID"] = std::move(tmplVar);
+		create->fields["ApplicationID"] = awst::makeTemplateVar(
+			"TMPL_" + tmpl, awst::WType::uint64Type(), _loc);
 		create->fields["ApplicationArgs"] = std::move(argsTuple);
 
 		submit->itxns.push_back(std::move(create));
@@ -823,11 +810,8 @@ std::shared_ptr<awst::Expression> buildChainedInnerCallReplacement(
 				std::to_string(TxnTypeAppl), _loc);
 			hc->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
 			hc->fields["OnCompletion"] = awst::makeIntegerConstant("0", _loc);
-			auto tv = std::make_shared<awst::TemplateVar>();
-			tv->sourceLocation = _loc;
-			tv->wtype = awst::WType::uint64Type();
-			tv->name = "TMPL_" + _lastPieceTemplateVar;
-			hc->fields["ApplicationID"] = std::move(tv);
+			hc->fields["ApplicationID"] = awst::makeTemplateVar(
+				"TMPL_" + _lastPieceTemplateVar, awst::WType::uint64Type(), _loc);
 			hc->fields["ApplicationArgs"] = std::move(helperArgs);
 			submit->itxns.push_back(std::move(hc));
 		}

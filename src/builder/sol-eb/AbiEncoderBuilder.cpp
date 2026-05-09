@@ -414,11 +414,8 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeCall(
 	if (!targetFuncDef)
 		return nullptr;
 
-	std::string methodSig = buildARC4MethodSelector(_ctx, targetFuncDef);
-	auto methodConst = std::make_shared<awst::MethodConstant>();
-	methodConst->sourceLocation = _loc;
-	methodConst->wtype = awst::WType::bytesType();
-	methodConst->value = methodSig;
+	auto methodConst = awst::makeMethodConstant(
+		buildARC4MethodSelector(_ctx, targetFuncDef), awst::WType::bytesType(), _loc);
 
 	std::vector<std::shared_ptr<awst::Expression>> parts;
 	parts.push_back(std::move(methodConst));

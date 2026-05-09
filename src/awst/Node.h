@@ -864,6 +864,16 @@ struct TemplateVar: Expression
 	std::string name;
 };
 
+inline std::shared_ptr<TemplateVar> makeTemplateVar(
+	std::string name, WType const* wtype, SourceLocation loc)
+{
+	auto node = std::make_shared<TemplateVar>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->name = std::move(name);
+	return node;
+}
+
 struct Copy: Expression
 {
 	std::string nodeType() const override { return "Copy"; }
@@ -913,6 +923,16 @@ struct ArrayLength: Expression
 	std::shared_ptr<Expression> array;
 };
 
+inline std::shared_ptr<ArrayLength> makeArrayLength(
+	std::shared_ptr<Expression> array, WType const* wtype, SourceLocation loc)
+{
+	auto node = std::make_shared<ArrayLength>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->array = std::move(array);
+	return node;
+}
+
 struct ArrayPop: Expression
 {
 	std::string nodeType() const override { return "ArrayPop"; }
@@ -944,6 +964,16 @@ struct NewStruct: Expression
 	std::string nodeType() const override { return "NewStruct"; }
 	std::map<std::string, std::shared_ptr<Expression>> values;
 };
+
+// Empty NewStruct with location and wtype set; caller fills `values` map.
+inline std::shared_ptr<NewStruct> makeNewStruct(
+	WType const* wtype, SourceLocation loc)
+{
+	auto node = std::make_shared<NewStruct>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	return node;
+}
 
 struct NamedTupleExpression: Expression
 {
@@ -998,6 +1028,16 @@ struct AppStateExpression: Expression
 	std::optional<std::string> existsAssertionMessage;
 };
 
+inline std::shared_ptr<AppStateExpression> makeAppStateExpression(
+	std::shared_ptr<Expression> key, WType const* wtype, SourceLocation loc)
+{
+	auto node = std::make_shared<AppStateExpression>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->key = std::move(key);
+	return node;
+}
+
 struct AppAccountStateExpression: Expression
 {
 	std::string nodeType() const override { return "AppAccountStateExpression"; }
@@ -1019,6 +1059,16 @@ struct BoxValueExpression: Expression
 	std::shared_ptr<Expression> key;
 	std::optional<std::string> existsAssertionMessage;
 };
+
+inline std::shared_ptr<BoxValueExpression> makeBoxValueExpression(
+	std::shared_ptr<Expression> key, WType const* wtype, SourceLocation loc)
+{
+	auto node = std::make_shared<BoxValueExpression>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->key = std::move(key);
+	return node;
+}
 
 // Inner transactions
 struct CreateInnerTransaction: Expression
@@ -1062,6 +1112,16 @@ struct MethodConstant: Expression
 	std::string nodeType() const override { return "MethodConstant"; }
 	std::string value;
 };
+
+inline std::shared_ptr<MethodConstant> makeMethodConstant(
+	std::string value, WType const* wtype, SourceLocation loc)
+{
+	auto node = std::make_shared<MethodConstant>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->value = std::move(value);
+	return node;
+}
 
 struct AddressConstant: Expression
 {
