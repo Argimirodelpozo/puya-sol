@@ -1,3 +1,47 @@
+# Semantic Test Status — v218
+
+**Totals**: 1092 PASS / 156 FAIL / 74 (57 compile_err + 17 deploy_err) = **1092/1322 (82.6%)**
+
+vs v217 = 1092 PASS: **±0 / no outcome diffs** (zero per-test diffs at status+name level).
+
+## v218 puya-sol changes (vs v217)
+
+Pure boilerplate-collapse refactor + IntrinsicMapper trim. No behaviour change.
+
+  - **`makeAssignmentExpression(target, value, loc, wtype=nullptr)` helper**
+    (Node.h): collapses the canonical 5-line `AssignmentExpression`
+    construction to 1. wtype defaults to target->wtype (the common case);
+    callers pass an explicit wtype only for tuple-LHS / library-storage
+    writes. 12 sites converted across StorageMapper, SolAssignment,
+    SolAssignmentHandlers, SolUnaryOperation, SolInternalCall.
+  - **`makeBytesComparison(lhs, op, rhs, loc)` helper** (Node.h):
+    collapses the 6-line `BytesComparisonExpression` shape to 1, hard-
+    codes wtype = boolType(). 10 sites converted across SolAddressBuilder,
+    BinaryOpBuilder, SolStringBuilder, FunctionPointerBuilder,
+    SolFixedBytesBuilder, SolStructBuilder, PureHelperExtractor.
+  - **`makeTupleExpression(nullptr, loc)` adoption**: 14 of 15 lingering
+    `make_shared<TupleExpression>` + sourceLocation sites converted to
+    the existing helper with explicit nullptr wtype (caller fills items
+    + sets wtype after).
+  - **`makeUInt64BinOp` adoption**: 8 of 12 lingering `make_shared<
+    UInt64BinaryOperation>` sites converted (the 4 skipped are inside
+    BinaryOpBuilder/SolIntegerBuilder switch-on-Token blocks where
+    op is set per-branch — restructuring would add lines).
+  - **IntrinsicMapper trim**: deleted unused `createLog` (~9 lines),
+    inlined the 1-line `createAssert` passthrough at SolRequireAssert
+    (now calls awst::makeAssert directly), and consolidated the
+    SolExpressionFactory dispatch — no longer builds + discards a
+    sentinel IntrinsicCall, just inlines the recognised member-access
+    set (msg.{sender,value,sig,data}, block.{timestamp,number,chainid,
+    coinbase,difficulty,prevrandao,basefee,blobbasefee,gaslimit},
+    tx.{origin,gasprice}). Saves a per-member-access shared_ptr alloc.
+
+Net diff: **+141 / −286 = −145 LOC** across 30 files. Cumulative AWST
+construction surface reduction: **~1217 LOC** across the v208 + v217 +
+v218 helper layers. Per-test outcomes byte-identical to v217.
+
+---
+
 # Semantic Test Status — v217
 
 **Totals**: 1092 PASS / 156 FAIL / 74 (57 compile_err + 17 deploy_err) = **1092/1322 (82.6%)**
