@@ -73,6 +73,7 @@ std::shared_ptr<awst::Expression> makeBytesEq(
 	return awst::makeBytesComparison(std::move(a), op, std::move(b), loc);
 }
 
+
 } // namespace
 
 std::unique_ptr<InstanceBuilder> SolAddressBuilder::compare(
@@ -139,6 +140,12 @@ std::unique_ptr<InstanceBuilder> SolAddressBuilder::compare(
 		auto& storedSlot = leftIsIntrinsic ? rhs : lhs;
 		auto& intrinSlot = leftIsIntrinsic ? lhs : rhs;
 
+		// Build a second copy of the appId expression for the !=0 guard
+		// (we'll move one copy into the convention builder, the other is
+		// the operand of the comparison). Both copies are the same
+		// IntrinsicCall structure so puya emits identical TEAL for them.
+		auto appIdForCompare = detectAppIdIntrinsic(intrinSlot.get(), _loc);
+
 		// Two equality checks share the stored-side expression. AWST
 		// nodes are immutable post-construction, so re-using the same
 		// shared_ptr in two parents is safe — puya consumes the tree
@@ -149,9 +156,24 @@ std::unique_ptr<InstanceBuilder> SolAddressBuilder::compare(
 		auto conventional = makeBytesEq(
 			std::move(convention), std::move(storedSlot), awst::EqualityComparison::Eq, _loc);
 
+		// Gate the conventional arm on `appId != 0`. CallerApplicationID
+		// is 0 for user-account callers; without the guard the conv-form
+		// expression collapses to the zero address, making any
+		// `msg.sender == address(0)` (or `addr == address(this)` where
+		// `addr` happens to be the zero address) spuriously succeed.
+		// CurrentApplicationID is always > 0 inside an app's program, so
+		// the guard is a no-op there but free to keep for symmetry.
+		auto zeroId = awst::makeIntegerConstant("0", _loc);
+		auto appIdNonZero = awst::makeNumericCompare(
+			std::move(appIdForCompare), awst::NumericComparison::Ne,
+			std::move(zeroId), _loc);
+		auto guardedConv = awst::makeBoolBinOp(
+			std::move(appIdNonZero), awst::BinaryBooleanOperator::And,
+			std::move(conventional), _loc);
+
 		std::shared_ptr<awst::Expression> result = awst::makeBoolBinOp(
 			std::move(direct), awst::BinaryBooleanOperator::Or,
-			std::move(conventional), _loc);
+			std::move(guardedConv), _loc);
 		if (_op == BuilderComparisonOp::Ne)
 			result = awst::makeNot(std::move(result), _loc);
 
