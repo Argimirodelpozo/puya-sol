@@ -1,3 +1,55 @@
+# Semantic Test Status — v220
+
+**Totals**: 1092 PASS / 156 FAIL / 74 (57 compile_err + 17 deploy_err) = **1092/1322 (82.6%)**
+
+vs v219 = 1092 PASS: **±0 / no outcome diffs** (zero per-test diffs at status+name level).
+
+## v220 puya-sol changes (vs v219)
+
+Helper-adoption batch + IdentifierAnnotation::requiredLookup adoption.
+Pure refactor — no behaviour change.
+
+  - **`requiredLookup` adoption** (SuperCallResolution.cpp): replaced
+    `contractType->isSuper()` + TypeType-cat checks with a switch on
+    `MemberAccessAnnotation::requiredLookup` ∈ {Super, Static, Virtual}.
+    Solidity already classifies the lookup kind during semantic analysis;
+    we now lean on that directly. ~15 LOC saved in the SuperCallCollector
+    visitor.
+  - **6 new helpers in `src/awst/Node.h`**:
+      makeTemplateVar(name, type, loc)
+      makeMethodConstant(value, type, loc)
+      makeArrayLength(array, type, loc)
+      makeBoxValueExpression(key, type, loc)
+      makeNewStruct(type, loc)               (caller fills `values`)
+      makeAppStateExpression(key, type, loc) (existsAssertionMessage as
+                                              optional post-init)
+  - **`makeVoidConstant` adoption**: 7 lingering bare
+    `make_shared<VoidConstant>()` sites in CoreTranslation, StatementOps,
+    SolInternalCall switched to the helper (now passes proper
+    SourceLocation).
+  - Adoption totals across the helpers:
+      VoidConstant       7 → 0
+      TemplateVar       10 → 0
+      MethodConstant    10 → 0
+      ArrayLength        6 → 0
+      BoxValueExpression 8 → 1 (deferred-key SolIndexAccessHandlers site
+                                doesn't fit the upfront-key helper shape)
+      NewStruct          7 → 0
+      AppStateExpression 7 → 0
+
+  - **Decision**: 4 annotation-adoption tasks (calledDirectly, isLValue,
+    isPure/isConstant, baseFunctions) investigated and dropped — no
+    actionable sites in the current code paths; existing structural
+    detection via `referencedDeclaration` already does the work, and
+    `RationalNumberType`-based folding already covers the pure-expression
+    hot path. Detailed assessment documented in conversation history.
+
+Net diff: **+176 / −258 = −82 LOC** across 24 files. Cumulative AWST
+construction surface reduction across v208 + v217 + v218 + v219 + v220
+helper layers ~**−1336 LOC**.
+
+---
+
 # Semantic Test Status — v219
 
 **Totals**: 1092 PASS / 156 FAIL / 74 (57 compile_err + 17 deploy_err) = **1092/1322 (82.6%)**
