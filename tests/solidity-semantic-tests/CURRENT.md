@@ -1,3 +1,39 @@
+# Semantic Test Status — v219
+
+**Totals**: 1092 PASS / 156 FAIL / 74 (57 compile_err + 17 deploy_err) = **1092/1322 (82.6%)**
+
+vs v218 = 1092 PASS: **±0 / no outcome diffs** (zero per-test diffs at status+name level).
+
+## v219 puya-sol changes (vs v218)
+
+Two changes — one pure refactor, one real bug fix that didn't move any test
+(no existing test exercised the buggy code path).
+
+  - **`makeLeftPadToN(value, n, loc)` helper** (Node.h): canonical
+    implementation of "left-pad value to *exactly* n bytes" via
+    `extract3(bzero(n) ++ value, len - n, n)`. Replaces 4 near-duplicate
+    inlinings across SolTypeConversion, TypeConversionRegistry,
+    SolExternalCall (×2), each ~14 lines collapsed to 1 helper call.
+  - **InnerCallHandlers biguint encoding fix**: the biguint branch in
+    `encodeArgToBytes` (used to ABI-encode inner-txn args) had a known-
+    broken placeholder — `extract(padded, 0, 0)` returned the entire
+    padded blob (32 + actual_len bytes) instead of exactly 32 bytes,
+    producing wrong-sized ARC4 uint256 args. Replaced with
+    `awst::makeLeftPadToN(cast, 32, _loc)`. Behavioural change in
+    principle, but no semantic test moved — the code path requires
+    inner-call patterns that current tests don't reach (no test passes
+    a biguint > minimal-encoding arg through encodeArgToBytes that's
+    then length-validated by the callee).
+  - **InnerCallHandlers::leftPadToN deletion**: the third (broken AND
+    dead) copy of leftPadToN was deleted from .h and .cpp — never had
+    any callers, would have produced N zero bytes if anyone called it.
+
+Net diff: **+22 / −59 = −37 LOC** across 6 files. Cumulative AWST
+construction surface reduction now **~1254 LOC** across v208 + v217 +
+v218 + v219 helper layers.
+
+---
+
 # Semantic Test Status — v218
 
 **Totals**: 1092 PASS / 156 FAIL / 74 (57 compile_err + 17 deploy_err) = **1092/1322 (82.6%)**
