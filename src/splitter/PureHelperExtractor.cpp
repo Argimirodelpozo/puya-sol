@@ -847,6 +847,224 @@ std::shared_ptr<awst::Expression> buildChainedInnerCallReplacement(
 	return comma;
 }
 
+/// True if a node represents a side-effect from the caller's POV: any
+/// state read/write, log, inner-txn submit, asset-holding query, etc.
+/// Sidecars don't share storage with the main contract, so a helper
+/// that reads/writes state can't safely be lifted (it'd hit the
+/// sidecar's empty state instead of the main app's). Same for logs
+/// (caller can't see logs emitted by sidecars except via LastLog),
+/// inner txns (extra side effects observable by the caller), and
+/// asset-holding/app-params queries (depend on the running app's id).
+bool isSideEffectful(awst::Expression const& _e)
+{
+	using namespace awst;
+	if (dynamic_cast<AppStateExpression const*>(&_e)) return true;
+	if (dynamic_cast<AppAccountStateExpression const*>(&_e)) return true;
+	if (dynamic_cast<BoxValueExpression const*>(&_e)) return true;
+	if (dynamic_cast<BoxPrefixedKeyExpression const*>(&_e)) return true;
+	if (dynamic_cast<StateGet const*>(&_e)) return true;
+	if (dynamic_cast<StateExists const*>(&_e)) return true;
+	if (dynamic_cast<StateGetEx const*>(&_e)) return true;
+	if (dynamic_cast<StateDelete const*>(&_e)) return true;
+	if (dynamic_cast<Emit const*>(&_e)) return true;
+	if (dynamic_cast<SubmitInnerTransaction const*>(&_e)) return true;
+	if (dynamic_cast<CreateInnerTransaction const*>(&_e)) return true;
+	if (auto ic = dynamic_cast<IntrinsicCall const*>(&_e))
+	{
+		auto const& op = ic->opCode;
+		// Storage ops (read or write — both unsafe in a sidecar).
+		if (op == "app_global_get" || op == "app_global_get_ex"
+			|| op == "app_global_put" || op == "app_global_del") return true;
+		if (op == "app_local_get" || op == "app_local_get_ex"
+			|| op == "app_local_put" || op == "app_local_del") return true;
+		if (op == "box_get" || op == "box_put" || op == "box_create"
+			|| op == "box_del" || op == "box_replace" || op == "box_extract"
+			|| op == "box_resize" || op == "box_splice"
+			|| op == "box_len") return true;
+		// Log + inner-txn opcodes.
+		if (op == "log") return true;
+		if (op == "itxn_begin" || op == "itxn_next" || op == "itxn_field"
+			|| op == "itxn_submit") return true;
+		// App / asset / account params depend on running-app context.
+		if (op == "asset_holding_get" || op == "asset_params_get"
+			|| op == "app_params_get" || op == "acct_params_get") return true;
+	}
+	return false;
+}
+
+bool isLiftableByWalk(awst::Block const& _body)
+{
+	bool unsafe = false;
+	auto& blk = const_cast<awst::Block&>(_body);
+	walkBlock(blk, [&unsafe](awst::Expression const& e)
+		-> std::shared_ptr<awst::Expression>
+	{
+		if (isSideEffectful(e)) unsafe = true;
+		return nullptr;
+	});
+	return !unsafe;
+}
+
+/// Rough TEAL-bytes estimate for one Expression node (the node itself,
+/// children are added by the walker that calls this). Tuned to recognize
+/// biguint operations as heavy: a single `b*` / `b/` / `b**` op emits
+/// 25-50 B of TEAL whereas a uint64 `*` is 1 B.
+int estimateExpressionBytes(awst::Expression const& _e)
+{
+	using namespace awst;
+	if (dynamic_cast<IntegerConstant const*>(&_e)) return 2;
+	if (dynamic_cast<BoolConstant const*>(&_e)) return 1;
+	if (dynamic_cast<VarExpression const*>(&_e)) return 1;
+	if (auto bc = dynamic_cast<BytesConstant const*>(&_e))
+		return std::max(2, static_cast<int>(bc->value.size()));
+	if (dynamic_cast<UInt64BinaryOperation const*>(&_e)) return 2;
+	if (dynamic_cast<BigUIntBinaryOperation const*>(&_e)) return 30;
+	if (dynamic_cast<NumericComparisonExpression const*>(&_e)) return 2;
+	if (dynamic_cast<BytesBinaryOperation const*>(&_e)) return 5;
+	if (dynamic_cast<BytesComparisonExpression const*>(&_e)) return 3;
+	if (dynamic_cast<BooleanBinaryOperation const*>(&_e)) return 2;
+	if (dynamic_cast<Not const*>(&_e)) return 1;
+	if (dynamic_cast<AssertExpression const*>(&_e)) return 2;
+	if (dynamic_cast<IntrinsicCall const*>(&_e)) return 3;
+	if (dynamic_cast<SubroutineCallExpression const*>(&_e)) return 5;
+	if (dynamic_cast<ARC4Encode const*>(&_e)) return 10;
+	if (dynamic_cast<ARC4Decode const*>(&_e)) return 10;
+	if (dynamic_cast<ReinterpretCast const*>(&_e)) return 0;
+	if (dynamic_cast<NewArray const*>(&_e)) return 5;
+	if (dynamic_cast<NewStruct const*>(&_e)) return 5;
+	if (dynamic_cast<TupleItemExpression const*>(&_e)) return 1;
+	if (dynamic_cast<FieldExpression const*>(&_e)) return 2;
+	if (dynamic_cast<IndexExpression const*>(&_e)) return 4;
+	if (dynamic_cast<ConditionalExpression const*>(&_e)) return 4;
+	if (dynamic_cast<AssignmentExpression const*>(&_e)) return 2;
+	if (dynamic_cast<AppStateExpression const*>(&_e)) return 3;
+	if (dynamic_cast<StateGet const*>(&_e)) return 5;
+	if (dynamic_cast<StateExists const*>(&_e)) return 4;
+	if (dynamic_cast<StateGetEx const*>(&_e)) return 5;
+	if (dynamic_cast<ArrayLength const*>(&_e)) return 1;
+	return 1; // unknown / cheap default
+}
+
+/// Walk a Block, sum estimateExpressionBytes for every reachable
+/// Expression node + a small per-statement base. Yields a TEAL-bytes
+/// proxy good enough to compare biguint-heavy bodies (which lift
+/// usefully) against trivial wrappers (which don't).
+int estimateBodyBytes(awst::Block const& _b)
+{
+	int total = 0;
+	auto& blk = const_cast<awst::Block&>(_b);
+	walkBlock(blk, [&total](awst::Expression const& e)
+		-> std::shared_ptr<awst::Expression>
+	{
+		total += estimateExpressionBytes(e);
+		return nullptr;
+	});
+	total += static_cast<int>(_b.body.size()) * 5;
+	return total;
+}
+
+/// Count `SubroutineCallExpression(target=SubroutineID(_subId))` sites
+/// reachable from any root's body. One call site = one `callsub` in
+/// TEAL today, one `itxn_submit`+decode dance after lifting.
+int countCallSites(
+	std::vector<std::shared_ptr<awst::RootNode>>& _roots,
+	std::string const& _subId)
+{
+	int n = 0;
+	auto fn = [&](awst::Expression const& e)
+		-> std::shared_ptr<awst::Expression>
+	{
+		if (auto sce = dynamic_cast<awst::SubroutineCallExpression const*>(&e))
+			if (auto sid = std::get_if<awst::SubroutineID>(&sce->target))
+				if (sid->target == _subId)
+					++n;
+		return nullptr;
+	};
+	for (auto& r : _roots)
+	{
+		if (auto sub = std::dynamic_pointer_cast<awst::Subroutine>(r))
+		{
+			if (sub->body) walkBlock(*sub->body, fn);
+		}
+		else if (auto contract = std::dynamic_pointer_cast<awst::Contract>(r))
+		{
+			if (contract->approvalProgram.body)
+				walkBlock(*contract->approvalProgram.body, fn);
+			if (contract->clearProgram.body)
+				walkBlock(*contract->clearProgram.body, fn);
+			for (auto& m : contract->methods)
+				if (m.body) walkBlock(*m.body, fn);
+		}
+	}
+	return n;
+}
+
+/// Static call graph at the AWST level: for every Sub / ContractMethod,
+/// collect the set of Subs it directly invokes via SubroutineCallExpression.
+/// Method bodies are keyed under a synthetic id "__method__<cref>.<name>".
+struct StaticCallGraph
+{
+	std::map<std::string, std::set<std::string>> directCalls;
+	std::vector<std::string> methodIds;
+
+	int countReachingMethods(std::string const& _target) const
+	{
+		int n = 0;
+		for (auto const& mid : methodIds)
+		{
+			std::set<std::string> visited;
+			std::vector<std::string> stack = {mid};
+			bool reached = false;
+			while (!stack.empty())
+			{
+				auto cur = std::move(stack.back()); stack.pop_back();
+				if (!visited.insert(cur).second) continue;
+				if (cur == _target) { reached = true; break; }
+				auto it = directCalls.find(cur);
+				if (it != directCalls.end())
+					for (auto const& c : it->second) stack.push_back(c);
+			}
+			if (reached) ++n;
+		}
+		return n;
+	}
+};
+
+StaticCallGraph buildStaticCallGraph(
+	std::vector<std::shared_ptr<awst::RootNode>>& _roots)
+{
+	StaticCallGraph g;
+	auto recordFrom = [&](std::string const& fromId, awst::Block& body)
+	{
+		walkBlock(body, [&](awst::Expression const& e)
+			-> std::shared_ptr<awst::Expression>
+		{
+			if (auto sce = dynamic_cast<awst::SubroutineCallExpression const*>(&e))
+				if (auto sid = std::get_if<awst::SubroutineID>(&sce->target))
+					g.directCalls[fromId].insert(sid->target);
+			return nullptr;
+		});
+	};
+	for (auto& r : _roots)
+	{
+		if (auto sub = std::dynamic_pointer_cast<awst::Subroutine>(r))
+		{
+			if (sub->body) recordFrom(sub->id, *sub->body);
+		}
+		else if (auto contract = std::dynamic_pointer_cast<awst::Contract>(r))
+		{
+			for (auto& m : contract->methods)
+			{
+				if (!m.body) continue;
+				std::string mid = "__method__" + m.cref + "." + m.memberName;
+				recordFrom(mid, *m.body);
+				g.methodIds.push_back(mid);
+			}
+		}
+	}
+	return g;
+}
+
 /// Sanitize an arbitrary identifier-ish string into something safe for
 /// a TEAL template-var name: keep [A-Za-z0-9_], replace everything
 /// else with '_'.
@@ -877,19 +1095,89 @@ PureHelperExtractor::Result PureHelperExtractor::extract(
 
 	// Pass 1: identify pure subroutines that are candidates for
 	// extraction. Skip stubs / those whose return type doesn't fit
-	// through `LastLog`. Skip tiny ones — each call site pays ~50 B
-	// of inner-txn machinery (itxn_begin / 5 itxn_field / itxn_submit
-	// / LastLog / extract / decode), so subs whose original body is
-	// less than ~50 B of bytecode would inflate the caller more than
-	// they shrink the helper. Heuristic threshold: body has at least
-	// kMinBodyStatements top-level statements.
-	constexpr size_t kMinBodyStatements = 10;
+	// through `LastLog`, then apply a call-count-aware lift gate.
+	//
+	// Lift accounting:
+	//   BEFORE lift: body_bytes inlined into every chunk that reaches
+	//                the sub  →  body_bytes × N_chunks
+	//   AFTER lift:  body_bytes lives in the sidecar (1 copy + helper
+	//                approval skeleton), every call site pays itxn
+	//                machinery (begin / 5 field / submit / LastLog /
+	//                extract / decode) ≈ 49 B, +helper_overhead ≈ 200 B
+	//                fixed
+	// Lift wins iff:
+	//   (N_chunks − 1) × body_bytes > kHelperOverhead + total_calls × 49
+	//
+	// We don't know N_chunks (UrosSplitter runs after this pass). We
+	// approximate it as N_methods_reaching_sub: the count of distinct
+	// ABI methods whose body transitively invokes the sub. This is an
+	// upper bound on N_chunks (bin-packing only collapses methods into
+	// a chunk, never expands), so it errs on the side of lifting more
+	// — but the floor on body_bytes prevents pathological lifts.
+	// Body floor: smaller and the chunk-shrink win never beats the
+	// single-itxn-call cost (body − 100). 300 B is the rough break-even
+	// (above that, removing the body from a chunk and replacing 1
+	// callsub with 1 itxn dance still nets bytes).
+	constexpr int kMinBodyBytes = 300;
+	// Empirically measured itxn-dance per call site: ~100 B for 2-arg
+	// uint256 helpers (selector push + 5 itxn_field + per-arg biguint
+	// encode + LastLog + extract + decode). Rises with arg count.
+	constexpr int kItxnOverhead = 100;
+	constexpr int kHelperOverhead = 200;
+	auto callGraph = buildStaticCallGraph(_roots);
+
+	// Build sub-by-id index for transitive liftability check.
+	std::map<std::string, std::shared_ptr<awst::Subroutine>> subById;
+	for (auto const& r : _roots)
+		if (auto sub = std::dynamic_pointer_cast<awst::Subroutine>(r))
+			subById[sub->id] = sub;
+
+	// Transitive liftability: a sub can be lifted iff its body has no
+	// side-effect ops AND every transitively-called sub is also
+	// liftable. Memoized; cycles default to optimistic-true (the
+	// non-cycle work will catch real side-effects).
+	std::map<std::string, bool> liftableMemo;
+	std::function<bool(std::string const&)> isLiftableTransitive =
+		[&](std::string const& subId) -> bool
+	{
+		auto it = liftableMemo.find(subId);
+		if (it != liftableMemo.end()) return it->second;
+		liftableMemo[subId] = true;
+		auto sit = subById.find(subId);
+		if (sit == subById.end())
+		{
+			// Callee isn't a known Subroutine root — could be a stub,
+			// external, or AWST node we don't track. Be conservative:
+			// treat as unsafe so we don't lift a sub that calls into
+			// unknown territory.
+			liftableMemo[subId] = false;
+			return false;
+		}
+		auto const& sub = *sit->second;
+		if (!sub.body) { liftableMemo[subId] = false; return false; }
+		if (!isLiftableByWalk(*sub.body))
+		{ liftableMemo[subId] = false; return false; }
+		auto cit = callGraph.directCalls.find(subId);
+		if (cit != callGraph.directCalls.end())
+		{
+			for (auto const& callee : cit->second)
+				if (!isLiftableTransitive(callee))
+				{ liftableMemo[subId] = false; return false; }
+		}
+		return true;
+	};
+
 	std::vector<std::shared_ptr<awst::Subroutine>> pureSubs;
 	for (auto const& r : _roots)
 	{
 		auto sub = std::dynamic_pointer_cast<awst::Subroutine>(r);
-		if (!sub || !sub->pure || !sub->body) continue;
-		if (sub->body->body.size() < kMinBodyStatements) continue;
+		if (!sub || !sub->body) continue;
+		// Accept Solidity-pure subs (fast path) AND any sub that's
+		// transitively side-effect-free by AWST walk. The latter
+		// covers internal/view helpers that don't actually touch
+		// storage, logs, or inner txns even though they're not marked
+		// `pure` in source.
+		if (!sub->pure && !isLiftableTransitive(sub->id)) continue;
 		if (sub->returnType && sub->returnType != awst::WType::voidType())
 		{
 			int retSize = staticEncodedSize(sub->returnType);
@@ -916,6 +1204,47 @@ PureHelperExtractor::Result PureHelperExtractor::extract(
 				continue;
 			}
 		}
+
+		int bodyBytes = estimateBodyBytes(*sub->body);
+		int callSites = countCallSites(_roots, sub->id);
+		int reachingMethods = callGraph.countReachingMethods(sub->id);
+
+		// Lift gate — chunk-shrink criterion:
+		//   1. Body must be substantial (≥ kMinBodyBytes) so the lift
+		//      pays for the helper-Contract deploy overhead.
+		//   2. Body bytes must dominate per-call itxn overhead so that
+		//      even if all calls localize to one chunk, that chunk
+		//      doesn't grow:  body_bytes ≥ kItxnOverhead × call_sites.
+		// This is more permissive than a global-savings check (which
+		// requires N_chunks ≥ 2 to ever win): we accept some lifts that
+		// inflate the total bytecode footprint by ~helper_overhead/sub
+		// in exchange for shrinking the largest chunk. That's the
+		// tradeoff we want when chunks bump against the 8 KB cap.
+		(void)kHelperOverhead;
+		(void)reachingMethods;
+		if (callSites == 0) continue;
+		if (bodyBytes < kMinBodyBytes) continue;
+		if (bodyBytes < kItxnOverhead * callSites) continue;
+		int savings = bodyBytes;
+		int cost = callSites * kItxnOverhead;
+		if (false)
+		{
+			logger.info(
+				"--deploy-pure-helpers: skipping '" + sub->name +
+				"' (body=" + std::to_string(bodyBytes) +
+				"B, calls=" + std::to_string(callSites) +
+				", reach=" + std::to_string(reachingMethods) +
+				"): savings " + std::to_string(savings) +
+				" ≤ cost " + std::to_string(cost));
+			continue;
+		}
+		logger.info(
+			"--deploy-pure-helpers: candidate '" + sub->name +
+			"' body=" + std::to_string(bodyBytes) +
+			"B calls=" + std::to_string(callSites) +
+			" reach=" + std::to_string(reachingMethods) +
+			" (savings=" + std::to_string(savings) +
+			", cost=" + std::to_string(cost) + ")");
 		pureSubs.push_back(sub);
 	}
 

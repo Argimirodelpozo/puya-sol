@@ -144,7 +144,10 @@ for c in "${CONTRACTS[@]}"; do
         done
     fi
     out=$("$PUYA_SOL" "${args[@]}" 2>&1)
-    if echo "$out" | grep -q "puya completed successfully"; then
+    # bash pattern match avoids SIGPIPE on huge outputs (`echo | grep -q`
+    # with pipefail false-positives when grep matches early and echo
+    # gets EPIPE).
+    if [[ "$out" == *"puya completed successfully"* ]]; then
         if [ -f "$OUT/$c/$c.approval.bin" ]; then
             sz=$(wc -c < "$OUT/$c/$c.approval.bin")
             tag=""
