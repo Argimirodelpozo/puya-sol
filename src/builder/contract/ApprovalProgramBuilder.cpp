@@ -132,14 +132,13 @@ bool detectBoxRefsInConstructor(solidity::frontend::ContractDefinition const& _c
 		bool visit(solidity::frontend::FunctionCall const& _node) override
 		{
 			if (found) return false;
-			auto const* expr = &_node.expression();
-			// Unwrap MemberAccess for calls like _grantRole(...)
-			if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(expr))
-			{
-				auto const* decl = id->annotation().referencedDeclaration;
-				if (decl && targetIds.count(decl->id()))
-					found = true;
-			}
+			// solc's ASTNode::referencedDeclaration covers both
+			// `f(...)` (Identifier) and `Lib.f(...)` (MemberAccess) —
+			// the original Identifier-only check missed library /
+			// base-qualified calls into known box-touching functions.
+			auto const* decl = solidity::frontend::ASTNode::referencedDeclaration(_node.expression());
+			if (decl && targetIds.count(decl->id()))
+				found = true;
 			return !found;
 		}
 	};
