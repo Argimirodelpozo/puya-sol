@@ -110,7 +110,11 @@ std::unique_ptr<NodeBuilder> SolArrayBuilder::member_access(
 		return std::make_unique<SolArrayBuilder>(m_ctx, m_arrayType, std::move(len));
 	}
 
-	// .push, .pop, etc. — not yet handled by builder, fall through
+	// .push / .pop / .concat are dispatched as FunctionCalls (member access
+	// of array followed by a call), so they reach SolArrayMethod.cpp's
+	// toAwst() instead of this member() resolver. Fall through to nullptr;
+	// the caller (NodeBuilder) recognizes that and lets the call site flow
+	// build the FunctionCall instead of treating the member as a value.
 	return nullptr;
 }
 

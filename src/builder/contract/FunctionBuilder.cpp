@@ -1308,9 +1308,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		//
 		// Skipped for internal/private (not externally callable) and for the
 		// receive() function (implicitly payable).
-		bool isPayable =
-			_func.stateMutability() == solidity::frontend::StateMutability::Payable;
-		if (!isPayable && !_func.isReceive())
+		if (!_func.isPayable() && !_func.isReceive())
 			prependNonPayableCheck(method);
 	}
 	else

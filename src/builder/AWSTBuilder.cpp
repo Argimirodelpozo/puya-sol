@@ -121,103 +121,100 @@ void AWSTBuilder::registerFunctionIds(
 	{
 		auto const& sourceUnit = _compiler.ast(sourceName);
 
-		for (auto const& node: sourceUnit.nodes())
+		// Library functions — solc's filteredNodes<T> avoids the dynamic_cast loop.
+		for (auto const* contract: solidity::frontend::ASTNode::filteredNodes<
+			solidity::frontend::ContractDefinition>(sourceUnit.nodes()))
 		{
-			// Register library functions
-			auto const* contract = dynamic_cast<solidity::frontend::ContractDefinition const*>(
-				node.get()
-			);
-
-			if (contract && contract->isLibrary())
-			{
-				std::string libraryName = contract->name();
-
-				// Detect overloaded function names and name+paramcount collisions
-				std::unordered_map<std::string, int> nameCount;
-				std::unordered_map<std::string, int> nameParamCount;
-				for (auto const* func: contract->definedFunctions())
-				{
-					if (!func->isImplemented())
-						continue;
-					std::string baseName = libraryName + "." + func->name();
-					nameCount[baseName]++;
-					nameParamCount[baseName + "(" + std::to_string(func->parameters().size()) + ")"]++;
-				}
-
-				// Track sequence numbers for same-name-same-paramcount overloads
-				std::unordered_map<std::string, int> nameParamSeq;
-
-				for (auto const* func: contract->definedFunctions())
-				{
-					if (!func->isImplemented())
-						continue;
-
-					// Skip functions with non-internal function-type parameters
-					{
-						bool hasNonInternalFnParam = false;
-						for (auto const& p: func->parameters())
-						{
-							if (auto const* ft = dynamic_cast<solidity::frontend::FunctionType const*>(p->type()))
-								if (ft->kind() != solidity::frontend::FunctionType::Kind::Internal)
-								{ hasNonInternalFnParam = true; break; }
-						}
-						if (hasNonInternalFnParam)
-							continue;
-					}
-
-					std::string baseName = libraryName + "." + func->name();
-					std::string qualifiedName = baseName;
-					std::string subroutineId = _sourceFile + "." + baseName;
-					// Disambiguate overloaded functions by parameter count
-					if (nameCount[baseName] > 1)
-					{
-						std::string paramKey = baseName + "(" + std::to_string(func->parameters().size()) + ")";
-						qualifiedName = paramKey;
-						subroutineId = _sourceFile + "." + paramKey;
-						// Further disambiguate if same name AND same param count
-						if (nameParamCount[paramKey] > 1)
-						{
-							int seq = nameParamSeq[paramKey]++;
-							qualifiedName += "_" + std::to_string(seq);
-							subroutineId += "_" + std::to_string(seq);
-						}
-					}
-					m_libraryFunctionIds[qualifiedName] = subroutineId;
-					// Also store by AST ID for precise overload resolution
-					m_freeFunctionById[func->id()] = subroutineId;
-					Logger::instance().debug("[REG] lib func id=" + std::to_string(func->id()) + " name=" + qualifiedName + " => " + subroutineId);
-				}
+			if (!contract->isLibrary())
 				continue;
+
+			std::string libraryName = contract->name();
+
+			// Detect overloaded function names and name+paramcount collisions
+			std::unordered_map<std::string, int> nameCount;
+			std::unordered_map<std::string, int> nameParamCount;
+			for (auto const* func: contract->definedFunctions())
+			{
+				if (!func->isImplemented())
+					continue;
+				std::string baseName = libraryName + "." + func->name();
+				nameCount[baseName]++;
+				nameParamCount[baseName + "(" + std::to_string(func->parameters().size()) + ")"]++;
 			}
 
-			// Register free (file-level) functions
-			auto const* func = dynamic_cast<solidity::frontend::FunctionDefinition const*>(
-				node.get()
-			);
-			if (func && func->isImplemented() && func->isFree())
+			// Track sequence numbers for same-name-same-paramcount overloads
+			std::unordered_map<std::string, int> nameParamSeq;
+
+			for (auto const* func: contract->definedFunctions())
 			{
-				std::string qualifiedName = func->name();
-				std::string subroutineId = _sourceFile + "." + qualifiedName;
-				// Disambiguate free functions with the same name (e.g. UD60x18.powu vs SD59x18.powu)
-				// by appending the AST ID when the name is already registered by a different function
-				auto existingIt = m_freeFunctionById.find(func->id());
-				if (existingIt == m_freeFunctionById.end())
+				if (!func->isImplemented())
+					continue;
+
+				// Skip functions with non-internal function-type parameters
 				{
-					// Check if another function already uses this name
-					for (auto const& [otherId, otherSid]: m_freeFunctionById)
+					bool hasNonInternalFnParam = false;
+					for (auto const& p: func->parameters())
 					{
-						if (otherSid == subroutineId && otherId != func->id())
-						{
-							subroutineId += "_" + std::to_string(func->id());
-							break;
-						}
+						if (auto const* ft = dynamic_cast<solidity::frontend::FunctionType const*>(p->type()))
+							if (ft->kind() != solidity::frontend::FunctionType::Kind::Internal)
+							{ hasNonInternalFnParam = true; break; }
+					}
+					if (hasNonInternalFnParam)
+						continue;
+				}
+
+				std::string baseName = libraryName + "." + func->name();
+				std::string qualifiedName = baseName;
+				std::string subroutineId = _sourceFile + "." + baseName;
+				// Disambiguate overloaded functions by parameter count
+				if (nameCount[baseName] > 1)
+				{
+					std::string paramKey = baseName + "(" + std::to_string(func->parameters().size()) + ")";
+					qualifiedName = paramKey;
+					subroutineId = _sourceFile + "." + paramKey;
+					// Further disambiguate if same name AND same param count
+					if (nameParamCount[paramKey] > 1)
+					{
+						int seq = nameParamSeq[paramKey]++;
+						qualifiedName += "_" + std::to_string(seq);
+						subroutineId += "_" + std::to_string(seq);
 					}
 				}
 				m_libraryFunctionIds[qualifiedName] = subroutineId;
-				// Also store by AST ID for operator overload resolution
+				// Also store by AST ID for precise overload resolution
 				m_freeFunctionById[func->id()] = subroutineId;
-				Logger::instance().debug("[REG] free func id=" + std::to_string(func->id()) + " name=" + qualifiedName + " => " + subroutineId);
+				Logger::instance().debug("[REG] lib func id=" + std::to_string(func->id()) + " name=" + qualifiedName + " => " + subroutineId);
 			}
+		}
+
+		// Free (file-level) functions — same filteredNodes treatment.
+		for (auto const* func: solidity::frontend::ASTNode::filteredNodes<
+			solidity::frontend::FunctionDefinition>(sourceUnit.nodes()))
+		{
+			if (!func->isImplemented() || !func->isFree())
+				continue;
+
+			std::string qualifiedName = func->name();
+			std::string subroutineId = _sourceFile + "." + qualifiedName;
+			// Disambiguate free functions with the same name (e.g. UD60x18.powu vs SD59x18.powu)
+			// by appending the AST ID when the name is already registered by a different function
+			auto existingIt = m_freeFunctionById.find(func->id());
+			if (existingIt == m_freeFunctionById.end())
+			{
+				// Check if another function already uses this name
+				for (auto const& [otherId, otherSid]: m_freeFunctionById)
+				{
+					if (otherSid == subroutineId && otherId != func->id())
+					{
+						subroutineId += "_" + std::to_string(func->id());
+						break;
+					}
+				}
+			}
+			m_libraryFunctionIds[qualifiedName] = subroutineId;
+			// Also store by AST ID for operator overload resolution
+			m_freeFunctionById[func->id()] = subroutineId;
+			Logger::instance().debug("[REG] free func id=" + std::to_string(func->id()) + " name=" + qualifiedName + " => " + subroutineId);
 		}
 	}
 }
@@ -233,10 +230,10 @@ void AWSTBuilder::presetDispatchCref(
 	for (auto const& sourceName: _compiler.sourceNames())
 	{
 		auto const& su = _compiler.ast(sourceName);
-		for (auto const& node: su.nodes())
+		for (auto const* c: solidity::frontend::ASTNode::filteredNodes<
+			solidity::frontend::ContractDefinition>(su.nodes()))
 		{
-			auto const* c = dynamic_cast<solidity::frontend::ContractDefinition const*>(node.get());
-			if (c && !c->isLibrary() && !c->abstract() && !c->isInterface())
+			if (!c->isLibrary() && !c->abstract() && !c->isInterface())
 			{
 				eb::FunctionPointerBuilder::setCurrentCref(_sourceFile + "." + c->name());
 				return;
