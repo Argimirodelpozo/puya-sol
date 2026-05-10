@@ -3,7 +3,6 @@
 /// Migrated from MemberAccessBuilder.cpp lines 380-687.
 
 #include "builder/sol-ast/members/SolMetaTypeAccess.h"
-#include "builder/ExpressionUtils.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "Logger.h"
 
@@ -42,16 +41,12 @@ std::shared_ptr<awst::Expression> SolMetaTypeAccess::toAwst()
 			std::string val;
 			if (member == "max")
 			{
-				if (intType->isSigned())
-				{
-					// type(intN).max = 2^(N-1) - 1
-					solidity::u256 maxVal = (solidity::u256(1) << (bits - 1)) - 1;
-					std::ostringstream oss;
-					oss << maxVal;
-					val = oss.str();
-				}
-				else
-					val = puyasol::builder::maxUintValue(bits);
+				// solc's IntegerType::max() handles both signed (2^(N-1)-1)
+				// and unsigned (2^N-1) and returns a u256 — same value we
+				// were computing/looking up by hand.
+				std::ostringstream oss;
+				oss << intType->max();
+				val = oss.str();
 			}
 			else
 			{

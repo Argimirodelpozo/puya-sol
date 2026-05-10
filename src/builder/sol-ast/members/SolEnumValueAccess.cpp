@@ -11,6 +11,10 @@ std::shared_ptr<awst::Expression> SolEnumValueAccess::toAwst()
 		m_memberAccess.annotation().referencedDeclaration);
 	if (!enumVal) return nullptr;
 
+	// Iterate the enclosing EnumDefinition's members to find this value's
+	// ordinal. (Solc's EnumType::memberValue(name) does the same lookup
+	// but requires constructing an EnumType from an EnumDefinition, which
+	// we don't have a direct accessor for here.)
 	auto const* enumDef = dynamic_cast<solidity::frontend::EnumDefinition const*>(
 		enumVal->scope());
 	if (!enumDef) return nullptr;
@@ -23,8 +27,7 @@ std::shared_ptr<awst::Expression> SolEnumValueAccess::toAwst()
 		++index;
 	}
 
-	auto e = awst::makeIntegerConstant(std::to_string(index), m_loc);
-	return e;
+	return awst::makeIntegerConstant(std::to_string(index), m_loc);
 }
 
 } // namespace puyasol::builder::sol_ast
