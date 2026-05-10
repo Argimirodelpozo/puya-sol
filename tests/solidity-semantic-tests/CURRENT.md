@@ -1,3 +1,22 @@
+# Semantic Test Status — v225
+
+**Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**
+
+vs v224 = 1096 PASS: **bit-identical per-test results**.
+
+## v225 puya-sol changes (vs v224)
+
+Refactor commit *01e42a24a*: SolEmitStatement and SolRevertStatement
+both extract event/error names by walking
+`ASTNode::referencedDeclaration(eventCall.expression())` →
+`EventDefinition*` / `ErrorDefinition*` and reading `.name()`,
+collapsing the previous Identifier-or-MemberAccess `dynamic_cast`
+chains into one solc-resolved declaration lookup. Same result for
+valid Solidity code (the only case that reaches us — solc would error
+out earlier on an unresolved name).
+
+---
+
 # Semantic Test Status — v224
 
 **Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**

@@ -1,7 +1,7 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_sewvrtlh/s2.sol.C.approval_program() -> uint64:
+// /tmp/multisource_tz86lxas/s2.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
     pushint 4096
@@ -37,14 +37,14 @@ main_b_route@6:
     -
     gtxns Amount
 
-main_ternary_merge@13:
+main_ternary_merge@18:
     !
     assert // not payable
     err // E
 
 main_ternary_false@12:
     intc_1 // 0
-    b main_ternary_merge@13
+    b main_ternary_merge@18
 
 main_a_route@5:
     txn GroupIndex
@@ -53,11 +53,7 @@ main_a_route@5:
     intc_0 // 1
     -
     gtxns Amount
-
-main_ternary_merge@18:
-    !
-    assert // not payable
-    err // Panic
+    b main_ternary_merge@18
 
 main_ternary_false@17:
     intc_1 // 0
