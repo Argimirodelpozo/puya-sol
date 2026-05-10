@@ -1,3 +1,33 @@
+# Semantic Test Status — v232
+
+**Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**
+
+vs v231 = 1096 PASS: **bit-identical per-test results**.
+
+## v232 puya-sol changes (vs v231)
+
+Refactor commit *42e6fa50f*: scope tracking flattened to a shared
+`ScopeState` struct owned by `TranslationContext`. The seven decl-id-keyed
+maps (storageAliases, funcPtrTargets, constantLocals, slotStorageRefs,
+mappingKeyParams, paramRemaps, superTargetNames) used to live as members
+of three different Context subclasses and resolve via virtual `findX(id)`
+overrides walking the parent chain. They're keyed on globally-unique AST
+decl IDs, so no shadowing semantics is required. Collapsed into a single
+flat ScopeState with O(1) hashmap lookups; the `Context` base caches a
+`ScopeState*` so every nested context reaches it directly.
+
+Lexical-scope state (var-name shadowing, unchecked-block flag, enclosing
+loop, placeholder body, inConstructor) stays on the typed contexts —
+those genuinely depend on lexical nesting.
+
+Source delta: −89 LOC net. Setters / finders / erasers preserve the same
+external API; the only caller-side change is `ContractBuilder.cpp`'s
+`m_tr.emplace(TranslationContext{...})` → in-place
+`m_tr.emplace(args...)` (TranslationContext is now non-copyable /
+non-movable since `m_state` would dangle on a copy/move).
+
+---
+
 # Semantic Test Status — v231
 
 **Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**
