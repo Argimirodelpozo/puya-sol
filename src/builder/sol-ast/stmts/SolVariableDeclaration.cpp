@@ -39,15 +39,15 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 		std::shared_ptr<awst::Expression> value;
 		if (initialValue)
 		{
-			// Track function pointer assignments
+			// Track function pointer assignments. Use solc's
+			// ASTNode::referencedDeclaration so both `function() x = f;`
+			// (Identifier) and `function() x = Lib.f;` (MemberAccess)
+			// register the target.
 			if (dynamic_cast<FunctionType const*>(decl.type()))
 			{
-				if (auto const* initId = dynamic_cast<Identifier const*>(initialValue))
-				{
-					if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(
-							initId->annotation().referencedDeclaration))
-						m_blk.setFuncPtrTarget(decl.id(), funcDef);
-				}
+				if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(
+						ASTNode::referencedDeclaration(*initialValue)))
+					m_blk.setFuncPtrTarget(decl.id(), funcDef);
 			}
 
 			value = m_blk.builderCtx().build(*initialValue);
