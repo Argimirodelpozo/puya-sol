@@ -254,13 +254,12 @@ void AWSTBuilder::translateLibraryFunctions(
 	{
 		auto const& sourceUnit = _compiler.ast(sourceName);
 
-		for (auto const& node: sourceUnit.nodes())
+		// Use solc's filteredNodes<T>() template instead of dynamic_cast'ing
+		// each node — same effect, less boilerplate.
+		for (auto const* contract: solidity::frontend::ASTNode::filteredNodes<
+			solidity::frontend::ContractDefinition>(sourceUnit.nodes()))
 		{
-			auto const* contract = dynamic_cast<solidity::frontend::ContractDefinition const*>(
-				node.get()
-			);
-
-			if (!contract || !contract->isLibrary())
+			if (!contract->isLibrary())
 				continue;
 
 			std::string libraryName = contract->name();
@@ -340,12 +339,10 @@ void AWSTBuilder::translateFreeFunctions(
 	{
 		auto const& sourceUnit = _compiler.ast(sourceName);
 
-		for (auto const& node: sourceUnit.nodes())
+		for (auto const* func: solidity::frontend::ASTNode::filteredNodes<
+			solidity::frontend::FunctionDefinition>(sourceUnit.nodes()))
 		{
-			auto const* func = dynamic_cast<solidity::frontend::FunctionDefinition const*>(
-				node.get()
-			);
-			if (!func || !func->isImplemented() || !func->isFree())
+			if (!func->isImplemented() || !func->isFree())
 				continue;
 
 			std::string qualifiedName = func->name();
@@ -849,15 +846,9 @@ void AWSTBuilder::translateContracts(
 	{
 		auto const& sourceUnit = _compiler.ast(sourceName);
 
-		for (auto const& node: sourceUnit.nodes())
+		for (auto const* contract: solidity::frontend::ASTNode::filteredNodes<
+			solidity::frontend::ContractDefinition>(sourceUnit.nodes()))
 		{
-			auto const* contract = dynamic_cast<solidity::frontend::ContractDefinition const*>(
-				node.get()
-			);
-
-			if (!contract)
-				continue;
-
 			// Skip interfaces, abstract contracts, and libraries (already handled)
 			if (contract->isInterface())
 			{
