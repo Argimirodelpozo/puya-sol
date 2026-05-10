@@ -116,7 +116,11 @@ declare -A FN_SPLITS
 # Until then, liquidationCall stays as a single chunk and trips the
 # runtime size assertion in deploy_split_app — the 3 oracle tests that
 # need SpokeInstance deploy skip cleanly with a clear reason.
-# FN_SPLITS[SpokeInstance]="liquidationCall:3:g0:cross"  # DOESN'T FIT; awaits #63 + helper
+# FN_SPLITS[SpokeInstance]="liquidationCall:3:g0:cross"  # post-lift gate: chunk_6
+# fits but main bloats to 14849 B (LiquidationLogic helpers pulled in). The
+# `:g0` (no :cross) variant doesn't shrink chunk_6 since both pieces stay
+# together. Awaits dispatch_chain v3 + non-pure sidecar for storage-touching
+# LiquidationLogic helpers, OR a source-level refactor.
 
 for c in "${CONTRACTS[@]}"; do
     src="$HERE/contracts/$c.sol"
