@@ -1,3 +1,23 @@
+# Semantic Test Status — v230
+
+**Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**
+
+vs v229 = 1096 PASS: **bit-identical per-test results**.
+
+## v230 puya-sol changes (vs v229)
+
+Refactor commit *985f80688*: `AsaIntrinsics::isAvmLibraryAccess` now
+resolves the AVM-library reference through
+`ASTNode::referencedDeclaration(_memberAccess.expression())` instead
+of the per-shape `dynamic_cast<Identifier>...->annotation().referencedDeclaration`.
+Same coverage extension as the constructor-side (v226) and indirect
+box-write (v227) fixes — the call-site detector now also catches
+module-aliased forms `import "tokens/AVM.sol" as Mod; Mod.AVM.foo()`.
+AVM is a library — no virtual / super dispatch involved — so the
+widening is safe.
+
+---
+
 # Semantic Test Status — v229
 
 **Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**
