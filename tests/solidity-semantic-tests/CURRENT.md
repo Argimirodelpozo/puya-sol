@@ -1,3 +1,22 @@
+# Semantic Test Status — v233
+
+**Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**
+
+vs v232 = 1096 PASS: **bit-identical per-test results**.
+
+## v233 puya-sol changes (vs v232)
+
+Refactor commit *ccf60f579*: MsgRefChecker visitors in
+`ApprovalProgramBuilder.cpp` and `SolNewExpression.cpp` switch from
+string-comparing the base identifier name (`id->name() == "msg"`) to
+a typed lookup via `dynamic_cast<MagicVariableDeclaration>(id->annotation().referencedDeclaration)`.
+Fixes a latent shadowing bug — `msg` is not a reserved keyword in
+Solidity, so a user-defined local named `msg` would have triggered
+the constructor's __postInit deferral via false-positive name match.
+Same code length; correct under shadowing.
+
+---
+
 # Semantic Test Status — v232
 
 **Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**
