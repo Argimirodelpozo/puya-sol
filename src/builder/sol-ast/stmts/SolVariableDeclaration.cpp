@@ -39,15 +39,19 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 		std::shared_ptr<awst::Expression> value;
 		if (initialValue)
 		{
-			// Track function pointer assignments
+			// Track function pointer assignments. solc's
+			// ASTNode::referencedDeclaration handles both
+			// `function() x = f;` (Identifier) and `function() x = Lib.f;` /
+			// `function() x = super.f;` (MemberAccess). The MemberAccess
+			// case is safe even for super.f now that SolInternalCall's
+			// Identifier-form fn-ptr dispatch consults findSuperTarget
+			// before settling on a plain InstanceMethodTarget — see the
+			// matching block in SolInternalCall::processFromIdent.
 			if (dynamic_cast<FunctionType const*>(decl.type()))
 			{
-				if (auto const* initId = dynamic_cast<Identifier const*>(initialValue))
-				{
-					if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(
-							initId->annotation().referencedDeclaration))
-						m_blk.setFuncPtrTarget(decl.id(), funcDef);
-				}
+				if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(
+						ASTNode::referencedDeclaration(*initialValue)))
+					m_blk.setFuncPtrTarget(decl.id(), funcDef);
 			}
 
 			value = m_blk.builderCtx().build(*initialValue);

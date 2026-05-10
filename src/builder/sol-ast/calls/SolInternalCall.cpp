@@ -573,6 +573,19 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 		auto* retType = returnTypeFrom(funcDef);
 		awst::SubroutineTarget target;
 
+		// MRO super dispatch: when the resolved target is registered as a
+		// super-target (e.g. `function() x = super.f;` rebound to `f` and
+		// then called via `x()` — solc's referencedDeclaration on super.f
+		// gives the right MRO target, but a direct InstanceMethodTarget
+		// would bypass the f__super_<callerId> stub the SuperCallResolution
+		// machinery built). Mirror the MemberAccess path (line ~670) so
+		// the Identifier form picks up super stubs for fn-ptr-bound calls.
+		if (auto superName = m_scope.findSuperTarget(funcDef->id()); !superName.empty())
+		{
+			target = awst::InstanceMethodTarget{std::move(superName)};
+			return buildSubroutineCall(std::move(target), retType, funcDef, false);
+		}
+
 		// Try library/free function resolution via CallResolver
 		auto resolved = eb::CallResolver::resolveFromIdentifier(
 			m_ctx, _ident, eb::CallResolver::resolveMethodName(m_ctx, *funcDef));
