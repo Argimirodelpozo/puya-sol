@@ -202,14 +202,18 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 					bool found = false;
 					bool visit(solidity::frontend::MemberAccess const& _ma) override
 					{
-						if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(&_ma.expression()))
-						{
-							if (id->name() == "msg"
-								&& (_ma.memberName() == "value"
-									|| _ma.memberName() == "sender"
-									|| _ma.memberName() == "data"))
-								found = true;
-						}
+						// Resolve via solc's MagicVariableDeclaration so a
+						// user-defined local named `msg` doesn't trigger a
+						// false positive.
+						auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(&_ma.expression());
+						if (!id) return !found;
+						auto const* magic = dynamic_cast<solidity::frontend::MagicVariableDeclaration const*>(
+							id->annotation().referencedDeclaration);
+						if (magic && magic->name() == "msg"
+							&& (_ma.memberName() == "value"
+								|| _ma.memberName() == "sender"
+								|| _ma.memberName() == "data"))
+							found = true;
 						return !found;
 					}
 				};
