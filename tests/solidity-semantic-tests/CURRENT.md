@@ -1,3 +1,55 @@
+# Semantic Test Status — v224
+
+**Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**
+
+vs v222 = 1096 PASS: **bit-identical per-test results**.
+
+## v224 puya-sol changes (vs v222)
+
+Eight refactor commits landed between v222 and the v223 candidate run; that
+run regressed 5 tests (`asm_address_constant_regression`,
+`asm_constant_file_level`, `inlineAssembly/constant_access`,
+`inlineAssembly/constant_access_referencing`,
+`externalContracts/ramanujan_pi`). All five share an inline-assembly
+constant-access pattern (file-level `address constant`, contract-level
+`bytes2 constant`, chained `bytes2 constant bb = b;`, etc.).
+
+Two bugs in those interim commits — fixed in commit *933614134* — restored
+the regressions back to passing without changing any other test outcome:
+
+1. **Polarity inverted on `isConstantVariableRecursive`** (commit
+   9125edd04). Solc returns true for *cyclic* constant chains; the gate
+   `if (!isConstantVariableRecursive) continue;` was therefore skipping
+   every well-formed constant. Inverted to skip cycles.
+2. **Literal fast-path coverage gaps** (commit ba849498a). Solc's
+   `constantToTypedValue` only emits values for `RationalNumberType` /
+   `StringLiteralType`, so `address constant`, `bytes2 constant`, and
+   `bool constant` literals fell through to monostate. Restored direct
+   handling for bool, hex literal → u256 (with bytesN left-shift), and
+   chained `Identifier` recursion that strips the inner shift before
+   re-applying the outer one.
+
+Refactor commit *7d71f496a* additionally lands in this version:
+
+- `AWSTBuilder::registerFunctionIds` and `presetDispatchCref` switch from
+  per-node `dynamic_cast<ContractDefinition>` / `dynamic_cast<FunctionDefinition>`
+  loops to `ASTNode::filteredNodes<T>(sourceUnit.nodes())` — extending the
+  pattern that eb22d0ad4 already established for `translateLibraryFunctions` /
+  `translateFreeFunctions`.
+- `FunctionBuilder.cpp` adopts `_func.isPayable()` over
+  `stateMutability() == StateMutability::Payable`.
+- `TypeMapper.{h,cpp}` deletes four dead solc-adapter helpers
+  (`abiSignatureForFunction(×2)`, `abiTypeName`, `canImplicitlyConvert`)
+  and the `ImplicitConvert` struct — added as additive scaffolding but
+  never gained callers (same fate as the `resolveVirtual` shim removed
+  earlier this stack).
+
+Net source delta: −24 LOC (refactor adds 71, removes 96 in the constant
+fix; refactor commit adds 82, removes 181). Build clean. Suite identical
+to v222.
+
+---
+
 # Semantic Test Status — v222
 
 **Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**
