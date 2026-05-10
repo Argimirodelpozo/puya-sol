@@ -217,7 +217,10 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 
 	// Build the per-contract TranslationContext. FunctionContext + BlockContext
 	// are constructed locally (in buildBlock and similar) on top of this.
-	m_tr.emplace(sol_ast::TranslationContext{*m_exprBuilder, m_typeMapper, m_sourceFile});
+	// In-place emplace (forwarded args, no temporary) — TranslationContext
+	// caches a pointer to its own scopeState_ member, which would dangle if
+	// the object were copy/move-constructed from a temporary.
+	m_tr.emplace(*m_exprBuilder, m_typeMapper, m_sourceFile);
 	m_exprBuilder->currentScope = &*m_tr;
 	m_currentParams.clear();
 	m_currentReturnType = nullptr;

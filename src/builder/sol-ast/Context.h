@@ -3,28 +3,24 @@
 /// @file Context.h
 /// Typed nested contexts for Solidity AST traversal.
 ///
-/// Every scope level inherits from `Context` and carries a parent pointer.
-/// The chain terminates at `TranslationContext` (parent == nullptr). Future
-/// state migrations push scope-bound fields into the appropriate subclass
-/// and override base-class accessors to terminate the lookup walk when the
-/// subclass owns the answer.
+/// Two layers of state:
 ///
-///   TranslationContext  — per-contract: type mapper, source file, the
-///                          ContractContext (low-level translation state).
-///   FunctionContext     — per-function: params, return type, param bit
-///                          widths (for inline assembly packing).
-///   BlockContext        — per-block: enclosing loop (for continue/break),
-///                          placeholder body (for modifier inlining), parent
-///                          link for nesting.
-///   LoopContext         — per-loop: forLoopPost (i++ to run before
-///                          continue) or doWhileCondBreak (cond at bottom).
-///                          Currently orthogonal to the parent chain;
-///                          referenced via BlockContext::enclosingLoop.
+///  1. **Lexical scope state** — `unchecked` blocks, var-name shadowing,
+///     enclosing loop, modifier placeholder body, inConstructor flag.
+///     These stay on the typed per-scope contexts (BlockContext,
+///     FunctionContext) and resolve via parent-chain walks when looked
+///     up. They genuinely depend on lexical nesting.
 ///
-/// Visitors are *transient* and take the **narrowest context** they need.
-/// When entering a nested scope, we derive a new context with `nest()`,
-/// `withLoop()`, or `withPlaceholder()`, then construct a new visitor with
-/// it. Stack-allocated; no save-and-restore.
+///  2. **Decl-id-keyed bindings** — storage aliases, fn-ptr targets,
+///     constant-folded locals, slot-storage refs, mapping-key params,
+///     modifier param remaps, super-call MRO targets. All keyed by
+///     globally-unique AST decl IDs. These live in a single flat
+///     `ScopeState` owned by the TranslationContext at the top of the
+///     chain. Looked up in O(1) without virtual dispatch.
+///
+/// The `Context` base caches a `ScopeState*` so every level (Translation,
+/// Function, Block) reaches the same flat state. `setX`/`findX`/`eraseX`
+/// are non-virtual hashmap ops on it.
 
 #include "awst/Node.h"
 
@@ -33,6 +29,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace puyasol::builder
@@ -53,11 +50,53 @@ struct ParamRemap
 	awst::WType const* type;
 };
 
+/// Flat translation-time scope state. All decl-id-keyed bindings live
+/// here in a single struct owned by TranslationContext at the chain
+/// root. Decl IDs are globally unique, so the maps grow monotonically
+/// over a single contract's translation and never collide across
+/// functions; they're dropped when TranslationContext goes out of
+/// scope. Per-block reset is unnecessary — when the next function
+/// starts, it references its own (fresh) decl IDs and the prior
+/// bindings are inert.
+struct ScopeState
+{
+	/// `mapping(K=>V) storage m = m1; ...; m[k]` — local pointer aliasing
+	/// a state-var mapping. Lookup resolves `m` to `m1`'s base expression.
+	std::unordered_map<int64_t, std::shared_ptr<awst::Expression>> storageAliases;
 
-/// Common base for every scope level. Holds an upward parent pointer so
-/// scope-bound lookups can be resolved by walking the chain. Non-virtual
-/// where possible; virtual destructor so `delete` of a base pointer works
-/// once we start storing them through Context*.
+	/// Local `function (…) returns (…)` variable → its bound
+	/// FunctionDefinition. Used by SolInternalCall to lower an indirect
+	/// `f()` call through a fn-ptr local as a direct callsub.
+	std::unordered_map<int64_t, solidity::frontend::FunctionDefinition const*> funcPtrTargets;
+
+	/// Folded compile-time constant value for a local declaration.
+	/// Sentinel return is 0; reads check `>0`.
+	std::unordered_map<int64_t, unsigned long long> constantLocals;
+
+	/// Slot-based storage refs for local pointers (`T storage p = base[i]`).
+	std::unordered_map<int64_t, std::shared_ptr<awst::Expression>> slotStorageRefs;
+
+	/// Function param/return decl ID → its name as a runtime bytes value
+	/// (used as the box-key prefix for a `mapping(K=>V) storage` param).
+	std::unordered_map<int64_t, std::string> mappingKeyParams;
+
+	/// Modifier-inliner param remap: when the same modifier is applied
+	/// multiple times in a function, each instance's locals get a unique
+	/// mangled name. Set/erased explicitly by the inliner around each
+	/// expansion.
+	std::unordered_map<int64_t, ParamRemap> paramRemaps;
+
+	/// `super.X()` MRO resolution map: AST decl ID → mangled super name.
+	/// Set up per-function before its body is translated; cleared between
+	/// function bodies.
+	std::unordered_map<int64_t, std::string> superTargetNames;
+};
+
+/// Common base for every scope level. Holds an upward parent pointer for
+/// the lexical-scope walks and a cached `ScopeState*` to the chain root's
+/// flat decl-id-keyed state. Non-virtual where possible; virtual
+/// destructor so `delete` of a base pointer works once we start storing
+/// them through Context*.
 class Context
 {
 public:
@@ -66,23 +105,17 @@ public:
 	/// Walk one level up. Returns nullptr at the root (TranslationContext).
 	Context* parent() const { return m_parent; }
 
-	// ── Scope-bound state accessors ──────────────────────────────────
-	// Default impls chain to the parent so callers can always ask the
-	// innermost scope without caring which level owns the answer.
-	// Subclasses override what they own to terminate the walk.
+	/// The flat decl-id-keyed scope state shared across every level of
+	/// the chain. Always points to the TranslationContext's owned
+	/// ScopeState.
+	ScopeState& scopeState() const { return *m_state; }
+
+	// ── Lexical-scope state (parent-chain walks) ────────────────────
 
 	/// True if any ancestor scope is inside an `unchecked { }` block.
 	virtual bool isUnchecked() const
 	{
 		return m_parent && m_parent->isUnchecked();
-	}
-
-	/// Storage-pointer alias: `mapping(K=>V) storage m = m1; ...; m[k]`
-	/// resolves `m` to the same expression as `m1`. Returns nullptr if no
-	/// alias is bound for this decl in any enclosing block.
-	virtual std::shared_ptr<awst::Expression> findStorageAlias(int64_t _declId) const
-	{
-		return m_parent ? m_parent->findStorageAlias(_declId) : nullptr;
 	}
 
 	/// Variable-name → AST decl ID for shadow detection. Returns 0 if the
@@ -93,36 +126,7 @@ public:
 		return m_parent ? m_parent->lookupVarId(_name) : 0;
 	}
 
-	/// Function-pointer target: the FunctionDefinition that a local
-	/// `function (…) returns (…)` variable currently points at. Returns
-	/// nullptr if no binding exists in any enclosing block. Used by
-	/// SolInternalCall to lower an indirect call as a direct callsub.
-	virtual solidity::frontend::FunctionDefinition const* findFuncPtrTarget(
-		int64_t _declId
-	) const
-	{
-		return m_parent ? m_parent->findFuncPtrTarget(_declId) : nullptr;
-	}
-
-	/// Compile-time constant value for a local: e.g. `uint x = 5` is
-	/// folded so later uses of `x` inline `5`. Sentinel return is 0,
-	/// matched against `>0` checks at the read site.
-	virtual unsigned long long findConstantLocal(int64_t _declId) const
-	{
-		return m_parent ? m_parent->findConstantLocal(_declId) : 0ULL;
-	}
-
-	/// Slot-based storage ref for a local declaration: when a `T storage`
-	/// pointer is assigned a slot expression, the binding lets later index
-	/// accesses through the local resolve to the slot directly.
-	virtual std::shared_ptr<awst::Expression> findSlotStorageRef(
-		int64_t _declId
-	) const
-	{
-		return m_parent ? m_parent->findSlotStorageRef(_declId) : nullptr;
-	}
-
-	/// True if the enclosing function is a constructor body. Constructor-only
+	/// True iff the enclosing function is a constructor body. Constructor-only
 	/// behaviour (e.g. immutable writes via direct app-global init) gates on
 	/// this flag.
 	virtual bool isInConstructor() const
@@ -130,50 +134,111 @@ public:
 		return m_parent && m_parent->isInConstructor();
 	}
 
-	/// Mapping-storage-pointer parameter: function-scoped binding from a
-	/// param/return decl ID to its name (used as the box-key prefix at
-	/// runtime). Returns empty string if the decl isn't a mapping-storage
-	/// param in any enclosing function.
-	virtual std::string findMappingKeyParam(int64_t _declId) const
+	// ── Decl-id-keyed lookups (O(1) flat) ───────────────────────────
+
+	std::shared_ptr<awst::Expression> findStorageAlias(int64_t _declId) const
 	{
-		return m_parent ? m_parent->findMappingKeyParam(_declId) : std::string{};
+		auto it = m_state->storageAliases.find(_declId);
+		return it != m_state->storageAliases.end() ? it->second : nullptr;
 	}
 
-	/// Modifier-inliner param remap: when the same modifier is applied
-	/// multiple times in a single function, each instance's locals get a
-	/// unique mangled name. Returns nullptr if no remap is in effect.
-	virtual ParamRemap const* findParamRemap(int64_t _declId) const
+	solidity::frontend::FunctionDefinition const* findFuncPtrTarget(int64_t _declId) const
 	{
-		return m_parent ? m_parent->findParamRemap(_declId) : nullptr;
+		auto it = m_state->funcPtrTargets.find(_declId);
+		return it != m_state->funcPtrTargets.end() ? it->second : nullptr;
 	}
 
-	/// `super.X()` resolution: pre-computed per the contract's MRO so a
-	/// call expression with target decl ID can route to the right base
-	/// implementation. Returns empty string if not bound.
-	virtual std::string findSuperTarget(int64_t _declId) const
+	unsigned long long findConstantLocal(int64_t _declId) const
 	{
-		return m_parent ? m_parent->findSuperTarget(_declId) : std::string{};
+		auto it = m_state->constantLocals.find(_declId);
+		return it != m_state->constantLocals.end() ? it->second : 0ULL;
 	}
 
-	// ── Mutation API (writes target the right ancestor) ─────────────
-	// Each setter walks the parent chain to find the scope level that
-	// owns the binding (BlockContext for block-scoped state,
-	// FunctionContext for function-scoped, TranslationContext for
-	// contract-scoped). Defined out-of-line in Context.cpp.
+	std::shared_ptr<awst::Expression> findSlotStorageRef(int64_t _declId) const
+	{
+		auto it = m_state->slotStorageRefs.find(_declId);
+		return it != m_state->slotStorageRefs.end() ? it->second : nullptr;
+	}
 
-	void setStorageAlias(int64_t _declId, std::shared_ptr<awst::Expression> _expr);
+	std::string findMappingKeyParam(int64_t _declId) const
+	{
+		auto it = m_state->mappingKeyParams.find(_declId);
+		return it != m_state->mappingKeyParams.end() ? it->second : std::string{};
+	}
+
+	ParamRemap const* findParamRemap(int64_t _declId) const
+	{
+		auto it = m_state->paramRemaps.find(_declId);
+		return it != m_state->paramRemaps.end() ? &it->second : nullptr;
+	}
+
+	std::string findSuperTarget(int64_t _declId) const
+	{
+		auto it = m_state->superTargetNames.find(_declId);
+		return it != m_state->superTargetNames.end() ? it->second : std::string{};
+	}
+
+	// ── Mutators (direct map ops on the shared state) ───────────────
+
+	void setStorageAlias(int64_t _declId, std::shared_ptr<awst::Expression> _expr)
+	{
+		m_state->storageAliases[_declId] = std::move(_expr);
+	}
+
 	void setFuncPtrTarget(int64_t _declId,
-		solidity::frontend::FunctionDefinition const* _target);
-	void eraseFuncPtrTarget(int64_t _declId);
-	void setConstantLocal(int64_t _declId, unsigned long long _value);
-	void setSlotStorageRef(int64_t _declId, std::shared_ptr<awst::Expression> _expr);
-	void setMappingKeyParam(int64_t _declId, std::string _name);
+		solidity::frontend::FunctionDefinition const* _target)
+	{
+		m_state->funcPtrTargets[_declId] = _target;
+	}
+
+	void eraseFuncPtrTarget(int64_t _declId)
+	{
+		m_state->funcPtrTargets.erase(_declId);
+	}
+
+	void setConstantLocal(int64_t _declId, unsigned long long _value)
+	{
+		m_state->constantLocals[_declId] = _value;
+	}
+
+	void setSlotStorageRef(int64_t _declId, std::shared_ptr<awst::Expression> _expr)
+	{
+		m_state->slotStorageRefs[_declId] = std::move(_expr);
+	}
+
+	void setMappingKeyParam(int64_t _declId, std::string _name)
+	{
+		m_state->mappingKeyParams[_declId] = std::move(_name);
+	}
+
+	/// Toggle the enclosing function's constructor flag. Walks the chain
+	/// to find the FunctionContext that owns `inConstructor`.
 	void setInConstructor(bool _flag);
-	void setParamRemap(int64_t _declId, ParamRemap _remap);
-	void eraseParamRemap(int64_t _declId);
-	void setSuperTarget(int64_t _declId, std::string _name);
-	void clearSuperTargets();
-	std::unordered_map<int64_t, std::string> const& allSuperTargets() const;
+
+	void setParamRemap(int64_t _declId, ParamRemap _remap)
+	{
+		m_state->paramRemaps[_declId] = std::move(_remap);
+	}
+
+	void eraseParamRemap(int64_t _declId)
+	{
+		m_state->paramRemaps.erase(_declId);
+	}
+
+	void setSuperTarget(int64_t _declId, std::string _name)
+	{
+		m_state->superTargetNames[_declId] = std::move(_name);
+	}
+
+	void clearSuperTargets()
+	{
+		m_state->superTargetNames.clear();
+	}
+
+	std::unordered_map<int64_t, std::string> const& allSuperTargets() const
+	{
+		return m_state->superTargetNames;
+	}
 
 	/// Get the AWST variable name for a declaration, handling shadowing.
 	/// If the name is already taken by a different declaration in an outer
@@ -187,56 +252,54 @@ public:
 	std::string lookupVarName(std::string const& _name, int64_t _declId) const;
 
 protected:
-	explicit Context(Context* _parent): m_parent(_parent) {}
+	Context(Context* _parent, ScopeState* _state)
+		: m_parent(_parent), m_state(_state) {}
+	/// Inheriting-state constructor for child scopes — picks up the
+	/// parent's flat ScopeState pointer.
+	explicit Context(Context* _parent)
+		: m_parent(_parent), m_state(_parent ? _parent->m_state : nullptr) {}
 
 	Context* m_parent;
+	ScopeState* m_state;
 };
 
 /// Top-level translation context: per-contract state we share across
-/// every function and statement. Wraps ContractContext (which still holds
-/// the lower-level shared state like storage layout, library function IDs,
-/// scope mappings); future cleanup can flatten more of that down here.
+/// every function and statement. Owns the flat ScopeState that all
+/// nested contexts reach via the cached `m_state` pointer.
 struct TranslationContext: Context
 {
 	eb::ContractContext& contractCtx;
 	TypeMapper& typeMapper;
 	std::string sourceFile;
 
-	/// Modifier-inliner param remaps. Lives at the translation level
-	/// because modifier-body translation re-enters `ContractBuilder::buildBlock`
-	/// (which creates a fresh FunctionContext parented to `*this`) while
-	/// the remap is in effect — the chain walk from inside the modifier
-	/// body reaches `TranslationContext` but not the outer FunctionContext.
-	std::map<int64_t, ParamRemap> paramRemaps;
-
-	/// `super.X()` MRO resolution map: AST decl ID → mangled super name.
-	/// Set up per-function before its body is translated; cleared between
-	/// function bodies. Lives at the translation level so inner buildBlock
-	/// recursions (e.g. modifier inlining) can still see the bindings.
-	std::unordered_map<int64_t, std::string> superTargetNames;
+	/// Flat decl-id-keyed scope state. Owned here so it lives for the
+	/// lifetime of the contract translation.
+	ScopeState scopeState_;
 
 	TranslationContext(
 		eb::ContractContext& _contractCtx,
 		TypeMapper& _typeMapper,
 		std::string _sourceFile
 	)
-		: Context(nullptr),
+		: Context(nullptr, nullptr),
 		  contractCtx(_contractCtx),
 		  typeMapper(_typeMapper),
 		  sourceFile(std::move(_sourceFile))
-	{}
-
-	ParamRemap const* findParamRemap(int64_t _declId) const override
 	{
-		auto it = paramRemaps.find(_declId);
-		return it != paramRemaps.end() ? &it->second : nullptr;
+		// Wire the base's ScopeState pointer to our owned state.
+		// (Can't be done in the initializer list because scopeState_ is
+		// declared after the base.)
+		m_state = &scopeState_;
 	}
 
-	std::string findSuperTarget(int64_t _declId) const override
-	{
-		auto it = superTargetNames.find(_declId);
-		return it != superTargetNames.end() ? it->second : std::string{};
-	}
+	// Non-copyable / non-movable: m_state caches a pointer into our own
+	// scopeState_ member, which would dangle after a move/copy. Force
+	// in-place construction (e.g. `optional::emplace(args...)` instead of
+	// `optional::emplace(TranslationContext{args...})`).
+	TranslationContext(TranslationContext const&) = delete;
+	TranslationContext(TranslationContext&&) = delete;
+	TranslationContext& operator=(TranslationContext const&) = delete;
+	TranslationContext& operator=(TranslationContext&&) = delete;
 
 	awst::SourceLocation makeLoc(solidity::langutil::SourceLocation const& _sl) const
 	{
@@ -269,12 +332,6 @@ struct FunctionContext: Context
 	/// into one). Set by ApprovalProgramBuilder around constructor inlining.
 	bool inConstructor = false;
 
-	/// Mapping-storage-pointer locals: function params (or returns) typed
-	/// `mapping(K=>V) storage` carry their name as a runtime bytes value
-	/// — `r[k]` resolves to a box-access prefixed by `r`'s holder name.
-	std::map<int64_t, std::string> mappingKeyParams;
-
-
 	FunctionContext(
 		TranslationContext& _tr,
 		std::vector<std::pair<std::string, awst::WType const*>> _params,
@@ -289,14 +346,6 @@ struct FunctionContext: Context
 	{}
 
 	bool isInConstructor() const override { return inConstructor; }
-
-	std::string findMappingKeyParam(int64_t _declId) const override
-	{
-		auto it = mappingKeyParams.find(_declId);
-		if (it != mappingKeyParams.end())
-			return it->second;
-		return m_parent ? m_parent->findMappingKeyParam(_declId) : std::string{};
-	}
 };
 
 /// Loop-level context: control-flow targets for continue inside this loop.
@@ -314,7 +363,8 @@ struct LoopContext
 };
 
 /// Block/scope-level context: nesting chain, enclosing loop (for
-/// continue/break), modifier placeholder body (for `_;` inlining).
+/// continue/break), modifier placeholder body (for `_;` inlining),
+/// var-name shadowing.
 struct BlockContext: Context
 {
 	FunctionContext& fn;
@@ -327,36 +377,14 @@ struct BlockContext: Context
 	/// `isUnchecked()`, which walks the chain.
 	bool unchecked = false;
 
-	/// Storage-pointer aliases bound in this block's lexical scope.
-	std::map<int64_t, std::shared_ptr<awst::Expression>> storageAliases;
-
 	/// Variable-name → AST decl ID for shadowing checks. Inserts go to the
-	/// current block (the innermost when reading via `lookupVarId`).
+	/// current block (the innermost when reading via `lookupVarId`). This
+	/// genuinely needs lexical nesting, so it stays per-block.
 	std::map<std::string, int64_t> varNameToId;
-
-	/// Function-pointer targets: local `function` variables → the
-	/// FunctionDefinition they're bound to. Used to lower `f()` (where `f`
-	/// is a local function pointer) as a direct callsub.
-	std::map<int64_t, solidity::frontend::FunctionDefinition const*> funcPtrTargets;
-
-	/// Folded compile-time constant value for a local declaration. Bound
-	/// when a `T x = LITERAL` declaration is encountered.
-	std::unordered_map<int64_t, unsigned long long> constantLocals;
-
-	/// Slot-based storage refs for local pointers (`T storage p = base[i]`).
-	std::map<int64_t, std::shared_ptr<awst::Expression>> slotStorageRefs;
 
 	bool isUnchecked() const override
 	{
 		return unchecked || (m_parent && m_parent->isUnchecked());
-	}
-
-	std::shared_ptr<awst::Expression> findStorageAlias(int64_t _declId) const override
-	{
-		auto it = storageAliases.find(_declId);
-		if (it != storageAliases.end())
-			return it->second;
-		return m_parent ? m_parent->findStorageAlias(_declId) : nullptr;
 	}
 
 	int64_t lookupVarId(std::string const& _name) const override
@@ -365,34 +393,6 @@ struct BlockContext: Context
 		if (it != varNameToId.end())
 			return it->second;
 		return m_parent ? m_parent->lookupVarId(_name) : 0;
-	}
-
-	solidity::frontend::FunctionDefinition const* findFuncPtrTarget(
-		int64_t _declId
-	) const override
-	{
-		auto it = funcPtrTargets.find(_declId);
-		if (it != funcPtrTargets.end())
-			return it->second;
-		return m_parent ? m_parent->findFuncPtrTarget(_declId) : nullptr;
-	}
-
-	unsigned long long findConstantLocal(int64_t _declId) const override
-	{
-		auto it = constantLocals.find(_declId);
-		if (it != constantLocals.end())
-			return it->second;
-		return m_parent ? m_parent->findConstantLocal(_declId) : 0ULL;
-	}
-
-	std::shared_ptr<awst::Expression> findSlotStorageRef(
-		int64_t _declId
-	) const override
-	{
-		auto it = slotStorageRefs.find(_declId);
-		if (it != slotStorageRefs.end())
-			return it->second;
-		return m_parent ? m_parent->findSlotStorageRef(_declId) : nullptr;
 	}
 
 	BlockContext(
