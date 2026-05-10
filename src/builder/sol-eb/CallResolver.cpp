@@ -45,13 +45,14 @@ bool CallResolver::tryResolveLibraryOrFree(
 	if (!_funcDef)
 		return false;
 
-	// Check if in a library scope
-	if (auto const* scope = _funcDef->scope())
+	// Check if in a library scope. solc's Scoper populates
+	// `annotation().contract` directly with the enclosing
+	// ContractDefinition (or nullptr for free functions in a SourceUnit
+	// scope) — saves the scope() + dynamic_cast dance.
+	if (auto const* contractDef = _funcDef->annotation().contract)
 	{
-		if (auto const* contractDef = dynamic_cast<solidity::frontend::ContractDefinition const*>(scope))
+		if (contractDef->isLibrary())
 		{
-			if (contractDef->isLibrary())
-			{
 				// Prefer AST ID lookup for precise overload resolution
 				auto byId = _ctx.freeFunctionById.find(_funcDef->id());
 				if (byId != _ctx.freeFunctionById.end())
@@ -76,7 +77,6 @@ bool CallResolver::tryResolveLibraryOrFree(
 					return true;
 				}
 			}
-		}
 	}
 
 	// Check if it's a free function

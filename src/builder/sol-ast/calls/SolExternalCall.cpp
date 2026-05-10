@@ -430,18 +430,13 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 	{
 		if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(refDecl))
 		{
-			if (auto const* scope = funcDef->scope())
+			auto const* contractDef = funcDef->annotation().contract;
+			if (contractDef && contractDef->isLibrary())
 			{
-				if (auto const* contractDef = dynamic_cast<ContractDefinition const*>(scope))
-				{
-					if (contractDef->isLibrary())
-					{
-						Logger::instance().error(
-							"delegatecall to public library function '" + contractDef->name()
-							+ "." + funcDef->name() + "' is not supported on AVM. "
-							"Use internal library functions instead.", m_loc);
-					}
-				}
+				Logger::instance().error(
+					"delegatecall to public library function '" + contractDef->name()
+					+ "." + funcDef->name() + "' is not supported on AVM. "
+					"Use internal library functions instead.", m_loc);
 			}
 		}
 	}

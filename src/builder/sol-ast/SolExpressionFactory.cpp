@@ -316,15 +316,9 @@ std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
 			{
 				if (auto const* funcDef = dynamic_cast<solidity::frontend::FunctionDefinition const*>(refDecl))
 				{
-					if (auto const* scope = funcDef->scope())
-					{
-						if (auto const* contractDef = dynamic_cast<
-								solidity::frontend::ContractDefinition const*>(scope))
-						{
-							if (contractDef->isLibrary())
-								return std::make_unique<SolInternalCall>(m_ctx, _node);
-						}
-					}
+					auto const* contractDef = funcDef->annotation().contract;
+					if (contractDef && contractDef->isLibrary())
+						return std::make_unique<SolInternalCall>(m_ctx, _node);
 				}
 			}
 

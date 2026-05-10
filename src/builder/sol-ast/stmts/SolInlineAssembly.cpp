@@ -152,7 +152,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 			auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
 			if (varDecl && varDecl->isStateVariable() && !varDecl->isConstant())
 			{
-				contractDef = dynamic_cast<ContractDefinition const*>(varDecl->scope());
+				contractDef = varDecl->annotation().contract;
 				break;
 			}
 		}

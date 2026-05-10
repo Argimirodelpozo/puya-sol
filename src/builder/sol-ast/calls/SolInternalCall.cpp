@@ -169,9 +169,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	{
 		calleeIsPrivate = _funcDef->visibility() == Visibility::Private;
 		calleeIsFree = _funcDef->isFree();
-		if (auto const* scope = _funcDef->scope())
-			if (auto const* contractDef = dynamic_cast<ContractDefinition const*>(scope))
-				calleeIsLibrary = contractDef->isLibrary();
+		if (auto const* contractDef = _funcDef->annotation().contract)
+			calleeIsLibrary = contractDef->isLibrary();
 	}
 	// Collect ALL storage param indices (mapping-type storage refs are
 	// handled elsewhere — they get a different threading scheme). Order
@@ -736,25 +735,22 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 		}
 
 		// Try library function map
-		if (auto const* scope = funcDef->scope())
+		if (auto const* contractDef = funcDef->annotation().contract)
 		{
-			if (auto const* contractDef = dynamic_cast<ContractDefinition const*>(scope))
+			if (contractDef->isLibrary())
 			{
-				if (contractDef->isLibrary())
+				std::string key = contractDef->name() + "." + funcDef->name();
+				auto it = m_ctx.libraryFunctionIds.find(key);
+				if (it == m_ctx.libraryFunctionIds.end())
 				{
-					std::string key = contractDef->name() + "." + funcDef->name();
-					auto it = m_ctx.libraryFunctionIds.find(key);
-					if (it == m_ctx.libraryFunctionIds.end())
-					{
-						key += "(" + std::to_string(funcDef->parameters().size()) + ")";
-						it = m_ctx.libraryFunctionIds.find(key);
-					}
-					if (it != m_ctx.libraryFunctionIds.end())
-					{
-						isUsingForCall = classifyUsingFor();
-						return buildSubroutineCall(
-							awst::SubroutineID{it->second}, retType, funcDef, isUsingForCall);
-					}
+					key += "(" + std::to_string(funcDef->parameters().size()) + ")";
+					it = m_ctx.libraryFunctionIds.find(key);
+				}
+				if (it != m_ctx.libraryFunctionIds.end())
+				{
+					isUsingForCall = classifyUsingFor();
+					return buildSubroutineCall(
+						awst::SubroutineID{it->second}, retType, funcDef, isUsingForCall);
 				}
 			}
 		}

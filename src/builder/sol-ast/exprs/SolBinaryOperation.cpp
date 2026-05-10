@@ -37,8 +37,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::tryUserDefinedOp()
 		subroutineId = it->second;
 	else
 	{
-		auto const* scope = userFunc->scope();
-		auto const* libContract = dynamic_cast<ContractDefinition const*>(scope);
+		auto const* libContract = userFunc->annotation().contract;
 		if (libContract && libContract->isLibrary())
 		{
 			std::string qualifiedName = libContract->name() + "." + userFunc->name();

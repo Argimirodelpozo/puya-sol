@@ -609,10 +609,9 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		return methods;
 
 	// Helper: figure out which contract a function is defined in.
+	// solc's Scoper populates `annotation().contract` directly.
 	auto funcScopeContract = [](FunctionDefinition const* fd) -> ContractDefinition const* {
-		if (!fd) return nullptr;
-		auto const* scope = fd->scope();
-		return dynamic_cast<ContractDefinition const*>(scope);
+		return fd ? fd->annotation().contract : nullptr;
 	};
 	// Find our current contract from _cref: last "."-separated segment.
 	std::string contractName;
