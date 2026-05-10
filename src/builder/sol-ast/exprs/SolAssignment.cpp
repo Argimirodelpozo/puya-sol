@@ -138,6 +138,115 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleStorage
 	return std::shared_ptr<awst::Expression>(voidExpr);
 }
 
+std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBoxArrayWrite()
+{
+	auto const* lhsIdx = dynamic_cast<IndexAccess const*>(&m_assignment.leftHandSide());
+	if (!lhsIdx) return std::nullopt;
+	auto const* ident = dynamic_cast<Identifier const*>(&lhsIdx->baseExpression());
+	if (!ident) return std::nullopt;
+	auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
+		ident->annotation().referencedDeclaration);
+	if (!varDecl || !varDecl->isStateVariable()
+		|| varDecl->isConstant() || varDecl->immutable())
+		return std::nullopt;
+	auto const* arrWtype = m_ctx.typeMapper.map(varDecl->type());
+	if (!builder::StorageMapper::isMultiBoxArray(arrWtype))
+		return std::nullopt;
+	if (!lhsIdx->indexExpression()) return std::nullopt;
+
+	Token op = m_assignment.assignmentOperator();
+	if (op != Token::Assign)
+	{
+		// Compound assignments (`arr[i] += v`) on multi-box arrays not
+		// yet supported. Falls through to default handler which will fail.
+		return std::nullopt;
+	}
+
+	unsigned elemSize = StorageMapper::arc4StaticArrayElementSize(arrWtype);
+	unsigned elemsPerBox = StorageMapper::elementsPerBox(arrWtype);
+	auto const* sa = static_cast<awst::ARC4StaticArray const*>(arrWtype);
+	auto const* elemArc4Type = sa->elementType();
+
+	// Pin idx to a temp so we can reference it for both page and offset
+	// without re-evaluating any side effects.
+	auto idxExpr = buildExpr(*lhsIdx->indexExpression());
+	if (idxExpr->wtype != awst::WType::uint64Type())
+		idxExpr = builder::TypeCoercion::implicitNumericCast(
+			std::move(idxExpr), awst::WType::uint64Type(), m_loc);
+	static int s_mbWCounter = 0;
+	std::string idxVarName = "__mb_widx_" + std::to_string(s_mbWCounter++);
+	auto idxVar = awst::makeVarExpression(idxVarName, awst::WType::uint64Type(), m_loc);
+	m_ctx.prePendingStatements.push_back(
+		awst::makeAssignmentStatement(idxVar, std::move(idxExpr), m_loc));
+
+	// page = idx / elemsPerBox
+	auto pageExpr = awst::makeUInt64BinOp(
+		awst::makeVarExpression(idxVarName, awst::WType::uint64Type(), m_loc),
+		awst::UInt64BinaryOperator::FloorDiv,
+		awst::makeIntegerConstant(std::to_string(elemsPerBox), m_loc), m_loc);
+
+	// offset = (idx % elemsPerBox) * elemSize
+	auto remExpr = awst::makeUInt64BinOp(
+		awst::makeVarExpression(idxVarName, awst::WType::uint64Type(), m_loc),
+		awst::UInt64BinaryOperator::Mod,
+		awst::makeIntegerConstant(std::to_string(elemsPerBox), m_loc), m_loc);
+	auto offsetExpr = awst::makeUInt64BinOp(
+		std::move(remExpr), awst::UInt64BinaryOperator::Mult,
+		awst::makeIntegerConstant(std::to_string(elemSize), m_loc), m_loc);
+
+	// boxKey = bytes(varName) ++ itob(page)
+	auto nameBytes = awst::makeUtf8BytesConstant(
+		varDecl->name(), m_loc, awst::WType::boxKeyType());
+	auto boxKey = awst::makeConcat(
+		std::move(nameBytes), awst::makeItob(std::move(pageExpr), m_loc), m_loc);
+	boxKey->wtype = awst::WType::boxKeyType();
+
+	// rhs → ARC4-encoded element bytes.
+	auto rhs = buildExpr(m_assignment.rightHandSide());
+	auto* expectedNative = m_ctx.typeMapper.map(
+		m_assignment.rightHandSide().annotation().type);
+	rhs = builder::TypeCoercion::coerceForAssignment(
+		std::move(rhs), expectedNative, m_loc);
+
+	// Pin rhs to a temp so we can both encode it for box_replace and return
+	// the raw value as the assignment-as-expression result.
+	static int s_mbVCounter = 0;
+	std::string valVarName = "__mb_val_" + std::to_string(s_mbVCounter++);
+	auto valVar = awst::makeVarExpression(valVarName, rhs->wtype, m_loc);
+	m_ctx.prePendingStatements.push_back(
+		awst::makeAssignmentStatement(valVar, std::move(rhs), m_loc));
+
+	auto valForEncode = awst::makeVarExpression(valVarName, valVar->wtype, m_loc);
+	std::shared_ptr<awst::Expression> valueBytes;
+	bool valueIsNative = valForEncode->wtype != elemArc4Type
+		&& valForEncode->wtype->name() != elemArc4Type->name();
+	if (valueIsNative)
+	{
+		auto encode = awst::makeARC4Encode(
+			std::move(valForEncode),
+			const_cast<awst::WType*>(elemArc4Type), m_loc);
+		valueBytes = awst::makeReinterpretCast(
+			std::move(encode), awst::WType::bytesType(), m_loc);
+	}
+	else
+	{
+		valueBytes = awst::makeReinterpretCast(
+			std::move(valForEncode), awst::WType::bytesType(), m_loc);
+	}
+
+	// box_replace(boxKey, offset, valueBytes)
+	auto replace = awst::makeIntrinsicCall(
+		"box_replace", awst::WType::voidType(), m_loc);
+	replace->stackArgs.push_back(std::move(boxKey));
+	replace->stackArgs.push_back(std::move(offsetExpr));
+	replace->stackArgs.push_back(std::move(valueBytes));
+	m_ctx.pendingStatements.push_back(
+		awst::makeExpressionStatement(std::move(replace), m_loc));
+
+	// Return the assigned value (assignment-as-expression).
+	return awst::makeVarExpression(valVarName, valVar->wtype, m_loc);
+}
+
 std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 {
 	Token op = m_assignment.assignmentOperator();
@@ -147,6 +256,8 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 	if (auto r = tryHandleTransientStateWrite())
 		return std::move(*r);
 	if (auto r = tryHandleStoragePointerReassign())
+		return std::move(*r);
+	if (auto r = tryHandleMultiBoxArrayWrite())
 		return std::move(*r);
 
 	// Rewrite `arr.push() = value` as `arr.push(value)`. Solidity's

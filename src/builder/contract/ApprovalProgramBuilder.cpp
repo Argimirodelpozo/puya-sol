@@ -460,34 +460,38 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					if (!isBoxType)
 						continue;
 
-					// Skip box_create for oversized static arrays (e.g.
-					// `uint[2 ether]` which would need 2^63 bytes). The
-					// array's `.length` is a compile-time literal so reads
-					// keep working; element writes would fail at runtime,
-					// but such arrays are almost always declared and never
-					// written in tests.
+					// ARC4StaticArray sizing — accept oversized declared sizes by
+					// switching to the multi-box layout. AVM caps a single box's
+					// value at 32768 bytes; arrays larger than that get split
+					// across N boxes keyed `<name>` ++ `itob(page)`. Element
+					// reads/writes route at runtime via
+					// `page = idx / elemsPerBox`. Pathological declarations
+					// (`uint[2 ether]`) still get rejected (effectively infinite
+					// pages) so we don't allocate billions of boxes.
 					if (wtype->kind() == awst::WTypeKind::ARC4StaticArray)
 					{
 						auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(wtype);
 						if (sa && sa->arraySize() > 0)
 						{
-							uint64_t elemSize = 32;
-							if (auto const* elemT = sa->elementType())
-							{
-								if (auto const* uintN = dynamic_cast<awst::ARC4UIntN const*>(elemT))
-									elemSize = std::max<uint64_t>(1u, static_cast<uint64_t>(uintN->n() / 8));
-								else if (elemT->kind() == awst::WTypeKind::Bytes)
-									if (auto const* bw = dynamic_cast<awst::BytesWType const*>(elemT))
-										if (bw->length().has_value())
-											elemSize = *bw->length();
-							}
-							uint64_t sz = elemSize * static_cast<uint64_t>(sa->arraySize());
-							if (sz > 32768)
+							uint64_t totalBytes = StorageMapper::arc4StaticArrayTotalBytes(wtype);
+							// Cap pre-allocation at 4 boxes (128 KB). Beyond
+							// that, __postInit's box_create burst exceeds
+							// reasonable txn-group budget (one app call ≈ 8
+							// box_create calls before write-budget exhaustion).
+							// Skipping is safe for tests that only access
+							// `.length` (compile-time constant); element
+							// reads/writes on un-pre-allocated multi-box arrays
+							// are a known limitation tracked in
+							// multi-box-storage.md. totalBytes == 0
+							// (struct/dynamic-element) falls through to the
+							// legacy single-box path.
+							constexpr uint64_t MAX_PREALLOC_BYTES = 4ULL * 32768ULL;
+							if (totalBytes > MAX_PREALLOC_BYTES)
 							{
 								Logger::instance().warning(
 									"state array '" + var->name() + "' has declared size "
 									+ std::to_string(sa->arraySize())
-									+ " which exceeds the 32KB box limit — skipping box_create. "
+									+ " which exceeds 4-box (128 KB) pre-allocation cap — skipping box_create. "
 									"Element writes will fail at runtime but .length reads "
 									"still return the declared size.",
 									method.sourceLocation);
@@ -878,11 +882,10 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 												elemSize = *bw->length();
 										}
 									}
-									// AVM box max is 32768 bytes. Cap huge declared
-									// sizes (e.g. `uint[2 ether]`) at the max so the
-									// contract still deploys; element access beyond
-									// the cap will fail at runtime, but `.length`
-									// (a compile-time constant) keeps working.
+									// AVM box max value is 32768 bytes. For arrays whose
+									// encoded size exceeds that, we'll emit N
+									// box_create calls (multi-box layout) below;
+									// the size we record here is the per-box size.
 									uint64_t size = elemSize * static_cast<uint64_t>(sa->arraySize());
 									if (size > 32768)
 										size = 32768;
@@ -909,7 +912,60 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 						}
 				}
 
-				if (dynArc4Default)
+				// Multi-box detection: if the var's ARC4StaticArray total size
+				// exceeds a single box's capacity, emit N box_create calls
+				// keyed `<name>` ++ `itob(page)` instead of one. Element
+				// reads/writes route at runtime via the same key suffix
+				// scheme (see SolIndexAccessHandlers.cpp).
+				unsigned multiBoxN = 0;
+				unsigned multiBoxElemSize = 0;
+				uint64_t multiBoxTotalBytes = 0;
+				uint64_t multiBoxPerPageBytes = 0;
+				{
+					auto const& lin = _contract.annotation().linearizedBaseContracts;
+					for (auto const* base: lin)
+						for (auto const* var: base->stateVariables())
+						{
+							if (var->name() != varName || var->isConstant())
+								continue;
+							auto* varWtype = m_typeMapper.map(var->type());
+							if (StorageMapper::isMultiBoxArray(varWtype))
+							{
+								multiBoxN = StorageMapper::numBoxesForArray(varWtype);
+								multiBoxElemSize = StorageMapper::arc4StaticArrayElementSize(varWtype);
+								multiBoxTotalBytes = StorageMapper::arc4StaticArrayTotalBytes(varWtype);
+								multiBoxPerPageBytes = static_cast<uint64_t>(
+									StorageMapper::elementsPerBox(varWtype)) * multiBoxElemSize;
+							}
+						}
+				}
+
+				if (multiBoxN > 1 && multiBoxElemSize > 0 && !dynArc4Default && !boxInitVal)
+				{
+					// Multi-box layout: emit N box_create calls.
+
+					for (unsigned page = 0; page < multiBoxN; ++page)
+					{
+						// Per-page key = name_bytes ++ itob(page)
+						auto nameBytes = awst::makeUtf8BytesConstant(varName, method.sourceLocation);
+						auto pageInt = awst::makeIntegerConstant(std::to_string(page), method.sourceLocation);
+						auto pageItob = awst::makeItob(std::move(pageInt), method.sourceLocation);
+						auto pageKey = awst::makeConcat(std::move(nameBytes), std::move(pageItob), method.sourceLocation);
+
+						uint64_t pageSize = (page == multiBoxN - 1)
+							? (multiBoxTotalBytes - static_cast<uint64_t>(page) * multiBoxPerPageBytes)
+							: multiBoxPerPageBytes;
+						auto pageSizeExpr = awst::makeIntegerConstant(std::to_string(pageSize), method.sourceLocation);
+
+						auto boxCreate = awst::makeIntrinsicCall("box_create", awst::WType::boolType(), method.sourceLocation);
+						boxCreate->stackArgs.push_back(std::move(pageKey));
+						boxCreate->stackArgs.push_back(std::move(pageSizeExpr));
+
+						auto boxStmt = awst::makeExpressionStatement(std::move(boxCreate), method.sourceLocation);
+						postInitBody->body.push_back(std::move(boxStmt));
+					}
+				}
+				else if (dynArc4Default)
 				{
 					// box_put(key, default_encoding) — creates the box and
 					// initialises with a valid ARC4 head/tail layout in one op.

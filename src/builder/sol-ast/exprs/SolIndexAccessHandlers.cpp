@@ -347,6 +347,34 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 
 std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 {
+	// Multi-box state-var array: when the encoded array exceeds AVM's
+	// 32KB box capacity, the storage gets split across N boxes keyed
+	// `<name>` ++ `itob(page)`. Element accesses route at runtime via
+	// `page = idx / elemsPerBox`, `inPageOffset = (idx % elemsPerBox) * elemSize`.
+	// Bypass the standard IndexExpression(BoxValueExpression(...), idx) path
+	// since that translates to a single box_extract on a non-existent box.
+	if (auto const* ident = dynamic_cast<Identifier const*>(&m_indexAccess.baseExpression()))
+	{
+		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
+			ident->annotation().referencedDeclaration);
+		if (varDecl && varDecl->isStateVariable() && !varDecl->isConstant() && !varDecl->immutable()
+			&& !m_indexAccess.annotation().willBeWrittenTo)
+		{
+			// Read context only — write context is owned by SolAssignment's
+			// tryHandleMultiBoxArrayWrite early-out (which emits box_replace
+			// at the right page/offset). A ReinterpretCast cannot be a valid
+			// Lvalue in puya, so we never return one here.
+			auto* baseWtype = m_ctx.typeMapper.map(varDecl->type());
+			if (builder::StorageMapper::isMultiBoxArray(baseWtype))
+			{
+				auto idxExpr = m_indexAccess.indexExpression()
+					? buildExpr(*m_indexAccess.indexExpression()) : nullptr;
+				if (idxExpr)
+					return buildMultiBoxAccess(varDecl->name(), baseWtype, std::move(idxExpr));
+			}
+		}
+	}
+
 	auto base = buildExpr(m_indexAccess.baseExpression());
 	std::shared_ptr<awst::Expression> index;
 	if (m_indexAccess.indexExpression())
@@ -456,6 +484,111 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 		}
 	}
 	return e;
+}
+
+std::shared_ptr<awst::Expression> SolIndexAccess::buildMultiBoxAccess(
+	std::string const& _varName,
+	awst::WType const* _arrWtype,
+	std::shared_ptr<awst::Expression> _idxExpr)
+{
+	using ::puyasol::builder::StorageMapper;
+
+	unsigned elemSize = StorageMapper::arc4StaticArrayElementSize(_arrWtype);
+	unsigned elemsPerBox = StorageMapper::elementsPerBox(_arrWtype);
+
+	// Coerce index to uint64 for arithmetic.
+	if (_idxExpr->wtype != awst::WType::uint64Type())
+		_idxExpr = builder::TypeCoercion::implicitNumericCast(
+			std::move(_idxExpr), awst::WType::uint64Type(), m_loc);
+
+	// Pin idx to a temp local so we can reference it twice (page + offset).
+	static int s_mbCounter = 0;
+	std::string idxVarName = "__mb_idx_" + std::to_string(s_mbCounter++);
+	auto idxVar = awst::makeVarExpression(idxVarName, awst::WType::uint64Type(), m_loc);
+	m_ctx.prePendingStatements.push_back(
+		awst::makeAssignmentStatement(idxVar, std::move(_idxExpr), m_loc));
+
+	// page = idx / elemsPerBox
+	auto idxRead1 = awst::makeVarExpression(idxVarName, awst::WType::uint64Type(), m_loc);
+	auto epbConst1 = awst::makeIntegerConstant(std::to_string(elemsPerBox), m_loc);
+	auto pageExpr = awst::makeUInt64BinOp(
+		std::move(idxRead1), awst::UInt64BinaryOperator::FloorDiv,
+		std::move(epbConst1), m_loc);
+
+	// inPageOffset = (idx % elemsPerBox) * elemSize
+	auto idxRead2 = awst::makeVarExpression(idxVarName, awst::WType::uint64Type(), m_loc);
+	auto epbConst2 = awst::makeIntegerConstant(std::to_string(elemsPerBox), m_loc);
+	auto remExpr = awst::makeUInt64BinOp(
+		std::move(idxRead2), awst::UInt64BinaryOperator::Mod,
+		std::move(epbConst2), m_loc);
+	auto elemSizeConst = awst::makeIntegerConstant(std::to_string(elemSize), m_loc);
+	auto offsetExpr = awst::makeUInt64BinOp(
+		std::move(remExpr), awst::UInt64BinaryOperator::Mult,
+		std::move(elemSizeConst), m_loc);
+
+	// boxKey = bytes(varName) ++ itob(page)
+	auto nameBytes = awst::makeUtf8BytesConstant(_varName, m_loc, awst::WType::boxKeyType());
+	auto pageItob = awst::makeItob(std::move(pageExpr), m_loc);
+	auto boxKey = awst::makeConcat(std::move(nameBytes), std::move(pageItob), m_loc);
+	boxKey->wtype = awst::WType::boxKeyType();
+
+	auto const* sa = static_cast<awst::ARC4StaticArray const*>(_arrWtype);
+	auto const* elemArc4Type = sa->elementType();
+
+	if (m_indexAccess.annotation().willBeWrittenTo)
+	{
+		// LHS context: caller will write to this. We can't return a writable
+		// "box[offset]" expression in AWST; instead the assignment handler
+		// detects multi-box arrays and emits box_replace directly. Fall back
+		// to a marker expression that SolAssignment recognises — but that
+		// requires plumbing through SolAssignment.cpp too. As a first cut,
+		// just emit the read path; writes via this path will fail until
+		// SolAssignment.cpp is extended. (Tracked as follow-up.)
+		auto extract = awst::makeIntrinsicCall("box_extract", awst::WType::bytesType(), m_loc);
+		extract->stackArgs.push_back(std::move(boxKey));
+		extract->stackArgs.push_back(std::move(offsetExpr));
+		extract->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(elemSize), m_loc));
+		auto cast = awst::makeReinterpretCast(std::move(extract),
+			const_cast<awst::WType*>(elemArc4Type), m_loc);
+		return cast;
+	}
+
+	// Read path: box_extract(boxKey, inPageOffset, elemSize) returning the
+	// raw element bytes, reinterpreted as the element's ARC4 type, then
+	// optionally ARC4Decode'd to the native expected type.
+	auto extract = awst::makeIntrinsicCall("box_extract", awst::WType::bytesType(), m_loc);
+	extract->stackArgs.push_back(std::move(boxKey));
+	extract->stackArgs.push_back(std::move(offsetExpr));
+	extract->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(elemSize), m_loc));
+
+	auto* expectedType = m_ctx.typeMapper.map(m_indexAccess.annotation().type);
+	auto* elemArc4 = const_cast<awst::WType*>(elemArc4Type);
+	auto cast = awst::makeReinterpretCast(std::move(extract), elemArc4, m_loc);
+
+	if (expectedType && expectedType != elemArc4
+		&& expectedType->name() != elemArc4->name())
+	{
+		bool elemIsArc4 = false;
+		switch (elemArc4->kind())
+		{
+		case awst::WTypeKind::ARC4UIntN:
+		case awst::WTypeKind::ARC4StaticArray:
+		case awst::WTypeKind::ARC4DynamicArray:
+		case awst::WTypeKind::ARC4Struct:
+			elemIsArc4 = true; break;
+		default: break;
+		}
+		bool expectedIsNative = expectedType->kind() != awst::WTypeKind::ARC4UIntN
+			&& expectedType->kind() != awst::WTypeKind::ARC4StaticArray
+			&& expectedType->kind() != awst::WTypeKind::ARC4DynamicArray
+			&& expectedType->kind() != awst::WTypeKind::ARC4Struct;
+		if (elemIsArc4 && expectedIsNative)
+		{
+			auto decode = awst::makeARC4Decode(std::move(cast), expectedType, m_loc);
+			return decode;
+		}
+	}
+	return cast;
 }
 
 std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()

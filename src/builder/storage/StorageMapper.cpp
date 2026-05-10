@@ -48,6 +48,73 @@ int StorageMapper::computeEncodedElementSize(awst::WType const* _type)
 	return TypeCoercion::computeEncodedElementSize(_type);
 }
 
+// ── Multi-box helpers ──
+
+// Multi-box arrays currently support only scalar elements (ARC4UIntN /
+// fixed-length bytes) and nested ARC4StaticArray of scalars. Struct
+// elements would require copy-on-write through box_extract → modify →
+// box_replace logic that's not yet implemented; they fall back to the
+// default >32KB-box warning path.
+unsigned StorageMapper::arc4StaticArrayElementSize(awst::WType const* _type)
+{
+	auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(_type);
+	if (!sa) return 0;
+	auto const* elem = sa->elementType();
+	if (!elem) return 0;
+	if (auto const* uintN = dynamic_cast<awst::ARC4UIntN const*>(elem))
+		return std::max<unsigned>(1u, static_cast<unsigned>(uintN->n() / 8));
+	if (elem->kind() == awst::WTypeKind::Bytes)
+	{
+		auto const* bw = dynamic_cast<awst::BytesWType const*>(elem);
+		if (bw && bw->length().has_value())
+			return static_cast<unsigned>(*bw->length());
+	}
+	if (auto const* nestedSa = dynamic_cast<awst::ARC4StaticArray const*>(elem))
+	{
+		// Nested ARC4StaticArray of scalar elements: recurse.
+		unsigned innerElem = arc4StaticArrayElementSize(nestedSa);
+		if (innerElem > 0)
+			return innerElem * static_cast<unsigned>(nestedSa->arraySize());
+	}
+	return 0;
+}
+
+uint64_t StorageMapper::arc4StaticArrayTotalBytes(awst::WType const* _type)
+{
+	auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(_type);
+	if (!sa || sa->arraySize() <= 0) return 0;
+	unsigned elemSize = arc4StaticArrayElementSize(_type);
+	if (elemSize == 0) return 0;
+	return static_cast<uint64_t>(elemSize) * static_cast<uint64_t>(sa->arraySize());
+}
+
+bool StorageMapper::isMultiBoxArray(awst::WType const* _type)
+{
+	uint64_t total = arc4StaticArrayTotalBytes(_type);
+	return total > BOX_VALUE_CAPACITY;
+}
+
+unsigned StorageMapper::numBoxesForArray(awst::WType const* _type)
+{
+	uint64_t total = arc4StaticArrayTotalBytes(_type);
+	if (total == 0) return 0;  // not a fixed-size array — caller decides
+	if (total <= BOX_VALUE_CAPACITY) return 1;
+	unsigned elemSize = arc4StaticArrayElementSize(_type);
+	if (elemSize == 0) return 1;  // shouldn't happen — guard
+	unsigned perBox = elementsPerBox(_type);
+	if (perBox == 0) return 1;
+	auto const* sa = static_cast<awst::ARC4StaticArray const*>(_type);
+	uint64_t totalElems = static_cast<uint64_t>(sa->arraySize());
+	return static_cast<unsigned>((totalElems + perBox - 1) / perBox);
+}
+
+unsigned StorageMapper::elementsPerBox(awst::WType const* _type)
+{
+	unsigned elemSize = arc4StaticArrayElementSize(_type);
+	if (elemSize == 0) return 0;
+	return BOX_VALUE_CAPACITY / elemSize;
+}
+
 bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration const& _var)
 {
 	auto const* type = _var.type();

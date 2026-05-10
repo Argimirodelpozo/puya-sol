@@ -22,6 +22,30 @@ from conftest import (
 )
 
 
+def _split_top_level(s: str) -> list[str]:
+    """Split `s` on top-level commas, respecting paren/bracket nesting.
+
+    Used to walk ABI tuple type signatures: `_split_top_level("uint64,(uint8,bool),string")`
+    → `["uint64", "(uint8,bool)", "string"]`.
+    """
+    out: list[str] = []
+    depth = 0
+    buf: list[str] = []
+    for ch in s:
+        if ch in "([":
+            depth += 1
+        elif ch in ")]":
+            depth -= 1
+        if ch == "," and depth == 0:
+            out.append("".join(buf).strip())
+            buf = []
+        else:
+            buf.append(ch)
+    if buf:
+        out.append("".join(buf).strip())
+    return out
+
+
 def _call_with_payment(app, method, args, value_wei, localnet, account):
     """Call an app method with a preceding payment transaction (msg.value equivalent).
 
@@ -317,10 +341,18 @@ def test_semantic(test, localnet_session):
                         result = app.send.call(params)
                 except Exception as ex1:
                     err_str = str(ex1)
-                    if "fee too small" in err_str:
-                        # Inner txns need fee pooling — retry with extra budget
+                    # Retry with extra budget for:
+                    #  - "fee too small": inner txns need fee pooling
+                    #  - "dynamic cost budget exceeded" / "opcode cost budget"
+                    #    exceeded: append no-op app calls to expand opcode
+                    #    budget pool (each call adds 700 ops to the group budget)
+                    needs_extra_budget = (
+                        "fee too small" in err_str
+                        or "dynamic cost budget exceeded" in err_str
+                        or "opcode cost budget" in err_str
+                    )
+                    if needs_extra_budget:
                         from run_tests import _call_with_extra_budget
-                        # Use full ABI signature for method resolution
                         method_sig = matched_method.to_abi_method().get_signature() if matched_method else method
                         result = _call_with_extra_budget(app, method_sig, args if args else [], extra_calls=3)
                     else:
@@ -396,9 +428,46 @@ def test_semantic(test, localnet_session):
                                                 f"{call.raw_line}: elem[{i}] expected {e}, got {a}")
                                     evm_string_handled = True
 
-                    # Multi-return with strings
-                    elif "string" in ret_str and isinstance(actual, (list, tuple, dict)):
-                        pass
+                    # Multi-return tuple containing dynamic types (string/bytes).
+                    # EVM ABI encodes as:
+                    #   head: N_static static-value words + N_dyn offset words
+                    #   tails: for each dynamic, (length, data) pair
+                    # ARC4 returns the tuple with statics + decoded dynamics in
+                    # order. We strip the offset and length words from
+                    # `call.expected` and compare the remaining (static-values
+                    # then dynamic-data) against the actual tuple positionally.
+                    elif (ret_str.startswith("(")
+                          and ret_str.endswith(")")
+                          and ("string" in ret_str or "byte[]" in ret_str)
+                          and isinstance(actual, (list, tuple, dict))):
+                        fields = _split_top_level(ret_str[1:-1])
+                        def _is_dynamic(t: str) -> bool:
+                            t = t.strip()
+                            return t in ("string", "byte[]", "bytes") or t.endswith("[]")
+                        n_static = sum(1 for f in fields if not _is_dynamic(f))
+                        n_dyn = len(fields) - n_static
+                        # expected layout: [statics(n_static)] [offsets(n_dyn)] then n_dyn pairs of (length, data)
+                        if len(call.expected) == n_static + n_dyn + 2 * n_dyn:
+                            stripped: list = []
+                            # statics: pass through verbatim
+                            stripped.extend(call.expected[:n_static])
+                            # skip n_dyn offset words
+                            # take every second word from the tail (skip length, keep data)
+                            tail_start = n_static + n_dyn
+                            for i in range(n_dyn):
+                                stripped.append(call.expected[tail_start + 2 * i + 1])
+                            actual_list = list(actual) if isinstance(actual, (list, tuple)) else list(actual.values())
+                            exp_elems = [parse_value(e) for e in stripped]
+                            all_match = (len(actual_list) == len(exp_elems)
+                                and all(compare_values(a, e) for a, e in zip(actual_list, exp_elems)))
+                            if all_match:
+                                evm_string_handled = True
+                            else:
+                                for i, (a, e) in enumerate(zip(actual_list, exp_elems)):
+                                    if not compare_values(a, e):
+                                        failures.append(
+                                            f"{call.raw_line}: value[{i}] expected {e}, got {a}")
+                                evm_string_handled = True
 
                 if evm_string_handled:
                     continue

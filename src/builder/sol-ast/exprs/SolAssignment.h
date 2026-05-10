@@ -61,6 +61,12 @@ private:
 	/// Updates the compile-time alias for state-var aliases; for runtime-bound
 	/// mapping-key params, emits an actual bytes assignment.
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleStoragePointerReassign();
+
+	/// `arr[i] = v` where `arr` is a multi-box state-var array (encoded size
+	/// exceeds AVM's 32KB box cap). Computes runtime `page = i / elemsPerBox`
+	/// and `offset = (i % elemsPerBox) * elemSize`, encodes the rhs as ARC4
+	/// element bytes, and emits `box_replace(<name> ++ itob(page), offset, bytes)`.
+	std::optional<std::shared_ptr<awst::Expression>> tryHandleMultiBoxArrayWrite();
 };
 
 } // namespace puyasol::builder::sol_ast

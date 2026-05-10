@@ -47,6 +47,35 @@ public:
 	/// Returns 0 for variable-length types (skip splitting).
 	static int computeEncodedElementSize(awst::WType const* _type);
 
+	// ── Multi-box storage for oversized fixed arrays ──
+	// AVM caps a single box's value at 32768 bytes. Fixed-size ARC4 static
+	// arrays whose total encoded size exceeds that get split across N boxes
+	// keyed `<name>` ++ `itob(page)` (page = 0..N-1). Element accesses
+	// route at runtime via `page = idx / elemsPerBox`,
+	// `inPageOffset = (idx % elemsPerBox) * elemSize`.
+
+	/// AVM single-box value capacity.
+	static constexpr unsigned BOX_VALUE_CAPACITY = 32768;
+
+	/// Element size for an ARC4StaticArray's fixed element type, or 0 if
+	/// the element isn't a fixed-encoded scalar (e.g. dynamic ARC4).
+	static unsigned arc4StaticArrayElementSize(awst::WType const* _type);
+
+	/// Total encoded bytes for an ARC4StaticArray (`element_size * count`).
+	/// Returns 0 if the type isn't ARC4StaticArray or has variable element size.
+	static uint64_t arc4StaticArrayTotalBytes(awst::WType const* _type);
+
+	/// Returns true if the array type's encoded size exceeds a single
+	/// box's capacity and therefore requires the multi-box layout.
+	static bool isMultiBoxArray(awst::WType const* _type);
+
+	/// Number of boxes needed to back a multi-box array, or 1 for single-box.
+	static unsigned numBoxesForArray(awst::WType const* _type);
+
+	/// Number of elements per box for a multi-box array
+	/// (`floor(BOX_VALUE_CAPACITY / element_size)`).
+	static unsigned elementsPerBox(awst::WType const* _type);
+
 	/// Create a type-correct default value expression (0/false/empty) for the given wtype.
 	static std::shared_ptr<awst::Expression> makeDefaultValue(
 		awst::WType const* _type,

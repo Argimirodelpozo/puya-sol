@@ -215,7 +215,12 @@ def deploy_app(localnet, account, artifacts):
         app_addr = encoding.encode_address(
             encoding.checksum(b"appID" + app_id.to_bytes(8, "big")))
         sp2 = algod.suggested_params()
-        pay = PaymentTxn(account.address, sp2, app_addr, 1_000_000)
+        # Compute MBR from declared box_create sizes so multi-box state arrays
+        # (>32KB total) get funded correctly. Each box's MBR is
+        # `2500 + 400 * (key_len + value_len)` microAlgos.
+        box_mbr = _compute_box_mbr(artifacts["approval_teal"])
+        funding = 1_000_000 + box_mbr
+        pay = PaymentTxn(account.address, sp2, app_addr, funding)
         wait_for_confirmation(algod,
             algod.send_transaction(pay.sign(account.private_key)), 4)
         app = au.AppClient(au.AppClientParams(
@@ -237,6 +242,83 @@ def deploy_app(localnet, account, artifacts):
         return app
     except Exception:
         return None
+
+
+def _compute_box_mbr(teal_path):
+    """Sum MBR for all box_create calls in the TEAL.
+
+    Pattern: a `pushint <size>` (or `intc_<n>` referencing a known intcblock
+    entry) immediately preceding `box_create`, with the box key on the
+    line before that. We just sum the value+key MBR per declared box.
+    """
+    import re
+    teal = teal_path.read_text()
+    lines = teal.split('\n')
+
+    intc_values: list[int] = []
+    intc_match = re.search(r'^\s*intcblock\s+(.*)$', teal, re.MULTILINE)
+    if intc_match:
+        for tok in intc_match.group(1).split():
+            try:
+                intc_values.append(int(tok))
+            except ValueError:
+                pass
+
+    bytec_values: list[bytes] = []
+    bytec_match = re.search(r'^\s*bytecblock\s+(.*)$', teal, re.MULTILINE)
+    if bytec_match:
+        for tok in bytec_match.group(1).split():
+            tok = tok.strip()
+            if tok.startswith('0x'):
+                try:
+                    bytec_values.append(bytes.fromhex(tok[2:]))
+                except ValueError:
+                    bytec_values.append(b'')
+            elif tok.startswith('"') and tok.endswith('"'):
+                bytec_values.append(tok[1:-1].encode())
+            else:
+                bytec_values.append(b'')
+
+    def _read_int(line):
+        line = line.strip()
+        m = re.search(r'pushint\s+(\d+)', line)
+        if m: return int(m.group(1))
+        m = re.match(r'intc_(\d+)', line)
+        if m and int(m.group(1)) < len(intc_values): return intc_values[int(m.group(1))]
+        m = re.match(r'intc\s+(\d+)', line)
+        if m and int(m.group(1)) < len(intc_values): return intc_values[int(m.group(1))]
+        return None
+
+    def _read_bytes_len(line):
+        line = line.strip()
+        m = re.search(r'pushbytes\s+0x([0-9a-fA-F]+)', line)
+        if m: return len(bytes.fromhex(m.group(1)))
+        m = re.search(r'pushbytes\s+"([^"]*)"', line)
+        if m: return len(m.group(1).encode())
+        m = re.match(r'bytec_(\d+)', line)
+        if m and int(m.group(1)) < len(bytec_values): return len(bytec_values[int(m.group(1))])
+        m = re.match(r'bytec\s+(\d+)', line)
+        if m and int(m.group(1)) < len(bytec_values): return len(bytec_values[int(m.group(1))])
+        return None
+
+    total = 0
+    for i, line in enumerate(lines):
+        if line.strip() == 'box_create':
+            size = None
+            key_len = None
+            for j in range(i-1, max(0, i-6), -1):
+                if size is None:
+                    size = _read_int(lines[j])
+                    if size is not None:
+                        continue
+                if key_len is None:
+                    key_len = _read_bytes_len(lines[j])
+                    if key_len is not None:
+                        break
+            if size is None or key_len is None:
+                continue
+            total += 2500 + 400 * (key_len + size)
+    return total
 
 
 def _extract_box_refs(teal_path):
@@ -270,13 +352,18 @@ def _extract_box_refs(teal_path):
                         refs.append((0, key.encode()))
                     break
 
-    # Also grab hex constants from bytecblock that are box keys
+    # Also grab hex constants from bytecblock that *could* be box keys.
+    # Filter to ≤64 bytes (AVM box name max) — bigger constants are
+    # state-var default-value buffers, not box keys, and submitting them
+    # as references makes algod reject the txn.
     bytecblock_match = re.search(r'bytecblock\s+(.*)', teal)
     if bytecblock_match:
         tokens = bytecblock_match.group(1).split()
         for token in tokens:
             if token.startswith('0x') and len(token) > 10:
                 key_bytes = bytes.fromhex(token[2:])
+                if len(key_bytes) > 64:
+                    continue
                 if key_bytes not in seen:
                     seen.add(key_bytes)
                     refs.append((0, key_bytes))
