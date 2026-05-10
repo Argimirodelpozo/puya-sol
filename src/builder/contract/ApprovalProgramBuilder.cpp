@@ -204,11 +204,14 @@ bool detectAvmLibCallInConstructor(solidity::frontend::ContractDefinition const&
 		bool visit(solidity::frontend::MemberAccess const& _ma) override
 		{
 			if (found) return false;
-			if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(&_ma.expression()))
-				if (auto const* contractDef = dynamic_cast<solidity::frontend::ContractDefinition const*>(
-						id->annotation().referencedDeclaration))
-					if (contractDef->isLibrary() && contractDef->name() == "AVM")
-						found = true;
+			// solc's ASTNode::referencedDeclaration handles both
+			// `AVM.foo()` (Identifier base) and module-aliased forms
+			// `import "tokens/AVM.sol" as Mod; Mod.AVM.foo()`
+			// (MemberAccess base) without a per-shape dynamic_cast.
+			if (auto const* contractDef = dynamic_cast<solidity::frontend::ContractDefinition const*>(
+					solidity::frontend::ASTNode::referencedDeclaration(_ma.expression())))
+				if (contractDef->isLibrary() && contractDef->name() == "AVM")
+					found = true;
 			return !found;
 		}
 	};
