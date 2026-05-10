@@ -1,3 +1,34 @@
+# Semantic Test Status — v229
+
+**Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**
+
+vs v227 = 1096 PASS: **bit-identical per-test results** (skipping v228
+which lost 2 tests, see below).
+
+## v228 → v229 (revert)
+
+v228 ran with commit *5765a1ae3* — `SolVariableDeclaration` fn-ptr
+tracking switched from `dynamic_cast<Identifier>` to
+`ASTNode::referencedDeclaration`. Result: **−2 PASS** —
+`inheritance/inherited_function_through_dispatch` and
+`inheritance/super_in_constructor_assignment` both regressed.
+
+Root cause: `function() x = super.f;` resolves the MemberAccess's
+`referencedDeclaration` to the textually-named base function, but
+`requiredLookup == VirtualLookup::Super` was *not* honored — the
+fn-ptr now pointed to the wrong target. The Identifier-only check
+intentionally fell through for `super.f`, leaving super-resolution
+to the call-site path (where requiredLookup is consulted).
+
+Reverted in commit *e44f560f3*. v229 reproduces v227's 1096-PASS
+baseline byte-for-byte.
+
+Lesson saved to memory `feedback-astnode-refdecl-not-for-super.md`:
+do not use `ASTNode::referencedDeclaration` for any code path that
+needs to honor virtual / super dispatch.
+
+---
+
 # Semantic Test Status — v227
 
 **Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**
