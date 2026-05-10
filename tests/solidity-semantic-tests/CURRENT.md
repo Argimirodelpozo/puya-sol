@@ -1,3 +1,32 @@
+# Semantic Test Status — v234
+
+**Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**
+
+vs v233 = 1096 PASS: **bit-identical per-test results**.
+
+## v234 puya-sol changes (vs v233)
+
+Two minor cleanups (commit *6371712bd*) plus the dead-helper deletion of
+`makeU64Const` in `awst/Node.h` (commit pending in this version):
+
+  * **`StorageLayout::slotKey(unsigned)` deleted** — leftover from an
+    earlier global-state-keyed scheme; zero callers anywhere in src/ or
+    tests/.
+  * **`makeU64Const(uint64_t, SourceLocation)` deleted** in `awst/Node.h`
+    — convenience wrapper around `makeIntegerConstant(std::to_string(v))`,
+    zero callers across the codebase.
+  * **Recursive-struct annotation experiment documented** — tried solc's
+    `StructDefinition::annotation().recursive` as a one-shot
+    short-circuit replacing `TypeMapper::m_inProgressStructs`. The
+    annotation correctly identifies recursive structs at analysis time,
+    but collapsing the WHOLE struct to bytes drops the outer non-cycling
+    fields. `recursive_structs.sol`'s `s.x` access then fails with
+    "unrecognised member 'x' on type bytes". Comment in `mapStruct`
+    documents the dead end so the next person doesn't redo the
+    experiment.
+
+---
+
 # Semantic Test Status — v233
 
 **Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**

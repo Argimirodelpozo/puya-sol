@@ -206,13 +206,6 @@ inline std::shared_ptr<IntegerConstant> makeIntegerConstant(
 	return node;
 }
 
-// Convenience for compile-time known uint64 values (no to_string ceremony).
-inline std::shared_ptr<IntegerConstant> makeU64Const(
-	uint64_t value, SourceLocation loc)
-{
-	return makeIntegerConstant(std::to_string(value), std::move(loc));
-}
-
 struct BoolConstant: Expression
 {
 	std::string nodeType() const override { return "BoolConstant"; }
