@@ -20,7 +20,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 	{
 		for (auto const* var: base->stateVariables())
 		{
-			if (var->visibility() != solidity::frontend::Visibility::Public)
+			if (!var->isPartOfExternalInterface())
 				continue;
 			if (translatedFunctions.count(var->name()))
 				continue; // explicit getter already exists

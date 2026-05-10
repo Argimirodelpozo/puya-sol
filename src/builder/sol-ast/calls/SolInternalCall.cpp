@@ -31,8 +31,7 @@ awst::WType const* SolInternalCall::returnTypeFrom(FunctionDefinition const* _fu
 	// extension works — but only at the ABI boundary (public/external). For
 	// private/internal callees the target retains its native uint64 return,
 	// so the call-site wtype must match.
-	bool isAbiBoundary = _funcDef->visibility() == Visibility::Public
-		|| _funcDef->visibility() == Visibility::External;
+	bool isAbiBoundary = _funcDef->isPartOfExternalInterface();
 	auto mapReturnType = [&](solidity::frontend::Type const* solType) -> awst::WType const* {
 		auto* mapped = m_ctx.typeMapper.map(solType);
 		auto const* t = solType;
