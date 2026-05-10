@@ -22,15 +22,12 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 {
 	auto const& eventCall = m_node.eventCall();
 
-	std::string eventName;
-	if (auto const* ident = dynamic_cast<Identifier const*>(&eventCall.expression()))
-		eventName = ident->name();
-	else
-		eventName = "Event";
-
-	EventDefinition const* eventDef = nullptr;
-	if (auto const* ident = dynamic_cast<Identifier const*>(&eventCall.expression()))
-		eventDef = dynamic_cast<EventDefinition const*>(ident->annotation().referencedDeclaration);
+	// Resolve via solc's ASTNode::referencedDeclaration helper so the same
+	// code path handles `emit MyEvent(...)` (Identifier),
+	// `emit Lib.MyEvent(...)` (MemberAccess), and IdentifierPath forms.
+	auto const* eventDef = dynamic_cast<EventDefinition const*>(
+		ASTNode::referencedDeclaration(eventCall.expression()));
+	std::string eventName = eventDef ? eventDef->name() : "Event";
 
 	auto arc4SigName = [this](Type const* _type) -> std::string {
 		auto* wtype = m_blk.typeMapper().map(_type);

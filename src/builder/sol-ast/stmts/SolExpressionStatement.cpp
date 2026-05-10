@@ -67,12 +67,14 @@ SolRevertStatement::SolRevertStatement(
 
 std::vector<std::shared_ptr<awst::Statement>> SolRevertStatement::toAwst()
 {
+	// Resolve via solc's ASTNode::referencedDeclaration helper so we get
+	// the ErrorDefinition's name regardless of whether the source wrote
+	// `revert MyError()` (Identifier), `revert Lib.MyError()`
+	// (MemberAccess), or used an IdentifierPath.
 	std::string errorName = "revert";
-	auto const& errorCall = m_node.errorCall();
-	if (auto const* ident = dynamic_cast<Identifier const*>(&errorCall.expression()))
-		errorName = ident->name();
-	else if (auto const* ma = dynamic_cast<MemberAccess const*>(&errorCall.expression()))
-		errorName = ma->memberName();
+	if (auto const* errorDef = dynamic_cast<ErrorDefinition const*>(
+			ASTNode::referencedDeclaration(m_node.errorCall().expression())))
+		errorName = errorDef->name();
 
 	auto stmt = awst::makeExpressionStatement(awst::makeAssert(awst::makeBoolConstant(false, m_loc), m_loc, errorName), m_loc);
 	return {stmt};
