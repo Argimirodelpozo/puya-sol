@@ -1,3 +1,39 @@
+# Semantic Test Status — v231
+
+**Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**
+
+vs v230 = 1096 PASS: **bit-identical per-test results** (after re-run;
+the first v231 attempt lost 1 test to flakiness on
+`mapping_enum_key_getter_v2` — passes in isolation, listed in the 42
+documented flaky-under-load tests in MEMORY.md).
+
+## v231 puya-sol changes (vs v230)
+
+Refactor commit *f276b2168* — two coupled changes that fix the
+v228/v229 misdiagnosis:
+
+1. **`SolInternalCall.cpp` — Identifier-form fn-ptr dispatch now
+   consults `findSuperTarget`** (lines 580–586). Mirrors the
+   MemberAccess path (lines ~670–676) so a fn-ptr-bound `super.f`
+   call routes through the `f__super_<callerId>` MRO stub built by
+   SuperCallResolution instead of dispatching directly to the
+   resolved base function. Without this check, the Identifier path
+   silently bypassed the MRO super stub.
+
+2. **`SolVariableDeclaration.cpp` — fn-ptr binding now uses
+   `ASTNode::referencedDeclaration`** (re-applies commit 5765a1ae3
+   reverted in e44f560f3). Solc's helper *does* return the right
+   MRO-aware target for `super.f` (typechecking sees
+   `m_currentContract = D` and resolves D's super.f to C.f). With
+   change #1 in place, the Identifier-form fn-ptr path correctly
+   routes through the super stub.
+
+Memory note `feedback-astnode-refdecl-not-for-super.md` updated this
+session to reflect the corrected diagnosis: the v228 regression was
+in puya-sol's dispatch path, not in solc's `referencedDeclaration`.
+
+---
+
 # Semantic Test Status — v230
 
 **Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**
