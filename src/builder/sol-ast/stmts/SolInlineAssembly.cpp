@@ -9,6 +9,7 @@
 #include "builder/storage/TransientStorage.h"
 #include "Logger.h"
 
+#include <libsolidity/analysis/ConstantEvaluator.h>
 #include <libsolidity/ast/ASTUtils.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolutil/Numeric.h>
@@ -25,77 +26,68 @@ solidity::frontend::IntegerType const* resolveIntegerType(solidity::frontend::Ty
 	return nullptr;
 }
 
-/// Recursively resolve a constant variable's value to a u256 integer.
-/// Follows reference chains (e.g., `uint constant aa = a;` where `a = 2`).
-/// @param _varDecl  The constant VariableDeclaration to resolve.
-/// @return The resolved u256 value, or nullopt if unresolvable.
+/// Resolve a constant variable's initializer to a u256 integer using
+/// solc's ConstantEvaluator. Handles literals, binary/unary ops on
+/// constants, identifier-chains via solc's own recursion. The bytesN
+/// left-shift below is the only AVM-side adjustment we still need.
 std::optional<solidity::u256> resolveConstantU256(
-	solidity::frontend::VariableDeclaration const& _varDecl,
-	int _depth = 0)
+	solidity::frontend::VariableDeclaration const& _varDecl)
 {
 	using namespace solidity::frontend;
-	if (_depth > 10 || !_varDecl.isConstant() || !_varDecl.value())
+	if (!_varDecl.isConstant() || !_varDecl.value())
 		return std::nullopt;
 
 	auto const* initExpr = _varDecl.value().get();
-	auto const* exprType = initExpr->annotation().type;
 
-	// 1. RationalNumberType (numeric literals and compile-time constant expressions)
-	if (auto const* ratType = dynamic_cast<RationalNumberType const*>(exprType))
-	{
-		if (!ratType->isFractional())
-		{
-			auto const& val = ratType->value();
-			solidity::u256 intVal = solidity::u256(val.numerator() / val.denominator());
-			// For FixedBytesType (bytesN), left-shift to match EVM representation
-			if (auto const* fixedBytes = dynamic_cast<FixedBytesType const*>(_varDecl.type()))
-			{
-				size_t shiftBits = (32 - fixedBytes->numBytes()) * 8;
-				intVal <<= shiftBits;
-			}
-			return intVal;
-		}
-	}
-
-	// 2. Bool constants: true → 1, false → 0
-	if (dynamic_cast<BoolType const*>(exprType))
-	{
-		if (auto const* literal = dynamic_cast<Literal const*>(initExpr))
-			return (literal->value() == "true") ? solidity::u256(1) : solidity::u256(0);
-	}
-
-	// 3. Literal (hex or string)
+	// String/hex literal fast-path: ConstantEvaluator only handles
+	// numeric / bool, not raw bytes/strings. For those, parse directly.
 	if (auto const* literal = dynamic_cast<Literal const*>(initExpr))
 	{
-		std::string value = literal->value();
-		if (value.size() > 2 && value.substr(0, 2) == "0x")
+		auto const* exprType = initExpr->annotation().type;
+		// Bool: handled by ConstantEvaluator below as rational 0/1, but
+		// only for true/false keywords; bool literals always map cleanly.
+		if (!dynamic_cast<RationalNumberType const*>(exprType)
+			&& !dynamic_cast<BoolType const*>(exprType))
 		{
-			try
+			std::string const& value = literal->value();
+			if (value.size() > 2 && value.substr(0, 2) == "0x")
 			{
-				return solidity::u256(value);
+				try { return solidity::u256(value); }
+				catch (...) {}
 			}
-			catch (...) {}
-		}
-		else
-		{
-			solidity::u256 numVal = 0;
-			for (char ch: value)
-				numVal = (numVal << 8) | static_cast<unsigned char>(ch);
-			size_t shiftBits = (32 - value.size()) * 8;
-			numVal <<= shiftBits;
-			return numVal;
+			else
+			{
+				solidity::u256 numVal = 0;
+				for (char ch: value)
+					numVal = (numVal << 8) | static_cast<unsigned char>(ch);
+				size_t shiftBits = (32 - value.size()) * 8;
+				numVal <<= shiftBits;
+				return numVal;
+			}
 		}
 	}
 
-	// 4. Identifier referencing another constant — follow the chain
-	if (auto const* identifier = dynamic_cast<Identifier const*>(initExpr))
+	// Numeric / bool / identifier-chain / arithmetic over constants:
+	// solc's ConstantEvaluator handles all of these (including the
+	// chained-const case `const aa = a;` and constant binary ops like
+	// `const x = 1 << 32;`). It walks the AST itself, so we don't need
+	// our own recursion + depth cap.
+	auto evaluated = ConstantEvaluator::tryEvaluate(*initExpr);
+	if (!std::holds_alternative<solidity::frontend::rational>(evaluated.value))
+		return std::nullopt;
+
+	auto const& rat = std::get<solidity::frontend::rational>(evaluated.value);
+	if (rat.denominator() != 1)
+		return std::nullopt;
+	solidity::u256 intVal = solidity::u256(rat.numerator());
+
+	// `bytes[N]` left-shift to match the EVM big-endian representation.
+	if (auto const* fixedBytes = dynamic_cast<FixedBytesType const*>(_varDecl.type()))
 	{
-		if (auto const* refDecl = dynamic_cast<VariableDeclaration const*>(
-				identifier->annotation().referencedDeclaration))
-			return resolveConstantU256(*refDecl, _depth + 1);
+		size_t shiftBits = (32 - fixedBytes->numBytes()) * 8;
+		intVal <<= shiftBits;
 	}
-
-	return std::nullopt;
+	return intVal;
 }
 }
 
