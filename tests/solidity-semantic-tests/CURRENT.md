@@ -1,3 +1,24 @@
+# Semantic Test Status — v227
+
+**Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**
+
+vs v226 = 1096 PASS: **bit-identical per-test results**.
+
+## v227 puya-sol changes (vs v226)
+
+Refactor commit *b58810fd1*: ApprovalProgramBuilder.cpp's
+`CtorCallChecker` (the indirect box-write detector — finds calls in
+the constructor that transitively touch box-stored state) now resolves
+the call's target through `ASTNode::referencedDeclaration(_node.expression())`
+instead of the per-shape `dynamic_cast<Identifier>(...)->annotation().referencedDeclaration`.
+Same coverage extension as the AvmLibCallChecker fix in v226: previously
+missed library- or base-qualified call forms (`Lib.foo()`, `Base.foo()`)
+that should also count as indirect box writes. The original comment
+already promised "Unwrap MemberAccess" — the code now matches that
+intent.
+
+---
+
 # Semantic Test Status — v226
 
 **Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**
