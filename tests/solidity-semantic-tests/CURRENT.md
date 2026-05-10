@@ -1,3 +1,23 @@
+# Semantic Test Status — v226
+
+**Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**
+
+vs v225 = 1096 PASS: **bit-identical per-test results**.
+
+## v226 puya-sol changes (vs v225)
+
+Refactor commit *b37d2c6d4*: ApprovalProgramBuilder.cpp's
+`AvmLibCallChecker` (the constructor-side detector that decides whether
+to defer setup to `__postInit`) now resolves the AVM library reference
+through `ASTNode::referencedDeclaration(_ma.expression())` instead of
+the per-shape `dynamic_cast<Identifier>(...)->annotation().referencedDeclaration`.
+This brings the post-init detector path in line with the call-site path
+fixed in 380b670a2 — module-aliased forms like
+`import "tokens/AVM.sol" as Mod; Mod.AVM.foo()` are now correctly
+detected and flagged.
+
+---
+
 # Semantic Test Status — v225
 
 **Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**
