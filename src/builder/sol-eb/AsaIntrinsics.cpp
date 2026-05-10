@@ -14,17 +14,16 @@ using namespace solidity::frontend;
 namespace
 {
 
-/// True iff `_memberAccess.expression()` is an Identifier whose
-/// referenced declaration is the `AVM` library (per the bundled
-/// tokens/AVM.sol).
+/// True iff `_memberAccess.expression()` resolves to the `AVM` library
+/// (per the bundled tokens/AVM.sol). Uses solc's
+/// `ASTNode::referencedDeclaration` so both `AVM.foo()` (Identifier)
+/// and module-aliased `import "tokens/AVM.sol" as Mod; Mod.AVM.foo()`
+/// (MemberAccess) resolve through one path. AVM is a library — no
+/// virtual / super dispatch involved, so this is safe to widen.
 bool isAvmLibraryAccess(MemberAccess const& _memberAccess)
 {
-	auto const* baseId = dynamic_cast<Identifier const*>(&_memberAccess.expression());
-	if (!baseId)
-		return false;
-
 	auto const* contractDef = dynamic_cast<ContractDefinition const*>(
-		baseId->annotation().referencedDeclaration);
+		ASTNode::referencedDeclaration(_memberAccess.expression()));
 	if (!contractDef || !contractDef->isLibrary())
 		return false;
 
