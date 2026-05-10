@@ -9,6 +9,7 @@
 #include "builder/storage/TransientStorage.h"
 #include "Logger.h"
 
+#include <libsolidity/ast/ASTUtils.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolutil/Numeric.h>
 
@@ -130,7 +131,13 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	{
 		if (!extInfo.declaration) continue;
 		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
+		// `isConstant()` is the per-decl flag; `isConstantVariableRecursive`
+		// also walks the initializer chain to confirm it bottoms out at a
+		// literal — protects `resolveConstantU256` below from chasing a
+		// chain that ends at a non-static expression. Two-stage call
+		// because solc asserts `isConstant()` inside the recursive form.
 		if (!varDecl || !varDecl->isConstant()) continue;
+		if (!solidity::frontend::isConstantVariableRecursive(*varDecl)) continue;
 
 		auto resolved = resolveConstantU256(*varDecl);
 		if (resolved)

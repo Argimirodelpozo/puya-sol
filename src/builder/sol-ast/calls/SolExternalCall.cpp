@@ -8,6 +8,7 @@
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ASTUtils.h>
 
 namespace puyasol::builder::sol_ast
 {
@@ -388,14 +389,8 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 		// the AST (e.g. `(new C())` is Tuple(FunctionCall(NewExpression))),
 		// so peel them before looking for `new C()`. Without this the
 		// fold never fires for the common parenthesised form.
-		Expression const* base = &memberAccess->expression();
-		while (auto const* tup = dynamic_cast<TupleExpression const*>(base))
-		{
-			if (tup->components().size() == 1 && tup->components()[0])
-				base = tup->components()[0].get();
-			else
-				break;
-		}
+		Expression const* base = solidity::frontend::resolveOuterUnaryTuples(
+			&memberAccess->expression());
 		if (auto const* outerFuncCall = dynamic_cast<FunctionCall const*>(base))
 		{
 			if (auto const* newExpr = dynamic_cast<NewExpression const*>(&outerFuncCall->expression()))

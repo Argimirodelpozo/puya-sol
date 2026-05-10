@@ -1,6 +1,8 @@
 #include "builder/sol-ast/SolFunctionCall.h"
 #include "builder/sol-types/TypeCoercion.h"
 
+#include <libsolidity/ast/ASTUtils.h>
+
 namespace puyasol::builder::sol_ast
 {
 
@@ -18,15 +20,8 @@ solidity::frontend::Expression const& SolFunctionCall::funcExpression() const
 	// Unwrap FunctionCallOptions
 	if (auto const* opts = dynamic_cast<solidity::frontend::FunctionCallOptions const*>(expr))
 		expr = &opts->expression();
-	// Unwrap parenthesized expressions
-	while (auto const* tuple = dynamic_cast<solidity::frontend::TupleExpression const*>(expr))
-	{
-		auto const& comps = tuple->components();
-		if (comps.size() == 1 && comps[0])
-			expr = comps[0].get();
-		else
-			break;
-	}
+	// Unwrap parenthesized expressions (1-element TupleExpressions).
+	expr = solidity::frontend::resolveOuterUnaryTuples(expr);
 	return *expr;
 }
 
