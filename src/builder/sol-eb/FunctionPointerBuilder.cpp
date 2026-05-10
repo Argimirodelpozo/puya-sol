@@ -643,8 +643,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 			// (e.g. internal/private from a base contract reachable via
 			// inheritance), keep it — an InstanceMethodTarget on the
 			// derived contract would still resolve via MRO flattening.
-			auto vis = entry.funcDef->visibility();
-			if (vis != Visibility::External && vis != Visibility::Public)
+			if (!entry.funcDef->isPartOfExternalInterface())
 				foreignNonResolvable = false;
 		}
 		if (foreignNonResolvable)
@@ -684,9 +683,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		bool anyPublic = false;
 		for (auto const* entry : entries)
 		{
-			if (entry->funcDef && (
-				entry->funcDef->visibility() == Visibility::Public
-				|| entry->funcDef->visibility() == Visibility::External))
+			if (entry->funcDef && entry->funcDef->isPartOfExternalInterface())
 			{
 				anyPublic = true;
 				break;
@@ -751,9 +748,8 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 					std::move(target), dispatch.returnType, _loc);
 
 				// Check if target is public (has ARC4 wrapping)
-				bool isPublic = entry->funcDef && (
-					entry->funcDef->visibility() == Visibility::Public
-					|| entry->funcDef->visibility() == Visibility::External);
+				bool isPublic = entry->funcDef
+					&& entry->funcDef->isPartOfExternalInterface();
 
 				for (size_t i = 0; i < funcType->parameterTypes().size(); ++i)
 				{

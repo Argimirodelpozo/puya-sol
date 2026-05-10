@@ -279,8 +279,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// Biguint promotion is only for ABI sign-extension (public/external).
 		// Private/internal functions keep the native uint64 return so their
 		// body's `return IntegerConstant(uint64, …)` matches the declared type.
-		bool isAbiBoundary = _func.visibility() == solidity::frontend::Visibility::Public
-			|| _func.visibility() == solidity::frontend::Visibility::External;
+		bool isAbiBoundary = _func.isPartOfExternalInterface();
 		if (intType && intType->isSigned())
 		{
 			if (intType->numBits() <= 64 && isAbiBoundary)
@@ -314,8 +313,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					intType = dynamic_cast<solidity::frontend::IntegerType const*>(
 						enumType->encodingType());
 			// Biguint promotion only at ABI boundary (public/external).
-			bool isAbiBoundary = _func.visibility() == solidity::frontend::Visibility::Public
-				|| _func.visibility() == solidity::frontend::Visibility::External;
+			bool isAbiBoundary = _func.isPartOfExternalInterface();
 			if (intType)
 			{
 				if (intType->isSigned())
