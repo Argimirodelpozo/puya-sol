@@ -275,6 +275,14 @@ awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _
 	// to break the cycle. ARC4 has no cycle support, so the recursive
 	// field becomes a bytes blob — semantics will be wrong but the
 	// compiler won't infinite-recurse into a stack overflow.
+	//
+	// (Tried solc's `structDef.annotation().recursive` as a one-shot check
+	// at function entry — it correctly identifies recursive structs, but
+	// short-circuiting the WHOLE struct to bytes loses the outer non-cycling
+	// fields. Tests like `recursive_structs.sol` that access `s.x` on the
+	// outer struct then fail with "unrecognised member 'x' on type bytes".
+	// Runtime per-cycle tracking is the right model; the annotation can't
+	// replace it.)
 	if (m_inProgressStructs.count(structDef.id()))
 		return awst::WType::bytesType();
 	m_inProgressStructs.insert(structDef.id());

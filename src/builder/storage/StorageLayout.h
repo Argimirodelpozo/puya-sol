@@ -72,9 +72,6 @@ public:
 	/// All variables in layout order.
 	std::vector<SlotVariable> const& variables() const { return m_variables; }
 
-	/// Generate the AVM global state key for a slot number.
-	static std::string slotKey(unsigned _slot) { return "slot_" + std::to_string(_slot); }
-
 private:
 	std::vector<SlotVariable> m_variables;
 	std::vector<SlotInfo> m_slots;
