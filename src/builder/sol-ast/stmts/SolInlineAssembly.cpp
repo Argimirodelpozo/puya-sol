@@ -39,30 +39,77 @@ std::optional<solidity::u256> resolveConstantU256(
 
 	auto const* initExpr = _varDecl.value().get();
 
-	// String/hex literal fast-path: ConstantEvaluator only handles
-	// numeric / bool, not raw bytes/strings. For those, parse directly.
+	// Literal fast-path. Two cases ConstantEvaluator can't or won't fold:
+	//   - hex literals typed as address/bytesN/etc — TypeProvider::forLiteral
+	//     returns AddressType / FixedBytesType, and constantToTypedValue
+	//     bails on anything that isn't RationalNumberType/StringLiteralType.
+	//     So `address constant e = 0x12…12;` yields a monostate value out of
+	//     ConstantEvaluator, and `e` falls through to a VarExpression.
+	//   - non-hex string literals — packed left-aligned into a 32-byte word
+	//     using EVM's bytesN convention.
+	auto applyBytesNShift = [&](solidity::u256 _val) -> solidity::u256 {
+		if (auto const* fixedBytes = dynamic_cast<FixedBytesType const*>(_varDecl.type()))
+		{
+			size_t shiftBits = (32 - fixedBytes->numBytes()) * 8;
+			_val <<= shiftBits;
+		}
+		return _val;
+	};
+
 	if (auto const* literal = dynamic_cast<Literal const*>(initExpr))
 	{
+		std::string const& value = literal->value();
 		auto const* exprType = initExpr->annotation().type;
-		// Bool: handled by ConstantEvaluator below as rational 0/1, but
-		// only for true/false keywords; bool literals always map cleanly.
-		if (!dynamic_cast<RationalNumberType const*>(exprType)
-			&& !dynamic_cast<BoolType const*>(exprType))
+		// Bool: ConstantEvaluator's constantToTypedValue handles only
+		// RationalNumberType and StringLiteralType, so `bool constant d =
+		// true;` falls through to monostate. Map true/false directly.
+		if (dynamic_cast<BoolType const*>(exprType))
+			return value == "true" ? solidity::u256(1) : solidity::u256(0);
+		if (value.size() > 2 && value.substr(0, 2) == "0x")
 		{
-			std::string const& value = literal->value();
-			if (value.size() > 2 && value.substr(0, 2) == "0x")
+			try { return applyBytesNShift(solidity::u256(value)); }
+			catch (...) {}
+		}
+		else if (!dynamic_cast<RationalNumberType const*>(exprType))
+		{
+			// String literal: pack as bytesN (left-aligned). Skip for
+			// rational — those are simple numeric values (e.g. "2") that
+			// ConstantEvaluator handles correctly below.
+			solidity::u256 numVal = 0;
+			for (char ch: value)
+				numVal = (numVal << 8) | static_cast<unsigned char>(ch);
+			size_t shiftBits = (32 - value.size()) * 8;
+			numVal <<= shiftBits;
+			return numVal;
+		}
+	}
+
+	// Chained constant: `const bb = b;` where b's value is itself a
+	// non-rational literal (address/bytesN/bool) that ConstantEvaluator
+	// can't fold to a rational. Recurse via this function so the literal
+	// fast-path above kicks in for the leaf, then re-apply the bytesN
+	// shift for the outer declaration.
+	if (auto const* identifier = dynamic_cast<Identifier const*>(initExpr))
+	{
+		if (auto const* refDecl = dynamic_cast<VariableDeclaration const*>(
+				identifier->annotation().referencedDeclaration))
+		{
+			if (refDecl->isConstant())
 			{
-				try { return solidity::u256(value); }
-				catch (...) {}
-			}
-			else
-			{
-				solidity::u256 numVal = 0;
-				for (char ch: value)
-					numVal = (numVal << 8) | static_cast<unsigned char>(ch);
-				size_t shiftBits = (32 - value.size()) * 8;
-				numVal <<= shiftBits;
-				return numVal;
+				auto inner = resolveConstantU256(*refDecl);
+				if (inner)
+				{
+					// Strip the inner bytesN shift (if any) before re-applying
+					// the outer one — otherwise chains like `bytes3 cc = c;
+					// bytes3 ccc = cc;` would shift twice.
+					if (auto const* innerFixedBytes =
+						dynamic_cast<FixedBytesType const*>(refDecl->type()))
+					{
+						size_t innerShift = (32 - innerFixedBytes->numBytes()) * 8;
+						*inner >>= innerShift;
+					}
+					return applyBytesNShift(*inner);
+				}
 			}
 		}
 	}
@@ -123,13 +170,12 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	{
 		if (!extInfo.declaration) continue;
 		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
-		// `isConstant()` is the per-decl flag; `isConstantVariableRecursive`
-		// also walks the initializer chain to confirm it bottoms out at a
-		// literal — protects `resolveConstantU256` below from chasing a
-		// chain that ends at a non-static expression. Two-stage call
-		// because solc asserts `isConstant()` inside the recursive form.
 		if (!varDecl || !varDecl->isConstant()) continue;
-		if (!solidity::frontend::isConstantVariableRecursive(*varDecl)) continue;
+		// Skip cyclic constant chains (`const a = b; const b = a;`) — solc's
+		// isConstantVariableRecursive returns true for cycles. Without this
+		// guard, resolveConstantU256 → ConstantEvaluator could recurse into
+		// the cycle.
+		if (solidity::frontend::isConstantVariableRecursive(*varDecl)) continue;
 
 		auto resolved = resolveConstantU256(*varDecl);
 		if (resolved)
