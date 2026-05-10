@@ -615,68 +615,27 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				++argIndex;
 			}
 
-			for (auto const& mod: constructor->modifiers())
-			{
-				auto const* refDecl = mod->name().annotation().referencedDeclaration;
-				if (auto const* baseContract =
-						dynamic_cast<solidity::frontend::ContractDefinition const*>(refDecl))
-				{
-					explicitBaseArgs[baseContract] = mod->arguments();
-				}
-			}
 		}
 
-		// Also collect arguments from inheritance specifiers (e.g. `is Base(arg1, arg2)`)
-		for (auto const& baseSpec: _contract.baseContracts())
+		// solc's ContractLevelChecker has already walked the contract's
+		// `is Base(args)` specifiers + constructor modifier invocations
+		// (transitively across the inheritance chain) and populated
+		// `_contract.annotation().baseConstructorArguments` mapping each
+		// base constructor's FunctionDefinition* to the ASTNode (either
+		// InheritanceSpecifier or ModifierInvocation) that provides its
+		// args. Replaces ~70 LOC of manual InheritanceSpecifier walks +
+		// transitive lookups across linearizedBaseContracts.
+		for (auto const& [baseCtor, argNode] : _contract.annotation().baseConstructorArguments)
 		{
-			auto const* refDecl = baseSpec->name().annotation().referencedDeclaration;
-			auto const* baseContract =
-				dynamic_cast<solidity::frontend::ContractDefinition const*>(refDecl);
-			if (baseContract && baseSpec->arguments()
-				&& !baseSpec->arguments()->empty()
-				&& explicitBaseArgs.find(baseContract) == explicitBaseArgs.end())
-			{
-				explicitBaseArgs[baseContract] = baseSpec->arguments();
-			}
-		}
-
-		// Collect transitive base constructor args from intermediate base contracts.
-		// e.g. if ConfigPositionManager → PositionManagerBase(x) → Ownable(x),
-		// we need explicitBaseArgs[Ownable] from PositionManagerBase's constructor.
-		for (auto const* base: _contract.annotation().linearizedBaseContracts)
-		{
-			if (base == &_contract)
-				continue;
-			// Check base's constructor modifiers
-			if (auto const* baseCtor = base->constructor())
-			{
-				for (auto const& mod: baseCtor->modifiers())
-				{
-					auto const* ref = mod->name().annotation().referencedDeclaration;
-					if (auto const* grandBase =
-							dynamic_cast<solidity::frontend::ContractDefinition const*>(ref))
-					{
-						if (explicitBaseArgs.find(grandBase) == explicitBaseArgs.end()
-							&& mod->arguments() && !mod->arguments()->empty())
-						{
-							explicitBaseArgs[grandBase] = mod->arguments();
-						}
-					}
-				}
-			}
-			// Check base's inheritance specifiers
-			for (auto const& baseSpec: base->baseContracts())
-			{
-				auto const* ref = baseSpec->name().annotation().referencedDeclaration;
-				auto const* grandBase =
-					dynamic_cast<solidity::frontend::ContractDefinition const*>(ref);
-				if (grandBase && baseSpec->arguments()
-					&& !baseSpec->arguments()->empty()
-					&& explicitBaseArgs.find(grandBase) == explicitBaseArgs.end())
-				{
-					explicitBaseArgs[grandBase] = baseSpec->arguments();
-				}
-			}
+			auto const* baseContract = baseCtor->annotation().contract;
+			if (!baseContract) continue;
+			std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression>> const* args = nullptr;
+			if (auto const* mod = dynamic_cast<solidity::frontend::ModifierInvocation const*>(argNode))
+				args = mod->arguments();
+			else if (auto const* spec = dynamic_cast<solidity::frontend::InheritanceSpecifier const*>(argNode))
+				args = spec->arguments();
+			if (args && !args->empty())
+				explicitBaseArgs[baseContract] = args;
 		}
 
 		if (needsPostInit)
