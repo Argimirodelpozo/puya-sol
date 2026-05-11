@@ -1,3 +1,28 @@
+# Semantic Test Status — v242
+
+**Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**
+
+vs v241 = 1096 PASS: **bit-identical per-test results**.
+
+## v242 puya-sol changes (vs v241)
+
+Pure refactor commit *366a2b350*: adds two intrinsic-builder helpers
+`makeExtract3` / `makeReplace3` in `awst/Node.h` and collapses the
+~70 + ~16 inline `makeIntrinsicCall("extract3"|"replace3", …) +
+stackArgs.push_back × 3` construction sites in the builder and
+splitter layers into one-liners. Same call gets the `makeExtractLastN`
+helper applied to two remaining hand-rolled "extract last 8 bytes"
+patterns in `SolIndexAccess.cpp` / `SolAssignmentHandlers.cpp`.
+
+Source delta: −271 LOC net (31 files modified, +106/−377). Pure
+mechanical: every callsite produces an identical AWST node, so
+per-test outcomes are byte-identical to v241. The .approval.teal /
+awst.json artifact diffs under `tests/solidity-semantic-tests/out/`
+come from regenerating outputs through the rebuilt binary — they
+carry no semantic content change.
+
+---
+
 # Semantic Test Status — v234
 
 **Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 8
-    bytecblock "data" "__ctor_pending" "ids" 0x151f7c75
+    intcblock 1 32 0 8 1024 32768
+    bytecblock "data" "__ctor_pending" 0x151f7c75 "ids" 0x6964730000000000000000
     intc_2 // 0
     dupn 3
     pushint 4096
@@ -93,7 +93,7 @@ main_ternary_merge@23:
     swap
     extract 32 32
     concat
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -131,13 +131,21 @@ main_ternary_merge@28:
     intc_3 // 8
     -
     extract_uint64
+    dup
+    intc 4 // 1024
+    /
+    itob
+    bytec_3 // "ids"
+    swap
+    concat
+    swap
+    intc 4 // 1024
+    %
     intc_1 // 32
     *
-    bytec_2 // "ids"
-    swap
     intc_1 // 32
-    box_extract // on error: index access is out of bounds
-    bytec_3 // 0x151f7c75
+    box_extract
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -254,12 +262,20 @@ main_ternary_merge@38:
     intc_3 // 8
     -
     extract_uint64
+    dup
+    intc 4 // 1024
+    /
+    itob
+    bytec_3 // "ids"
+    swap
+    concat
+    swap
+    intc 4 // 1024
+    %
     intc_1 // 32
     *
-    bytec_2 // "ids"
-    swap
     dig 5
-    box_replace // on error: index out of bounds
+    box_replace
     intc_0 // 1
     return
 
@@ -285,10 +301,10 @@ main_setIDStatic_route@6:
 main_ternary_merge@43:
     !
     assert // not payable
-    bytec_2 // "ids"
+    bytec 4 // 0x6964730000000000000000
     pushint 64
     dig 5
-    box_replace // on error: index out of bounds
+    box_replace
     intc_0 // 1
     return
 
@@ -304,7 +320,15 @@ main___postInit_route@5:
     intc_2 // 0
     app_global_put
     bytec_0 // "data"
-    pushint 32768
+    intc 5 // 32768
+    box_create
+    pop
+    bytec 4 // 0x6964730000000000000000
+    intc 5 // 32768
+    box_create
+    pop
+    pushbytes 0x6964730000000000000001
+    pushint 96
     box_create
     pop
     intc_0 // 1
