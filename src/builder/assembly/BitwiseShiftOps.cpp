@@ -83,20 +83,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildPowerOf2(
 		// Cast biguint → bytes first
 		auto cast = awst::makeReinterpretCast(std::move(shiftAmt), awst::WType::bytesType(), _loc);
 
-		// Safe btoi: extract last 8 bytes to avoid btoi overflow (> 8 bytes fails)
-		// Pattern: concat(bzero(8), bytes) → extract3(result, len-8, 8) → btoi
+		// Safe btoi: pad to 8 then extract last 8 (btoi requires ≤8 bytes).
 		auto cat = awst::makeLeftPad(std::move(cast), 8, _loc);
-		auto lenCall = awst::makeLen(cat, _loc);
-
-		auto start = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), _loc);
-		start->stackArgs.push_back(std::move(lenCall));
-		start->stackArgs.push_back(awst::makeIntegerConstant("8", _loc));
-
-		auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-		extract->stackArgs.push_back(cat);
-		extract->stackArgs.push_back(std::move(start));
-		extract->stackArgs.push_back(awst::makeIntegerConstant("8", _loc));
-
+		auto extract = awst::makeExtractLastN(std::move(cat), 8, _loc);
 		shiftAmt = awst::makeBtoi(std::move(extract), _loc);
 	}
 

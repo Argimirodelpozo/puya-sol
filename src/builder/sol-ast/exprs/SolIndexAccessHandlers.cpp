@@ -284,21 +284,10 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 			}
 			else if (keyWType == awst::WType::biguintType())
 			{
+				// Force biguint key → 32 bytes (right-aligned).
 				auto reinterpret = awst::makeReinterpretCast(std::move(translated), awst::WType::bytesType(), m_loc);
 				auto cat = awst::makeLeftPad(std::move(reinterpret), 32, m_loc);
-				auto lenCall = awst::makeLen(cat, m_loc);
-
-				auto offset = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), m_loc);
-				offset->stackArgs.push_back(std::move(lenCall));
-				offset->stackArgs.push_back(awst::makeIntegerConstant("32", m_loc));
-
-				auto width3 = awst::makeIntegerConstant("32", m_loc);
-
-				auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
-				extract->stackArgs.push_back(std::move(cat));
-				extract->stackArgs.push_back(std::move(offset));
-				extract->stackArgs.push_back(std::move(width3));
-				keyBytes = std::move(extract);
+				keyBytes = awst::makeExtractLastN(std::move(cat), 32, m_loc);
 			}
 			else
 			{

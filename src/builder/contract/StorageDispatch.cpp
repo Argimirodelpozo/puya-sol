@@ -129,19 +129,11 @@ void ContractBuilder::buildStorageDispatch(
 				auto get = awst::makeIntrinsicCall("app_global_get", awst::WType::bytesType(), loc);
 				get->stackArgs.push_back(makeBytes(sv.name));
 
-				// Pad to 32 bytes: concat(bzero(32), value), take last 32
+				// Left-pad then take last 32 — yields a fixed-width 32-byte
+				// value regardless of the global state slot's original size
+				// (which can be <32 for short ints).
 				auto cat = awst::makeLeftPad(std::move(get), 32, loc);
-
-				// Extract last 32 bytes
-				auto lenCall = awst::makeLen(cat, loc);
-
-				auto sub = awst::makeUInt64BinOp(std::move(lenCall), awst::UInt64BinaryOperator::Sub, makeUint64("32"), loc);
-
-				auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), loc);
-				extract->stackArgs.push_back(cat);
-				extract->stackArgs.push_back(std::move(sub));
-				extract->stackArgs.push_back(makeUint64("32"));
-
+				auto extract = awst::makeExtractLastN(std::move(cat), 32, loc);
 				auto cast = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), loc);
 
 				auto ret = awst::makeReturnStatement(std::move(cast), loc);

@@ -373,22 +373,8 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					{
 						// Normalize biguint to exactly 32 bytes before hashing.
 						auto reinterpret = awst::makeReinterpretCast(std::move(argRef), awst::WType::bytesType(), loc);
-
 						auto cat = awst::makeLeftPad(std::move(reinterpret), 32, loc);
-						auto lenCall = awst::makeLen(cat, loc);
-
-						auto offset = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), loc);
-						offset->stackArgs.push_back(std::move(lenCall));
-						offset->stackArgs.push_back(awst::makeIntegerConstant("32", loc));
-
-						auto width32b = awst::makeIntegerConstant("32", loc);
-
-						auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), loc);
-						extract->stackArgs.push_back(std::move(cat));
-						extract->stackArgs.push_back(std::move(offset));
-						extract->stackArgs.push_back(std::move(width32b));
-
-						keyBytes = std::move(extract);
+						keyBytes = awst::makeExtractLastN(std::move(cat), 32, loc);
 					}
 					else
 					{

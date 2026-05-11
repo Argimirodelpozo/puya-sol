@@ -35,26 +35,9 @@ std::shared_ptr<awst::Expression> TypeCoercion::implicitNumericCast(
 		// reinterpret biguint → bytes
 		auto toBytes = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
 
-		// concat(bzero(8), bytes) → padded
+		// concat(bzero(8), bytes) → padded; then extract3 last 8 → btoi.
 		auto padded = awst::makeLeftPad(std::move(toBytes), 8, _loc);
-
-		// len(padded) → paddedLen
-		auto paddedLen = awst::makeLen(padded, _loc);
-
-		// paddedLen - 8 → offset
-		auto eight2 = awst::makeIntegerConstant("8", _loc);
-
-		auto offset = awst::makeUInt64BinOp(std::move(paddedLen), awst::UInt64BinaryOperator::Sub, std::move(eight2), _loc);
-
-		// extract3(padded, offset, 8) → last 8 bytes
-		auto eight3 = awst::makeIntegerConstant("8", _loc);
-
-		auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-		extract->stackArgs.push_back(std::move(padded));
-		extract->stackArgs.push_back(std::move(offset));
-		extract->stackArgs.push_back(std::move(eight3));
-
-		// btoi(last8) → uint64
+		auto extract = awst::makeExtractLastN(std::move(padded), 8, _loc);
 		return awst::makeBtoi(std::move(extract), _loc);
 	}
 

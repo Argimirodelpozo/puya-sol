@@ -645,6 +645,38 @@ inline std::shared_ptr<IntrinsicCall> makeExtract(
 	return node;
 }
 
+// Take the LAST n bytes of `bytesExpr`: lowers to
+//   extract3(bytesExpr, len(bytesExpr) - n, n)
+// 3-arg `extract3` form because the offset is `len - n` at runtime
+// (constant only if `len` is known statically — which it usually isn't
+// for box reads and padded biguints, so the dynamic form is correct).
+// ~8 sites across the builder use this exact pattern to right-align
+// a bytes value to a fixed width after a left-pad. Note `bytesExpr` is
+// referenced TWICE (once by len, once by extract3); puya's IR builder
+// deduplicates by AST identity, so passing the same shared_ptr to both
+// produces the right wiring.
+inline std::shared_ptr<IntrinsicCall> makeExtractLastN(
+	std::shared_ptr<Expression> bytesExpr,
+	int n,
+	SourceLocation loc)
+{
+	auto nStr = std::to_string(n);
+	auto lenCall = makeLen(bytesExpr, loc);
+	auto nConstOffset = makeIntegerConstant(nStr, loc);
+	auto offset = std::make_shared<UInt64BinaryOperation>();
+	offset->sourceLocation = loc;
+	offset->wtype = WType::uint64Type();
+	offset->left = std::move(lenCall);
+	offset->op = UInt64BinaryOperator::Sub;
+	offset->right = std::move(nConstOffset);
+	auto nConstWidth = makeIntegerConstant(std::move(nStr), loc);
+	auto extract = makeIntrinsicCall("extract3", WType::bytesType(), std::move(loc));
+	extract->stackArgs.push_back(bytesExpr);
+	extract->stackArgs.push_back(std::move(offset));
+	extract->stackArgs.push_back(std::move(nConstWidth));
+	return extract;
+}
+
 // `bzero(count)` → `count` zero bytes.
 inline std::shared_ptr<IntrinsicCall> makeBzero(int count, SourceLocation loc)
 {
