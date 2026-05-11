@@ -319,11 +319,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					// extract3(readVal, 0, len-1)
 					auto zero = awst::makeIntegerConstant("0", loc);
 
-					auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), loc);
-					extract->stackArgs.push_back(readVal);
-					extract->stackArgs.push_back(std::move(zero));
-					extract->stackArgs.push_back(std::move(newLen));
-
+					auto extract = awst::makeExtract3(readVal, std::move(zero), std::move(newLen), loc);
 					if (kind == awst::AppStorageKind::Box)
 					{
 						// Box: store shrunk in temp, box_del, box_put
@@ -734,10 +730,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMemoryArray(
 				auto seven = awst::makeIntegerConstant("7", m_loc);
 				auto one = awst::makeIntegerConstant("1", m_loc);
 
-				auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
-				extract->stackArgs.push_back(std::move(itob));
-				extract->stackArgs.push_back(std::move(seven));
-				extract->stackArgs.push_back(std::move(one));
+				auto extract = awst::makeExtract3(std::move(itob), std::move(seven), std::move(one), m_loc);
 				byteVal = std::move(extract);
 			}
 			else if (byteVal->wtype != awst::WType::bytesType())
@@ -852,11 +845,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMappingElementArrayLengt
 
 	// 2-byte big-endian = extract3(itob(new_len), 6, 2)
 	auto itob = awst::makeItob(std::move(newLen), m_loc);
-	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
-	extract->stackArgs.push_back(std::move(itob));
-	extract->stackArgs.push_back(awst::makeIntegerConstant("6", m_loc));
-	extract->stackArgs.push_back(awst::makeIntegerConstant("2", m_loc));
-
+	auto extract = awst::makeExtract3(std::move(itob), awst::makeIntegerConstant("6", m_loc), awst::makeIntegerConstant("2", m_loc), m_loc);
 	// box_put(arrayVarName, len_bytes)
 	auto put = awst::makeIntrinsicCall("box_put", awst::WType::voidType(), m_loc);
 	put->stackArgs.push_back(boxKey);

@@ -456,10 +456,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::extractLastN(
 
 	auto widthConst = awst::makeIntegerConstant(_n, m_loc);
 
-	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
-	extract->stackArgs.push_back(std::move(_expr));
-	extract->stackArgs.push_back(std::move(offsetConst));
-	extract->stackArgs.push_back(std::move(widthConst));
+	auto extract = awst::makeExtract3(std::move(_expr), std::move(offsetConst), std::move(widthConst), m_loc);
 	return extract;
 }
 

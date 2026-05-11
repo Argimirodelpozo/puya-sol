@@ -18,10 +18,7 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::makeSelectorExpr(std::strin
 	auto sigConst = awst::makeUtf8BytesConstant(_sig, m_loc);
 	auto keccak = awst::makeKeccak256(std::move(sigConst), m_loc);
 
-	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
-	extract->stackArgs.push_back(std::move(keccak));
-	extract->stackArgs.push_back(awst::makeIntegerConstant("0", m_loc));
-	extract->stackArgs.push_back(awst::makeIntegerConstant("4", m_loc));
+	auto extract = awst::makeExtract3(std::move(keccak), awst::makeIntegerConstant("0", m_loc), awst::makeIntegerConstant("4", m_loc), m_loc);
 	return extract;
 }
 

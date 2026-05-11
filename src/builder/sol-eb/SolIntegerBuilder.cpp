@@ -454,11 +454,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			startOff->stackArgs.push_back(std::move(lenCall));
 			startOff->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
 
-			auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-			extract->stackArgs.push_back(concatPad);
-			extract->stackArgs.push_back(std::move(startOff));
-			extract->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
-
+			auto extract = awst::makeExtract3(concatPad, std::move(startOff), awst::makeIntegerConstant("32", _loc), _loc);
 			auto bitInvert = std::make_shared<awst::BytesUnaryOperation>();
 			bitInvert->sourceLocation = _loc;
 			bitInvert->wtype = awst::WType::bytesType();

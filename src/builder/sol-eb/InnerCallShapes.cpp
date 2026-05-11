@@ -233,11 +233,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	};
 
 	// selector = len >= 4 ? extract3(data, 0, 4) : data
-	auto extractSel = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	extractSel->stackArgs.push_back(tmpRead());
-	extractSel->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
-	extractSel->stackArgs.push_back(awst::makeIntegerConstant("4", _loc));
-
+	auto extractSel = awst::makeExtract3(tmpRead(), awst::makeIntegerConstant("0", _loc), awst::makeIntegerConstant("4", _loc), _loc);
 	auto selector = awst::makeConditional(
 		makeGe4(), std::move(extractSel), tmpRead(),
 		awst::WType::bytesType(), _loc);
@@ -246,11 +242,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	auto restLen = awst::makeUInt64BinOp(
 		makeLen(), awst::UInt64BinaryOperator::Sub,
 		awst::makeIntegerConstant("4", _loc), _loc);
-	auto extractRest = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	extractRest->stackArgs.push_back(tmpRead());
-	extractRest->stackArgs.push_back(awst::makeIntegerConstant("4", _loc));
-	extractRest->stackArgs.push_back(std::move(restLen));
-
+	auto extractRest = awst::makeExtract3(tmpRead(), awst::makeIntegerConstant("4", _loc), std::move(restLen), _loc);
 	auto rest = awst::makeConditional(
 		makeGe4(), std::move(extractRest),
 		awst::makeBytesConstant({}, _loc),

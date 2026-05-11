@@ -379,11 +379,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::emitFreeMemoryBum
 
 	auto blobRead2 = awst::makeVarExpression(blobTmp, awst::WType::bytesType(), _loc);
 	auto offset40 = awst::makeIntegerConstant("64", _loc);
-	auto replaceCall = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
-	replaceCall->stackArgs.push_back(std::move(blobRead2));
-	replaceCall->stackArgs.push_back(std::move(offset40));
-	replaceCall->stackArgs.push_back(std::move(concat));
-
+	auto replaceCall = awst::makeReplace3(std::move(blobRead2), std::move(offset40), std::move(concat), _loc);
 	auto storeOp = awst::makeIntrinsicCall("store", awst::WType::voidType(), _loc);
 	storeOp->immediates = {MEMORY_SLOT_FIRST};
 	storeOp->stackArgs.push_back(std::move(replaceCall));
@@ -444,10 +440,7 @@ void AssemblyBuilder::initializeMemoryBlob(
 
 			auto offsetConst = awst::makeIntegerConstant(offset, loc);
 
-			auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), loc);
-			replace->stackArgs.push_back(memoryVar(loc));
-			replace->stackArgs.push_back(std::move(offsetConst));
-			replace->stackArgs.push_back(std::move(padded));
+			auto replace = awst::makeReplace3(memoryVar(loc), std::move(offsetConst), std::move(padded), loc);
 			assignMemoryVar(std::move(replace), loc, _out);
 		}
 	}

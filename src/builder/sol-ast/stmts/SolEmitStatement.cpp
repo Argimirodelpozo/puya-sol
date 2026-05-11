@@ -123,11 +123,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 		auto zero = awst::makeIntegerConstant("0", m_loc);
 		auto four = awst::makeIntegerConstant("4", m_loc);
 
-		auto selector = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
-		selector->stackArgs.push_back(std::move(hash));
-		selector->stackArgs.push_back(std::move(zero));
-		selector->stackArgs.push_back(std::move(four));
-
+		auto selector = awst::makeExtract3(std::move(hash), std::move(zero), std::move(four), m_loc);
 		auto logCall = awst::makeIntrinsicCall("log", awst::WType::voidType(), m_loc);
 		logCall->stackArgs.push_back(std::move(selector));
 

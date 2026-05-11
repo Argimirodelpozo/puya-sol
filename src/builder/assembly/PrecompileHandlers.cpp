@@ -172,10 +172,7 @@ void AssemblyBuilder::handleEcPairingRT(
 									std::shared_ptr<awst::Expression> off2)
 			-> std::shared_ptr<awst::Expression> {
 			auto extract = [&](std::shared_ptr<awst::Expression> off) {
-				auto a = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-				a->stackArgs.push_back(memoryVar(_loc));
-				a->stackArgs.push_back(std::move(off));
-				a->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
+				auto a = awst::makeExtract3(memoryVar(_loc), std::move(off), awst::makeIntegerConstant("32", _loc), _loc);
 				return a;
 			};
 			auto a = extract(std::move(off1));
@@ -264,11 +261,7 @@ void AssemblyBuilder::handleSha256PrecompileRT(
 {
 	// Read inputSize bytes from memory at inputOffset, hash, write 32 bytes
 	// at outputOffset. The output size for SHA-256 is always 32.
-	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	extract->stackArgs.push_back(memoryVar(_loc));
-	extract->stackArgs.push_back(offsetToUint64(std::move(_inputOffset), _loc));
-	extract->stackArgs.push_back(offsetToUint64(std::move(_inputSize), _loc));
-
+	auto extract = awst::makeExtract3(memoryVar(_loc), offsetToUint64(std::move(_inputOffset), _loc), offsetToUint64(std::move(_inputSize), _loc), _loc);
 	auto sha = awst::makeIntrinsicCall("sha256", awst::WType::bytesType(), _loc);
 	sha->stackArgs.push_back(std::move(extract));
 
@@ -285,16 +278,8 @@ void AssemblyBuilder::handleIdentityPrecompileRT(
 )
 {
 	// Memory-to-memory copy of inputSize bytes from inputOffset to outputOffset.
-	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	extract->stackArgs.push_back(memoryVar(_loc));
-	extract->stackArgs.push_back(offsetToUint64(std::move(_inputOffset), _loc));
-	extract->stackArgs.push_back(offsetToUint64(std::move(_inputSize), _loc));
-
-	auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
-	replace->stackArgs.push_back(memoryVar(_loc));
-	replace->stackArgs.push_back(offsetToUint64(std::move(_outputOffset), _loc));
-	replace->stackArgs.push_back(std::move(extract));
-
+	auto extract = awst::makeExtract3(memoryVar(_loc), offsetToUint64(std::move(_inputOffset), _loc), offsetToUint64(std::move(_inputSize), _loc), _loc);
+	auto replace = awst::makeReplace3(memoryVar(_loc), offsetToUint64(std::move(_outputOffset), _loc), std::move(extract), _loc);
 	assignMemoryVar(std::move(replace), _loc, _out);
 }
 
@@ -334,10 +319,7 @@ void AssemblyBuilder::handleModExpRT(
 	};
 	auto readSlot = [&](uint64_t slotOff) -> std::shared_ptr<awst::Expression>
 	{
-		auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-		extract->stackArgs.push_back(memoryVar(_loc));
-		extract->stackArgs.push_back(plusConst(baseOff(), slotOff));
-		extract->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
+		auto extract = awst::makeExtract3(memoryVar(_loc), plusConst(baseOff(), slotOff), awst::makeIntegerConstant("32", _loc), _loc);
 		return awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
 	};
 

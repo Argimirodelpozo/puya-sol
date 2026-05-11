@@ -687,6 +687,36 @@ inline std::shared_ptr<IntrinsicCall> makeExtractLastN(
 	return extract;
 }
 
+// `extract3(bytes, offset, length)` → bytes slice. ~70 sites across the
+// builder layer use this exact 3-stack-arg shape.
+inline std::shared_ptr<IntrinsicCall> makeExtract3(
+	std::shared_ptr<Expression> bytes,
+	std::shared_ptr<Expression> offset,
+	std::shared_ptr<Expression> length,
+	SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("extract3", WType::bytesType(), std::move(loc));
+	node->stackArgs.push_back(std::move(bytes));
+	node->stackArgs.push_back(std::move(offset));
+	node->stackArgs.push_back(std::move(length));
+	return node;
+}
+
+// `replace3(bytes, offset, replacement)` → bytes with `replacement` overlaid
+// starting at `offset`. ~16 sites use this exact 3-stack-arg shape.
+inline std::shared_ptr<IntrinsicCall> makeReplace3(
+	std::shared_ptr<Expression> bytes,
+	std::shared_ptr<Expression> offset,
+	std::shared_ptr<Expression> replacement,
+	SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("replace3", WType::bytesType(), std::move(loc));
+	node->stackArgs.push_back(std::move(bytes));
+	node->stackArgs.push_back(std::move(offset));
+	node->stackArgs.push_back(std::move(replacement));
+	return node;
+}
+
 // `bzero(count)` → `count` zero bytes.
 inline std::shared_ptr<IntrinsicCall> makeBzero(int count, SourceLocation loc)
 {

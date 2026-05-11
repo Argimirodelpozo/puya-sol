@@ -215,11 +215,7 @@ void ContractBuilder::buildStorageDispatch(
 
 			auto sub32 = awst::makeUInt64BinOp(std::move(lenCall), awst::UInt64BinaryOperator::Sub, makeUint64("32"), loc);
 
-			auto paddedVal = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), loc);
-			paddedVal->stackArgs.push_back(cat);
-			paddedVal->stackArgs.push_back(std::move(sub32));
-			paddedVal->stackArgs.push_back(makeUint64("32"));
-
+			auto paddedVal = awst::makeExtract3(cat, std::move(sub32), makeUint64("32"), loc);
 			// box_create("__dyn_storage", 8192) — ensure box exists
 			auto boxCreate = awst::makeIntrinsicCall("box_create", awst::WType::boolType(), loc);
 			boxCreate->stackArgs.push_back(boxKey);
@@ -265,11 +261,7 @@ void ContractBuilder::buildStorageDispatch(
 
 				auto sub32 = awst::makeUInt64BinOp(std::move(lenCall), awst::UInt64BinaryOperator::Sub, makeUint64("32"), loc);
 
-				auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), loc);
-				extract->stackArgs.push_back(cat);
-				extract->stackArgs.push_back(std::move(sub32));
-				extract->stackArgs.push_back(makeUint64("32"));
-
+				auto extract = awst::makeExtract3(cat, std::move(sub32), makeUint64("32"), loc);
 				auto put = awst::makeIntrinsicCall("app_global_put", awst::WType::voidType(), loc);
 				put->stackArgs.push_back(makeBytes(sv.name));
 				put->stackArgs.push_back(std::move(extract));

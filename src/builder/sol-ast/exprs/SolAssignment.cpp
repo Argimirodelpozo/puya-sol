@@ -341,19 +341,8 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 
 				auto slotJ = awst::makeBigUIntBinOp(target, awst::BigUIntBinaryOperator::Add, std::move(jConst), m_loc);
 
-				// btoi(slot + j) for __storage_write
 				auto castBytes = awst::makeReinterpretCast(std::move(slotJ), awst::WType::bytesType(), m_loc);
-
-				// Safe truncate biguint slot to uint64: extract last 8 bytes then btoi
-				auto lenOp = awst::makeLen(castBytes, m_loc);
-				auto sub8 = awst::makeUInt64BinOp(std::move(lenOp),
-					awst::UInt64BinaryOperator::Sub,
-					awst::makeIntegerConstant("8", m_loc), m_loc);
-				auto last8 = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
-				last8->stackArgs.push_back(std::move(castBytes));
-				last8->stackArgs.push_back(std::move(sub8));
-				auto eight2 = awst::makeIntegerConstant("8", m_loc);
-				last8->stackArgs.push_back(std::move(eight2));
+				auto last8 = awst::makeExtractLastN(std::move(castBytes), 8, m_loc);
 				auto btoi = awst::makeBtoi(std::move(last8), m_loc);
 
 				// value[j]

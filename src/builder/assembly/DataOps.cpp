@@ -32,10 +32,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 			auto blob = awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), _loc);
 			auto offArg = offsetToUint64(_args[0], _loc);
 			auto lenArg = awst::makeIntegerConstant("32", _loc);
-			auto extractCall = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-			extractCall->stackArgs.push_back(std::move(blob));
-			extractCall->stackArgs.push_back(std::move(offArg));
-			extractCall->stackArgs.push_back(std::move(lenArg));
+			auto extractCall = awst::makeExtract3(std::move(blob), std::move(offArg), std::move(lenArg), _loc);
 			return awst::makeReinterpretCast(std::move(extractCall), awst::WType::biguintType(), _loc);
 		}
 		Logger::instance().error(
@@ -65,11 +62,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 
 			auto lenArg = awst::makeIntegerConstant("32", _loc);
 
-			auto extractCall = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-			extractCall->stackArgs.push_back(std::move(base));
-			extractCall->stackArgs.push_back(std::move(offArg));
-			extractCall->stackArgs.push_back(std::move(lenArg));
-
+			auto extractCall = awst::makeExtract3(std::move(base), std::move(offArg), std::move(lenArg), _loc);
 			auto cast = awst::makeReinterpretCast(std::move(extractCall), awst::WType::biguintType(), _loc);
 			return cast;
 		}
@@ -299,11 +292,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 
 			auto lenConst = awst::makeIntegerConstant(*length, _loc);
 
-			auto data = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-			data->stackArgs.push_back(memoryVar(_loc));
-			data->stackArgs.push_back(std::move(offsetU64));
-			data->stackArgs.push_back(std::move(lenConst));
-
+			auto data = awst::makeExtract3(memoryVar(_loc), std::move(offsetU64), std::move(lenConst), _loc);
 			auto keccak = awst::makeKeccak256(std::move(data), _loc);
 			return awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
 		}
@@ -378,11 +367,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 
 			auto lenConst = awst::makeIntegerConstant(*length, _loc);
 
-			auto data = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-			data->stackArgs.push_back(memoryVar(_loc));
-			data->stackArgs.push_back(std::move(offsetConst));
-			data->stackArgs.push_back(std::move(lenConst));
-
+			auto data = awst::makeExtract3(memoryVar(_loc), std::move(offsetConst), std::move(lenConst), _loc);
 			auto keccak = awst::makeKeccak256(std::move(data), _loc);
 			return awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
 		}
@@ -454,11 +439,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 
 				auto lenExpr = awst::makeIntegerConstant(fieldSize, _loc);
 
-				auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-				extract->stackArgs.push_back(structBytes);
-				extract->stackArgs.push_back(std::move(offExpr));
-				extract->stackArgs.push_back(std::move(lenExpr));
-
+				auto extract = awst::makeExtract3(structBytes, std::move(offExpr), std::move(lenExpr), _loc);
 				// Cast to biguint, then pad to 32 bytes
 				auto asBiguint = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
 
@@ -741,10 +722,7 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 					std::move(paramVar), awst::WType::uint64Type(), _loc);
 				byteByVal->stackArgs.push_back(std::move(castU64));
 				// itob produces 8 bytes BE; take last byte
-				auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-				extract->stackArgs.push_back(std::move(byteByVal));
-				extract->stackArgs.push_back(u64Const(7));
-				extract->stackArgs.push_back(u64Const(1));
+				auto extract = awst::makeExtract3(std::move(byteByVal), u64Const(7), u64Const(1), _loc);
 				headWord = concatBytes(std::move(bz), std::move(extract));
 			}
 			else if (type == awst::WType::accountType())
@@ -821,10 +799,7 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 			auto lenCall = awst::makeLen(bytes, _loc);
 			auto sub2 = awst::makeUInt64BinOp(
 				std::move(lenCall), O::Sub, u64Const(2), _loc);
-			auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-			extract->stackArgs.push_back(std::move(bytes));
-			extract->stackArgs.push_back(u64Const(2));
-			extract->stackArgs.push_back(std::move(sub2));
+			auto extract = awst::makeExtract3(std::move(bytes), u64Const(2), std::move(sub2), _loc);
 			body = std::move(extract);
 		}
 		auto paddedBody = padTo32Multiple(std::move(body), _loc);
@@ -862,10 +837,7 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 		{
 			if (!isDynamicAbi(_params[j].second)) continue;
 			uint64_t headByteOffset = 4 + j * 32;
-			auto patch = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
-			patch->stackArgs.push_back(bytesVar(CD_BLOB_VAR));
-			patch->stackArgs.push_back(u64Const(headByteOffset));
-			patch->stackArgs.push_back(pad32BE(u64Var("__cd_tail_off"), _loc));
+			auto patch = awst::makeReplace3(bytesVar(CD_BLOB_VAR), u64Const(headByteOffset), pad32BE(u64Var("__cd_tail_off"), _loc), _loc);
 			_out.push_back(awst::makeAssignmentStatement(bytesVar(CD_BLOB_VAR), std::move(patch), _loc));
 			break;  // only patch the very next dynamic; updating
 			        // __cd_tail_off in subsequent iterations chains them.

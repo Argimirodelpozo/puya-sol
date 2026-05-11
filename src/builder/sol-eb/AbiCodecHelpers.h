@@ -50,10 +50,7 @@ inline std::shared_ptr<awst::Expression> bytesExtract3(
 	std::shared_ptr<awst::Expression> _length,
 	awst::SourceLocation const& _loc)
 {
-	auto e = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	e->stackArgs.push_back(std::move(_bytes));
-	e->stackArgs.push_back(std::move(_start));
-	e->stackArgs.push_back(std::move(_length));
+	auto e = awst::makeExtract3(std::move(_bytes), std::move(_start), std::move(_length), _loc);
 	return e;
 }
 

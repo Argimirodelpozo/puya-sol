@@ -118,11 +118,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 	using namespace solidity::frontend;
 
 	// Extract the 32-byte head word at _offset
-	auto headWord = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	headWord->stackArgs.push_back(_data);
-	headWord->stackArgs.push_back(_offset);
-	headWord->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
-
+	auto headWord = awst::makeExtract3(_data, _offset, awst::makeIntegerConstant("32", _loc), _loc);
 	auto* wtype = _ctx.typeMapper.map(_solType);
 
 	// ── Static types: value is in the 32-byte head word ──
@@ -173,11 +169,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 
 		// At tailOffset: [length as 32 bytes][data...]
 		// Read length
-		auto lenWord = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-		lenWord->stackArgs.push_back(_data);
-		lenWord->stackArgs.push_back(tailOffset);
-		lenWord->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
-
+		auto lenWord = awst::makeExtract3(_data, tailOffset, awst::makeIntegerConstant("32", _loc), _loc);
 		auto elemCount = uint64FromAbiWord(std::move(lenWord), _loc);
 
 		// Data starts at tailOffset + 32
@@ -211,18 +203,10 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 					_loc);
 
 				// elemBytes = extract3(_data, dataStart, byteCount)
-				auto elemBytes = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-				elemBytes->stackArgs.push_back(_data);
-				elemBytes->stackArgs.push_back(std::move(dataStart));
-				elemBytes->stackArgs.push_back(std::move(byteCount));
-
+				auto elemBytes = awst::makeExtract3(_data, std::move(dataStart), std::move(byteCount), _loc);
 				// arc4Header = extract3(itob(elemCount), 6, 2) — uint16 BE length
 				auto itob = awst::makeItob(std::move(elemCount), _loc);
-				auto header = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-				header->stackArgs.push_back(std::move(itob));
-				header->stackArgs.push_back(awst::makeIntegerConstant("6", _loc));
-				header->stackArgs.push_back(awst::makeIntegerConstant("2", _loc));
-
+				auto header = awst::makeExtract3(std::move(itob), awst::makeIntegerConstant("6", _loc), awst::makeIntegerConstant("2", _loc), _loc);
 				// concat(header, elemBytes)
 				auto arc4Bytes = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
 				arc4Bytes->stackArgs.push_back(std::move(header));
@@ -235,11 +219,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 
 		// Extract data bytes (length word is interpreted as byte count — correct
 		// for bytes/string where elements are 1 byte each)
-		auto dataBytes = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-		dataBytes->stackArgs.push_back(_data);
-		dataBytes->stackArgs.push_back(std::move(dataStart));
-		dataBytes->stackArgs.push_back(std::move(elemCount));
-
+		auto dataBytes = awst::makeExtract3(_data, std::move(dataStart), std::move(elemCount), _loc);
 		// Cast to target type (string, bytes, etc.)
 		if (wtype == awst::WType::stringType())
 		{
@@ -305,10 +285,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::rightPadTo32(
 	auto padded = awst::makeRightPad(std::move(_expr), 31, _loc);
 
 	// extract3(padded, 0, paddedLen)
-	auto result = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	result->stackArgs.push_back(std::move(padded));
-	result->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
-	result->stackArgs.push_back(std::move(paddedLen));
+	auto result = awst::makeExtract3(std::move(padded), awst::makeIntegerConstant("0", _loc), std::move(paddedLen), _loc);
 	return result;
 }
 

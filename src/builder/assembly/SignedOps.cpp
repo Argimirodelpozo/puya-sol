@@ -38,11 +38,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTload(
 	// extract3(blob, offset, 32)
 	auto thirtyTwo2 = awst::makeIntegerConstant("32", _loc);
 
-	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	extract->stackArgs.push_back(std::move(loadBlob));
-	extract->stackArgs.push_back(std::move(offset));
-	extract->stackArgs.push_back(std::move(thirtyTwo2));
-
+	auto extract = awst::makeExtract3(std::move(loadBlob), std::move(offset), std::move(thirtyTwo2), _loc);
 	// Reinterpret as biguint
 	auto cast = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
 	return cast;
@@ -79,11 +75,7 @@ void AssemblyBuilder::handleTstore(
 	auto blobRead = awst::makeIntrinsicCall("load", awst::WType::bytesType(), _loc);
 	blobRead->immediates = {TRANSIENT_SLOT};
 
-	auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
-	replace->stackArgs.push_back(std::move(blobRead));
-	replace->stackArgs.push_back(std::move(offset));
-	replace->stackArgs.push_back(std::move(padded));
-
+	auto replace = awst::makeReplace3(std::move(blobRead), std::move(offset), std::move(padded), _loc);
 	// store TRANSIENT_SLOT ← replace3(...)
 	// Direct scratch write: write persists across callsub within the app call,
 	// and can't be DCE'd because store is a side-effectful intrinsic.

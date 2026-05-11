@@ -261,10 +261,7 @@ std::shared_ptr<awst::Expression> encodeValueToBytes(
 		auto offset = awst::makeUInt64BinOp(
 			std::move(len), awst::UInt64BinaryOperator::Sub,
 			awst::makeIntegerConstant("32", _loc), _loc);
-		auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-		extract->stackArgs.push_back(cat);
-		extract->stackArgs.push_back(std::move(offset));
-		extract->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
+		auto extract = awst::makeExtract3(cat, std::move(offset), awst::makeIntegerConstant("32", _loc), _loc);
 		return extract;
 	}
 	if (_t == awst::WType::uint64Type())

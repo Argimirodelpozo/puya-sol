@@ -41,10 +41,7 @@ std::shared_ptr<awst::IntrinsicCall> InnerCallHandlers::makeExtract(
 	std::shared_ptr<awst::Expression> _source, int _offset, int _length,
 	awst::SourceLocation const& _loc)
 {
-	auto call = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	call->stackArgs.push_back(std::move(_source));
-	call->stackArgs.push_back(awst::makeIntegerConstant(_offset, _loc));
-	call->stackArgs.push_back(awst::makeIntegerConstant(_length, _loc));
+	auto call = awst::makeExtract3(std::move(_source), awst::makeIntegerConstant(_offset, _loc), awst::makeIntegerConstant(_length, _loc), _loc);
 	return call;
 }
 

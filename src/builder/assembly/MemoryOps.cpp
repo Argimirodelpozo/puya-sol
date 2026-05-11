@@ -43,11 +43,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleMload(
 
 	auto len32 = awst::makeIntegerConstant("32", _loc);
 
-	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	extract->stackArgs.push_back(memoryVar(_loc));
-	extract->stackArgs.push_back(std::move(offsetU64));
-	extract->stackArgs.push_back(std::move(len32));
-
+	auto extract = awst::makeExtract3(memoryVar(_loc), std::move(offsetU64), std::move(len32), _loc);
 	// Cast bytes → biguint (mload returns uint256)
 	auto result = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
 	return result;
@@ -144,11 +140,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryHandleBytesMemoryRead(
 	auto lenArg = awst::makeIntegerConstant("32", _loc);
 
 	// extract3(param, offset, 32)
-	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	extract->stackArgs.push_back(std::move(paramVar));
-	extract->stackArgs.push_back(std::move(offsetU64));
-	extract->stackArgs.push_back(std::move(lenArg));
-
+	auto extract = awst::makeExtract3(std::move(paramVar), std::move(offsetU64), std::move(lenArg), _loc);
 	// Cast bytes → biguint (mload returns uint256)
 	auto result = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
 
@@ -229,11 +221,7 @@ bool AssemblyBuilder::tryHandleBytesMemoryWrite(
 	// extract3(padded, 0, len(x))
 	auto zero = awst::makeIntegerConstant("0", _loc);
 
-	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	extract->stackArgs.push_back(std::move(padded));
-	extract->stackArgs.push_back(std::move(zero));
-	extract->stackArgs.push_back(std::move(lenCall));
-
+	auto extract = awst::makeExtract3(std::move(padded), std::move(zero), std::move(lenCall), _loc);
 	// Cast if needed for string type
 	std::shared_ptr<awst::Expression> newValue = std::move(extract);
 	if (varType == awst::WType::stringType())
@@ -288,11 +276,7 @@ void AssemblyBuilder::handleMstore(
 	auto offsetU64 = offsetToUint64(_args[0], _loc);
 	auto padded = padTo32Bytes(ensureBiguint(_args[1], _loc), _loc);
 
-	auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
-	replace->stackArgs.push_back(memoryVar(_loc));
-	replace->stackArgs.push_back(std::move(offsetU64));
-	replace->stackArgs.push_back(std::move(padded));
-
+	auto replace = awst::makeReplace3(memoryVar(_loc), std::move(offsetU64), std::move(padded), _loc);
 	assignMemoryVar(std::move(replace), _loc, _out);
 }
 
@@ -317,16 +301,8 @@ void AssemblyBuilder::handleMstore8(
 	auto start = awst::makeIntegerConstant("31", _loc);
 	auto len = awst::makeIntegerConstant("1", _loc);
 
-	auto lowByte = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	lowByte->stackArgs.push_back(std::move(padded));
-	lowByte->stackArgs.push_back(std::move(start));
-	lowByte->stackArgs.push_back(std::move(len));
-
-	auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
-	replace->stackArgs.push_back(memoryVar(_loc));
-	replace->stackArgs.push_back(std::move(offsetU64));
-	replace->stackArgs.push_back(std::move(lowByte));
-
+	auto lowByte = awst::makeExtract3(std::move(padded), std::move(start), std::move(len), _loc);
+	auto replace = awst::makeReplace3(memoryVar(_loc), std::move(offsetU64), std::move(lowByte), _loc);
 	assignMemoryVar(std::move(replace), _loc, _out);
 }
 
@@ -380,11 +356,7 @@ void AssemblyBuilder::handleReturn(
 
 		auto sizeU64 = awst::makeIntegerConstant(*returnSize, _loc);
 
-		auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-		extract->stackArgs.push_back(memoryVar(_loc));
-		extract->stackArgs.push_back(std::move(offsetU64));
-		extract->stackArgs.push_back(std::move(sizeU64));
-
+		auto extract = awst::makeExtract3(memoryVar(_loc), std::move(offsetU64), std::move(sizeU64), _loc);
 		// log(data) — emit the raw bytes as a transaction log
 		auto logCall = awst::makeIntrinsicCall("log", awst::WType::voidType(), _loc);
 		logCall->stackArgs.push_back(std::move(extract));

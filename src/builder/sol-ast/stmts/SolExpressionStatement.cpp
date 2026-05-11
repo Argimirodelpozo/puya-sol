@@ -229,10 +229,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 							{
 								auto zero = awst::makeIntegerConstant("0", m_loc);
 								auto width = awst::makeIntegerConstant(dstLen, m_loc);
-								auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
-								extract->stackArgs.push_back(std::move(toBytes));
-								extract->stackArgs.push_back(std::move(zero));
-								extract->stackArgs.push_back(std::move(width));
+								auto extract = awst::makeExtract3(std::move(toBytes), std::move(zero), std::move(width), m_loc);
 								result = std::move(extract);
 							}
 							auto finalCast = awst::makeReinterpretCast(std::move(result), expectedType, m_loc);
@@ -295,10 +292,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 								{
 									auto zero = awst::makeIntegerConstant("0", m_loc);
 									auto width = awst::makeIntegerConstant(dstLen, m_loc);
-									auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
-									extract->stackArgs.push_back(std::move(toBytes));
-									extract->stackArgs.push_back(std::move(zero));
-									extract->stackArgs.push_back(std::move(width));
+									auto extract = awst::makeExtract3(std::move(toBytes), std::move(zero), std::move(width), m_loc);
 									widened = std::move(extract);
 								}
 								tupleExpr->items[i] = awst::makeReinterpretCast(std::move(widened), expectedElemType, m_loc);

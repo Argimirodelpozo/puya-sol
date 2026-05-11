@@ -208,11 +208,7 @@ std::shared_ptr<awst::Expression> decodeScalarAt(
 	if (size == 0)
 		return nullptr;
 
-	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	extract->stackArgs.push_back(std::move(_bytes));
-	extract->stackArgs.push_back(awst::makeIntegerConstant(_offset, _loc));
-	extract->stackArgs.push_back(awst::makeIntegerConstant(size, _loc));
-
+	auto extract = awst::makeExtract3(std::move(_bytes), awst::makeIntegerConstant(_offset, _loc), awst::makeIntegerConstant(size, _loc), _loc);
 	if (_t == awst::WType::biguintType())
 		return awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
 	if (_t == awst::WType::uint64Type())

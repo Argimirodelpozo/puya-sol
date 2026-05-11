@@ -1323,11 +1323,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			auto fmpBytes = awst::makeBytesConstant(
 				std::move(fmpBytesVal), method.sourceLocation, awst::BytesEncoding::Unknown);
 
-			auto replaceOp = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), method.sourceLocation);
-			replaceOp->stackArgs.push_back(std::move(loadBlob));
-			replaceOp->stackArgs.push_back(std::move(fmpOffset));
-			replaceOp->stackArgs.push_back(std::move(fmpBytes));
-
+			auto replaceOp = awst::makeReplace3(std::move(loadBlob), std::move(fmpOffset), std::move(fmpBytes), method.sourceLocation);
 			auto storeFmpOp = awst::makeIntrinsicCall("store", awst::WType::voidType(), method.sourceLocation);
 			storeFmpOp->immediates = {AssemblyBuilder::MEMORY_SLOT_FIRST};
 			storeFmpOp->stackArgs.push_back(std::move(replaceOp));

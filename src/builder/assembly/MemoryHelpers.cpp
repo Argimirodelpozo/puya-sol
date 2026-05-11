@@ -21,11 +21,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemSlot(
 
 	auto len32 = awst::makeIntegerConstant("32", _loc);
 
-	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	extract->stackArgs.push_back(memoryVar(_loc));
-	extract->stackArgs.push_back(std::move(offsetConst));
-	extract->stackArgs.push_back(std::move(len32));
-
+	auto extract = awst::makeExtract3(memoryVar(_loc), std::move(offsetConst), std::move(len32), _loc);
 	auto cast = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
 	return cast;
 }
@@ -54,11 +50,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::concatSlots(
 
 	auto lenConst = awst::makeIntegerConstant(byteLen, _loc);
 
-	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	extract->stackArgs.push_back(memoryVar(_loc));
-	extract->stackArgs.push_back(std::move(offsetConst));
-	extract->stackArgs.push_back(std::move(lenConst));
-
+	auto extract = awst::makeExtract3(memoryVar(_loc), std::move(offsetConst), std::move(lenConst), _loc);
 	return extract;
 }
 
@@ -84,11 +76,7 @@ void AssemblyBuilder::storeResultToMemory(
 
 		auto offsetConst = awst::makeIntegerConstant(_outputOffset, _loc);
 
-		auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
-		replace->stackArgs.push_back(memoryVar(_loc));
-		replace->stackArgs.push_back(std::move(offsetConst));
-		replace->stackArgs.push_back(std::move(padded));
-
+		auto replace = awst::makeReplace3(memoryVar(_loc), std::move(offsetConst), std::move(padded), _loc);
 		assignMemoryVar(std::move(replace), _loc, _out);
 		return;
 	}
@@ -107,11 +95,7 @@ void AssemblyBuilder::storeResultToMemory(
 
 		auto offsetConst = awst::makeIntegerConstant(_outputOffset, _loc);
 
-		auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
-		replace->stackArgs.push_back(memoryVar(_loc));
-		replace->stackArgs.push_back(std::move(offsetConst));
-		replace->stackArgs.push_back(std::move(padded));
-
+		auto replace = awst::makeReplace3(memoryVar(_loc), std::move(offsetConst), std::move(padded), _loc);
 		assignMemoryVar(std::move(replace), _loc, _out);
 		return;
 	}
@@ -139,19 +123,11 @@ void AssemblyBuilder::storeResultToMemory(
 
 		auto slotLen = awst::makeIntegerConstant("32", _loc);
 
-		auto extractSlot = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-		extractSlot->stackArgs.push_back(resultRead);
-		extractSlot->stackArgs.push_back(slotStart);
-		extractSlot->stackArgs.push_back(slotLen);
-
+		auto extractSlot = awst::makeExtract3(resultRead, slotStart, slotLen, _loc);
 		// replace3(__evm_memory, outOff, chunk)
 		auto offsetConst = awst::makeIntegerConstant(outOff, _loc);
 
-		auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
-		replace->stackArgs.push_back(memoryVar(_loc));
-		replace->stackArgs.push_back(std::move(offsetConst));
-		replace->stackArgs.push_back(std::move(extractSlot));
-
+		auto replace = awst::makeReplace3(memoryVar(_loc), std::move(offsetConst), std::move(extractSlot), _loc);
 		assignMemoryVar(std::move(replace), _loc, _out);
 	}
 }
@@ -179,11 +155,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::concatSlotsRT(
 
 	auto lenConst = awst::makeIntegerConstant(_count * 0x20, _loc);
 
-	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	extract->stackArgs.push_back(memoryVar(_loc));
-	extract->stackArgs.push_back(std::move(offsetExpr));
-	extract->stackArgs.push_back(std::move(lenConst));
-
+	auto extract = awst::makeExtract3(memoryVar(_loc), std::move(offsetExpr), std::move(lenConst), _loc);
 	return extract;
 }
 
@@ -207,10 +179,7 @@ void AssemblyBuilder::storeResultToMemoryRT(
 			awst::WType::biguintType(), _loc);
 		auto padded = padTo32Bytes(std::move(cond), _loc);
 
-		auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
-		replace->stackArgs.push_back(memoryVar(_loc));
-		replace->stackArgs.push_back(std::move(baseOff));
-		replace->stackArgs.push_back(std::move(padded));
+		auto replace = awst::makeReplace3(memoryVar(_loc), std::move(baseOff), std::move(padded), _loc);
 		assignMemoryVar(std::move(replace), _loc, _out);
 		return;
 	}
@@ -222,10 +191,7 @@ void AssemblyBuilder::storeResultToMemoryRT(
 			storeVal = awst::makeReinterpretCast(std::move(storeVal), awst::WType::biguintType(), _loc);
 		auto padded = padTo32Bytes(std::move(storeVal), _loc);
 
-		auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
-		replace->stackArgs.push_back(memoryVar(_loc));
-		replace->stackArgs.push_back(std::move(baseOff));
-		replace->stackArgs.push_back(std::move(padded));
+		auto replace = awst::makeReplace3(memoryVar(_loc), std::move(baseOff), std::move(padded), _loc);
 		assignMemoryVar(std::move(replace), _loc, _out);
 		return;
 	}
@@ -250,11 +216,7 @@ void AssemblyBuilder::storeResultToMemoryRT(
 		auto resultRead = awst::makeVarExpression(resultVar, awst::WType::bytesType(), _loc);
 		auto slotStart = awst::makeIntegerConstant(i * 32, _loc);
 		auto slotLen = awst::makeIntegerConstant("32", _loc);
-		auto extractSlot = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-		extractSlot->stackArgs.push_back(resultRead);
-		extractSlot->stackArgs.push_back(std::move(slotStart));
-		extractSlot->stackArgs.push_back(std::move(slotLen));
-
+		auto extractSlot = awst::makeExtract3(resultRead, std::move(slotStart), std::move(slotLen), _loc);
 		auto offBase = awst::makeVarExpression(offsetVar, awst::WType::uint64Type(), _loc);
 		std::shared_ptr<awst::Expression> outOff = (i == 0)
 			? offBase
@@ -262,10 +224,7 @@ void AssemblyBuilder::storeResultToMemoryRT(
 				std::move(offBase), O::Add,
 				awst::makeIntegerConstant(i * 32, _loc), _loc));
 
-		auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
-		replace->stackArgs.push_back(memoryVar(_loc));
-		replace->stackArgs.push_back(std::move(outOff));
-		replace->stackArgs.push_back(std::move(extractSlot));
+		auto replace = awst::makeReplace3(memoryVar(_loc), std::move(outOff), std::move(extractSlot), _loc);
 		assignMemoryVar(std::move(replace), _loc, _out);
 	}
 }

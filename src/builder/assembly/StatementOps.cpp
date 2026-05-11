@@ -174,11 +174,7 @@ void AssemblyBuilder::buildStatement(
 
 					auto width = awst::makeIntegerConstant("32", loc);
 
-					auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), loc);
-					extract->stackArgs.push_back(std::move(bor));
-					extract->stackArgs.push_back(std::move(minus));
-					extract->stackArgs.push_back(std::move(width));
-
+					auto extract = awst::makeExtract3(std::move(bor), std::move(minus), std::move(width), loc);
 					switchNode->value = std::move(extract);
 				}
 				else
@@ -614,10 +610,7 @@ void AssemblyBuilder::buildAssignment(
 				// Extract first N bytes (EVM left-aligned)
 				auto zero = awst::makeIntegerConstant("0", loc);
 				auto lenConst = awst::makeIntegerConstant(n, loc);
-				auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), loc);
-				extract->stackArgs.push_back(std::move(padded));
-				extract->stackArgs.push_back(std::move(zero));
-				extract->stackArgs.push_back(std::move(lenConst));
+				auto extract = awst::makeExtract3(std::move(padded), std::move(zero), std::move(lenConst), loc);
 				auto cast = awst::makeReinterpretCast(std::move(extract), target->wtype, loc);
 				value = std::move(cast);
 			}

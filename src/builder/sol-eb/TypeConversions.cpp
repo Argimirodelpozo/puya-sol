@@ -288,10 +288,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 			auto off = awst::makeIntegerConstant(8 - byteWidth, _loc);
 			auto len = awst::makeIntegerConstant(byteWidth, _loc);
 
-			auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-			extract->stackArgs.push_back(std::move(itob));
-			extract->stackArgs.push_back(std::move(off));
-			extract->stackArgs.push_back(std::move(len));
+			auto extract = awst::makeExtract3(std::move(itob), std::move(off), std::move(len), _loc);
 			result = std::move(extract);
 		}
 		else if (byteWidth > 8)

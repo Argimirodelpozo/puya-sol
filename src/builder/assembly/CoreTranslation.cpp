@@ -710,18 +710,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 			auto blob = awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), loc);
 			auto srcOff = offsetToUint64(args[1], loc);
 			auto sz = offsetToUint64(args[2], loc);
-			auto extractCall = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), loc);
-			extractCall->stackArgs.push_back(std::move(blob));
-			extractCall->stackArgs.push_back(std::move(srcOff));
-			extractCall->stackArgs.push_back(std::move(sz));
+			auto extractCall = awst::makeExtract3(std::move(blob), std::move(srcOff), std::move(sz), loc);
 			// Now write into memory blob via replace3. The handler is in
 			// expression-context, so route the assignment through
 			// m_pendingStatements (drained by the outer statement boundary).
 			auto destOff = offsetToUint64(args[0], loc);
-			auto replaceCall = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), loc);
-			replaceCall->stackArgs.push_back(memoryVar(loc));
-			replaceCall->stackArgs.push_back(std::move(destOff));
-			replaceCall->stackArgs.push_back(std::move(extractCall));
+			auto replaceCall = awst::makeReplace3(memoryVar(loc), std::move(destOff), std::move(extractCall), loc);
 			assignMemoryVar(std::move(replaceCall), loc, m_pendingStatements);
 			auto zero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
 			return zero;

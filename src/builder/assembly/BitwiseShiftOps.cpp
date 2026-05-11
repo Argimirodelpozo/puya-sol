@@ -229,11 +229,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleByte(
 	// extract3(padded, n, 1)
 	auto one = awst::makeIntegerConstant("1", _loc);
 
-	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	extract->stackArgs.push_back(std::move(padded));
-	extract->stackArgs.push_back(std::move(nExpr));
-	extract->stackArgs.push_back(std::move(one));
-
+	auto extract = awst::makeExtract3(std::move(padded), std::move(nExpr), std::move(one), _loc);
 	// Cast bytes → biguint for Yul semantics (all values are uint256)
 	auto castResult = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
 	return castResult;

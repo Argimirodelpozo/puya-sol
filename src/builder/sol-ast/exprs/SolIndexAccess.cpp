@@ -118,16 +118,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 					// Truncate: btoi(add)
 					auto castToBytes = awst::makeReinterpretCast(std::move(add), awst::WType::bytesType(), m_loc);
 
-					// Safe truncate biguint to uint64: extract last 8 bytes then btoi
-					auto lenOp = awst::makeLen(castToBytes, m_loc);
-					auto sub8 = awst::makeUInt64BinOp(std::move(lenOp),
-						awst::UInt64BinaryOperator::Sub,
-						awst::makeIntegerConstant("8", m_loc), m_loc);
-					auto last8 = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
-					last8->stackArgs.push_back(std::move(castToBytes));
-					last8->stackArgs.push_back(std::move(sub8));
-					auto eight2 = awst::makeIntegerConstant("8", m_loc);
-					last8->stackArgs.push_back(std::move(eight2));
+					auto last8 = awst::makeExtractLastN(std::move(castToBytes), 8, m_loc);
 					auto btoi = awst::makeBtoi(std::move(last8), m_loc);
 
 					auto call = awst::makeSubroutineCall(awst::SubroutineID{"__puyasol___storage_read"}, awst::WType::biguintType(), m_loc);
@@ -386,11 +377,7 @@ std::shared_ptr<awst::Expression> SolIndexRangeAccess::toAwst()
 				mkEnd(), awst::UInt64BinaryOperator::Sub, mkStart(), m_loc);
 			auto itob = awst::makeItob(std::move(diff), m_loc);
 
-			auto lenHdr = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
-			lenHdr->stackArgs.push_back(std::move(itob));
-			lenHdr->stackArgs.push_back(awst::makeIntegerConstant("6", m_loc));
-			lenHdr->stackArgs.push_back(awst::makeIntegerConstant("2", m_loc));
-
+			auto lenHdr = awst::makeExtract3(std::move(itob), awst::makeIntegerConstant("6", m_loc), awst::makeIntegerConstant("2", m_loc), m_loc);
 			auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
 			cat->stackArgs.push_back(std::move(lenHdr));
 			cat->stackArgs.push_back(std::move(sub));

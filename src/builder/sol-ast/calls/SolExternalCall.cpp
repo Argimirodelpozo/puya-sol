@@ -306,11 +306,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 				break;
 			}
 
-			auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
-			extract->stackArgs.push_back(singleBytes);
-			extract->stackArgs.push_back(awst::makeIntegerConstant(offset, m_loc));
-			extract->stackArgs.push_back(awst::makeIntegerConstant(fieldSize, m_loc));
-
+			auto extract = awst::makeExtract3(singleBytes, awst::makeIntegerConstant(offset, m_loc), awst::makeIntegerConstant(fieldSize, m_loc), m_loc);
 			std::shared_ptr<awst::Expression> decoded;
 			if (fieldType == awst::WType::biguintType())
 			{

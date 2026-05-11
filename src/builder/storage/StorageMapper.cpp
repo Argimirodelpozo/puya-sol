@@ -306,25 +306,8 @@ std::shared_ptr<awst::Expression> StorageMapper::biguintSlotToBtoi(
 	awst::SourceLocation const& _loc
 )
 {
-	// reinterpret_cast<bytes>(slotExpr)
 	auto castToBytes = awst::makeReinterpretCast(_slotExpr, awst::WType::bytesType(), _loc);
-
-	// len(castToBytes)
-	auto lenOp = awst::makeLen(castToBytes, _loc);
-
-	// len - 8
-	auto sub8 = awst::makeUInt64BinOp(std::move(lenOp),
-		awst::UInt64BinaryOperator::Sub,
-		awst::makeIntegerConstant("8", _loc), _loc);
-
-	// extract3(castToBytes, len-8, 8)
-	auto last8 = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	last8->stackArgs.push_back(std::move(castToBytes));
-	last8->stackArgs.push_back(std::move(sub8));
-	auto eight2 = awst::makeIntegerConstant("8", _loc);
-	last8->stackArgs.push_back(std::move(eight2));
-
-	// btoi(last8)
+	auto last8 = awst::makeExtractLastN(std::move(castToBytes), 8, _loc);
 	return awst::makeBtoi(std::move(last8), _loc);
 }
 

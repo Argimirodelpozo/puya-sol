@@ -177,11 +177,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 
 		auto top31Len = awst::makeIntegerConstant("31", m_loc);
 
-		auto top31 = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
-		top31->stackArgs.push_back(std::move(h2));
-		top31->stackArgs.push_back(std::move(top31Start));
-		top31->stackArgs.push_back(std::move(top31Len));
-
+		auto top31 = awst::makeExtract3(std::move(h2), std::move(top31Start), std::move(top31Len), m_loc);
 		// Concat with 0x00 to zero the last byte.
 		auto zeroByte = awst::makeBytesConstant({0}, m_loc);
 

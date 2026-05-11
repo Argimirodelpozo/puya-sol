@@ -35,10 +35,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::leftPadBytes(
 	offset->stackArgs.push_back(std::move(lenCall));
 	offset->stackArgs.push_back(awst::makeIntegerConstant(_n, _loc));
 
-	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	extract->stackArgs.push_back(std::move(cat));
-	extract->stackArgs.push_back(std::move(offset));
-	extract->stackArgs.push_back(awst::makeIntegerConstant(_n, _loc));
+	auto extract = awst::makeExtract3(std::move(cat), std::move(offset), awst::makeIntegerConstant(_n, _loc), _loc);
 	return extract;
 }
 
@@ -457,10 +454,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeCall(
 					// Take last n bytes of the 8-byte itob result.
 					auto off = awst::makeIntegerConstant(8 - n, _loc);
 					auto nConst = awst::makeIntegerConstant(n, _loc);
-					auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-					extract->stackArgs.push_back(std::move(itob));
-					extract->stackArgs.push_back(std::move(off));
-					extract->stackArgs.push_back(std::move(nConst));
+					auto extract = awst::makeExtract3(std::move(itob), std::move(off), std::move(nConst), _loc);
 					bytesN = std::move(extract);
 				}
 				else
@@ -475,10 +469,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeCall(
 				// biguint is 32-byte big-endian: take last n bytes.
 				auto off = awst::makeIntegerConstant(32 - n, _loc);
 				auto nConst = awst::makeIntegerConstant(n, _loc);
-				auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-				extract->stackArgs.push_back(std::move(asBytes));
-				extract->stackArgs.push_back(std::move(off));
-				extract->stackArgs.push_back(std::move(nConst));
+				auto extract = awst::makeExtract3(std::move(asBytes), std::move(off), std::move(nConst), _loc);
 				bytesN = std::move(extract);
 			}
 			else
@@ -548,10 +539,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeWithSelector(
 		offset->stackArgs.push_back(std::move(lenCall));
 		offset->stackArgs.push_back(four);
 
-		auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-		extract->stackArgs.push_back(std::move(cat));
-		extract->stackArgs.push_back(std::move(offset));
-		extract->stackArgs.push_back(std::move(four));
+		auto extract = awst::makeExtract3(std::move(cat), std::move(offset), std::move(four), _loc);
 		selector = std::move(extract);
 	}
 
@@ -637,10 +625,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 		// Pull out the first 32 bytes (the head word) — handles ABIv2
 		// inputs that prefix with offsets etc. uint64FromAbiWord then
 		// extracts the low 8 bytes.
-		auto head = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-		head->stackArgs.push_back(std::move(bytesExpr));
-		head->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
-		head->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
+		auto head = awst::makeExtract3(std::move(bytesExpr), awst::makeIntegerConstant("0", _loc), awst::makeIntegerConstant("32", _loc), _loc);
 		return std::make_unique<GenericAbiResult>(_ctx, uint64FromAbiWord(std::move(head), _loc));
 	}
 
