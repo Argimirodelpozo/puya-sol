@@ -2,8 +2,23 @@
 #include "builder/storage/StorageLayout.h"
 #include "Logger.h"
 
+#include <libsolidity/ast/ASTVisitor.h>
+
 namespace puyasol::builder
 {
+
+namespace {
+/// Recursive visitor — true if any function in the linearised hierarchy
+/// contains an InlineAssembly node (anywhere, including nested in
+/// if/for/etc.). The previous hand-rolled loop only checked top-level
+/// statements, so deeply-nested asm slipped past.
+struct InlineAsmDetector: public solidity::frontend::ASTConstVisitor
+{
+	bool found = false;
+	bool visit(solidity::frontend::InlineAssembly const&) override
+	{ found = true; return false; }
+};
+}
 
 void ContractBuilder::buildStorageDispatch(
 	solidity::frontend::ContractDefinition const& _contract,
@@ -14,17 +29,16 @@ void ContractBuilder::buildStorageDispatch(
 	StorageLayout layout;
 	layout.computeLayout(_contract, m_typeMapper);
 
-	// Check if any function has inline assembly (might use .slot / sload / sstore)
-	bool hasInlineAsm = false;
+	InlineAsmDetector asmDetector;
 	for (auto const* base: _contract.annotation().linearizedBaseContracts)
 		for (auto const* func: base->definedFunctions())
 			if (func->isImplemented())
-				for (auto const& stmt: func->body().statements())
-					if (dynamic_cast<solidity::frontend::InlineAssembly const*>(stmt.get()))
-					{ hasInlineAsm = true; goto asmCheckDone; }
-	asmCheckDone:
+			{
+				func->body().accept(asmDetector);
+				if (asmDetector.found) break;
+			}
 
-	if (layout.totalSlots() == 0 && !hasInlineAsm)
+	if (layout.totalSlots() == 0 && !asmDetector.found)
 		return;
 
 	std::string cref = m_sourceFile + "." + _contractName;

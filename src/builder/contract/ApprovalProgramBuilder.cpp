@@ -1346,24 +1346,15 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 	// scratch bzero in the preamble above already satisfies EIP-1153 per-tx
 	// reset — no per-call app_global reset needed.
 
-	// Detect fallback and receive functions across the MRO.
-	// Solidity allows only one of each in the linearized hierarchy.
-	solidity::frontend::FunctionDefinition const* fallbackFunc = nullptr;
-	solidity::frontend::FunctionDefinition const* receiveFunc = nullptr;
-	for (auto const* base: _contract.annotation().linearizedBaseContracts)
-	{
-		for (auto const* func: base->definedFunctions())
-		{
-			if (!func->isImplemented())
-				continue;
-			if (func->isFallback() && !fallbackFunc)
-				fallbackFunc = func;
-			else if (func->isReceive() && !receiveFunc)
-				receiveFunc = func;
-		}
-		if (fallbackFunc && receiveFunc)
-			break;
-	}
+	// Solc's `ContractDefinition::fallbackFunction()` and
+	// `receiveFunction()` walk the linearized MRO themselves and return
+	// the first match — same semantics as the hand-rolled double loop.
+	auto const* fallbackFunc = _contract.fallbackFunction();
+	auto const* receiveFunc = _contract.receiveFunction();
+	if (fallbackFunc && !fallbackFunc->isImplemented())
+		fallbackFunc = nullptr;
+	if (receiveFunc && !receiveFunc->isImplemented())
+		receiveFunc = nullptr;
 
 	if (!fallbackFunc && !receiveFunc)
 	{
