@@ -206,6 +206,15 @@ inline std::shared_ptr<IntegerConstant> makeIntegerConstant(
 	return node;
 }
 
+// Shorthand for `makeIntegerConstant(value, loc, biguintType())` — the
+// most common biguint-constant construction (~30 sites across the
+// builder layer for "0", "1", and 2^256 wraps).
+inline std::shared_ptr<IntegerConstant> makeBiguintConstant(
+	std::string value, SourceLocation loc)
+{
+	return makeIntegerConstant(std::move(value), std::move(loc), WType::biguintType());
+}
+
 struct BoolConstant: Expression
 {
 	std::string nodeType() const override { return "BoolConstant"; }

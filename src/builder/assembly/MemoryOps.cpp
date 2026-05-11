@@ -415,7 +415,7 @@ void AssemblyBuilder::handleReturn(
 	if (m_returnType == awst::WType::boolType()
 		&& returnValue->wtype != awst::WType::boolType())
 	{
-		auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
+		auto zero = awst::makeBiguintConstant("0", _loc);
 
 		auto cmp = awst::makeNumericCompare(std::move(returnValue), awst::NumericComparison::Ne, std::move(zero), _loc);
 		returnValue = std::move(cmp);

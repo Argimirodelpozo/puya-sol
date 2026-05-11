@@ -57,7 +57,7 @@ std::shared_ptr<awst::Expression> bigUIntToUint64(
 	// preserves value but normalises length to 32 so `extract3 24 8`
 	// always sees the low-order 8 bytes.
 	auto padBack = awst::makeReinterpretCast(asBytes, awst::WType::biguintType(), _loc);
-	auto zeroBig = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
+	auto zeroBig = awst::makeBiguintConstant("0", _loc);
 	// biguint(b) | biguint(0) ≡ left-pad-with-zeros to 32 bytes via puya's
 	// big-int op. We use addition for a similar effect — `Add(b, 0)` yields
 	// b but normalised to fixed width.

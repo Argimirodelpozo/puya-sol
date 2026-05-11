@@ -790,9 +790,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBiguint(
 	if (_expr->wtype == awst::WType::boolType())
 	{
 		// bool → biguint: (expr ? 1 : 0)
-		auto one = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType());
+		auto one = awst::makeBiguintConstant("1", _loc);
 
-		auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
+		auto zero = awst::makeBiguintConstant("0", _loc);
 
 		return awst::makeConditional(
 			std::move(_expr), std::move(one), std::move(zero),
@@ -824,7 +824,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBiguint(
 		+ "' in assembly arithmetic, coercing to biguint(0)",
 		_loc
 	);
-	auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
+	auto zero = awst::makeBiguintConstant("0", _loc);
 	return zero;
 }
 
@@ -843,7 +843,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBool(
 	// Yul uses non-zero = true. Convert biguint/uint64 to bool via != 0
 	if (_expr->wtype == awst::WType::biguintType())
 	{
-		auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
+		auto zero = awst::makeBiguintConstant("0", _loc);
 
 		auto cmp = awst::makeNumericCompare(std::move(_expr), awst::NumericComparison::Ne, std::move(zero), _loc);
 		return cmp;
@@ -875,7 +875,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::makeTwoPow256(
 	awst::SourceLocation const& _loc
 )
 {
-	auto c = awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
+	auto c = makePow256(_loc);
 	return c;
 }
 
@@ -896,9 +896,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::safeDivMod(
 {
 	// EVM div/mod by zero returns 0; AVM panics.
 	// Emit: right != 0 ? left op right : 0
-	auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
+	auto zero = awst::makeBiguintConstant("0", _loc);
 
-	auto zeroForCmp = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
+	auto zeroForCmp = awst::makeBiguintConstant("0", _loc);
 
 	auto cond = awst::makeNumericCompare(ensureBiguint(_right, _loc), awst::NumericComparison::Ne, std::move(zeroForCmp), _loc);
 

@@ -24,6 +24,16 @@ namespace puyasol::builder
 inline constexpr char const* kPow2_256 =
 	"115792089237316195423570985008687907853269984665640564039457584007913129639936";
 
+/// Construct a biguint IntegerConstant holding 2^256. Wraps the common
+/// `makeIntegerConstant(kPow2_256, loc, biguintType())` call used by
+/// ~8 sites for modular-arithmetic wrapping. The biguint type is fixed
+/// here so callers can't accidentally type-mismatch by omitting it.
+inline std::shared_ptr<awst::IntegerConstant> makePow256(
+	awst::SourceLocation const& _loc)
+{
+	return awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
+}
+
 class TypeCoercion
 {
 public:

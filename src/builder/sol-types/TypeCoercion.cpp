@@ -124,7 +124,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint256(
 	auto add = awst::makeBigUIntBinOp(promoted, awst::BigUIntBinaryOperator::Add, std::move(offsetConst), _loc);
 
 	// Mod 2^256 to keep within 32 bytes
-	auto pow256Const = awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
+	auto pow256Const = makePow256(_loc);
 
 	auto mod = awst::makeBigUIntBinOp(std::move(add), awst::BigUIntBinaryOperator::Mod, std::move(pow256Const), _loc);
 
@@ -257,7 +257,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 	}
 	if (_type == awst::WType::biguintType())
 	{
-		auto val = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
+		auto val = awst::makeBiguintConstant("0", _loc);
 		return val;
 	}
 	if (_type->kind() == awst::WTypeKind::ARC4UIntN)

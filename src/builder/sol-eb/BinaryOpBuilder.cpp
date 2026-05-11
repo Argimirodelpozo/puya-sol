@@ -270,13 +270,13 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 
 			// Biguint subtraction needs wrapping mod 2^256 to avoid AVM underflow.
 			// Pattern: (a + 2^256 - b) % 2^256
-			auto pow256 = awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
+			auto pow256 = makePow256(_loc);
 
 			auto addPow = awst::makeBigUIntBinOp(std::move(_left), awst::BigUIntBinaryOperator::Add, pow256, _loc);
 
 			auto diff = awst::makeBigUIntBinOp(std::move(addPow), awst::BigUIntBinaryOperator::Sub, std::move(_right), _loc);
 
-			auto pow256b = awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
+			auto pow256b = makePow256(_loc);
 
 			auto mod = awst::makeBigUIntBinOp(std::move(diff), awst::BigUIntBinaryOperator::Mod, std::move(pow256b), _loc);
 			return mod;
@@ -411,7 +411,7 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 				|| _op == Token::Sub || _op == Token::AssignSub
 				|| _op == Token::Mul || _op == Token::AssignMul))
 		{
-			auto pow256 = awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
+			auto pow256 = makePow256(_loc);
 
 			auto mod = awst::makeBigUIntBinOp(e, awst::BigUIntBinaryOperator::Mod, std::move(pow256), _loc);
 			return mod;

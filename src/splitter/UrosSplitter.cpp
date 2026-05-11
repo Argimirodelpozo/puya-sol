@@ -40,7 +40,7 @@ std::shared_ptr<awst::Expression> makeDefaultValue(
 	if (_t == awst::WType::uint64Type())
 		return awst::makeIntegerConstant("0", _loc, awst::WType::uint64Type());
 	if (_t == awst::WType::biguintType())
-		return awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
+		return awst::makeBiguintConstant("0", _loc);
 	if (_t == awst::WType::boolType())
 		return awst::makeBoolConstant(false, _loc);
 	if (_t == awst::WType::accountType())

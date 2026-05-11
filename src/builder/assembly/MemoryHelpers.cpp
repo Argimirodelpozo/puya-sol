@@ -88,8 +88,8 @@ void AssemblyBuilder::storeResultToMemory(
 	if (_isBoolResult)
 	{
 		// Bool result → convert to 32-byte biguint (1 or 0), store at offset
-		auto one = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType());
-		auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
+		auto one = awst::makeBiguintConstant("1", _loc);
+		auto zero = awst::makeBiguintConstant("0", _loc);
 
 		auto cond = awst::makeConditional(
 			std::move(_result), std::move(one), std::move(zero),
@@ -215,8 +215,8 @@ void AssemblyBuilder::storeResultToMemoryRT(
 
 	if (_isBoolResult)
 	{
-		auto one = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType());
-		auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
+		auto one = awst::makeBiguintConstant("1", _loc);
+		auto zero = awst::makeBiguintConstant("0", _loc);
 		auto cond = awst::makeConditional(
 			std::move(_result), std::move(one), std::move(zero),
 			awst::WType::biguintType(), _loc);

@@ -133,7 +133,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::negate256(
 
 	auto sub = makeBigUIntBinOp(maxU256, awst::BigUIntBinaryOperator::Sub, _val, _loc);
 
-	auto one = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType());
+	auto one = awst::makeBiguintConstant("1", _loc);
 
 	return makeBigUIntBinOp(sub, awst::BigUIntBinaryOperator::Add, one, _loc);
 }
@@ -257,7 +257,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSlt(
 	{
 		if (aConst->value == "0")
 		{
-			auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
+			auto zero = awst::makeBiguintConstant("0", _loc);
 			auto signThreshold = awst::makeIntegerConstant(
 				origTypeB && origTypeB == awst::WType::uint64Type()
 					? "9223372036854775808" // 2^63
@@ -370,11 +370,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSar(
 	auto pow2Complement = buildPowerOf2(complementShift, _loc);
 
 	// fillMask = MAX_UINT256 - pow2Complement + 1
-	auto maxU256 = awst::makeIntegerConstant("115792089237316195423570985008687907853269984665640564039457584007913129639935", _loc, awst::WType::biguintType());
+	auto maxU256 = awst::makeBiguintConstant("115792089237316195423570985008687907853269984665640564039457584007913129639935", _loc);
 
 	auto sub1 = makeBigUIntBinOp(maxU256, awst::BigUIntBinaryOperator::Sub, pow2Complement, _loc);
 
-	auto one = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType());
+	auto one = awst::makeBiguintConstant("1", _loc);
 
 	auto fillMask = makeBigUIntBinOp(sub1, awst::BigUIntBinaryOperator::Add, one, _loc);
 

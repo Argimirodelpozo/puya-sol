@@ -467,12 +467,12 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 
 			auto castBack = awst::makeReinterpretCast(std::move(bitInvert), awst::WType::biguintType(), _loc);
 
-			auto one = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType());
+			auto one = awst::makeBiguintConstant("1", _loc);
 
 			auto addOne = awst::makeBigUIntBinOp(std::move(castBack), awst::BigUIntBinaryOperator::Add, std::move(one), _loc);
 
 			// Mod 2^256 to handle -0 overflow (2^256 wraps to 0)
-			auto modConst = awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
+			auto modConst = makePow256(_loc);
 
 			auto wrapped = awst::makeBigUIntBinOp(std::move(addOne), awst::BigUIntBinaryOperator::Mod, std::move(modConst), _loc);
 
@@ -495,7 +495,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			auto sub = awst::makeBigUIntBinOp(std::move(pow2_64), awst::BigUIntBinaryOperator::Sub, std::move(castBiguint), _loc);
 
 			// mod 2^64 to wrap
-			auto pow2_64_2 = awst::makeIntegerConstant("18446744073709551616", _loc, awst::WType::biguintType());
+			auto pow2_64_2 = awst::makeBiguintConstant("18446744073709551616", _loc);
 
 			auto mod = awst::makeBigUIntBinOp(std::move(sub), awst::BigUIntBinaryOperator::Mod, std::move(pow2_64_2), _loc);
 
@@ -778,7 +778,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildWrappingSubtract(
 	}
 
 	// (a + 2^256 - b) % 2^256
-	auto pow256 = awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
+	auto pow256 = makePow256(_loc);
 
 	auto addPow = awst::makeBigUIntBinOp(std::move(_left), awst::BigUIntBinaryOperator::Add, pow256, _loc);
 
@@ -795,7 +795,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::wrapMod256(
 	std::shared_ptr<awst::Expression> _expr,
 	awst::SourceLocation const& _loc)
 {
-	auto pow256 = awst::makeIntegerConstant(kPow2_256, _loc, awst::WType::biguintType());
+	auto pow256 = makePow256(_loc);
 
 	auto mod = awst::makeBigUIntBinOp(std::move(_expr), awst::BigUIntBinaryOperator::Mod, std::move(pow256), _loc);
 	return mod;

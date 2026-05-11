@@ -35,7 +35,7 @@ void AssemblyBuilder::handleEcRecover(
 	auto s = padTo32Bytes(readMemSlot(_inputOffset + 0x60, _loc), _loc);
 
 	// 2. Compute recovery_id = v - 27 as uint64
-	auto twentySeven = awst::makeIntegerConstant("27", _loc, awst::WType::biguintType());
+	auto twentySeven = awst::makeBiguintConstant("27", _loc);
 
 	auto vMinus27 = makeBigUIntBinOp(
 		std::move(vBiguint), awst::BigUIntBinaryOperator::Sub,

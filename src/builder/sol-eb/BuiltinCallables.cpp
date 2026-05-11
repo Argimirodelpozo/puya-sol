@@ -89,7 +89,7 @@ static void emitModByZeroCheck(
 	awst::SourceLocation const& _loc)
 {
 	// assert(modulus != 0, "modulo by zero") — prevents optimizer from eliminating
-	auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
+	auto zero = awst::makeBiguintConstant("0", _loc);
 
 	auto cmp = awst::makeNumericCompare(_modulus, awst::NumericComparison::Ne, std::move(zero), _loc);
 

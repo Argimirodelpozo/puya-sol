@@ -80,7 +80,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 	Logger::instance().warning(
 		"calldataload at unknown offset " + std::to_string(*offset) + ", returning 0", _loc
 	);
-	auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
+	auto zero = awst::makeBiguintConstant("0", _loc);
 	return zero;
 }
 
@@ -496,7 +496,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleReturndatasize(
 )
 {
 	// On AVM there is no return data concept — return 0
-	auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
+	auto zero = awst::makeBiguintConstant("0", _loc);
 	return zero;
 }
 

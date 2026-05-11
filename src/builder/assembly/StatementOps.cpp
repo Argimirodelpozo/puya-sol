@@ -992,7 +992,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 
 		auto target = awst::makeVarExpression(retName, awst::WType::biguintType(), _loc);
 
-		auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
+		auto zero = awst::makeBiguintConstant("0", _loc);
 
 		auto assign = awst::makeAssignmentStatement(std::move(target), std::move(zero), _loc);
 		_out.push_back(std::move(assign));

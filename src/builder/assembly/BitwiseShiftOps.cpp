@@ -298,7 +298,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 
 	// Build: signBit = (x >> (bitPos - 1)) & 1
 	// Using shr pattern: x / 2^(bitPos-1) mod 2
-	auto shiftAmt = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType()); // 2^(bitPos-1) via pow2
+	auto shiftAmt = awst::makeBiguintConstant("1", _loc); // 2^(bitPos-1) via pow2
 
 	auto shiftConst = awst::makeIntegerConstant(std::to_string(bitPos - 1), _loc);
 
@@ -308,12 +308,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 	auto shifted = makeBigUIntBinOp(x, awst::BigUIntBinaryOperator::FloorDiv, pow2shift, _loc);
 
 	// ... mod 2
-	auto two = awst::makeIntegerConstant("2", _loc, awst::WType::biguintType());
+	auto two = awst::makeBiguintConstant("2", _loc);
 
 	auto signBit = makeBigUIntBinOp(shifted, awst::BigUIntBinaryOperator::Mod, two, _loc);
 
 	// signBit != 0  (i.e., sign bit is set)
-	auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
+	auto zero = awst::makeBiguintConstant("0", _loc);
 
 	auto isNeg = awst::makeNumericCompare(signBit, awst::NumericComparison::Ne, zero, _loc);
 
@@ -322,13 +322,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 
 	auto pow2BitPos = buildPowerOf2(std::move(bitPosConst), _loc);
 
-	auto oneBI = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType());
+	auto oneBI = awst::makeBiguintConstant("1", _loc);
 
 	auto lowMask = makeBigUIntBinOp(pow2BitPos, awst::BigUIntBinaryOperator::Sub, oneBI, _loc);
 
 	// highMask = ~lowMask in 256 bits = (2^256 - 1) - lowMask
 	// Use MAX_UINT256 = 2^256 - 1
-	auto maxU256 = awst::makeIntegerConstant("115792089237316195423570985008687907853269984665640564039457584007913129639935", _loc, awst::WType::biguintType());
+	auto maxU256 = awst::makeBiguintConstant("115792089237316195423570985008687907853269984665640564039457584007913129639935", _loc);
 
 	auto highMask = makeBigUIntBinOp(maxU256, awst::BigUIntBinaryOperator::Sub, lowMask, _loc);
 
@@ -349,7 +349,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 
 	auto pow2BitPos2 = buildPowerOf2(std::move(bitPosConst2), _loc);
 
-	auto oneBI2 = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType());
+	auto oneBI2 = awst::makeBiguintConstant("1", _loc);
 
 	auto lowMask2 = makeBigUIntBinOp(pow2BitPos2, awst::BigUIntBinaryOperator::Sub, oneBI2, _loc);
 
