@@ -17,7 +17,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemSlot(
 {
 	// Read 32 bytes from the memory blob at a constant offset.
 	// extract3(__evm_memory, offset, 32) → cast to biguint
-	auto offsetConst = awst::makeIntegerConstant(std::to_string(_offset), _loc);
+	auto offsetConst = awst::makeIntegerConstant(_offset, _loc);
 
 	auto len32 = awst::makeIntegerConstant("32", _loc);
 
@@ -50,9 +50,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::concatSlots(
 	uint64_t byteOffset = _baseOffset + static_cast<uint64_t>(_startSlot) * 0x20;
 	uint64_t byteLen = static_cast<uint64_t>(_count) * 0x20;
 
-	auto offsetConst = awst::makeIntegerConstant(std::to_string(byteOffset), _loc);
+	auto offsetConst = awst::makeIntegerConstant(byteOffset, _loc);
 
-	auto lenConst = awst::makeIntegerConstant(std::to_string(byteLen), _loc);
+	auto lenConst = awst::makeIntegerConstant(byteLen, _loc);
 
 	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 	extract->stackArgs.push_back(memoryVar(_loc));
@@ -82,7 +82,7 @@ void AssemblyBuilder::storeResultToMemory(
 
 		auto padded = padTo32Bytes(std::move(cond), _loc);
 
-		auto offsetConst = awst::makeIntegerConstant(std::to_string(_outputOffset), _loc);
+		auto offsetConst = awst::makeIntegerConstant(_outputOffset, _loc);
 
 		auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
 		replace->stackArgs.push_back(memoryVar(_loc));
@@ -105,7 +105,7 @@ void AssemblyBuilder::storeResultToMemory(
 
 		auto padded = padTo32Bytes(std::move(storeVal), _loc);
 
-		auto offsetConst = awst::makeIntegerConstant(std::to_string(_outputOffset), _loc);
+		auto offsetConst = awst::makeIntegerConstant(_outputOffset, _loc);
 
 		auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
 		replace->stackArgs.push_back(memoryVar(_loc));
@@ -135,7 +135,7 @@ void AssemblyBuilder::storeResultToMemory(
 		auto resultRead = awst::makeVarExpression(resultVar, awst::WType::bytesType(), _loc);
 
 		// extract3(result, i*32, 32)
-		auto slotStart = awst::makeIntegerConstant(std::to_string(i * 32), _loc);
+		auto slotStart = awst::makeIntegerConstant(i * 32, _loc);
 
 		auto slotLen = awst::makeIntegerConstant("32", _loc);
 
@@ -145,7 +145,7 @@ void AssemblyBuilder::storeResultToMemory(
 		extractSlot->stackArgs.push_back(slotLen);
 
 		// replace3(__evm_memory, outOff, chunk)
-		auto offsetConst = awst::makeIntegerConstant(std::to_string(outOff), _loc);
+		auto offsetConst = awst::makeIntegerConstant(outOff, _loc);
 
 		auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
 		replace->stackArgs.push_back(memoryVar(_loc));
@@ -173,11 +173,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::concatSlotsRT(
 	auto offsetExpr = (_startSlot != 0)
 		? std::shared_ptr<awst::Expression>(awst::makeUInt64BinOp(
 			std::move(base), O::Add,
-			awst::makeIntegerConstant(std::to_string(_startSlot * 0x20), _loc),
+			awst::makeIntegerConstant(_startSlot * 0x20, _loc),
 			_loc))
 		: base;
 
-	auto lenConst = awst::makeIntegerConstant(std::to_string(_count * 0x20), _loc);
+	auto lenConst = awst::makeIntegerConstant(_count * 0x20, _loc);
 
 	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 	extract->stackArgs.push_back(memoryVar(_loc));
@@ -248,7 +248,7 @@ void AssemblyBuilder::storeResultToMemoryRT(
 	for (int i = 0; i < _outputSlots; ++i)
 	{
 		auto resultRead = awst::makeVarExpression(resultVar, awst::WType::bytesType(), _loc);
-		auto slotStart = awst::makeIntegerConstant(std::to_string(i * 32), _loc);
+		auto slotStart = awst::makeIntegerConstant(i * 32, _loc);
 		auto slotLen = awst::makeIntegerConstant("32", _loc);
 		auto extractSlot = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 		extractSlot->stackArgs.push_back(resultRead);
@@ -260,7 +260,7 @@ void AssemblyBuilder::storeResultToMemoryRT(
 			? offBase
 			: std::shared_ptr<awst::Expression>(awst::makeUInt64BinOp(
 				std::move(offBase), O::Add,
-				awst::makeIntegerConstant(std::to_string(i * 32), _loc), _loc));
+				awst::makeIntegerConstant(i * 32, _loc), _loc));
 
 		auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
 		replace->stackArgs.push_back(memoryVar(_loc));

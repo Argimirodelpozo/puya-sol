@@ -376,9 +376,9 @@ void AssemblyBuilder::handleReturn(
 		);
 
 		// Read the return region from the memory blob: extract3(blob, offset, size)
-		auto offsetU64 = awst::makeIntegerConstant(std::to_string(*returnOffset), _loc);
+		auto offsetU64 = awst::makeIntegerConstant(*returnOffset, _loc);
 
-		auto sizeU64 = awst::makeIntegerConstant(std::to_string(*returnSize), _loc);
+		auto sizeU64 = awst::makeIntegerConstant(*returnSize, _loc);
 
 		auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 		extract->stackArgs.push_back(memoryVar(_loc));

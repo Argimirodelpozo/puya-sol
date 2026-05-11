@@ -948,14 +948,14 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					{
 						// Per-page key = name_bytes ++ itob(page)
 						auto nameBytes = awst::makeUtf8BytesConstant(varName, method.sourceLocation);
-						auto pageInt = awst::makeIntegerConstant(std::to_string(page), method.sourceLocation);
+						auto pageInt = awst::makeIntegerConstant(page, method.sourceLocation);
 						auto pageItob = awst::makeItob(std::move(pageInt), method.sourceLocation);
 						auto pageKey = awst::makeConcat(std::move(nameBytes), std::move(pageItob), method.sourceLocation);
 
 						uint64_t pageSize = (page == multiBoxN - 1)
 							? (multiBoxTotalBytes - static_cast<uint64_t>(page) * multiBoxPerPageBytes)
 							: multiBoxPerPageBytes;
-						auto pageSizeExpr = awst::makeIntegerConstant(std::to_string(pageSize), method.sourceLocation);
+						auto pageSizeExpr = awst::makeIntegerConstant(pageSize, method.sourceLocation);
 
 						auto boxCreate = awst::makeIntrinsicCall("box_create", awst::WType::boolType(), method.sourceLocation);
 						boxCreate->stackArgs.push_back(std::move(pageKey));
@@ -978,7 +978,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				}
 				else
 				{
-					auto boxSize = awst::makeIntegerConstant(std::to_string(boxSizeVal), method.sourceLocation);
+					auto boxSize = awst::makeIntegerConstant(boxSizeVal, method.sourceLocation);
 
 					auto boxCreate = awst::makeIntrinsicCall("box_create", awst::WType::boolType(), method.sourceLocation);
 					boxCreate->stackArgs.push_back(std::move(boxKey));

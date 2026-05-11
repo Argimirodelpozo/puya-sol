@@ -206,6 +206,16 @@ inline std::shared_ptr<IntegerConstant> makeIntegerConstant(
 	return node;
 }
 
+// Numeric overload — accepts a uint64_t and converts internally.
+// Drops the std::to_string adapter at >100 call sites.
+inline std::shared_ptr<IntegerConstant> makeIntegerConstant(
+	uint64_t value,
+	SourceLocation loc,
+	WType const* wtype = WType::uint64Type())
+{
+	return makeIntegerConstant(std::to_string(value), std::move(loc), wtype);
+}
+
 // Shorthand for `makeIntegerConstant(value, loc, biguintType())` — the
 // most common biguint-constant construction (~30 sites across the
 // builder layer for "0", "1", and 2^256 wraps).
@@ -680,7 +690,7 @@ inline std::shared_ptr<IntrinsicCall> makeExtractLastN(
 // `bzero(count)` → `count` zero bytes.
 inline std::shared_ptr<IntrinsicCall> makeBzero(int count, SourceLocation loc)
 {
-	auto countExpr = makeIntegerConstant(std::to_string(count), loc);
+	auto countExpr = makeIntegerConstant(static_cast<uint64_t>(count), loc);
 	auto node = makeIntrinsicCall("bzero", WType::bytesType(), std::move(loc));
 	node->stackArgs.push_back(std::move(countExpr));
 	return node;
@@ -714,11 +724,11 @@ inline std::shared_ptr<IntrinsicCall> makeLeftPadToN(
 	auto padded = makeLeftPad(std::move(value), n, loc);
 	auto offset = makeUInt64BinOp(makeLen(padded, loc),
 		UInt64BinaryOperator::Sub,
-		makeIntegerConstant(std::to_string(n), loc), loc);
+		makeIntegerConstant(static_cast<uint64_t>(n), loc), loc);
 	auto extract = makeIntrinsicCall("extract3", WType::bytesType(), loc);
 	extract->stackArgs.push_back(std::move(padded));
 	extract->stackArgs.push_back(std::move(offset));
-	extract->stackArgs.push_back(makeIntegerConstant(std::to_string(n), std::move(loc)));
+	extract->stackArgs.push_back(makeIntegerConstant(static_cast<uint64_t>(n), std::move(loc)));
 	return extract;
 }
 

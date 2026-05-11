@@ -228,7 +228,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 							else
 							{
 								auto zero = awst::makeIntegerConstant("0", m_loc);
-								auto width = awst::makeIntegerConstant(std::to_string(dstLen), m_loc);
+								auto width = awst::makeIntegerConstant(dstLen, m_loc);
 								auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 								extract->stackArgs.push_back(std::move(toBytes));
 								extract->stackArgs.push_back(std::move(zero));
@@ -294,7 +294,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 								else
 								{
 									auto zero = awst::makeIntegerConstant("0", m_loc);
-									auto width = awst::makeIntegerConstant(std::to_string(dstLen), m_loc);
+									auto width = awst::makeIntegerConstant(dstLen, m_loc);
 									auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 									extract->stackArgs.push_back(std::move(toBytes));
 									extract->stackArgs.push_back(std::move(zero));
@@ -370,7 +370,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 					auto val = builder::TypeCoercion::implicitNumericCast(
 						stmt->value, awst::WType::uint64Type(), m_loc);
 
-					auto maxVal = awst::makeIntegerConstant(std::to_string(numMembers), m_loc);
+					auto maxVal = awst::makeIntegerConstant(numMembers, m_loc);
 
 					auto cmp = awst::makeNumericCompare(val, awst::NumericComparison::Lt, std::move(maxVal), m_loc);
 

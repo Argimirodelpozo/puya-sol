@@ -720,7 +720,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 							"box_create", awst::WType::boolType(), m_loc);
 						createCall->stackArgs.push_back(bv->key);
 						createCall->stackArgs.push_back(
-							awst::makeIntegerConstant(std::to_string(totalSize), m_loc));
+							awst::makeIntegerConstant(totalSize, m_loc));
 						auto createStmt = awst::makeExpressionStatement(std::move(createCall), m_loc);
 						m_ctx.prePendingStatements.push_back(std::move(createStmt));
 					}

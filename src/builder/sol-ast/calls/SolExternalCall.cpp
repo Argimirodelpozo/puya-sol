@@ -308,8 +308,8 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 
 			auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 			extract->stackArgs.push_back(singleBytes);
-			extract->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(offset), m_loc));
-			extract->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(fieldSize), m_loc));
+			extract->stackArgs.push_back(awst::makeIntegerConstant(offset, m_loc));
+			extract->stackArgs.push_back(awst::makeIntegerConstant(fieldSize, m_loc));
 
 			std::shared_ptr<awst::Expression> decoded;
 			if (fieldType == awst::WType::biguintType())
@@ -513,7 +513,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 	auto create = std::make_shared<awst::CreateInnerTransaction>();
 	create->sourceLocation = m_loc;
 	create->wtype = &s_applFieldsType;
-	create->fields["TypeEnum"] = awst::makeIntegerConstant(std::to_string(TxnTypeAppl), m_loc);
+	create->fields["TypeEnum"] = awst::makeIntegerConstant(TxnTypeAppl, m_loc);
 	create->fields["Fee"] = awst::makeIntegerConstant("0", m_loc);
 	create->fields["ApplicationID"] = std::move(appId);
 	create->fields["OnCompletion"] = awst::makeIntegerConstant("0", m_loc);

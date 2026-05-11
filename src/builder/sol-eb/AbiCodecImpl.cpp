@@ -61,7 +61,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgsHeadTail(
 	size_t headSize = numTrailing * 32;
 	std::vector<std::shared_ptr<awst::Expression>> headParts;
 	std::vector<std::shared_ptr<awst::Expression>> tailParts;
-	std::shared_ptr<awst::Expression> currentOffset = awst::makeIntegerConstant(std::to_string(headSize), _loc);
+	std::shared_ptr<awst::Expression> currentOffset = awst::makeIntegerConstant(headSize, _loc);
 
 	for (size_t i = _startIdx; i < args.size(); ++i)
 	{
@@ -207,7 +207,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 				auto byteCount = awst::makeUInt64BinOp(
 					elemCount,
 					awst::UInt64BinaryOperator::Mult,
-					awst::makeIntegerConstant(std::to_string(elemSize), _loc),
+					awst::makeIntegerConstant(elemSize, _loc),
 					_loc);
 
 				// elemBytes = extract3(_data, dataStart, byteCount)
@@ -433,7 +433,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 
 				auto contentBytes = awst::makeUInt64BinOp(std::move(rawLen), awst::UInt64BinaryOperator::Sub, std::move(two), _loc);
 
-				auto elemSize = awst::makeIntegerConstant(std::to_string(elemByteSize), _loc);
+				auto elemSize = awst::makeIntegerConstant(elemByteSize, _loc);
 
 				auto lenExpr = awst::makeUInt64BinOp(std::move(contentBytes), awst::UInt64BinaryOperator::FloorDiv, std::move(elemSize), _loc);
 
@@ -505,7 +505,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 
 			std::vector<std::shared_ptr<awst::Expression>> headParts;
 			std::vector<std::shared_ptr<awst::Expression>> tailParts;
-			std::shared_ptr<awst::Expression> currentOffset = awst::makeIntegerConstant(std::to_string(headSize), _loc);
+			std::shared_ptr<awst::Expression> currentOffset = awst::makeIntegerConstant(headSize, _loc);
 
 			for (auto const& memberDecl : structDef.members())
 			{

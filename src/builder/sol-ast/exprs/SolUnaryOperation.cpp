@@ -632,7 +632,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 
 		for (unsigned j = 0; j < slotCount; ++j)
 		{
-			auto jConst = awst::makeIntegerConstant(std::to_string(j), m_loc, awst::WType::biguintType());
+			auto jConst = awst::makeIntegerConstant(j, m_loc, awst::WType::biguintType());
 
 			auto slotJ = awst::makeBigUIntBinOp(target, awst::BigUIntBinaryOperator::Add, std::move(jConst), m_loc);
 

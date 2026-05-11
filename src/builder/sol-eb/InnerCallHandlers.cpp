@@ -43,8 +43,8 @@ std::shared_ptr<awst::IntrinsicCall> InnerCallHandlers::makeExtract(
 {
 	auto call = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 	call->stackArgs.push_back(std::move(_source));
-	call->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(_offset), _loc));
-	call->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(_length), _loc));
+	call->stackArgs.push_back(awst::makeIntegerConstant(_offset, _loc));
+	call->stackArgs.push_back(awst::makeIntegerConstant(_length, _loc));
 	return call;
 }
 
@@ -211,7 +211,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::buildPaymentTransaction(
 	auto create = std::make_shared<awst::CreateInnerTransaction>();
 	create->sourceLocation = _loc;
 	create->wtype = &s_payFieldsType;
-	create->fields["TypeEnum"] = awst::makeIntegerConstant(std::to_string(TxnTypePay), _loc);
+	create->fields["TypeEnum"] = awst::makeIntegerConstant(TxnTypePay, _loc);
 	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
 	create->fields["Receiver"] = std::move(_receiver);
 	create->fields["Amount"] = std::move(_amount);

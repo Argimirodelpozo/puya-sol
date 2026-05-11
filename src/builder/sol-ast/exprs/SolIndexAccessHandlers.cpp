@@ -499,18 +499,18 @@ std::shared_ptr<awst::Expression> SolIndexAccess::buildMultiBoxAccess(
 
 	// page = idx / elemsPerBox
 	auto idxRead1 = awst::makeVarExpression(idxVarName, awst::WType::uint64Type(), m_loc);
-	auto epbConst1 = awst::makeIntegerConstant(std::to_string(elemsPerBox), m_loc);
+	auto epbConst1 = awst::makeIntegerConstant(elemsPerBox, m_loc);
 	auto pageExpr = awst::makeUInt64BinOp(
 		std::move(idxRead1), awst::UInt64BinaryOperator::FloorDiv,
 		std::move(epbConst1), m_loc);
 
 	// inPageOffset = (idx % elemsPerBox) * elemSize
 	auto idxRead2 = awst::makeVarExpression(idxVarName, awst::WType::uint64Type(), m_loc);
-	auto epbConst2 = awst::makeIntegerConstant(std::to_string(elemsPerBox), m_loc);
+	auto epbConst2 = awst::makeIntegerConstant(elemsPerBox, m_loc);
 	auto remExpr = awst::makeUInt64BinOp(
 		std::move(idxRead2), awst::UInt64BinaryOperator::Mod,
 		std::move(epbConst2), m_loc);
-	auto elemSizeConst = awst::makeIntegerConstant(std::to_string(elemSize), m_loc);
+	auto elemSizeConst = awst::makeIntegerConstant(elemSize, m_loc);
 	auto offsetExpr = awst::makeUInt64BinOp(
 		std::move(remExpr), awst::UInt64BinaryOperator::Mult,
 		std::move(elemSizeConst), m_loc);
@@ -536,7 +536,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::buildMultiBoxAccess(
 		auto extract = awst::makeIntrinsicCall("box_extract", awst::WType::bytesType(), m_loc);
 		extract->stackArgs.push_back(std::move(boxKey));
 		extract->stackArgs.push_back(std::move(offsetExpr));
-		extract->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(elemSize), m_loc));
+		extract->stackArgs.push_back(awst::makeIntegerConstant(elemSize, m_loc));
 		auto cast = awst::makeReinterpretCast(std::move(extract),
 			const_cast<awst::WType*>(elemArc4Type), m_loc);
 		return cast;
@@ -548,7 +548,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::buildMultiBoxAccess(
 	auto extract = awst::makeIntrinsicCall("box_extract", awst::WType::bytesType(), m_loc);
 	extract->stackArgs.push_back(std::move(boxKey));
 	extract->stackArgs.push_back(std::move(offsetExpr));
-	extract->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(elemSize), m_loc));
+	extract->stackArgs.push_back(awst::makeIntegerConstant(elemSize, m_loc));
 
 	auto* expectedType = m_ctx.typeMapper.map(m_indexAccess.annotation().type);
 	auto* elemArc4 = const_cast<awst::WType*>(elemArc4Type);

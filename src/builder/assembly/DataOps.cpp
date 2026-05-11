@@ -61,7 +61,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 		{
 			uint64_t relativeOffset = *offset - m_localConstants[elem.paramName];
 
-			auto offArg = awst::makeIntegerConstant(std::to_string(relativeOffset), _loc);
+			auto offArg = awst::makeIntegerConstant(relativeOffset, _loc);
 
 			auto lenArg = awst::makeIntegerConstant("32", _loc);
 
@@ -297,7 +297,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 			// extract3(__evm_memory, offset, length) → keccak256
 			auto offsetU64 = offsetToUint64(_args[0], _loc);
 
-			auto lenConst = awst::makeIntegerConstant(std::to_string(*length), _loc);
+			auto lenConst = awst::makeIntegerConstant(*length, _loc);
 
 			auto data = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 			data->stackArgs.push_back(memoryVar(_loc));
@@ -374,9 +374,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 		// Read from the memory blob and truncate to exact length
 		Logger::instance().warning("keccak256 with sub-32-byte input, using partial slot", _loc);
 		{
-			auto offsetConst = awst::makeIntegerConstant(std::to_string(*offset), _loc);
+			auto offsetConst = awst::makeIntegerConstant(*offset, _loc);
 
-			auto lenConst = awst::makeIntegerConstant(std::to_string(*length), _loc);
+			auto lenConst = awst::makeIntegerConstant(*length, _loc);
 
 			auto data = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 			data->stackArgs.push_back(memoryVar(_loc));
@@ -450,9 +450,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 				int fieldSize = computeARC4ByteSize(fieldType);
 
 				// extract3(structBytes, fieldByteOffset, fieldSize)
-				auto offExpr = awst::makeIntegerConstant(std::to_string(fieldByteOffset), _loc);
+				auto offExpr = awst::makeIntegerConstant(fieldByteOffset, _loc);
 
-				auto lenExpr = awst::makeIntegerConstant(std::to_string(fieldSize), _loc);
+				auto lenExpr = awst::makeIntegerConstant(fieldSize, _loc);
 
 				auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 				extract->stackArgs.push_back(structBytes);
@@ -662,7 +662,7 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 	using O = awst::UInt64BinaryOperator;
 
 	auto u64Const = [&](uint64_t v) {
-		return awst::makeIntegerConstant(std::to_string(v), _loc, awst::WType::uint64Type());
+		return awst::makeIntegerConstant(v, _loc, awst::WType::uint64Type());
 	};
 	auto bytesVar = [&](std::string const& n) {
 		return awst::makeVarExpression(n, awst::WType::bytesType(), _loc);

@@ -189,7 +189,7 @@ void AssemblyBuilder::handleEcPairingRT(
 			if (k == 0) return base;
 			return std::shared_ptr<awst::Expression>(awst::makeUInt64BinOp(
 				std::move(base), O::Add,
-				awst::makeIntegerConstant(std::to_string(k), _loc), _loc));
+				awst::makeIntegerConstant(k, _loc), _loc));
 		};
 
 		// Bind input offset to a local so we don't reduplicate the
@@ -330,7 +330,7 @@ void AssemblyBuilder::handleModExpRT(
 		if (k == 0) return b;
 		return std::shared_ptr<awst::Expression>(awst::makeUInt64BinOp(
 			std::move(b), O::Add,
-			awst::makeIntegerConstant(std::to_string(k), _loc), _loc));
+			awst::makeIntegerConstant(k, _loc), _loc));
 	};
 	auto readSlot = [&](uint64_t slotOff) -> std::shared_ptr<awst::Expression>
 	{

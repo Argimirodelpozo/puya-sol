@@ -77,7 +77,7 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 
 		auto cmpLhs = TypeCoercion::implicitNumericCast(
 			tmpVar, awst::WType::uint64Type(), _loc);
-		auto maxVal = awst::makeIntegerConstant(std::to_string(numMembers), _loc);
+		auto maxVal = awst::makeIntegerConstant(numMembers, _loc);
 
 		auto cmp = awst::makeNumericCompare(std::move(cmpLhs), awst::NumericComparison::Lt, std::move(maxVal), _loc);
 

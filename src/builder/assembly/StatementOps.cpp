@@ -456,7 +456,7 @@ void AssemblyBuilder::buildAssignment(
 							lenCall->stackArgs.push_back(std::move(rhsBytesForLen));
 							auto offsetExpr = awst::makeUInt64BinOp(
 								std::move(lenCall), awst::UInt64BinaryOperator::Sub,
-								awst::makeIntegerConstant(std::to_string(sliceWidth), loc), loc);
+								awst::makeIntegerConstant(sliceWidth, loc), loc);
 
 							auto extractCall = awst::makeIntrinsicCall(
 								"extract3", awst::WType::bytesType(), loc);
@@ -613,7 +613,7 @@ void AssemblyBuilder::buildAssignment(
 				auto padded = padTo32Bytes(std::move(biguintVal), loc);
 				// Extract first N bytes (EVM left-aligned)
 				auto zero = awst::makeIntegerConstant("0", loc);
-				auto lenConst = awst::makeIntegerConstant(std::to_string(n), loc);
+				auto lenConst = awst::makeIntegerConstant(n, loc);
 				auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), loc);
 				extract->stackArgs.push_back(std::move(padded));
 				extract->stackArgs.push_back(std::move(zero));

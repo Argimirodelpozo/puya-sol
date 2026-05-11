@@ -49,7 +49,7 @@ std::string const SUBROUTINE_ID = "__builtin_ripemd160";
 
 std::shared_ptr<Expression> u64Const(uint64_t v, SourceLocation const& loc)
 {
-	return makeIntegerConstant(std::to_string(v), loc, WType::uint64Type());
+	return makeIntegerConstant(v, loc, WType::uint64Type());
 }
 
 std::shared_ptr<VarExpression> u64Var(std::string const& name, SourceLocation const& loc)

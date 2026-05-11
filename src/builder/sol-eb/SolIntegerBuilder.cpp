@@ -162,7 +162,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 		if (m_scope.isUnchecked() && !m_signed && m_bits < 64)
 		{
 			uint64_t pow2N = uint64_t(1) << m_bits;
-			auto powConst = awst::makeIntegerConstant(std::to_string(pow2N), _loc);
+			auto powConst = awst::makeIntegerConstant(pow2N, _loc);
 
 			auto aPlusPow = awst::makeUInt64BinOp(std::move(e->left), awst::UInt64BinaryOperator::Add, std::move(powConst), _loc);
 
@@ -194,7 +194,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 		if (m_scope.isUnchecked() && !m_signed && m_bits < 64)
 		{
 			uint64_t modVal = uint64_t(1) << m_bits;
-			auto modConst = awst::makeIntegerConstant(std::to_string(modVal), _loc);
+			auto modConst = awst::makeIntegerConstant(modVal, _loc);
 			auto masked = awst::makeUInt64BinOp(std::move(powResult), awst::UInt64BinaryOperator::Mod, std::move(modConst), _loc);
 			powResult = std::move(masked);
 		}
@@ -218,7 +218,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 		if (needsWrap)
 		{
 			uint64_t modVal = uint64_t(1) << m_bits;
-			auto modConst = awst::makeIntegerConstant(std::to_string(modVal), _loc);
+			auto modConst = awst::makeIntegerConstant(modVal, _loc);
 
 			auto masked = awst::makeUInt64BinOp(std::move(result), awst::UInt64BinaryOperator::Mod, std::move(modConst), _loc);
 			result = std::move(masked);
@@ -394,7 +394,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 						return wrap(std::move(e));
 					}
 					unsigned long long result = (UINT64_MAX - val) + 1ULL;
-					auto e = awst::makeIntegerConstant(std::to_string(result), _loc);
+					auto e = awst::makeIntegerConstant(result, _loc);
 					return wrap(std::move(e));
 				}
 			}
@@ -420,7 +420,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			if (!m_isBigUInt)
 			{
 				// Mask to N bits first (uint64 may hold wider two's complement)
-				auto maskConst = awst::makeIntegerConstant(std::to_string((uint64_t(1) << m_bits) - 1), _loc);
+				auto maskConst = awst::makeIntegerConstant((uint64_t(1) << m_bits) - 1, _loc);
 
 				auto masked = awst::makeUInt64BinOp(operand, awst::UInt64BinaryOperator::BitAnd, std::move(maskConst), _loc);
 

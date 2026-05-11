@@ -141,7 +141,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 			auto it = m_localConstants.find(baseName);
 			if (it != m_localConstants.end())
 			{
-				auto node = awst::makeIntegerConstant(std::to_string(it->second), loc, awst::WType::biguintType());
+				auto node = awst::makeIntegerConstant(it->second, loc, awst::WType::biguintType());
 				return node;
 			}
 		}

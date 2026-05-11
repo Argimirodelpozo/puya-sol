@@ -285,8 +285,8 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 		if (byteWidth < 8)
 		{
 			// Truncate: extract last byteWidth bytes from 8-byte itob result
-			auto off = awst::makeIntegerConstant(std::to_string(8 - byteWidth), _loc);
-			auto len = awst::makeIntegerConstant(std::to_string(byteWidth), _loc);
+			auto off = awst::makeIntegerConstant(8 - byteWidth, _loc);
+			auto len = awst::makeIntegerConstant(byteWidth, _loc);
 
 			auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 			extract->stackArgs.push_back(std::move(itob));
@@ -373,7 +373,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToEnum(
 
 	// EVM reverts with Panic(0x21) if value >= numMembers
 	unsigned numMembers = enumType->numberOfMembers();
-	auto maxVal = awst::makeIntegerConstant(std::to_string(numMembers), _loc);
+	auto maxVal = awst::makeIntegerConstant(numMembers, _loc);
 
 	auto cmp = awst::makeNumericCompare(result, awst::NumericComparison::Lt, std::move(maxVal), _loc);
 

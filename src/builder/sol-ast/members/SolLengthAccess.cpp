@@ -248,7 +248,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 						awst::WType::uint64Type(), m_loc);
 				}
 
-				auto elemSizeConst = awst::makeIntegerConstant(std::to_string(elemSize), m_loc);
+				auto elemSizeConst = awst::makeIntegerConstant(elemSize, m_loc);
 
 				// Guard against box_len returning 0 (uninitialised box):
 				// `(0 - 2) / elemSize` underflows. Use `max(len, 2)` so the
@@ -279,7 +279,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 	{
 		if (fixedBytes->length().has_value())
 		{
-			auto c = awst::makeIntegerConstant(std::to_string(*fixedBytes->length()), m_loc);
+			auto c = awst::makeIntegerConstant(*fixedBytes->length(), m_loc);
 			return c;
 		}
 	}

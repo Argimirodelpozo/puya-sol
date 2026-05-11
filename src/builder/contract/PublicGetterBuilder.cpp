@@ -541,7 +541,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 
 						auto pv = awst::makeVarExpression(pname, awst::WType::uint64Type(), loc);
 
-						auto mv = awst::makeIntegerConstant(std::to_string(memberCount - 1), loc);
+						auto mv = awst::makeIntegerConstant(memberCount - 1, loc);
 
 						auto cmp = awst::makeNumericCompare(pv, awst::NumericComparison::Lte, std::move(mv), loc);
 

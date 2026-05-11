@@ -399,7 +399,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 	auto it = s_targets.find({_funcDef->id(), _awstName});
 	unsigned funcId = (it != s_targets.end()) ? it->second.id : 0;
 
-	auto idConst = awst::makeIntegerConstant(std::to_string(funcId), _loc);
+	auto idConst = awst::makeIntegerConstant(funcId, _loc);
 	return idConst;
 }
 
@@ -732,7 +732,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 			// Condition: __funcptr_id == entry->id
 			auto idVar = awst::makeVarExpression("__funcptr_id", awst::WType::uint64Type(), _loc);
 
-			auto idConst = awst::makeIntegerConstant(std::to_string(entry->id), _loc);
+			auto idConst = awst::makeIntegerConstant(entry->id, _loc);
 
 			auto cmp = awst::makeNumericCompare(std::move(idVar), awst::NumericComparison::Eq, std::move(idConst), _loc);
 
@@ -899,7 +899,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 
 				auto thenBlock = awst::makeBlock(_loc);
 				thenBlock->body.push_back(awst::makeReturnStatement(
-					awst::makeIntegerConstant(std::to_string(entry->id), _loc), _loc));
+					awst::makeIntegerConstant(entry->id, _loc), _loc));
 
 				auto ifElse = awst::makeIfElse(
 					std::move(cmp), std::move(thenBlock), std::move(selElse), _loc);

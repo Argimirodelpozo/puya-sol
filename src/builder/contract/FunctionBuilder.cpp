@@ -584,7 +584,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					unsigned numMembers = enumType->numberOfMembers();
 					auto var = awst::makeVarExpression(retParams[0]->name(), awst::WType::uint64Type(), method.sourceLocation);
 
-					auto maxVal = awst::makeIntegerConstant(std::to_string(numMembers), method.sourceLocation);
+					auto maxVal = awst::makeIntegerConstant(numMembers, method.sourceLocation);
 
 					auto cmp = awst::makeNumericCompare(std::move(var), awst::NumericComparison::Lt, std::move(maxVal), method.sourceLocation);
 
@@ -904,7 +904,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				-> std::shared_ptr<awst::Expression>
 			{
 				uint64_t mask = (uint64_t(1) << bits) - 1;
-				auto maskConst = awst::makeIntegerConstant(std::to_string(mask), loc);
+				auto maskConst = awst::makeIntegerConstant(mask, loc);
 				auto bitAnd = awst::makeUInt64BinOp(std::move(val), awst::UInt64BinaryOperator::BitAnd, std::move(maskConst), loc);
 				return bitAnd;
 			};
@@ -1067,11 +1067,11 @@ awst::ContractMethod ContractBuilder::buildFunction(
 						uint64_t minNeg = ~((uint64_t(1) << (bits - 1)) - 1); // 2^64 - 2^(n-1)
 
 						auto paramCheck1 = awst::makeVarExpression(param->name(), awst::WType::uint64Type(), loc);
-						auto maxPosConst = awst::makeIntegerConstant(std::to_string(maxPos), loc);
+						auto maxPosConst = awst::makeIntegerConstant(maxPos, loc);
 						auto cmpPos = awst::makeNumericCompare(paramCheck1, awst::NumericComparison::Lte, std::move(maxPosConst), loc);
 
 						auto paramCheck2 = awst::makeVarExpression(param->name(), awst::WType::uint64Type(), loc);
-						auto minNegConst = awst::makeIntegerConstant(std::to_string(minNeg), loc);
+						auto minNegConst = awst::makeIntegerConstant(minNeg, loc);
 						auto cmpNeg = awst::makeNumericCompare(paramCheck2, awst::NumericComparison::Gte, std::move(minNegConst), loc);
 
 						// OR the two conditions
@@ -1095,7 +1095,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				{
 					auto paramCheck = awst::makeVarExpression(param->name(), awst::WType::uint64Type(), loc);
 
-					auto maxVal = awst::makeIntegerConstant(std::to_string(mask), loc);
+					auto maxVal = awst::makeIntegerConstant(mask, loc);
 
 					auto cmp = awst::makeNumericCompare(paramCheck, awst::NumericComparison::Lte, std::move(maxVal), loc);
 
@@ -1105,7 +1105,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 				auto paramVar = awst::makeVarExpression(param->name(), awst::WType::uint64Type(), loc);
 
-				auto maskConst = awst::makeIntegerConstant(std::to_string(mask), loc);
+				auto maskConst = awst::makeIntegerConstant(mask, loc);
 
 				auto bitAnd = awst::makeUInt64BinOp(paramVar, awst::UInt64BinaryOperator::BitAnd, std::move(maskConst), loc);
 
@@ -1161,7 +1161,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 						? "_param" + std::to_string(pi)
 						: param->name(), awst::WType::uint64Type(), loc);
 
-					auto maxVal = awst::makeIntegerConstant(std::to_string(memberCount - 1), loc);
+					auto maxVal = awst::makeIntegerConstant(memberCount - 1, loc);
 
 					auto cmp = awst::makeNumericCompare(paramVar, awst::NumericComparison::Lte, std::move(maxVal), loc);
 
@@ -1255,7 +1255,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 		if (budgetForFunc > 0)
 		{
-			auto budgetVal = awst::makeIntegerConstant(std::to_string(budgetForFunc), method.sourceLocation);
+			auto budgetVal = awst::makeIntegerConstant(budgetForFunc, method.sourceLocation);
 
 			auto feeSource = awst::makeIntegerConstant("0", method.sourceLocation);
 

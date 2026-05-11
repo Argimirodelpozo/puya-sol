@@ -289,7 +289,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 	// Using shr pattern: x / 2^(bitPos-1) mod 2
 	auto shiftAmt = awst::makeBiguintConstant("1", _loc); // 2^(bitPos-1) via pow2
 
-	auto shiftConst = awst::makeIntegerConstant(std::to_string(bitPos - 1), _loc);
+	auto shiftConst = awst::makeIntegerConstant(bitPos - 1, _loc);
 
 	auto pow2shift = buildPowerOf2(std::move(shiftConst), _loc);
 
@@ -307,7 +307,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 	auto isNeg = awst::makeNumericCompare(signBit, awst::NumericComparison::Ne, zero, _loc);
 
 	// lowMask = 2^bitPos - 1
-	auto bitPosConst = awst::makeIntegerConstant(std::to_string(bitPos), _loc);
+	auto bitPosConst = awst::makeIntegerConstant(bitPos, _loc);
 
 	auto pow2BitPos = buildPowerOf2(std::move(bitPosConst), _loc);
 
@@ -334,7 +334,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 
 	// Positive case: x & lowMask (clear all bits above bitPos)
 	// Re-create lowMask (can't reuse shared_ptr after move)
-	auto bitPosConst2 = awst::makeIntegerConstant(std::to_string(bitPos), _loc);
+	auto bitPosConst2 = awst::makeIntegerConstant(bitPos, _loc);
 
 	auto pow2BitPos2 = buildPowerOf2(std::move(bitPosConst2), _loc);
 

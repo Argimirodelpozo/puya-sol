@@ -369,7 +369,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::emitFreeMemoryBum
 	extractFmp->stackArgs.push_back(std::move(blobRead));
 	extractFmp->stackArgs.push_back(std::move(offset58));
 
-	auto sizeConst = awst::makeIntegerConstant(std::to_string(_size), _loc);
+	auto sizeConst = awst::makeIntegerConstant(_size, _loc);
 	auto newFmp = awst::makeUInt64BinOp(
 		std::move(extractFmp), awst::UInt64BinaryOperator::Add,
 		std::move(sizeConst), _loc);
@@ -435,14 +435,14 @@ void AssemblyBuilder::initializeMemoryBlob(
 			// Access param[i]
 			auto base = awst::makeVarExpression(m_arrayParamName, m_arrayParamType, loc);
 
-			auto index = awst::makeIntegerConstant(std::to_string(i), loc);
+			auto index = awst::makeIntegerConstant(i, loc);
 
 			auto indexExpr = awst::makeIndexExpression(std::move(base), std::move(index), awst::WType::biguintType(), loc);
 
 			// Pad to 32 bytes and write into blob
 			auto padded = padTo32Bytes(std::move(indexExpr), loc);
 
-			auto offsetConst = awst::makeIntegerConstant(std::to_string(offset), loc);
+			auto offsetConst = awst::makeIntegerConstant(offset, loc);
 
 			auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), loc);
 			replace->stackArgs.push_back(memoryVar(loc));
@@ -620,7 +620,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::accessFlatElement(
 		int outerIndex = _flatIndex / innerSize;
 		int innerFlatIndex = _flatIndex % innerSize;
 
-		auto index = awst::makeIntegerConstant(std::to_string(outerIndex), _loc);
+		auto index = awst::makeIntegerConstant(outerIndex, _loc);
 
 		auto indexExpr = awst::makeIndexExpression(_base, std::move(index), refArr->elementType(), _loc);
 
@@ -641,7 +641,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::accessFlatElement(
 		int outerIndex = _flatIndex / innerSize;
 		int innerFlatIndex = _flatIndex % innerSize;
 
-		auto index = awst::makeIntegerConstant(std::to_string(outerIndex), _loc);
+		auto index = awst::makeIntegerConstant(outerIndex, _loc);
 
 		auto indexExpr = awst::makeIndexExpression(_base, std::move(index), arc4Arr->elementType(), _loc);
 

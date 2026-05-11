@@ -33,12 +33,12 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::leftPadBytes(
 
 	auto offset = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), _loc);
 	offset->stackArgs.push_back(std::move(lenCall));
-	offset->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(_n), _loc));
+	offset->stackArgs.push_back(awst::makeIntegerConstant(_n, _loc));
 
 	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 	extract->stackArgs.push_back(std::move(cat));
 	extract->stackArgs.push_back(std::move(offset));
-	extract->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(_n), _loc));
+	extract->stackArgs.push_back(awst::makeIntegerConstant(_n, _loc));
 	return extract;
 }
 
@@ -331,7 +331,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 				std::shared_ptr<awst::Expression> packed;
 				for (int j = 0; j < len; ++j)
 				{
-					auto idx = awst::makeIntegerConstant(std::to_string(j), _loc);
+					auto idx = awst::makeIntegerConstant(j, _loc);
 
 					auto indexExpr = std::make_shared<awst::IndexExpression>();
 					indexExpr->sourceLocation = _loc;
@@ -455,8 +455,8 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeCall(
 				if (n <= 8)
 				{
 					// Take last n bytes of the 8-byte itob result.
-					auto off = awst::makeIntegerConstant(std::to_string(8 - n), _loc);
-					auto nConst = awst::makeIntegerConstant(std::to_string(n), _loc);
+					auto off = awst::makeIntegerConstant(8 - n, _loc);
+					auto nConst = awst::makeIntegerConstant(n, _loc);
 					auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 					extract->stackArgs.push_back(std::move(itob));
 					extract->stackArgs.push_back(std::move(off));
@@ -473,8 +473,8 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeCall(
 			{
 				auto asBytes = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), _loc);
 				// biguint is 32-byte big-endian: take last n bytes.
-				auto off = awst::makeIntegerConstant(std::to_string(32 - n), _loc);
-				auto nConst = awst::makeIntegerConstant(std::to_string(n), _loc);
+				auto off = awst::makeIntegerConstant(32 - n, _loc);
+				auto nConst = awst::makeIntegerConstant(n, _loc);
 				auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 				extract->stackArgs.push_back(std::move(asBytes));
 				extract->stackArgs.push_back(std::move(off));
@@ -665,7 +665,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 		std::vector<std::shared_ptr<awst::Expression>> items;
 		for (size_t i = 0; i < components.size(); ++i)
 		{
-			auto offset = awst::makeIntegerConstant(std::to_string(i * 32), _loc);
+			auto offset = awst::makeIntegerConstant(i * 32, _loc);
 			items.push_back(decodeAbiValue(_ctx, dataExpr, std::move(offset), components[i], _loc));
 		}
 		auto tuple = awst::makeTupleExpression(targetType, _loc);
@@ -783,7 +783,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncode(
 	std::vector<std::shared_ptr<awst::Expression>> tailConcatParts;
 
 	// Running tail offset as AWST expression (starts at headSize)
-	std::shared_ptr<awst::Expression> currentTailOffset = awst::makeIntegerConstant(std::to_string(headSize), _loc);
+	std::shared_ptr<awst::Expression> currentTailOffset = awst::makeIntegerConstant(headSize, _loc);
 
 	for (size_t i = 0; i < numArgs; ++i)
 	{

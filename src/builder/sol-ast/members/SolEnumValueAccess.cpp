@@ -27,7 +27,7 @@ std::shared_ptr<awst::Expression> SolEnumValueAccess::toAwst()
 		++index;
 	}
 
-	return awst::makeIntegerConstant(std::to_string(index), m_loc);
+	return awst::makeIntegerConstant(index, m_loc);
 }
 
 } // namespace puyasol::builder::sol_ast

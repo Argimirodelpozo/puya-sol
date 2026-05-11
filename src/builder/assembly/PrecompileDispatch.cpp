@@ -128,7 +128,7 @@ void AssemblyBuilder::handlePrecompileCall(
 	// nodes back to a literal at the backend, so generated TEAL for the
 	// common static-arg case is unchanged.
 	auto wrap = [&](uint64_t v) {
-		return awst::makeIntegerConstant(std::to_string(v), _loc);
+		return awst::makeIntegerConstant(v, _loc);
 	};
 
 	switch (*precompileAddr)

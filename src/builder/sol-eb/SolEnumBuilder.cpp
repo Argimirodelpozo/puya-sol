@@ -22,7 +22,7 @@ std::unique_ptr<InstanceBuilder> SolEnumBuilder::compare(
 	{
 		unsigned numMembers = m_enumType->numberOfMembers();
 		auto validateEnum = [&](std::shared_ptr<awst::Expression> val) {
-			auto maxVal = awst::makeIntegerConstant(std::to_string(numMembers), _loc);
+			auto maxVal = awst::makeIntegerConstant(numMembers, _loc);
 
 			auto cmp = awst::makeNumericCompare(val, awst::NumericComparison::Lt, std::move(maxVal), _loc);
 

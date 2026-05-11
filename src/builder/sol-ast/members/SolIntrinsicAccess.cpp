@@ -144,12 +144,12 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		std::shared_ptr<awst::Expression> calldataConcat;
 		for (int slot = 0; slot < 16; ++slot)
 		{
-			auto slotIdx = awst::makeIntegerConstant(std::to_string(slot), m_loc);
+			auto slotIdx = awst::makeIntegerConstant(slot, m_loc);
 
 			auto numArgsCheck = awst::makeIntrinsicCall("txn", awst::WType::uint64Type(), m_loc);
 			numArgsCheck->immediates = {std::string("NumAppArgs")};
 
-			auto slotIdxCmp = awst::makeIntegerConstant(std::to_string(slot), m_loc);
+			auto slotIdxCmp = awst::makeIntegerConstant(slot, m_loc);
 
 			auto slotPresent = awst::makeNumericCompare(std::move(numArgsCheck), awst::NumericComparison::Gt, std::move(slotIdxCmp), m_loc);
 

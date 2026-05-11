@@ -105,7 +105,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleEnumConversion()
 		std::move(argExpr), awst::WType::uint64Type(), m_loc);
 
 	unsigned numMembers = enumType->numberOfMembers();
-	auto maxVal = awst::makeIntegerConstant(std::to_string(numMembers), m_loc);
+	auto maxVal = awst::makeIntegerConstant(numMembers, m_loc);
 
 	auto cmp = awst::makeNumericCompare(result, awst::NumericComparison::Lt, std::move(maxVal), m_loc);
 
@@ -180,7 +180,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
 			unsigned targetBits = intType->numBits();
 			if (targetBits < 64)
 			{
-				auto mask = awst::makeIntegerConstant(std::to_string((uint64_t(1) << targetBits) - 1), m_loc);
+				auto mask = awst::makeIntegerConstant((uint64_t(1) << targetBits) - 1, m_loc);
 
 				auto bitAnd = awst::makeUInt64BinOp(std::move(result), awst::UInt64BinaryOperator::BitAnd, std::move(mask), m_loc);
 				result = std::move(bitAnd);
@@ -243,9 +243,9 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
 			{
 				auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 				extract->stackArgs.push_back(bytesSource);
-				auto off = awst::makeIntegerConstant(std::to_string(i * elemSize), m_loc);
+				auto off = awst::makeIntegerConstant(i * elemSize, m_loc);
 				extract->stackArgs.push_back(std::move(off));
-				auto len = awst::makeIntegerConstant(std::to_string(elemSize), m_loc);
+				auto len = awst::makeIntegerConstant(elemSize, m_loc);
 				extract->stackArgs.push_back(std::move(len));
 
 				if (elemType == awst::WType::biguintType())
@@ -368,7 +368,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::applyNarrowingMask(
 		}
 		if (targetBits < 64 && (targetBits < sourceBits || (sourceIsSigned && !targetIntType->isSigned())))
 		{
-			auto mask = awst::makeIntegerConstant(std::to_string((uint64_t(1) << targetBits) - 1), m_loc);
+			auto mask = awst::makeIntegerConstant((uint64_t(1) << targetBits) - 1, m_loc);
 			auto bitAnd = awst::makeUInt64BinOp(std::move(_expr), awst::UInt64BinaryOperator::BitAnd, std::move(mask), m_loc);
 			return bitAnd;
 		}
@@ -452,9 +452,9 @@ std::shared_ptr<awst::Expression> SolTypeConversion::leftPadToN(
 std::shared_ptr<awst::Expression> SolTypeConversion::extractLastN(
 	std::shared_ptr<awst::Expression> _expr, int _n)
 {
-	auto offsetConst = awst::makeIntegerConstant(std::to_string(8 - _n), m_loc);
+	auto offsetConst = awst::makeIntegerConstant(8 - _n, m_loc);
 
-	auto widthConst = awst::makeIntegerConstant(std::to_string(_n), m_loc);
+	auto widthConst = awst::makeIntegerConstant(_n, m_loc);
 
 	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 	extract->stackArgs.push_back(std::move(_expr));

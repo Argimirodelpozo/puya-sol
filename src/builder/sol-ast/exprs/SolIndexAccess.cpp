@@ -95,7 +95,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 						if (innerLen > 0)
 						{
 							// newSlot = slot + index * innerLen
-							auto stride = awst::makeIntegerConstant(std::to_string(innerLen), m_loc, awst::WType::biguintType());
+							auto stride = awst::makeIntegerConstant(innerLen, m_loc, awst::WType::biguintType());
 
 							auto mul = awst::makeBigUIntBinOp(std::move(indexExpr), awst::BigUIntBinaryOperator::Mult, std::move(stride), m_loc);
 
@@ -361,14 +361,14 @@ std::shared_ptr<awst::Expression> SolIndexRangeAccess::toAwst()
 				auto scale = awst::makeUInt64BinOp(
 					std::move(idx),
 					awst::UInt64BinaryOperator::Mult,
-					awst::makeIntegerConstant(std::to_string(elemSize), m_loc),
+					awst::makeIntegerConstant(elemSize, m_loc),
 					m_loc);
 				if (headerBytes > 0)
 				{
 					return awst::makeUInt64BinOp(
 						std::move(scale),
 						awst::UInt64BinaryOperator::Add,
-						awst::makeIntegerConstant(std::to_string(headerBytes), m_loc),
+						awst::makeIntegerConstant(headerBytes, m_loc),
 						m_loc);
 				}
 				return scale;

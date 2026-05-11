@@ -183,16 +183,16 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBo
 	auto pageExpr = awst::makeUInt64BinOp(
 		awst::makeVarExpression(idxVarName, awst::WType::uint64Type(), m_loc),
 		awst::UInt64BinaryOperator::FloorDiv,
-		awst::makeIntegerConstant(std::to_string(elemsPerBox), m_loc), m_loc);
+		awst::makeIntegerConstant(elemsPerBox, m_loc), m_loc);
 
 	// offset = (idx % elemsPerBox) * elemSize
 	auto remExpr = awst::makeUInt64BinOp(
 		awst::makeVarExpression(idxVarName, awst::WType::uint64Type(), m_loc),
 		awst::UInt64BinaryOperator::Mod,
-		awst::makeIntegerConstant(std::to_string(elemsPerBox), m_loc), m_loc);
+		awst::makeIntegerConstant(elemsPerBox, m_loc), m_loc);
 	auto offsetExpr = awst::makeUInt64BinOp(
 		std::move(remExpr), awst::UInt64BinaryOperator::Mult,
-		awst::makeIntegerConstant(std::to_string(elemSize), m_loc), m_loc);
+		awst::makeIntegerConstant(elemSize, m_loc), m_loc);
 
 	// boxKey = bytes(varName) ++ itob(page)
 	auto nameBytes = awst::makeUtf8BytesConstant(
@@ -307,7 +307,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 			unsigned numMembers = enumType->numberOfMembers();
 			auto val = builder::TypeCoercion::implicitNumericCast(value, awst::WType::uint64Type(), m_loc);
 
-			auto maxVal = awst::makeIntegerConstant(std::to_string(numMembers), m_loc);
+			auto maxVal = awst::makeIntegerConstant(numMembers, m_loc);
 
 			auto cmp = awst::makeNumericCompare(val, awst::NumericComparison::Lt, std::move(maxVal), m_loc);
 
@@ -337,7 +337,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 			for (unsigned j = 0; j < len; ++j)
 			{
 				// slot + j
-				auto jConst = awst::makeIntegerConstant(std::to_string(j), m_loc, awst::WType::biguintType());
+				auto jConst = awst::makeIntegerConstant(j, m_loc, awst::WType::biguintType());
 
 				auto slotJ = awst::makeBigUIntBinOp(target, awst::BigUIntBinaryOperator::Add, std::move(jConst), m_loc);
 
@@ -357,7 +357,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 				auto btoi = awst::makeBtoi(std::move(last8), m_loc);
 
 				// value[j]
-				auto idx = awst::makeIntegerConstant(std::to_string(j), m_loc);
+				auto idx = awst::makeIntegerConstant(j, m_loc);
 
 				auto elemExpr = std::make_shared<awst::IndexExpression>();
 				elemExpr->sourceLocation = m_loc;
@@ -708,7 +708,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 							"box_create", awst::WType::boolType(), m_loc);
 						createCall->stackArgs.push_back(bv->key);
 						createCall->stackArgs.push_back(
-							awst::makeIntegerConstant(std::to_string(totalSize), m_loc));
+							awst::makeIntegerConstant(totalSize, m_loc));
 						auto createStmt = awst::makeExpressionStatement(std::move(createCall), m_loc);
 						m_ctx.prePendingStatements.push_back(std::move(createStmt));
 					}

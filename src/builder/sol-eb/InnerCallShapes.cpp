@@ -166,7 +166,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 	auto create = std::make_shared<awst::CreateInnerTransaction>();
 	create->sourceLocation = _loc;
 	create->wtype = &s_applFieldsType;
-	create->fields["TypeEnum"] = awst::makeIntegerConstant(std::to_string(TxnTypeAppl), _loc);
+	create->fields["TypeEnum"] = awst::makeIntegerConstant(TxnTypeAppl, _loc);
 	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
 	create->fields["ApplicationID"] = std::move(appId);
 	create->fields["OnCompletion"] = awst::makeIntegerConstant("0", _loc);
@@ -271,7 +271,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	auto create = std::make_shared<awst::CreateInnerTransaction>();
 	create->sourceLocation = _loc;
 	create->wtype = &s_applFieldsType;
-	create->fields["TypeEnum"] = awst::makeIntegerConstant(std::to_string(TxnTypeAppl), _loc);
+	create->fields["TypeEnum"] = awst::makeIntegerConstant(TxnTypeAppl, _loc);
 	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
 	create->fields["ApplicationID"] = std::move(appId);
 	create->fields["OnCompletion"] = awst::makeIntegerConstant("0", _loc);

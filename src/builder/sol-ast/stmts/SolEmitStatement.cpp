@@ -85,7 +85,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 				unsigned numMembers = enumType->numberOfMembers();
 				auto val = builder::TypeCoercion::implicitNumericCast(translated, awst::WType::uint64Type(), m_loc);
 
-				auto maxVal = awst::makeIntegerConstant(std::to_string(numMembers), m_loc);
+				auto maxVal = awst::makeIntegerConstant(numMembers, m_loc);
 
 				auto cmp = awst::makeNumericCompare(val, awst::NumericComparison::Lt, std::move(maxVal), m_loc);
 
