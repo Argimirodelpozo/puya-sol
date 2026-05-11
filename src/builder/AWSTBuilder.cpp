@@ -2,7 +2,9 @@
 #include "awst/Termination.h"
 #include "builder/SubroutineReachability.h"
 #include "builder/builtin/Ripemd160Builder.h"
+#include "builder/sol-ast/ParamMutationDetector.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
+#include "builder/sol-types/OverloadSuffix.h"
 #include "builder/sol-eb/FunctionPointerBuilder.h"
 #include "Logger.h"
 
@@ -14,59 +16,6 @@ namespace puyasol::builder
 
 using awst::statementAlwaysTerminates;
 using awst::blockAlwaysTerminates;
-
-namespace {
-/// Walk a function body, identifying which `memory` ref params are
-/// actually written. A param is "mutated" if any assignment LHS roots
-/// back to that param's identifier (after peeling member / index
-/// accesses). Used to decide whether to augment the function's return
-/// type with that param — read-only memory-ref params skip the
-/// augmentation to keep the return tuple small (otherwise honk's
-/// transcript helpers, which take a ~14 KB Honk.Proof memory but only
-/// READ it, would have a 14 KB+ augmented return that overflows the
-/// AVM 4096 B stack-element cap and gets skipped from lifting).
-class MemoryParamMutationDetector
-	: public solidity::frontend::ASTConstVisitor
-{
-public:
-	std::set<int64_t> paramIds;        // input — set of param decl ids
-	std::set<int64_t> mutatedParams;   // output — subset of paramIds
-
-	bool visit(solidity::frontend::Assignment const& a) override
-	{
-		recordRoot(&a.leftHandSide());
-		return true;  // recurse so RHS's nested assignments also count
-	}
-
-private:
-	void recordRoot(solidity::frontend::Expression const* lhs)
-	{
-		using namespace solidity::frontend;
-		// Peel index / member accesses to find the root identifier.
-		while (true)
-		{
-			if (auto const* ix = dynamic_cast<IndexAccess const*>(lhs))
-				{ lhs = &ix->baseExpression(); continue; }
-			if (auto const* mb = dynamic_cast<MemberAccess const*>(lhs))
-				{ lhs = &mb->expression(); continue; }
-			if (auto const* tup = dynamic_cast<TupleExpression const*>(lhs))
-			{
-				// Tuple destructuring: each component is an LHS.
-				for (auto const& c : tup->components())
-					if (c) recordRoot(c.get());
-				return;
-			}
-			break;
-		}
-		if (auto const* id = dynamic_cast<Identifier const*>(lhs))
-		{
-			auto const* decl = id->annotation().referencedDeclaration;
-			if (decl && paramIds.count(decl->id()))
-				mutatedParams.insert(decl->id());
-		}
-	}
-};
-} // namespace
 
 /// Apply dead code elimination to all methods in a contract.
 static void eliminateDeadCode(awst::Contract& _contract)
@@ -139,7 +88,7 @@ void AWSTBuilder::registerFunctionIds(
 					continue;
 				std::string baseName = libraryName + "." + func->name();
 				nameCount[baseName]++;
-				nameParamCount[baseName + "(" + std::to_string(func->parameters().size()) + ")"]++;
+				nameParamCount[baseName + paramCountSuffix(*func)]++;
 			}
 
 			// Track sequence numbers for same-name-same-paramcount overloads
@@ -169,7 +118,7 @@ void AWSTBuilder::registerFunctionIds(
 				// Disambiguate overloaded functions by parameter count
 				if (nameCount[baseName] > 1)
 				{
-					std::string paramKey = baseName + "(" + std::to_string(func->parameters().size()) + ")";
+					std::string paramKey = baseName + paramCountSuffix(*func);
 					qualifiedName = paramKey;
 					subroutineId = _sourceFile + "." + paramKey;
 					// Further disambiguate if same name AND same param count
@@ -285,7 +234,7 @@ void AWSTBuilder::translateLibraryFunctions(
 					}
 					else
 					{
-						std::string overloadName = qualifiedName + "(" + std::to_string(func->parameters().size()) + ")";
+						std::string overloadName = qualifiedName + paramCountSuffix(*func);
 						auto it2 = m_libraryFunctionIds.find(overloadName);
 						if (it2 != m_libraryFunctionIds.end())
 						{
@@ -462,7 +411,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 				return !arr->isByteArrayOrString();
 			return dynamic_cast<solidity::frontend::StructType const*>(t) != nullptr;
 		};
-		MemoryParamMutationDetector detector;
+		ParamMutationDetector detector;
 		for (auto const& p : _func.parameters())
 			detector.paramIds.insert(p->id());
 		_func.body().accept(detector);
@@ -474,7 +423,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 				continue;
 			if (!p->type() || !isMemRefType(p->type()))
 				continue;
-			if (!detector.mutatedParams.count(p->id()))
+			if (!detector.mutated.count(p->id()))
 				continue;  // read-only — no need to thread the post-call value back
 			memoryRefParamIndices.push_back(pi);
 		}

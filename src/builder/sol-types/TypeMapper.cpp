@@ -1,4 +1,5 @@
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-types/OverloadSuffix.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
@@ -158,19 +159,12 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 	case Type::Category::Function:
 	{
 		auto const* funcType = dynamic_cast<FunctionType const*>(_solType);
-		if (funcType && (funcType->kind() == FunctionType::Kind::Internal
-			|| funcType->kind() == FunctionType::Kind::External
-			|| funcType->kind() == FunctionType::Kind::DelegateCall))
-		{
-			// Internal function pointers: uint64 (dispatch ID)
-			// External function pointers: bytes[12] (appId 8 + selector 4)
-			if (funcType->kind() == FunctionType::Kind::Internal)
-				result = awst::WType::uint64Type();
-			else
-				result = createType<awst::BytesWType>(12);
-		}
+		// Function pointers: External / DelegateCall → 12-byte (appId,
+		// selector); Internal and everything else → uint64 dispatch ID.
+		if (isExternalFunctionPointer(funcType))
+			result = createType<awst::BytesWType>(12);
 		else
-			result = awst::WType::uint64Type(); // default for other function kinds
+			result = awst::WType::uint64Type();
 		break;
 	}
 

@@ -2,6 +2,7 @@
 /// Resolves function call targets from Solidity AST nodes.
 
 #include "builder/sol-eb/CallResolver.h"
+#include "builder/sol-types/OverloadSuffix.h"
 #include "Logger.h"
 
 namespace puyasol::builder::eb
@@ -13,27 +14,7 @@ std::string CallResolver::resolveMethodName(
 {
 	std::string name = _func.name();
 	if (_ctx.overloadedNames.count(name))
-	{
-		name += "(";
-		bool first = true;
-		for (auto const& p: _func.parameters())
-		{
-			if (!first) name += ",";
-			auto const* solType = p->type();
-			if (dynamic_cast<solidity::frontend::BoolType const*>(solType))
-				name += "b";
-			else if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(solType))
-				name += (intType->isSigned() ? "i" : "u") + std::to_string(intType->numBits());
-			else if (dynamic_cast<solidity::frontend::AddressType const*>(solType))
-				name += "addr";
-			else if (auto const* fixedBytes = dynamic_cast<solidity::frontend::FixedBytesType const*>(solType))
-				name += "b" + std::to_string(fixedBytes->numBytes());
-			else
-				name += std::to_string(p->id());
-			first = false;
-		}
-		name += ")";
-	}
+		appendOverloadSuffix(name, _func);
 	return name;
 }
 
@@ -67,7 +48,7 @@ bool CallResolver::tryResolveLibraryOrFree(
 				auto it = _ctx.libraryFunctionIds.find(key);
 				if (it == _ctx.libraryFunctionIds.end())
 				{
-					key += "(" + std::to_string(_funcDef->parameters().size()) + ")";
+					key += paramCountSuffix(*_funcDef);
 					it = _ctx.libraryFunctionIds.find(key);
 				}
 				if (it != _ctx.libraryFunctionIds.end())

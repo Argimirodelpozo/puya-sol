@@ -3,9 +3,11 @@
 /// Migrated from FunctionCallBuilder.cpp lines 3324-4390.
 
 #include "builder/sol-ast/calls/SolInternalCall.h"
+#include "builder/sol-ast/ParamMutationDetector.h"
 #include "builder/sol-eb/AsaIntrinsics.h"
 #include "builder/sol-eb/CallResolver.h"
 #include "builder/sol-eb/FunctionPointerBuilder.h"
+#include "builder/sol-types/OverloadSuffix.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/storage/StorageMapper.h"
@@ -211,41 +213,10 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 				return !arr->isByteArrayOrString();
 			return dynamic_cast<StructType const*>(t) != nullptr;
 		};
-		// Use-def: collect params written in the callee body. Mirrors
-		// AWSTBuilder.cpp's MemoryParamMutationDetector.
-		struct Detector : public ASTConstVisitor {
-			std::set<int64_t> paramIds;
-			std::set<int64_t> mutated;
-			bool visit(Assignment const& a) override
-			{
-				record(&a.leftHandSide());
-				return true;
-			}
-			void record(Expression const* lhs)
-			{
-				while (true)
-				{
-					if (auto const* ix = dynamic_cast<IndexAccess const*>(lhs))
-						{ lhs = &ix->baseExpression(); continue; }
-					if (auto const* mb = dynamic_cast<MemberAccess const*>(lhs))
-						{ lhs = &mb->expression(); continue; }
-					if (auto const* tup = dynamic_cast<TupleExpression const*>(lhs))
-					{
-						for (auto const& c : tup->components())
-							if (c) record(c.get());
-						return;
-					}
-					break;
-				}
-				if (auto const* id = dynamic_cast<Identifier const*>(lhs))
-				{
-					auto const* d = id->annotation().referencedDeclaration;
-					if (d && paramIds.count(d->id()))
-						mutated.insert(d->id());
-				}
-			}
-		};
-		Detector detector;
+		// Use-def: collect params written in the callee body. Shared
+		// implementation in ParamMutationDetector.h is identical to the
+		// detector AWSTBuilder.cpp uses for the same purpose.
+		ParamMutationDetector detector;
 		for (auto const& p : _funcDef->parameters())
 			detector.paramIds.insert(p->id());
 		_funcDef->body().accept(detector);
@@ -521,8 +492,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 		else if (auto const* funcType = dynamic_cast<FunctionType const*>(varDecl->type()))
 		{
 			bool isInternal = funcType->kind() == FunctionType::Kind::Internal;
-			bool isExternal = funcType->kind() == FunctionType::Kind::External
-				|| funcType->kind() == FunctionType::Kind::DelegateCall;
+			bool isExternal = isExternalFunctionPointer(funcType);
 
 			if (isInternal || isExternal)
 			{
@@ -755,7 +725,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 				auto it = m_ctx.libraryFunctionIds.find(key);
 				if (it == m_ctx.libraryFunctionIds.end())
 				{
-					key += "(" + std::to_string(funcDef->parameters().size()) + ")";
+					key += paramCountSuffix(*funcDef);
 					it = m_ctx.libraryFunctionIds.find(key);
 				}
 				if (it != m_ctx.libraryFunctionIds.end())
@@ -877,8 +847,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::toAwst()
 		auto const* funcType = dynamic_cast<FunctionType const*>(exprType);
 		if (funcType
 			&& (funcType->kind() == FunctionType::Kind::Internal
-				|| funcType->kind() == FunctionType::Kind::External
-				|| funcType->kind() == FunctionType::Kind::DelegateCall))
+				|| isExternalFunctionPointer(funcType)))
 		{
 			auto ptrExpr = m_ctx.buildExpr(funcExpr);
 			auto* wantedType = eb::FunctionPointerBuilder::mapFunctionType(funcType);

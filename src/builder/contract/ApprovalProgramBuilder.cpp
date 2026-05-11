@@ -1103,23 +1103,22 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		std::map<solidity::frontend::ContractDefinition const*,
 			std::vector<std::shared_ptr<awst::Expression>>> preEvaluatedArgs;
 		{
-			// Identify which args come directly from the main contract vs transitive
+			// Identify which args come directly from the main contract vs transitive.
+			// Direct base ctor invocations land in two AST shapes: as a
+			// ModifierInvocation on the derived ctor, or as an
+			// InheritanceSpecifier on the contract itself. Both have a
+			// `.name()` whose `referencedDeclaration` is the base
+			// ContractDefinition.
 			std::set<solidity::frontend::ContractDefinition const*> directBases;
-			if (constructor)
-			{
-				for (auto const& mod: constructor->modifiers())
-				{
-					auto const* ref = mod->name().annotation().referencedDeclaration;
-					if (auto const* bc = dynamic_cast<solidity::frontend::ContractDefinition const*>(ref))
-						directBases.insert(bc);
-				}
-			}
-			for (auto const& baseSpec: _contract.baseContracts())
-			{
-				auto const* ref = baseSpec->name().annotation().referencedDeclaration;
-				if (auto const* bc = dynamic_cast<solidity::frontend::ContractDefinition const*>(ref))
+			auto recordBase = [&](solidity::frontend::Declaration const* _ref) {
+				if (auto const* bc = dynamic_cast<solidity::frontend::ContractDefinition const*>(_ref))
 					directBases.insert(bc);
-			}
+			};
+			if (constructor)
+				for (auto const& mod: constructor->modifiers())
+					recordBase(mod->name().annotation().referencedDeclaration);
+			for (auto const& baseSpec: _contract.baseContracts())
+				recordBase(baseSpec->name().annotation().referencedDeclaration);
 
 			// Phase 1: Assign direct base ctor params into createBlock
 			// (so transitive args can reference them)

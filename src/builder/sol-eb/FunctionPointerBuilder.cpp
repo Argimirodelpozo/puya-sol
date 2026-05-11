@@ -4,6 +4,7 @@
 
 #include "builder/sol-eb/FunctionPointerBuilder.h"
 #include "builder/sol-eb/AbiEncoderBuilder.h"
+#include "builder/sol-types/OverloadSuffix.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
@@ -237,8 +238,7 @@ awst::WType const* FunctionPointerBuilder::mapFunctionType(
 	if (!_funcType)
 		return awst::WType::uint64Type();
 
-	if (_funcType->kind() == FunctionType::Kind::External
-		|| _funcType->kind() == FunctionType::Kind::DelegateCall)
+	if (isExternalFunctionPointer(_funcType))
 	{
 		// 12 bytes: itob(appId) 8 + selector 4
 		static awst::BytesWType s_extFnPtrType(12);
@@ -314,8 +314,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 	// Register as target
 	registerTarget(_funcDef, funcType, _awstName);
 
-	bool isExternal = funcType && (funcType->kind() == FunctionType::Kind::External
-		|| funcType->kind() == FunctionType::Kind::DelegateCall);
+	bool isExternal = isExternalFunctionPointer(funcType);
 
 	if (isExternal)
 	{
@@ -416,8 +415,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 	if (!_funcType)
 		return nullptr;
 
-	bool isExternal = (_funcType->kind() == FunctionType::Kind::External
-		|| _funcType->kind() == FunctionType::Kind::DelegateCall);
+	bool isExternal = isExternalFunctionPointer(_funcType);
 
 	if (isExternal)
 	{

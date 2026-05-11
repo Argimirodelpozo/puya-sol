@@ -11,6 +11,7 @@
 ///                              once all regular methods are built.
 
 #include "builder/ContractBuilder.h"
+#include "builder/sol-types/OverloadSuffix.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
@@ -124,7 +125,7 @@ void ContractBuilder::collectSuperCallMetadata(
 			{
 				std::string name = fname;
 				if (m_overloadedNames.count(name))
-					name += "(" + std::to_string(mroTarget->parameters().size()) + ")";
+					name += paramCountSuffix(*mroTarget);
 				std::string superName = name + "__super_" + std::to_string(callerId);
 
 				m_perFuncSuperOverrides[callerId].push_back({superCallTargetId, superName});
@@ -156,7 +157,7 @@ void ContractBuilder::collectSuperCallMetadata(
 					int64_t callerId = ctor->id();
 					std::string name = fname;
 					if (m_overloadedNames.count(name))
-						name += "(" + std::to_string(target->parameters().size()) + ")";
+						name += paramCountSuffix(*target);
 					std::string superName = name + "__super_" + std::to_string(callerId);
 					m_perFuncSuperOverrides[callerId].push_back({superCallTargetId, superName});
 					m_superTargetFuncs[callerId] = target;
@@ -226,7 +227,7 @@ void ContractBuilder::collectSuperCallMetadata(
 						m_explicitBaseTargetFuncs[id] = func;
 						std::string name = func->name();
 						if (m_overloadedNames.count(name))
-							name += "(" + std::to_string(func->parameters().size()) + ")";
+							name += paramCountSuffix(*func);
 						std::string superName = name + "__super_" + std::to_string(id);
 						// Register globally — explicit base calls don't need per-function context
 						m_tr->setSuperTarget(id, superName);
@@ -257,7 +258,7 @@ void ContractBuilder::applySuperOverridesFor(int64_t _callerFuncId)
 	{
 		std::string name = func->name();
 		if (m_overloadedNames.count(name))
-			name += "(" + std::to_string(func->parameters().size()) + ")";
+			name += paramCountSuffix(*func);
 		m_tr->setSuperTarget(id, name + "__super_" + std::to_string(id));
 	}
 }
@@ -276,7 +277,7 @@ void ContractBuilder::emitSuperSubroutines(
 	{
 		std::string name = targetFunc->name();
 		if (m_overloadedNames.count(name))
-			name += "(" + std::to_string(targetFunc->parameters().size()) + ")";
+			name += paramCountSuffix(*targetFunc);
 		std::string superName = name + "__super_" + std::to_string(callerFuncId);
 		clearSuperOverrides();
 		applySuperOverridesFor(targetFunc->id());
@@ -303,7 +304,7 @@ void ContractBuilder::emitSuperSubroutines(
 	{
 		std::string name = func->name();
 		if (m_overloadedNames.count(name))
-			name += "(" + std::to_string(func->parameters().size()) + ")";
+			name += paramCountSuffix(*func);
 		std::string superName = name + "__super_" + std::to_string(targetId);
 		clearSuperOverrides();
 		auto method = buildFunction(*func, _contractName, superName);

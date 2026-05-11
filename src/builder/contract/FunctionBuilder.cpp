@@ -3,6 +3,7 @@
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-eb/CallResolver.h"
+#include "builder/sol-types/OverloadSuffix.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 
@@ -183,30 +184,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	{
 		method.memberName = _func.name();
 		if (m_overloadedNames.count(_func.name()))
-		{
-			// Build unique suffix from parameter types to disambiguate
-			// overloads with the same name and parameter count
-			method.memberName += "(";
-			bool first = true;
-			for (auto const& p: _func.parameters())
-			{
-				if (!first) method.memberName += ",";
-				// Use a short type tag for uniqueness
-				auto const* solType = p->type();
-				if (dynamic_cast<solidity::frontend::BoolType const*>(solType))
-					method.memberName += "b";
-				else if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(solType))
-					method.memberName += (intType->isSigned() ? "i" : "u") + std::to_string(intType->numBits());
-				else if (dynamic_cast<solidity::frontend::AddressType const*>(solType))
-					method.memberName += "addr";
-				else if (auto const* fixedBytes = dynamic_cast<solidity::frontend::FixedBytesType const*>(solType))
-					method.memberName += "b" + std::to_string(fixedBytes->numBytes());
-				else
-					method.memberName += std::to_string(p->id());
-				first = false;
-			}
-			method.memberName += ")";
-		}
+			appendOverloadSuffix(method.memberName, _func);
 	}
 
 	// Documentation
