@@ -69,25 +69,36 @@ void StorageLayout::computeLayout(
 	{
 		auto const* solType = var->type();
 		unsigned byteSize = 32; // default for unknown types
+		unsigned slotsSpanned = 1;
 
-		// Use Solidity's storageBytes() for accurate sizing
+		// Use Solidity's storageBytes() (byte width within a slot) and
+		// storageSize() (number of slots) for accurate EVM-style packing.
 		if (solType)
-			byteSize = solType->storageBytes();
-
-		// Dynamic types (mappings, dynamic arrays) always start a new slot
-		// and consume a full slot (the actual data is in a derived location)
-		bool isDynamic = false;
-		if (dynamic_cast<MappingType const*>(solType) ||
-			dynamic_cast<ArrayType const*>(solType))
 		{
-			isDynamic = true;
-			byteSize = 32; // base slot is always 32 bytes
+			byteSize = solType->storageBytes();
+			solidity::u256 size = solType->storageSize();
+			if (size > std::numeric_limits<unsigned>::max())
+				slotsSpanned = std::numeric_limits<unsigned>::max();
+			else
+				slotsSpanned = static_cast<unsigned>(size);
+			if (slotsSpanned == 0)
+				slotsSpanned = 1;
 		}
 
-		// Check if we need a new slot
-		if (isDynamic || byteSize > 32 || currentOffset + byteSize > 32)
+		bool isDynamic = false;
+		if (dynamic_cast<MappingType const*>(solType))
+			isDynamic = true;
+		if (auto const* arr = dynamic_cast<ArrayType const*>(solType))
+			if (arr->isDynamicallySized())
+				isDynamic = true;
+
+		bool isMultiSlot = (slotsSpanned > 1) || isDynamic;
+
+		// Multi-slot types (structs, static arrays, dynamic arrays, mappings)
+		// always start at a fresh slot boundary. Single-slot types pack into
+		// the current slot if their bytes fit, else advance to a new slot.
+		if (isMultiSlot || currentOffset + byteSize > 32)
 		{
-			// Start a new slot (if current slot has content)
 			if (currentOffset > 0)
 				currentSlot++;
 			currentOffset = 0;
@@ -100,7 +111,7 @@ void StorageLayout::computeLayout(
 		sv.byteOffset = currentOffset;
 		sv.byteSize = byteSize;
 		sv.wtype = _typeMapper.map(solType);
-		sv.isFullSlot = (byteSize == 32) || isDynamic;
+		sv.isFullSlot = (byteSize == 32) || isMultiSlot;
 		sv.declId = var->id();
 
 		size_t varIdx = m_variables.size();
@@ -124,13 +135,16 @@ void StorageLayout::computeLayout(
 		m_slots[slotIdx].variables.push_back(&m_variables[varIdx]);
 		m_slots[slotIdx].bytesUsed = currentOffset + byteSize;
 
-		currentOffset += byteSize;
-
-		// Dynamic types consume the full slot, advance
-		if (isDynamic)
+		// Advance: multi-slot types consume `slotsSpanned` slots starting
+		// fresh; single-slot types advance the byte offset within the slot.
+		if (isMultiSlot)
 		{
-			currentSlot++;
+			currentSlot += slotsSpanned;
 			currentOffset = 0;
+		}
+		else
+		{
+			currentOffset += byteSize;
 		}
 	}
 

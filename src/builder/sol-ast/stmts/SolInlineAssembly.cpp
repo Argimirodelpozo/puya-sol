@@ -190,16 +190,22 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	// Computes EVM-compatible (slot, offset) pairs for state variables.
 	std::map<std::string, std::string> storageSlotVars;
 	{
-		// Find the contract from any state variable reference
-		ContractDefinition const* contractDef = nullptr;
-		for (auto const& [yulId, extInfo]: annotation.externalReferences)
+		// Prefer the currently-being-built contract — its layout reflects the
+		// derived class's `layout at N` annotation and inherited-var ordering.
+		// Falls back to the declaring contract of any referenced state var
+		// (which is correct for free functions / libraries).
+		ContractDefinition const* contractDef = m_blk.builderCtx().currentContract;
+		if (!contractDef)
 		{
-			if (!extInfo.declaration) continue;
-			auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
-			if (varDecl && varDecl->isStateVariable() && !varDecl->isConstant())
+			for (auto const& [yulId, extInfo]: annotation.externalReferences)
 			{
-				contractDef = varDecl->annotation().contract;
-				break;
+				if (!extInfo.declaration) continue;
+				auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
+				if (varDecl && varDecl->isStateVariable() && !varDecl->isConstant())
+				{
+					contractDef = varDecl->annotation().contract;
+					break;
+				}
 			}
 		}
 
