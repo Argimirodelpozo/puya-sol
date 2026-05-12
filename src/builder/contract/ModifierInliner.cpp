@@ -389,9 +389,7 @@ void ContractBuilder::inlineModifiers(
 
 			// Helper: create LoopExit
 			auto makeBreak = [&]() -> std::shared_ptr<awst::Statement> {
-				auto le = std::make_shared<awst::LoopExit>();
-				le->sourceLocation = flagLoc;
-				return le;
+				return awst::makeLoopExit(flagLoc);
 			};
 
 			// Helper: create if(flag) break;

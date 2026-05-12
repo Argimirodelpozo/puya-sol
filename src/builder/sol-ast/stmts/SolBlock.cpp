@@ -105,26 +105,22 @@ public:
 		{
 			auto block = awst::makeBlock(loc);
 			block->body.push_back(loop->forLoopPost);
-			block->body.push_back(std::make_shared<awst::LoopContinue>());
+			block->body.push_back(awst::makeLoopContinue(loc));
 			return {block};
 		}
 		if (loop && loop->doWhileCondBreak)
 		{
 			auto block = awst::makeBlock(loc);
 			block->body.push_back(loop->doWhileCondBreak);
-			block->body.push_back(std::make_shared<awst::LoopContinue>());
+			block->body.push_back(awst::makeLoopContinue(loc));
 			return {block};
 		}
-		auto stmt = std::make_shared<awst::LoopContinue>();
-		stmt->sourceLocation = loc;
-		return {stmt};
+		return {awst::makeLoopContinue(loc)};
 	}
 
 	ResultT visitBreak(Break const& _n) override
 	{
-		auto stmt = std::make_shared<awst::LoopExit>();
-		stmt->sourceLocation = locOf(_n);
-		return {stmt};
+		return {awst::makeLoopExit(locOf(_n))};
 	}
 
 	ResultT visitPlaceholder(PlaceholderStatement const& _n) override

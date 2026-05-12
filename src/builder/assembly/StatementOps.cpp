@@ -103,9 +103,7 @@ void AssemblyBuilder::buildStatement(
 			}
 			else if constexpr (std::is_same_v<T, solidity::yul::Break>)
 			{
-				auto stmt = std::make_shared<awst::LoopExit>();
-				stmt->sourceLocation = makeLoc(_node.debugData);
-				_out.push_back(std::move(stmt));
+				_out.push_back(awst::makeLoopExit(makeLoc(_node.debugData)));
 			}
 			else if constexpr (std::is_same_v<T, solidity::yul::Continue>)
 			{
@@ -116,9 +114,7 @@ void AssemblyBuilder::buildStatement(
 					for (auto const& postStmt: *m_forLoopPost)
 						buildStatement(postStmt, _out);
 				}
-				auto stmt = std::make_shared<awst::LoopContinue>();
-				stmt->sourceLocation = makeLoc(_node.debugData);
-				_out.push_back(std::move(stmt));
+				_out.push_back(awst::makeLoopContinue(makeLoc(_node.debugData)));
 			}
 			else if constexpr (std::is_same_v<T, solidity::yul::Leave>)
 			{
@@ -129,11 +125,7 @@ void AssemblyBuilder::buildStatement(
 				// translation — emit a no-op (Solidity wouldn't even
 				// parse this case).
 				if (m_inlineDepth > 0)
-				{
-					auto stmt = std::make_shared<awst::LoopExit>();
-					stmt->sourceLocation = makeLoc(_node.debugData);
-					_out.push_back(std::move(stmt));
-				}
+					_out.push_back(awst::makeLoopExit(makeLoc(_node.debugData)));
 			}
 			else if constexpr (std::is_same_v<T, solidity::yul::Switch>)
 			{
@@ -1043,9 +1035,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 		auto block = awst::makeBlock(_loc);
 		block->body = std::move(bodyStmts);
 
-		auto exit = std::make_shared<awst::LoopExit>();
-		exit->sourceLocation = _loc;
-		block->body.push_back(std::move(exit));
+		block->body.push_back(awst::makeLoopExit(_loc));
 
 		loop->loopBody = std::move(block);
 		_out.push_back(std::move(loop));

@@ -1318,10 +1318,26 @@ struct LoopExit: Statement
 	std::string nodeType() const override { return "LoopExit"; }
 };
 
+// `break;` statement — 6 callers across builder/.
+inline std::shared_ptr<LoopExit> makeLoopExit(SourceLocation loc)
+{
+	auto node = std::make_shared<LoopExit>();
+	node->sourceLocation = std::move(loc);
+	return node;
+}
+
 struct LoopContinue: Statement
 {
 	std::string nodeType() const override { return "LoopContinue"; }
 };
+
+// `continue;` statement — 4 callers across builder/.
+inline std::shared_ptr<LoopContinue> makeLoopContinue(SourceLocation loc)
+{
+	auto node = std::make_shared<LoopContinue>();
+	node->sourceLocation = std::move(loc);
+	return node;
+}
 
 struct AssignmentStatement: Statement
 {

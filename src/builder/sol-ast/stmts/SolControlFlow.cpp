@@ -75,7 +75,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 		auto notCond = awst::makeNot(std::move(cond), m_loc);
 
 		auto breakBlock = awst::makeBlock(m_loc);
-		breakBlock->body.push_back(std::make_shared<awst::LoopExit>());
+		breakBlock->body.push_back(awst::makeLoopExit(m_loc));
 
 		auto ifBreak = awst::makeIfElse(notCond, breakBlock, nullptr, m_loc);
 
