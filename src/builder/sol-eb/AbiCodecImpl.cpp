@@ -690,9 +690,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynArrayDynElems(
 	_ctx.prePendingStatements.push_back(assignFresh(iVar, u64Const("0", _loc), _loc));
 
 	// While loop body
-	auto loop = std::make_shared<awst::WhileLoop>();
-	loop->sourceLocation = _loc;
-	loop->condition = awst::makeNumericCompare(iVar, awst::NumericComparison::Lt, nVar, _loc);
+	auto loopCond = awst::makeNumericCompare(iVar, awst::NumericComparison::Lt, nVar, _loc);
 	auto body = awst::makeBlock(_loc);
 
 	// inner_arc4_off = extract_uint16(arr_b, 2 + i*2)
@@ -800,8 +798,8 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynArrayDynElems(
 		awst::makeUInt64BinOp(iVar, awst::UInt64BinaryOperator::Add,
 			u64Const("1", _loc), _loc), _loc));
 
-	loop->loopBody = std::move(body);
-	_ctx.prePendingStatements.push_back(std::move(loop));
+	_ctx.prePendingStatements.push_back(
+		awst::makeWhileLoop(std::move(loopCond), std::move(body), _loc));
 
 	// Build result: leftpad32(itob(outer_n)) ++ acc_head ++ acc_tail
 	auto outerLenWord = leftPadBytes(u64Itob(nVar, _loc), 32, _loc);
@@ -858,9 +856,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeStaticArrayDynElems(
 	// While loop body — same structure as encodeDynArrayDynElems but the
 	// ARC4 offset table starts at byte 0 (no length header) and `n` is
 	// compile-time fixed.
-	auto loop = std::make_shared<awst::WhileLoop>();
-	loop->sourceLocation = _loc;
-	loop->condition = awst::makeNumericCompare(iVar, awst::NumericComparison::Lt,
+	auto loopCond = awst::makeNumericCompare(iVar, awst::NumericComparison::Lt,
 		u64Const(std::to_string(_n), _loc), _loc);
 	auto body = awst::makeBlock(_loc);
 
@@ -949,8 +945,8 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeStaticArrayDynElems(
 		awst::makeUInt64BinOp(iVar, awst::UInt64BinaryOperator::Add,
 			u64Const("1", _loc), _loc), _loc));
 
-	loop->loopBody = std::move(body);
-	_ctx.prePendingStatements.push_back(std::move(loop));
+	_ctx.prePendingStatements.push_back(
+		awst::makeWhileLoop(std::move(loopCond), std::move(body), _loc));
 
 	// Result: acc_head ++ acc_tail (no length word)
 	return bytesConcat(headVar, tailVar, _loc);

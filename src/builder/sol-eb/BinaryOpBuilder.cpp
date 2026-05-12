@@ -333,13 +333,7 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 			_ctx.prePendingStatements.push_back(makeAssign(expVar, std::move(expExpr)));
 
 			// while __biguint_exp_exp > 0:
-			auto loop = std::make_shared<awst::WhileLoop>();
-			loop->sourceLocation = _loc;
-			{
-				auto cond = awst::makeNumericCompare(makeVar(expVar), awst::NumericComparison::Gt, makeConst("0"), _loc);
-				loop->condition = std::move(cond);
-			}
-
+			auto loopCond = awst::makeNumericCompare(makeVar(expVar), awst::NumericComparison::Gt, makeConst("0"), _loc);
 			auto body = awst::makeBlock(_loc);
 
 			// In unchecked mode, Solidity wraps exponentiation modulo 2^256
@@ -382,8 +376,8 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 				body->body.push_back(makeAssign(baseVar, std::move(baseSq)));
 			}
 
-			loop->loopBody = std::move(body);
-			_ctx.prePendingStatements.push_back(std::move(loop));
+			_ctx.prePendingStatements.push_back(
+				awst::makeWhileLoop(std::move(loopCond), std::move(body), _loc));
 
 			return makeVar(resultVar);
 		}

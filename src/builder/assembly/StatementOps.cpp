@@ -82,9 +82,7 @@ void AssemblyBuilder::buildStatement(
 				for (auto const& preStmt: _node.pre.statements)
 					buildStatement(preStmt, _out);
 
-				auto loop = std::make_shared<awst::WhileLoop>();
-				loop->sourceLocation = loc;
-				loop->condition = ensureBool(buildExpression(*_node.condition), loc);
+				auto cond = ensureBool(buildExpression(*_node.condition), loc);
 
 				// Set post statements so `continue` can emit them
 				auto* savedPost = m_forLoopPost;
@@ -96,10 +94,9 @@ void AssemblyBuilder::buildStatement(
 				// Post statements at end of body (normal iteration path)
 				for (auto const& postStmt: _node.post.statements)
 					buildStatement(postStmt, body->body);
-				loop->loopBody = std::move(body);
 
 				m_forLoopPost = savedPost;
-				_out.push_back(std::move(loop));
+				_out.push_back(awst::makeWhileLoop(std::move(cond), std::move(body), loc));
 			}
 			else if constexpr (std::is_same_v<T, solidity::yul::Break>)
 			{
@@ -1027,18 +1024,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 	if (hasLeave)
 	{
 		// Wrap in `while true { body; break; }` so leave→LoopExit works.
-		auto loop = std::make_shared<awst::WhileLoop>();
-		loop->sourceLocation = _loc;
-
-		loop->condition = awst::makeBoolConstant(true, _loc);
-
 		auto block = awst::makeBlock(_loc);
 		block->body = std::move(bodyStmts);
-
 		block->body.push_back(awst::makeLoopExit(_loc));
 
-		loop->loopBody = std::move(block);
-		_out.push_back(std::move(loop));
+		_out.push_back(awst::makeWhileLoop(
+			awst::makeBoolConstant(true, _loc), std::move(block), _loc));
 	}
 	else
 	{

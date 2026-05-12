@@ -691,13 +691,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildBigUIntExp(
 	m_ctx.prePendingStatements.push_back(makeAssign(expVar, std::move(_exp)));
 
 	// while exp > 0:
-	auto loop = std::make_shared<awst::WhileLoop>();
-	loop->sourceLocation = _loc;
-	{
-		auto cond = awst::makeNumericCompare(makeVar(expVar), awst::NumericComparison::Gt, makeConst("0"), _loc);
-		loop->condition = std::move(cond);
-	}
-
+	auto loopCond = awst::makeNumericCompare(makeVar(expVar), awst::NumericComparison::Gt, makeConst("0"), _loc);
 	auto body = awst::makeBlock(_loc);
 
 	// In unchecked mode, Solidity wraps intermediate products mod 2^256 so
@@ -736,8 +730,8 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildBigUIntExp(
 		body->body.push_back(makeAssign(baseVar, std::move(baseSq)));
 	}
 
-	loop->loopBody = std::move(body);
-	m_ctx.prePendingStatements.push_back(std::move(loop));
+	m_ctx.prePendingStatements.push_back(
+		awst::makeWhileLoop(std::move(loopCond), std::move(body), _loc));
 
 	return makeVar(resultVar);
 }

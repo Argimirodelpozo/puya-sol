@@ -65,10 +65,6 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 
 	if (m_node.isDoWhile())
 	{
-		auto loop = std::make_shared<awst::WhileLoop>();
-		loop->sourceLocation = m_loc;
-		loop->condition = awst::makeBoolConstant(true, m_loc);
-
 		auto body = awst::makeBlock(m_blk.makeLoc(m_node.body().location()));
 
 		auto cond = bc.build(m_node.condition());
@@ -112,14 +108,12 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 		}
 
 		if (!bodyTerminated) body->body.push_back(ifBreak);
-		loop->loopBody = body;
-		return {loop};
+		return {awst::makeWhileLoop(
+			awst::makeBoolConstant(true, m_loc), std::move(body), m_loc)};
 	}
 	else
 	{
-		auto loop = std::make_shared<awst::WhileLoop>();
-		loop->sourceLocation = m_loc;
-		loop->condition = bc.build(m_node.condition());
+		auto cond = bc.build(m_node.condition());
 
 		// while-loop body: no special LoopContext data needed (no for-post,
 		// no doWhile cond break) but we still create one so continue/break
@@ -128,16 +122,16 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 		auto bodyBlk = m_blk.withLoop(loopCtx);
 		auto blkGuard = m_blk.builderCtx().pushScopeRaii(&bodyBlk);
 
+		std::shared_ptr<awst::Block> body;
 		if (auto const* block = dynamic_cast<Block const*>(&m_node.body()))
-			loop->loopBody = buildBlock(bodyBlk, *block);
+			body = buildBlock(bodyBlk, *block);
 		else
 		{
-			auto body = awst::makeBlock(m_blk.makeLoc(m_node.body().location()));
+			body = awst::makeBlock(m_blk.makeLoc(m_node.body().location()));
 			auto translated = buildStatement(bodyBlk, m_node.body());
 			if (translated) body->body.push_back(std::move(translated));
-			loop->loopBody = body;
 		}
-		return {loop};
+		return {awst::makeWhileLoop(std::move(cond), std::move(body), m_loc)};
 	}
 }
 
@@ -159,14 +153,10 @@ std::vector<std::shared_ptr<awst::Statement>> SolForStatement::toAwst()
 		if (init) outerBlock->body.push_back(std::move(init));
 	}
 
-	auto loop = std::make_shared<awst::WhileLoop>();
-	loop->sourceLocation = m_loc;
-
 	auto& bc = m_blk.builderCtx();
-	if (m_node.condition())
-		loop->condition = bc.build(*m_node.condition());
-	else
-		loop->condition = awst::makeBoolConstant(true, m_loc);
+	auto cond = m_node.condition()
+		? bc.build(*m_node.condition())
+		: std::shared_ptr<awst::Expression>(awst::makeBoolConstant(true, m_loc));
 
 	std::shared_ptr<awst::Statement> postStmt;
 	if (m_node.loopExpression())
@@ -195,8 +185,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolForStatement::toAwst()
 
 	if (postStmt) loopBody->body.push_back(postStmt);
 
-	loop->loopBody = loopBody;
-	outerBlock->body.push_back(loop);
+	outerBlock->body.push_back(
+		awst::makeWhileLoop(std::move(cond), std::move(loopBody), m_loc));
 	return {outerBlock};
 }
 

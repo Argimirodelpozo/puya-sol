@@ -342,10 +342,7 @@ void AssemblyBuilder::handleModExpRT(
 	));
 	_out.push_back(makeAssign(expVar, std::move(exp)));
 
-	auto loop = std::make_shared<awst::WhileLoop>();
-	loop->sourceLocation = _loc;
-	loop->condition = awst::makeNumericCompare(makeVar(expVar), awst::NumericComparison::Gt, makeConst("0"), _loc);
-
+	auto loopCond = awst::makeNumericCompare(makeVar(expVar), awst::NumericComparison::Gt, makeConst("0"), _loc);
 	auto body = awst::makeBlock(_loc);
 
 	{
@@ -374,8 +371,7 @@ void AssemblyBuilder::handleModExpRT(
 		body->body.push_back(makeAssign(baseVar, std::move(modSquared)));
 	}
 
-	loop->loopBody = std::move(body);
-	_out.push_back(std::move(loop));
+	_out.push_back(awst::makeWhileLoop(std::move(loopCond), std::move(body), _loc));
 
 	storeResultToMemoryRT(makeVar(resultVar), std::move(_outputOffset), 1, _loc, _out);
 }
