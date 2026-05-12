@@ -1,3 +1,41 @@
+# Semantic Test Status — v243
+
+**Totals**: 1097 PASS / 152 FAIL / 73 (56 compile_err + 17 deploy_err) = **1097/1322 (83.0%)**
+
+vs v242 = 1096 PASS: **+1 PASS, −1 compile_err** — the `chop_sign_bits` test
+(int8→int16 widening through narrowing/widening helpers) flipped compile_err → 7p/0s.
+Fail-list and deploy-err list are bit-identical to v242 (diff is empty).
+
+## v243 puya-sol changes (vs v242)
+
+Eight commits land in v243 — two semantic fixes (chop_sign_bits delta) plus a
+six-commit refactor train carrying the v217-v242 "makeX helper" pattern further:
+
+1. *2e8863d39* `feat: ARC4 int narrowing + array widening helpers in TypeCoercion` —
+   `tryNarrowUInt64ToArc4UIntN`, `tryWidenArc4StaticArrayInt`,
+   `tryWidenArc4DynamicArrayInt` centralise narrowing/widening dispatch so
+   `int8[N] → int16[N]` (and dynamic variant) coerces through ARC4-aware
+   helpers instead of falling back to raw ARC4Encode.
+2. *7b88be0a8* `fix: dynamic-array state-var initializer was dropped on box init` —
+   `int16[] public x = [-1, -2]` initializers now flow into `box_put` instead of
+   being skipped after the box was created empty.
+3. *75dde94f2* `refactor: bytes-type concat via makeConcat (33 sites, 17 files)` —
+   −128 LOC, no outcome diff.
+4. *4bb947fc1* `refactor: collapse make_shared+field-set idioms via helpers` —
+   13 sites, −49 LOC.
+5. *960e33a2d* `refactor: makeLoopExit / makeLoopContinue helpers (10 sites)`.
+6. *cbea1d81c* `refactor: remaining WhileLoop sites via makeWhileLoop (11 sites)` —
+   −39 LOC.
+7. *aca8543b7* `refactor: misc make_shared idioms via existing helpers (5 sites)` —
+   IfElse / IndexExpression / AddressConstant, −10 LOC.
+8. *156547f57* `refactor: Block + makeIfElse inline construction (3 sites)` —
+   −7 LOC.
+
+Cumulative refactor delta: ~−233 LOC across ~86 callsites, zero outcome change.
+The semantic delta is +1 PASS / −1 compile_err from the chop_sign fix only.
+
+---
+
 # Semantic Test Status — v242
 
 **Totals**: 1096 PASS / 152 FAIL / 74 (57 compile_err + 17 deploy_err) = **1096/1322 (82.9%)**
