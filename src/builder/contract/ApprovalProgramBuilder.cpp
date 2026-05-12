@@ -1363,10 +1363,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			auto loadBlob = awst::makeIntrinsicCall("load", awst::WType::bytesType(), method.sourceLocation);
 			loadBlob->immediates = {AssemblyBuilder::MEMORY_SLOT_FIRST};
 
-			auto fmpOffset = std::make_shared<awst::IntegerConstant>();
-			fmpOffset->sourceLocation = method.sourceLocation;
-			fmpOffset->wtype = awst::WType::uint64Type();
-			fmpOffset->value = "64"; // 0x40
+			auto fmpOffset = awst::makeIntegerConstant("64", method.sourceLocation); // 0x40
 
 			std::vector<uint8_t> fmpBytesVal(31, 0);
 			fmpBytesVal.push_back(0x80);

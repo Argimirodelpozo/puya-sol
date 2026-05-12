@@ -161,17 +161,11 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleSelfdestruct(
 		create->sourceLocation = _loc;
 		create->wtype = &s_payFieldsType;
 
-		auto typeVal = std::make_shared<awst::IntegerConstant>();
-		typeVal->sourceLocation = _loc;
-		typeVal->wtype = awst::WType::uint64Type();
-		typeVal->value = "1"; // pay
+		auto typeVal = awst::makeIntegerConstant("1", _loc); // pay
 
 		auto feeVal = awst::makeIntegerConstant("0", _loc);
 
-		auto amountVal = std::make_shared<awst::IntegerConstant>();
-		amountVal->sourceLocation = _loc;
-		amountVal->wtype = awst::WType::uint64Type();
-		amountVal->value = "0"; // amount=0, CloseRemainderTo sends everything
+		auto amountVal = awst::makeIntegerConstant("0", _loc); // amount=0, CloseRemainderTo sends everything
 
 		create->fields["TypeEnum"] = std::move(typeVal);
 		create->fields["Fee"] = std::move(feeVal);

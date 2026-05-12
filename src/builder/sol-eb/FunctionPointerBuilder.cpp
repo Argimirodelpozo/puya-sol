@@ -431,12 +431,9 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		};
 
 		// Check if self-call: appId == 0 (sentinel for current app).
-		auto isSelf = std::make_shared<awst::NumericComparisonExpression>();
-		isSelf->sourceLocation = _loc;
-		isSelf->wtype = awst::WType::boolType();
-		isSelf->lhs = extractU64(0);
-		isSelf->op = awst::NumericComparison::Eq;
-		isSelf->rhs = awst::makeIntegerConstant("0", _loc);
+		auto isSelf = awst::makeNumericCompare(
+			extractU64(0), awst::NumericComparison::Eq,
+			awst::makeIntegerConstant("0", _loc), _loc);
 
 		// Self-call path: selector slot now holds ARC4 selector (was internal
 		// id; changed for `.selector` accessor consistency with cross-call).

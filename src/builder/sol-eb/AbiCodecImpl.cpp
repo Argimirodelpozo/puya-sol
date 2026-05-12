@@ -587,10 +587,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynArrayPadSmallElems
 
 	// while i < n: { elem = extract3(arr_b, 2 + i*sz, sz);
 	//                acc = concat(acc, padded(elem)); i += 1; }
-	auto loop = std::make_shared<awst::WhileLoop>();
-	loop->sourceLocation = _loc;
-	loop->condition = awst::makeNumericCompare(iVar, awst::NumericComparison::Lt, nVar, _loc);
-
+	auto loopCond = awst::makeNumericCompare(iVar, awst::NumericComparison::Lt, nVar, _loc);
 	auto body = awst::makeBlock(_loc);
 
 	// elem_off = 2 + i*sz
@@ -632,8 +629,8 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynArrayPadSmallElems
 			u64Const("1", _loc), _loc),
 		_loc));
 
-	loop->loopBody = std::move(body);
-	_ctx.prePendingStatements.push_back(std::move(loop));
+	_ctx.prePendingStatements.push_back(
+		awst::makeWhileLoop(std::move(loopCond), std::move(body), _loc));
 
 	return accVar;
 }

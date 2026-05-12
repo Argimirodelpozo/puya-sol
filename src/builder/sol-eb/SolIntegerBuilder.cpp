@@ -311,10 +311,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::compare(
 		else
 		{
 			// XOR with 2^63 for uint64
-			auto signBit = std::make_shared<awst::IntegerConstant>();
-			signBit->sourceLocation = _loc;
-			signBit->wtype = awst::WType::uint64Type();
-			signBit->value = "9223372036854775808"; // 2^63
+			auto signBit = awst::makeIntegerConstant("9223372036854775808", _loc); // 2^63
 
 			auto xorL = awst::makeUInt64BinOp(std::move(lhs), awst::UInt64BinaryOperator::BitXor, signBit, _loc);
 			lhs = std::move(xorL);
@@ -483,10 +480,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			auto castBiguint = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
 
 			// 2^64 - x
-			auto pow2_64 = std::make_shared<awst::IntegerConstant>();
-			pow2_64->sourceLocation = _loc;
-			pow2_64->wtype = awst::WType::biguintType();
-			pow2_64->value = "18446744073709551616"; // 2^64
+			auto pow2_64 = awst::makeBiguintConstant("18446744073709551616", _loc); // 2^64
 
 			auto sub = awst::makeBigUIntBinOp(std::move(pow2_64), awst::BigUIntBinaryOperator::Sub, std::move(castBiguint), _loc);
 
@@ -602,19 +596,12 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::emitOverflowCheck(
 	auto assign = awst::makeAssignmentStatement(tmpVar, std::move(_result), _loc);
 	m_ctx.prePendingStatements.push_back(std::move(assign));
 
-	auto maxConst = std::make_shared<awst::IntegerConstant>();
-	maxConst->sourceLocation = _loc;
-	maxConst->wtype = resType;
+	std::string maxValStr;
 	if (m_isBigUInt)
-	{
-		solidity::u256 maxVal = (solidity::u256(1) << m_bits) - 1;
-		maxConst->value = maxVal.str();
-	}
+		maxValStr = ((solidity::u256(1) << m_bits) - 1).str();
 	else
-	{
-		uint64_t maxVal = (uint64_t(1) << m_bits) - 1;
-		maxConst->value = std::to_string(maxVal);
-	}
+		maxValStr = std::to_string((uint64_t(1) << m_bits) - 1);
+	auto maxConst = awst::makeIntegerConstant(std::move(maxValStr), _loc, resType);
 
 	auto cmp = awst::makeNumericCompare(tmpVar, awst::NumericComparison::Lte, std::move(maxConst), _loc);
 

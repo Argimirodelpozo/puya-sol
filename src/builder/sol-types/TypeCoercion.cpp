@@ -1206,11 +1206,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::tryWidenArc4DynamicArrayInt(
 		awst::makeVarExpression(idxN, u64, _loc),
 		awst::NumericComparison::Lt,
 		awst::makeVarExpression(lenN, u64, _loc), _loc);
-	auto loop = std::make_shared<awst::WhileLoop>();
-	loop->sourceLocation = _loc;
-	loop->condition = std::move(loopCond);
-	loop->loopBody = std::move(body);
-	_emit(std::move(loop));
+	_emit(awst::makeWhileLoop(std::move(loopCond), std::move(body), _loc));
 
 	return awst::makeReinterpretCast(
 		awst::makeVarExpression(resN, bytesT, _loc),

@@ -108,15 +108,12 @@ void AssemblyBuilder::handlePrecompileCall(
 		{
 			auto localIt = m_locals.find(_assignTarget);
 			auto* varType = (localIt != m_locals.end()) ? localIt->second : awst::WType::biguintType();
-			auto assignStmt = std::make_shared<awst::AssignmentStatement>();
-			assignStmt->sourceLocation = _loc;
-			auto varExpr = awst::makeVarExpression(_assignTarget, varType, _loc);
-			assignStmt->target = std::move(varExpr);
-			if (varType == awst::WType::boolType())
-				assignStmt->value = awst::makeBoolConstant(rtSuccess, _loc);
-			else
-				assignStmt->value = awst::makeIntegerConstant(rtSuccess ? "1" : "0", _loc, awst::WType::biguintType());
-			_out.push_back(std::move(assignStmt));
+			std::shared_ptr<awst::Expression> rhs = (varType == awst::WType::boolType())
+				? std::shared_ptr<awst::Expression>(awst::makeBoolConstant(rtSuccess, _loc))
+				: awst::makeIntegerConstant(rtSuccess ? "1" : "0", _loc, awst::WType::biguintType());
+			_out.push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(_assignTarget, varType, _loc),
+				std::move(rhs), _loc));
 		}
 		return;
 	}

@@ -137,12 +137,11 @@ void ContractBuilder::inlineModifiers(
 	// assignment (e.g. early revert inside the modifier).
 	for (auto const& [n, t]: syntheticRets)
 	{
-		auto synthInit = std::make_shared<awst::AssignmentStatement>();
-		synthInit->sourceLocation = makeLoc(_func.location());
-		auto target = awst::makeVarExpression(n, t, synthInit->sourceLocation);
-		synthInit->target = std::move(target);
-		synthInit->value = StorageMapper::makeDefaultValue(t, synthInit->sourceLocation);
-		hoistedInits.push_back(std::move(synthInit));
+		auto loc = makeLoc(_func.location());
+		hoistedInits.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(n, t, loc),
+			StorageMapper::makeDefaultValue(t, loc),
+			loc));
 	}
 
 	// For each modifier invocation, wrap the function body
@@ -463,25 +462,19 @@ void ContractBuilder::inlineModifiers(
 			}
 
 			// Initialize flag: __mod_exit_N = false
-			auto flagInit = std::make_shared<awst::AssignmentStatement>();
-			flagInit->sourceLocation = flagLoc;
-			auto flagTarget = awst::makeVarExpression(flagName, awst::WType::boolType(), flagLoc);
-			flagInit->target = std::move(flagTarget);
-			flagInit->value = awst::makeBoolConstant(false, flagLoc);
-			modBody->body.push_back(std::move(flagInit));
+			modBody->body.push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(flagName, awst::WType::boolType(), flagLoc),
+				awst::makeBoolConstant(false, flagLoc),
+				flagLoc));
 
 			// Wrap in while(true) { ...body...; break; }
-			auto wrapperLoop = std::make_shared<awst::WhileLoop>();
-			wrapperLoop->sourceLocation = flagLoc;
-			wrapperLoop->condition = awst::makeBoolConstant(true, flagLoc);
-
 			auto loopBody = awst::makeBlock(flagLoc);
 			for (auto& stmt: translatedModBody->body)
 				loopBody->body.push_back(std::move(stmt));
 			loopBody->body.push_back(makeBreak()); // always exit after one pass
-			wrapperLoop->loopBody = std::move(loopBody);
 
-			modBody->body.push_back(std::move(wrapperLoop));
+			modBody->body.push_back(awst::makeWhileLoop(
+				awst::makeBoolConstant(true, flagLoc), std::move(loopBody), flagLoc));
 		}
 		else
 		{

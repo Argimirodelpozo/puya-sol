@@ -316,10 +316,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		static int storageWriteBackCounter = 0;
 		std::string tempName = "__storage_wb_" + std::to_string(storageWriteBackCounter++);
 
-		auto tempVar = std::make_shared<awst::VarExpression>();
-		tempVar->sourceLocation = m_loc;
-		tempVar->wtype = callTupleType;
-		tempVar->name = tempName;
+		auto tempVar = awst::makeVarExpression(tempName, callTupleType, m_loc);
 
 		auto assignTemp = awst::makeAssignmentStatement(
 			tempVar, std::shared_ptr<awst::Expression>(call), m_loc);

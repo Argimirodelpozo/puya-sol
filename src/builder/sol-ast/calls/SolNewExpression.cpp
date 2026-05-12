@@ -98,19 +98,11 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 			// __i = 0
 			auto idxVar = awst::makeVarExpression(idxName, awst::WType::uint64Type(), m_loc);
 
-			auto initIdx = std::make_shared<awst::AssignmentStatement>();
-			initIdx->sourceLocation = m_loc;
-			initIdx->target = idxVar;
-			auto zero = awst::makeIntegerConstant("0", m_loc);
-			initIdx->value = zero;
-			m_ctx.prePendingStatements.push_back(std::move(initIdx));
+			m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+				idxVar, awst::makeIntegerConstant("0", m_loc), m_loc));
 
 			// while (__i < n)
-			auto loop = std::make_shared<awst::WhileLoop>();
-			loop->sourceLocation = m_loc;
 			auto cond = awst::makeNumericCompare(idxVar, awst::NumericComparison::Lt, sizeExpr, m_loc);
-			loop->condition = cond;
-
 			auto loopBody = awst::makeBlock(m_loc);
 
 			// extend with default
@@ -123,17 +115,15 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 			extend->wtype = awst::WType::voidType();
 			extend->base = arrVar;
 			extend->other = std::move(singleArr);
-			auto extendStmt = awst::makeExpressionStatement(extend, m_loc);
-			loopBody->body.push_back(std::move(extendStmt));
+			loopBody->body.push_back(awst::makeExpressionStatement(extend, m_loc));
 
 			// __i++
-			auto one = awst::makeIntegerConstant("1", m_loc);
-			auto incr = awst::makeUInt64BinOp(idxVar, awst::UInt64BinaryOperator::Add, one, m_loc);
-			auto incrAssign = awst::makeAssignmentStatement(idxVar, incr, m_loc);
-			loopBody->body.push_back(std::move(incrAssign));
+			auto incr = awst::makeUInt64BinOp(idxVar, awst::UInt64BinaryOperator::Add,
+				awst::makeIntegerConstant("1", m_loc), m_loc);
+			loopBody->body.push_back(awst::makeAssignmentStatement(idxVar, incr, m_loc));
 
-			loop->loopBody = loopBody;
-			m_ctx.prePendingStatements.push_back(std::move(loop));
+			m_ctx.prePendingStatements.push_back(
+				awst::makeWhileLoop(std::move(cond), std::move(loopBody), m_loc));
 
 			return arrVar;
 		}
@@ -373,11 +363,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				fundCreate->sourceLocation = m_loc;
 				fundCreate->wtype = &s_fundFieldsType;
 
-				auto fundTypeVal = std::make_shared<awst::IntegerConstant>();
-				fundTypeVal->sourceLocation = m_loc;
-				fundTypeVal->wtype = awst::WType::uint64Type();
-				fundTypeVal->value = "1"; // pay
-				fundCreate->fields["TypeEnum"] = std::move(fundTypeVal);
+				fundCreate->fields["TypeEnum"] = awst::makeIntegerConstant("1", m_loc); // pay
 
 				auto fundFee = awst::makeIntegerConstant("0", m_loc);
 				fundCreate->fields["Fee"] = std::move(fundFee);

@@ -140,12 +140,9 @@ std::shared_ptr<awst::Expression> SolTupleExpression::toAwst()
 			else
 			{
 				// Null placeholder — mark with empty-name VarExpression
-				auto placeholder = std::make_shared<awst::VarExpression>();
-				placeholder->sourceLocation = m_loc;
-				placeholder->wtype = awst::WType::uint64Type(); // dummy type
-				placeholder->name = ""; // empty = skip marker
 				types.push_back(awst::WType::uint64Type());
-				e->items.push_back(std::move(placeholder));
+				e->items.push_back(awst::makeVarExpression(
+					"", awst::WType::uint64Type(), m_loc));
 			}
 		}
 	}

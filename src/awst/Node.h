@@ -1300,6 +1300,19 @@ struct WhileLoop: Statement
 	std::shared_ptr<Block> loopBody;
 };
 
+// `while (condition) loopBody` — 14 callers across builder/.
+inline std::shared_ptr<WhileLoop> makeWhileLoop(
+	std::shared_ptr<Expression> condition,
+	std::shared_ptr<Block> loopBody,
+	SourceLocation loc)
+{
+	auto node = std::make_shared<WhileLoop>();
+	node->sourceLocation = std::move(loc);
+	node->condition = std::move(condition);
+	node->loopBody = std::move(loopBody);
+	return node;
+}
+
 struct LoopExit: Statement
 {
 	std::string nodeType() const override { return "LoopExit"; }
