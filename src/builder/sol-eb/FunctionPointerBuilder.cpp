@@ -521,13 +521,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		// Emit `if (isSelf) selfCall else submit (and read result)`. Puts the
 		// if-else into prePendingStatements; the expression this function
 		// returns is the result expression the caller reads.
-		auto ifStmt = std::make_shared<awst::IfElse>();
-		ifStmt->sourceLocation = _loc;
-		ifStmt->condition = isSelf;
-		ifStmt->ifBranch = std::make_shared<awst::Block>();
-		ifStmt->ifBranch->sourceLocation = _loc;
-		ifStmt->elseBranch = std::make_shared<awst::Block>();
-		ifStmt->elseBranch->sourceLocation = _loc;
+		auto ifStmt = awst::makeIfElse(isSelf, awst::makeBlock(_loc), awst::makeBlock(_loc), _loc);
 
 		if (retType == awst::WType::voidType())
 		{

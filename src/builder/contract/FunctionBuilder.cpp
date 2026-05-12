@@ -1287,8 +1287,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	{
 		// Abstract function — empty body
 		Logger::instance().debug("function '" + method.memberName + "' has no implementation", method.sourceLocation);
-		method.body = std::make_shared<awst::Block>();
-		method.body->sourceLocation = method.sourceLocation;
+		method.body = awst::makeBlock(method.sourceLocation);
 	}
 
 	return method;
