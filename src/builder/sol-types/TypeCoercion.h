@@ -10,6 +10,7 @@
 
 #include "awst/Node.h"
 
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -52,6 +53,49 @@ public:
 	static std::shared_ptr<awst::Expression> signExtendToUint256(
 		std::shared_ptr<awst::Expression> _value,
 		unsigned _bits,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Narrow a `uint64` stack value to `arc4.uintN` where N < 64. Puya has
+	/// no codec for this direction; we emit `extract3(itob(v), 8-N/8, N/8)`
+	/// → ReinterpretCast<arc4.uintN>. Two's complement makes this correct
+	/// for signed targets too: uint64(-3) = 0xFF…FFFD; low byte 0xFD = int8(-3).
+	/// `value` is evaluated exactly once (the bytes flow through `itob` only).
+	/// Returns nullptr if the shapes don't match (caller falls back to ARC4Encode).
+	static std::shared_ptr<awst::Expression> tryNarrowUInt64ToArc4UIntN(
+		std::shared_ptr<awst::Expression> _value,
+		awst::WType const* _targetType,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Widen each element of `arc4.static_array<arc4.intM, K>` to
+	/// `arc4.static_array<arc4.intN, K>` (M < N), sign- or zero-extending
+	/// based on the alias prefix (`intM` vs `uintM`). `_mkSourceBytes` is
+	/// called K times to obtain fresh `bytes`-typed expressions for the
+	/// source; pass a closure that returns a VarExpression to a pre-pinned
+	/// temp if the original `value` has side effects.
+	/// Returns nullptr if the shapes don't match (caller falls back).
+	static std::shared_ptr<awst::Expression> tryWidenArc4StaticArrayInt(
+		awst::WType const* _sourceType,
+		awst::WType const* _targetType,
+		std::function<std::shared_ptr<awst::Expression>()> _mkSourceBytes,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Widen each element of `arc4.dynamic_array<arc4.intM>` to
+	/// `arc4.dynamic_array<arc4.intN>` (M < N) at runtime via a WhileLoop.
+	/// The length prefix (2-byte uint16) is carried through; each element
+	/// gets sign- or zero-extended per the alias. `_mkSourceBytes` must
+	/// return a fresh, side-effect-free expression for the source bytes
+	/// each call (the helper reads it multiple times — once for the length
+	/// header and once per iteration). `_emit` is called to attach the
+	/// setup assignments and loop statement to the caller's pre-pending
+	/// statement list. Returns nullptr if the shapes don't match.
+	static std::shared_ptr<awst::Expression> tryWidenArc4DynamicArrayInt(
+		awst::WType const* _sourceType,
+		awst::WType const* _targetType,
+		std::function<std::shared_ptr<awst::Expression>()> _mkSourceBytes,
+		std::function<void(std::shared_ptr<awst::Statement>)> _emit,
 		awst::SourceLocation const& _loc
 	);
 

@@ -297,8 +297,67 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 			if (targetIsArc4)
 			{
 				assignValue = builder::TypeCoercion::stringToBytes(std::move(assignValue), m_loc);
-				auto encode = awst::makeARC4Encode(std::move(assignValue), assignTarget->wtype, m_loc);
-				assignValue = std::move(encode);
+				bool handled = false;
+				// Array element-wise widening: arc4.{static,dynamic}_array<arc4.intM, ...>
+				// → arc4.{static,dynamic}_array<arc4.intN, ...> (M < N). Pin source
+				// bytes to a temp; the helper reads them multiple times.
+				bool const sourceIsArc4Array =
+					assignValue->wtype->kind() == awst::WTypeKind::ARC4StaticArray
+					|| assignValue->wtype->kind() == awst::WTypeKind::ARC4DynamicArray;
+				bool const targetIsArc4Array =
+					assignTarget->wtype->kind() == awst::WTypeKind::ARC4StaticArray
+					|| assignTarget->wtype->kind() == awst::WTypeKind::ARC4DynamicArray;
+				if (sourceIsArc4Array && targetIsArc4Array)
+				{
+					static int s_widCounter = 0;
+					std::string tmpName = "__widen_src_h_" + std::to_string(s_widCounter++);
+					auto srcAsBytes = awst::makeReinterpretCast(
+						assignValue, awst::WType::bytesType(), m_loc);
+					auto tmpVar = awst::makeVarExpression(
+						tmpName, awst::WType::bytesType(), m_loc);
+					m_ctx.prePendingStatements.push_back(
+						awst::makeAssignmentStatement(tmpVar, std::move(srcAsBytes), m_loc));
+					auto const* sourceType = assignValue->wtype;
+					auto mkSrc = [&]() {
+						return awst::makeVarExpression(
+							tmpName, awst::WType::bytesType(), m_loc);
+					};
+					std::shared_ptr<awst::Expression> widened;
+					if (assignTarget->wtype->kind() == awst::WTypeKind::ARC4StaticArray)
+					{
+						widened = builder::TypeCoercion::tryWidenArc4StaticArrayInt(
+							sourceType, assignTarget->wtype, mkSrc, m_loc);
+					}
+					else
+					{
+						widened = builder::TypeCoercion::tryWidenArc4DynamicArrayInt(
+							sourceType, assignTarget->wtype, mkSrc,
+							[this](std::shared_ptr<awst::Statement> _s) {
+								m_ctx.prePendingStatements.push_back(std::move(_s));
+							},
+							m_loc);
+					}
+					if (widened)
+					{
+						assignValue = std::move(widened);
+						handled = true;
+					}
+				}
+				// Narrowing: uint64 → arc4.uintN where N < 64.
+				if (!handled)
+				{
+					if (auto narrowed = builder::TypeCoercion::tryNarrowUInt64ToArc4UIntN(
+							assignValue, assignTarget->wtype, m_loc))
+					{
+						assignValue = std::move(narrowed);
+						handled = true;
+					}
+				}
+				if (!handled)
+				{
+					auto encode = awst::makeARC4Encode(std::move(assignValue), assignTarget->wtype, m_loc);
+					assignValue = std::move(encode);
+				}
 			}
 			else
 				assignValue = builder::TypeCoercion::implicitNumericCast(

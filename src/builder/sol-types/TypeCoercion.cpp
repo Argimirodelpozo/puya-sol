@@ -704,6 +704,60 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 				auto cast = awst::makeReinterpretCast(std::move(withHeader), _targetType, _loc);
 				return cast;
 			}
+
+			// Signed variant: `int8[K]` literal → `int16[]` (any signed
+			// widening). Sign-extend at byte level (prepend 0xFF/0x00 pad
+			// based on bit-7 of each element's first byte), concat into
+			// body bytes, prepend uint16 length header.
+			bool const srcSigned =
+				srcArc4 && srcArc4->arc4Alias().size() >= 3
+				&& srcArc4->arc4Alias().substr(0, 3) == "int";
+			bool const tgtSigned =
+				tgtArc4 && tgtArc4->arc4Alias().size() >= 3
+				&& tgtArc4->arc4Alias().substr(0, 3) == "int";
+			if (newArr && srcArc4 && tgtArc4
+				&& srcArc4->n() < tgtArc4->n()
+				&& srcArc4->n() % 8 == 0 && tgtArc4->n() % 8 == 0
+				&& srcSigned && tgtSigned)
+			{
+				int const padBytes = (tgtArc4->n() - srcArc4->n()) / 8;
+				std::shared_ptr<awst::Expression> bodyBytes;
+				for (auto const& elem : newArr->values)
+				{
+					auto elemBytes = awst::makeReinterpretCast(
+						elem, awst::WType::bytesType(), _loc);
+					auto signByte = awst::makeExtract3(
+						elemBytes,
+						awst::makeIntegerConstant(0, _loc),
+						awst::makeIntegerConstant(1, _loc), _loc);
+					auto signByteVal = awst::makeBtoi(std::move(signByte), _loc);
+					auto isNeg = awst::makeNumericCompare(
+						std::move(signByteVal),
+						awst::NumericComparison::Gte,
+						awst::makeIntegerConstant(128, _loc), _loc);
+					std::vector<uint8_t> ffPad(padBytes, 0xFFu);
+					std::vector<uint8_t> zeroPad(padBytes, 0x00u);
+					auto prepend = awst::makeConditional(
+						std::move(isNeg),
+						awst::makeBytesConstant(std::move(ffPad), _loc),
+						awst::makeBytesConstant(std::move(zeroPad), _loc),
+						awst::WType::bytesType(), _loc);
+					auto widenedBytes = awst::makeConcat(
+						std::move(prepend), std::move(elemBytes), _loc);
+					if (!bodyBytes) bodyBytes = std::move(widenedBytes);
+					else bodyBytes = awst::makeConcat(
+						std::move(bodyBytes), std::move(widenedBytes), _loc);
+				}
+
+				int N = static_cast<int>(statArr->arraySize());
+				auto header = awst::makeBytesConstant(
+					{static_cast<uint8_t>((N >> 8) & 0xFF),
+					 static_cast<uint8_t>(N & 0xFF)},
+					_loc);
+				auto withHeader = awst::makeConcat(
+					std::move(header), std::move(bodyBytes), _loc);
+				return awst::makeReinterpretCast(std::move(withHeader), _targetType, _loc);
+			}
 		}
 	}
 
@@ -765,6 +819,56 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 					widened->values.push_back(std::move(encode));
 				}
 				return widened;
+			}
+
+			// Signed version: `intM[K]` literal → `intN[K]` (M < N).
+			// puya's ARC4 encoder rejects uint64 > 2^N-1 for arc4.uintN
+			// targets, so we can't widen via uint64 sign-OR'ing. Instead,
+			// build the wider element bytes directly per slot: for each
+			// element, prepend (N-M)/8 sign bytes (0xFF or 0x00) to the
+			// source byte slice. Final concat → reinterpret as target.
+			bool const srcSigned =
+				srcArc4 && srcArc4->arc4Alias().size() >= 3
+				&& srcArc4->arc4Alias().substr(0, 3) == "int";
+			bool const tgtSigned =
+				tgtArc4 && tgtArc4->arc4Alias().size() >= 3
+				&& tgtArc4->arc4Alias().substr(0, 3) == "int";
+			if (newArr && srcArc4 && tgtArc4
+				&& srcStat->arraySize() == targetStat->arraySize()
+				&& srcArc4->n() < tgtArc4->n()
+				&& srcArc4->n() % 8 == 0 && tgtArc4->n() % 8 == 0
+				&& srcSigned && tgtSigned)
+			{
+				int const padBytes = (tgtArc4->n() - srcArc4->n()) / 8;
+				std::shared_ptr<awst::Expression> result;
+				for (auto const& elem : newArr->values)
+				{
+					// elem is an arc4.intM literal (BytesConstant of srcBytes).
+					auto elemBytes = awst::makeReinterpretCast(
+						elem, awst::WType::bytesType(), _loc);
+					// Sign-extend per element by inspecting bit 7 of byte 0.
+					auto signByte = awst::makeExtract3(
+						elemBytes,
+						awst::makeIntegerConstant(0, _loc),
+						awst::makeIntegerConstant(1, _loc), _loc);
+					auto signByteVal = awst::makeBtoi(std::move(signByte), _loc);
+					auto isNeg = awst::makeNumericCompare(
+						std::move(signByteVal),
+						awst::NumericComparison::Gte,
+						awst::makeIntegerConstant(128, _loc), _loc);
+					std::vector<uint8_t> ffPad(padBytes, 0xFFu);
+					std::vector<uint8_t> zeroPad(padBytes, 0x00u);
+					auto prepend = awst::makeConditional(
+						std::move(isNeg),
+						awst::makeBytesConstant(std::move(ffPad), _loc),
+						awst::makeBytesConstant(std::move(zeroPad), _loc),
+						awst::WType::bytesType(), _loc);
+					auto widenedBytes = awst::makeConcat(
+						std::move(prepend), std::move(elemBytes), _loc);
+					if (!result) result = std::move(widenedBytes);
+					else result = awst::makeConcat(std::move(result), std::move(widenedBytes), _loc);
+				}
+				return awst::makeReinterpretCast(std::move(result), _targetType, _loc);
 			}
 		}
 	}
@@ -897,6 +1001,229 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 	}
 
 	return _expr;
+}
+
+std::shared_ptr<awst::Expression> TypeCoercion::tryNarrowUInt64ToArc4UIntN(
+	std::shared_ptr<awst::Expression> _value,
+	awst::WType const* _targetType,
+	awst::SourceLocation const& _loc)
+{
+	if (_value->wtype != awst::WType::uint64Type()) return nullptr;
+	auto const* arc4 = dynamic_cast<awst::ARC4UIntN const*>(_targetType);
+	if (!arc4) return nullptr;
+	int const bits = arc4->n();
+	if (bits >= 64 || bits % 8 != 0) return nullptr;
+	int const nBytes = bits / 8;
+	auto bytes = awst::makeItob(std::move(_value), _loc);
+	auto low = awst::makeExtract3(std::move(bytes),
+		awst::makeIntegerConstant(8 - nBytes, _loc),
+		awst::makeIntegerConstant(nBytes, _loc), _loc);
+	return awst::makeReinterpretCast(std::move(low), _targetType, _loc);
+}
+
+std::shared_ptr<awst::Expression> TypeCoercion::tryWidenArc4StaticArrayInt(
+	awst::WType const* _sourceType,
+	awst::WType const* _targetType,
+	std::function<std::shared_ptr<awst::Expression>()> _mkSourceBytes,
+	awst::SourceLocation const& _loc)
+{
+	auto const* srcArr = dynamic_cast<awst::ARC4StaticArray const*>(_sourceType);
+	auto const* tgtArr = dynamic_cast<awst::ARC4StaticArray const*>(_targetType);
+	if (!srcArr || !tgtArr) return nullptr;
+	if (srcArr->arraySize() != tgtArr->arraySize()) return nullptr;
+	auto const* srcInt = dynamic_cast<awst::ARC4UIntN const*>(srcArr->elementType());
+	auto const* tgtInt = dynamic_cast<awst::ARC4UIntN const*>(tgtArr->elementType());
+	if (!srcInt || !tgtInt) return nullptr;
+	int const srcBits = srcInt->n();
+	int const tgtBits = tgtInt->n();
+	if (srcBits >= tgtBits || srcBits % 8 != 0 || tgtBits % 8 != 0) return nullptr;
+	int const srcBytes = srcBits / 8;
+	int const tgtBytes = tgtBits / 8;
+	int const padBytes = tgtBytes - srcBytes;
+	int const count = static_cast<int>(srcArr->arraySize());
+
+	// Sign-ness: "intN" alias → signed; "uintN" alias → unsigned.
+	bool const isSigned =
+		srcInt->arc4Alias().size() >= 3 && srcInt->arc4Alias().substr(0, 3) == "int";
+
+	std::shared_ptr<awst::Expression> result;
+	for (int i = 0; i < count; ++i)
+	{
+		// Per-element source bytes: extract3(src, i*srcBytes, srcBytes).
+		auto srcByte = awst::makeExtract3(
+			_mkSourceBytes(),
+			awst::makeIntegerConstant(i * srcBytes, _loc),
+			awst::makeIntegerConstant(srcBytes, _loc),
+			_loc);
+
+		std::shared_ptr<awst::Expression> widened;
+		if (isSigned)
+		{
+			// Sign-extend: prepend 0xFF*padBytes if the high byte's bit 7 is
+			// set, else 0x00*padBytes. We look at the first byte of the slice
+			// (always the high byte in big-endian ARC4 encoding).
+			auto signByte = awst::makeExtract3(
+				srcByte,
+				awst::makeIntegerConstant(0, _loc),
+				awst::makeIntegerConstant(1, _loc),
+				_loc);
+			auto signByteVal = awst::makeBtoi(std::move(signByte), _loc);
+			auto isNeg = awst::makeNumericCompare(
+				std::move(signByteVal),
+				awst::NumericComparison::Gte,
+				awst::makeIntegerConstant(128, _loc),
+				_loc);
+			std::vector<uint8_t> ffPad(padBytes, 0xFFu);
+			std::vector<uint8_t> zeroPad(padBytes, 0x00u);
+			auto prepend = awst::makeConditional(
+				std::move(isNeg),
+				awst::makeBytesConstant(std::move(ffPad), _loc),
+				awst::makeBytesConstant(std::move(zeroPad), _loc),
+				awst::WType::bytesType(),
+				_loc);
+			widened = awst::makeConcat(std::move(prepend), std::move(srcByte), _loc);
+		}
+		else
+		{
+			// Unsigned: prepend zeros.
+			auto prepend = awst::makeBzero(padBytes, _loc);
+			widened = awst::makeConcat(std::move(prepend), std::move(srcByte), _loc);
+		}
+
+		if (!result) result = std::move(widened);
+		else result = awst::makeConcat(std::move(result), std::move(widened), _loc);
+	}
+
+	return awst::makeReinterpretCast(std::move(result), _targetType, _loc);
+}
+
+std::shared_ptr<awst::Expression> TypeCoercion::tryWidenArc4DynamicArrayInt(
+	awst::WType const* _sourceType,
+	awst::WType const* _targetType,
+	std::function<std::shared_ptr<awst::Expression>()> _mkSourceBytes,
+	std::function<void(std::shared_ptr<awst::Statement>)> _emit,
+	awst::SourceLocation const& _loc)
+{
+	auto const* srcArr = dynamic_cast<awst::ARC4DynamicArray const*>(_sourceType);
+	auto const* tgtArr = dynamic_cast<awst::ARC4DynamicArray const*>(_targetType);
+	if (!srcArr || !tgtArr) return nullptr;
+	auto const* srcInt = dynamic_cast<awst::ARC4UIntN const*>(srcArr->elementType());
+	auto const* tgtInt = dynamic_cast<awst::ARC4UIntN const*>(tgtArr->elementType());
+	if (!srcInt || !tgtInt) return nullptr;
+	int const srcBits = srcInt->n();
+	int const tgtBits = tgtInt->n();
+	if (srcBits >= tgtBits || srcBits % 8 != 0 || tgtBits % 8 != 0) return nullptr;
+	int const srcBytes = srcBits / 8;
+	int const padBytes = (tgtBits - srcBits) / 8;
+
+	bool const isSigned =
+		srcInt->arc4Alias().size() >= 3 && srcInt->arc4Alias().substr(0, 3) == "int";
+
+	static int s_dwCounter = 0;
+	int const n = s_dwCounter++;
+	auto u64 = awst::WType::uint64Type();
+	auto bytesT = awst::WType::bytesType();
+	std::string const lenN = "__dwiden_len_" + std::to_string(n);
+	std::string const idxN = "__dwiden_i_" + std::to_string(n);
+	std::string const resN = "__dwiden_res_" + std::to_string(n);
+
+	// __dwiden_len = extract_uint16(srcBytes, 0)
+	auto lenExtract = awst::makeIntrinsicCall("extract_uint16", u64, _loc);
+	lenExtract->stackArgs.push_back(_mkSourceBytes());
+	lenExtract->stackArgs.push_back(awst::makeIntegerConstant(0, _loc));
+	_emit(awst::makeAssignmentStatement(
+		awst::makeVarExpression(lenN, u64, _loc), std::move(lenExtract), _loc));
+
+	// __dwiden_i = 0
+	_emit(awst::makeAssignmentStatement(
+		awst::makeVarExpression(idxN, u64, _loc),
+		awst::makeIntegerConstant(0, _loc), _loc));
+
+	// __dwiden_res = extract3(itob(len), 6, 2)  // 2-byte length prefix
+	auto itobLen = awst::makeItob(
+		awst::makeVarExpression(lenN, u64, _loc), _loc);
+	auto lenPrefix = awst::makeExtract3(std::move(itobLen),
+		awst::makeIntegerConstant(6, _loc),
+		awst::makeIntegerConstant(2, _loc), _loc);
+	_emit(awst::makeAssignmentStatement(
+		awst::makeVarExpression(resN, bytesT, _loc), std::move(lenPrefix), _loc));
+
+	// Loop body
+	auto body = awst::makeBlock(_loc);
+
+	// offset = 2 + __dwiden_i * srcBytes
+	auto idxRead = awst::makeVarExpression(idxN, u64, _loc);
+	auto offMul = awst::makeUInt64BinOp(std::move(idxRead),
+		awst::UInt64BinaryOperator::Mult,
+		awst::makeIntegerConstant(srcBytes, _loc), _loc);
+	auto offsetExpr = awst::makeUInt64BinOp(
+		awst::makeIntegerConstant(2, _loc),
+		awst::UInt64BinaryOperator::Add,
+		std::move(offMul), _loc);
+
+	// srcByte = extract3(srcBytes, offset, srcBytes)
+	auto srcByte = awst::makeExtract3(_mkSourceBytes(),
+		std::move(offsetExpr),
+		awst::makeIntegerConstant(srcBytes, _loc), _loc);
+
+	std::shared_ptr<awst::Expression> widened;
+	if (isSigned)
+	{
+		auto signByte = awst::makeExtract3(srcByte,
+			awst::makeIntegerConstant(0, _loc),
+			awst::makeIntegerConstant(1, _loc), _loc);
+		auto signByteVal = awst::makeBtoi(std::move(signByte), _loc);
+		auto isNeg = awst::makeNumericCompare(
+			std::move(signByteVal),
+			awst::NumericComparison::Gte,
+			awst::makeIntegerConstant(128, _loc), _loc);
+		std::vector<uint8_t> ffPad(padBytes, 0xFFu);
+		std::vector<uint8_t> zeroPad(padBytes, 0x00u);
+		auto prepend = awst::makeConditional(
+			std::move(isNeg),
+			awst::makeBytesConstant(std::move(ffPad), _loc),
+			awst::makeBytesConstant(std::move(zeroPad), _loc),
+			bytesT, _loc);
+		widened = awst::makeConcat(std::move(prepend), std::move(srcByte), _loc);
+	}
+	else
+	{
+		widened = awst::makeConcat(
+			awst::makeBzero(padBytes, _loc),
+			std::move(srcByte), _loc);
+	}
+
+	// __dwiden_res = concat(__dwiden_res, widened)
+	auto resAppend = awst::makeConcat(
+		awst::makeVarExpression(resN, bytesT, _loc),
+		std::move(widened), _loc);
+	body->body.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(resN, bytesT, _loc),
+		std::move(resAppend), _loc));
+
+	// __dwiden_i = __dwiden_i + 1
+	auto idxInc = awst::makeUInt64BinOp(
+		awst::makeVarExpression(idxN, u64, _loc),
+		awst::UInt64BinaryOperator::Add,
+		awst::makeIntegerConstant(1, _loc), _loc);
+	body->body.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(idxN, u64, _loc),
+		std::move(idxInc), _loc));
+
+	// while __dwiden_i < __dwiden_len { body }
+	auto loopCond = awst::makeNumericCompare(
+		awst::makeVarExpression(idxN, u64, _loc),
+		awst::NumericComparison::Lt,
+		awst::makeVarExpression(lenN, u64, _loc), _loc);
+	auto loop = std::make_shared<awst::WhileLoop>();
+	loop->sourceLocation = _loc;
+	loop->condition = std::move(loopCond);
+	loop->loopBody = std::move(body);
+	_emit(std::move(loop));
+
+	return awst::makeReinterpretCast(
+		awst::makeVarExpression(resN, bytesT, _loc),
+		_targetType, _loc);
 }
 
 } // namespace puyasol::builder
