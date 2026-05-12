@@ -364,13 +364,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				if (!defaultVal)
 				{
 				if (wtype == awst::WType::accountType())
-				{
-					auto addr = std::make_shared<awst::AddressConstant>();
-					addr->sourceLocation = method.sourceLocation;
-					addr->wtype = awst::WType::accountType();
-					addr->value = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ";
-					defaultVal = addr;
-				}
+					defaultVal = awst::makeAddressConstant(
+						"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
+						method.sourceLocation);
 				else if (wtype == awst::WType::biguintType())
 				{
 					auto val = awst::makeIntegerConstant("0", method.sourceLocation, awst::WType::biguintType());

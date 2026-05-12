@@ -25,9 +25,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolIfStatement::toAwst()
 	std::vector<std::shared_ptr<awst::Statement>> result;
 	auto& bc = m_blk.builderCtx();
 
-	auto stmt = std::make_shared<awst::IfElse>();
-	stmt->sourceLocation = m_loc;
-	stmt->condition = bc.build(m_node.condition());
+	auto cond = bc.build(m_node.condition());
 
 	auto prePending = bc.takePrePending();
 	auto postPending = bc.takePending();
@@ -41,12 +39,13 @@ std::vector<std::shared_ptr<awst::Statement>> SolIfStatement::toAwst()
 		return syntheticBlock;
 	};
 
-	stmt->ifBranch = buildBranch(m_node.trueStatement());
-	if (m_node.falseStatement())
-		stmt->elseBranch = buildBranch(*m_node.falseStatement());
+	auto ifBranch = buildBranch(m_node.trueStatement());
+	auto elseBranch = m_node.falseStatement()
+		? buildBranch(*m_node.falseStatement())
+		: nullptr;
 
 	for (auto& p: prePending) result.push_back(std::move(p));
-	result.push_back(stmt);
+	result.push_back(awst::makeIfElse(std::move(cond), std::move(ifBranch), std::move(elseBranch), m_loc));
 	for (auto& p: postPending) result.push_back(std::move(p));
 	return result;
 }

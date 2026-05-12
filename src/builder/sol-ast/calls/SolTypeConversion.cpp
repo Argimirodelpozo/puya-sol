@@ -125,13 +125,8 @@ std::shared_ptr<awst::Expression> SolTypeConversion::tryAddressZeroConstant()
 	if (auto const* lit = dynamic_cast<solidity::frontend::Literal const*>(&arg))
 	{
 		if (lit->value() == "0")
-		{
-			auto e = std::make_shared<awst::AddressConstant>();
-			e->sourceLocation = m_loc;
-			e->wtype = awst::WType::accountType();
-			e->value = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ";
-			return e;
-		}
+			return awst::makeAddressConstant(
+				"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ", m_loc);
 	}
 	return nullptr;
 }

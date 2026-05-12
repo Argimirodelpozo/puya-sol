@@ -1203,6 +1203,18 @@ struct AddressConstant: Expression
 	std::string value;
 };
 
+// `address(<value>)` AVM account literal — defaults to the zero address
+// (32 zero bytes, base32-encoded with 4-byte SHA-512/256 checksum).
+inline std::shared_ptr<AddressConstant> makeAddressConstant(
+	std::string value, SourceLocation loc)
+{
+	auto node = std::make_shared<AddressConstant>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = WType::accountType();
+	node->value = std::move(value);
+	return node;
+}
+
 struct PuyaLibCall: Expression
 {
 	std::string nodeType() const override { return "PuyaLibCall"; }

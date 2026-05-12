@@ -348,17 +348,16 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 				// value[j]
 				auto idx = awst::makeIntegerConstant(j, m_loc);
 
-				auto elemExpr = std::make_shared<awst::IndexExpression>();
-				elemExpr->sourceLocation = m_loc;
-				elemExpr->base = value; // shared
-				elemExpr->index = std::move(idx);
 				// Element type: use the ARC4 element type from the value's wtype
+				awst::WType const* elemWtype;
 				if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(value->wtype))
-					elemExpr->wtype = sa->elementType();
+					elemWtype = sa->elementType();
 				else if (auto const* da = dynamic_cast<awst::ARC4DynamicArray const*>(value->wtype))
-					elemExpr->wtype = da->elementType();
+					elemWtype = da->elementType();
 				else
-					elemExpr->wtype = m_ctx.typeMapper.map(arrType->baseType());
+					elemWtype = m_ctx.typeMapper.map(arrType->baseType());
+
+				auto elemExpr = awst::makeIndexExpression(value, std::move(idx), elemWtype, m_loc);
 
 				// If element is ARC4-encoded, decode to biguint
 				std::shared_ptr<awst::Expression> elemVal = std::move(elemExpr);
