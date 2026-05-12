@@ -909,6 +909,31 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 									}
 								}
 							}
+							// Non-bytes dynamic arrays with explicit initialiser:
+							// `int16[] public x = [-1, -2]`. Build the initialiser
+							// via the expression builder, run it through
+							// TypeCoercion::coerceForAssignment so any narrower→wider
+							// element widening lands, and box_put the result. The
+							// dedicated box_array loop below will see boxInitVal set
+							// and emit `box_put(key, value)` instead of the empty-
+							// header `box_create(key, 2)`.
+							else if (arrType && arrType->isDynamicallySized()
+								&& !arrType->isByteArrayOrString())
+							{
+								auto initVal = m_exprBuilder->build(*var->value());
+								if (initVal)
+								{
+									auto* tgtWtype = m_typeMapper.map(arrType);
+									initVal = TypeCoercion::coerceForAssignment(
+										std::move(initVal), tgtWtype, method.sourceLocation);
+									// Materialise as bytes for box_put.
+									if (initVal->wtype != awst::WType::bytesType())
+										initVal = awst::makeReinterpretCast(
+											std::move(initVal), awst::WType::bytesType(),
+											method.sourceLocation);
+									boxInitVal = std::move(initVal);
+								}
+							}
 						}
 				}
 
@@ -978,16 +1003,41 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				}
 				else
 				{
-					auto boxSize = awst::makeIntegerConstant(boxSizeVal, method.sourceLocation);
+					// For dynamic-array initializers (non-bytes case, e.g.
+					// `int16[] x = [-1, -2]`) the encoded value's length doesn't
+					// match the empty-header `boxSizeVal=2`. box_put can't grow
+					// a pre-created box, so skip the box_create entirely and
+					// let box_put create the box at the right size in one op.
+					bool isNonBytesDynArrInit = false;
+					{
+						auto const& lin = _contract.annotation().linearizedBaseContracts;
+						for (auto const* base: lin)
+							for (auto const* var: base->stateVariables())
+							{
+								if (var->name() != varName || var->isConstant() || !var->value())
+									continue;
+								auto const* arrType =
+									dynamic_cast<solidity::frontend::ArrayType const*>(var->type());
+								if (arrType && arrType->isDynamicallySized()
+									&& !arrType->isByteArrayOrString())
+									isNonBytesDynArrInit = true;
+							}
+					}
 
-					auto boxCreate = awst::makeIntrinsicCall("box_create", awst::WType::boolType(), method.sourceLocation);
-					boxCreate->stackArgs.push_back(std::move(boxKey));
-					boxCreate->stackArgs.push_back(std::move(boxSize));
+					if (!isNonBytesDynArrInit)
+					{
+						auto boxSize = awst::makeIntegerConstant(boxSizeVal, method.sourceLocation);
 
-					auto boxStmt = awst::makeExpressionStatement(std::move(boxCreate), method.sourceLocation);
-					postInitBody->body.push_back(std::move(boxStmt));
+						auto boxCreate = awst::makeIntrinsicCall("box_create", awst::WType::boolType(), method.sourceLocation);
+						boxCreate->stackArgs.push_back(std::move(boxKey));
+						boxCreate->stackArgs.push_back(std::move(boxSize));
 
-					// Write initial value for bytes vars with initializers
+						auto boxStmt = awst::makeExpressionStatement(std::move(boxCreate), method.sourceLocation);
+						postInitBody->body.push_back(std::move(boxStmt));
+					}
+
+					// Write initial value for bytes vars with initializers (and
+					// for the non-bytes dyn-array case, this is the sole op).
 					if (boxInitVal)
 					{
 						auto putKey = awst::makeUtf8BytesConstant(varName, method.sourceLocation);
