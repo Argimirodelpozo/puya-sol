@@ -987,22 +987,60 @@ class _AbiDynamicArray(_AbiType):
     def head_words(self) -> int: return 1
 
 
+class _AbiTuple(_AbiType):
+    __slots__ = ('fields',)
+    def __init__(self, fields: list):
+        self.fields = fields
+    def is_dynamic(self) -> bool:
+        return any(f.is_dynamic() for f in self.fields)
+    @property
+    def head_words(self) -> int:
+        # If any field is dynamic the whole tuple is referenced by one
+        # head offset slot in its parent. Otherwise the tuple is inlined
+        # using each field's head_words.
+        if self.is_dynamic():
+            return 1
+        return sum(f.head_words for f in self.fields)
+
+
 def _parse_abi_type(s: str) -> _AbiType:
     """Parse a Solidity-style ABI type string into an _AbiType tree.
 
     Examples: 'uint256' → _AbiScalar, 'bytes' → _AbiBytes, 'uint8[3]' →
     _AbiStaticArray(_AbiScalar, 3), 'uint256[][2]' →
-    _AbiStaticArray(_AbiDynamicArray(_AbiScalar), 2)."""
+    _AbiStaticArray(_AbiDynamicArray(_AbiScalar), 2),
+    '(uint256,uint256)' → _AbiTuple([_AbiScalar, _AbiScalar])."""
     import re as _re
     s = s.strip()
-    # Outer-most array suffix peeled first (Solidity reads right-to-left).
-    m = _re.match(r'^(.+?)(\[\d*\])$', s)
-    if m:
-        inner_s, suf = m.group(1), m.group(2)
-        inner = _parse_abi_type(inner_s)
-        if suf == '[]':
-            return _AbiDynamicArray(inner)
-        return _AbiStaticArray(inner, int(suf[1:-1]))
+    # Outer-most array suffix peeled first. Use depth-aware scan so we
+    # don't peel inside a nested tuple like `(uint256,uint256)[]`.
+    if s.endswith(']'):
+        # Find matching `[` that closes at the end of the string at depth 0.
+        i = len(s) - 1
+        depth = 1
+        i -= 1
+        while i >= 0:
+            c = s[i]
+            if c == ']':
+                depth += 1
+            elif c == '[':
+                depth -= 1
+                if depth == 0:
+                    break
+            i -= 1
+        if i >= 0:
+            inner_s = s[:i]
+            suf = s[i:]
+            # Outer suffix must be `[]` (dynamic) or `[N]` (static).
+            if suf == '[]':
+                return _AbiDynamicArray(_parse_abi_type(inner_s))
+            num = suf[1:-1]
+            if num.isdigit():
+                return _AbiStaticArray(_parse_abi_type(inner_s), int(num))
+    # Tuple `(t1,t2,...)` — depth-aware split on commas.
+    if s.startswith('(') and s.endswith(')'):
+        fields = _split_param_types(s[1:-1])
+        return _AbiTuple([_parse_abi_type(f) for f in fields])
     if s == 'bytes':
         return _AbiBytes()
     if s == 'string':
@@ -1093,6 +1131,25 @@ def _decode_abi_at(words, ty: _AbiType, base: int):
             raise _MalformedAbi(f"dyn-array length word OOB at {base}")
         length = _abi_word_to_int(words[base])
         return _decode_abi_array_body(words, ty.elem, length, base + 1)
+
+    if isinstance(ty, _AbiTuple):
+        out = []
+        cur = base
+        for f in ty.fields:
+            if f.is_dynamic():
+                if cur >= len(words):
+                    raise _MalformedAbi(f"tuple dyn-field head OOB at {cur}")
+                offset_bytes = _abi_word_to_int(words[cur])
+                if offset_bytes % 32 != 0:
+                    raise _MalformedAbi(
+                        f"tuple dyn-field offset {offset_bytes} not word-aligned")
+                inner_base = base + offset_bytes // 32
+                out.append(_decode_abi_at(words, f, inner_base))
+                cur += 1
+            else:
+                out.append(_decode_abi_at(words, f, cur))
+                cur += f.head_words
+        return out
 
     raise _MalformedAbi(f"unhandled AbiType {type(ty).__name__}")
 
@@ -1502,7 +1559,11 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                 ptypes = _split_param_types(_inner)
                 for idx, pt in enumerate(ptypes):
                     param_types[idx] = pt
-                    bm = _re.match(r'byte\[(\d+)\]', pt)
+                    # `param_sizes[idx]` is the expected single-arg byte width.
+                    # Only set it when the param IS `byte[N]` (full string match),
+                    # not when it's `byte[N][...]` — those are arrays of byte[N]
+                    # consumed via regroup, not direct bytesN slots.
+                    bm = _re.fullmatch(r'byte\[(\d+)\]', pt)
                     if bm:
                         param_sizes[idx] = int(bm.group(1))
         # Map each flat raw_args index to its logical ARC4 param index.
@@ -1520,7 +1581,12 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
             ptypes_list = [param_types[i] for i in sorted(param_types.keys())]
             consumed = 0
             for pidx, pt in enumerate(ptypes_list):
-                static_m = _re_map.findall(r'\[(\d+)\]', pt)
+                # Only static arrays `T[N]` (not ending in dynamic `[]`)
+                # inline-expand across multiple raw args. Dynamic arrays
+                # like `byte[2][]` are single params (length+offset
+                # markers + elements live in raw_args adjacent to it).
+                ends_dynamic = pt.endswith('[]')
+                static_m = _re_map.findall(r'\[(\d+)\]', pt) if not ends_dynamic else []
                 expanded = False
                 if static_m:
                     elem_prefix = _re_map.sub(r'(\[\d+\])+$', '', pt)
@@ -2500,6 +2566,23 @@ def _evm_walk_compare(words, base, actual):
                 for i in range(n):
                     elem_int = int.from_bytes(bytes(actual[i]), 'big') << pad_shift
                     if elem_int != words[body_start + i]:
+                        ok = False
+                        break
+                if ok:
+                    return True
+            # Same shape as above (list of fixed-width byte-int lists) but
+            # the fixture wrote each element as a quoted-string `"ab"`,
+            # which parse_value returns as Python `bytes`. Compare each
+            # actual element's bytes against the corresponding bytes word.
+            if (body_start + n <= len(words)
+                and all(isinstance(elem, (list, tuple)) and 0 < len(elem) <= 32
+                        and all(isinstance(b, int) and 0 <= b < 256 for b in elem)
+                        for elem in actual)
+                and all(isinstance(words[body_start + i], bytes) for i in range(n))):
+                ok = True
+                for i in range(n):
+                    elem_bytes_val = bytes(actual[i])
+                    if elem_bytes_val != words[body_start + i]:
                         ok = False
                         break
                 if ok:
