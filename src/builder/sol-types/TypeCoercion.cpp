@@ -371,11 +371,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::prependArc4LengthHeader(
 	// the uint16 length header when going from ARC4StaticArray to
 	// ARC4DynamicArray (and how to strip it in the reverse direction),
 	// so we don't need to synthesise concat+reinterpret by hand.
-	auto convert = std::make_shared<awst::ConvertArray>();
-	convert->sourceLocation = _loc;
-	convert->wtype = _targetType;
-	convert->expr = std::move(_expr);
-	return convert;
+	return awst::makeConvertArray(std::move(_expr), _targetType, _loc);
 }
 
 bool TypeCoercion::arc4IsDynamic(awst::WType const* _type)

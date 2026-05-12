@@ -389,6 +389,17 @@ struct BytesUnaryOperation: Expression
 	BytesUnaryOperator op;
 };
 
+inline std::shared_ptr<BytesUnaryOperation> makeBitInvert(
+	std::shared_ptr<Expression> expr, WType const* wtype, SourceLocation loc)
+{
+	auto node = std::make_shared<BytesUnaryOperation>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->op = BytesUnaryOperator::BitInvert;
+	node->expr = std::move(expr);
+	return node;
+}
+
 struct NumericComparisonExpression: Expression
 {
 	std::string nodeType() const override { return "NumericComparisonExpression"; }
@@ -1013,6 +1024,16 @@ struct ArrayPop: Expression
 	std::shared_ptr<Expression> base;
 };
 
+inline std::shared_ptr<ArrayPop> makeArrayPop(
+	std::shared_ptr<Expression> base, WType const* wtype, SourceLocation loc)
+{
+	auto node = std::make_shared<ArrayPop>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->base = std::move(base);
+	return node;
+}
+
 struct ArrayConcat: Expression
 {
 	std::string nodeType() const override { return "ArrayConcat"; }
@@ -1027,11 +1048,32 @@ struct ArrayExtend: Expression
 	std::shared_ptr<Expression> other;
 };
 
+inline std::shared_ptr<ArrayExtend> makeArrayExtend(
+	std::shared_ptr<Expression> base, std::shared_ptr<Expression> other, SourceLocation loc)
+{
+	auto node = std::make_shared<ArrayExtend>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = WType::voidType();
+	node->base = std::move(base);
+	node->other = std::move(other);
+	return node;
+}
+
 struct ConvertArray: Expression
 {
 	std::string nodeType() const override { return "ConvertArray"; }
 	std::shared_ptr<Expression> expr;
 };
+
+inline std::shared_ptr<ConvertArray> makeConvertArray(
+	std::shared_ptr<Expression> expr, WType const* wtype, SourceLocation loc)
+{
+	auto node = std::make_shared<ConvertArray>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->expr = std::move(expr);
+	return node;
+}
 
 struct NewStruct: Expression
 {
@@ -1150,6 +1192,16 @@ struct CreateInnerTransaction: Expression
 	std::string nodeType() const override { return "CreateInnerTransaction"; }
 	std::map<std::string, std::shared_ptr<Expression>> fields;
 };
+
+// Empty CreateInnerTransaction with location and wtype set; caller fills fields.
+inline std::shared_ptr<CreateInnerTransaction> makeCreateInnerTransaction(
+	WType const* wtype, SourceLocation loc)
+{
+	auto node = std::make_shared<CreateInnerTransaction>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	return node;
+}
 
 struct SubmitInnerTransaction: Expression
 {

@@ -110,11 +110,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 			auto singleArr = awst::makeNewArray(resultType, m_loc);
 			singleArr->values.push_back(std::move(defaultElem));
 
-			auto extend = std::make_shared<awst::ArrayExtend>();
-			extend->sourceLocation = m_loc;
-			extend->wtype = awst::WType::voidType();
-			extend->base = arrVar;
-			extend->other = std::move(singleArr);
+			auto extend = awst::makeArrayExtend(arrVar, std::move(singleArr), m_loc);
 			loopBody->body.push_back(awst::makeExpressionStatement(extend, m_loc));
 
 			// __i++
@@ -270,9 +266,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 
 			// Build inner appl create transaction with TemplateVar programs
 			static awst::WInnerTransactionFields s_applFieldsType(6); // appl
-			auto create = std::make_shared<awst::CreateInnerTransaction>();
-			create->sourceLocation = m_loc;
-			create->wtype = &s_applFieldsType;
+			auto create = awst::makeCreateInnerTransaction(&s_applFieldsType, m_loc);
 
 			auto makeU64 = [&](std::string val) {
 				auto c = awst::makeIntegerConstant(std::move(val), m_loc);
@@ -359,9 +353,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				auto fundAddr = awst::makeReinterpretCast(std::move(fundAddrBytes), awst::WType::accountType(), m_loc);
 
 				static awst::WInnerTransactionFields s_fundFieldsType(1);
-				auto fundCreate = std::make_shared<awst::CreateInnerTransaction>();
-				fundCreate->sourceLocation = m_loc;
-				fundCreate->wtype = &s_fundFieldsType;
+				auto fundCreate = awst::makeCreateInnerTransaction(&s_fundFieldsType, m_loc);
 
 				fundCreate->fields["TypeEnum"] = awst::makeIntegerConstant("1", m_loc); // pay
 
@@ -471,9 +463,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 
 				// PaymentTxn (sets msg.value for __postInit)
 				static awst::WInnerTransactionFields s_payFieldsType(1);
-				auto payTxn = std::make_shared<awst::CreateInnerTransaction>();
-				payTxn->sourceLocation = m_loc;
-				payTxn->wtype = &s_payFieldsType;
+				auto payTxn = awst::makeCreateInnerTransaction(&s_payFieldsType, m_loc);
 				payTxn->fields["TypeEnum"] = awst::makeIntegerConstant("1", m_loc);
 				payTxn->fields["Fee"] = awst::makeIntegerConstant("0", m_loc);
 				payTxn->fields["Receiver"] = std::move(receiver);
@@ -481,9 +471,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 
 				// AppCall __postInit(args)
 				static awst::WInnerTransactionFields s_applFieldsType2(6);
-				auto postCall = std::make_shared<awst::CreateInnerTransaction>();
-				postCall->sourceLocation = m_loc;
-				postCall->wtype = &s_applFieldsType2;
+				auto postCall = awst::makeCreateInnerTransaction(&s_applFieldsType2, m_loc);
 				postCall->fields["TypeEnum"] = awst::makeIntegerConstant("6", m_loc);
 				postCall->fields["OnCompletion"] = awst::makeIntegerConstant("0", m_loc);
 				postCall->fields["Fee"] = awst::makeIntegerConstant("0", m_loc);

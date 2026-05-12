@@ -498,9 +498,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 
 	// Build inner app transaction
 	static awst::WInnerTransactionFields s_applFieldsType(TxnTypeAppl);
-	auto create = std::make_shared<awst::CreateInnerTransaction>();
-	create->sourceLocation = m_loc;
-	create->wtype = &s_applFieldsType;
+	auto create = awst::makeCreateInnerTransaction(&s_applFieldsType, m_loc);
 	create->fields["TypeEnum"] = awst::makeIntegerConstant(TxnTypeAppl, m_loc);
 	create->fields["Fee"] = awst::makeIntegerConstant("0", m_loc);
 	create->fields["ApplicationID"] = std::move(appId);

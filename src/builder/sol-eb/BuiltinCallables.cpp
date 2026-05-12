@@ -157,9 +157,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleSelfdestruct(
 		appAddr->immediates = {std::string("CurrentApplicationAddress")};
 
 		static awst::WInnerTransactionFields s_payFieldsType(1); // pay
-		auto create = std::make_shared<awst::CreateInnerTransaction>();
-		create->sourceLocation = _loc;
-		create->wtype = &s_payFieldsType;
+		auto create = awst::makeCreateInnerTransaction(&s_payFieldsType, _loc);
 
 		auto typeVal = awst::makeIntegerConstant("1", _loc); // pay
 

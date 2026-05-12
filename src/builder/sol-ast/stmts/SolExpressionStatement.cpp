@@ -158,11 +158,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 					|| (stmt->value->wtype->kind() == awst::WTypeKind::ARC4StaticArray
 						&& expectedType->kind() == awst::WTypeKind::ARC4DynamicArray)))
 				{
-					auto convert = std::make_shared<awst::ConvertArray>();
-					convert->sourceLocation = m_loc;
-					convert->wtype = expectedType;
-					convert->expr = std::move(stmt->value);
-					stmt->value = std::move(convert);
+					stmt->value = awst::makeConvertArray(std::move(stmt->value), expectedType, m_loc);
 				}
 
 				// IntegerConstant → BytesConstant for bytes[N] returns

@@ -202,9 +202,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::buildPaymentTransaction(
 {
 	static awst::WInnerTransactionFields s_payFieldsType(TxnTypePay);
 
-	auto create = std::make_shared<awst::CreateInnerTransaction>();
-	create->sourceLocation = _loc;
-	create->wtype = &s_payFieldsType;
+	auto create = awst::makeCreateInnerTransaction(&s_payFieldsType, _loc);
 	create->fields["TypeEnum"] = awst::makeIntegerConstant(TxnTypePay, _loc);
 	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
 	create->fields["Receiver"] = std::move(_receiver);

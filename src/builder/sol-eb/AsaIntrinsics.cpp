@@ -162,9 +162,7 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaCreate(
 	auto symbol = stringToBytes(std::move(_args[3]), _loc);
 
 	static awst::WInnerTransactionFields s_acfgFieldsType(3);
-	auto create = std::make_shared<awst::CreateInnerTransaction>();
-	create->sourceLocation = _loc;
-	create->wtype = &s_acfgFieldsType;
+	auto create = awst::makeCreateInnerTransaction(&s_acfgFieldsType, _loc);
 
 	create->fields["TypeEnum"] = awst::makeIntegerConstant("3", _loc);
 	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
@@ -331,9 +329,7 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaTransfer(
 	auto amount = bigUIntToUint64(std::move(_args[3]), _loc);
 
 	static awst::WInnerTransactionFields s_axferFieldsType(4);
-	auto create = std::make_shared<awst::CreateInnerTransaction>();
-	create->sourceLocation = _loc;
-	create->wtype = &s_axferFieldsType;
+	auto create = awst::makeCreateInnerTransaction(&s_axferFieldsType, _loc);
 
 	create->fields["TypeEnum"] = awst::makeIntegerConstant("4", _loc);
 	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);

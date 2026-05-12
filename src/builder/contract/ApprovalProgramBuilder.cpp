@@ -578,11 +578,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(paramType);
 					if (refArr && !refArr->arraySize().has_value())
 					{
-						auto convert = std::make_shared<awst::ConvertArray>();
-						convert->sourceLocation = method.sourceLocation;
-						convert->wtype = paramType;
-						convert->expr = std::move(cast);
-						paramVal = std::move(convert);
+						paramVal = awst::makeConvertArray(std::move(cast), paramType, method.sourceLocation);
 					}
 					else
 					{

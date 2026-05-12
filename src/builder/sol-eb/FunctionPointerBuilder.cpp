@@ -479,9 +479,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 
 		// Build CreateInnerTransaction for application call
 		static awst::WInnerTransactionFields s_applFieldsType(6); // TxnTypeAppl
-		auto create = std::make_shared<awst::CreateInnerTransaction>();
-		create->sourceLocation = _loc;
-		create->wtype = &s_applFieldsType;
+		auto create = awst::makeCreateInnerTransaction(&s_applFieldsType, _loc);
 		create->fields["TypeEnum"] = awst::makeIntegerConstant("6", _loc);
 		create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
 		// ApplicationID: reinterpret uint64 appId to application type

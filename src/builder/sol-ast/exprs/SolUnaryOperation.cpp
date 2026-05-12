@@ -261,11 +261,8 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleBitNot(
 		auto cast = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), m_loc);
 		expr = std::move(cast);
 	}
-	auto e = std::make_shared<awst::BytesUnaryOperation>();
-	e->sourceLocation = m_loc;
-	e->wtype = expr->wtype;
-	e->op = awst::BytesUnaryOperator::BitInvert;
-	e->expr = std::move(expr);
+	auto const* exprWtype = expr->wtype;
+	auto e = awst::makeBitInvert(std::move(expr), exprWtype, m_loc);
 	if (resultType == awst::WType::biguintType())
 	{
 		auto castBack = awst::makeReinterpretCast(std::move(e), resultType, m_loc);

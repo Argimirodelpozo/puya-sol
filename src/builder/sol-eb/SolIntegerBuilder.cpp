@@ -452,11 +452,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			startOff->stackArgs.push_back(awst::makeIntegerConstant("32", _loc));
 
 			auto extract = awst::makeExtract3(concatPad, std::move(startOff), awst::makeIntegerConstant("32", _loc), _loc);
-			auto bitInvert = std::make_shared<awst::BytesUnaryOperation>();
-			bitInvert->sourceLocation = _loc;
-			bitInvert->wtype = awst::WType::bytesType();
-			bitInvert->op = awst::BytesUnaryOperator::BitInvert;
-			bitInvert->expr = std::move(extract);
+			auto bitInvert = awst::makeBitInvert(std::move(extract), awst::WType::bytesType(), _loc);
 
 			auto castBack = awst::makeReinterpretCast(std::move(bitInvert), awst::WType::biguintType(), _loc);
 
@@ -521,11 +517,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			extract->stackArgs.push_back(std::move(offset));
 			extract->stackArgs.push_back(std::move(thirtyTwo2));
 
-			auto invert = std::make_shared<awst::BytesUnaryOperation>();
-			invert->sourceLocation = _loc;
-			invert->wtype = awst::WType::bytesType();
-			invert->op = awst::BytesUnaryOperator::BitInvert;
-			invert->expr = std::move(extract);
+			auto invert = awst::makeBitInvert(std::move(extract), awst::WType::bytesType(), _loc);
 
 			auto cast = awst::makeReinterpretCast(std::move(invert), awst::WType::biguintType(), _loc);
 			return wrap(std::move(cast));

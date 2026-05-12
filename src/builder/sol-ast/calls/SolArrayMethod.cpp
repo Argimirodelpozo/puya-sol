@@ -92,11 +92,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					auto singleArr = awst::makeNewArray(arrWType, m_loc);
 					singleArr->values.push_back(std::move(encoded));
 
-					auto e = std::make_shared<awst::ArrayExtend>();
-					e->sourceLocation = m_loc;
-					e->wtype = awst::WType::voidType();
-					e->base = baseAwst;
-					e->other = std::move(singleArr);
+					auto e = awst::makeArrayExtend(baseAwst, std::move(singleArr), m_loc);
 					return e;
 				}
 				if (memberName == "push" && m_call.arguments().empty())
@@ -117,11 +113,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					auto singleArr = awst::makeNewArray(arrWType, m_loc);
 					singleArr->values.push_back(std::move(elem));
 
-					auto e = std::make_shared<awst::ArrayExtend>();
-					e->sourceLocation = m_loc;
-					e->wtype = awst::WType::voidType();
-					e->base = baseAwst;
-					e->other = std::move(singleArr);
+					auto e = awst::makeArrayExtend(baseAwst, std::move(singleArr), m_loc);
 
 					if (fromAssign)
 						return e;
@@ -149,10 +141,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				}
 				if (memberName == "pop")
 				{
-					auto popExpr = std::make_shared<awst::ArrayPop>();
-					popExpr->sourceLocation = m_loc;
-					popExpr->wtype = elemType;
-					popExpr->base = baseAwst;
+					auto popExpr = awst::makeArrayPop(baseAwst, elemType, m_loc);
 
 					auto decode = awst::makeARC4Decode(std::move(popExpr), rawElemType, m_loc);
 					return decode;
@@ -203,11 +192,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 								auto singleArr = awst::makeNewArray(arrWType, m_loc);
 								singleArr->values.push_back(std::move(encoded));
 
-								auto e = std::make_shared<awst::ArrayExtend>();
-								e->sourceLocation = m_loc;
-								e->wtype = awst::WType::voidType();
-								e->base = aliasExpr;
-								e->other = std::move(singleArr);
+								auto e = awst::makeArrayExtend(aliasExpr, std::move(singleArr), m_loc);
 								return e;
 							}
 							if (memberName == "push" && m_call.arguments().empty())
@@ -227,11 +212,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 								auto singleArr = awst::makeNewArray(arrWType, m_loc);
 								singleArr->values.push_back(std::move(elem));
 
-								auto e = std::make_shared<awst::ArrayExtend>();
-								e->sourceLocation = m_loc;
-								e->wtype = awst::WType::voidType();
-								e->base = aliasExpr;
-								e->other = std::move(singleArr);
+								auto e = awst::makeArrayExtend(aliasExpr, std::move(singleArr), m_loc);
 
 								if (fromAssign)
 									return e;
@@ -243,10 +224,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 							}
 							if (memberName == "pop")
 							{
-								auto popExpr = std::make_shared<awst::ArrayPop>();
-								popExpr->sourceLocation = m_loc;
-								popExpr->wtype = elemType;
-								popExpr->base = aliasExpr;
+								auto popExpr = awst::makeArrayPop(aliasExpr, elemType, m_loc);
 
 								auto decode = awst::makeARC4Decode(std::move(popExpr), rawElemType, m_loc);
 								return decode;
@@ -562,20 +540,13 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 		auto singleArr = awst::makeNewArray(rawFieldType, loc);
 		singleArr->values.push_back(std::move(val));
 
-		auto extend = std::make_shared<awst::ArrayExtend>();
-		extend->sourceLocation = loc;
-		extend->wtype = awst::WType::voidType();
-		extend->base = fieldExpr;
-		extend->other = std::move(singleArr);
+		auto extend = awst::makeArrayExtend(fieldExpr, std::move(singleArr), loc);
 		auto extendStmt = awst::makeExpressionStatement(std::move(extend), loc);
 		m_ctx.pendingStatements.push_back(std::move(extendStmt));
 	}
 	else // pop
 	{
-		auto popExpr = std::make_shared<awst::ArrayPop>();
-		popExpr->sourceLocation = loc;
-		popExpr->wtype = elemType ? elemType : rawFieldType;
-		popExpr->base = fieldExpr;
+		auto popExpr = awst::makeArrayPop(fieldExpr, elemType ? elemType : rawFieldType, loc);
 		auto popStmt = awst::makeExpressionStatement(std::move(popExpr), loc);
 		m_ctx.pendingStatements.push_back(std::move(popStmt));
 	}
@@ -641,11 +612,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 		auto singleArr = awst::makeNewArray(arrWType, m_loc);
 		singleArr->values.push_back(std::move(encoded));
 
-		auto e = std::make_shared<awst::ArrayExtend>();
-		e->sourceLocation = m_loc;
-		e->wtype = awst::WType::voidType();
-		e->base = writeExpr;
-		e->other = std::move(singleArr);
+		auto e = awst::makeArrayExtend(writeExpr, std::move(singleArr), m_loc);
 		return e;
 	}
 	else if (_memberName == "push" && m_call.arguments().empty())
@@ -674,11 +641,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 		auto singleArr = awst::makeNewArray(arrWType, m_loc);
 		singleArr->values.push_back(std::move(elem));
 
-		auto e = std::make_shared<awst::ArrayExtend>();
-		e->sourceLocation = m_loc;
-		e->wtype = awst::WType::voidType();
-		e->base = writeExpr;
-		e->other = std::move(singleArr);
+		auto e = awst::makeArrayExtend(writeExpr, std::move(singleArr), m_loc);
 
 		if (fromAssign)
 			return e;
@@ -691,10 +654,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 	}
 	else if (_memberName == "pop")
 	{
-		auto popExpr = std::make_shared<awst::ArrayPop>();
-		popExpr->sourceLocation = m_loc;
-		popExpr->wtype = elemType;
-		popExpr->base = writeExpr;
+		auto popExpr = awst::makeArrayPop(writeExpr, elemType, m_loc);
 
 		auto decode = awst::makeARC4Decode(std::move(popExpr), rawElemType, m_loc);
 		return decode;
@@ -773,20 +733,13 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMemoryArray(
 			auto singleArr = awst::makeNewArray(baseWtype, m_loc);
 			singleArr->values.push_back(std::move(val));
 
-			auto e = std::make_shared<awst::ArrayExtend>();
-			e->sourceLocation = m_loc;
-			e->wtype = awst::WType::voidType();
-			e->base = std::move(base);
-			e->other = std::move(singleArr);
+			auto e = awst::makeArrayExtend(std::move(base), std::move(singleArr), m_loc);
 			return e;
 		}
 	}
 	else if (_memberName == "pop")
 	{
-		auto e = std::make_shared<awst::ArrayPop>();
-		e->sourceLocation = m_loc;
-		e->wtype = awst::WType::voidType();
-		e->base = std::move(base);
+		auto e = awst::makeArrayPop(std::move(base), awst::WType::voidType(), m_loc);
 		return e;
 	}
 

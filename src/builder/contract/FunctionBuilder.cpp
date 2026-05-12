@@ -1002,10 +1002,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					// but extract3 with length=0 returns empty bytes instead
 					// of extracting to end (see puya-possible-bug.md).
 					// ConvertArray uses len+substring3 which works correctly.
-					auto convert = std::make_shared<awst::ConvertArray>();
-					convert->sourceLocation = pd.loc;
-					convert->wtype = pd.nativeType;
-					convert->expr = std::move(arc4Var);
+					auto convert = awst::makeConvertArray(std::move(arc4Var), pd.nativeType, pd.loc);
 					decodeExpr = std::move(convert);
 				}
 				else

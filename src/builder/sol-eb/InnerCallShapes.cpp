@@ -163,9 +163,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 
 	// Build inner app call
 	static awst::WInnerTransactionFields s_applFieldsType(TxnTypeAppl);
-	auto create = std::make_shared<awst::CreateInnerTransaction>();
-	create->sourceLocation = _loc;
-	create->wtype = &s_applFieldsType;
+	auto create = awst::makeCreateInnerTransaction(&s_applFieldsType, _loc);
 	create->fields["TypeEnum"] = awst::makeIntegerConstant(TxnTypeAppl, _loc);
 	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
 	create->fields["ApplicationID"] = std::move(appId);
@@ -260,9 +258,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	auto appId = addressToAppId(std::move(_receiver), _loc);
 
 	static awst::WInnerTransactionFields s_applFieldsType(TxnTypeAppl);
-	auto create = std::make_shared<awst::CreateInnerTransaction>();
-	create->sourceLocation = _loc;
-	create->wtype = &s_applFieldsType;
+	auto create = awst::makeCreateInnerTransaction(&s_applFieldsType, _loc);
 	create->fields["TypeEnum"] = awst::makeIntegerConstant(TxnTypeAppl, _loc);
 	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
 	create->fields["ApplicationID"] = std::move(appId);
