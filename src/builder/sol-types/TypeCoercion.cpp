@@ -683,12 +683,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 					if (!bodyBytes)
 						bodyBytes = std::move(encBytes);
 					else
-					{
-						auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-						cat->stackArgs.push_back(std::move(bodyBytes));
-						cat->stackArgs.push_back(std::move(encBytes));
-						bodyBytes = std::move(cat);
-					}
+						bodyBytes = awst::makeConcat(std::move(bodyBytes), std::move(encBytes), _loc);
 				}
 
 				int N = static_cast<int>(statArr->arraySize());
@@ -697,12 +692,8 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 					 static_cast<uint8_t>(N & 0xFF)},
 					_loc);
 
-				auto withHeader = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-				withHeader->stackArgs.push_back(std::move(header));
-				withHeader->stackArgs.push_back(std::move(bodyBytes));
-
-				auto cast = awst::makeReinterpretCast(std::move(withHeader), _targetType, _loc);
-				return cast;
+				auto withHeader = awst::makeConcat(std::move(header), std::move(bodyBytes), _loc);
+				return awst::makeReinterpretCast(std::move(withHeader), _targetType, _loc);
 			}
 
 			// Signed variant: `int8[K]` literal → `int16[]` (any signed

@@ -49,10 +49,7 @@ std::shared_ptr<awst::IntrinsicCall> InnerCallHandlers::makeConcat(
 	std::shared_ptr<awst::Expression> _a, std::shared_ptr<awst::Expression> _b,
 	awst::SourceLocation const& _loc)
 {
-	auto c = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-	c->stackArgs.push_back(std::move(_a));
-	c->stackArgs.push_back(std::move(_b));
-	return c;
+	return awst::makeConcat(std::move(_a), std::move(_b), _loc);
 }
 
 std::shared_ptr<awst::Expression> InnerCallHandlers::addressToAppId(

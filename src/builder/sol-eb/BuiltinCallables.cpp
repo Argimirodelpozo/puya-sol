@@ -310,9 +310,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	auto pubkeyY = awst::makeTupleItem(std::move(tupleRead1), 1, awst::WType::bytesType(), _loc);
 
 	// concat(pubkey_x, pubkey_y) → 64 bytes
-	auto pubkeyConcat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-	pubkeyConcat->stackArgs.push_back(std::move(pubkeyX));
-	pubkeyConcat->stackArgs.push_back(std::move(pubkeyY));
+	auto pubkeyConcat = awst::makeConcat(std::move(pubkeyX), std::move(pubkeyY), _loc);
 
 	// keccak256(pubkey) → 32 bytes
 	auto hash = awst::makeKeccak256(std::move(pubkeyConcat), _loc);

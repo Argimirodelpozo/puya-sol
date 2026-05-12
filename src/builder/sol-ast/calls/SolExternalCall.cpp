@@ -104,10 +104,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 			auto itobLen = awst::makeItob(std::move(lenExpr), m_loc);
 			auto header = awst::makeExtract(std::move(itobLen), 6, 2, m_loc);
 
-			auto encoded = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
-			encoded->stackArgs.push_back(std::move(header));
-			encoded->stackArgs.push_back(std::move(_argExpr));
-			return encoded;
+			return awst::makeConcat(std::move(header), std::move(_argExpr), m_loc);
 		}
 		return _argExpr;
 	}
@@ -479,12 +476,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 				if (!acc)
 					acc = std::move(extracted);
 				else
-				{
-					auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
-					cat->stackArgs.push_back(std::move(acc));
-					cat->stackArgs.push_back(std::move(extracted));
-					acc = std::move(cat);
-				}
+					acc = awst::makeConcat(std::move(acc), std::move(extracted), m_loc);
 			}
 			if (acc)
 				argsTuple->items.push_back(std::move(acc));

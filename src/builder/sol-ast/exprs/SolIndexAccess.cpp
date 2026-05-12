@@ -378,10 +378,7 @@ std::shared_ptr<awst::Expression> SolIndexRangeAccess::toAwst()
 			auto itob = awst::makeItob(std::move(diff), m_loc);
 
 			auto lenHdr = awst::makeExtract3(std::move(itob), awst::makeIntegerConstant("6", m_loc), awst::makeIntegerConstant("2", m_loc), m_loc);
-			auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
-			cat->stackArgs.push_back(std::move(lenHdr));
-			cat->stackArgs.push_back(std::move(sub));
-
+			auto cat = awst::makeConcat(std::move(lenHdr), std::move(sub), m_loc);
 			return awst::makeReinterpretCast(std::move(cat), resultType, m_loc);
 		}
 	}

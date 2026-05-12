@@ -223,12 +223,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 						if (!data)
 							data = std::move(padded);
 						else
-						{
-							auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-							concat->stackArgs.push_back(std::move(data));
-							concat->stackArgs.push_back(std::move(padded));
-							data = std::move(concat);
-						}
+							data = awst::makeConcat(std::move(data), std::move(padded), _loc);
 					}
 
 					auto keccak = awst::makeKeccak256(std::move(data), _loc);
@@ -268,12 +263,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 							if (!data)
 								data = std::move(padded);
 							else
-							{
-								auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-								concat->stackArgs.push_back(std::move(data));
-								concat->stackArgs.push_back(std::move(padded));
-								data = std::move(concat);
-							}
+								data = awst::makeConcat(std::move(data), std::move(padded), _loc);
 						}
 
 						// keccak256 the concatenated bytes
@@ -332,10 +322,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 
 				auto slotPadded = padTo32Bytes(m_lastMstoreValue, _loc);
 
-				auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-				concat->stackArgs.push_back(std::move(paramBytes));
-				concat->stackArgs.push_back(std::move(slotPadded));
-
+				auto concat = awst::makeConcat(std::move(paramBytes), std::move(slotPadded), _loc);
 				auto keccak = awst::makeKeccak256(std::move(concat), _loc);
 				return awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
 			}
@@ -448,12 +435,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 				if (!data)
 					data = std::move(padded);
 				else
-				{
-					auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-					concat->stackArgs.push_back(std::move(data));
-					concat->stackArgs.push_back(std::move(padded));
-					data = std::move(concat);
-				}
+					data = awst::makeConcat(std::move(data), std::move(padded), _loc);
 				fieldByteOffset += fieldSize;
 			}
 
@@ -657,10 +639,7 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 		return c;
 	};
 	auto concatBytes = [&](std::shared_ptr<awst::Expression> a, std::shared_ptr<awst::Expression> b) {
-		auto c = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-		c->stackArgs.push_back(std::move(a));
-		c->stackArgs.push_back(std::move(b));
-		return c;
+		return awst::makeConcat(std::move(a), std::move(b), _loc);
 	};
 	auto lenOf = [&](std::shared_ptr<awst::Expression> b) {
 		return awst::makeLen(std::move(b), _loc);

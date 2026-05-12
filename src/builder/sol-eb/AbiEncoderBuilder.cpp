@@ -46,12 +46,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::concatByteExprs(
 		return awst::makeBytesConstant({}, _loc);
 	auto result = std::move(_parts[0]);
 	for (size_t i = 1; i < _parts.size(); ++i)
-	{
-		auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-		concat->stackArgs.push_back(std::move(result));
-		concat->stackArgs.push_back(std::move(_parts[i]));
-		result = std::move(concat);
-	}
+		result = awst::makeConcat(std::move(result), std::move(_parts[i]), _loc);
 	return result;
 }
 
@@ -360,12 +355,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 					if (!packed)
 						packed = std::move(elemBytes);
 					else
-					{
-						auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-						cat->stackArgs.push_back(std::move(packed));
-						cat->stackArgs.push_back(std::move(elemBytes));
-						packed = std::move(cat);
-					}
+						packed = awst::makeConcat(std::move(packed), std::move(elemBytes), _loc);
 				}
 				return packed ? packed : toPackedBytes(_ctx, _ctx.buildExpr(*args[argIdx]), solType, _isPacked, _loc);
 			}
@@ -381,13 +371,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 
 	auto result = packArg(0);
 	for (size_t i = 1; i < args.size(); ++i)
-	{
-		auto arg = packArg(i);
-		auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-		concat->stackArgs.push_back(std::move(result));
-		concat->stackArgs.push_back(std::move(arg));
-		result = std::move(concat);
-	}
+		result = awst::makeConcat(std::move(result), packArg(i), _loc);
 	return std::make_unique<GenericAbiResult>(_ctx, std::move(result));
 }
 
@@ -798,10 +782,8 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncode(
 	if (!tailConcatParts.empty())
 	{
 		auto tail = concatByteExprs(std::move(tailConcatParts), _loc);
-		auto result = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-		result->stackArgs.push_back(std::move(head));
-		result->stackArgs.push_back(std::move(tail));
-		return std::make_unique<GenericAbiResult>(_ctx, std::move(result));
+		return std::make_unique<GenericAbiResult>(_ctx,
+			awst::makeConcat(std::move(head), std::move(tail), _loc));
 	}
 	return std::make_unique<GenericAbiResult>(_ctx, std::move(head));
 }

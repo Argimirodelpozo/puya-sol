@@ -88,10 +88,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgsHeadTail(
 	if (!tailParts.empty())
 	{
 		auto tail = concatByteExprs(std::move(tailParts), _loc);
-		auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-		concat->stackArgs.push_back(std::move(encoded));
-		concat->stackArgs.push_back(std::move(tail));
-		encoded = std::move(concat);
+		encoded = awst::makeConcat(std::move(encoded), std::move(tail), _loc);
 	}
 	return encoded;
 }
@@ -208,9 +205,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 				auto itob = awst::makeItob(std::move(elemCount), _loc);
 				auto header = awst::makeExtract3(std::move(itob), awst::makeIntegerConstant("6", _loc), awst::makeIntegerConstant("2", _loc), _loc);
 				// concat(header, elemBytes)
-				auto arc4Bytes = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-				arc4Bytes->stackArgs.push_back(std::move(header));
-				arc4Bytes->stackArgs.push_back(std::move(elemBytes));
+				auto arc4Bytes = awst::makeConcat(std::move(header), std::move(elemBytes), _loc);
 
 				// ReinterpretCast to ARC4DynamicArray<elem>
 				return awst::makeReinterpretCast(std::move(arc4Bytes), wtype, _loc);
@@ -326,10 +321,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 			auto dataPadded = rightPadTo32(std::move(bytesExpr), _loc);
 
 			// concat length + data
-			auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-			concat->stackArgs.push_back(std::move(lenPadded));
-			concat->stackArgs.push_back(std::move(dataPadded));
-			return concat;
+			return awst::makeConcat(std::move(lenPadded), std::move(dataPadded), _loc);
 		}
 	}
 
@@ -424,10 +416,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 					stripHeader->stackArgs.push_back(std::move(bytesCast));
 				}
 
-				auto concatArr = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-				concatArr->stackArgs.push_back(std::move(lenPadded));
-				concatArr->stackArgs.push_back(std::move(stripHeader));
-				return concatArr;
+				return awst::makeConcat(std::move(lenPadded), std::move(stripHeader), _loc);
 			}
 
 			// (b) Small static element: per-element pad via runtime loop.
@@ -537,10 +526,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 			if (tailParts.empty())
 				return head;
 			auto tail = concatByteExprs(std::move(tailParts), _loc);
-			auto result = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-			result->stackArgs.push_back(std::move(head));
-			result->stackArgs.push_back(std::move(tail));
-			return result;
+			return awst::makeConcat(std::move(head), std::move(tail), _loc);
 		}
 	}
 

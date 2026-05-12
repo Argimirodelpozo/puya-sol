@@ -166,12 +166,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 				calldataConcat = std::move(slotChoice);
 			}
 			else
-			{
-				auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
-				cat->stackArgs.push_back(std::move(calldataConcat));
-				cat->stackArgs.push_back(std::move(slotChoice));
-				calldataConcat = std::move(cat);
-			}
+				calldataConcat = awst::makeConcat(std::move(calldataConcat), std::move(slotChoice), m_loc);
 		}
 
 		return awst::makeConditional(

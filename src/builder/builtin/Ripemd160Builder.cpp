@@ -140,10 +140,7 @@ std::shared_ptr<Expression> bzeroOf(std::shared_ptr<Expression> n, SourceLocatio
 std::shared_ptr<Expression> concatBytes(
 	std::shared_ptr<Expression> a, std::shared_ptr<Expression> b, SourceLocation const& loc)
 {
-	auto call = makeIntrinsicCall("concat", WType::bytesType(), loc);
-	call->stackArgs.push_back(std::move(a));
-	call->stackArgs.push_back(std::move(b));
-	return call;
+	return makeConcat(std::move(a), std::move(b), loc);
 }
 
 std::shared_ptr<Expression> getByte(

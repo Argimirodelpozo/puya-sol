@@ -393,12 +393,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				{
 					compositeKey = std::move(keyParts[0]);
 					for (size_t i = 1; i < keyParts.size(); ++i)
-					{
-						auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), loc);
-						concat->stackArgs.push_back(std::move(compositeKey));
-						concat->stackArgs.push_back(std::move(keyParts[i]));
-						compositeKey = std::move(concat);
-					}
+						compositeKey = awst::makeConcat(std::move(compositeKey), std::move(keyParts[i]), loc);
 				}
 
 				// Hash the composite key

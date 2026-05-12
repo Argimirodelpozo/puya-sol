@@ -24,13 +24,7 @@ std::shared_ptr<awst::Expression> SolBytesConcat::toAwst()
 
 	auto result = toBytes(buildExpr(*args[0]));
 	for (size_t i = 1; i < args.size(); ++i)
-	{
-		auto arg = toBytes(buildExpr(*args[i]));
-		auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
-		concat->stackArgs.push_back(std::move(result));
-		concat->stackArgs.push_back(std::move(arg));
-		result = std::move(concat);
-	}
+		result = awst::makeConcat(std::move(result), toBytes(buildExpr(*args[i])), m_loc);
 
 	return result;
 }

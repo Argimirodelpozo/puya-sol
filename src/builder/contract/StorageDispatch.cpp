@@ -189,9 +189,7 @@ void ContractBuilder::buildStorageDispatch(
 			auto slotVar = awst::makeVarExpression("__slot", awst::WType::uint64Type(), loc);
 			auto slotItob = awst::makeItob(std::move(slotVar), loc);
 
-			auto key = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), loc);
-			key->stackArgs.push_back(std::move(prefix));
-			key->stackArgs.push_back(std::move(slotItob));
+			auto key = awst::makeConcat(std::move(prefix), std::move(slotItob), loc);
 
 			// Use single "__dyn_storage" box, same as read
 			auto boxKey = makeBytes("__dyn_storage");

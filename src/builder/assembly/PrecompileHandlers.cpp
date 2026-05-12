@@ -177,10 +177,7 @@ void AssemblyBuilder::handleEcPairingRT(
 			};
 			auto a = extract(std::move(off1));
 			auto b = extract(std::move(off2));
-			auto c = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-			c->stackArgs.push_back(std::move(a));
-			c->stackArgs.push_back(std::move(b));
-			return c;
+			return awst::makeConcat(std::move(a), std::move(b), _loc);
 		};
 		auto plusConst = [&](std::shared_ptr<awst::Expression> base, uint64_t k) {
 			if (k == 0) return base;
@@ -214,26 +211,12 @@ void AssemblyBuilder::handleEcPairingRT(
 			auto g2_y = concatTwoSlotsRT(
 				plusConst(baseOff(), pairBase + 5 * 0x20),
 				plusConst(baseOff(), pairBase + 4 * 0x20));
-			auto g2 = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-			g2->stackArgs.push_back(std::move(g2_x));
-			g2->stackArgs.push_back(std::move(g2_y));
+			auto g2 = awst::makeConcat(std::move(g2_x), std::move(g2_y), _loc);
 
 			if (!g1All) g1All = std::move(g1);
-			else
-			{
-				auto c = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-				c->stackArgs.push_back(std::move(g1All));
-				c->stackArgs.push_back(std::move(g1));
-				g1All = std::move(c);
-			}
+			else g1All = awst::makeConcat(std::move(g1All), std::move(g1), _loc);
 			if (!g2All) g2All = std::move(g2);
-			else
-			{
-				auto c = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-				c->stackArgs.push_back(std::move(g2All));
-				c->stackArgs.push_back(std::move(g2));
-				g2All = std::move(c);
-			}
+			else g2All = awst::makeConcat(std::move(g2All), std::move(g2), _loc);
 		}
 		ecCall->stackArgs.push_back(std::move(g1All));
 		ecCall->stackArgs.push_back(std::move(g2All));

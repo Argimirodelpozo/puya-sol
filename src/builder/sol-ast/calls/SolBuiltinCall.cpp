@@ -181,9 +181,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		// Concat with 0x00 to zero the last byte.
 		auto zeroByte = awst::makeBytesConstant({0}, m_loc);
 
-		auto masked = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
-		masked->stackArgs.push_back(std::move(top31));
-		masked->stackArgs.push_back(std::move(zeroByte));
+		auto masked = awst::makeConcat(std::move(top31), std::move(zeroByte), m_loc);
 
 		// Cast to biguint
 		auto result = awst::makeReinterpretCast(std::move(masked), awst::WType::biguintType(), m_loc);

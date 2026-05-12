@@ -411,9 +411,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					}
 
 					// concat(current, pushVal)
-					auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), loc);
-					cat->stackArgs.push_back(std::move(readVal));
-					cat->stackArgs.push_back(std::move(pushVal));
+					auto cat = awst::makeConcat(std::move(readVal), std::move(pushVal), loc);
 
 					if (kind == awst::AppStorageKind::Box)
 					{

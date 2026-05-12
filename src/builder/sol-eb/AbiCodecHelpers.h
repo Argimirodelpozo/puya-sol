@@ -37,10 +37,7 @@ inline std::shared_ptr<awst::Expression> bytesConcat(
 	std::shared_ptr<awst::Expression> _b,
 	awst::SourceLocation const& _loc)
 {
-	auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
-	cat->stackArgs.push_back(std::move(_a));
-	cat->stackArgs.push_back(std::move(_b));
-	return cat;
+	return awst::makeConcat(std::move(_a), std::move(_b), _loc);
 }
 
 /// extract3(bytes, start, length) on bytes
