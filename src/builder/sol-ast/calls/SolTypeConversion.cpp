@@ -44,13 +44,14 @@ std::shared_ptr<awst::Expression> SolTypeConversion::toAwst()
 		if (converted)
 		{
 			auto result = converted->resolve();
-			// Apply narrowing mask for unsigned types when registry returns as-is.
-			// uint32→uint16 (both uint64) needs truncation to target width.
-			// Skip for signed types — masking strips sign extension.
-			auto const* targetIntType = dynamic_cast<solidity::frontend::IntegerType const*>(
-				m_call.annotation().type);
-			if (!targetIntType || !targetIntType->isSigned())
-				result = applyNarrowingMask(std::move(result), targetType);
+			// Apply narrowing mask whenever the registry returned the value
+			// in a wider container than the target type. Solidity narrowing
+			// (uintN → uintM, intN → intM, int→uint, etc.) always truncates
+			// to the target width — the source bits outside that width must
+			// be dropped regardless of sign. Sign-extension on subsequent
+			// widening reads inspects the source-width MSB of the masked
+			// value, so masking does not strip that information.
+			result = applyNarrowingMask(std::move(result), targetType);
 			return result;
 		}
 	}
