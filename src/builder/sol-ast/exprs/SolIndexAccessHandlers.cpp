@@ -311,12 +311,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 		hashCall->stackArgs.push_back(std::move(compositeKey));
 		compositeKey = std::move(hashCall);
 
-		auto boxKey = std::make_shared<awst::BoxPrefixedKeyExpression>();
-		boxKey->sourceLocation = m_loc;
-		boxKey->wtype = awst::WType::boxKeyType();
-		boxKey->prefix = prefix;
-		boxKey->key = std::move(compositeKey);
-		e->key = std::move(boxKey);
+		e->key = awst::makeBoxPrefixedKey(prefix, std::move(compositeKey), m_loc);
 	}
 	else
 		e->key = std::move(prefix);

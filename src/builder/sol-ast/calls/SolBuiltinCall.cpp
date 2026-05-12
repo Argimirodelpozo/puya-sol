@@ -162,12 +162,11 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		// minus1_bytes = 32-byte big-endian via b|(sub, bzero(32))
 		auto minusBytesCast = awst::makeReinterpretCast(std::move(sub), awst::WType::bytesType(), m_loc);
 
-		auto minus1Bytes = std::make_shared<awst::BytesBinaryOperation>();
-		minus1Bytes->sourceLocation = m_loc;
-		minus1Bytes->wtype = awst::WType::bytesType();
-		minus1Bytes->left = awst::makeBzero(32, m_loc);
-		minus1Bytes->op = awst::BytesBinaryOperator::BitOr;
-		minus1Bytes->right = std::move(minusBytesCast);
+		auto minus1Bytes = awst::makeBytesBinOp(
+			awst::makeBzero(32, m_loc),
+			awst::BytesBinaryOperator::BitOr,
+			std::move(minusBytesCast),
+			m_loc);
 
 		// h2 = keccak256(minus1_bytes)
 		auto h2 = awst::makeKeccak256(std::move(minus1Bytes), m_loc);

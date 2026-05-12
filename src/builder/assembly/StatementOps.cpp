@@ -552,12 +552,9 @@ void AssemblyBuilder::buildAssignment(
 		}
 	}
 
-	auto target = std::make_shared<awst::VarExpression>();
-	target->sourceLocation = loc;
-	target->name = name;
-
 	auto it = m_locals.find(name);
-	target->wtype = (it != m_locals.end()) ? it->second : awst::WType::biguintType();
+	auto const* wtype = (it != m_locals.end()) ? it->second : awst::WType::biguintType();
+	auto target = awst::makeVarExpression(name, wtype, loc);
 
 	auto value = buildExpression(*_assign.value);
 	// Drain any pending statements from inlined assembly functions

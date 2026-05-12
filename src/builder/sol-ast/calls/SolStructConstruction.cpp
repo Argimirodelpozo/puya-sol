@@ -87,11 +87,7 @@ std::shared_ptr<awst::Expression> SolStructConstruction::toAwst()
 		return newStruct;
 	}
 
-	auto structExpr = std::make_shared<awst::NamedTupleExpression>();
-	structExpr->sourceLocation = m_loc;
-	structExpr->wtype = wtype;
-	structExpr->values = std::move(fieldValues);
-	return structExpr;
+	return awst::makeNamedTupleExpression(wtype, std::move(fieldValues), m_loc);
 }
 
 } // namespace puyasol::builder::sol_ast

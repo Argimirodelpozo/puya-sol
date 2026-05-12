@@ -269,11 +269,8 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 	// Tuple/struct returns
 	if (auto const* tupleType = dynamic_cast<awst::WTuple const*>(_returnType))
 	{
-		auto singleBytes = std::make_shared<awst::SingleEvaluation>();
-		singleBytes->sourceLocation = m_loc;
-		singleBytes->wtype = awst::WType::bytesType();
-		singleBytes->source = std::move(stripPrefix);
-		singleBytes->id = 0;
+		auto singleBytes = awst::makeSingleEvaluation(
+			std::move(stripPrefix), awst::WType::bytesType(), 0, m_loc);
 
 		auto tuple = awst::makeTupleExpression(_returnType, m_loc);
 

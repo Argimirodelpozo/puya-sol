@@ -553,10 +553,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 
 	if (dynamic_cast<awst::BoxValueExpression const*>(target.get()))
 	{
-		auto stateDelete = std::make_shared<awst::StateDelete>();
-		stateDelete->sourceLocation = m_loc;
-		stateDelete->wtype = awst::WType::boolType();
-		stateDelete->field = target;
+		auto stateDelete = awst::makeStateDelete(target, m_loc);
 		auto stmt = awst::makeExpressionStatement(std::move(stateDelete), m_loc);
 		m_ctx.pendingStatements.push_back(std::move(stmt));
 		return _operand;

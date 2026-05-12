@@ -66,12 +66,7 @@ std::shared_ptr<awst::Expression> SolTupleExpression::toAwst()
 								|| dynamic_cast<awst::ARC4Struct const*>(elementType);
 							if (isArc4Aggregate)
 							{
-								auto fromBytes = std::make_shared<awst::ARC4FromBytes>();
-								fromBytes->sourceLocation = m_loc;
-								fromBytes->wtype = elementType;
-								fromBytes->value = std::move(val);
-								fromBytes->validate = false;
-								e->values.push_back(std::move(fromBytes));
+								e->values.push_back(awst::makeARC4FromBytes(std::move(val), elementType, m_loc));
 								continue;
 							}
 						}

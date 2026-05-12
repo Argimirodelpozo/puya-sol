@@ -214,15 +214,10 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 		return node;
 	}
 
-	auto node = std::make_shared<awst::VarExpression>();
-	node->sourceLocation = loc;
-	node->name = name;
-
 	auto it = m_locals.find(name);
-	if (it != m_locals.end())
-		node->wtype = it->second;
-	else
-		node->wtype = awst::WType::biguintType(); // Default: all assembly vars are uint256
+	// Default: all assembly vars are uint256
+	auto const* wtype = (it != m_locals.end()) ? it->second : awst::WType::biguintType();
+	auto node = awst::makeVarExpression(name, wtype, loc);
 
 	// bytesN variables in assembly need left-alignment (right-padded to 32 bytes).
 	// EVM stores bytesN left-aligned in 256-bit words: bytes4(0xAABBCCDD) = 0xAABBCCDD000...00

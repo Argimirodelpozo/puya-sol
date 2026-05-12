@@ -345,15 +345,10 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 	}
 	else
 	{
-		auto binOp = std::make_shared<awst::BigUIntBinaryOperation>();
-		binOp->sourceLocation = m_loc;
-		binOp->wtype = awst::WType::biguintType();
-		binOp->left = _left;
-		binOp->right = _right;
-		if (_op == Token::Mul || _op == Token::AssignMul)
-			binOp->op = awst::BigUIntBinaryOperator::Mult;
-		else
-			binOp->op = awst::BigUIntBinaryOperator::Add;
+		auto bigOp = (_op == Token::Mul || _op == Token::AssignMul)
+			? awst::BigUIntBinaryOperator::Mult
+			: awst::BigUIntBinaryOperator::Add;
+		auto binOp = awst::makeBigUIntBinOp(_left, bigOp, _right, m_loc);
 		rawResult = std::move(binOp);
 	}
 
@@ -754,10 +749,8 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 	// Also need result == 0 check: don't negate 0
 	auto resultIsZero = awst::makeNumericCompare(unsignedResult, awst::NumericComparison::Eq, makeBiguintConst("0"), m_loc);
 
-	auto needNeg = awst::makeBoolBinOp(std::move(shouldNegate), awst::BinaryBooleanOperator::And, std::make_shared<awst::Not>(), m_loc);
-	dynamic_cast<awst::Not*>(needNeg->right.get())->sourceLocation = m_loc;
-	dynamic_cast<awst::Not*>(needNeg->right.get())->wtype = awst::WType::boolType();
-	dynamic_cast<awst::Not*>(needNeg->right.get())->expr = std::move(resultIsZero);
+	auto notExpr = awst::makeNot(std::move(resultIsZero), m_loc);
+	auto needNeg = awst::makeBoolBinOp(std::move(shouldNegate), awst::BinaryBooleanOperator::And, std::move(notExpr), m_loc);
 
 	// shouldNegate && result != 0 ? negated : unsigned
 	auto finalResult = awst::makeConditional(

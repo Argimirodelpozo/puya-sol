@@ -38,19 +38,15 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::binary_op(
 	if (_reverse)
 		std::swap(lhs, rhs);
 
-	auto e = std::make_shared<awst::BytesBinaryOperation>();
-	e->sourceLocation = _loc;
-	e->wtype = awst::WType::bytesType();
-	e->left = std::move(lhs);
-	e->right = std::move(rhs);
-
+	awst::BytesBinaryOperator bytesOp = awst::BytesBinaryOperator::BitOr;
 	switch (_op)
 	{
-	case BuilderBinaryOp::BitOr: e->op = awst::BytesBinaryOperator::BitOr; break;
-	case BuilderBinaryOp::BitXor: e->op = awst::BytesBinaryOperator::BitXor; break;
-	case BuilderBinaryOp::BitAnd: e->op = awst::BytesBinaryOperator::BitAnd; break;
-	default: e->op = awst::BytesBinaryOperator::BitOr; break;
+	case BuilderBinaryOp::BitOr: bytesOp = awst::BytesBinaryOperator::BitOr; break;
+	case BuilderBinaryOp::BitXor: bytesOp = awst::BytesBinaryOperator::BitXor; break;
+	case BuilderBinaryOp::BitAnd: bytesOp = awst::BytesBinaryOperator::BitAnd; break;
+	default: break;
 	}
+	auto e = awst::makeBytesBinOp(std::move(lhs), bytesOp, std::move(rhs), _loc);
 	return std::make_unique<SolFixedBytesBuilder>(m_ctx, m_bytesType, std::move(e));
 }
 

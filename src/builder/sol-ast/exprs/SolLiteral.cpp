@@ -75,11 +75,7 @@ std::shared_ptr<awst::Expression> SolLiteral::toAwst()
 	}
 	case Token::StringLiteral:
 	{
-		auto e = std::make_shared<awst::StringConstant>();
-		e->sourceLocation = m_loc;
-		e->wtype = awst::WType::stringType();
-		e->value = m_literal.value();
-		return e;
+		return awst::makeStringConstant(m_literal.value(), m_loc);
 	}
 	case Token::HexStringLiteral:
 	{
@@ -89,11 +85,7 @@ std::shared_ptr<awst::Expression> SolLiteral::toAwst()
 	}
 	default:
 	{
-		auto e = std::make_shared<awst::StringConstant>();
-		e->sourceLocation = m_loc;
-		e->wtype = awst::WType::stringType();
-		e->value = m_literal.value();
-		return e;
+		return awst::makeStringConstant(m_literal.value(), m_loc);
 	}
 	}
 }

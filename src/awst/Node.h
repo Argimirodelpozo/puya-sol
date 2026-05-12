@@ -288,6 +288,16 @@ struct StringConstant: Expression
 	std::string value;
 };
 
+inline std::shared_ptr<StringConstant> makeStringConstant(
+	std::string value, SourceLocation loc)
+{
+	auto node = std::make_shared<StringConstant>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = WType::stringType();
+	node->value = std::move(value);
+	return node;
+}
+
 struct VoidConstant: Expression
 {
 	std::string nodeType() const override { return "VoidConstant"; }
@@ -376,6 +386,21 @@ struct BytesBinaryOperation: Expression
 	BytesBinaryOperator op;
 	std::shared_ptr<Expression> right;
 };
+
+inline std::shared_ptr<BytesBinaryOperation> makeBytesBinOp(
+	std::shared_ptr<Expression> left,
+	BytesBinaryOperator op,
+	std::shared_ptr<Expression> right,
+	SourceLocation loc)
+{
+	auto node = std::make_shared<BytesBinaryOperation>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = WType::bytesType();
+	node->left = std::move(left);
+	node->op = op;
+	node->right = std::move(right);
+	return node;
+}
 
 enum class BytesUnaryOperator
 {
@@ -917,10 +942,29 @@ struct ARC4FromBytes: Expression
 	bool validate = false;
 };
 
+inline std::shared_ptr<ARC4FromBytes> makeARC4FromBytes(
+	std::shared_ptr<Expression> value, WType const* wtype, SourceLocation loc, bool validate = false)
+{
+	auto node = std::make_shared<ARC4FromBytes>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->value = std::move(value);
+	node->validate = validate;
+	return node;
+}
+
 struct ARC4Router: Expression
 {
 	std::string nodeType() const override { return "ARC4Router"; }
 };
+
+inline std::shared_ptr<ARC4Router> makeARC4Router(WType const* wtype, SourceLocation loc)
+{
+	auto node = std::make_shared<ARC4Router>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	return node;
+}
 
 struct ReinterpretCast: Expression
 {
@@ -972,6 +1016,17 @@ struct SingleEvaluation: Expression
 	int id = 0;
 };
 
+inline std::shared_ptr<SingleEvaluation> makeSingleEvaluation(
+	std::shared_ptr<Expression> source, WType const* wtype, int id, SourceLocation loc)
+{
+	auto node = std::make_shared<SingleEvaluation>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->source = std::move(source);
+	node->id = id;
+	return node;
+}
+
 struct CheckedMaybe: Expression
 {
 	std::string nodeType() const override { return "CheckedMaybe"; }
@@ -985,6 +1040,17 @@ struct Emit: Expression
 	std::string signature;
 	std::shared_ptr<Expression> value;
 };
+
+inline std::shared_ptr<Emit> makeEmit(
+	std::string signature, std::shared_ptr<Expression> value, SourceLocation loc)
+{
+	auto node = std::make_shared<Emit>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = WType::voidType();
+	node->signature = std::move(signature);
+	node->value = std::move(value);
+	return node;
+}
 
 struct NewArray: Expression
 {
@@ -1097,6 +1163,17 @@ struct NamedTupleExpression: Expression
 	std::map<std::string, std::shared_ptr<Expression>> values;
 };
 
+inline std::shared_ptr<NamedTupleExpression> makeNamedTupleExpression(
+	WType const* wtype, std::map<std::string, std::shared_ptr<Expression>> values,
+	SourceLocation loc)
+{
+	auto node = std::make_shared<NamedTupleExpression>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->values = std::move(values);
+	return node;
+}
+
 struct StateGet: Expression
 {
 	std::string nodeType() const override { return "StateGet"; }
@@ -1129,6 +1206,16 @@ struct StateDelete: Expression
 	std::string nodeType() const override { return "StateDelete"; }
 	std::shared_ptr<Expression> field;
 };
+
+inline std::shared_ptr<StateDelete> makeStateDelete(
+	std::shared_ptr<Expression> field, SourceLocation loc)
+{
+	auto node = std::make_shared<StateDelete>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = WType::boolType();
+	node->field = std::move(field);
+	return node;
+}
 
 struct StateGetEx: Expression
 {
@@ -1168,6 +1255,17 @@ struct BoxPrefixedKeyExpression: Expression
 	std::shared_ptr<Expression> prefix;
 	std::shared_ptr<Expression> key;
 };
+
+inline std::shared_ptr<BoxPrefixedKeyExpression> makeBoxPrefixedKey(
+	std::shared_ptr<Expression> prefix, std::shared_ptr<Expression> key, SourceLocation loc)
+{
+	auto node = std::make_shared<BoxPrefixedKeyExpression>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = WType::boxKeyType();
+	node->prefix = std::move(prefix);
+	node->key = std::move(key);
+	return node;
+}
 
 struct BoxValueExpression: Expression
 {
@@ -1273,6 +1371,17 @@ struct PuyaLibCall: Expression
 	std::string func; // enum name, e.g. "ensure_budget"
 	std::vector<CallArg> args;
 };
+
+inline std::shared_ptr<PuyaLibCall> makePuyaLibCall(
+	std::string func, std::vector<CallArg> args, WType const* wtype, SourceLocation loc)
+{
+	auto node = std::make_shared<PuyaLibCall>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->func = std::move(func);
+	node->args = std::move(args);
+	return node;
+}
 
 // ─── Statements ─────────────────────────────────────────────────────────────
 
@@ -1540,5 +1649,20 @@ struct Subroutine: RootNode
 	std::optional<bool> inlineOpt;
 	bool pure = false;
 };
+
+inline std::shared_ptr<Subroutine> makeSubroutine(
+	std::string id, std::string name, std::vector<SubroutineArgument> args,
+	WType const* returnType, std::shared_ptr<Block> body, bool pure, SourceLocation loc)
+{
+	auto node = std::make_shared<Subroutine>();
+	node->sourceLocation = std::move(loc);
+	node->id = std::move(id);
+	node->name = std::move(name);
+	node->args = std::move(args);
+	node->returnType = returnType;
+	node->body = std::move(body);
+	node->pure = pure;
+	return node;
+}
 
 } // namespace puyasol::awst

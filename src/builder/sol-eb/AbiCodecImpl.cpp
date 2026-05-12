@@ -234,12 +234,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 			|| kind == awst::WTypeKind::ARC4Struct
 			|| kind == awst::WTypeKind::ARC4Tuple)
 		{
-			auto fromBytes = std::make_shared<awst::ARC4FromBytes>();
-			fromBytes->sourceLocation = _loc;
-			fromBytes->wtype = wtype;
-			fromBytes->value = std::move(dataBytes);
-			fromBytes->validate = false;
-			return fromBytes;
+			return awst::makeARC4FromBytes(std::move(dataBytes), wtype, _loc);
 		}
 		return dataBytes;
 	}

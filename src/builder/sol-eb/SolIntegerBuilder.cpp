@@ -114,24 +114,20 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 		}
 
 		// Standard biguint arithmetic
-		auto e = std::make_shared<awst::BigUIntBinaryOperation>();
-		e->sourceLocation = _loc;
-		e->wtype = awst::WType::biguintType();
-		e->left = std::move(lhs);
-		e->right = std::move(rhs);
-
+		awst::BigUIntBinaryOperator bigOp = awst::BigUIntBinaryOperator::Add;
 		switch (_op)
 		{
-		case BuilderBinaryOp::Add: e->op = awst::BigUIntBinaryOperator::Add; break;
-		case BuilderBinaryOp::Mult: e->op = awst::BigUIntBinaryOperator::Mult; break;
+		case BuilderBinaryOp::Add: bigOp = awst::BigUIntBinaryOperator::Add; break;
+		case BuilderBinaryOp::Mult: bigOp = awst::BigUIntBinaryOperator::Mult; break;
 		case BuilderBinaryOp::Div:
-		case BuilderBinaryOp::FloorDiv: e->op = awst::BigUIntBinaryOperator::FloorDiv; break;
-		case BuilderBinaryOp::Mod: e->op = awst::BigUIntBinaryOperator::Mod; break;
-		case BuilderBinaryOp::BitOr: e->op = awst::BigUIntBinaryOperator::BitOr; break;
-		case BuilderBinaryOp::BitXor: e->op = awst::BigUIntBinaryOperator::BitXor; break;
-		case BuilderBinaryOp::BitAnd: e->op = awst::BigUIntBinaryOperator::BitAnd; break;
-		default: e->op = awst::BigUIntBinaryOperator::Add; break;
+		case BuilderBinaryOp::FloorDiv: bigOp = awst::BigUIntBinaryOperator::FloorDiv; break;
+		case BuilderBinaryOp::Mod: bigOp = awst::BigUIntBinaryOperator::Mod; break;
+		case BuilderBinaryOp::BitOr: bigOp = awst::BigUIntBinaryOperator::BitOr; break;
+		case BuilderBinaryOp::BitXor: bigOp = awst::BigUIntBinaryOperator::BitXor; break;
+		case BuilderBinaryOp::BitAnd: bigOp = awst::BigUIntBinaryOperator::BitAnd; break;
+		default: break;
 		}
+		auto e = awst::makeBigUIntBinOp(std::move(lhs), bigOp, std::move(rhs), _loc);
 
 		std::shared_ptr<awst::Expression> result = e;
 
@@ -332,21 +328,17 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::compare(
 			rhs = promoteToBigUInt(std::move(rhs), _loc);
 	}
 
-	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-	cmp->sourceLocation = _loc;
-	cmp->wtype = awst::WType::boolType();
-	cmp->lhs = std::move(lhs);
-	cmp->rhs = std::move(rhs);
-
+	awst::NumericComparison cmpOp = awst::NumericComparison::Eq;
 	switch (_op)
 	{
-	case BuilderComparisonOp::Eq: cmp->op = awst::NumericComparison::Eq; break;
-	case BuilderComparisonOp::Ne: cmp->op = awst::NumericComparison::Ne; break;
-	case BuilderComparisonOp::Lt: cmp->op = awst::NumericComparison::Lt; break;
-	case BuilderComparisonOp::Lte: cmp->op = awst::NumericComparison::Lte; break;
-	case BuilderComparisonOp::Gt: cmp->op = awst::NumericComparison::Gt; break;
-	case BuilderComparisonOp::Gte: cmp->op = awst::NumericComparison::Gte; break;
+	case BuilderComparisonOp::Eq: cmpOp = awst::NumericComparison::Eq; break;
+	case BuilderComparisonOp::Ne: cmpOp = awst::NumericComparison::Ne; break;
+	case BuilderComparisonOp::Lt: cmpOp = awst::NumericComparison::Lt; break;
+	case BuilderComparisonOp::Lte: cmpOp = awst::NumericComparison::Lte; break;
+	case BuilderComparisonOp::Gt: cmpOp = awst::NumericComparison::Gt; break;
+	case BuilderComparisonOp::Gte: cmpOp = awst::NumericComparison::Gte; break;
 	}
+	auto cmp = awst::makeNumericCompare(std::move(lhs), cmpOp, std::move(rhs), _loc);
 
 	// Comparison returns a bool — we can't return a SolIntegerBuilder.
 	// For now, return a generic InstanceBuilder. When SolBoolBuilder exists,

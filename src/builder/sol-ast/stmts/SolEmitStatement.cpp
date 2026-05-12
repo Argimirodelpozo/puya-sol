@@ -141,11 +141,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 	for (auto& f: fields)
 		newStruct->values[f.name] = std::move(f.value);
 
-	auto emit = std::make_shared<awst::Emit>();
-	emit->sourceLocation = m_loc;
-	emit->wtype = awst::WType::voidType();
-	emit->signature = eventSignature;
-	emit->value = std::move(newStruct);
+	auto emit = awst::makeEmit(eventSignature, std::move(newStruct), m_loc);
 
 	auto stmt = awst::makeExpressionStatement(emit, m_loc);
 

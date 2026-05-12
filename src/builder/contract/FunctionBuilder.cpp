@@ -1072,12 +1072,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 						auto cmpNeg = awst::makeNumericCompare(paramCheck2, awst::NumericComparison::Gte, std::move(minNegConst), loc);
 
 						// OR the two conditions
-						auto orExpr = std::make_shared<awst::BooleanBinaryOperation>();
-						orExpr->sourceLocation = loc;
-						orExpr->wtype = awst::WType::boolType();
-						orExpr->left = std::move(cmpPos);
-						orExpr->right = std::move(cmpNeg);
-						orExpr->op = awst::BinaryBooleanOperator::Or;
+						auto orExpr = awst::makeBoolBinOp(std::move(cmpPos), awst::BinaryBooleanOperator::Or, std::move(cmpNeg), loc);
 
 						auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(orExpr), loc, "ABI validation"), loc);
 						maskStmts.push_back(std::move(assertStmt));
@@ -1256,14 +1251,12 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 			auto feeSource = awst::makeIntegerConstant("0", method.sourceLocation);
 
-			auto call = std::make_shared<awst::PuyaLibCall>();
-			call->sourceLocation = method.sourceLocation;
-			call->wtype = awst::WType::voidType();
-			call->func = "ensure_budget";
-			call->args = {
-				awst::CallArg{std::string("required_budget"), budgetVal},
-				awst::CallArg{std::string("fee_source"), feeSource}
-			};
+			auto call = awst::makePuyaLibCall("ensure_budget",
+				{
+					awst::CallArg{std::string("required_budget"), budgetVal},
+					awst::CallArg{std::string("fee_source"), feeSource}
+				},
+				awst::WType::voidType(), method.sourceLocation);
 
 			auto stmt = awst::makeExpressionStatement(std::move(call), method.sourceLocation);
 

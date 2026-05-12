@@ -387,13 +387,10 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 						std::shared_ptr<awst::Expression> readStruct;
 						if (sr.rootBox)
 						{
-							auto sg = std::make_shared<awst::StateGet>();
-							sg->sourceLocation = m_loc;
-							sg->wtype = sr.rootType;
-							sg->field = sr.rootBox;
-							sg->defaultValue =
-								builder::StorageMapper::makeDefaultValue(sr.rootType, m_loc);
-							readStruct = std::move(sg);
+							readStruct = awst::makeStateGet(
+								sr.rootBox,
+								builder::StorageMapper::makeDefaultValue(sr.rootType, m_loc),
+								sr.rootType, m_loc);
 						}
 						else
 						{

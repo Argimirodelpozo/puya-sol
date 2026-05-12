@@ -169,30 +169,24 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 				{
 					std::ostringstream oss;
 					oss << arrType->length();
-					auto c = std::make_shared<awst::IntegerConstant>();
-					c->sourceLocation = m_loc;
 					// uint256 array sizes (e.g. from erc7201()) don't fit in
 					// uint64 — emit as biguint in that case. The result's
 					// Solidity type is uint256 which maps to biguint anyway.
 					auto solLenType = m_memberAccess.annotation().type;
+					awst::WType const* lenWtype = awst::WType::uint64Type();
 					if (solLenType && solLenType->category()
 							== solidity::frontend::Type::Category::Integer)
 					{
 						auto const* intType = dynamic_cast<
 							solidity::frontend::IntegerType const*>(solLenType);
 						if (intType && intType->numBits() > 64)
-							c->wtype = awst::WType::biguintType();
-						else
-							c->wtype = awst::WType::uint64Type();
+							lenWtype = awst::WType::biguintType();
 					}
-					else
+					else if (arrType->length() > solidity::u256("18446744073709551615"))
 					{
-						c->wtype = arrType->length() > solidity::u256("18446744073709551615")
-							? awst::WType::biguintType()
-							: awst::WType::uint64Type();
+						lenWtype = awst::WType::biguintType();
 					}
-					c->value = oss.str();
-					return c;
+					return awst::makeIntegerConstant(oss.str(), m_loc, lenWtype);
 				}
 				auto boxKey = awst::makeUtf8BytesConstant(ident->name(), m_loc);
 

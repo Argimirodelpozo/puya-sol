@@ -197,11 +197,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 		auto rhsExpr = m_blk.builderCtx().build(*initialValue);
 		m_blk.builderCtx().appendPendingTo(result);
 
-		auto singleRhs = std::make_shared<awst::SingleEvaluation>();
-		singleRhs->sourceLocation = m_loc;
-		singleRhs->wtype = rhsExpr->wtype;
-		singleRhs->source = std::move(rhsExpr);
-		singleRhs->id = static_cast<int>(m_node.id());
+		auto const* rhsWtype = rhsExpr->wtype;
+		auto singleRhs = awst::makeSingleEvaluation(
+			std::move(rhsExpr), rhsWtype, static_cast<int>(m_node.id()), m_loc);
 		rhsExpr = std::move(singleRhs);
 
 		for (size_t i = 0; i < declarations.size(); ++i)

@@ -302,14 +302,10 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 			if (*offset == cdOffset + 0x20 && m_lastMstoreValue)
 			{
 				// Build: keccak256(concat(param_bytes, padTo32(lastMstoreValue)))
-				auto paramVar = std::make_shared<awst::VarExpression>();
-				paramVar->sourceLocation = _loc;
-				paramVar->name = elem.paramName;
 				auto paramType = m_locals.find(elem.paramName);
-				if (paramType != m_locals.end() && paramType->second)
-					paramVar->wtype = paramType->second;
-				else
-					paramVar->wtype = awst::WType::bytesType();
+				auto const* paramWtype = (paramType != m_locals.end() && paramType->second)
+					? paramType->second : awst::WType::bytesType();
+				auto paramVar = awst::makeVarExpression(elem.paramName, paramWtype, _loc);
 
 				std::shared_ptr<awst::Expression> paramBytes;
 				if (paramVar->wtype != awst::WType::bytesType())
@@ -366,15 +362,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 			{
 				// Found: offset points to the string data area of a calldata parameter.
 				// On AVM, the parameter IS the string bytes. Hash them directly.
-				auto paramVar = std::make_shared<awst::VarExpression>();
-				paramVar->sourceLocation = _loc;
-				paramVar->name = elem.paramName;
 				// The parameter might be bytes or biguint — need bytes for keccak
 				auto paramType = m_locals.find(elem.paramName);
-				if (paramType != m_locals.end() && paramType->second)
-					paramVar->wtype = paramType->second;
-				else
-					paramVar->wtype = awst::WType::bytesType();
+				auto const* paramWtype = (paramType != m_locals.end() && paramType->second)
+					? paramType->second : awst::WType::bytesType();
+				auto paramVar = awst::makeVarExpression(elem.paramName, paramWtype, _loc);
 
 				std::shared_ptr<awst::Expression> hashInput;
 				if (paramVar->wtype != awst::WType::bytesType())

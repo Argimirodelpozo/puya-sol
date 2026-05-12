@@ -148,22 +148,18 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 			promoteToBigUInt(_right);
 		}
 
-		auto e = std::make_shared<awst::NumericComparisonExpression>();
-		e->sourceLocation = _loc;
-		e->wtype = awst::WType::boolType();
-		e->lhs = std::move(_left);
-		e->rhs = std::move(_right);
+		awst::NumericComparison cmpOp = awst::NumericComparison::Eq;
 		switch (_op)
 		{
-		case Token::Equal: e->op = awst::NumericComparison::Eq; break;
-		case Token::NotEqual: e->op = awst::NumericComparison::Ne; break;
-		case Token::LessThan: e->op = awst::NumericComparison::Lt; break;
-		case Token::LessThanOrEqual: e->op = awst::NumericComparison::Lte; break;
-		case Token::GreaterThan: e->op = awst::NumericComparison::Gt; break;
-		case Token::GreaterThanOrEqual: e->op = awst::NumericComparison::Gte; break;
+		case Token::Equal: cmpOp = awst::NumericComparison::Eq; break;
+		case Token::NotEqual: cmpOp = awst::NumericComparison::Ne; break;
+		case Token::LessThan: cmpOp = awst::NumericComparison::Lt; break;
+		case Token::LessThanOrEqual: cmpOp = awst::NumericComparison::Lte; break;
+		case Token::GreaterThan: cmpOp = awst::NumericComparison::Gt; break;
+		case Token::GreaterThanOrEqual: cmpOp = awst::NumericComparison::Gte; break;
 		default: break;
 		}
-		return e;
+		return awst::makeNumericCompare(std::move(_left), cmpOp, std::move(_right), _loc);
 	}
 
 	// Boolean operations
@@ -192,20 +188,15 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 
 		if ((leftIsBytesKind || rightIsBytesKind) && isBitwiseOp)
 		{
-			auto e = std::make_shared<awst::BytesBinaryOperation>();
-			e->sourceLocation = _loc;
-			e->wtype = awst::WType::bytesType();
-			e->left = std::move(_left);
-			e->right = std::move(_right);
-
+			awst::BytesBinaryOperator bytesOp = awst::BytesBinaryOperator::BitOr;
 			switch (_op)
 			{
-			case Token::BitOr: case Token::AssignBitOr: e->op = awst::BytesBinaryOperator::BitOr; break;
-			case Token::BitXor: case Token::AssignBitXor: e->op = awst::BytesBinaryOperator::BitXor; break;
-			case Token::BitAnd: case Token::AssignBitAnd: e->op = awst::BytesBinaryOperator::BitAnd; break;
-			default: e->op = awst::BytesBinaryOperator::BitOr; break;
+			case Token::BitOr: case Token::AssignBitOr: bytesOp = awst::BytesBinaryOperator::BitOr; break;
+			case Token::BitXor: case Token::AssignBitXor: bytesOp = awst::BytesBinaryOperator::BitXor; break;
+			case Token::BitAnd: case Token::AssignBitAnd: bytesOp = awst::BytesBinaryOperator::BitAnd; break;
+			default: break;
 			}
-			return e;
+			return awst::makeBytesBinOp(std::move(_left), bytesOp, std::move(_right), _loc);
 		}
 	}
 
@@ -213,10 +204,6 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 	if (isBigUInt(_resultType) || isBigUInt(_left->wtype) || isBigUInt(_right->wtype))
 	{
 		promoteToBigUInt(_left);
-
-		auto e = std::make_shared<awst::BigUIntBinaryOperation>();
-		e->sourceLocation = _loc;
-		e->wtype = awst::WType::biguintType();
 
 		// BigUInt doesn't have native shift ops — convert x<<n to x*(2^n), x>>n to x/(2^n)
 		// Construct 2^n using setbit(bzero(32), 255-n, 1) since AVM has no bexp opcode
@@ -246,12 +233,10 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 			// Cast bytes → biguint
 			auto castToBigUInt = awst::makeReinterpretCast(std::move(setbit), awst::WType::biguintType(), _loc);
 
-			e->left = std::move(_left);
-			e->right = std::move(castToBigUInt);
-			e->op = (_op == Token::SHL || _op == Token::AssignShl)
+			auto shiftBigOp = (_op == Token::SHL || _op == Token::AssignShl)
 				? awst::BigUIntBinaryOperator::Mult
 				: awst::BigUIntBinaryOperator::FloorDiv;
-			return e;
+			return awst::makeBigUIntBinOp(std::move(_left), shiftBigOp, std::move(castToBigUInt), _loc);
 		}
 
 		// For non-shift ops, promote right operand to biguint now
@@ -382,20 +367,19 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 			return makeVar(resultVar);
 		}
 
-		e->left = std::move(_left);
-		e->right = std::move(_right);
-
+		awst::BigUIntBinaryOperator bigOp = awst::BigUIntBinaryOperator::Add;
 		switch (_op)
 		{
-		case Token::Add: case Token::AssignAdd: e->op = awst::BigUIntBinaryOperator::Add; break;
-		case Token::Mul: case Token::AssignMul: e->op = awst::BigUIntBinaryOperator::Mult; break;
-		case Token::Div: case Token::AssignDiv: e->op = awst::BigUIntBinaryOperator::FloorDiv; break;
-		case Token::Mod: case Token::AssignMod: e->op = awst::BigUIntBinaryOperator::Mod; break;
-		case Token::BitOr: case Token::AssignBitOr: e->op = awst::BigUIntBinaryOperator::BitOr; break;
-		case Token::BitXor: case Token::AssignBitXor: e->op = awst::BigUIntBinaryOperator::BitXor; break;
-		case Token::BitAnd: case Token::AssignBitAnd: e->op = awst::BigUIntBinaryOperator::BitAnd; break;
-		default: e->op = awst::BigUIntBinaryOperator::Add; break;
+		case Token::Add: case Token::AssignAdd: bigOp = awst::BigUIntBinaryOperator::Add; break;
+		case Token::Mul: case Token::AssignMul: bigOp = awst::BigUIntBinaryOperator::Mult; break;
+		case Token::Div: case Token::AssignDiv: bigOp = awst::BigUIntBinaryOperator::FloorDiv; break;
+		case Token::Mod: case Token::AssignMod: bigOp = awst::BigUIntBinaryOperator::Mod; break;
+		case Token::BitOr: case Token::AssignBitOr: bigOp = awst::BigUIntBinaryOperator::BitOr; break;
+		case Token::BitXor: case Token::AssignBitXor: bigOp = awst::BigUIntBinaryOperator::BitXor; break;
+		case Token::BitAnd: case Token::AssignBitAnd: bigOp = awst::BigUIntBinaryOperator::BitAnd; break;
+		default: break;
 		}
+		auto e = awst::makeBigUIntBinOp(std::move(_left), bigOp, std::move(_right), _loc);
 
 		// In unchecked blocks, arithmetic must wrap mod 2^256 (EVM semantics).
 		// AVM biguint is arbitrary-precision; without truncation, results can

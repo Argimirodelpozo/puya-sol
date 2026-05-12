@@ -33,21 +33,17 @@ std::unique_ptr<InstanceBuilder> SolEnumBuilder::compare(
 		validateEnum(rhs);
 	}
 
-	auto e = std::make_shared<awst::NumericComparisonExpression>();
-	e->sourceLocation = _loc;
-	e->wtype = awst::WType::boolType();
-	e->lhs = std::move(lhs);
-	e->rhs = std::move(rhs);
-
+	awst::NumericComparison cmpOp = awst::NumericComparison::Eq;
 	switch (_op)
 	{
-	case BuilderComparisonOp::Eq: e->op = awst::NumericComparison::Eq; break;
-	case BuilderComparisonOp::Ne: e->op = awst::NumericComparison::Ne; break;
-	case BuilderComparisonOp::Lt: e->op = awst::NumericComparison::Lt; break;
-	case BuilderComparisonOp::Lte: e->op = awst::NumericComparison::Lte; break;
-	case BuilderComparisonOp::Gt: e->op = awst::NumericComparison::Gt; break;
-	case BuilderComparisonOp::Gte: e->op = awst::NumericComparison::Gte; break;
+	case BuilderComparisonOp::Eq: cmpOp = awst::NumericComparison::Eq; break;
+	case BuilderComparisonOp::Ne: cmpOp = awst::NumericComparison::Ne; break;
+	case BuilderComparisonOp::Lt: cmpOp = awst::NumericComparison::Lt; break;
+	case BuilderComparisonOp::Lte: cmpOp = awst::NumericComparison::Lte; break;
+	case BuilderComparisonOp::Gt: cmpOp = awst::NumericComparison::Gt; break;
+	case BuilderComparisonOp::Gte: cmpOp = awst::NumericComparison::Gte; break;
 	}
+	auto e = awst::makeNumericCompare(std::move(lhs), cmpOp, std::move(rhs), _loc);
 	return std::make_unique<SolEnumBuilder>(m_ctx, m_enumType, std::move(e));
 }
 

@@ -1036,13 +1036,9 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 	auto block = awst::makeBlock(loc);
 	block->body = std::move(bodyStmts);
 
-	auto sub = std::make_shared<awst::Subroutine>();
-	sub->sourceLocation = loc;
-	sub->id = _subroutineId;
-	sub->name = _subroutineName;
-	sub->args = std::move(subArgs);
-	sub->returnType = retType;
-	sub->body = std::move(block);
+	auto sub = awst::makeSubroutine(
+		_subroutineId, _subroutineName, std::move(subArgs),
+		retType, std::move(block), /*pure=*/false, loc);
 
 	pendingSubroutinesRef().push_back(std::move(sub));
 

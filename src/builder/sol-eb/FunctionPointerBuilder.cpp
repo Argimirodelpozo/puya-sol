@@ -820,14 +820,10 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		// InstanceMethodTarget from outside the contract scope).
 		if (_outRootSubs)
 		{
-			auto sub = std::make_shared<awst::Subroutine>();
-			sub->sourceLocation = dispatch.sourceLocation;
-			sub->id = _cref + "." + dispatch.memberName;
-			sub->name = dispatch.memberName;
-			sub->returnType = dispatch.returnType;
-			sub->args = dispatch.args;
-			sub->body = dispatch.body; // shared ptr — same body
-			sub->pure = dispatch.pure;
+			auto sub = awst::makeSubroutine(
+				_cref + "." + dispatch.memberName, dispatch.memberName,
+				dispatch.args, dispatch.returnType, dispatch.body /*shared*/,
+				dispatch.pure, dispatch.sourceLocation);
 			_outRootSubs->push_back(std::move(sub));
 		}
 
@@ -903,14 +899,10 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 
 			if (_outRootSubs)
 			{
-				auto sub = std::make_shared<awst::Subroutine>();
-				sub->sourceLocation = selToId.sourceLocation;
-				sub->id = _cref + "." + selToId.memberName;
-				sub->name = selToId.memberName;
-				sub->returnType = selToId.returnType;
-				sub->args = selToId.args;
-				sub->body = selToId.body;
-				sub->pure = false;
+				auto sub = awst::makeSubroutine(
+					_cref + "." + selToId.memberName, selToId.memberName,
+					selToId.args, selToId.returnType, selToId.body,
+					/*pure=*/false, selToId.sourceLocation);
 				_outRootSubs->push_back(std::move(sub));
 			}
 			methods.push_back(std::move(selToId));

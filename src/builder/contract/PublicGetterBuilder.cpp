@@ -400,11 +400,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				auto hashCall = awst::makeIntrinsicCall("sha256", awst::WType::bytesType(), loc);
 				hashCall->stackArgs.push_back(std::move(compositeKey));
 
-				auto boxKey = std::make_shared<awst::BoxPrefixedKeyExpression>();
-				boxKey->sourceLocation = loc;
-				boxKey->wtype = awst::WType::boxKeyType();
-				boxKey->prefix = prefix;
-				boxKey->key = std::move(hashCall);
+				auto boxKey = awst::makeBoxPrefixedKey(prefix, std::move(hashCall), loc);
 
 				auto boxExpr = awst::makeBoxValueExpression(std::move(boxKey), storedWType, loc);
 

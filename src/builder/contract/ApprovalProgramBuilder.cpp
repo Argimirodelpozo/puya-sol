@@ -1394,9 +1394,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 	{
 		// No fallback/receive: use the normal pattern `return ARC4Router()`
 		// which triggers puya's can_exit_early=True (rejects on no selector match).
-		auto routerExpr = std::make_shared<awst::ARC4Router>();
-		routerExpr->sourceLocation = method.sourceLocation;
-		routerExpr->wtype = awst::WType::boolType();
+		auto routerExpr = awst::makeARC4Router(awst::WType::boolType(), method.sourceLocation);
 
 		auto routerReturn = awst::makeReturnStatement(routerExpr, method.sourceLocation);
 		body->body.push_back(routerReturn);
@@ -1489,9 +1487,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		{
 			auto matchVar = awst::makeVarExpression(matchVarName, awst::WType::boolType(), method.sourceLocation);
 
-			auto routerExpr = std::make_shared<awst::ARC4Router>();
-			routerExpr->sourceLocation = method.sourceLocation;
-			routerExpr->wtype = awst::WType::boolType();
+			auto routerExpr = awst::makeARC4Router(awst::WType::boolType(), method.sourceLocation);
 
 			auto assignMatch = awst::makeAssignmentStatement(std::move(matchVar), std::move(routerExpr), method.sourceLocation);
 			body->body.push_back(std::move(assignMatch));

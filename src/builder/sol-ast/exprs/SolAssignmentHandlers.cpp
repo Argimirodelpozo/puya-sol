@@ -244,16 +244,11 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 			}
 		}
 
-		auto itemExpr = std::make_shared<awst::TupleItemExpression>();
-		itemExpr->sourceLocation = m_loc;
 		// Use the VALUE tuple's element type (not the target's type)
 		auto const* valueTuple = dynamic_cast<awst::WTuple const*>(_value->wtype);
-		if (valueTuple && i < valueTuple->types().size())
-			itemExpr->wtype = valueTuple->types()[i];
-		else
-			itemExpr->wtype = item->wtype;
-		itemExpr->base = _value;
-		itemExpr->index = static_cast<int>(i);
+		auto const* itemWtype = (valueTuple && i < valueTuple->types().size())
+			? valueTuple->types()[i] : item->wtype;
+		auto itemExpr = awst::makeTupleItem(_value, static_cast<int>(i), itemWtype, m_loc);
 
 		auto assignTarget = item;
 		if (auto const* decodeExpr = dynamic_cast<awst::ARC4Decode const*>(item.get()))
@@ -710,12 +705,8 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 				outerNewStruct->values[fn] = std::move(assignValue2);
 			else
 			{
-				auto f = std::make_shared<awst::FieldExpression>();
-				f->sourceLocation = m_loc;
-				f->base = outerReadBase; // Use StateGet-wrapped for reads
-				f->name = fn;
-				f->wtype = ft;
-				outerNewStruct->values[fn] = std::move(f);
+				// Use StateGet-wrapped base for reads
+				outerNewStruct->values[fn] = awst::makeFieldExpression(outerReadBase, fn, ft, m_loc);
 			}
 		}
 		assignTarget2 = std::move(outerWriteBase); // Use unwrapped for target
