@@ -211,7 +211,7 @@ awst::WType const* TypeMapper::mapToARC4Type(awst::WType const* _type)
 	if (_type == awst::WType::boolType())
 		return awst::WType::arc4BoolType();
 	if (_type == awst::WType::accountType())
-		return createType<awst::ARC4StaticArray>(arc4Byte, 32);
+		return createType<awst::ARC4StaticArray>(arc4Byte, 32, std::string("address"));
 	if (_type == awst::WType::bytesType())
 		return createType<awst::ARC4DynamicArray>(arc4Byte, std::string("byte[]"));
 	if (_type == awst::WType::stringType())
@@ -221,7 +221,11 @@ awst::WType const* TypeMapper::mapToARC4Type(awst::WType const* _type)
 	{
 		auto const* bytesType = static_cast<awst::BytesWType const*>(_type);
 		if (bytesType->length().has_value())
-			return createType<awst::ARC4StaticArray>(arc4Byte, bytesType->length().value());
+		{
+			auto len = bytesType->length().value();
+			return createType<awst::ARC4StaticArray>(
+				arc4Byte, len, "byte[" + std::to_string(len) + "]");
+		}
 		return createType<awst::ARC4DynamicArray>(arc4Byte);
 	}
 

@@ -12,6 +12,38 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 
+class _SyntheticMatch:
+    """Mimics a re.Match's .group(i) API. `groups[0]` is group(1), etc."""
+    def __init__(self, groups: list):
+        self._groups = [None] + groups
+    def group(self, i: int):
+        return self._groups[i]
+
+
+def _find_method_sig_end(line: str) -> int:
+    """Return index just past the matching `)` for the first `name(...)` token.
+
+    Walks parens depth-aware so nested tuples like `f((uint8,uint16))`
+    parse correctly. Returns 0 if the line doesn't start with a method
+    signature.
+    """
+    m = re.match(r'^[a-zA-Z_]\w*\(', line)
+    if not m:
+        return 0
+    i = m.end() - 1  # index of the opening '('
+    depth = 0
+    while i < len(line):
+        c = line[i]
+        if c == '(':
+            depth += 1
+        elif c == ')':
+            depth -= 1
+            if depth == 0:
+                return i + 1
+        i += 1
+    return 0
+
+
 # EVM versions ordered oldest → newest. Mirrors solc's ladder; the puya-sol
 # binary defaults to cancun, but accepts any of these names via --evm-version.
 _EVM_LADDER = [
@@ -240,23 +272,47 @@ def _parse_assertion_line(line: str) -> TestCall | None:
             raw_line=line,
         )
 
-    match = re.match(
-        r'^([a-zA-Z_]\w*\([^)]*\))'  # method signature
-        r'(?:,\s*(\d+)\s+(wei|ether))?'  # optional value
-        r'(?:\s*:\s*(.+?))?'  # optional args after ':'
-        r'\s*->\s*(.*)$',  # expected after '->' (may be empty for void)
-        line
-    )
+    # Depth-aware split: parse method sig with nested tuples like
+    # `f((uint8,uint16,bytes2,uint8))`, then split the remainder by
+    # `:` / `->` markers. Plain `\([^)]*\)` regex breaks on tuples.
+    sig_end = _find_method_sig_end(line)
+    match = None
+    if sig_end > 0:
+        method_sig_str = line[:sig_end]
+        rest = line[sig_end:]
+        rm = re.match(
+            r'^(?:,\s*(\d+)\s+(wei|ether))?'  # optional value
+            r'(?:\s*:\s*(.+?))?'  # optional args after ':'
+            r'\s*->\s*(.*)$',  # expected after '->' (may be empty for void)
+            rest
+        )
+        if rm:
+            match = _SyntheticMatch([method_sig_str, rm.group(1), rm.group(2), rm.group(3), rm.group(4)])
 
     if not match:
         # Try matching lines without '->' (void calls with no return assertion)
-        match_no_arrow = re.match(
-            r'^([a-zA-Z_]\w*\([^)]*\))'  # method signature
-            r'(?:,\s*(\d+)\s+(wei|ether))?'  # optional value
-            r'(?:\s*:\s*(.+?))?'  # optional args after ':'
-            r'\s*$',  # end of line, no '->'
-            line
-        )
+        if sig_end > 0:
+            method_sig_str = line[:sig_end]
+            rest = line[sig_end:]
+            mna = re.match(
+                r'^(?:,\s*(\d+)\s+(wei|ether))?'  # optional value
+                r'(?:\s*:\s*(.+?))?'  # optional args after ':'
+                r'\s*$',  # end of line, no '->'
+                rest
+            )
+            if mna:
+                match_no_arrow = _SyntheticMatch(
+                    [method_sig_str, mna.group(1), mna.group(2), mna.group(3), None])
+            else:
+                match_no_arrow = None
+        else:
+            match_no_arrow = re.match(
+                r'^([a-zA-Z_]\w*\([^)]*\))'  # method signature
+                r'(?:,\s*(\d+)\s+(wei|ether))?'  # optional value
+                r'(?:\s*:\s*(.+?))?'  # optional args after ':'
+                r'\s*$',  # end of line, no '->'
+                line
+            )
         if match_no_arrow:
             method_sig = match_no_arrow.group(1)
             args_str = match_no_arrow.group(4)

@@ -179,25 +179,30 @@ private:
 class ARC4StaticArray: public WType
 {
 public:
-	ARC4StaticArray(WType const* _elementType, int64_t _arraySize)
+	ARC4StaticArray(WType const* _elementType, int64_t _arraySize, std::string _arc4Alias = {})
 		: WType(
-			  "arc4.static_array<" + _elementType->name() + ", "
-				  + std::to_string(_arraySize) + ">",
+			  _arc4Alias.empty()
+				  ? "arc4.static_array<" + _elementType->name() + ", "
+					    + std::to_string(_arraySize) + ">"
+				  : _arc4Alias,
 			  WTypeKind::ARC4StaticArray,
 			  false // ARC4 arrays are mutable (matching puya Python default)
 		  ),
 		  m_elementType(_elementType),
-		  m_arraySize(_arraySize)
+		  m_arraySize(_arraySize),
+		  m_arc4Alias(std::move(_arc4Alias))
 	{
 	}
 
 	std::string jsonType() const override { return "ARC4StaticArray"; }
 	WType const* elementType() const { return m_elementType; }
 	int64_t arraySize() const { return m_arraySize; }
+	std::string const& arc4Alias() const { return m_arc4Alias; }
 
 private:
 	WType const* m_elementType;
 	int64_t m_arraySize;
+	std::string m_arc4Alias;
 };
 
 class ARC4Struct: public WType

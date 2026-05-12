@@ -120,6 +120,52 @@ def compile_test(sol_path: Path, out_dir: Path, ensure_budget: dict = None,
     return contracts
 
 
+def _method_args_inner(method_sig: str) -> str | None:
+    """Extract the inner parameter list from a method signature.
+
+    Handles nested parens (tuples/structs): for `f((uint8,uint16))void`,
+    returns `(uint8,uint16)`. The plain regex `\\w+\\(([^)]*)\\)` stops at
+    the first `)`, mis-splitting structs.
+    """
+    i = method_sig.find('(')
+    if i < 0:
+        return None
+    depth = 0
+    for j in range(i, len(method_sig)):
+        c = method_sig[j]
+        if c == '(':
+            depth += 1
+        elif c == ')':
+            depth -= 1
+            if depth == 0:
+                return method_sig[i + 1:j]
+    return None
+
+
+def _split_param_types(inner: str) -> list[str]:
+    """Split a parameter type list by commas, respecting nested parens.
+
+    For `uint8,(uint16,byte[2]),uint8` returns
+    `['uint8', '(uint16,byte[2])', 'uint8']`.
+    """
+    out, cur, depth = [], "", 0
+    for c in inner:
+        if c == '(':
+            depth += 1
+            cur += c
+        elif c == ')':
+            depth -= 1
+            cur += c
+        elif c == ',' and depth == 0:
+            out.append(cur.strip())
+            cur = ""
+        else:
+            cur += c
+    if cur.strip():
+        out.append(cur.strip())
+    return out
+
+
 def _get_constructor_param_types(app_spec, artifacts):
     """Extract constructor parameter types from __postInit ARC56 spec or Solidity source.
     Returns a list of type descriptors: 'uint256', 'uint256[3]', 'bytes', etc.
@@ -1159,16 +1205,15 @@ def _regroup_args(raw_args, method_sig):
     that codec doesn't model yet (e.g. tests that pass extra excess
     calldata appended after the ABI args).
     """
-    import re as _re
-    m = _re.match(r'\w+\(([^)]*)\)', method_sig)
-    if not m or not m.group(1):
+    inner = _method_args_inner(method_sig)
+    if not inner:
         return raw_args
 
     # Parse parameter types
     param_types = []
     depth = 0
     current = ""
-    for c in m.group(1):
+    for c in inner:
         if c == '(':
             depth += 1
         elif c == ')':
@@ -1184,6 +1229,17 @@ def _regroup_args(raw_args, method_sig):
     # If arg count matches param count, no regrouping needed
     if len(raw_args) == len(param_types):
         return raw_args
+
+    # Nest flat raw_args into tuples when a param type is `(...)` —
+    # Solidity tests pass struct field values flat after the method sig,
+    # but algokit's ABI encoder expects each tuple param as a list.
+    if any(p.startswith('(') and p.endswith(')') for p in param_types):
+        try:
+            nested, consumed = _nest_tuple_args(param_types, raw_args, 0)
+            if consumed == len(raw_args) and len(nested) == len(param_types):
+                return nested
+        except Exception:
+            pass
 
     # Check if any params are complex (arrays/strings/bytes)
     dynamic_types = {'string', 'bytes'}
@@ -1208,6 +1264,33 @@ def _regroup_args(raw_args, method_sig):
     # the caller can degrade gracefully (excess calldata path handles
     # mismatched arg counts upstream).
     return raw_args
+
+
+def _nest_tuple_args(param_types, flat, idx):
+    """Consume flat values into the shape implied by param_types.
+
+    Tuple types `(t1,t2,...)` recurse; static arrays of non-byte element
+    types consume `N` flat values into a list. Other types consume one
+    flat value. Returns (nested_args, new_idx).
+    """
+    import re as _re
+    out = []
+    for pt in param_types:
+        if pt.startswith('(') and pt.endswith(')'):
+            inner = _split_param_types(pt[1:-1])
+            sub, idx = _nest_tuple_args(inner, flat, idx)
+            out.append(sub)
+        else:
+            # Static-sized non-byte array slot: `T[N]` consumes N flats.
+            m = _re.match(r'(.+?)\[(\d+)\]$', pt)
+            if m and m.group(1) != 'byte':
+                n = int(m.group(2))
+                out.append([flat[idx + k] for k in range(n)])
+                idx += n
+            else:
+                out.append(flat[idx])
+                idx += 1
+    return out, idx
 
 
 # Thread-unsafe "current test" flag consumed by execute_call to avoid
@@ -1414,11 +1497,11 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
         param_types = {}  # index → ARC4 type string
         if app_spec:
             import re as _re
-            pm = _re.match(r'\w+\(([^)]*)\)', resolved)
-            if pm and pm.group(1):
-                ptypes = pm.group(1).split(',')
+            _inner = _method_args_inner(resolved)
+            if _inner:
+                ptypes = _split_param_types(_inner)
                 for idx, pt in enumerate(ptypes):
-                    param_types[idx] = pt.strip()
+                    param_types[idx] = pt
                     bm = _re.match(r'byte\[(\d+)\]', pt)
                     if bm:
                         param_sizes[idx] = int(bm.group(1))
@@ -1650,10 +1733,9 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
         # additional ApplicationArgs so msg.data sees them.
         excess_calldata = []
         if app_spec:
-            import re as _re2
-            pm2 = _re2.match(r'\w+\(([^)]*)\)', method)
-            if pm2:
-                n_expected = len([p for p in pm2.group(1).split(',') if p.strip()]) if pm2.group(1).strip() else 0
+            _inner = _method_args_inner(method)
+            if _inner is not None:
+                n_expected = len(_split_param_types(_inner)) if _inner.strip() else 0
                 if len(args) > n_expected:
                     excess_calldata = args[n_expected:]
                     args = args[:n_expected]
@@ -1667,11 +1749,10 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
         if app_spec:
             resolved_m = resolve_method(app_spec, call.method_signature)
             import re as _re
-            pm2 = _re.match(r'\w+\(([^)]*)\)', resolved_m)
-            if pm2 and pm2.group(1):
-                rptypes = pm2.group(1).split(',')
-                for i2, pt2 in enumerate(rptypes):
-                    pt2s = pt2.strip()
+            _inner = _method_args_inner(resolved_m)
+            if _inner:
+                rptypes = _split_param_types(_inner)
+                for i2, pt2s in enumerate(rptypes):
                     if pt2s == 'string' and i2 < len(args) and isinstance(args[i2], bytes):
                         args[i2] = args[i2].decode('utf-8', errors='replace')
                     elif i2 < len(args) and isinstance(args[i2], int):

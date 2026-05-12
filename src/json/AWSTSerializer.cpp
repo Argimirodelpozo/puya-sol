@@ -788,7 +788,7 @@ njson AWSTSerializer::serializeWType(awst::WType const* _type)
 		auto const* at = static_cast<awst::ARC4StaticArray const*>(_type);
 		j["element_type"] = serializeWType(at->elementType());
 		j["array_size"] = at->arraySize();
-		j["arc4_alias"] = nullptr;
+		j["arc4_alias"] = at->arc4Alias().empty() ? nlohmann::json(nullptr) : nlohmann::json(at->arc4Alias());
 		j["source_location"] = nullptr;
 		break;
 	}
