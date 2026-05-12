@@ -1,3 +1,38 @@
+# Semantic Test Status — v244
+
+**Totals**: 1097 PASS / 152 FAIL / 73 (56 compile_err + 17 deploy_err) = **1097/1322 (83.0%)**
+
+vs v243 = 1097 PASS: **bit-identical per-test results**. Fail-list, compile-err
+list, and deploy-err list all diff empty.
+
+## v244 puya-sol changes (vs v243)
+
+Two pure refactor commits extending the v217-v243 "makeX helper" pattern
+to nearly every remaining AWST construction site:
+
+1. *ad8231c92* `refactor: collapse AWST node construction via maker helpers` —
+   adds 5 new helpers (`makeCreateInnerTransaction`, `makeArrayExtend`,
+   `makeArrayPop`, `makeConvertArray`, `makeBitInvert`) and converts 33
+   inline construction sites across 11 builder files. −49 LOC.
+2. *84f92c586* `refactor: AWST maker helpers — round 2 (long-tail patterns)` —
+   adds 11 more helpers (`makeBytesBinOp`, `makeStringConstant`,
+   `makeSingleEvaluation`, `makeBoxPrefixedKey`, `makeARC4FromBytes`,
+   `makeARC4Router`, `makeStateDelete`, `makeEmit`,
+   `makeNamedTupleExpression`, `makePuyaLibCall`, `makeSubroutine`) and
+   routes ~30 callsites through them. Also switches sites that already
+   had unused existing helpers to start using them
+   (`makeNumericCompare`, `makeBigUIntBinOp`, `makeBoolBinOp`,
+   `makeNot`, `makeFieldExpression`, `makeTupleItem`, `makeStateGet`,
+   `makeVarExpression`, `makeIntegerConstant`). −21 LOC.
+
+Cumulative round delta: ~−70 LOC across ~63 callsites. 16 new maker
+helpers in `awst/Node.h`. The 9 remaining `make_shared<awst::…>` sites
+are genuinely non-mechanical — fields populated incrementally across
+many branches in a single function — and skipping them preserves
+clarity at those callsites.
+
+---
+
 # Semantic Test Status — v243
 
 **Totals**: 1097 PASS / 152 FAIL / 73 (56 compile_err + 17 deploy_err) = **1097/1322 (83.0%)**
