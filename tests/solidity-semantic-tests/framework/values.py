@@ -64,3 +64,56 @@ def raw(value: bytes) -> bytes:
     """Identity marker. Used in test code to signal 'this is the raw byte sequence
     the contract returns; do not interpret it as ABI-decoded'."""
     return value
+
+
+def as_int(value) -> int:
+    """Coerce algosdk's typed return into the equivalent uint256 int.
+
+    Use when a Solidity function declared `returns (bytes32)` (or any
+    byte[N]) but the test expectation is written as an int. algosdk
+    delivers byte[N] as `list[int]`, so a strict `== 0x...` check fails
+    against `[0,0,...]`.
+
+    Conversions:
+      int          → unchanged
+      bool         → 0 / 1
+      bytes        → big-endian int.from_bytes
+      list/tuple   → bytes(...) then int.from_bytes
+      str (algo)   → decode_address → 32-byte int (last 20 bytes match an EVM address)
+    """
+    if isinstance(value, bool):
+        return int(value)
+    if isinstance(value, int):
+        return value
+    if isinstance(value, (bytes, bytearray)):
+        return int.from_bytes(value, "big")
+    if isinstance(value, (list, tuple)):
+        # Filter out non-int items (defensive) — algosdk delivers byte[N] as
+        # a list[int] in [0, 255].
+        if all(isinstance(x, int) for x in value):
+            return int.from_bytes(bytes(value), "big")
+    if isinstance(value, str):
+        # Algorand address (58-char base32). decode_address yields 32 bytes.
+        from algosdk import encoding as _enc
+        try:
+            return int.from_bytes(_enc.decode_address(value), "big")
+        except Exception:
+            pass
+    raise TypeError(f"can't coerce {type(value).__name__} to int: {value!r}")
+
+
+def as_bytes(value) -> bytes:
+    """Coerce algosdk's typed return into a bytes object.
+
+    int → 32-byte big-endian. bytes → unchanged. list[int]/tuple[int] →
+    bytes(...). str → utf-8 encode (for `string` returns).
+    """
+    if isinstance(value, (bytes, bytearray)):
+        return bytes(value)
+    if isinstance(value, (list, tuple)):
+        return bytes(value)
+    if isinstance(value, int):
+        return value.to_bytes(32, "big")
+    if isinstance(value, str):
+        return value.encode("utf-8")
+    raise TypeError(f"can't coerce {type(value).__name__} to bytes: {value!r}")

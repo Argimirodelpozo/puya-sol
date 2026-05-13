@@ -19,7 +19,7 @@ Pytest usage:
 from . import _algosdk_patch  # noqa: F401
 
 from .harness import Harness, Result, App
-from .values import lpad, rpad, u256, i256, hex_bytes, str_bytes, raw
+from .values import lpad, rpad, u256, i256, hex_bytes, str_bytes, raw, as_int, as_bytes
 from .revert import Reverted, Panic, ErrorString, RawRevert
 
 __all__ = [
@@ -33,6 +33,8 @@ __all__ = [
     "hex_bytes",
     "str_bytes",
     "raw",
+    "as_int",
+    "as_bytes",
     "Reverted",
     "Panic",
     "ErrorString",
