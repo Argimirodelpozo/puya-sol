@@ -203,10 +203,28 @@ def parse_test_file(path: Path) -> SemanticTest:
             continue
         raw_lines.append(line)
 
-    # Merge continuation lines: if a line starts with "->", append to previous
+    # Merge continuation lines. A line that doesn't start a new assertion
+    # (no leading alphabetic identifier, no bare `(`, no `~ ...` event syntax)
+    # is treated as continuation of the previous logical line. Covers:
+    #   - "-> result" continuations
+    #   - sig line ending in ":" followed by arg lines and a "-> ..." line
+    #   - any literal-looking line (numeric, hex, quoted string)
+    # Lines starting with a letter/underscore are NEW assertions even if
+    # they aren't standard method calls (e.g. isoltest barewords like
+    # `storageEmpty -> 1`); we can't execute those, but they still cleanly
+    # break the merge so following method calls aren't swallowed.
+    def _starts_new_assertion(s: str) -> bool:
+        if re.match(r'^[a-zA-Z_]', s):
+            return True
+        if s.startswith('(') and re.match(r'^\(\s*\)', s):
+            return True  # bare call ()
+        if s.startswith('~'):
+            return True  # event emit assertion
+        return False
+
     merged = []
     for line in raw_lines:
-        if line.startswith("->") and merged:
+        if not _starts_new_assertion(line) and merged:
             merged[-1] = merged[-1] + " " + line
         else:
             merged.append(line)
@@ -215,6 +233,28 @@ def parse_test_file(path: Path) -> SemanticTest:
         call = _parse_assertion_line(line)
         if call:
             calls.append(call)
+
+    # Hardcoded xfail: three tests whose entire assertion list is
+    # isoltest-internal barewords (`isoltest_side_effects_test`,
+    # `isoltest_builtin_test`, bare `balance`). We have no analog
+    # for those commands, so the assertions can never run — emit a
+    # single FAILURE-expecting synthetic call so the harness records
+    # the test as failing instead of vacuously passing.
+    XFAIL_ISOLTEST_BAREWORDS = {
+        "tests/isoltestTesting/effects.sol",
+        "tests/isoltestTesting/balance_without_balance.sol",
+        "tests/isoltestTesting/builtins.sol",
+    }
+    rel_path = str(path).split("solidity-semantic-tests/", 1)[-1]
+    if not calls and rel_path in XFAIL_ISOLTEST_BAREWORDS:
+        calls.append(TestCall(
+            method_signature="__xfail_isoltest_bareword__",
+            args=[],
+            expected=[""],
+            expect_failure=False,
+            value_wei=0,
+            raw_line="(synthetic xfail for isoltest-bareword test)",
+        ))
 
     # Tests with no assertions still pass if compilation + deployment succeeds
     if not calls:
