@@ -1,52 +1,69 @@
-"""Auto-generated tests for the abiEncodeDecode category.
-
-Each test deploys the contract defined in the matching .sol file and
-runs the assertions originally documented in the test's `// ----`
-block. The .sol files are unchanged; this Python module is the new
-source of truth — edit it freely to fix or sharpen assertions.
-"""
+"""Tests for the abiEncodeDecode category."""
 import pytest
 
-from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted
+from framework import (
+    Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
+    as_int, as_bytes,
+)
+
+
+def _evm_abi_encode_uint_bytes(uint_val: int, raw_bytes: bytes) -> bytes:
+    """Build the EVM-ABI encoding of `(uint256, bytes)` — used by the
+    abi_decode_* fixtures whose `bytes data` argument is itself the
+    EVM-encoded payload that the contract then `abi.decode`s."""
+    return (
+        uint_val.to_bytes(32, "big")          # uint256 head
+        + (0x40).to_bytes(32, "big")          # offset of bytes payload (after the two heads)
+        + len(raw_bytes).to_bytes(32, "big")  # bytes length
+        + raw_bytes.ljust(((len(raw_bytes) + 31) // 32) * 32, b"\x00")  # bytes data, 32-byte padded
+    )
 
 
 def test_abi_decode_calldata(harness):
     """abiEncodeDecode/contracts/abi_decode_calldata.sol"""
     app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_decode_calldata.sol")
-    # f(bytes): 0x20, 0x80, 0x21, 0x40, 0x7, "abcdefg" -> 0x21, 0x40, 0x7, "abcdefg"
-    r = harness.call(app, "f(bytes)", 32, 128, 33, 64, 7, bytes.fromhex('61626364656667'))
-    # TODO: verify expected: 0x21 | 0x40 | 0x7 | "abcdefg"
-    assert not r.reverted
+    # The function decodes its bytes arg as `(uint256, bytes)` and returns
+    # `(33, "abcdefg")`. We pass the EVM-encoded payload as a single bytes arg.
+    payload = _evm_abi_encode_uint_bytes(33, b"abcdefg")
+    r = harness.call(app, "f(bytes)", payload)
+    assert as_int(r.abi_return[0]) == 33
+    assert bytes(r.abi_return[1]) == b"abcdefg"
 
 def test_abi_decode_simple(harness):
     """abiEncodeDecode/contracts/abi_decode_simple.sol"""
     app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_decode_simple.sol")
-    # f(bytes): 0x20, 0x80, 0x21, 0x40, 0x7, "abcdefg" -> 0x21, 0x40, 0x7, "abcdefg"
-    r = harness.call(app, "f(bytes)", 32, 128, 33, 64, 7, bytes.fromhex('61626364656667'))
-    # TODO: verify expected: 0x21 | 0x40 | 0x7 | "abcdefg"
-    assert not r.reverted
+    payload = _evm_abi_encode_uint_bytes(33, b"abcdefg")
+    r = harness.call(app, "f(bytes)", payload)
+    assert as_int(r.abi_return[0]) == 33
+    assert bytes(r.abi_return[1]) == b"abcdefg"
 
 def test_abi_decode_simple_storage(harness):
     """abiEncodeDecode/contracts/abi_decode_simple_storage.sol"""
     app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_decode_simple_storage.sol")
-    # f(bytes): 0x20, 0x80, 0x21, 0x40, 0x7, "abcdefg" -> 0x21, 0x40, 0x7, "abcdefg"
-    r = harness.call(app, "f(bytes)", 32, 128, 33, 64, 7, bytes.fromhex('61626364656667'))
-    # TODO: verify expected: 0x21 | 0x40 | 0x7 | "abcdefg"
-    assert not r.reverted
+    payload = _evm_abi_encode_uint_bytes(33, b"abcdefg")
+    r = harness.call(app, "f(bytes)", payload)
+    assert as_int(r.abi_return[0]) == 33
+    assert bytes(r.abi_return[1]) == b"abcdefg"
 
 def test_abi_encode_call(harness):
     """abiEncodeDecode/contracts/abi_encode_call.sol"""
     app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_call.sol")
     # callExternal() -> true
     r = harness.call(app, "callExternal()")
-    assert r.abi_return is True
+    assert bool(as_int(r.abi_return)) is True
 
 def test_abi_encode_call_declaration(harness):
     """abiEncodeDecode/contracts/abi_encode_call_declaration.sol"""
-    app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_call_declaration.sol")
+    # 5 inner staticcalls each round-tripping through abi.encodeCall / decode
+    # → easily over the 700-opcode default; pre-allocate budget via the
+    # --ensure-budget compile flag.
+    app = harness.compile_and_deploy(
+        "abiEncodeDecode/contracts/abi_encode_call_declaration.sol",
+        ensure_budget={"test": 20000},
+    )
     # test() -> 11116
     r = harness.call(app, "test()")
-    assert r.abi_return == 11116
+    assert as_int(r.abi_return) == 11116
 
 def test_abi_encode_call_is_consistent(harness):
     """abiEncodeDecode/contracts/abi_encode_call_is_consistent.sol"""
@@ -92,47 +109,53 @@ def test_abi_encode_call_memory(harness):
     app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_call_memory.sol")
     # test() -> 0xa7a0d53700000000000000000000000000000000000000000000000000000000
     r = harness.call(app, "test()")
-    assert r.abi_return == 75820412798538961434450374661564614143690048118980576262982101388227132784640
+    assert as_int(r.abi_return) == 75820412798538961434450374661564614143690048118980576262982101388227132784640
 
 def test_abi_encode_call_special_args(harness):
-    """abiEncodeDecode/contracts/abi_encode_call_special_args.sol"""
+    """abiEncodeDecode/contracts/abi_encode_call_special_args.sol
+
+    The helper getters return raw encoded calldata as `bytes`; we verify
+    each by reconstructing it locally. `assertConsistentSelectors()` is
+    the contract's own end-to-end check that all three encoders agree.
+    """
     app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_call_special_args.sol")
-    # assertConsistentSelectors() ->
+
     r = harness.call(app, "assertConsistentSelectors()")
-    # (void return — call succeeding is the assertion)
-    # fSignatureFromLiteralNoArgs() -> 0x20, 0x04, 12200448252684243758085936796735499259670113115893304444050964496075123064832
-    r = harness.call(app, "fSignatureFromLiteralNoArgs()")
-    assert tuple(r.abi_return) == (32, 4, 12200448252684243758085936796735499259670113115893304444050964496075123064832)
-    # fPointerNoArgs() -> 0x20, 4, 12200448252684243758085936796735499259670113115893304444050964496075123064832
-    r = harness.call(app, "fPointerNoArgs()")
-    assert tuple(r.abi_return) == (32, 4, 12200448252684243758085936796735499259670113115893304444050964496075123064832)
-    # fSignatureFromLiteralArray() -> 0x20, 0x44, 4612216551196396486909126966576324289294165774260092952932219511233230929920, 862718293348820473429344482784628181556388621521298319395315527974912, 0
-    r = harness.call(app, "fSignatureFromLiteralArray()")
-    # TODO: verify structural decoding matches expected: 32, 68, 4612216551196396486909126966576324289294165774260092952932219511233230929920, 862718293348820473429344482784628181556388621521298319395315527974912, 0
     assert not r.reverted
-    # fPointerArray() -> 0x20, 0x44, 4612216551196396486909126966576324289294165774260092952932219511233230929920, 862718293348820473429344482784628181556388621521298319395315527974912, 0
-    r = harness.call(app, "fPointerArray()")
-    # TODO: verify structural decoding matches expected: 32, 68, 4612216551196396486909126966576324289294165774260092952932219511233230929920, 862718293348820473429344482784628181556388621521298319395315527974912, 0
-    assert not r.reverted
-    # fPointerUint() -> 0x20, 0x44, 30372892641494467502622535050667754357470287521126424526399600764424271429632, 323519360005807677536004181044235568083645733070486869773243322990592, 350479306672958317330671196131255198757282877493027442254346933239808
-    r = harness.call(app, "fPointerUint()")
-    # TODO: verify structural decoding matches expected: 32, 68, 30372892641494467502622535050667754357470287521126424526399600764424271429632, 323519360005807677536004181044235568083645733070486869773243322990592, 350479306672958317330671196131255198757282877493027442254346933239808
-    assert not r.reverted
-    # fSignatureFromLiteralUint() -> 0x20, 0x44, 30372892641494467502622535050667754357470287521126424526399600764424271429632, 323519360005807677536004181044235568083645733070486869773243322990592, 350479306672958317330671196131255198757282877493027442254346933239808
-    r = harness.call(app, "fSignatureFromLiteralUint()")
-    # TODO: verify structural decoding matches expected: 32, 68, 30372892641494467502622535050667754357470287521126424526399600764424271429632, 323519360005807677536004181044235568083645733070486869773243322990592, 350479306672958317330671196131255198757282877493027442254346933239808
-    assert not r.reverted
+
+    # fNoArgs() selector = keccak("fNoArgs()")[:4] = 0x1af93581.
+    sel_no_args = bytes.fromhex("1af93581")
+    assert bytes(harness.call(app, "fSignatureFromLiteralNoArgs()").abi_return) == sel_no_args
+    assert bytes(harness.call(app, "fPointerNoArgs()").abi_return) == sel_no_args
+
+    # fArray(uint256[]) selector = 0x0a368f80; empty array → offset=32, length=0.
+    sel_array = bytes.fromhex("0a368f80")
+    array_payload = sel_array + (32).to_bytes(32, "big") + (0).to_bytes(32, "big")
+    assert bytes(harness.call(app, "fSignatureFromLiteralArray()").abi_return) == array_payload
+    assert bytes(harness.call(app, "fPointerArray()").abi_return) == array_payload
+
+    # fUint(uint256,uint256) selector = 0x432d32cc; args = (12, 13).
+    sel_uint = bytes.fromhex("432d32cc")
+    uint_payload = sel_uint + (12).to_bytes(32, "big") + (13).to_bytes(32, "big")
+    assert bytes(harness.call(app, "fPointerUint()").abi_return) == uint_payload
+    assert bytes(harness.call(app, "fSignatureFromLiteralUint()").abi_return) == uint_payload
 
 def test_abi_encode_call_uint_bytes(harness):
     """abiEncodeDecode/contracts/abi_encode_call_uint_bytes.sol"""
     app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_call_uint_bytes.sol")
-    # f() -> 0x20, 0x60, 0x1234000000000000000000000000000000000000000000000000000000000000, 0x6162000000000000000000000000000000000000000000000000000000000000, 0x1234000000000000000000000000000000000000000000000000000000000000
+    # f() returns the encoded args (selector stripped) for
+    # g(bytes2, bytes2, bytes2). Each bytes2 is right-padded to a 32-byte
+    # word: 0x1234, "ab" = 0x6162, 0x1234.
     r = harness.call(app, "f()")
-    # TODO: verify structural decoding matches expected: 32, 96, 8233507321867270975858166353462000283756074959440384344846684898023608156160, 44047497324925121336511606693520958599579173549109180625971642598225011015680, 8233507321867270975858166353462000283756074959440384344846684898023608156160
-    assert not r.reverted
-    # f2() -> 0x20, 0x40, 0x1234, 0x1234
+    expected = (
+        b"\x12\x34" + b"\x00" * 30
+        + b"\x61\x62" + b"\x00" * 30
+        + b"\x12\x34" + b"\x00" * 30
+    )
+    assert bytes(r.abi_return) == expected
+    # f2() returns encoded args for h(uint16, uint16): two left-padded uints.
     r = harness.call(app, "f2()")
-    assert tuple(r.abi_return) == (32, 64, 4660, 4660)
+    assert bytes(r.abi_return) == (0x1234).to_bytes(32, "big") + (0x1234).to_bytes(32, "big")
 
 def test_abi_encode_empty_string_v1(harness):
     """abiEncodeDecode/contracts/abi_encode_empty_string_v1.sol"""
@@ -145,114 +168,159 @@ def test_abi_encode_empty_string_v1(harness):
 def test_abi_encode_with_selector(harness):
     """abiEncodeDecode/contracts/abi_encode_with_selector.sol"""
     app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_with_selector.sol")
-    # f0() -> 0x20, 4, 8234104107246695022420661102507966550300666591269321702959126607540084801536
-    r = harness.call(app, "f0()")
-    assert tuple(r.abi_return) == (32, 4, 8234104107246695022420661102507966550300666591269321702959126607540084801536)
-    # f1() -> 0x20, 0x64, 8234104107246695022420661102507966550300666591269321702959126607540084801536, 862718293348820473429344482784628181556388621521298319395315527974912, 91135606241822717681769169345594720818313984248279388438121731325952, 0
-    r = harness.call(app, "f1()")
-    # TODO: verify structural decoding matches expected: 32, 100, 8234104107246695022420661102507966550300666591269321702959126607540084801536, 862718293348820473429344482784628181556388621521298319395315527974912, 91135606241822717681769169345594720818313984248279388438121731325952, 0
-    assert not r.reverted
-    # f2() -> 0x20, 0x64, 8234104107246695022420661102507966550300666591269321702959126607540084801536, 862718293348820473429344482784628181556388621521298319395315527974912, 91135606241822717681769169345594720818313984248279388438121731325952, 0
-    r = harness.call(app, "f2()")
-    # TODO: verify structural decoding matches expected: 32, 100, 8234104107246695022420661102507966550300666591269321702959126607540084801536, 862718293348820473429344482784628181556388621521298319395315527974912, 91135606241822717681769169345594720818313984248279388438121731325952, 0
-    assert not r.reverted
-    # f3() -> 0x20, 0x24, 0x12345678ffffffffffffffffffffffffffffffffffffffffffffffffffffffff, -26959946667150639794667015087019630673637144422540572481103610249216
-    r = harness.call(app, "f3()")
-    assert tuple(r.abi_return) == (32, 36, 8234104134206641689571300897174981637320297264906466125499699088643695050751, -26959946667150639794667015087019630673637144422540572481103610249216)
+    sel = bytes.fromhex("12345678")
+    # f0() -> just the selector
+    assert bytes(harness.call(app, "f0()").abi_return) == sel
+    # f1()/f2() -> selector + abicoded "abc" (offset, length, data padded to a word)
+    payload_abc = sel + (32).to_bytes(32, "big") + (3).to_bytes(32, "big") + b"abc".ljust(32, b"\x00")
+    assert bytes(harness.call(app, "f1()").abi_return) == payload_abc
+    assert bytes(harness.call(app, "f2()").abi_return) == payload_abc
+    # f3() -> selector + uint256(max). abicoder v1 doesn't word-align the
+    # selector, so the result is 36 raw bytes, not a 32-byte-padded layout.
+    assert bytes(harness.call(app, "f3()").abi_return) == sel + (2**256 - 1).to_bytes(32, "big")
 
 def test_abi_encode_with_selectorv2(harness):
     """abiEncodeDecode/contracts/abi_encode_with_selectorv2.sol"""
     app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_with_selectorv2.sol")
-    # f0() -> 0x20, 4, 8234104107246695022420661102507966550300666591269321702959126607540084801536
-    r = harness.call(app, "f0()")
-    assert tuple(r.abi_return) == (32, 4, 8234104107246695022420661102507966550300666591269321702959126607540084801536)
-    # f1() -> 0x20, 0x64, 8234104107246695022420661102507966550300666591269321702959126607540084801536, 862718293348820473429344482784628181556388621521298319395315527974912, 91135606241822717681769169345594720818313984248279388438121731325952, 0
-    r = harness.call(app, "f1()")
-    # TODO: verify structural decoding matches expected: 32, 100, 8234104107246695022420661102507966550300666591269321702959126607540084801536, 862718293348820473429344482784628181556388621521298319395315527974912, 91135606241822717681769169345594720818313984248279388438121731325952, 0
-    assert not r.reverted
-    # f2() -> 0x20, 0x64, 8234104107246695022420661102507966550300666591269321702959126607540084801536, 862718293348820473429344482784628181556388621521298319395315527974912, 91135606241822717681769169345594720818313984248279388438121731325952, 0
-    r = harness.call(app, "f2()")
-    # TODO: verify structural decoding matches expected: 32, 100, 8234104107246695022420661102507966550300666591269321702959126607540084801536, 862718293348820473429344482784628181556388621521298319395315527974912, 91135606241822717681769169345594720818313984248279388438121731325952, 0
-    assert not r.reverted
-    # f3() -> 0x20, 0x24, 0x12345678ffffffffffffffffffffffffffffffffffffffffffffffffffffffff, -26959946667150639794667015087019630673637144422540572481103610249216
-    r = harness.call(app, "f3()")
-    assert tuple(r.abi_return) == (32, 36, 8234104134206641689571300897174981637320297264906466125499699088643695050751, -26959946667150639794667015087019630673637144422540572481103610249216)
-    # f4() -> 0x20, 292, 0x12345678ffffffffffffffffffffffffffffffffffffffffffffffffffffffff, -26959946667150639794667015087019630673637144422540572481103610249216, 2588154880046461420288033448353884544669165864563894958185946583924736, 80879840001451919384001045261058892020911433267621717443310830747648, 514631493222945105325971421573240365883976325135760395164659172419450175488, 2588154880046461420288033448353884544669165864563894958185946583924736, 125633351468921981443148290305511478939149093009039067761942823761346560, 0x264c6f72656d20697073756d20646f6c6f722073697420657468657265, 53113508339655873314659021564971517366334151400493876485713881232784043802624, 0
-    r = harness.call(app, "f4()")
-    # TODO: verify structural decoding matches expected: 32, 292, 8234104134206641689571300897174981637320297264906466125499699088643695050751, -26959946667150639794667015087019630673637144422540572481103610249216, 2588154880046461420288033448353884544669165864563894958185946583924736, 80879840001451919384001045261058892020911433267621717443310830747648, 514631493222945105325971421573240365883976325135760395164659172419450175488, 2588154880046461420288033448353884544669165864563894958185946583924736, 125633351468921981443148290305511478939149093009039067761942823761346560, 1032527554097600419316867502151134058906128185543445472916578555490917, 53113508339655873314659021564971517366334151400493876485713881232784043802624, 0
-    assert not r.reverted
+    sel = bytes.fromhex("12345678")
+
+    assert bytes(harness.call(app, "f0()").abi_return) == sel
+
+    payload_abc = sel + (32).to_bytes(32, "big") + (3).to_bytes(32, "big") + b"abc".ljust(32, b"\x00")
+    assert bytes(harness.call(app, "f1()").abi_return) == payload_abc
+    assert bytes(harness.call(app, "f2()").abi_return) == payload_abc
+
+    assert bytes(harness.call(app, "f3()").abi_return) == sel + (2**256 - 1).to_bytes(32, "big")
+
+    # f4 encodes (uint256.max, S{a,b,c}, uint(3)). The struct has a dynamic
+    # `b` field, so the head is (max, offset_to_S, 3) followed by the S tail:
+    # (a, offset_to_b, c, length, b_padded).
+    s_a = 0x1234567
+    s_b = b"Lorem ipsum dolor sit ethereum........"
+    s_c = 0x1234
+    s_tail = (
+        s_a.to_bytes(32, "big")
+        + (0x60).to_bytes(32, "big")
+        + s_c.to_bytes(32, "big")
+        + len(s_b).to_bytes(32, "big")
+        + s_b.ljust(((len(s_b) + 31) // 32) * 32, b"\x00")
+    )
+    f4_payload = (
+        sel
+        + (2**256 - 1).to_bytes(32, "big")
+        + (0x60).to_bytes(32, "big")  # offset to S relative to args region
+        + (3).to_bytes(32, "big")
+        + s_tail
+    )
+    assert bytes(harness.call(app, "f4()").abi_return) == f4_payload
 
 def test_abi_encode_with_signature(harness):
     """abiEncodeDecode/contracts/abi_encode_with_signature.sol"""
     app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_with_signature.sol")
-    # f0() -> 0x20, 4, -34435155370463444793260793355178157075203752403645521721995013737368954863616
-    r = harness.call(app, "f0()")
-    assert tuple(r.abi_return) == (32, 4, -34435155370463444793260793355178157075203752403645521721995013737368954863616)
-    # f1() -> 0x20, 0x64, -34435155370463444793260793355178157075203752403645521721995013737368954863616, 862718293348820473429344482784628181556388621521298319395315527974912, 91135606241822717681769169345594720818313984248279388438121731325952, 0
-    r = harness.call(app, "f1()")
-    # TODO: verify structural decoding matches expected: 32, 100, -34435155370463444793260793355178157075203752403645521721995013737368954863616, 862718293348820473429344482784628181556388621521298319395315527974912, 91135606241822717681769169345594720818313984248279388438121731325952, 0
-    assert not r.reverted
-    # f1s() -> 0x20, 0x64, -34435155370463444793260793355178157075203752403645521721995013737368954863616, 862718293348820473429344482784628181556388621521298319395315527974912, 91135606241822717681769169345594720818313984248279388438121731325952, 0
-    r = harness.call(app, "f1s()")
-    # TODO: verify structural decoding matches expected: 32, 100, -34435155370463444793260793355178157075203752403645521721995013737368954863616, 862718293348820473429344482784628181556388621521298319395315527974912, 91135606241822717681769169345594720818313984248279388438121731325952, 0
-    assert not r.reverted
-    # f2() -> 0x40, 0x0140, 0xc4, -10047825972976160827854069633043429618646681939320956771263895477211642200064, 862718293348820473429344482784628181556388621521298319395315527974912, 0x04ffffffffffffffffffffffffffffffffffffffffffffffffffffffff, -1, -26959946667150639794667015087019630673637144422540572481103610249217, -53919893334301279589334030174039261347274288845081144962207220498433, -107839786668602559178668060348078522694548577690162289924414440996864, 2, 0, 0
+    # selector("f(uint256)")[:4]
+    sel = bytes.fromhex("b3de648b")
+    assert bytes(harness.call(app, "f0()").abi_return) == sel
+
+    payload_abc = sel + (32).to_bytes(32, "big") + (3).to_bytes(32, "big") + b"abc".ljust(32, b"\x00")
+    assert bytes(harness.call(app, "f1()").abi_return) == payload_abc
+    assert bytes(harness.call(app, "f1s()").abi_return) == payload_abc
+
+    # f2 signature is the long Lorem ipsum string; selector picked from the
+    # contract's actual hash.
+    sel_long = bytes.fromhex("e9c921cd")
     r = harness.call(app, "f2()")
-    # TODO: verify structural decoding matches expected: 64, 320, 196, -10047825972976160827854069633043429618646681939320956771263895477211642200064, 862718293348820473429344482784628181556388621521298319395315527974912, 134799733335753198973335075435098153368185722112702862405518051246079, -1, -26959946667150639794667015087019630673637144422540572481103610249217, -53919893334301279589334030174039261347274288845081144962207220498433, -107839786668602559178668060348078522694548577690162289924414440996864, 2, 0, 0
-    assert not r.reverted
+    elems = [(2**256 - 1) - i for i in range(4)]
+    expected_r = (
+        sel_long
+        + (32).to_bytes(32, "big")
+        + (4).to_bytes(32, "big")
+        + b"".join(v.to_bytes(32, "big") for v in elems)
+    )
+    assert bytes(r.abi_return[0]) == expected_r
+    assert list(r.abi_return[1]) == [0, 0]
 
 def test_abi_encode_with_signaturev2(harness):
     """abiEncodeDecode/contracts/abi_encode_with_signaturev2.sol"""
     app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_with_signaturev2.sol")
-    # f0() -> 0x20, 4, -34435155370463444793260793355178157075203752403645521721995013737368954863616
-    r = harness.call(app, "f0()")
-    assert tuple(r.abi_return) == (32, 4, -34435155370463444793260793355178157075203752403645521721995013737368954863616)
-    # f1() -> 0x20, 0x64, -34435155370463444793260793355178157075203752403645521721995013737368954863616, 862718293348820473429344482784628181556388621521298319395315527974912, 91135606241822717681769169345594720818313984248279388438121731325952, 0
-    r = harness.call(app, "f1()")
-    # TODO: verify structural decoding matches expected: 32, 100, -34435155370463444793260793355178157075203752403645521721995013737368954863616, 862718293348820473429344482784628181556388621521298319395315527974912, 91135606241822717681769169345594720818313984248279388438121731325952, 0
-    assert not r.reverted
-    # f1s() -> 0x20, 0x64, -34435155370463444793260793355178157075203752403645521721995013737368954863616, 862718293348820473429344482784628181556388621521298319395315527974912, 91135606241822717681769169345594720818313984248279388438121731325952, 0
-    r = harness.call(app, "f1s()")
-    # TODO: verify structural decoding matches expected: 32, 100, -34435155370463444793260793355178157075203752403645521721995013737368954863616, 862718293348820473429344482784628181556388621521298319395315527974912, 91135606241822717681769169345594720818313984248279388438121731325952, 0
-    assert not r.reverted
-    # f2() -> 0x40, 0x0140, 0xc4, -10047825972976160827854069633043429618646681939320956771263895477211642200064, 862718293348820473429344482784628181556388621521298319395315527974912, 0x04ffffffffffffffffffffffffffffffffffffffffffffffffffffffff, -1, -26959946667150639794667015087019630673637144422540572481103610249217, -53919893334301279589334030174039261347274288845081144962207220498433, -107839786668602559178668060348078522694548577690162289924414440996864, 2, 0, 0
+    sel_f = bytes.fromhex("b3de648b")
+    assert bytes(harness.call(app, "f0()").abi_return) == sel_f
+
+    payload_abc = sel_f + (32).to_bytes(32, "big") + (3).to_bytes(32, "big") + b"abc".ljust(32, b"\x00")
+    assert bytes(harness.call(app, "f1()").abi_return) == payload_abc
+    assert bytes(harness.call(app, "f1s()").abi_return) == payload_abc
+
+    # f2: selector for the long Lorem ipsum signature + encoded uint[4]
+    sel_long = bytes.fromhex("e9c921cd")
+    elems = [(2**256 - 1) - i for i in range(4)]
+    expected_r = (
+        sel_long
+        + (32).to_bytes(32, "big")
+        + (4).to_bytes(32, "big")
+        + b"".join(v.to_bytes(32, "big") for v in elems)
+    )
     r = harness.call(app, "f2()")
-    # TODO: verify structural decoding matches expected: 64, 320, 196, -10047825972976160827854069633043429618646681939320956771263895477211642200064, 862718293348820473429344482784628181556388621521298319395315527974912, 134799733335753198973335075435098153368185722112702862405518051246079, -1, -26959946667150639794667015087019630673637144422540572481103610249217, -53919893334301279589334030174039261347274288845081144962207220498433, -107839786668602559178668060348078522694548577690162289924414440996864, 2, 0, 0
-    assert not r.reverted
-    # f4() -> 0x20, 292, 0x7c793002ffffffffffffffffffffffffffffffffffffffffffffffffffffffff, -26959946667150639794667015087019630673637144422540572481103610249216, 2588154880046461420288033448353884544669165864563894958185946583924736, 80879840001451919384001045261058892020911433267621717443310830747648, 514631493222945105325971421573240365883976325135760395164659172419450175488, 2588154880046461420288033448353884544669165864563894958185946583924736, 125633351468921981443148290305511478939149093009039067761942823761346560, 0x264c6f72656d20697073756d20646f6c6f722073697420657468657265, 53113508339655873314659021564971517366334151400493876485713881232784043802624, 0
-    r = harness.call(app, "f4()")
-    # TODO: verify structural decoding matches expected: 32, 292, 56300913083867702610685491113455533065123384048083695546721346848662902276095, -26959946667150639794667015087019630673637144422540572481103610249216, 2588154880046461420288033448353884544669165864563894958185946583924736, 80879840001451919384001045261058892020911433267621717443310830747648, 514631493222945105325971421573240365883976325135760395164659172419450175488, 2588154880046461420288033448353884544669165864563894958185946583924736, 125633351468921981443148290305511478939149093009039067761942823761346560, 1032527554097600419316867502151134058906128185543445472916578555490917, 53113508339655873314659021564971517366334151400493876485713881232784043802624, 0
-    assert not r.reverted
+    assert bytes(r.abi_return[0]) == expected_r
+    assert list(r.abi_return[1]) == [0, 0]
+
+    # f4: selector("Lorem ipsum dolor sit ethereum........") + uintmax + offset + 3 + S tail
+    sel_s_b = bytes.fromhex("7c793002")
+    s_a, s_c = 0x1234567, 0x1234
+    s_b = b"Lorem ipsum dolor sit ethereum........"
+    s_tail = (
+        s_a.to_bytes(32, "big")
+        + (0x60).to_bytes(32, "big")
+        + s_c.to_bytes(32, "big")
+        + len(s_b).to_bytes(32, "big")
+        + s_b.ljust(((len(s_b) + 31) // 32) * 32, b"\x00")
+    )
+    f4_payload = (
+        sel_s_b
+        + (2**256 - 1).to_bytes(32, "big")
+        + (0x60).to_bytes(32, "big")
+        + (3).to_bytes(32, "big")
+        + s_tail
+    )
+    assert bytes(harness.call(app, "f4()").abi_return) == f4_payload
 
 def test_contract_array(harness):
     """abiEncodeDecode/contracts/contract_array.sol"""
+    from algosdk import encoding
     app = harness.compile_and_deploy("abiEncodeDecode/contracts/contract_array.sol")
-    # f(bytes): 0x20, 0xA0, 0x20, 3, 0x01, 0x02, 0x03 -> 0x20, 3, 0x01, 0x02, 0x03
-    r = harness.call(app, "f(bytes)", 32, 160, 32, 3, 1, 2, 3)
-    # TODO: verify structural decoding matches expected: 32, 3, 1, 2, 3
-    assert not r.reverted
-    # g() -> 0x20, 0xa0, 0x20, 3, 0x42, 0x21, 0x23
-    r = harness.call(app, "g()")
-    # TODO: verify structural decoding matches expected: 32, 160, 32, 3, 66, 33, 35
-    assert not r.reverted
+    # f decodes a bytes payload encoding `(C[])` and returns the C[].
+    payload = b"".join(v.to_bytes(32, "big") for v in (32, 3, 1, 2, 3))
+    r = harness.call(app, "f(bytes)", payload)
+    expected_addrs = [encoding.encode_address(v.to_bytes(32, "big")) for v in (1, 2, 3)]
+    assert list(r.abi_return) == expected_addrs
+    # g() returns the abi.encode of the in-contract array (addresses 0x42, 0x21, 0x23).
+    expected_g = b"".join(v.to_bytes(32, "big") for v in (32, 3, 0x42, 0x21, 0x23))
+    assert bytes(harness.call(app, "g()").abi_return) == expected_g
 
 def test_contract_array_v2(harness):
     """abiEncodeDecode/contracts/contract_array_v2.sol"""
+    from algosdk import encoding
     app = harness.compile_and_deploy("abiEncodeDecode/contracts/contract_array_v2.sol")
-    # f(bytes): 0x20, 0xA0, 0x20, 3, 0x01, 0x02, 0x03 -> 0x20, 3, 0x01, 0x02, 0x03
-    r = harness.call(app, "f(bytes)", 32, 160, 32, 3, 1, 2, 3)
-    # TODO: verify structural decoding matches expected: 32, 3, 1, 2, 3
-    assert not r.reverted
-    # f(bytes): 0x20, 0x60, 0x20, 1, 0x0102030405060708090a0b0c0d0e0f1011121314 -> 0x20, 1, 0x0102030405060708090a0b0c0d0e0f1011121314
-    r = harness.call(app, "f(bytes)", 32, 96, 32, 1, 0x102030405060708090a0b0c0d0e0f1011121314)
-    assert tuple(r.abi_return) == (32, 1, 5753854965885600108575829560559299546819203860)
-    # f(bytes): 0x20, 0x60, 0x20, 1, 0x0102030405060708090a0b0c0d0e0f101112131415 -> FAILURE
-    r = harness.call(app, "f(bytes)", 32, 96, 32, 1, 0x102030405060708090a0b0c0d0e0f101112131415, expect_revert=True)
+
+    # Decode a 3-element C[] (addresses 0x01, 0x02, 0x03).
+    payload3 = b"".join(v.to_bytes(32, "big") for v in (32, 3, 1, 2, 3))
+    r = harness.call(app, "f(bytes)", payload3)
+    expected_addrs = [encoding.encode_address(v.to_bytes(32, "big")) for v in (1, 2, 3)]
+    assert list(r.abi_return) == expected_addrs
+
+    # Decode a 1-element C[] (20-byte address fits exactly).
+    addr20 = 0x0102030405060708090a0b0c0d0e0f1011121314
+    payload1 = b"".join(v.to_bytes(32, "big") for v in (32, 1, addr20))
+    r = harness.call(app, "f(bytes)", payload1)
+    assert list(r.abi_return) == [encoding.encode_address(addr20.to_bytes(32, "big"))]
+
+    # 21-byte address — too long for Solidity `address` (160 bits) → revert.
+    addr21 = 0x0102030405060708090a0b0c0d0e0f101112131415  # 21 bytes
+    bad_payload = b"".join(v.to_bytes(32, "big") for v in (32, 1, addr21))
+    r = harness.call(app, "f(bytes)", bad_payload, expect_revert=True)
     assert r.reverted
-    # g() -> 0x20, 0xa0, 0x20, 3, 0x42, 0x21, 0x23
-    r = harness.call(app, "g()")
-    # TODO: verify structural decoding matches expected: 32, 160, 32, 3, 66, 33, 35
-    assert not r.reverted
+
+    # g() returns the abi-encoded array {0x42, 0x21, 0x23}.
+    expected_g = b"".join(v.to_bytes(32, "big") for v in (32, 3, 0x42, 0x21, 0x23))
+    assert bytes(harness.call(app, "g()").abi_return) == expected_g
 
 def test_offset_overflow_in_array_decoding(harness):
     """abiEncodeDecode/contracts/offset_overflow_in_array_decoding.sol"""

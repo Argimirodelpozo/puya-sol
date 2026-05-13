@@ -60,20 +60,42 @@ def _resolve_method(app_spec, sig: str):
     """
     base_name = sig.split("(")[0]
     has_paren = "(" in sig
-    target_inner = sig[sig.index("(") + 1 : sig.rindex(")")] if has_paren else ""
+    target_inner = _extract_inner_args(sig) if has_paren else ""
 
     target_norm = _normalize_sol_inner(target_inner)
     for m in app_spec.methods:
         if m.name != base_name:
             continue
         abi_m = m.to_abi_method()
-        abi_inner = abi_m.get_signature().split("(", 1)[1].rsplit(")", 1)[0]
+        abi_inner = _extract_inner_args(abi_m.get_signature())
         if _normalize_arc4_inner(abi_inner) == target_norm:
             return abi_m
     candidates = [m for m in app_spec.methods if m.name == base_name]
     if len(candidates) == 1:
         return candidates[0].to_abi_method()
     return None
+
+
+def _extract_inner_args(method_sig: str) -> str:
+    """Extract the first balanced-paren group from a method signature.
+
+    ARC4 signatures with tuple returns look like
+    `f(uint256[][])(uint256,uint256,uint256)`, so we need balanced-paren
+    matching rather than a simple `rindex(')')`.
+    """
+    i = method_sig.find("(")
+    if i < 0:
+        return ""
+    depth = 0
+    for j in range(i, len(method_sig)):
+        c = method_sig[j]
+        if c == "(":
+            depth += 1
+        elif c == ")":
+            depth -= 1
+            if depth == 0:
+                return method_sig[i + 1 : j]
+    return method_sig[i + 1 :]
 
 
 _SOL_TO_ARC4_SCALAR = {
@@ -221,6 +243,26 @@ def call(
         logs = _collect_logs(resp)
         return Result(abi_return=abi_return, logs=logs, raw_response=resp)
     except Exception as e:
+        # Budget-exhausted? Retry with a pool of dummy helper-app calls in
+        # the same group (each contributes 700 opcodes via fee pooling).
+        if _is_budget_error(e):
+            retry_result = _retry_with_budget_pool(
+                algod=algod,
+                localnet=localnet,
+                app=app,
+                sender=sender,
+                signer=signer,
+                abi_method=abi_method,
+                encoded_args=encoded_args,
+                payment_wei=payment_wei,
+                extra_fee=extra_fee,
+                extra_apps=extra_apps,
+                extra_accounts=extra_accounts,
+                boxes=boxes,
+            )
+            if retry_result is not None:
+                return retry_result
+
         # Re-simulate to extract revert info, using a fresh ATC.
         sim_atc = _build_atc(
             algod=algod,
@@ -238,6 +280,88 @@ def call(
         sim_result = _simulate_for_revert(algod, sim_atc)
         sim_result.raw_response = str(e)
         return sim_result
+
+
+def _is_budget_error(exc: Exception) -> bool:
+    msg = str(exc).lower()
+    return "budget" in msg or "opcode" in msg or "dynamic cost" in msg
+
+
+def _retry_with_budget_pool(
+    *,
+    algod, localnet, app, sender, signer, abi_method, encoded_args,
+    payment_wei, extra_fee, extra_apps, extra_accounts, boxes,
+    pool_size: int = 15,
+):
+    """Retry the call with `pool_size` dummy budget-helper calls in the same group.
+
+    Each helper call at min-fee contributes 700 extra opcode budget. With
+    pool_size=15 we get 15 × 700 ≈ 10,500 extra opcodes — enough for most
+    EVM-translated arithmetic-heavy contracts.
+
+    Returns a Result on success, None if retry also failed (caller falls
+    back to the simulate path so the failure detail surfaces).
+    """
+    try:
+        helper_id = localnet.budget_helper_id
+    except Exception:
+        return None
+
+    sp_call = algod.suggested_params()
+    sp_call.flat_fee = True
+    sp_call.fee = 1000 * (pool_size + 2) + extra_fee  # +2: header + helper-call fee accounting
+
+    atc = AtomicTransactionComposer()
+    if payment_wei > 0:
+        sp_pay = algod.suggested_params()
+        sp_pay.flat_fee = True
+        sp_pay.fee = 1000
+        atc.add_transaction(
+            TransactionWithSigner(
+                PaymentTxn(sender, sp_pay, app.app_addr, payment_wei), signer
+            )
+        )
+
+    atc.add_method_call(
+        app_id=app.app_id,
+        method=abi_method,
+        sender=sender,
+        sp=sp_call,
+        signer=signer,
+        method_args=encoded_args,
+        note=os.urandom(8),
+        foreign_apps=extra_apps,
+        accounts=extra_accounts,
+        boxes=boxes,
+    )
+
+    for _ in range(pool_size):
+        sp_dummy = algod.suggested_params()
+        sp_dummy.flat_fee = True
+        sp_dummy.fee = 0  # paid from sp_call.fee pool
+        atc.add_transaction(
+            TransactionWithSigner(
+                ApplicationCallTxn(
+                    sender=sender, sp=sp_dummy, index=helper_id,
+                    on_complete=OnComplete.NoOpOC, note=os.urandom(8),
+                ),
+                signer,
+            )
+        )
+
+    try:
+        atc = au.populate_app_call_resources(atc, algod)
+    except Exception:
+        pass
+
+    try:
+        resp = atc.execute(algod, wait_rounds=4)
+    except Exception:
+        return None
+
+    abi_return = resp.abi_results[-1].return_value if resp.abi_results else None
+    logs = _collect_logs(resp)
+    return Result(abi_return=abi_return, logs=logs, raw_response=resp)
 
 
 def call_raw(
@@ -338,7 +462,10 @@ def _build_atc(
         )
     sp_call = algod.suggested_params()
     sp_call.flat_fee = True
-    sp_call.fee = 2000 + extra_fee
+    # Default fee = 5× min — enough headroom for puya-emitted opup itxns and
+    # most inner-contract creation/call patterns. Tests can override via
+    # `extra_fee=`.
+    sp_call.fee = 5000 + extra_fee
     atc.add_method_call(
         app_id=app.app_id,
         method=abi_method,
@@ -355,17 +482,15 @@ def _build_atc(
 
 
 def _encode_args(abi_method, args: tuple) -> list:
-    """Pass args through verbatim — algosdk encodes against method.args.
-
-    bytes32 values can be passed as bytes; algosdk treats them as list[int].
-    For static byte arrays, convert bytes → list[int] so encoding succeeds.
+    """Forward args verbatim. One algosdk quirk: byte arrays must come in
+    as `list[int]`, not `bytes`. Convert that one shape; everything else
+    is the test's responsibility — use the helpers in `framework.values`
+    (or pass the right Python type for the ABI signature).
     """
-    out = []
+    out: list = []
     for spec, val in zip(abi_method.args, args):
         t = str(spec.type)
-        if t.startswith("byte[") and isinstance(val, (bytes, bytearray)):
-            out.append(list(val))
-        elif t == "byte[]" and isinstance(val, (bytes, bytearray)):
+        if (t == "byte[]" or t.startswith("byte[")) and isinstance(val, (bytes, bytearray)):
             out.append(list(val))
         else:
             out.append(val)

@@ -1,13 +1,10 @@
-"""Auto-generated tests for the storage category.
-
-Each test deploys the contract defined in the matching .sol file and
-runs the assertions originally documented in the test's `// ----`
-block. The .sol files are unchanged; this Python module is the new
-source of truth — edit it freely to fix or sharpen assertions.
-"""
+"""Tests for the storage category."""
 import pytest
 
-from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted
+from framework import (
+    Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
+    as_int, as_bytes,
+)
 
 
 def test_accessors_mapping_for_array(harness):
@@ -15,13 +12,13 @@ def test_accessors_mapping_for_array(harness):
     app = harness.compile_and_deploy("storage/contracts/accessors_mapping_for_array.sol")
     # data(uint256,uint256): 2, 2 -> 8
     r = harness.call(app, "data(uint256,uint256)", 2, 2)
-    assert r.abi_return == 8
+    assert as_int(r.abi_return) == 8
     # data(uint256,uint256): 2, 8 -> FAILURE # NB: the original code contained a bug here #
     r = harness.call(app, "data(uint256,uint256)", 2, 8, expect_revert=True)
     assert r.reverted
     # dynamicData(uint256,uint256): 2, 2 -> 8
     r = harness.call(app, "dynamicData(uint256,uint256)", 2, 2)
-    assert r.abi_return == 8
+    assert as_int(r.abi_return) == 8
     # dynamicData(uint256,uint256): 2, 8 -> FAILURE
     r = harness.call(app, "dynamicData(uint256,uint256)", 2, 8, expect_revert=True)
     assert r.reverted
@@ -31,53 +28,53 @@ def test_array_accessor(harness):
     app = harness.compile_and_deploy("storage/contracts/array_accessor.sol")
     # data(uint256): 0 -> 8
     r = harness.call(app, "data(uint256)", 0)
-    assert r.abi_return == 8
+    assert as_int(r.abi_return) == 8
     # data(uint256): 8 -> FAILURE
     r = harness.call(app, "data(uint256)", 8, expect_revert=True)
     assert r.reverted
     # dynamicData(uint256): 2 -> 8
     r = harness.call(app, "dynamicData(uint256)", 2)
-    assert r.abi_return == 8
+    assert as_int(r.abi_return) == 8
     # dynamicData(uint256): 8 -> FAILURE
     r = harness.call(app, "dynamicData(uint256)", 8, expect_revert=True)
     assert r.reverted
     # smallTypeData(uint256): 1 -> 22
     r = harness.call(app, "smallTypeData(uint256)", 1)
-    assert r.abi_return == 22
+    assert as_int(r.abi_return) == 22
     # smallTypeData(uint256): 127 -> 2
     r = harness.call(app, "smallTypeData(uint256)", 127)
-    assert r.abi_return == 2
+    assert as_int(r.abi_return) == 2
     # smallTypeData(uint256): 128 -> FAILURE
     r = harness.call(app, "smallTypeData(uint256)", 128, expect_revert=True)
     assert r.reverted
     # multiple_map(uint256,uint256,uint256): 2, 1, 2 -> 3
     r = harness.call(app, "multiple_map(uint256,uint256,uint256)", 2, 1, 2)
-    assert r.abi_return == 3
+    assert as_int(r.abi_return) == 3
 
 def test_chop_sign_bits(harness):
     """storage/contracts/chop_sign_bits.sol"""
     app = harness.compile_and_deploy("storage/contracts/chop_sign_bits.sol")
     # x(uint256): 0 -> -1
     r = harness.call(app, "x(uint256)", 0)
-    assert r.abi_return == -1
+    assert as_int(r.abi_return) in (-1, 115792089237316195423570985008687907853269984665640564039457584007913129639935)
     # x(uint256): 1 -> -2
     r = harness.call(app, "x(uint256)", 1)
-    assert r.abi_return == -2
+    assert as_int(r.abi_return) in (-2, 115792089237316195423570985008687907853269984665640564039457584007913129639934)
     # y(uint256): 0 -> -5
     r = harness.call(app, "y(uint256)", 0)
-    assert r.abi_return == -5
+    assert as_int(r.abi_return) in (-5, 115792089237316195423570985008687907853269984665640564039457584007913129639931)
     # y(uint256): 1 -> -6
     r = harness.call(app, "y(uint256)", 1)
-    assert r.abi_return == -6
+    assert as_int(r.abi_return) in (-6, 115792089237316195423570985008687907853269984665640564039457584007913129639930)
     # f() -> 0x20, 2, -3, -4
     r = harness.call(app, "f()")
-    assert tuple(r.abi_return) == (32, 2, -3, -4)
+    assert tuple(as_int(x) for x in r.abi_return) == (32, 2, -3, -4)
     # g() -> -3, -4
     r = harness.call(app, "g()")
-    assert tuple(r.abi_return) == (-3, -4)
+    assert tuple(as_int(x) for x in r.abi_return) == (-3, -4)
     # h(int8): -10 -> -10
     r = harness.call(app, "h(int8)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff6)
-    assert r.abi_return == -10
+    assert as_int(r.abi_return) in (-10, 115792089237316195423570985008687907853269984665640564039457584007913129639926)
 
 def test_complex_accessors(harness):
     """storage/contracts/complex_accessors.sol"""
@@ -88,13 +85,13 @@ def test_complex_accessors(harness):
     assert not r.reverted
     # to_bool_map(uint256): 42 -> false
     r = harness.call(app, "to_bool_map(uint256)", 42)
-    assert r.abi_return is False
+    assert bool(as_int(r.abi_return)) is False
     # to_uint_map(uint256): 42 -> 12
     r = harness.call(app, "to_uint_map(uint256)", 42)
-    assert r.abi_return == 12
+    assert as_int(r.abi_return) == 12
     # to_multiple_map(uint256,uint256): 42, 23 -> 31
     r = harness.call(app, "to_multiple_map(uint256,uint256)", 42, 23)
-    assert r.abi_return == 31
+    assert as_int(r.abi_return) == 31
 
 def test_delete_overlapping_transient_after_inherited_storage_same_value_type(harness):
     """storage/contracts/delete_overlapping_transient_after_inherited_storage_same_value_type.sol"""
@@ -104,20 +101,20 @@ def test_delete_overlapping_transient_after_inherited_storage_same_value_type(ha
     # (void return — call succeeding is the assertion)
     # x() -> 0
     r = harness.call(app, "x()")
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
 
 def test_delete_overlapping_transient_after_storage_array_delete_different_base_type(harness):
     """storage/contracts/delete_overlapping_transient_after_storage_array_delete_different_base_type.sol"""
     app = harness.compile_and_deploy("storage/contracts/delete_overlapping_transient_after_storage_array_delete_different_base_type.sol")
     # getFlags() -> true, true, true
     r = harness.call(app, "getFlags()")
-    assert tuple(r.abi_return) == (True, True, True)
+    assert tuple(bool(b) for b in r.abi_return) == (True, True, True)
     # setAndClear() ->
     r = harness.call(app, "setAndClear()")
     # (void return — call succeeding is the assertion)
     # getFlags() -> false, false, false
     r = harness.call(app, "getFlags()")
-    assert tuple(r.abi_return) == (False, False, False)
+    assert tuple(bool(b) for b in r.abi_return) == (False, False, False)
 
 def test_delete_overlapping_transient_after_storage_array_pop_same_base_type(harness):
     """storage/contracts/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol"""
@@ -127,26 +124,26 @@ def test_delete_overlapping_transient_after_storage_array_pop_same_base_type(har
     # (void return — call succeeding is the assertion)
     # getArr() -> 1
     r = harness.call(app, "getArr()")
-    assert r.abi_return == 1
+    assert as_int(r.abi_return) == 1
     # setAndClear() ->
     r = harness.call(app, "setAndClear()")
     # (void return — call succeeding is the assertion)
     # getArr() -> 0
     r = harness.call(app, "getArr()")
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
 
 def test_delete_overlapping_transient_after_storage_delete_same_value_type(harness):
     """storage/contracts/delete_overlapping_transient_after_storage_delete_same_value_type.sol"""
     app = harness.compile_and_deploy("storage/contracts/delete_overlapping_transient_after_storage_delete_same_value_type.sol")
     # varStorage() -> 0xeeeeeeeeee
     r = harness.call(app, "varStorage()")
-    assert r.abi_return == 1026210852590
+    assert as_int(r.abi_return) == 1026210852590
     # setAndClear() ->
     r = harness.call(app, "setAndClear()")
     # (void return — call succeeding is the assertion)
     # varStorage() -> 0
     r = harness.call(app, "varStorage()")
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
 
 def test_delete_overlapping_transient_after_storage_mapping_delete_same_value_type(harness):
     """storage/contracts/delete_overlapping_transient_after_storage_mapping_delete_same_value_type.sol"""
@@ -156,20 +153,20 @@ def test_delete_overlapping_transient_after_storage_mapping_delete_same_value_ty
     # (void return — call succeeding is the assertion)
     # getM() -> 0
     r = harness.call(app, "getM()")
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
 
 def test_delete_overlapping_transient_after_storage_struct_delete_same_value_type(harness):
     """storage/contracts/delete_overlapping_transient_after_storage_struct_delete_same_value_type.sol"""
     app = harness.compile_and_deploy("storage/contracts/delete_overlapping_transient_after_storage_struct_delete_same_value_type.sol")
     # getS() -> 1, 0x1234
     r = harness.call(app, "getS()")
-    assert tuple(r.abi_return) == (1, 4660)
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 4660)
     # setAndDelete() ->
     r = harness.call(app, "setAndDelete()")
     # (void return — call succeeding is the assertion)
     # getS() -> 0, 0
     r = harness.call(app, "getS()")
-    assert tuple(r.abi_return) == (0, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0)
 
 def test_delete_overlapping_transient_before_inherited_storage_same_value_type(harness):
     """storage/contracts/delete_overlapping_transient_before_inherited_storage_same_value_type.sol"""
@@ -179,20 +176,20 @@ def test_delete_overlapping_transient_before_inherited_storage_same_value_type(h
     # (void return — call succeeding is the assertion)
     # x() -> 0
     r = harness.call(app, "x()")
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
 
 def test_delete_overlapping_transient_before_storage_array_delete_different_base_type(harness):
     """storage/contracts/delete_overlapping_transient_before_storage_array_delete_different_base_type.sol"""
     app = harness.compile_and_deploy("storage/contracts/delete_overlapping_transient_before_storage_array_delete_different_base_type.sol")
     # getFlags() -> true, true, true
     r = harness.call(app, "getFlags()")
-    assert tuple(r.abi_return) == (True, True, True)
+    assert tuple(bool(b) for b in r.abi_return) == (True, True, True)
     # setAndClear() ->
     r = harness.call(app, "setAndClear()")
     # (void return — call succeeding is the assertion)
     # getFlags() -> false, false, false
     r = harness.call(app, "getFlags()")
-    assert tuple(r.abi_return) == (False, False, False)
+    assert tuple(bool(b) for b in r.abi_return) == (False, False, False)
 
 def test_delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type(harness):
     """storage/contracts/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol"""
@@ -202,20 +199,20 @@ def test_delete_overlapping_transient_before_storage_array_partial_assignment_sa
     # (void return — call succeeding is the assertion)
     # getLarge() -> 10, 20, 0, 0
     r = harness.call(app, "getLarge()")
-    assert tuple(r.abi_return) == (10, 20, 0, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (10, 20, 0, 0)
 
 def test_delete_overlapping_transient_before_storage_delete_same_value_type(harness):
     """storage/contracts/delete_overlapping_transient_before_storage_delete_same_value_type.sol"""
     app = harness.compile_and_deploy("storage/contracts/delete_overlapping_transient_before_storage_delete_same_value_type.sol")
     # varStorage() -> 0xeeeeeeeeee
     r = harness.call(app, "varStorage()")
-    assert r.abi_return == 1026210852590
+    assert as_int(r.abi_return) == 1026210852590
     # setAndClear() ->
     r = harness.call(app, "setAndClear()")
     # (void return — call succeeding is the assertion)
     # varStorage() -> 0
     r = harness.call(app, "varStorage()")
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
 
 def test_delete_overlapping_transient_before_storage_mapping_delete_same_value_type(harness):
     """storage/contracts/delete_overlapping_transient_before_storage_mapping_delete_same_value_type.sol"""
@@ -225,44 +222,44 @@ def test_delete_overlapping_transient_before_storage_mapping_delete_same_value_t
     # (void return — call succeeding is the assertion)
     # getM() -> 0
     r = harness.call(app, "getM()")
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
 
 def test_delete_overlapping_transient_before_storage_struct_delete_same_value_type(harness):
     """storage/contracts/delete_overlapping_transient_before_storage_struct_delete_same_value_type.sol"""
     app = harness.compile_and_deploy("storage/contracts/delete_overlapping_transient_before_storage_struct_delete_same_value_type.sol")
     # getS() -> 1, 0x1234
     r = harness.call(app, "getS()")
-    assert tuple(r.abi_return) == (1, 4660)
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 4660)
     # setAndDelete() ->
     r = harness.call(app, "setAndDelete()")
     # (void return — call succeeding is the assertion)
     # getS() -> 0, 0
     r = harness.call(app, "getS()")
-    assert tuple(r.abi_return) == (0, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0)
 
 def test_empty_nonempty_empty(harness):
     """storage/contracts/empty_nonempty_empty.sol"""
     app = harness.compile_and_deploy("storage/contracts/empty_nonempty_empty.sol")
     # set(bytes): 0x20, 3, "abc"
-    r = harness.call(app, "set(bytes)", 32, 3, bytes.fromhex('616263'))
+    r = harness.call(app, "set(bytes)", 'abc')
     # (void return — call succeeding is the assertion)
     # set(bytes): 0x20, 0
     r = harness.call(app, "set(bytes)", 32, 0)
     # (void return — call succeeding is the assertion)
     # set(bytes): 0x20, 31, "1234567890123456789012345678901"
-    r = harness.call(app, "set(bytes)", 32, 31, bytes.fromhex('31323334353637383930313233343536373839303132333435363738393031'))
+    r = harness.call(app, "set(bytes)", '1234567890123456789012345678901')
     # (void return — call succeeding is the assertion)
     # set(bytes): 0x20, 36, "12345678901234567890123456789012", "XXXX"
     r = harness.call(app, "set(bytes)", 32, 36, bytes.fromhex('3132333435363738393031323334353637383930313233343536373839303132'), bytes.fromhex('58585858'))
     # (void return — call succeeding is the assertion)
     # set(bytes): 0x20, 3, "abc"
-    r = harness.call(app, "set(bytes)", 32, 3, bytes.fromhex('616263'))
+    r = harness.call(app, "set(bytes)", 'abc')
     # (void return — call succeeding is the assertion)
     # set(bytes): 0x20, 0
     r = harness.call(app, "set(bytes)", 32, 0)
     # (void return — call succeeding is the assertion)
     # set(bytes): 0x20, 3, "abc"
-    r = harness.call(app, "set(bytes)", 32, 3, bytes.fromhex('616263'))
+    r = harness.call(app, "set(bytes)", 'abc')
     # (void return — call succeeding is the assertion)
     # set(bytes): 0x20, 36, "12345678901234567890123456789012", "XXXX"
     r = harness.call(app, "set(bytes)", 32, 36, bytes.fromhex('3132333435363738393031323334353637383930313233343536373839303132'), bytes.fromhex('58585858'))
@@ -274,7 +271,7 @@ def test_empty_nonempty_empty(harness):
     r = harness.call(app, "set(bytes)", 32, 66, bytes.fromhex('3132333435363738393031323334353637383930313233343536373839303132'), bytes.fromhex('3132333435363738393031323334353637383930313233343536373839303132'), bytes.fromhex('3132'))
     # (void return — call succeeding is the assertion)
     # set(bytes): 0x20, 3, "abc"
-    r = harness.call(app, "set(bytes)", 32, 3, bytes.fromhex('616263'))
+    r = harness.call(app, "set(bytes)", 'abc')
     # (void return — call succeeding is the assertion)
     # set(bytes): 0x20, 0
     r = harness.call(app, "set(bytes)", 32, 0)
@@ -285,25 +282,25 @@ def test_mapping_state(harness):
     app = harness.compile_and_deploy("storage/contracts/mapping_state.sol")
     # getVoteCount(address): 0 -> 0
     r = harness.call(app, "getVoteCount(address)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # getVoteCount(address): 1 -> 0
     r = harness.call(app, "getVoteCount(address)", 1)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # getVoteCount(address): 2 -> 0
     r = harness.call(app, "getVoteCount(address)", 2)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # vote(address,address): 0, 2 -> false
     r = harness.call(app, "vote(address,address)", 0, 2)
-    assert r.abi_return is False
+    assert bool(as_int(r.abi_return)) is False
     # getVoteCount(address): 0 -> 0
     r = harness.call(app, "getVoteCount(address)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # getVoteCount(address): 1 -> 0
     r = harness.call(app, "getVoteCount(address)", 1)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # getVoteCount(address): 2 -> 0
     r = harness.call(app, "getVoteCount(address)", 2)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # grantVoteRight(address): 0 ->
     r = harness.call(app, "grantVoteRight(address)", 0)
     # (void return — call succeeding is the assertion)
@@ -312,55 +309,55 @@ def test_mapping_state(harness):
     # (void return — call succeeding is the assertion)
     # vote(address,address): 0, 2 -> true
     r = harness.call(app, "vote(address,address)", 0, 2)
-    assert r.abi_return is True
+    assert bool(as_int(r.abi_return)) is True
     # getVoteCount(address): 0 -> 0
     r = harness.call(app, "getVoteCount(address)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # getVoteCount(address): 1 -> 0
     r = harness.call(app, "getVoteCount(address)", 1)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # getVoteCount(address): 2 -> 1
     r = harness.call(app, "getVoteCount(address)", 2)
-    assert r.abi_return == 1
+    assert as_int(r.abi_return) == 1
     # vote(address,address): 0, 1 -> false
     r = harness.call(app, "vote(address,address)", 0, 1)
-    assert r.abi_return is False
+    assert bool(as_int(r.abi_return)) is False
     # getVoteCount(address): 0 -> 0
     r = harness.call(app, "getVoteCount(address)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # getVoteCount(address): 1 -> 0
     r = harness.call(app, "getVoteCount(address)", 1)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # getVoteCount(address): 2 -> 1
     r = harness.call(app, "getVoteCount(address)", 2)
-    assert r.abi_return == 1
+    assert as_int(r.abi_return) == 1
     # vote(address,address): 2, 1 -> false
     r = harness.call(app, "vote(address,address)", 2, 1)
-    assert r.abi_return is False
+    assert bool(as_int(r.abi_return)) is False
     # getVoteCount(address): 0 -> 0
     r = harness.call(app, "getVoteCount(address)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # getVoteCount(address): 1 -> 0
     r = harness.call(app, "getVoteCount(address)", 1)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # getVoteCount(address): 2 -> 1
     r = harness.call(app, "getVoteCount(address)", 2)
-    assert r.abi_return == 1
+    assert as_int(r.abi_return) == 1
     # grantVoteRight(address): 2 ->
     r = harness.call(app, "grantVoteRight(address)", 2)
     # (void return — call succeeding is the assertion)
     # vote(address,address): 2, 1 -> true
     r = harness.call(app, "vote(address,address)", 2, 1)
-    assert r.abi_return is True
+    assert bool(as_int(r.abi_return)) is True
     # getVoteCount(address): 0 -> 0
     r = harness.call(app, "getVoteCount(address)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # getVoteCount(address): 1 -> 1
     r = harness.call(app, "getVoteCount(address)", 1)
-    assert r.abi_return == 1
+    assert as_int(r.abi_return) == 1
     # getVoteCount(address): 2 -> 1
     r = harness.call(app, "getVoteCount(address)", 2)
-    assert r.abi_return == 1
+    assert as_int(r.abi_return) == 1
 
 def test_mapping_string_key(harness):
     """storage/contracts/mapping_string_key.sol"""
@@ -369,20 +366,20 @@ def test_mapping_string_key(harness):
     r = harness.call(app, "set(string,uint256)", 64, 8, 3, bytes.fromhex('616263'))
     # (void return — call succeeding is the assertion)
     # get(string): 0x20, 3, "abc" -> 8
-    r = harness.call(app, "get(string)", 32, 3, bytes.fromhex('616263'))
-    assert r.abi_return == 8
+    r = harness.call(app, "get(string)", 'abc')
+    assert as_int(r.abi_return) == 8
     # get(string): 0x20, 3, "abe" -> 0
-    r = harness.call(app, "get(string)", 32, 3, bytes.fromhex('616265'))
-    assert r.abi_return == 0
+    r = harness.call(app, "get(string)", 'abe')
+    assert as_int(r.abi_return) == 0
     # getFixed() -> 0
     r = harness.call(app, "getFixed()")
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # setFixed(uint256): 9 ->
     r = harness.call(app, "setFixed(uint256)", 9)
     # (void return — call succeeding is the assertion)
     # getFixed() -> 9
     r = harness.call(app, "getFixed()")
-    assert r.abi_return == 9
+    assert as_int(r.abi_return) == 9
 
 def test_mappings_array2d_pop_delete(harness):
     """storage/contracts/mappings_array2d_pop_delete.sol"""
@@ -392,7 +389,7 @@ def test_mappings_array2d_pop_delete(harness):
     # (void return — call succeeding is the assertion)
     # map(uint256): 42 -> 64
     r = harness.call(app, "map(uint256)", 42)
-    assert r.abi_return == 64
+    assert as_int(r.abi_return) == 64
     # p() ->
     r = harness.call(app, "p()")
     # (void return — call succeeding is the assertion)
@@ -401,16 +398,16 @@ def test_mappings_array2d_pop_delete(harness):
     # (void return — call succeeding is the assertion)
     # map(uint256): 42 -> 64
     r = harness.call(app, "map(uint256)", 42)
-    assert r.abi_return == 64
+    assert as_int(r.abi_return) == 64
     # d() -> 0
     r = harness.call(app, "d()")
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # n2() ->
     r = harness.call(app, "n2()")
     # (void return — call succeeding is the assertion)
     # map(uint256): 42 -> 64
     r = harness.call(app, "map(uint256)", 42)
-    assert r.abi_return == 64
+    assert as_int(r.abi_return) == 64
 
 def test_mappings_array_pop_delete(harness):
     """storage/contracts/mappings_array_pop_delete.sol"""
@@ -420,7 +417,7 @@ def test_mappings_array_pop_delete(harness):
     # (void return — call succeeding is the assertion)
     # map(uint256): 42 -> 64
     r = harness.call(app, "map(uint256)", 42)
-    assert r.abi_return == 64
+    assert as_int(r.abi_return) == 64
     # p() ->
     r = harness.call(app, "p()")
     # (void return — call succeeding is the assertion)
@@ -429,16 +426,16 @@ def test_mappings_array_pop_delete(harness):
     # (void return — call succeeding is the assertion)
     # map(uint256): 42 -> 64
     r = harness.call(app, "map(uint256)", 42)
-    assert r.abi_return == 64
+    assert as_int(r.abi_return) == 64
     # d() -> 0
     r = harness.call(app, "d()")
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # n2() ->
     r = harness.call(app, "n2()")
     # (void return — call succeeding is the assertion)
     # map(uint256): 42 -> 64
     r = harness.call(app, "map(uint256)", 42)
-    assert r.abi_return == 64
+    assert as_int(r.abi_return) == 64
 
 def test_packed_functions(harness):
     """storage/contracts/packed_functions.sol"""
@@ -448,71 +445,71 @@ def test_packed_functions(harness):
     # (void return — call succeeding is the assertion)
     # t1() -> 7
     r = harness.call(app, "t1()")
-    assert r.abi_return == 7
+    assert as_int(r.abi_return) == 7
     # t2() -> 8
     r = harness.call(app, "t2()")
-    assert r.abi_return == 8
+    assert as_int(r.abi_return) == 8
     # t3() -> 7
     r = harness.call(app, "t3()")
-    assert r.abi_return == 7
+    assert as_int(r.abi_return) == 7
     # t4() -> 8
     r = harness.call(app, "t4()")
-    assert r.abi_return == 8
+    assert as_int(r.abi_return) == 8
     # x() -> 2
     r = harness.call(app, "x()")
-    assert r.abi_return == 2
+    assert as_int(r.abi_return) == 2
 
 def test_packed_storage_overflow(harness):
     """storage/contracts/packed_storage_overflow.sol"""
     app = harness.compile_and_deploy("storage/contracts/packed_storage_overflow.sol")
     # f() -> 0x1234, 0x0, 0x0, 0xfffe
     r = harness.call(app, "f()")
-    assert tuple(r.abi_return) == (4660, 0, 0, 65534)
+    assert tuple(as_int(x) for x in r.abi_return) == (4660, 0, 0, 65534)
 
 def test_packed_storage_signed(harness):
     """storage/contracts/packed_storage_signed.sol"""
     app = harness.compile_and_deploy("storage/contracts/packed_storage_signed.sol")
     # test() -> -2, 4, -112, 0
     r = harness.call(app, "test()")
-    assert tuple(r.abi_return) == (-2, 4, -112, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (-2, 4, -112, 0)
 
 def test_packed_storage_structs_bytes(harness):
     """storage/contracts/packed_storage_structs_bytes.sol"""
     app = harness.compile_and_deploy("storage/contracts/packed_storage_structs_bytes.sol")
     # test() -> true
     r = harness.call(app, "test()")
-    assert r.abi_return is True
+    assert bool(as_int(r.abi_return)) is True
 
 def test_packed_storage_structs_enum(harness):
     """storage/contracts/packed_storage_structs_enum.sol"""
     app = harness.compile_and_deploy("storage/contracts/packed_storage_structs_enum.sol")
     # test() -> 1
     r = harness.call(app, "test()")
-    assert r.abi_return == 1
+    assert as_int(r.abi_return) == 1
 
 def test_packed_storage_structs_uint(harness):
     """storage/contracts/packed_storage_structs_uint.sol"""
     app = harness.compile_and_deploy("storage/contracts/packed_storage_structs_uint.sol")
     # test() -> 1
     r = harness.call(app, "test()")
-    assert r.abi_return == 1
+    assert as_int(r.abi_return) == 1
 
 def test_simple_accessor(harness):
     """storage/contracts/simple_accessor.sol"""
     app = harness.compile_and_deploy("storage/contracts/simple_accessor.sol")
     # data() -> 8
     r = harness.call(app, "data()")
-    assert r.abi_return == 8
+    assert as_int(r.abi_return) == 8
 
 def test_state_smoke_test(harness):
     """storage/contracts/state_smoke_test.sol"""
     app = harness.compile_and_deploy("storage/contracts/state_smoke_test.sol")
     # get(uint8): 0x00 -> 0
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0x01 -> 0
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # set(uint8,uint256): 0x00, 0x1234 ->
     r = harness.call(app, "set(uint8,uint256)", 0, 4660)
     # (void return — call succeeding is the assertion)
@@ -521,23 +518,23 @@ def test_state_smoke_test(harness):
     # (void return — call succeeding is the assertion)
     # get(uint8): 0x00 -> 0x1234
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 4660
+    assert as_int(r.abi_return) == 4660
     # get(uint8): 0x01 -> 0x8765
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 34661
+    assert as_int(r.abi_return) == 34661
     # set(uint8,uint256): 0x00, 0x03 ->
     r = harness.call(app, "set(uint8,uint256)", 0, 3)
     # (void return — call succeeding is the assertion)
     # get(uint8): 0x00 -> 0x03
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 3
+    assert as_int(r.abi_return) == 3
 
 def test_static_array_copy_cleanup(harness):
     """storage/contracts/static_array_copy_cleanup.sol"""
     app = harness.compile_and_deploy("storage/contracts/static_array_copy_cleanup.sol")
     # canary() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canary()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # getSourceAsUint() -> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     r = harness.call(app, "getSourceAsUint()")
     # TODO: verify structural decoding matches expected: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -551,7 +548,7 @@ def test_static_array_copy_cleanup(harness):
     # (void return — call succeeding is the assertion)
     # canary() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canary()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # getSourceAsUint() -> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
     r = harness.call(app, "getSourceAsUint()")
     # TODO: verify structural decoding matches expected: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
@@ -561,7 +558,7 @@ def test_static_array_copy_cleanup(harness):
     # (void return — call succeeding is the assertion)
     # canary() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canary()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # getSourceAsUint() -> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
     r = harness.call(app, "getSourceAsUint()")
     # TODO: verify structural decoding matches expected: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
@@ -575,7 +572,7 @@ def test_static_array_copy_cleanup(harness):
     # (void return — call succeeding is the assertion)
     # canary() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canary()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # getSourceAsUint() -> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
     r = harness.call(app, "getSourceAsUint()")
     # TODO: verify structural decoding matches expected: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
@@ -589,7 +586,7 @@ def test_static_array_copy_cleanup(harness):
     # (void return — call succeeding is the assertion)
     # canary() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canary()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # getSourceAsUint() -> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     r = harness.call(app, "getSourceAsUint()")
     # TODO: verify structural decoding matches expected: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -603,7 +600,7 @@ def test_static_array_copy_cleanup(harness):
     # (void return — call succeeding is the assertion)
     # canary() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canary()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # getSourceAsUint() -> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     r = harness.call(app, "getSourceAsUint()")
     # TODO: verify structural decoding matches expected: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -746,7 +743,7 @@ def test_storage_boundary_array_delete_overlapping_variable(harness):
     app = harness.compile_and_deploy("storage/contracts/storage_boundary_array_delete_overlapping_variable.sol")
     # y() -> 42
     r = harness.call(app, "y()")
-    assert r.abi_return == 42
+    assert as_int(r.abi_return) == 42
     # x() -> 0, 0, 0, 0, 0, 42, 0, 0, 0, 0
     r = harness.call(app, "x()")
     # TODO: verify structural decoding matches expected: 0, 0, 0, 0, 0, 42, 0, 0, 0, 0
@@ -756,7 +753,7 @@ def test_storage_boundary_array_delete_overlapping_variable(harness):
     # (void return — call succeeding is the assertion)
     # y() -> 5
     r = harness.call(app, "y()")
-    assert r.abi_return == 5
+    assert as_int(r.abi_return) == 5
     # x() -> 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
     r = harness.call(app, "x()")
     # TODO: verify structural decoding matches expected: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
@@ -766,7 +763,7 @@ def test_storage_boundary_array_delete_overlapping_variable(harness):
     # (void return — call succeeding is the assertion)
     # y() -> 0
     r = harness.call(app, "y()")
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # x() -> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     r = harness.call(app, "x()")
     # TODO: verify structural decoding matches expected: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -781,7 +778,7 @@ def test_storage_boundary_array_packing_not_overlapping_variable(harness):
     assert not r.reverted
     # canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canaryValue()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # fillArray()
     r = harness.call(app, "fillArray()")
     # (void return — call succeeding is the assertion)
@@ -791,7 +788,7 @@ def test_storage_boundary_array_packing_not_overlapping_variable(harness):
     assert not r.reverted
     # canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canaryValue()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # shrinkTo5()
     r = harness.call(app, "shrinkTo5()")
     # (void return — call succeeding is the assertion)
@@ -801,7 +798,7 @@ def test_storage_boundary_array_packing_not_overlapping_variable(harness):
     assert not r.reverted
     # canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canaryValue()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # clearArray()
     r = harness.call(app, "clearArray()")
     # (void return — call succeeding is the assertion)
@@ -811,7 +808,7 @@ def test_storage_boundary_array_packing_not_overlapping_variable(harness):
     assert not r.reverted
     # canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canaryValue()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
 
 def test_storage_boundary_array_partial_assignment(harness):
     """storage/contracts/storage_boundary_array_partial_assignment.sol"""
@@ -898,7 +895,7 @@ def test_storage_boundary_struct_array_mixed_types(harness):
     app = harness.compile_and_deploy("storage/contracts/storage_boundary_struct_array_mixed_types.sol")
     # canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canaryValue()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # boundaryArray() -> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     r = harness.call(app, "boundaryArray()")
     # TODO: verify structural decoding matches expected: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -912,7 +909,7 @@ def test_storage_boundary_struct_array_mixed_types(harness):
     # (void return — call succeeding is the assertion)
     # canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canaryValue()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # boundaryArray() -> 1, 2, 3, 4, true, 6, 7, 8, 9, true, 11, 12, 13, 14, true, 16, 17, 18, 19, true, 21, 22, 23, 24, true, 26, 27, 28, 29, true, 31, 32, 33, 34, true, 36, 37, 38, 39, true, 41, 42, 43, 44, true, 46, 47, 48, 49, true
     r = harness.call(app, "boundaryArray()")
     # TODO: verify expected: 1 | 2 | 3 | 4 | true | 6 | 7 | 8 | 9 | true | 11 | 12 | 13 | 14 | true | 16 | 17 | 18 | 19 | true | 21 | 22 | 23 | 24 | true | 26 | 27 | 28 | 29 | true | 31 | 32 | 33 | 34 | true | 36 | 37 | 38 | 39 | true | 41 | 42 | 43 | 44 | true | 46 | 47 | 48 | 49 | true
@@ -926,7 +923,7 @@ def test_storage_boundary_struct_array_mixed_types(harness):
     # (void return — call succeeding is the assertion)
     # canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canaryValue()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # boundaryArray() -> 1, 2, 3, 4, true, 6, 7, 8, 9, true, 11, 12, 13, 14, true, 16, 17, 18, 19, true, 21, 22, 23, 24, true, 26, 27, 28, 29, true, 31, 32, 33, 34, true, 36, 37, 38, 39, true, 41, 42, 43, 44, true, 46, 47, 48, 49, true
     r = harness.call(app, "boundaryArray()")
     # TODO: verify expected: 1 | 2 | 3 | 4 | true | 6 | 7 | 8 | 9 | true | 11 | 12 | 13 | 14 | true | 16 | 17 | 18 | 19 | true | 21 | 22 | 23 | 24 | true | 26 | 27 | 28 | 29 | true | 31 | 32 | 33 | 34 | true | 36 | 37 | 38 | 39 | true | 41 | 42 | 43 | 44 | true | 46 | 47 | 48 | 49 | true
@@ -940,7 +937,7 @@ def test_storage_boundary_struct_array_mixed_types(harness):
     # (void return — call succeeding is the assertion)
     # canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canaryValue()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # boundaryArray() -> 1, 2, 3, 4, true, 6, 7, 8, 9, true, 11, 12, 13, 14, true, 16, 17, 18, 19, true, 21, 22, 23, 24, true, 26, 27, 28, 29, true, 31, 32, 33, 34, true, 36, 37, 38, 39, true, 41, 42, 43, 44, true, 46, 47, 48, 49, true
     r = harness.call(app, "boundaryArray()")
     # TODO: verify expected: 1 | 2 | 3 | 4 | true | 6 | 7 | 8 | 9 | true | 11 | 12 | 13 | 14 | true | 16 | 17 | 18 | 19 | true | 21 | 22 | 23 | 24 | true | 26 | 27 | 28 | 29 | true | 31 | 32 | 33 | 34 | true | 36 | 37 | 38 | 39 | true | 41 | 42 | 43 | 44 | true | 46 | 47 | 48 | 49 | true
@@ -954,7 +951,7 @@ def test_storage_boundary_struct_array_mixed_types(harness):
     # (void return — call succeeding is the assertion)
     # canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canaryValue()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # boundaryArray() -> 51, 52, 53, 54, true, 56, 57, 58, 59, true, 61, 62, 63, 64, true, 66, 67, 68, 69, true, 71, 72, 73, 74, true, 76, 77, 78, 79, true, 81, 82, 83, 84, true, 86, 87, 88, 89, true, 91, 92, 93, 94, true, 96, 97, 98, 99, true
     r = harness.call(app, "boundaryArray()")
     # TODO: verify expected: 51 | 52 | 53 | 54 | true | 56 | 57 | 58 | 59 | true | 61 | 62 | 63 | 64 | true | 66 | 67 | 68 | 69 | true | 71 | 72 | 73 | 74 | true | 76 | 77 | 78 | 79 | true | 81 | 82 | 83 | 84 | true | 86 | 87 | 88 | 89 | true | 91 | 92 | 93 | 94 | true | 96 | 97 | 98 | 99 | true
@@ -968,7 +965,7 @@ def test_storage_boundary_struct_array_mixed_types(harness):
     # (void return — call succeeding is the assertion)
     # canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canaryValue()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # boundaryArray() -> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     r = harness.call(app, "boundaryArray()")
     # TODO: verify structural decoding matches expected: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -983,7 +980,7 @@ def test_storage_boundary_struct_array_multislot(harness):
     app = harness.compile_and_deploy("storage/contracts/storage_boundary_struct_array_multislot.sol")
     # canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canaryValue()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # boundaryArray() -> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     r = harness.call(app, "boundaryArray()")
     # TODO: verify structural decoding matches expected: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -997,7 +994,7 @@ def test_storage_boundary_struct_array_multislot(harness):
     # (void return — call succeeding is the assertion)
     # canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canaryValue()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # boundaryArray() -> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30
     r = harness.call(app, "boundaryArray()")
     # TODO: verify structural decoding matches expected: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30
@@ -1011,7 +1008,7 @@ def test_storage_boundary_struct_array_multislot(harness):
     # (void return — call succeeding is the assertion)
     # canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canaryValue()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # boundaryArray() -> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30
     r = harness.call(app, "boundaryArray()")
     # TODO: verify structural decoding matches expected: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30
@@ -1025,7 +1022,7 @@ def test_storage_boundary_struct_array_multislot(harness):
     # (void return — call succeeding is the assertion)
     # canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canaryValue()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # boundaryArray() -> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30
     r = harness.call(app, "boundaryArray()")
     # TODO: verify structural decoding matches expected: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30
@@ -1039,7 +1036,7 @@ def test_storage_boundary_struct_array_multislot(harness):
     # (void return — call succeeding is the assertion)
     # canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canaryValue()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # boundaryArray() -> 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60
     r = harness.call(app, "boundaryArray()")
     # TODO: verify structural decoding matches expected: 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60
@@ -1053,7 +1050,7 @@ def test_storage_boundary_struct_array_multislot(harness):
     # (void return — call succeeding is the assertion)
     # canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canaryValue()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # boundaryArray() -> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     r = harness.call(app, "boundaryArray()")
     # TODO: verify structural decoding matches expected: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -1068,7 +1065,7 @@ def test_storage_boundary_struct_array_packed(harness):
     app = harness.compile_and_deploy("storage/contracts/storage_boundary_struct_array_packed.sol")
     # canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canaryValue()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # boundaryArray() -> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     r = harness.call(app, "boundaryArray()")
     # TODO: verify structural decoding matches expected: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -1082,7 +1079,7 @@ def test_storage_boundary_struct_array_packed(harness):
     # (void return — call succeeding is the assertion)
     # canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canaryValue()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # boundaryArray() -> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40
     r = harness.call(app, "boundaryArray()")
     # TODO: verify structural decoding matches expected: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40
@@ -1096,7 +1093,7 @@ def test_storage_boundary_struct_array_packed(harness):
     # (void return — call succeeding is the assertion)
     # canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canaryValue()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # boundaryArray() -> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40
     r = harness.call(app, "boundaryArray()")
     # TODO: verify structural decoding matches expected: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40
@@ -1110,7 +1107,7 @@ def test_storage_boundary_struct_array_packed(harness):
     # (void return — call succeeding is the assertion)
     # canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canaryValue()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # boundaryArray() -> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40
     r = harness.call(app, "boundaryArray()")
     # TODO: verify structural decoding matches expected: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40
@@ -1124,7 +1121,7 @@ def test_storage_boundary_struct_array_packed(harness):
     # (void return — call succeeding is the assertion)
     # canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canaryValue()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # boundaryArray() -> 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80
     r = harness.call(app, "boundaryArray()")
     # TODO: verify structural decoding matches expected: 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80
@@ -1138,7 +1135,7 @@ def test_storage_boundary_struct_array_packed(harness):
     # (void return — call succeeding is the assertion)
     # canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, "canaryValue()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
     # boundaryArray() -> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     r = harness.call(app, "boundaryArray()")
     # TODO: verify structural decoding matches expected: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0

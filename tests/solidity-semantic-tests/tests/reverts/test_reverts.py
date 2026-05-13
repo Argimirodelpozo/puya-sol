@@ -1,13 +1,10 @@
-"""Auto-generated tests for the reverts category.
-
-Each test deploys the contract defined in the matching .sol file and
-runs the assertions originally documented in the test's `// ----`
-block. The .sol files are unchanged; this Python module is the new
-source of truth — edit it freely to fix or sharpen assertions.
-"""
+"""Tests for the reverts category."""
 import pytest
 
-from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted
+from framework import (
+    Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
+    as_int, as_bytes,
+)
 
 
 def test_assert_require(harness):
@@ -21,13 +18,13 @@ def test_assert_require(harness):
     assert r.reverted
     # g(bool): true -> true
     r = harness.call(app, "g(bool)", True)
-    assert r.abi_return is True
+    assert bool(as_int(r.abi_return)) is True
     # h(bool): false -> FAILURE
     r = harness.call(app, "h(bool)", False, expect_revert=True)
     assert r.reverted
     # h(bool): true -> true
     r = harness.call(app, "h(bool)", True)
-    assert r.abi_return is True
+    assert bool(as_int(r.abi_return)) is True
 
 def test_error_struct(harness):
     """reverts/contracts/error_struct.sol"""
@@ -37,7 +34,7 @@ def test_error_struct(harness):
     assert r.reverted
     # g(uint256): 7 -> 7
     r = harness.call(app, "g(uint256)", 7)
-    assert r.abi_return == 7
+    assert as_int(r.abi_return) == 7
 
 def test_invalid_enum_as_external_arg(harness):
     """reverts/contracts/invalid_enum_as_external_arg.sol"""
@@ -64,7 +61,7 @@ def test_invalid_enum_compared(harness):
     app = harness.compile_and_deploy("reverts/contracts/invalid_enum_compared.sol")
     # test_eq_ok() -> 1
     r = harness.call(app, "test_eq_ok()")
-    assert r.abi_return == 1
+    assert as_int(r.abi_return) == 1
     # test_eq() -> FAILURE, hex"4e487b71", 33 # both should throw #
     r = harness.call(app, "test_eq()", expect_revert=True)
     assert r.reverted
@@ -77,10 +74,10 @@ def test_invalid_enum_stored(harness):
     app = harness.compile_and_deploy("reverts/contracts/invalid_enum_stored.sol")
     # test_store_ok() -> 1
     r = harness.call(app, "test_store_ok()")
-    assert r.abi_return == 1
+    assert as_int(r.abi_return) == 1
     # x() -> 0
     r = harness.call(app, "x()")
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # test_store() -> FAILURE, hex"4e487b71", 33 # should throw #
     r = harness.call(app, "test_store()", expect_revert=True)
     assert r.reverted
@@ -100,27 +97,27 @@ def test_revert(harness):
     assert r.reverted
     # a() -> 42
     r = harness.call(app, "a()")
-    assert r.abi_return == 42
+    assert as_int(r.abi_return) == 42
     # g() -> FAILURE
     r = harness.call(app, "g()", expect_revert=True)
     assert r.reverted
     # a() -> 42
     r = harness.call(app, "a()")
-    assert r.abi_return == 42
+    assert as_int(r.abi_return) == 42
 
 def test_revert_return_area(harness):
     """reverts/contracts/revert_return_area.sol"""
     app = harness.compile_and_deploy("reverts/contracts/revert_return_area.sol")
     # f() -> 0x00, 0x08c379a000000000000000000000000000000000000000000000000000000000
     r = harness.call(app, "f()")
-    assert tuple(r.abi_return) == (0, 3963877391197344453575983046348115674221700746820753546331534351508065746944)
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 3963877391197344453575983046348115674221700746820753546331534351508065746944)
 
 def test_simple_throw(harness):
     """reverts/contracts/simple_throw.sol"""
     app = harness.compile_and_deploy("reverts/contracts/simple_throw.sol")
     # f(uint256): 11 -> 21
     r = harness.call(app, "f(uint256)", 11)
-    assert r.abi_return == 21
+    assert as_int(r.abi_return) == 21
     # f(uint256): 1 -> FAILURE
     r = harness.call(app, "f(uint256)", 1, expect_revert=True)
     assert r.reverted

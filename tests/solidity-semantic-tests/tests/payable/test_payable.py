@@ -1,13 +1,10 @@
-"""Auto-generated tests for the payable category.
-
-Each test deploys the contract defined in the matching .sol file and
-runs the assertions originally documented in the test's `// ----`
-block. The .sol files are unchanged; this Python module is the new
-source of truth — edit it freely to fix or sharpen assertions.
-"""
+"""Tests for the payable category."""
 import pytest
 
-from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted
+from framework import (
+    Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
+    as_int, as_bytes,
+)
 
 
 def test_no_nonpayable_circumvention_by_modifier(harness):

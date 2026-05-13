@@ -1,13 +1,10 @@
-"""Auto-generated tests for the storageLayoutSpecifier category.
-
-Each test deploys the contract defined in the matching .sol file and
-runs the assertions originally documented in the test's `// ----`
-block. The .sol files are unchanged; this Python module is the new
-source of truth — edit it freely to fix or sharpen assertions.
-"""
+"""Tests for the storageLayoutSpecifier category."""
 import pytest
 
-from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted
+from framework import (
+    Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
+    as_int, as_bytes,
+)
 
 
 def test_base_slot_max_value(harness):
@@ -15,45 +12,45 @@ def test_base_slot_max_value(harness):
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/base_slot_max_value.sol")
     # f(uint256): 4 -> 8
     r = harness.call(app, "f(uint256)", 4)
-    assert r.abi_return == 8
+    assert as_int(r.abi_return) == 8
 
 def test_constructor(harness):
     """storageLayoutSpecifier/contracts/constructor.sol"""
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/constructor.sol", ctor_args=[1, 2, 3])
     # x() -> 2
     r = harness.call(app, "x()")
-    assert r.abi_return == 2
+    assert as_int(r.abi_return) == 2
     # y() -> 4
     r = harness.call(app, "y()")
-    assert r.abi_return == 4
+    assert as_int(r.abi_return) == 4
     # z() -> 6
     r = harness.call(app, "z()")
-    assert r.abi_return == 6
+    assert as_int(r.abi_return) == 6
 
 def test_delete(harness):
     """storageLayoutSpecifier/contracts/delete.sol"""
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/delete.sol")
     # fillArray() -> 3
     r = harness.call(app, "fillArray()")
-    assert r.abi_return == 3
+    assert as_int(r.abi_return) == 3
     # arrayLength() -> 3
     r = harness.call(app, "arrayLength()")
-    assert r.abi_return == 3
+    assert as_int(r.abi_return) == 3
     # array(uint256): 2 -> 3
     r = harness.call(app, "array(uint256)", 2)
-    assert r.abi_return == 3
+    assert as_int(r.abi_return) == 3
     # deleteLast() ->
     r = harness.call(app, "deleteLast()")
     # (void return — call succeeding is the assertion)
     # array(uint256): 2 -> 0
     r = harness.call(app, "array(uint256)", 2)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # deleteArray() ->
     r = harness.call(app, "deleteArray()")
     # (void return — call succeeding is the assertion)
     # arrayLength() -> 0
     r = harness.call(app, "arrayLength()")
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
 
 def test_delete_transient_storage(harness):
     """storageLayoutSpecifier/contracts/delete_transient_storage.sol"""
@@ -80,130 +77,130 @@ def test_function_from_base_contract(harness):
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/function_from_base_contract.sol")
     # f() -> 1
     r = harness.call(app, "f()")
-    assert r.abi_return == 1
+    assert as_int(r.abi_return) == 1
     # g() -> 2
     r = harness.call(app, "g()")
-    assert r.abi_return == 2
+    assert as_int(r.abi_return) == 2
     # test() -> 6
     r = harness.call(app, "test()")
-    assert r.abi_return == 6
+    assert as_int(r.abi_return) == 6
     # x() -> 2
     r = harness.call(app, "x()")
-    assert r.abi_return == 2
+    assert as_int(r.abi_return) == 2
     # y() -> 4
     r = harness.call(app, "y()")
-    assert r.abi_return == 4
+    assert as_int(r.abi_return) == 4
     # z() -> 6
     r = harness.call(app, "z()")
-    assert r.abi_return == 6
+    assert as_int(r.abi_return) == 6
 
 def test_getters(harness):
     """storageLayoutSpecifier/contracts/getters.sol"""
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/getters.sol")
     # x() -> 1
     r = harness.call(app, "x()")
-    assert r.abi_return == 1
+    assert as_int(r.abi_return) == 1
     # y() -> 2
     r = harness.call(app, "y()")
-    assert r.abi_return == 2
+    assert as_int(r.abi_return) == 2
     # z() -> 3
     r = harness.call(app, "z()")
-    assert r.abi_return == 3
+    assert as_int(r.abi_return) == 3
 
 def test_inheritance_from_abstract_contract(harness):
     """storageLayoutSpecifier/contracts/inheritance_from_abstract_contract.sol"""
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/inheritance_from_abstract_contract.sol")
     # f() -> 10
     r = harness.call(app, "f()")
-    assert r.abi_return == 10
+    assert as_int(r.abi_return) == 10
     # x() -> 8
     r = harness.call(app, "x()")
-    assert r.abi_return == 8
+    assert as_int(r.abi_return) == 8
     # y() -> 10
     r = harness.call(app, "y()")
-    assert r.abi_return == 10
+    assert as_int(r.abi_return) == 10
 
 def test_inheritance_from_interface(harness):
     """storageLayoutSpecifier/contracts/inheritance_from_interface.sol"""
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/inheritance_from_interface.sol")
     # f(uint256): 8 -> 6
     r = harness.call(app, "f(uint256)", 8)
-    assert r.abi_return == 6
+    assert as_int(r.abi_return) == 6
     # y() -> 6
     r = harness.call(app, "y()")
-    assert r.abi_return == 6
+    assert as_int(r.abi_return) == 6
 
 def test_inheritance_from_same_base_state_var_slots(harness):
     """storageLayoutSpecifier/contracts/inheritance_from_same_base_state_var_slots.sol"""
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/inheritance_from_same_base_state_var_slots.sol")
     # contractASlots() -> 0
     r = harness.call(app, "contractASlots()")
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # contractBSlots() -> 5, 6
     r = harness.call(app, "contractBSlots()")
-    assert tuple(r.abi_return) == (5, 6)
+    assert tuple(as_int(x) for x in r.abi_return) == (5, 6)
     # contractCSlots() -> 9, 10
     r = harness.call(app, "contractCSlots()")
-    assert tuple(r.abi_return) == (9, 10)
+    assert tuple(as_int(x) for x in r.abi_return) == (9, 10)
 
 def test_inheritance_simple(harness):
     """storageLayoutSpecifier/contracts/inheritance_simple.sol"""
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/inheritance_simple.sol")
     # f() -> 8
     r = harness.call(app, "f()")
-    assert r.abi_return == 8
+    assert as_int(r.abi_return) == 8
     # x() -> 6
     r = harness.call(app, "x()")
-    assert r.abi_return == 6
+    assert as_int(r.abi_return) == 6
     # y() -> 8
     r = harness.call(app, "y()")
-    assert r.abi_return == 8
+    assert as_int(r.abi_return) == 8
 
 def test_inheritance_state_variable_slot_offset(harness):
     """storageLayoutSpecifier/contracts/inheritance_state_variable_slot_offset.sol"""
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/inheritance_state_variable_slot_offset.sol")
     # xSlotOffset() -> 7, 0
     r = harness.call(app, "xSlotOffset()")
-    assert tuple(r.abi_return) == (7, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (7, 0)
     # ySlotOffset() -> 8, 0
     r = harness.call(app, "ySlotOffset()")
-    assert tuple(r.abi_return) == (8, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (8, 0)
     # wSlotOffset() -> 8, 16
     r = harness.call(app, "wSlotOffset()")
-    assert tuple(r.abi_return) == (8, 16)
+    assert tuple(as_int(x) for x in r.abi_return) == (8, 16)
     # zSlotOffset() -> 9, 0
     r = harness.call(app, "zSlotOffset()")
-    assert tuple(r.abi_return) == (9, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (9, 0)
 
 def test_inline_assembly_direct_load(harness):
     """storageLayoutSpecifier/contracts/inline_assembly_direct_load.sol"""
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/inline_assembly_direct_load.sol")
     # f() -> 16
     r = harness.call(app, "f()")
-    assert r.abi_return == 16
+    assert as_int(r.abi_return) == 16
     # x() -> 16
     r = harness.call(app, "x()")
-    assert r.abi_return == 16
+    assert as_int(r.abi_return) == 16
 
 def test_inline_assembly_direct_store(harness):
     """storageLayoutSpecifier/contracts/inline_assembly_direct_store.sol"""
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/inline_assembly_direct_store.sol")
     # f() -> 16
     r = harness.call(app, "f()")
-    assert r.abi_return == 16
+    assert as_int(r.abi_return) == 16
     # x() -> 16
     r = harness.call(app, "x()")
-    assert r.abi_return == 16
+    assert as_int(r.abi_return) == 16
 
 def test_last_allowed_storage_slot(harness):
     """storageLayoutSpecifier/contracts/last_allowed_storage_slot.sol"""
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/last_allowed_storage_slot.sol")
     # f(uint256): 4 -> 8
     r = harness.call(app, "f(uint256)", 4)
-    assert r.abi_return == 8
+    assert as_int(r.abi_return) == 8
     # x() -> 8
     r = harness.call(app, "x()")
-    assert r.abi_return == 8
+    assert as_int(r.abi_return) == 8
 
 def test_mapping_storage_end(harness):
     """storageLayoutSpecifier/contracts/mapping_storage_end.sol"""
@@ -220,114 +217,114 @@ def test_multiple_inheritance(harness):
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/multiple_inheritance.sol")
     # test() -> 1, 2, 3, 5
     r = harness.call(app, "test()")
-    assert tuple(r.abi_return) == (1, 2, 3, 5)
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3, 5)
     # x() -> 1
     r = harness.call(app, "x()")
-    assert r.abi_return == 1
+    assert as_int(r.abi_return) == 1
     # y() -> 2
     r = harness.call(app, "y()")
-    assert r.abi_return == 2
+    assert as_int(r.abi_return) == 2
     # w() -> 3
     r = harness.call(app, "w()")
-    assert r.abi_return == 3
+    assert as_int(r.abi_return) == 3
     # z() -> 5
     r = harness.call(app, "z()")
-    assert r.abi_return == 5
+    assert as_int(r.abi_return) == 5
 
 def test_multiple_inheritance_state_var_slots(harness):
     """storageLayoutSpecifier/contracts/multiple_inheritance_state_var_slots.sol"""
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/multiple_inheritance_state_var_slots.sol")
     # xSlotOffset() -> 2, 0
     r = harness.call(app, "xSlotOffset()")
-    assert tuple(r.abi_return) == (2, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (2, 0)
     # ySlotOffset() -> 3, 0
     r = harness.call(app, "ySlotOffset()")
-    assert tuple(r.abi_return) == (3, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (3, 0)
     # wSlotOffset() -> 3, 4
     r = harness.call(app, "wSlotOffset()")
-    assert tuple(r.abi_return) == (3, 4)
+    assert tuple(as_int(x) for x in r.abi_return) == (3, 4)
     # zSlotOffset() -> 4, 0
     r = harness.call(app, "zSlotOffset()")
-    assert tuple(r.abi_return) == (4, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (4, 0)
 
 def test_state_variable_arithmetic_expression(harness):
     """storageLayoutSpecifier/contracts/state_variable_arithmetic_expression.sol"""
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/state_variable_arithmetic_expression.sol")
     # f(uint256): 2 -> 0
     r = harness.call(app, "f(uint256)", 2)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # f(uint256): 3 -> 5
     r = harness.call(app, "f(uint256)", 3)
-    assert r.abi_return == 5
+    assert as_int(r.abi_return) == 5
     # f(uint256): 5 -> 15
     r = harness.call(app, "f(uint256)", 5)
-    assert r.abi_return == 15
+    assert as_int(r.abi_return) == 15
     # x() -> 10
     r = harness.call(app, "x()")
-    assert r.abi_return == 10
+    assert as_int(r.abi_return) == 10
     # y() -> 17
     r = harness.call(app, "y()")
-    assert r.abi_return == 17
+    assert as_int(r.abi_return) == 17
     # z() -> 15
     r = harness.call(app, "z()")
-    assert r.abi_return == 15
+    assert as_int(r.abi_return) == 15
 
 def test_state_variable_constant_and_immutable(harness):
     """storageLayoutSpecifier/contracts/state_variable_constant_and_immutable.sol"""
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/state_variable_constant_and_immutable.sol")
     # f() -> 11
     r = harness.call(app, "f()")
-    assert r.abi_return == 11
+    assert as_int(r.abi_return) == 11
     # g() -> 200
     r = harness.call(app, "g()")
-    assert r.abi_return == 200
+    assert as_int(r.abi_return) == 200
 
 def test_state_variable_dynamic_array(harness):
     """storageLayoutSpecifier/contracts/state_variable_dynamic_array.sol"""
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/state_variable_dynamic_array.sol")
     # initA() -> 1, 2, 3
     r = harness.call(app, "initA()")
-    assert tuple(r.abi_return) == (1, 2, 3)
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3)
     # arrayA(uint256): 0 -> 1
     r = harness.call(app, "arrayA(uint256)", 0)
-    assert r.abi_return == 1
+    assert as_int(r.abi_return) == 1
     # arrayALength() -> 3
     r = harness.call(app, "arrayALength()")
-    assert r.abi_return == 3
+    assert as_int(r.abi_return) == 3
     # arrayCLength() -> 0
     r = harness.call(app, "arrayCLength()")
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # initCFromAInReverse() -> 3, 2, 1
     r = harness.call(app, "initCFromAInReverse()")
-    assert tuple(r.abi_return) == (3, 2, 1)
+    assert tuple(as_int(x) for x in r.abi_return) == (3, 2, 1)
     # clearA() ->
     r = harness.call(app, "clearA()")
     # (void return — call succeeding is the assertion)
     # arrayC(uint256): 0 -> 3
     r = harness.call(app, "arrayC(uint256)", 0)
-    assert r.abi_return == 3
+    assert as_int(r.abi_return) == 3
     # arrayALength() -> 0
     r = harness.call(app, "arrayALength()")
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # arrayCLength() -> 3
     r = harness.call(app, "arrayCLength()")
-    assert r.abi_return == 3
+    assert as_int(r.abi_return) == 3
 
 def test_state_variable_enum(harness):
     """storageLayoutSpecifier/contracts/state_variable_enum.sol"""
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/state_variable_enum.sol")
     # cSlotOffset() -> 42, 0
     r = harness.call(app, "cSlotOffset()")
-    assert tuple(r.abi_return) == (42, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (42, 0)
     # checkBlue() -> false
     r = harness.call(app, "checkBlue()")
-    assert r.abi_return is False
+    assert bool(as_int(r.abi_return)) is False
     # setBlue() ->
     r = harness.call(app, "setBlue()")
     # (void return — call succeeding is the assertion)
     # checkBlue() -> true
     r = harness.call(app, "checkBlue()")
-    assert r.abi_return is True
+    assert bool(as_int(r.abi_return)) is True
 
 def test_state_variable_mapping(harness):
     """storageLayoutSpecifier/contracts/state_variable_mapping.sol"""
@@ -350,55 +347,55 @@ def test_state_variable_reference_types_slot_offset(harness):
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/state_variable_reference_types_slot_offset.sol")
     # s1SlotOffset() -> 42, 0
     r = harness.call(app, "s1SlotOffset()")
-    assert tuple(r.abi_return) == (42, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (42, 0)
     # dArraySlotOffset() -> 44, 0
     r = harness.call(app, "dArraySlotOffset()")
-    assert tuple(r.abi_return) == (44, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (44, 0)
     # sArraySlotOffset() -> 49, 0
     r = harness.call(app, "sArraySlotOffset()")
-    assert tuple(r.abi_return) == (49, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (49, 0)
     # bArraySlotOffset() -> 69, 0
     r = harness.call(app, "bArraySlotOffset()")
-    assert tuple(r.abi_return) == (69, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (69, 0)
     # strSlotOffset() -> 70, 0
     r = harness.call(app, "strSlotOffset()")
-    assert tuple(r.abi_return) == (70, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (70, 0)
 
 def test_state_variable_slot_offset(harness):
     """storageLayoutSpecifier/contracts/state_variable_slot_offset.sol"""
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/state_variable_slot_offset.sol")
     # xSlotOffset() -> 7, 0
     r = harness.call(app, "xSlotOffset()")
-    assert tuple(r.abi_return) == (7, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (7, 0)
     # ySlotOffset() -> 7, 1
     r = harness.call(app, "ySlotOffset()")
-    assert tuple(r.abi_return) == (7, 1)
+    assert tuple(as_int(x) for x in r.abi_return) == (7, 1)
     # zSlotOffset() -> 8, 0
     r = harness.call(app, "zSlotOffset()")
-    assert tuple(r.abi_return) == (8, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (8, 0)
 
 def test_state_variable_struct(harness):
     """storageLayoutSpecifier/contracts/state_variable_struct.sol"""
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/state_variable_struct.sol")
     # initS1() -> 7, 0x0abc, 1
     r = harness.call(app, "initS1()")
-    assert tuple(r.abi_return) == (7, 2748, 1)
+    assert tuple(as_int(x) for x in r.abi_return) == (7, 2748, 1)
     # initS2() -> 8, 0x0def, 0
     r = harness.call(app, "initS2()")
-    assert tuple(r.abi_return) == (8, 3567, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (8, 3567, 0)
     # s1() -> 7, 0x0abc, 1
     r = harness.call(app, "s1()")
-    assert tuple(r.abi_return) == (7, 2748, 1)
+    assert tuple(as_int(x) for x in r.abi_return) == (7, 2748, 1)
     # s2() -> 8, 0x0def, 0
     r = harness.call(app, "s2()")
-    assert tuple(r.abi_return) == (8, 3567, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (8, 3567, 0)
 
 def test_state_variables_transient(harness):
     """storageLayoutSpecifier/contracts/state_variables_transient.sol"""
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/state_variables_transient.sol")
     # test() -> 2
     r = harness.call(app, "test()")
-    assert r.abi_return == 2
+    assert as_int(r.abi_return) == 2
 
 def test_storage_reference_array(harness):
     """storageLayoutSpecifier/contracts/storage_reference_array.sol"""
@@ -408,10 +405,10 @@ def test_storage_reference_array(harness):
     # (void return — call succeeding is the assertion)
     # array(uint256): 0 -> 1
     r = harness.call(app, "array(uint256)", 0)
-    assert r.abi_return == 1
+    assert as_int(r.abi_return) == 1
     # array(uint256): 9 -> 10
     r = harness.call(app, "array(uint256)", 9)
-    assert r.abi_return == 10
+    assert as_int(r.abi_return) == 10
 
 def test_storage_reference_inheritance(harness):
     """storageLayoutSpecifier/contracts/storage_reference_inheritance.sol"""
@@ -440,16 +437,16 @@ def test_transient_state_variable_slot_offset(harness):
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/transient_state_variable_slot_offset.sol")
     # xSlotOffset() -> 0, 0
     r = harness.call(app, "xSlotOffset()")
-    assert tuple(r.abi_return) == (0, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0)
     # ySlotOffset() -> 7, 0
     r = harness.call(app, "ySlotOffset()")
-    assert tuple(r.abi_return) == (7, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (7, 0)
     # wSlotOffset() -> 1, 0
     r = harness.call(app, "wSlotOffset()")
-    assert tuple(r.abi_return) == (1, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 0)
     # zSlotOffset() -> 8, 0
     r = harness.call(app, "zSlotOffset()")
-    assert tuple(r.abi_return) == (8, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (8, 0)
 
 def test_variable_cleanup(harness):
     """storageLayoutSpecifier/contracts/variable_cleanup.sol"""
@@ -472,19 +469,19 @@ def test_virtual_functions(harness):
     app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/virtual_functions.sol")
     # f() -> 1
     r = harness.call(app, "f()")
-    assert r.abi_return == 1
+    assert as_int(r.abi_return) == 1
     # g() -> 3
     r = harness.call(app, "g()")
-    assert r.abi_return == 3
+    assert as_int(r.abi_return) == 3
     # h() -> 6
     r = harness.call(app, "h()")
-    assert r.abi_return == 6
+    assert as_int(r.abi_return) == 6
     # x() -> 1
     r = harness.call(app, "x()")
-    assert r.abi_return == 1
+    assert as_int(r.abi_return) == 1
     # y() -> 3
     r = harness.call(app, "y()")
-    assert r.abi_return == 3
+    assert as_int(r.abi_return) == 3
     # z() -> 6
     r = harness.call(app, "z()")
-    assert r.abi_return == 6
+    assert as_int(r.abi_return) == 6

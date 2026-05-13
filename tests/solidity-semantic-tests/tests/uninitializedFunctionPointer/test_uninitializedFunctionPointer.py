@@ -1,13 +1,10 @@
-"""Auto-generated tests for the uninitializedFunctionPointer category.
-
-Each test deploys the contract defined in the matching .sol file and
-runs the assertions originally documented in the test's `// ----`
-block. The .sol files are unchanged; this Python module is the new
-source of truth — edit it freely to fix or sharpen assertions.
-"""
+"""Tests for the uninitializedFunctionPointer category."""
 import pytest
 
-from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted
+from framework import (
+    Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
+    as_int, as_bytes,
+)
 
 
 def test_invalidInConstructor(harness):
@@ -46,11 +43,11 @@ def test_uninitialized_internal_storage_function_legacy(harness):
     app = harness.compile_and_deploy("uninitializedFunctionPointer/contracts/uninitialized_internal_storage_function_legacy.sol")
     # f() -> true
     r = harness.call(app, "f()")
-    assert r.abi_return is True
+    assert bool(as_int(r.abi_return)) is True
 
 def test_uninitialized_internal_storage_function_via_yul(harness):
     """uninitializedFunctionPointer/contracts/uninitialized_internal_storage_function_via_yul.sol"""
     app = harness.compile_and_deploy("uninitializedFunctionPointer/contracts/uninitialized_internal_storage_function_via_yul.sol", via_yul_behavior=True)
     # f() -> true
     r = harness.call(app, "f()")
-    assert r.abi_return is True
+    assert bool(as_int(r.abi_return)) is True

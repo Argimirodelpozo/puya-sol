@@ -1,13 +1,10 @@
-"""Auto-generated tests for the types category.
-
-Each test deploys the contract defined in the matching .sol file and
-runs the assertions originally documented in the test's `// ----`
-block. The .sol files are unchanged; this Python module is the new
-source of truth — edit it freely to fix or sharpen assertions.
-"""
+"""Tests for the types category."""
 import pytest
 
-from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted
+from framework import (
+    Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
+    as_int, as_bytes,
+)
 
 
 def test_array_mapping_abstract_constructor_param(harness):
@@ -18,17 +15,17 @@ def test_array_mapping_abstract_constructor_param(harness):
     assert r.reverted
     # m(uint256,uint256,uint256): 1, 0, 1 -> 2
     r = harness.call(app, "m(uint256,uint256,uint256)", 1, 0, 1)
-    assert r.abi_return == 2
+    assert as_int(r.abi_return) == 2
     # m(uint256,uint256,uint256): 1, 0, 5 -> 0
     r = harness.call(app, "m(uint256,uint256,uint256)", 1, 0, 5)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
 
 def test_assign_calldata_value_type(harness):
     """types/contracts/assign_calldata_value_type.sol"""
     app = harness.compile_and_deploy("types/contracts/assign_calldata_value_type.sol")
     # f(uint256): 23 -> 42, 23
     r = harness.call(app, "f(uint256)", 23)
-    assert tuple(r.abi_return) == (42, 23)
+    assert tuple(as_int(x) for x in r.abi_return) == (42, 23)
 
 def test_convert_fixed_bytes_to_fixed_bytes_greater_size(harness):
     """types/contracts/convert_fixed_bytes_to_fixed_bytes_greater_size.sol"""
@@ -59,14 +56,14 @@ def test_convert_fixed_bytes_to_uint_greater_size(harness):
     app = harness.compile_and_deploy("types/contracts/convert_fixed_bytes_to_uint_greater_size.sol")
     # bytesToUint(bytes4): "abcd" -> 0x61626364
     r = harness.call(app, "bytesToUint(bytes4)", bytes.fromhex('61626364'))
-    assert r.abi_return == 1633837924
+    assert as_int(r.abi_return) == 1633837924
 
 def test_convert_fixed_bytes_to_uint_same_min_size(harness):
     """types/contracts/convert_fixed_bytes_to_uint_same_min_size.sol"""
     app = harness.compile_and_deploy("types/contracts/convert_fixed_bytes_to_uint_same_min_size.sol")
     # bytesToUint(bytes1): "a" -> 0x61
     r = harness.call(app, "bytesToUint(bytes1)", bytes.fromhex('61'))
-    assert r.abi_return == 97
+    assert as_int(r.abi_return) == 97
 
 def test_convert_fixed_bytes_to_uint_same_type(harness):
     """types/contracts/convert_fixed_bytes_to_uint_same_type.sol"""
@@ -81,7 +78,7 @@ def test_convert_fixed_bytes_to_uint_smaller_size(harness):
     app = harness.compile_and_deploy("types/contracts/convert_fixed_bytes_to_uint_smaller_size.sol")
     # bytesToUint(bytes4): "abcd" -> 0x6364
     r = harness.call(app, "bytesToUint(bytes4)", bytes.fromhex('61626364'))
-    assert r.abi_return == 25444
+    assert as_int(r.abi_return) == 25444
 
 def test_convert_uint_to_fixed_bytes_greater_size(harness):
     """types/contracts/convert_uint_to_fixed_bytes_greater_size.sol"""
@@ -120,222 +117,222 @@ def test_external_function_to_address(harness):
     app = harness.compile_and_deploy("types/contracts/external_function_to_address.sol")
     # f() -> true
     r = harness.call(app, "f()")
-    assert r.abi_return is True
+    assert bool(as_int(r.abi_return)) is True
     # g(function): hex"00000000000000000000000000000000000004226121ff00000000000000000" -> 0x42
     r = harness.call(app, "g(function)", bytes.fromhex('00000000000000000000000000000000000004226121ff000000000000000000'))
-    assert r.abi_return == 66
+    assert as_int(r.abi_return) == 66
 
 def test_mapping_abstract_constructor_param(harness):
     """types/contracts/mapping_abstract_constructor_param.sol"""
     app = harness.compile_and_deploy("types/contracts/mapping_abstract_constructor_param.sol")
     # m(uint256): 1 -> 0
     r = harness.call(app, "m(uint256)", 1)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # m(uint256): 5 -> 20
     r = harness.call(app, "m(uint256)", 5)
-    assert r.abi_return == 20
+    assert as_int(r.abi_return) == 20
 
 def test_mapping_contract_key(harness):
     """types/contracts/mapping_contract_key.sol"""
     app = harness.compile_and_deploy("types/contracts/mapping_contract_key.sol")
     # get(address): 0 -> 0
     r = harness.call(app, "get(address)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(address): 0x01 -> 0
     r = harness.call(app, "get(address)", 1)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(address): 0xa7 -> 0
     r = harness.call(app, "get(address)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # set(address,uint8): 0x01, 0xa1 ->
     r = harness.call(app, "set(address,uint8)", 1, 161)
     # (void return — call succeeding is the assertion)
     # get(address): 0 -> 0
     r = harness.call(app, "get(address)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(address): 0x01 -> 0xa1
     r = harness.call(app, "get(address)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # get(address): 0xa7 -> 0
     r = harness.call(app, "get(address)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # set(address,uint8): 0x00, 0xef ->
     r = harness.call(app, "set(address,uint8)", 0, 239)
     # (void return — call succeeding is the assertion)
     # get(address): 0 -> 0xef
     r = harness.call(app, "get(address)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # get(address): 0x01 -> 0xa1
     r = harness.call(app, "get(address)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # get(address): 0xa7 -> 0
     r = harness.call(app, "get(address)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # set(address,uint8): 0x01, 0x05 ->
     r = harness.call(app, "set(address,uint8)", 1, 5)
     # (void return — call succeeding is the assertion)
     # get(address): 0 -> 0xef
     r = harness.call(app, "get(address)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # get(address): 0x01 -> 0x05
     r = harness.call(app, "get(address)", 1)
-    assert r.abi_return == 5
+    assert as_int(r.abi_return) == 5
     # get(address): 0xa7 -> 0
     r = harness.call(app, "get(address)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
 
 def test_mapping_contract_key_getter(harness):
     """types/contracts/mapping_contract_key_getter.sol"""
     app = harness.compile_and_deploy("types/contracts/mapping_contract_key_getter.sol")
     # table(address): 0 -> 0
     r = harness.call(app, "table(address)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # table(address): 0x01 -> 0
     r = harness.call(app, "table(address)", 1)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # table(address): 0xa7 -> 0
     r = harness.call(app, "table(address)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(address): 0 -> 0
     r = harness.call(app, "get(address)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(address): 0x01 -> 0
     r = harness.call(app, "get(address)", 1)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(address): 0xa7 -> 0
     r = harness.call(app, "get(address)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # set(address,uint8): 0x01, 0xa1 ->
     r = harness.call(app, "set(address,uint8)", 1, 161)
     # (void return — call succeeding is the assertion)
     # table(address): 0 -> 0
     r = harness.call(app, "table(address)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # table(address): 0x01 -> 0xa1
     r = harness.call(app, "table(address)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # table(address): 0xa7 -> 0
     r = harness.call(app, "table(address)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(address): 0 -> 0
     r = harness.call(app, "get(address)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(address): 0x01 -> 0xa1
     r = harness.call(app, "get(address)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # get(address): 0xa7 -> 0
     r = harness.call(app, "get(address)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # set(address,uint8): 0x00, 0xef ->
     r = harness.call(app, "set(address,uint8)", 0, 239)
     # (void return — call succeeding is the assertion)
     # table(address): 0 -> 0xef
     r = harness.call(app, "table(address)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # table(address): 0x01 -> 0xa1
     r = harness.call(app, "table(address)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # table(address): 0xa7 -> 0
     r = harness.call(app, "table(address)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(address): 0 -> 0xef
     r = harness.call(app, "get(address)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # get(address): 0x01 -> 0xa1
     r = harness.call(app, "get(address)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # get(address): 0xa7 -> 0
     r = harness.call(app, "get(address)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # set(address,uint8): 0x01, 0x05 ->
     r = harness.call(app, "set(address,uint8)", 1, 5)
     # (void return — call succeeding is the assertion)
     # table(address): 0 -> 0xef
     r = harness.call(app, "table(address)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # table(address): 0x01 -> 0x05
     r = harness.call(app, "table(address)", 1)
-    assert r.abi_return == 5
+    assert as_int(r.abi_return) == 5
     # table(address): 0xa7 -> 0
     r = harness.call(app, "table(address)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(address): 0 -> 0xef
     r = harness.call(app, "get(address)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # get(address): 0x01 -> 0x05
     r = harness.call(app, "get(address)", 1)
-    assert r.abi_return == 5
+    assert as_int(r.abi_return) == 5
     # get(address): 0xa7 -> 0
     r = harness.call(app, "get(address)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
 
 def test_mapping_contract_key_library(harness):
     """types/contracts/mapping_contract_key_library.sol"""
     app = harness.compile_and_deploy("types/contracts/mapping_contract_key_library.sol")
     # get(address): 0 -> 0
     r = harness.call(app, "get(address)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(address): 0x01 -> 0
     r = harness.call(app, "get(address)", 1)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(address): 0xa7 -> 0
     r = harness.call(app, "get(address)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # set(address,uint8): 0x01, 0xa1 ->
     r = harness.call(app, "set(address,uint8)", 1, 161)
     # (void return — call succeeding is the assertion)
     # get(address): 0 -> 0
     r = harness.call(app, "get(address)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(address): 0x01 -> 0xa1
     r = harness.call(app, "get(address)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # get(address): 0xa7 -> 0
     r = harness.call(app, "get(address)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # set(address,uint8): 0x00, 0xef ->
     r = harness.call(app, "set(address,uint8)", 0, 239)
     # (void return — call succeeding is the assertion)
     # get(address): 0 -> 0xef
     r = harness.call(app, "get(address)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # get(address): 0x01 -> 0xa1
     r = harness.call(app, "get(address)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # get(address): 0xa7 -> 0
     r = harness.call(app, "get(address)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # set(address,uint8): 0x01, 0x05 ->
     r = harness.call(app, "set(address,uint8)", 1, 5)
     # (void return — call succeeding is the assertion)
     # get(address): 0 -> 0xef
     r = harness.call(app, "get(address)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # get(address): 0x01 -> 0x05
     r = harness.call(app, "get(address)", 1)
-    assert r.abi_return == 5
+    assert as_int(r.abi_return) == 5
     # get(address): 0xa7 -> 0
     r = harness.call(app, "get(address)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
 
 def test_mapping_enum_key_getter_v1(harness):
     """types/contracts/mapping_enum_key_getter_v1.sol"""
     app = harness.compile_and_deploy("types/contracts/mapping_enum_key_getter_v1.sol")
     # table(uint8): 0 -> 0
     r = harness.call(app, "table(uint8)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # table(uint8): 0x01 -> 0
     r = harness.call(app, "table(uint8)", 1)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # table(uint8): 0xa7 -> 0
     r = harness.call(app, "table(uint8)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0 -> 0
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0x01 -> 0
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0xa7 -> FAILURE, hex"4e487b71", 33
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
@@ -344,19 +341,19 @@ def test_mapping_enum_key_getter_v1(harness):
     # (void return — call succeeding is the assertion)
     # table(uint8): 0 -> 0
     r = harness.call(app, "table(uint8)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # table(uint8): 0x01 -> 0xa1
     r = harness.call(app, "table(uint8)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # table(uint8): 0xa7 -> 0
     r = harness.call(app, "table(uint8)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0 -> 0
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0x01 -> 0xa1
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # get(uint8): 0xa7 -> FAILURE, hex"4e487b71", 33
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
@@ -365,19 +362,19 @@ def test_mapping_enum_key_getter_v1(harness):
     # (void return — call succeeding is the assertion)
     # table(uint8): 0 -> 0xef
     r = harness.call(app, "table(uint8)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # table(uint8): 0x01 -> 0xa1
     r = harness.call(app, "table(uint8)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # table(uint8): 0xa7 -> 0
     r = harness.call(app, "table(uint8)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0 -> 0xef
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # get(uint8): 0x01 -> 0xa1
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # get(uint8): 0xa7 -> FAILURE, hex"4e487b71", 33
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
@@ -386,19 +383,19 @@ def test_mapping_enum_key_getter_v1(harness):
     # (void return — call succeeding is the assertion)
     # table(uint8): 0 -> 0xef
     r = harness.call(app, "table(uint8)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # table(uint8): 0x01 -> 0x05
     r = harness.call(app, "table(uint8)", 1)
-    assert r.abi_return == 5
+    assert as_int(r.abi_return) == 5
     # table(uint8): 0xa7 -> 0
     r = harness.call(app, "table(uint8)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0 -> 0xef
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # get(uint8): 0x01 -> 0x05
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 5
+    assert as_int(r.abi_return) == 5
     # get(uint8): 0xa7 -> FAILURE, hex"4e487b71", 33
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
@@ -408,19 +405,19 @@ def test_mapping_enum_key_getter_v2(harness):
     app = harness.compile_and_deploy("types/contracts/mapping_enum_key_getter_v2.sol")
     # table(uint8): 0 -> 0
     r = harness.call(app, "table(uint8)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # table(uint8): 0x01 -> 0
     r = harness.call(app, "table(uint8)", 1)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # table(uint8): 0xa7 -> FAILURE
     r = harness.call(app, "table(uint8)", 167, expect_revert=True)
     assert r.reverted
     # get(uint8): 0 -> 0
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0x01 -> 0
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0xa7 -> FAILURE
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
@@ -429,19 +426,19 @@ def test_mapping_enum_key_getter_v2(harness):
     # (void return — call succeeding is the assertion)
     # table(uint8): 0 -> 0
     r = harness.call(app, "table(uint8)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # table(uint8): 0x01 -> 0xa1
     r = harness.call(app, "table(uint8)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # table(uint8): 0xa7 -> FAILURE
     r = harness.call(app, "table(uint8)", 167, expect_revert=True)
     assert r.reverted
     # get(uint8): 0 -> 0
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0x01 -> 0xa1
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # get(uint8): 0xa7 -> FAILURE
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
@@ -450,19 +447,19 @@ def test_mapping_enum_key_getter_v2(harness):
     # (void return — call succeeding is the assertion)
     # table(uint8): 0 -> 0xef
     r = harness.call(app, "table(uint8)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # table(uint8): 0x01 -> 0xa1
     r = harness.call(app, "table(uint8)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # table(uint8): 0xa7 -> FAILURE
     r = harness.call(app, "table(uint8)", 167, expect_revert=True)
     assert r.reverted
     # get(uint8): 0 -> 0xef
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # get(uint8): 0x01 -> 0xa1
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # get(uint8): 0xa7 -> FAILURE
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
@@ -471,19 +468,19 @@ def test_mapping_enum_key_getter_v2(harness):
     # (void return — call succeeding is the assertion)
     # table(uint8): 0 -> 0xef
     r = harness.call(app, "table(uint8)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # table(uint8): 0x01 -> 0x05
     r = harness.call(app, "table(uint8)", 1)
-    assert r.abi_return == 5
+    assert as_int(r.abi_return) == 5
     # table(uint8): 0xa7 -> FAILURE
     r = harness.call(app, "table(uint8)", 167, expect_revert=True)
     assert r.reverted
     # get(uint8): 0 -> 0xef
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # get(uint8): 0x01 -> 0x05
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 5
+    assert as_int(r.abi_return) == 5
     # get(uint8): 0xa7 -> FAILURE
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
@@ -493,10 +490,10 @@ def test_mapping_enum_key_library_v1(harness):
     app = harness.compile_and_deploy("types/contracts/mapping_enum_key_library_v1.sol")
     # get(uint8): 0 -> 0
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0x01 -> 0
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0xa7 -> FAILURE, hex"4e487b71", 33
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
@@ -505,10 +502,10 @@ def test_mapping_enum_key_library_v1(harness):
     # (void return — call succeeding is the assertion)
     # get(uint8): 0 -> 0
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0x01 -> 0xa1
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # get(uint8): 0xa7 -> FAILURE, hex"4e487b71", 33
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
@@ -517,10 +514,10 @@ def test_mapping_enum_key_library_v1(harness):
     # (void return — call succeeding is the assertion)
     # get(uint8): 0 -> 0xef
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # get(uint8): 0x01 -> 0xa1
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # get(uint8): 0xa7 -> FAILURE, hex"4e487b71", 33
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
@@ -529,10 +526,10 @@ def test_mapping_enum_key_library_v1(harness):
     # (void return — call succeeding is the assertion)
     # get(uint8): 0 -> 0xef
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # get(uint8): 0x01 -> 0x05
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 5
+    assert as_int(r.abi_return) == 5
     # get(uint8): 0xa7 -> FAILURE, hex"4e487b71", 33
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
@@ -542,10 +539,10 @@ def test_mapping_enum_key_library_v2(harness):
     app = harness.compile_and_deploy("types/contracts/mapping_enum_key_library_v2.sol")
     # get(uint8): 0 -> 0
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0x01 -> 0
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0xa7 -> FAILURE
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
@@ -554,10 +551,10 @@ def test_mapping_enum_key_library_v2(harness):
     # (void return — call succeeding is the assertion)
     # get(uint8): 0 -> 0
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0x01 -> 0xa1
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # get(uint8): 0xa7 -> FAILURE
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
@@ -566,10 +563,10 @@ def test_mapping_enum_key_library_v2(harness):
     # (void return — call succeeding is the assertion)
     # get(uint8): 0 -> 0xef
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # get(uint8): 0x01 -> 0xa1
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # get(uint8): 0xa7 -> FAILURE
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
@@ -578,10 +575,10 @@ def test_mapping_enum_key_library_v2(harness):
     # (void return — call succeeding is the assertion)
     # get(uint8): 0 -> 0xef
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # get(uint8): 0x01 -> 0x05
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 5
+    assert as_int(r.abi_return) == 5
     # get(uint8): 0xa7 -> FAILURE
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
@@ -591,13 +588,13 @@ def test_mapping_enum_key_v1(harness):
     app = harness.compile_and_deploy("types/contracts/mapping_enum_key_v1.sol")
     # get(uint8): 0 -> 0
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0x01 -> 0
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0x02 -> 0
     r = harness.call(app, "get(uint8)", 2)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0x03 -> FAILURE, hex"4e487b71", 33
     r = harness.call(app, "get(uint8)", 3, expect_revert=True)
     assert r.reverted
@@ -609,10 +606,10 @@ def test_mapping_enum_key_v1(harness):
     # (void return — call succeeding is the assertion)
     # get(uint8): 0 -> 0
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0x01 -> 0xa1
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # get(uint8): 0xa7 -> FAILURE, hex"4e487b71", 33
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
@@ -621,10 +618,10 @@ def test_mapping_enum_key_v1(harness):
     # (void return — call succeeding is the assertion)
     # get(uint8): 0 -> 0xef
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # get(uint8): 0x01 -> 0xa1
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # get(uint8): 0xa7 -> FAILURE, hex"4e487b71", 33
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
@@ -633,10 +630,10 @@ def test_mapping_enum_key_v1(harness):
     # (void return — call succeeding is the assertion)
     # get(uint8): 0 -> 0xef
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # get(uint8): 0x01 -> 0x05
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 5
+    assert as_int(r.abi_return) == 5
     # get(uint8): 0xa7 -> FAILURE, hex"4e487b71", 33
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
@@ -646,13 +643,13 @@ def test_mapping_enum_key_v2(harness):
     app = harness.compile_and_deploy("types/contracts/mapping_enum_key_v2.sol")
     # get(uint8): 0 -> 0
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0x01 -> 0
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0x02 -> 0
     r = harness.call(app, "get(uint8)", 2)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0x03 -> FAILURE
     r = harness.call(app, "get(uint8)", 3, expect_revert=True)
     assert r.reverted
@@ -664,10 +661,10 @@ def test_mapping_enum_key_v2(harness):
     # (void return — call succeeding is the assertion)
     # get(uint8): 0 -> 0
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0x01 -> 0xa1
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # get(uint8): 0xa7 -> FAILURE
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
@@ -676,10 +673,10 @@ def test_mapping_enum_key_v2(harness):
     # (void return — call succeeding is the assertion)
     # get(uint8): 0 -> 0xef
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # get(uint8): 0x01 -> 0xa1
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # get(uint8): 0xa7 -> FAILURE
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
@@ -688,10 +685,10 @@ def test_mapping_enum_key_v2(harness):
     # (void return — call succeeding is the assertion)
     # get(uint8): 0 -> 0xef
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # get(uint8): 0x01 -> 0x05
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 5
+    assert as_int(r.abi_return) == 5
     # get(uint8): 0xa7 -> FAILURE
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
@@ -701,49 +698,49 @@ def test_mapping_simple(harness):
     app = harness.compile_and_deploy("types/contracts/mapping_simple.sol")
     # get(uint8): 0 -> 0
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0x01 -> 0
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0xa7 -> 0
     r = harness.call(app, "get(uint8)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # set(uint8,uint8): 0x01, 0xa1 ->
     r = harness.call(app, "set(uint8,uint8)", 1, 161)
     # (void return — call succeeding is the assertion)
     # get(uint8): 0 -> 0
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # get(uint8): 0x01 -> 0xa1
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # get(uint8): 0xa7 -> 0
     r = harness.call(app, "get(uint8)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # set(uint8,uint8): 0x00, 0xef ->
     r = harness.call(app, "set(uint8,uint8)", 0, 239)
     # (void return — call succeeding is the assertion)
     # get(uint8): 0 -> 0xef
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # get(uint8): 0x01 -> 0xa1
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 161
+    assert as_int(r.abi_return) == 161
     # get(uint8): 0xa7 -> 0
     r = harness.call(app, "get(uint8)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # set(uint8,uint8): 0x01, 0x05 ->
     r = harness.call(app, "set(uint8,uint8)", 1, 5)
     # (void return — call succeeding is the assertion)
     # get(uint8): 0 -> 0xef
     r = harness.call(app, "get(uint8)", 0)
-    assert r.abi_return == 239
+    assert as_int(r.abi_return) == 239
     # get(uint8): 0x01 -> 0x05
     r = harness.call(app, "get(uint8)", 1)
-    assert r.abi_return == 5
+    assert as_int(r.abi_return) == 5
     # get(uint8): 0xa7 -> 0
     r = harness.call(app, "get(uint8)", 167)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
 
 def test_nested_tuples(harness):
     """types/contracts/nested_tuples.sol"""
@@ -754,30 +751,30 @@ def test_nested_tuples(harness):
     assert not r.reverted
     # f1() -> 1
     r = harness.call(app, "f1()")
-    assert r.abi_return == 1
+    assert as_int(r.abi_return) == 1
     # f2() -> 2
     r = harness.call(app, "f2()")
-    assert r.abi_return == 2
+    assert as_int(r.abi_return) == 2
     # f3() -> 3
     r = harness.call(app, "f3()")
-    assert r.abi_return == 3
+    assert as_int(r.abi_return) == 3
     # f4() -> 4
     r = harness.call(app, "f4()")
-    assert r.abi_return == 4
+    assert as_int(r.abi_return) == 4
 
 def test_packing_signed_types(harness):
     """types/contracts/packing_signed_types.sol"""
     app = harness.compile_and_deploy("types/contracts/packing_signed_types.sol")
     # run() -> 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffa
     r = harness.call(app, "run()")
-    assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639930
+    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639930
 
 def test_packing_unpacking_types(harness):
     """types/contracts/packing_unpacking_types.sol"""
     app = harness.compile_and_deploy("types/contracts/packing_unpacking_types.sol")
     # run(bool,uint32,uint64): true, 0x0f0f0f0f, 0xf0f0f0f0f0f0f0f0 -> 0x0000000000000000000000000000000000000001f0f0f0f00f0f0f0f0f0f0f0f
     r = harness.call(app, "run(bool,uint32,uint64)", True, 252645135, 0xf0f0f0f0f0f0f0f0)
-    assert r.abi_return == 153795844864354234087135710991
+    assert as_int(r.abi_return) == 153795844864354234087135710991
 
 def test_strings(harness):
     """types/contracts/strings.sol"""
@@ -800,24 +797,24 @@ def test_struct_mapping_abstract_constructor_param(harness):
     app = harness.compile_and_deploy("types/contracts/struct_mapping_abstract_constructor_param.sol")
     # getM(uint256,uint256): 0, 0 -> 0
     r = harness.call(app, "getM(uint256,uint256)", 0, 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # getM(uint256,uint256): 1, 5 -> 0x10
     r = harness.call(app, "getM(uint256,uint256)", 1, 5)
-    assert r.abi_return == 16
+    assert as_int(r.abi_return) == 16
     # getM(uint256,uint256): 1, 0 -> 0
     r = harness.call(app, "getM(uint256,uint256)", 1, 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
 
 def test_tuple_assign_multi_slot_grow(harness):
     """types/contracts/tuple_assign_multi_slot_grow.sol"""
     app = harness.compile_and_deploy("types/contracts/tuple_assign_multi_slot_grow.sol")
     # f() -> 0x30, 0x31, 0x32
     r = harness.call(app, "f()")
-    assert tuple(r.abi_return) == (48, 49, 50)
+    assert tuple(as_int(x) for x in r.abi_return) == (48, 49, 50)
 
 def test_type_conversion_cleanup(harness):
     """types/contracts/type_conversion_cleanup.sol"""
     app = harness.compile_and_deploy("types/contracts/type_conversion_cleanup.sol")
     # test() -> 0xffffffffffffffffffffffffffffffff
     r = harness.call(app, "test()")
-    assert r.abi_return == 340282366920938463463374607431768211455
+    assert as_int(r.abi_return) == 340282366920938463463374607431768211455

@@ -1,13 +1,10 @@
-"""Auto-generated tests for the errors category.
-
-Each test deploys the contract defined in the matching .sol file and
-runs the assertions originally documented in the test's `// ----`
-block. The .sol files are unchanged; this Python module is the new
-source of truth — edit it freely to fix or sharpen assertions.
-"""
+"""Tests for the errors category."""
 import pytest
 
-from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted
+from framework import (
+    Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
+    as_int, as_bytes,
+)
 
 
 def test_error_in_library_and_interface(harness):
@@ -26,15 +23,15 @@ def test_error_in_library_and_interface(harness):
 def test_error_selector(harness):
     """errors/contracts/error_selector.sol"""
     app = harness.compile_and_deploy("errors/contracts/error_selector.sol")
-    # test1() -> 0x92bbf6e800000000000000000000000000000000000000000000000000000000, 0x2ff06700000000000000000000000000000000000000000000000000000000, 0x92bbf6e800000000000000000000000000000000000000000000000000000000, 0x92bbf6e800000000000000000000000000000000000000000000000000000000
+    # Each `.selector` is bytes4. The original EVM-flat fixture left-aligns
+    # them into 32-byte words; AVM returns the raw 4 bytes.
+    e1 = bytes.fromhex("92bbf6e8")
+    e2 = bytes.fromhex("2ff06700")
     r = harness.call(app, "test1()")
-    assert tuple(r.abi_return) == (66369780378579387829777545333095868546843396874963534868427279336151309090816, 84701008042320515315298174644417619374439393932350505483920050946320629760, 66369780378579387829777545333095868546843396874963534868427279336151309090816, 66369780378579387829777545333095868546843396874963534868427279336151309090816)
-    # test2() -> 0x92bbf6e800000000000000000000000000000000000000000000000000000000, 0x2ff06700000000000000000000000000000000000000000000000000000000, 0x92bbf6e800000000000000000000000000000000000000000000000000000000, 0x92bbf6e800000000000000000000000000000000000000000000000000000000
+    assert [bytes(x) for x in r.abi_return] == [e1, e2, e1, e1]
     r = harness.call(app, "test2()")
-    assert tuple(r.abi_return) == (66369780378579387829777545333095868546843396874963534868427279336151309090816, 84701008042320515315298174644417619374439393932350505483920050946320629760, 66369780378579387829777545333095868546843396874963534868427279336151309090816, 66369780378579387829777545333095868546843396874963534868427279336151309090816)
-    # test3() -> 0x28811f5900000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "test3()")
-    assert r.abi_return == 18320653568259070997333563987999395423151336464787283864857095557675424415744
+    assert [bytes(x) for x in r.abi_return] == [e1, e2, e1, e1]
+    assert bytes(harness.call(app, "test3()").abi_return) == bytes.fromhex("28811f59")
 
 def test_error_static_calldata_uint_array_and_dynamic_array(harness):
     """errors/contracts/error_static_calldata_uint_array_and_dynamic_array.sol"""
@@ -123,23 +120,23 @@ def test_require_error_condition_evaluated_only_once(harness):
     assert r.reverted
     # getCounter() -> 0
     r = harness.call(app, "getCounter()")
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # f(bool): true ->
     r = harness.call(app, "f(bool)", True)
     # (void return — call succeeding is the assertion)
     # getCounter() -> 1
     r = harness.call(app, "getCounter()")
-    assert r.abi_return == 1
+    assert as_int(r.abi_return) == 1
 
 def test_require_error_evaluation_order_1(harness):
     """errors/contracts/require_error_evaluation_order_1.sol"""
     app = harness.compile_and_deploy("errors/contracts/require_error_evaluation_order_1.sol")
     # f() -> 7
     r = harness.call(app, "f()")
-    assert r.abi_return == 7
+    assert as_int(r.abi_return) == 7
     # g() -> 7
     r = harness.call(app, "g()")
-    assert r.abi_return == 7
+    assert as_int(r.abi_return) == 7
 
 def test_require_error_evaluation_order_2(harness):
     """errors/contracts/require_error_evaluation_order_2.sol"""
@@ -166,7 +163,7 @@ def test_require_error_function_join_control_flow(harness):
     app = harness.compile_and_deploy("errors/contracts/require_error_function_join_control_flow.sol")
     # f(bool): true -> 0x15, 0x15, 0
     r = harness.call(app, "f(bool)", True)
-    assert tuple(r.abi_return) == (21, 21, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (21, 21, 0)
     # f(bool): false -> FAILURE, hex"002ff067", 21
     r = harness.call(app, "f(bool)", False, expect_revert=True)
     assert r.reverted
@@ -196,7 +193,7 @@ def test_require_error_stack_check(harness):
     # (void return — call succeeding is the assertion)
     # x() -> 4242
     r = harness.call(app, "x()")
-    assert r.abi_return == 4242
+    assert as_int(r.abi_return) == 4242
 
 def test_require_error_string_literal(harness):
     """errors/contracts/require_error_string_literal.sol"""

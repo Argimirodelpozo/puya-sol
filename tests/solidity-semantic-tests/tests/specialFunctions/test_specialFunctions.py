@@ -1,13 +1,10 @@
-"""Auto-generated tests for the specialFunctions category.
-
-Each test deploys the contract defined in the matching .sol file and
-runs the assertions originally documented in the test's `// ----`
-block. The .sol files are unchanged; this Python module is the new
-source of truth — edit it freely to fix or sharpen assertions.
-"""
+"""Tests for the specialFunctions category."""
 import pytest
 
-from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted
+from framework import (
+    Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
+    as_int, as_bytes,
+)
 
 
 def test_abi_encode_with_signature_from_string(harness):
@@ -30,7 +27,7 @@ def test_keccak256_optimized(harness):
     app = harness.compile_and_deploy("specialFunctions/contracts/keccak256_optimized.sol")
     # short() -> true
     r = harness.call(app, "short()")
-    assert r.abi_return is True
+    assert bool(as_int(r.abi_return)) is True
     # long() -> true, true
     r = harness.call(app, "long()")
-    assert tuple(r.abi_return) == (True, True)
+    assert tuple(bool(b) for b in r.abi_return) == (True, True)

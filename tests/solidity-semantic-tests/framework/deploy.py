@@ -45,8 +45,15 @@ def _substitute_template_vars(teal: str, tmpl_path: Path) -> str:
         data = json.loads(tmpl_path.read_text())
     except (json.JSONDecodeError, OSError):
         return teal
+    # Puya's deploy.tmpl.json keys are already literal `TMPL_<name>` strings
+    # (matching the placeholders in the TEAL bytecblock); replace verbatim.
+    # Values are bare hex (no `0x` prefix) — the bytecblock pseudo-op expects
+    # the prefix, so add it.
     for k, v in data.items():
-        teal = teal.replace(f"TMPL_{k}", str(v))
+        s = str(v)
+        if all(c in "0123456789abcdefABCDEF" for c in s):
+            s = "0x" + s
+        teal = teal.replace(k, s)
     return teal
 
 
@@ -230,6 +237,9 @@ def _default_encode(v) -> bytes:
     if isinstance(v, int):
         # 32-byte big-endian (Solidity uint256 default)
         return v.to_bytes(32, "big", signed=v < 0)
+    if isinstance(v, (list, tuple)):
+        # Static array fallback: concat each element's default-encoding.
+        return b"".join(_default_encode(x) for x in v)
     raise TypeError(f"can't default-encode {type(v).__name__}")
 
 

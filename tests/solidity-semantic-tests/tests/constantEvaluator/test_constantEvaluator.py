@@ -1,13 +1,10 @@
-"""Auto-generated tests for the constantEvaluator category.
-
-Each test deploys the contract defined in the matching .sol file and
-runs the assertions originally documented in the test's `// ----`
-block. The .sol files are unchanged; this Python module is the new
-source of truth — edit it freely to fix or sharpen assertions.
-"""
+"""Tests for the constantEvaluator category."""
 import pytest
 
-from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted
+from framework import (
+    Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
+    as_int, as_bytes,
+)
 
 
 def test_negative_fractional_mod(harness):
@@ -15,11 +12,11 @@ def test_negative_fractional_mod(harness):
     app = harness.compile_and_deploy("constantEvaluator/contracts/negative_fractional_mod.sol")
     # f() -> 11, 10
     r = harness.call(app, "f()")
-    assert tuple(r.abi_return) == (11, 10)
+    assert tuple(as_int(x) for x in r.abi_return) == (11, 10)
 
 def test_rounding(harness):
     """constantEvaluator/contracts/rounding.sol"""
     app = harness.compile_and_deploy("constantEvaluator/contracts/rounding.sol")
     # f() -> 2, 2, 2, 2
     r = harness.call(app, "f()")
-    assert tuple(r.abi_return) == (2, 2, 2, 2)
+    assert tuple(as_int(x) for x in r.abi_return) == (2, 2, 2, 2)

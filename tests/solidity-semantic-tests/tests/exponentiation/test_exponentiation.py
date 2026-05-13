@@ -1,53 +1,50 @@
-"""Auto-generated tests for the exponentiation category.
-
-Each test deploys the contract defined in the matching .sol file and
-runs the assertions originally documented in the test's `// ----`
-block. The .sol files are unchanged; this Python module is the new
-source of truth — edit it freely to fix or sharpen assertions.
-"""
+"""Tests for the exponentiation category."""
 import pytest
 
-from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted
+from framework import (
+    Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
+    as_int, as_bytes,
+)
+
+
+_TWO256 = 1 << 256
+
+
+def _u256_signed_eq(actual: int, expected: int) -> bool:
+    return actual == (expected if expected >= 0 else _TWO256 + expected)
 
 
 def test_literal_base(harness):
     """exponentiation/contracts/literal_base.sol"""
     app = harness.compile_and_deploy("exponentiation/contracts/literal_base.sol")
-    # f(uint256): 0 -> 1, 1
-    r = harness.call(app, "f(uint256)", 0)
-    assert tuple(r.abi_return) == (1, 1)
-    # f(uint256): 1 -> 2, -2
-    r = harness.call(app, "f(uint256)", 1)
-    assert tuple(r.abi_return) == (2, -2)
-    # f(uint256): 2 -> 4, 4
-    r = harness.call(app, "f(uint256)", 2)
-    assert tuple(r.abi_return) == (4, 4)
-    # f(uint256): 13 -> 0x2000, -8192
-    r = harness.call(app, "f(uint256)", 13)
-    assert tuple(r.abi_return) == (8192, -8192)
-    # f(uint256): 113 -> 0x020000000000000000000000000000, -10384593717069655257060992658440192
-    r = harness.call(app, "f(uint256)", 113)
-    assert tuple(r.abi_return) == (10384593717069655257060992658440192, -10384593717069655257060992658440192)
-    # f(uint256): 114 -> 0x040000000000000000000000000000, 20769187434139310514121985316880384
-    r = harness.call(app, "f(uint256)", 114)
-    assert tuple(r.abi_return) == (20769187434139310514121985316880384, 20769187434139310514121985316880384)
-    # f(uint256): 1113 -> 0x00, 0
-    r = harness.call(app, "f(uint256)", 1113)
-    assert tuple(r.abi_return) == (0, 0)
-    # f(uint256): 1114 -> 0x00, 0
-    r = harness.call(app, "f(uint256)", 1114)
-    assert tuple(r.abi_return) == (0, 0)
+    # f(x) returns (2**x as uint256, (-2)**x as int256). Negative expecteds
+    # match their uint256 two's-complement form.
+    for x, pos, neg in [
+        (0, 1, 1),
+        (1, 2, -2),
+        (2, 4, 4),
+        (13, 8192, -8192),
+        (113, 10384593717069655257060992658440192, -10384593717069655257060992658440192),
+        (114, 20769187434139310514121985316880384, 20769187434139310514121985316880384),
+        (1113, 0, 0),
+        (1114, 0, 0),
+    ]:
+        r = harness.call(app, "f(uint256)", x)
+        assert as_int(r.abi_return[0]) == pos
+        assert _u256_signed_eq(as_int(r.abi_return[1]), neg)
+
 
 def test_signed_base(harness):
     """exponentiation/contracts/signed_base.sol"""
     app = harness.compile_and_deploy("exponentiation/contracts/signed_base.sol")
-    # f() -> 9, -27
+    # Returns (3**2 = 9, (-3)**3 = -27 in int256).
     r = harness.call(app, "f()")
-    assert tuple(r.abi_return) == (9, -27)
+    assert as_int(r.abi_return[0]) == 9
+    assert _u256_signed_eq(as_int(r.abi_return[1]), -27)
 
 def test_small_exp(harness):
     """exponentiation/contracts/small_exp.sol"""
     app = harness.compile_and_deploy("exponentiation/contracts/small_exp.sol")
     # f() -> 4
     r = harness.call(app, "f()")
-    assert r.abi_return == 4
+    assert as_int(r.abi_return) == 4

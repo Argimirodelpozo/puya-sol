@@ -1,13 +1,10 @@
-"""Auto-generated tests for the revertStrings category.
-
-Each test deploys the contract defined in the matching .sol file and
-runs the assertions originally documented in the test's `// ----`
-block. The .sol files are unchanged; this Python module is the new
-source of truth — edit it freely to fix or sharpen assertions.
-"""
+"""Tests for the revertStrings category."""
 import pytest
 
-from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted
+from framework import (
+    Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
+    as_int, as_bytes,
+)
 
 
 def test_array_slices(harness):
@@ -90,7 +87,7 @@ def test_empty_v1(harness):
     r = harness.call(app, "f()", expect_revert=True)
     assert r.reverted
     # g(string): 0x20, 0, "" -> FAILURE, hex"08c379a0", 0x20, 0
-    r = harness.call(app, "g(string)", 32, 0, bytes.fromhex(''), expect_revert=True)
+    r = harness.call(app, "g(string)", '', expect_revert=True)
     assert r.reverted
     # g(string): 0x20, 0 -> FAILURE, hex"08c379a0", 0x20, 0
     r = harness.call(app, "g(string)", 32, 0, expect_revert=True)
@@ -106,7 +103,7 @@ def test_empty_v2(harness):
     r = harness.call(app, "g(string)", bytes.fromhex(''), expect_revert=True)
     assert r.reverted
     # g(string): 0x20, 0, "" -> FAILURE, hex"08c379a0", 0x20, 0
-    r = harness.call(app, "g(string)", 32, 0, bytes.fromhex(''), expect_revert=True)
+    r = harness.call(app, "g(string)", '', expect_revert=True)
     assert r.reverted
     # g(string): 0x20, 0 -> FAILURE, hex"08c379a0", 0x20, 0
     r = harness.call(app, "g(string)", 32, 0, expect_revert=True)
@@ -155,7 +152,7 @@ def test_invalid_abi_decoding_calldata_v1(harness):
     app = harness.compile_and_deploy("revertStrings/contracts/invalid_abi_decoding_calldata_v1.sol")
     # d(bytes): 0x20, 0x20, 0x0000000000000000000000000000000000000000000000000000000000000000 -> 0
     r = harness.call(app, "d(bytes)", 32, 32, 0)
-    assert r.abi_return == 0
+    assert as_int(r.abi_return) == 0
     # d(bytes): 0x100, 0x20, 0x0000000000000000000000000000000000000000000000000000000000000000 -> FAILURE, hex"08c379a0", 0x20, 43, "ABI calldata decoding: invalid h", "ead pointer"
     r = harness.call(app, "d(bytes)", 256, 32, 0, expect_revert=True)
     assert r.reverted
@@ -202,7 +199,7 @@ def test_transfer(harness):
     pytest.xfail("fallback() dispatch not yet implemented")
     # g() -> 10
     r = harness.call(app, "g()")
-    assert r.abi_return == 10
+    assert as_int(r.abi_return) == 10
     # f() -> FAILURE, hex"08c379a0", 0x20, 10, "no_receive"
     r = harness.call(app, "f()", expect_revert=True)
     assert r.reverted

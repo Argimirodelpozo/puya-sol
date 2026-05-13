@@ -31,15 +31,13 @@ tests/solidity-semantic-tests/
 │   ├── revert.py             — Reverted / ErrorString / Panic / RawRevert markers
 │   └── harness.py            — Harness class (compile_and_deploy + call)
 ├── conftest.py               ← Pytest fixtures (localnet, harness)
-├── convert.py                ← Codegen — reads .sol via legacy parser, emits test_<cat>.py
-├── parser.py                 ← Legacy parser (codegen-only; not imported by tests)
-├── multisource_splitter.py   ← Multi-source fixture splitter (still used by framework.compile)
+├── multisource_splitter.py   ← Multi-source fixture splitter (used by framework.compile)
 ├── tests/
 │   ├── <category>/
-│   │   ├── *.sol             ← Unchanged Solidity fixtures
-│   │   └── test_<category>.py ← Generated or hand-written pytest module
-│   └── smoke/test_smoke.py   ← Hand-written reference category
-└── legacy/                   ← Old run_tests.py, old conftest, analyzers — kept for grep
+│   │   ├── contracts/*.sol   ← Unchanged Solidity fixtures
+│   │   └── test_<category>.py ← Hand-edited pytest module
+│   └── smoke/test_smoke.py   ← Reference category — start here when in doubt
+└── legacy/                   ← Old run_tests.py + parser.py — kept for grep
 ```
 
 ## Running
@@ -136,32 +134,22 @@ If the auto-generated assertion is wrong, edit the Python. Don't refactor
 the framework to handle one weird case — keep the framework boring and
 the per-test code expressive.
 
-## Codegen status
+## Codegen history
 
-`convert.py` reads each `.sol` via the legacy parser and emits a Python
-function per fixture. Heuristics:
+The initial `test_<category>.py` modules were one-shot generated from
+the Solidity isoltest `// ----` blocks. The generator (`convert.py`)
+has been removed — the Python tests are the source of truth now. The
+`parser.py` it relied on lives under `legacy/` next to the archived
+analyzers that still import it; nothing in the active framework
+references it.
 
-| Expected shape                  | Emitted assertion                      |
-|---------------------------------|----------------------------------------|
-| empty (`->`)                    | (none — call succeeding is the test)   |
-| single int / hex                | `assert r.abi_return == N`             |
-| single `true` / `false`         | `assert r.abi_return is BOOL`          |
-| 2–4 simple ints                 | `assert tuple(r.abi_return) == (...)`  |
-| `[0x20, len, "string"]`         | `assert r.abi_return == "string"`      |
-| `FAILURE, ...`                  | `expect_revert=True; assert r.reverted`|
-| anything else                   | `# TODO: ...` + `assert not r.reverted`|
-
-Known under-coverage in codegen output:
-- `byte[N]` returns get compared as `int` — fails because algosdk returns
-  `list[int]`. Hand-fix: `bytes(r.abi_return) == lpad(value, N)`.
-- Dynamic single-arg encoding (`f(string): 32, 16, hex"..."`) is passed
-  as three Python args. Hand-fix: reassemble into one `str` / `bytes`.
-- Multi-return shapes get a `# TODO` because heuristics can't tell a
-  flat tuple from a structural EVM encoding.
-
-The codegen is one-shot. Once a test file is hand-edited, regenerating
-will skip it iff it doesn't have the `"Auto-generated"` marker in the
-docstring. To force regenerate, delete the file first.
+Common patterns the generator emitted (and that you'll want to hand-fix
+as you encounter them):
+- `byte[N]` returns compared as `int` — algosdk returns `list[int]`.
+  Use `as_int(r.abi_return)` or `bytes(r.abi_return) == lpad(N)`.
+- Dynamic single-arg returns (`f(string): 32, 16, hex"..."`) were
+  emitted as three positional args. Combine into a single `str` / `bytes`.
+- Multi-return shapes with > 4 values were emitted as TODOs.
 
 ## Migration status
 
