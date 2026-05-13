@@ -11,57 +11,57 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_delete_local(harness):
-    """variables/delete_local.sol"""
-    app = harness.compile_and_deploy("variables/delete_local.sol")
+    """variables/contracts/delete_local.sol"""
+    app = harness.compile_and_deploy("variables/contracts/delete_local.sol")
     # delLocal() -> 0
     r = harness.call(app, "delLocal()")
     assert r.abi_return == 0
 
 def test_delete_locals(harness):
-    """variables/delete_locals.sol"""
-    app = harness.compile_and_deploy("variables/delete_locals.sol")
+    """variables/contracts/delete_locals.sol"""
+    app = harness.compile_and_deploy("variables/contracts/delete_locals.sol")
     # delLocal() -> 6, 7
     r = harness.call(app, "delLocal()")
     assert tuple(r.abi_return) == (6, 7)
 
 def test_delete_transient_state_variable(harness):
-    """variables/delete_transient_state_variable.sol"""
-    app = harness.compile_and_deploy("variables/delete_transient_state_variable.sol")
+    """variables/contracts/delete_transient_state_variable.sol"""
+    app = harness.compile_and_deploy("variables/contracts/delete_transient_state_variable.sol")
     # f() -> 0
     r = harness.call(app, "f()")
     assert r.abi_return == 0
 
 def test_delete_transient_state_variable_non_zero_offset(harness):
-    """variables/delete_transient_state_variable_non_zero_offset.sol"""
-    app = harness.compile_and_deploy("variables/delete_transient_state_variable_non_zero_offset.sol")
+    """variables/contracts/delete_transient_state_variable_non_zero_offset.sol"""
+    app = harness.compile_and_deploy("variables/contracts/delete_transient_state_variable_non_zero_offset.sol")
     # f() -> 0xffffffffffffffffffffffffffff000000000000000000000000000000000000, 0, 0xffffffffffffffffffffffffffff
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (115792089237316195423570985008687885552524786135017422503739311359551623659520, 0, 5192296858534827628530496329220095)
 
 def test_mapping_local_assignment(harness):
-    """variables/mapping_local_assignment.sol"""
-    app = harness.compile_and_deploy("variables/mapping_local_assignment.sol")
+    """variables/contracts/mapping_local_assignment.sol"""
+    app = harness.compile_and_deploy("variables/contracts/mapping_local_assignment.sol")
     # f() -> 42, 0, 0, 21
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (42, 0, 0, 21)
 
 def test_mapping_local_compound_assignment(harness):
-    """variables/mapping_local_compound_assignment.sol"""
-    app = harness.compile_and_deploy("variables/mapping_local_compound_assignment.sol")
+    """variables/contracts/mapping_local_compound_assignment.sol"""
+    app = harness.compile_and_deploy("variables/contracts/mapping_local_compound_assignment.sol")
     # f() -> 42, 0, 0, 21
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (42, 0, 0, 21)
 
 def test_mapping_local_tuple_assignment(harness):
-    """variables/mapping_local_tuple_assignment.sol"""
-    app = harness.compile_and_deploy("variables/mapping_local_tuple_assignment.sol")
+    """variables/contracts/mapping_local_tuple_assignment.sol"""
+    app = harness.compile_and_deploy("variables/contracts/mapping_local_tuple_assignment.sol")
     # f() -> 42, 0, 0, 21
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (42, 0, 0, 21)
 
 def test_public_state_overridding(harness):
-    """variables/public_state_overridding.sol"""
-    app = harness.compile_and_deploy("variables/public_state_overridding.sol")
+    """variables/contracts/public_state_overridding.sol"""
+    app = harness.compile_and_deploy("variables/contracts/public_state_overridding.sol")
     # test() -> 0
     r = harness.call(app, "test()")
     assert r.abi_return == 0
@@ -73,8 +73,8 @@ def test_public_state_overridding(harness):
     assert r.abi_return == 2
 
 def test_public_state_overridding_dynamic_struct(harness):
-    """variables/public_state_overridding_dynamic_struct.sol"""
-    app = harness.compile_and_deploy("variables/public_state_overridding_dynamic_struct.sol")
+    """variables/contracts/public_state_overridding_dynamic_struct.sol"""
+    app = harness.compile_and_deploy("variables/contracts/public_state_overridding_dynamic_struct.sol")
     # test() -> 0, 64, 0
     r = harness.call(app, "test()")
     assert tuple(r.abi_return) == (0, 64, 0)
@@ -87,8 +87,8 @@ def test_public_state_overridding_dynamic_struct(harness):
     assert not r.reverted
 
 def test_public_state_overridding_mapping_to_dynamic_struct(harness):
-    """variables/public_state_overridding_mapping_to_dynamic_struct.sol"""
-    app = harness.compile_and_deploy("variables/public_state_overridding_mapping_to_dynamic_struct.sol")
+    """variables/contracts/public_state_overridding_mapping_to_dynamic_struct.sol"""
+    app = harness.compile_and_deploy("variables/contracts/public_state_overridding_mapping_to_dynamic_struct.sol")
     # test(uint256): 0 -> 0, 64, 0
     r = harness.call(app, "test(uint256)", 0)
     assert tuple(r.abi_return) == (0, 64, 0)
@@ -107,8 +107,8 @@ def test_public_state_overridding_mapping_to_dynamic_struct(harness):
     assert not r.reverted
 
 def test_storing_invalid_boolean(harness):
-    """variables/storing_invalid_boolean.sol"""
-    app = harness.compile_and_deploy("variables/storing_invalid_boolean.sol")
+    """variables/contracts/storing_invalid_boolean.sol"""
+    app = harness.compile_and_deploy("variables/contracts/storing_invalid_boolean.sol")
     # set() -> 1
     r = harness.call(app, "set()")
     assert r.abi_return == 1
@@ -123,15 +123,15 @@ def test_storing_invalid_boolean(harness):
     assert r.abi_return == 1
 
 def test_transient_function_type_state_variable(harness):
-    """variables/transient_function_type_state_variable.sol"""
-    app = harness.compile_and_deploy("variables/transient_function_type_state_variable.sol")
+    """variables/contracts/transient_function_type_state_variable.sol"""
+    app = harness.compile_and_deploy("variables/contracts/transient_function_type_state_variable.sol")
     # test() -> true
     r = harness.call(app, "test()")
     assert r.abi_return is True
 
 def test_transient_state_address_variable_members(harness):
-    """variables/transient_state_address_variable_members.sol"""
-    app = harness.compile_and_deploy("variables/transient_state_address_variable_members.sol")
+    """variables/contracts/transient_state_address_variable_members.sol"""
+    app = harness.compile_and_deploy("variables/contracts/transient_state_address_variable_members.sol")
     # f() -> 1267650600228229401496703205376
     r = harness.call(app, "f()")
     assert r.abi_return == 1267650600228229401496703205376
@@ -140,15 +140,15 @@ def test_transient_state_address_variable_members(harness):
     assert r.abi_return == 0
 
 def test_transient_state_enum_variable(harness):
-    """variables/transient_state_enum_variable.sol"""
-    app = harness.compile_and_deploy("variables/transient_state_enum_variable.sol")
+    """variables/contracts/transient_state_enum_variable.sol"""
+    app = harness.compile_and_deploy("variables/contracts/transient_state_enum_variable.sol")
     # f() ->
     r = harness.call(app, "f()")
     # (void return — call succeeding is the assertion)
 
 def test_transient_state_variable(harness):
-    """variables/transient_state_variable.sol"""
-    app = harness.compile_and_deploy("variables/transient_state_variable.sol")
+    """variables/contracts/transient_state_variable.sol"""
+    app = harness.compile_and_deploy("variables/contracts/transient_state_variable.sol")
     # x() -> 0
     r = harness.call(app, "x()")
     assert r.abi_return == 0
@@ -160,22 +160,22 @@ def test_transient_state_variable(harness):
     assert r.abi_return == 0
 
 def test_transient_state_variable_cleanup_assignment(harness):
-    """variables/transient_state_variable_cleanup_assignment.sol"""
-    app = harness.compile_and_deploy("variables/transient_state_variable_cleanup_assignment.sol")
+    """variables/contracts/transient_state_variable_cleanup_assignment.sol"""
+    app = harness.compile_and_deploy("variables/contracts/transient_state_variable_cleanup_assignment.sol")
     # f() -> 0xff
     r = harness.call(app, "f()")
     assert r.abi_return == 255
 
 def test_transient_state_variable_cleanup_tstore(harness):
-    """variables/transient_state_variable_cleanup_tstore.sol"""
-    app = harness.compile_and_deploy("variables/transient_state_variable_cleanup_tstore.sol")
+    """variables/contracts/transient_state_variable_cleanup_tstore.sol"""
+    app = harness.compile_and_deploy("variables/contracts/transient_state_variable_cleanup_tstore.sol")
     # f() -> 0xff
     r = harness.call(app, "f()")
     assert r.abi_return == 255
 
 def test_transient_state_variable_slot_inline_assembly(harness):
-    """variables/transient_state_variable_slot_inline_assembly.sol"""
-    app = harness.compile_and_deploy("variables/transient_state_variable_slot_inline_assembly.sol")
+    """variables/contracts/transient_state_variable_slot_inline_assembly.sol"""
+    app = harness.compile_and_deploy("variables/contracts/transient_state_variable_slot_inline_assembly.sol")
     # f() -> 0, 0
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (0, 0)
@@ -187,22 +187,22 @@ def test_transient_state_variable_slot_inline_assembly(harness):
     assert tuple(r.abi_return) == (2, 0)
 
 def test_transient_state_variable_slots_and_offsets(harness):
-    """variables/transient_state_variable_slots_and_offsets.sol"""
-    app = harness.compile_and_deploy("variables/transient_state_variable_slots_and_offsets.sol")
+    """variables/contracts/transient_state_variable_slots_and_offsets.sol"""
+    app = harness.compile_and_deploy("variables/contracts/transient_state_variable_slots_and_offsets.sol")
     # f() -> 1, 2, 3, 4
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (1, 2, 3, 4)
 
 def test_transient_state_variable_tuple_assignment(harness):
-    """variables/transient_state_variable_tuple_assignment.sol"""
-    app = harness.compile_and_deploy("variables/transient_state_variable_tuple_assignment.sol")
+    """variables/contracts/transient_state_variable_tuple_assignment.sol"""
+    app = harness.compile_and_deploy("variables/contracts/transient_state_variable_tuple_assignment.sol")
     # f() -> 2, 3, 4
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (2, 3, 4)
 
 def test_transient_state_variable_udvt(harness):
-    """variables/transient_state_variable_udvt.sol"""
-    app = harness.compile_and_deploy("variables/transient_state_variable_udvt.sol")
+    """variables/contracts/transient_state_variable_udvt.sol"""
+    app = harness.compile_and_deploy("variables/contracts/transient_state_variable_udvt.sol")
     # x() -> 0
     r = harness.call(app, "x()")
     assert r.abi_return == 0

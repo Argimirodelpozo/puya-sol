@@ -11,29 +11,29 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_asm_address_constant_regression(harness):
-    """constants/asm_address_constant_regression.sol"""
-    app = harness.compile_and_deploy("constants/asm_address_constant_regression.sol")
+    """constants/contracts/asm_address_constant_regression.sol"""
+    app = harness.compile_and_deploy("constants/contracts/asm_address_constant_regression.sol")
     # f() -> 0x00
     r = harness.call(app, "f()")
     assert r.abi_return == 0
 
 def test_asm_constant_file_level(harness):
-    """constants/asm_constant_file_level.sol"""
-    app = harness.compile_and_deploy("constants/asm_constant_file_level.sol")
+    """constants/contracts/asm_constant_file_level.sol"""
+    app = harness.compile_and_deploy("constants/contracts/asm_constant_file_level.sol")
     # f() -> 0x1212121212121212121212121000002134593163
     r = harness.call(app, "f()")
     assert r.abi_return == 103164821458651970696730694073941364629493592419
 
 def test_assign_type_info(harness):
-    """constants/assign_type_info.sol"""
-    app = harness.compile_and_deploy("constants/assign_type_info.sol")
+    """constants/contracts/assign_type_info.sol"""
+    app = harness.compile_and_deploy("constants/contracts/assign_type_info.sol")
     # nonEmptyCode() -> true
     r = harness.call(app, "nonEmptyCode()")
     assert r.abi_return is True
 
 def test_constant_string(harness):
-    """constants/constant_string.sol"""
-    app = harness.compile_and_deploy("constants/constant_string.sol")
+    """constants/contracts/constant_string.sol"""
+    app = harness.compile_and_deploy("constants/contracts/constant_string.sol")
     # f() -> 0x20, 3, "\x03\x01\x02"
     r = harness.call(app, "f()")
     assert r.abi_return == '\\x03\\x01\\x02'
@@ -45,8 +45,8 @@ def test_constant_string(harness):
     assert r.abi_return == 'hello'
 
 def test_constant_string_at_file_level(harness):
-    """constants/constant_string_at_file_level.sol"""
-    app = harness.compile_and_deploy("constants/constant_string_at_file_level.sol")
+    """constants/contracts/constant_string_at_file_level.sol"""
+    app = harness.compile_and_deploy("constants/contracts/constant_string_at_file_level.sol")
     # f() -> 0x20, 3, "\x03\x01\x02"
     r = harness.call(app, "f()")
     assert r.abi_return == '\\x03\\x01\\x02'
@@ -61,13 +61,13 @@ def test_constant_string_at_file_level(harness):
     assert tuple(r.abi_return) == (56, 1, 44048180624707321370159228589897778088919435935156254407473833945046349512704)
 
 def test_constant_variables(harness):
-    """constants/constant_variables.sol"""
-    app = harness.compile_and_deploy("constants/constant_variables.sol")
+    """constants/contracts/constant_variables.sol"""
+    app = harness.compile_and_deploy("constants/contracts/constant_variables.sol")
     # constructor-only test — deployment succeeding is the assertion
 
 def test_constants_at_file_level_referencing(harness):
-    """constants/constants_at_file_level_referencing.sol"""
-    app = harness.compile_and_deploy("constants/constants_at_file_level_referencing.sol")
+    """constants/contracts/constants_at_file_level_referencing.sol"""
+    app = harness.compile_and_deploy("constants/contracts/constants_at_file_level_referencing.sol")
     # f() -> 0x20, 3, "\x03\x01\x02"
     r = harness.call(app, "f()")
     assert r.abi_return == '\\x03\\x01\\x02'
@@ -82,29 +82,29 @@ def test_constants_at_file_level_referencing(harness):
     assert r.abi_return == '\\x03\\x01\\x02'
 
 def test_consteval_array_length(harness):
-    """constants/consteval_array_length.sol"""
-    app = harness.compile_and_deploy("constants/consteval_array_length.sol", via_yul_behavior=True)
+    """constants/contracts/consteval_array_length.sol"""
+    app = harness.compile_and_deploy("constants/contracts/consteval_array_length.sol", via_yul_behavior=True)
     # f() -> 0x0a, 0x0a
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (10, 10)
 
 def test_function_unreferenced(harness):
-    """constants/function_unreferenced.sol"""
-    app = harness.compile_and_deploy("constants/function_unreferenced.sol")
+    """constants/contracts/function_unreferenced.sol"""
+    app = harness.compile_and_deploy("constants/contracts/function_unreferenced.sol")
     # f() -> 0xe2179b8e00000000000000000000000000000000000000000000000000000000
     r = harness.call(app, "f()")
     assert r.abi_return == 102264414861304285884729579275374176073311626045629144087797787832582884294656
 
 def test_same_constants_different_files(harness):
-    """constants/same_constants_different_files.sol"""
-    app = harness.compile_and_deploy("constants/same_constants_different_files.sol")
+    """constants/contracts/same_constants_different_files.sol"""
+    app = harness.compile_and_deploy("constants/contracts/same_constants_different_files.sol")
     # f() -> 0x0d, 0x59, 0x59, 0x59
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (13, 89, 89, 89)
 
 def test_simple_constant_variables_test(harness):
-    """constants/simple_constant_variables_test.sol"""
-    app = harness.compile_and_deploy("constants/simple_constant_variables_test.sol")
+    """constants/contracts/simple_constant_variables_test.sol"""
+    app = harness.compile_and_deploy("constants/contracts/simple_constant_variables_test.sol")
     # getX() -> 56
     r = harness.call(app, "getX()")
     assert r.abi_return == 56

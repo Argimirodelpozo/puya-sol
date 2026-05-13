@@ -11,8 +11,8 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_abi_encode_calldata_slice(harness):
-    """abiEncoderV2/abi_encode_calldata_slice.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/abi_encode_calldata_slice.sol")
+    """abiEncoderV2/contracts/abi_encode_calldata_slice.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/abi_encode_calldata_slice.sol")
     # test_bytes() ->
     r = harness.call(app, "test_bytes()")
     # (void return — call succeeding is the assertion)
@@ -21,23 +21,23 @@ def test_abi_encode_calldata_slice(harness):
     # (void return — call succeeding is the assertion)
 
 def test_abi_encode_empty_string_v2(harness):
-    """abiEncoderV2/abi_encode_empty_string_v2.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/abi_encode_empty_string_v2.sol")
+    """abiEncoderV2/contracts/abi_encode_empty_string_v2.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/abi_encode_empty_string_v2.sol")
     # f() -> 0x40, 0xa0, 0x40, 0x20, 0x0, 0x0
     r = harness.call(app, "f()")
     # TODO: verify structural decoding matches expected: 64, 160, 64, 32, 0, 0
     assert not r.reverted
 
 def test_abi_encode_rational_v2(harness):
-    """abiEncoderV2/abi_encode_rational_v2.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/abi_encode_rational_v2.sol")
+    """abiEncoderV2/contracts/abi_encode_rational_v2.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/abi_encode_rational_v2.sol")
     # f() -> 0x20, 0x40, 0x1, -2
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (32, 64, 1, -2)
 
 def test_abi_encode_v2(harness):
-    """abiEncoderV2/abi_encode_v2.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/abi_encode_v2.sol")
+    """abiEncoderV2/contracts/abi_encode_v2.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/abi_encode_v2.sol")
     # f0() -> 0x20, 0x0
     r = harness.call(app, "f0()")
     assert tuple(r.abi_return) == (32, 0)
@@ -58,30 +58,30 @@ def test_abi_encode_v2(harness):
     assert not r.reverted
 
 def test_abi_encode_v2_in_function_inherited_in_v1_contract(harness):
-    """abiEncoderV2/abi_encode_v2_in_function_inherited_in_v1_contract.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/abi_encode_v2_in_function_inherited_in_v1_contract.sol")
+    """abiEncoderV2/contracts/abi_encode_v2_in_function_inherited_in_v1_contract.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/abi_encode_v2_in_function_inherited_in_v1_contract.sol")
     # test() -> 77
     r = harness.call(app, "test()")
     assert r.abi_return == 77
 
 def test_abi_encode_v2_in_modifier_used_in_v1_contract(harness):
-    """abiEncoderV2/abi_encode_v2_in_modifier_used_in_v1_contract.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/abi_encode_v2_in_modifier_used_in_v1_contract.sol")
+    """abiEncoderV2/contracts/abi_encode_v2_in_modifier_used_in_v1_contract.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/abi_encode_v2_in_modifier_used_in_v1_contract.sol")
     # test() -> 5, 10
     r = harness.call(app, "test()")
     assert tuple(r.abi_return) == (5, 10)
 
 def test_abi_encoder_v2_head_overflow_with_static_array_cleanup_bug(harness):
-    """abiEncoderV2/abi_encoder_v2_head_overflow_with_static_array_cleanup_bug.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/abi_encoder_v2_head_overflow_with_static_array_cleanup_bug.sol")
+    """abiEncoderV2/contracts/abi_encoder_v2_head_overflow_with_static_array_cleanup_bug.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/abi_encoder_v2_head_overflow_with_static_array_cleanup_bug.sol")
     # f(bool,(bytes,uint256[3]),bytes32[2]): 1, 0x80, "a", "b", 0x80, 11, 12, 13, 4, "abcd" -> 1, 0x80, "a", "b", 0x80, 11, 12, 13, 4, "abcd"
     r = harness.call(app, "f(bool,(bytes,uint256[3]),bytes32[2])", 1, 128, bytes.fromhex('61'), bytes.fromhex('62'), 128, 11, 12, 13, 4, bytes.fromhex('61626364'))
     # TODO: verify expected: 1 | 0x80 | "a" | "b" | 0x80 | 11 | 12 | 13 | 4 | "abcd"
     assert not r.reverted
 
 def test_bool_out_of_bounds(harness):
-    """abiEncoderV2/bool_out_of_bounds.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/bool_out_of_bounds.sol")
+    """abiEncoderV2/contracts/bool_out_of_bounds.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/bool_out_of_bounds.sol")
     # f(bool): true -> true
     r = harness.call(app, "f(bool)", True)
     assert r.abi_return is True
@@ -96,8 +96,8 @@ def test_bool_out_of_bounds(harness):
     assert r.reverted
 
 def test_byte_arrays(harness):
-    """abiEncoderV2/byte_arrays.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/byte_arrays.sol")
+    """abiEncoderV2/contracts/byte_arrays.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/byte_arrays.sol")
     # f(uint256,bytes,uint256): 6, 0x60, 9, 7, "abcdefg" -> 6, 7, "d", 9
     r = harness.call(app, "f(uint256,bytes,uint256)", 6, 96, 9, 7, bytes.fromhex('61626364656667'))
     # TODO: verify expected: 6 | 7 | "d" | 9
@@ -108,8 +108,8 @@ def test_byte_arrays(harness):
     assert not r.reverted
 
 def test_calldata_array(harness):
-    """abiEncoderV2/calldata_array.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_array.sol")
+    """abiEncoderV2/contracts/calldata_array.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array.sol")
     # f(uint256[][1]): 32, 32, 0 -> true
     r = harness.call(app, "f(uint256[][1])", 32, 32, 0)
     assert r.abi_return is True
@@ -121,8 +121,8 @@ def test_calldata_array(harness):
     assert r.abi_return is True
 
 def test_calldata_array_dynamic(harness):
-    """abiEncoderV2/calldata_array_dynamic.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_array_dynamic.sol")
+    """abiEncoderV2/contracts/calldata_array_dynamic.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_dynamic.sol")
     # f(uint256[]): 32, 3, 23, 42, 87 -> 32, 160, 32, 3, 23, 42, 87
     r = harness.call(app, "f(uint256[])", 32, 3, 23, 42, 87)
     # TODO: verify structural decoding matches expected: 32, 160, 32, 3, 23, 42, 87
@@ -155,8 +155,8 @@ def test_calldata_array_dynamic(harness):
     assert not r.reverted
 
 def test_calldata_array_dynamic_index_access(harness):
-    """abiEncoderV2/calldata_array_dynamic_index_access.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_array_dynamic_index_access.sol")
+    """abiEncoderV2/contracts/calldata_array_dynamic_index_access.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_dynamic_index_access.sol")
     # f(uint256[]): 32, 3, 42, 23, 87 -> 32, 160, 32, 3, 42, 23, 87
     r = harness.call(app, "f(uint256[])", 32, 3, 42, 23, 87)
     # TODO: verify structural decoding matches expected: 32, 160, 32, 3, 42, 23, 87
@@ -195,8 +195,8 @@ def test_calldata_array_dynamic_index_access(harness):
     assert not r.reverted
 
 def test_calldata_array_dynamic_static_dynamic(harness):
-    """abiEncoderV2/calldata_array_dynamic_static_dynamic.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_array_dynamic_static_dynamic.sol")
+    """abiEncoderV2/contracts/calldata_array_dynamic_static_dynamic.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_dynamic_static_dynamic.sol")
     # g() -> 32, 196, hex"eccb829a", 32, 1, 32, 32, 1, 42, hex"00000000000000000000000000000000000000000000000000000000"
     r = harness.call(app, "g()")
     # TODO: verify expected: 32 | 196 | hex"eccb829a" | 32 | 1 | 32 | 32 | 1 | 42 | hex"00000000000000000000000000000000000000000000000000000000"
@@ -207,15 +207,15 @@ def test_calldata_array_dynamic_static_dynamic(harness):
     assert not r.reverted
 
 def test_calldata_array_dynamic_static_in_library(harness):
-    """abiEncoderV2/calldata_array_dynamic_static_in_library.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_array_dynamic_static_in_library.sol")
+    """abiEncoderV2/contracts/calldata_array_dynamic_static_in_library.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_dynamic_static_in_library.sol")
     # f(uint256[],uint256[1]): 0x40, 0xff, 1, 0xffff -> 0x40, 0xff, 0x01, 0xffff
     r = harness.call(app, "f(uint256[],uint256[1])", 64, 255, 1, 65535)
     assert tuple(r.abi_return) == (64, 255, 1, 65535)
 
 def test_calldata_array_dynamic_static_short_decode(harness):
-    """abiEncoderV2/calldata_array_dynamic_static_short_decode.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_array_dynamic_static_short_decode.sol")
+    """abiEncoderV2/contracts/calldata_array_dynamic_static_short_decode.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_dynamic_static_short_decode.sol")
     # f(uint256[][2][]): 0x20, 0x01, 0x20, 0x40, 0x60, 0x00, 0x00 -> 23 # this is the common encoding for x.length == 1 && x[0][0].length == 0 && x[0][1].length == 0 #
     r = harness.call(app, "f(uint256[][2][])", 32, 1, 32, 64, 96, 0, 0)
     # TODO: verify expected: 23 # this is the common encoding for x.length == 1 && x[0][0].length == 0 && x[0][1].length == 0 #
@@ -229,8 +229,8 @@ def test_calldata_array_dynamic_static_short_decode(harness):
     assert r.reverted
 
 def test_calldata_array_dynamic_static_short_reencode(harness):
-    """abiEncoderV2/calldata_array_dynamic_static_short_reencode.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_array_dynamic_static_short_reencode.sol")
+    """abiEncoderV2/contracts/calldata_array_dynamic_static_short_reencode.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_dynamic_static_short_reencode.sol")
     # g(uint256[][2][]): 0x20, 0x01, 0x20, 0x40, 0x60, 0x00, 0x00 -> 42
     r = harness.call(app, "g(uint256[][2][])", 32, 1, 32, 64, 96, 0, 0)
     assert r.abi_return == 42
@@ -242,8 +242,8 @@ def test_calldata_array_dynamic_static_short_reencode(harness):
     assert r.reverted
 
 def test_calldata_array_function_types(harness):
-    """abiEncoderV2/calldata_array_function_types.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_array_function_types.sol")
+    """abiEncoderV2/contracts/calldata_array_function_types.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_function_types.sol")
     # g(bool): false -> 23, 37, 71
     r = harness.call(app, "g(bool)", False)
     assert tuple(r.abi_return) == (23, 37, 71)
@@ -252,8 +252,8 @@ def test_calldata_array_function_types(harness):
     assert tuple(r.abi_return) == (23, 37, 71)
 
 def test_calldata_array_multi_dynamic(harness):
-    """abiEncoderV2/calldata_array_multi_dynamic.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_array_multi_dynamic.sol")
+    """abiEncoderV2/contracts/calldata_array_multi_dynamic.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_multi_dynamic.sol")
     # f(uint256[][]): 0x20, 2, 0x40, 0xC0, 3, 13, 17, 23, 4, 27, 31, 37, 41 -> 32, 416, 32, 2, 64, 192, 3, 13, 17, 23, 4, 27, 31, 37, 41
     r = harness.call(app, "f(uint256[][])", 32, 2, 64, 192, 3, 13, 17, 23, 4, 27, 31, 37, 41)
     # TODO: verify structural decoding matches expected: 32, 416, 32, 2, 64, 192, 3, 13, 17, 23, 4, 27, 31, 37, 41
@@ -280,8 +280,8 @@ def test_calldata_array_multi_dynamic(harness):
     assert not r.reverted
 
 def test_calldata_array_short(harness):
-    """abiEncoderV2/calldata_array_short.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_array_short.sol")
+    """abiEncoderV2/contracts/calldata_array_short.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_short.sol")
     # f(uint256[]): 0x20, 0 ->
     r = harness.call(app, "f(uint256[])", 32, 0)
     # (void return — call succeeding is the assertion)
@@ -293,8 +293,8 @@ def test_calldata_array_short(harness):
     assert r.reverted
 
 def test_calldata_array_short_no_revert_string(harness):
-    """abiEncoderV2/calldata_array_short_no_revert_string.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_array_short_no_revert_string.sol")
+    """abiEncoderV2/contracts/calldata_array_short_no_revert_string.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_short_no_revert_string.sol")
     # f(uint256[]): 0x20, 0 ->
     r = harness.call(app, "f(uint256[])", 32, 0)
     # (void return — call succeeding is the assertion)
@@ -306,8 +306,8 @@ def test_calldata_array_short_no_revert_string(harness):
     assert r.reverted
 
 def test_calldata_array_static(harness):
-    """abiEncoderV2/calldata_array_static.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_array_static.sol")
+    """abiEncoderV2/contracts/calldata_array_static.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_static.sol")
     # f(uint256[3]): 23, 42, 87 -> 32, 96, 23, 42, 87
     r = harness.call(app, "f(uint256[3])", 23, 42, 87)
     # TODO: verify structural decoding matches expected: 32, 96, 23, 42, 87
@@ -332,8 +332,8 @@ def test_calldata_array_static(harness):
     assert r.reverted
 
 def test_calldata_array_static_dynamic_static(harness):
-    """abiEncoderV2/calldata_array_static_dynamic_static.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_array_static_dynamic_static.sol")
+    """abiEncoderV2/contracts/calldata_array_static_dynamic_static.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_static_dynamic_static.sol")
     # g() -> 32, 132, hex"15cfcc01", 32, 32, 1, 42, hex"00000000000000000000000000000000000000000000000000000000"
     r = harness.call(app, "g()")
     # TODO: verify expected: 32 | 132 | hex"15cfcc01" | 32 | 32 | 1 | 42 | hex"00000000000000000000000000000000000000000000000000000000"
@@ -352,8 +352,8 @@ def test_calldata_array_static_dynamic_static(harness):
     assert not r.reverted
 
 def test_calldata_array_static_index_access(harness):
-    """abiEncoderV2/calldata_array_static_index_access.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_array_static_index_access.sol")
+    """abiEncoderV2/contracts/calldata_array_static_index_access.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_static_index_access.sol")
     # f(uint256[3]): 23, 42, 87 -> 32, 96, 23, 42, 87
     r = harness.call(app, "f(uint256[3])", 23, 42, 87)
     # TODO: verify structural decoding matches expected: 32, 96, 23, 42, 87
@@ -380,8 +380,8 @@ def test_calldata_array_static_index_access(harness):
     assert not r.reverted
 
 def test_calldata_array_struct_dynamic(harness):
-    """abiEncoderV2/calldata_array_struct_dynamic.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_array_struct_dynamic.sol")
+    """abiEncoderV2/contracts/calldata_array_struct_dynamic.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_struct_dynamic.sol")
     # f((uint256[])[]): 32, 1, 32, 32, 3, 17, 42, 23 -> 32, 256, 32, 1, 32, 32, 3, 17, 42, 23
     r = harness.call(app, "f((uint256[])[])", 32, 1, 32, 32, 3, 17, 42, 23)
     # TODO: verify structural decoding matches expected: 32, 256, 32, 1, 32, 32, 3, 17, 42, 23
@@ -392,8 +392,8 @@ def test_calldata_array_struct_dynamic(harness):
     assert not r.reverted
 
 def test_calldata_array_two_dynamic(harness):
-    """abiEncoderV2/calldata_array_two_dynamic.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_array_two_dynamic.sol")
+    """abiEncoderV2/contracts/calldata_array_two_dynamic.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_two_dynamic.sol")
     # f(uint256[],uint256[],bool): 0x60, 0xE0, true, 3, 23, 42, 87, 2, 51, 72 -> 32, 160, 0x20, 3, 23, 42, 87
     r = harness.call(app, "f(uint256[],uint256[],bool)", 96, 224, True, 3, 23, 42, 87, 2, 51, 72)
     # TODO: verify structural decoding matches expected: 32, 160, 32, 3, 23, 42, 87
@@ -412,8 +412,8 @@ def test_calldata_array_two_dynamic(harness):
     assert not r.reverted
 
 def test_calldata_array_two_static(harness):
-    """abiEncoderV2/calldata_array_two_static.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_array_two_static.sol")
+    """abiEncoderV2/contracts/calldata_array_two_static.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_two_static.sol")
     # f(uint256[3],uint256[2],bool): 23, 42, 87, 51, 72, true -> 32, 96, 23, 42, 87
     r = harness.call(app, "f(uint256[3],uint256[2],bool)", 23, 42, 87, 51, 72, True)
     # TODO: verify structural decoding matches expected: 32, 96, 23, 42, 87
@@ -430,8 +430,8 @@ def test_calldata_array_two_static(harness):
     assert tuple(r.abi_return) == (32, 64, 51, 72)
 
 def test_calldata_dynamic_array_to_memory(harness):
-    """abiEncoderV2/calldata_dynamic_array_to_memory.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_dynamic_array_to_memory.sol")
+    """abiEncoderV2/contracts/calldata_dynamic_array_to_memory.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_dynamic_array_to_memory.sol")
     # f(uint256[][]): 0x20, 2, 0x40, 0xa0, 2, 5, 6, 2, 7, 8 -> 0x20, 2, 0x40, 0xa0, 2, 5, 6, 2, 7, 8
     r = harness.call(app, "f(uint256[][])", 32, 2, 64, 160, 2, 5, 6, 2, 7, 8)
     # TODO: verify structural decoding matches expected: 32, 2, 64, 160, 2, 5, 6, 2, 7, 8
@@ -463,8 +463,8 @@ def test_calldata_dynamic_array_to_memory(harness):
     assert r.reverted
 
 def test_calldata_nested_array_reencode(harness):
-    """abiEncoderV2/calldata_nested_array_reencode.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_nested_array_reencode.sol")
+    """abiEncoderV2/contracts/calldata_nested_array_reencode.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_nested_array_reencode.sol")
     # f(uint256[][]): 0x20, 1, 0x20, 0 -> 0x20, 0x80, 0x20, 1, 0x20, 0
     r = harness.call(app, "f(uint256[][])", 32, 1, 32, 0)
     # TODO: verify structural decoding matches expected: 32, 128, 32, 1, 32, 0
@@ -516,8 +516,8 @@ def test_calldata_nested_array_reencode(harness):
     assert r.reverted
 
 def test_calldata_nested_array_static_reencode(harness):
-    """abiEncoderV2/calldata_nested_array_static_reencode.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_nested_array_static_reencode.sol")
+    """abiEncoderV2/contracts/calldata_nested_array_static_reencode.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_nested_array_static_reencode.sol")
     # f(uint256[3][]): 0x20, 1, 0x01 -> FAILURE
     r = harness.call(app, "f(uint256[3][])", 32, 1, 1, expect_revert=True)
     assert r.reverted
@@ -553,8 +553,8 @@ def test_calldata_nested_array_static_reencode(harness):
     # (void return — call succeeding is the assertion)
 
 def test_calldata_overlapped_dynamic_arrays(harness):
-    """abiEncoderV2/calldata_overlapped_dynamic_arrays.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_overlapped_dynamic_arrays.sol")
+    """abiEncoderV2/contracts/calldata_overlapped_dynamic_arrays.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_overlapped_dynamic_arrays.sol")
     # f_memory(uint256[],uint256[2]): 0x20, 1, 2 -> 0x60, 0x01, 0x02, 1, 2
     r = harness.call(app, "f_memory(uint256[],uint256[2])", 32, 1, 2)
     # TODO: verify structural decoding matches expected: 96, 1, 2, 1, 2
@@ -599,8 +599,8 @@ def test_calldata_overlapped_dynamic_arrays(harness):
     assert r.reverted
 
 def test_calldata_overlapped_nested_dynamic_arrays(harness):
-    """abiEncoderV2/calldata_overlapped_nested_dynamic_arrays.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_overlapped_nested_dynamic_arrays.sol")
+    """abiEncoderV2/contracts/calldata_overlapped_nested_dynamic_arrays.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_overlapped_nested_dynamic_arrays.sol")
     # f_memory(uint256[][]): 0x20, 2, 0x40, 0x40, 2, 1, 2 -> 0x20, 2, 0x40, 0xa0, 2, 1, 2, 2, 1, 2
     r = harness.call(app, "f_memory(uint256[][])", 32, 2, 64, 64, 2, 1, 2)
     # TODO: verify structural decoding matches expected: 32, 2, 64, 160, 2, 1, 2, 2, 1, 2
@@ -654,8 +654,8 @@ def test_calldata_overlapped_nested_dynamic_arrays(harness):
     assert r.reverted
 
 def test_calldata_struct_array_reencode(harness):
-    """abiEncoderV2/calldata_struct_array_reencode.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_struct_array_reencode.sol")
+    """abiEncoderV2/contracts/calldata_struct_array_reencode.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_struct_array_reencode.sol")
     # f((uint256[])): 0x20, 0x20, 0 -> 0x20, 0x60, 0x20, 0x20, 0
     r = harness.call(app, "f((uint256[]))", 32, 32, 0)
     # TODO: verify structural decoding matches expected: 32, 96, 32, 32, 0
@@ -716,8 +716,8 @@ def test_calldata_struct_array_reencode(harness):
     assert r.reverted
 
 def test_calldata_struct_dynamic(harness):
-    """abiEncoderV2/calldata_struct_dynamic.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_struct_dynamic.sol")
+    """abiEncoderV2/contracts/calldata_struct_dynamic.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_struct_dynamic.sol")
     # f((uint256[])): 0x20, 0x20, 3, 42, 23, 17 -> 32, 192, 0x20, 0x20, 3, 42, 23, 17
     r = harness.call(app, "f((uint256[]))", 32, 32, 3, 42, 23, 17)
     # TODO: verify structural decoding matches expected: 32, 192, 32, 32, 3, 42, 23, 17
@@ -728,15 +728,15 @@ def test_calldata_struct_dynamic(harness):
     assert not r.reverted
 
 def test_calldata_struct_member_offset(harness):
-    """abiEncoderV2/calldata_struct_member_offset.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_struct_member_offset.sol")
+    """abiEncoderV2/contracts/calldata_struct_member_offset.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_struct_member_offset.sol")
     # f() -> 11, 11
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (11, 11)
 
 def test_calldata_struct_simple(harness):
-    """abiEncoderV2/calldata_struct_simple.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_struct_simple.sol")
+    """abiEncoderV2/contracts/calldata_struct_simple.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_struct_simple.sol")
     # f((uint256)): 3 -> 32, 32, 3
     r = harness.call(app, "f((uint256))", 3)
     assert tuple(r.abi_return) == (32, 32, 3)
@@ -745,8 +745,8 @@ def test_calldata_struct_simple(harness):
     assert tuple(r.abi_return) == (32, 32, 3)
 
 def test_calldata_three_dimensional_dynamic_array_index_access(harness):
-    """abiEncoderV2/calldata_three_dimensional_dynamic_array_index_access.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_three_dimensional_dynamic_array_index_access.sol")
+    """abiEncoderV2/contracts/calldata_three_dimensional_dynamic_array_index_access.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_three_dimensional_dynamic_array_index_access.sol")
     # f(uint256[][],uint256,uint256): 0x60, 0, 0, 2, 0x40, 0x80, 1, 7, 1, 8 -> 0x20, 0x20, 7
     r = harness.call(app, "f(uint256[][],uint256,uint256)", 96, 0, 0, 2, 64, 128, 1, 7, 1, 8)
     assert tuple(r.abi_return) == (32, 32, 7)
@@ -788,8 +788,8 @@ def test_calldata_three_dimensional_dynamic_array_index_access(harness):
     assert r.reverted
 
 def test_calldata_with_garbage(harness):
-    """abiEncoderV2/calldata_with_garbage.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/calldata_with_garbage.sol")
+    """abiEncoderV2/contracts/calldata_with_garbage.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_with_garbage.sol")
     # f_memory(uint256[]): 0x80, 9, 9, 9, 0 -> 0x20, 0
     r = harness.call(app, "f_memory(uint256[])", 128, 9, 9, 9, 0)
     assert tuple(r.abi_return) == (32, 0)
@@ -871,15 +871,15 @@ def test_calldata_with_garbage(harness):
     assert r.reverted
 
 def test_dynamic_arrays(harness):
-    """abiEncoderV2/dynamic_arrays.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/dynamic_arrays.sol")
+    """abiEncoderV2/contracts/dynamic_arrays.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/dynamic_arrays.sol")
     # f(uint256,uint16[],uint256): 6, 0x60, 9, 7, 11, 12, 13, 14, 15, 16, 17 -> 7, 17, 9
     r = harness.call(app, "f(uint256,uint16[],uint256)", 6, 96, 9, 7, 11, 12, 13, 14, 15, 16, 17)
     assert tuple(r.abi_return) == (7, 17, 9)
 
 def test_dynamic_nested_arrays(harness):
-    """abiEncoderV2/dynamic_nested_arrays.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/dynamic_nested_arrays.sol")
+    """abiEncoderV2/contracts/dynamic_nested_arrays.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/dynamic_nested_arrays.sol")
     # test() -> 12, 3, 4, 0x66, 5, 0x85, 13
     r = harness.call(app, "test()")
     # TODO: verify structural decoding matches expected: 12, 3, 4, 102, 5, 133, 13
@@ -890,8 +890,8 @@ def test_dynamic_nested_arrays(harness):
     assert not r.reverted
 
 def test_enums(harness):
-    """abiEncoderV2/enums.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/enums.sol")
+    """abiEncoderV2/contracts/enums.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/enums.sol")
     # f(uint8): 0 -> 0
     r = harness.call(app, "f(uint8)", 0)
     assert r.abi_return == 0
@@ -906,8 +906,8 @@ def test_enums(harness):
     assert r.reverted
 
 def test_memory_dynamic_array_and_calldata_bytes(harness):
-    """abiEncoderV2/memory_dynamic_array_and_calldata_bytes.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/memory_dynamic_array_and_calldata_bytes.sol")
+    """abiEncoderV2/contracts/memory_dynamic_array_and_calldata_bytes.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/memory_dynamic_array_and_calldata_bytes.sol")
     # f(uint256[],bytes): 0x40, 0x80, 1, 0xFF, 6, "123456" -> 0x20, 0xc0, 0x40, 0x80, 1, 0xff, 6, "123456"
     r = harness.call(app, "f(uint256[],bytes)", 64, 128, 1, 255, 6, bytes.fromhex('313233343536'))
     # TODO: verify expected: 0x20 | 0xc0 | 0x40 | 0x80 | 1 | 0xff | 6 | "123456"
@@ -918,8 +918,8 @@ def test_memory_dynamic_array_and_calldata_bytes(harness):
     assert not r.reverted
 
 def test_memory_dynamic_array_and_calldata_static_array(harness):
-    """abiEncoderV2/memory_dynamic_array_and_calldata_static_array.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/memory_dynamic_array_and_calldata_static_array.sol")
+    """abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol")
     # f(uint256[],uint256[1]): 0x40, 0xff, 1, 0xffff -> 0x20, 0x80, 0x40, 0xff, 1, 0xffff
     r = harness.call(app, "f(uint256[],uint256[1])", 64, 255, 1, 65535)
     # TODO: verify structural decoding matches expected: 32, 128, 64, 255, 1, 65535
@@ -933,16 +933,16 @@ def test_memory_dynamic_array_and_calldata_static_array(harness):
     assert tuple(r.abi_return) == (64, 255, 1, 65535)
 
 def test_memory_params_in_external_function(harness):
-    """abiEncoderV2/memory_params_in_external_function.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/memory_params_in_external_function.sol")
+    """abiEncoderV2/contracts/memory_params_in_external_function.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/memory_params_in_external_function.sol")
     # g() -> 3, 0x6200000000000000000000000000000000000000000000000000000000000000, 3, 0x6600000000000000000000000000000000000000000000000000000000000000, 4, 7
     r = harness.call(app, "g()")
     # TODO: verify structural decoding matches expected: 3, 44326659161160106060585767698638339725079916004815528421354856378029244940288, 3, 46135910555493171614079064339399088285287259515216162234471381128152887590912, 4, 7
     assert not r.reverted
 
 def test_storage_array_encoding(harness):
-    """abiEncoderV2/storage_array_encoding.sol"""
-    app = harness.compile_and_deploy("abiEncoderV2/storage_array_encoding.sol")
+    """abiEncoderV2/contracts/storage_array_encoding.sol"""
+    app = harness.compile_and_deploy("abiEncoderV2/contracts/storage_array_encoding.sol")
     # h(uint256[2][]): 0x20, 3, 123, 124, 223, 224, 323, 324 -> 32, 256, 0x20, 3, 123, 124, 223, 224, 323, 324
     r = harness.call(app, "h(uint256[2][])", 32, 3, 123, 124, 223, 224, 323, 324)
     # TODO: verify structural decoding matches expected: 32, 256, 32, 3, 123, 124, 223, 224, 323, 324

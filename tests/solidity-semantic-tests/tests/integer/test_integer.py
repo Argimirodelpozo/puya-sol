@@ -11,15 +11,15 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_basic(harness):
-    """integer/basic.sol"""
-    app = harness.compile_and_deploy("integer/basic.sol")
+    """integer/contracts/basic.sol"""
+    app = harness.compile_and_deploy("integer/contracts/basic.sol")
     # basic() -> true
     r = harness.call(app, "basic()")
     assert r.abi_return is True
 
 def test_int(harness):
-    """integer/int.sol"""
-    app = harness.compile_and_deploy("integer/int.sol")
+    """integer/contracts/int.sol"""
+    app = harness.compile_and_deploy("integer/contracts/int.sol")
     # intMinA() -> true
     r = harness.call(app, "intMinA()")
     assert r.abi_return is True
@@ -46,22 +46,22 @@ def test_int(harness):
     assert r.abi_return is True
 
 def test_many_local_variables(harness):
-    """integer/many_local_variables.sol"""
-    app = harness.compile_and_deploy("integer/many_local_variables.sol")
+    """integer/contracts/many_local_variables.sol"""
+    app = harness.compile_and_deploy("integer/contracts/many_local_variables.sol")
     # run(uint256,uint256,uint256): 0x1000, 0x10000, 0x100000 -> 0x121121
     r = harness.call(app, "run(uint256,uint256,uint256)", 4096, 65536, 1048576)
     assert r.abi_return == 1184033
 
 def test_small_signed_types(harness):
-    """integer/small_signed_types.sol"""
-    app = harness.compile_and_deploy("integer/small_signed_types.sol")
+    """integer/contracts/small_signed_types.sol"""
+    app = harness.compile_and_deploy("integer/contracts/small_signed_types.sol")
     # run() -> 200
     r = harness.call(app, "run()")
     assert r.abi_return == 200
 
 def test_uint(harness):
-    """integer/uint.sol"""
-    app = harness.compile_and_deploy("integer/uint.sol")
+    """integer/contracts/uint.sol"""
+    app = harness.compile_and_deploy("integer/contracts/uint.sol")
     # uintMinA() -> true
     r = harness.call(app, "uintMinA()")
     assert r.abi_return is True

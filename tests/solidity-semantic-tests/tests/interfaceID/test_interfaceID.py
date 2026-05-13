@@ -11,8 +11,8 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_homer(harness):
-    """interfaceID/homer.sol"""
-    app = harness.compile_and_deploy("interfaceID/homer.sol")
+    """interfaceID/contracts/homer.sol"""
+    app = harness.compile_and_deploy("interfaceID/contracts/homer.sol")
     # supportsInterface(bytes4): left(0x01ffc9a0) -> false
     r = harness.call(app, "supportsInterface(bytes4)", 0x1ffc9a000000000000000000000000000000000000000000000000000000000)
     assert r.abi_return is False
@@ -27,8 +27,8 @@ def test_homer(harness):
     assert r.abi_return is False
 
 def test_homer_interfaceId(harness):
-    """interfaceID/homer_interfaceId.sol"""
-    app = harness.compile_and_deploy("interfaceID/homer_interfaceId.sol")
+    """interfaceID/contracts/homer_interfaceId.sol"""
+    app = harness.compile_and_deploy("interfaceID/contracts/homer_interfaceId.sol")
     # supportsInterface(bytes4): left(0x01ffc9a0) -> false
     r = harness.call(app, "supportsInterface(bytes4)", 0x1ffc9a000000000000000000000000000000000000000000000000000000000)
     assert r.abi_return is False
@@ -43,8 +43,8 @@ def test_homer_interfaceId(harness):
     assert r.abi_return is False
 
 def test_interfaceId_events(harness):
-    """interfaceID/interfaceId_events.sol"""
-    app = harness.compile_and_deploy("interfaceID/interfaceId_events.sol")
+    """interfaceID/contracts/interfaceId_events.sol"""
+    app = harness.compile_and_deploy("interfaceID/contracts/interfaceId_events.sol")
     # hello_world() -> left(0xc6be8b58)
     r = harness.call(app, "hello_world()")
     # TODO: verify expected: left(0xc6be8b58)
@@ -55,8 +55,8 @@ def test_interfaceId_events(harness):
     assert not r.reverted
 
 def test_interfaces(harness):
-    """interfaceID/interfaces.sol"""
-    app = harness.compile_and_deploy("interfaceID/interfaces.sol")
+    """interfaceID/contracts/interfaces.sol"""
+    app = harness.compile_and_deploy("interfaceID/contracts/interfaces.sol")
     # hello() -> left(0x19ff1d21)
     r = harness.call(app, "hello()")
     # TODO: verify expected: left(0x19ff1d21)
@@ -91,8 +91,8 @@ def test_interfaces(harness):
     assert not r.reverted
 
 def test_lisa(harness):
-    """interfaceID/lisa.sol"""
-    app = harness.compile_and_deploy("interfaceID/lisa.sol")
+    """interfaceID/contracts/lisa.sol"""
+    app = harness.compile_and_deploy("interfaceID/contracts/lisa.sol")
     # supportsInterface(bytes4): left(0x01ffc9a0) -> false
     r = harness.call(app, "supportsInterface(bytes4)", 0x1ffc9a000000000000000000000000000000000000000000000000000000000)
     assert r.abi_return is False
@@ -107,8 +107,8 @@ def test_lisa(harness):
     assert r.abi_return is False
 
 def test_lisa_interfaceId(harness):
-    """interfaceID/lisa_interfaceId.sol"""
-    app = harness.compile_and_deploy("interfaceID/lisa_interfaceId.sol")
+    """interfaceID/contracts/lisa_interfaceId.sol"""
+    app = harness.compile_and_deploy("interfaceID/contracts/lisa_interfaceId.sol")
     # supportsInterface(bytes4): left(0x01ffc9a0) -> false
     r = harness.call(app, "supportsInterface(bytes4)", 0x1ffc9a000000000000000000000000000000000000000000000000000000000)
     assert r.abi_return is False

@@ -11,8 +11,8 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_empty_calldata_calls_receive(harness):
-    """receive/empty_calldata_calls_receive.sol"""
-    app = harness.compile_and_deploy("receive/empty_calldata_calls_receive.sol")
+    """receive/contracts/empty_calldata_calls_receive.sol"""
+    app = harness.compile_and_deploy("receive/contracts/empty_calldata_calls_receive.sol")
     # x() -> 0
     r = harness.call(app, "x()")
     assert r.abi_return == 0
@@ -37,8 +37,8 @@ def test_empty_calldata_calls_receive(harness):
     assert r.reverted
 
 def test_ether_and_data(harness):
-    """receive/ether_and_data.sol"""
-    app = harness.compile_and_deploy("receive/ether_and_data.sol")
+    """receive/contracts/ether_and_data.sol"""
+    app = harness.compile_and_deploy("receive/contracts/ether_and_data.sol")
     # (), 1 ether
     pytest.xfail("fallback() dispatch not yet implemented")
     # (), 1 ether: 1 -> FAILURE
@@ -46,8 +46,8 @@ def test_ether_and_data(harness):
     assert r.reverted
 
 def test_inherited(harness):
-    """receive/inherited.sol"""
-    app = harness.compile_and_deploy("receive/inherited.sol")
+    """receive/contracts/inherited.sol"""
+    app = harness.compile_and_deploy("receive/contracts/inherited.sol")
     # getData() -> 0
     r = harness.call(app, "getData()")
     assert r.abi_return == 0

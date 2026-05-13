@@ -11,8 +11,8 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_array_multiple_local_vars(harness):
-    """functionCall/array_multiple_local_vars.sol"""
-    app = harness.compile_and_deploy("functionCall/array_multiple_local_vars.sol")
+    """functionCall/contracts/array_multiple_local_vars.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/array_multiple_local_vars.sol")
     # f(uint256[]): 32, 3, 1000, 1, 2 -> 3
     r = harness.call(app, "f(uint256[])", 32, 3, 1000, 1, 2)
     assert r.abi_return == 3
@@ -24,22 +24,22 @@ def test_array_multiple_local_vars(harness):
     assert r.abi_return == 55
 
 def test_bare_call_no_returndatacopy(harness):
-    """functionCall/bare_call_no_returndatacopy.sol"""
-    app = harness.compile_and_deploy("functionCall/bare_call_no_returndatacopy.sol")
+    """functionCall/contracts/bare_call_no_returndatacopy.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/bare_call_no_returndatacopy.sol")
     # f() -> true
     r = harness.call(app, "f()")
     assert r.abi_return is True
 
 def test_call_attached_library_function_on_function(harness):
-    """functionCall/call_attached_library_function_on_function.sol"""
-    app = harness.compile_and_deploy("functionCall/call_attached_library_function_on_function.sol")
+    """functionCall/contracts/call_attached_library_function_on_function.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/call_attached_library_function_on_function.sol")
     # f() -> 7
     r = harness.call(app, "f()")
     assert r.abi_return == 7
 
 def test_call_attached_library_function_on_storage_variable(harness):
-    """functionCall/call_attached_library_function_on_storage_variable.sol"""
-    app = harness.compile_and_deploy("functionCall/call_attached_library_function_on_storage_variable.sol")
+    """functionCall/contracts/call_attached_library_function_on_storage_variable.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/call_attached_library_function_on_storage_variable.sol")
     # f(uint256): 7 -> 0x2a
     r = harness.call(app, "f(uint256)", 7)
     assert r.abi_return == 42
@@ -48,8 +48,8 @@ def test_call_attached_library_function_on_storage_variable(harness):
     assert r.abi_return == 42
 
 def test_call_attached_library_function_on_string(harness):
-    """functionCall/call_attached_library_function_on_string.sol"""
-    app = harness.compile_and_deploy("functionCall/call_attached_library_function_on_string.sol")
+    """functionCall/contracts/call_attached_library_function_on_string.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/call_attached_library_function_on_string.sol")
     # f() -> 3
     r = harness.call(app, "f()")
     assert r.abi_return == 3
@@ -58,15 +58,15 @@ def test_call_attached_library_function_on_string(harness):
     assert r.abi_return == 3
 
 def test_call_function_returning_function(harness):
-    """functionCall/call_function_returning_function.sol"""
-    app = harness.compile_and_deploy("functionCall/call_function_returning_function.sol")
+    """functionCall/contracts/call_function_returning_function.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/call_function_returning_function.sol")
     # f() -> 2
     r = harness.call(app, "f()")
     assert r.abi_return == 2
 
 def test_call_function_returning_nothing_via_pointer(harness):
-    """functionCall/call_function_returning_nothing_via_pointer.sol"""
-    app = harness.compile_and_deploy("functionCall/call_function_returning_nothing_via_pointer.sol")
+    """functionCall/contracts/call_function_returning_nothing_via_pointer.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/call_function_returning_nothing_via_pointer.sol")
     # f() -> true
     r = harness.call(app, "f()")
     assert r.abi_return is True
@@ -75,8 +75,8 @@ def test_call_function_returning_nothing_via_pointer(harness):
     assert r.abi_return is True
 
 def test_call_internal_function_via_expression(harness):
-    """functionCall/call_internal_function_via_expression.sol"""
-    app = harness.compile_and_deploy("functionCall/call_internal_function_via_expression.sol")
+    """functionCall/contracts/call_internal_function_via_expression.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/call_internal_function_via_expression.sol")
     # associated() -> 42
     r = harness.call(app, "associated()")
     assert r.abi_return == 42
@@ -85,15 +85,15 @@ def test_call_internal_function_via_expression(harness):
     assert r.abi_return == 42
 
 def test_call_internal_function_with_multislot_arguments_via_pointer(harness):
-    """functionCall/call_internal_function_with_multislot_arguments_via_pointer.sol"""
-    app = harness.compile_and_deploy("functionCall/call_internal_function_with_multislot_arguments_via_pointer.sol")
+    """functionCall/contracts/call_internal_function_with_multislot_arguments_via_pointer.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/call_internal_function_with_multislot_arguments_via_pointer.sol")
     # test() -> 12
     r = harness.call(app, "test()")
     assert r.abi_return == 12
 
 def test_call_options_overload(harness):
-    """functionCall/call_options_overload.sol"""
-    app = harness.compile_and_deploy("functionCall/call_options_overload.sol")
+    """functionCall/contracts/call_options_overload.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/call_options_overload.sol")
     # (), 1 ether
     pytest.xfail("fallback() dispatch not yet implemented")
     # call() -> 1, 2, 2, 2
@@ -104,8 +104,8 @@ def test_call_options_overload(harness):
     assert r.abi_return == 1000000000000000000
 
 def test_calling_nonexisting_contract_throws(harness):
-    """functionCall/calling_nonexisting_contract_throws.sol"""
-    app = harness.compile_and_deploy("functionCall/calling_nonexisting_contract_throws.sol")
+    """functionCall/contracts/calling_nonexisting_contract_throws.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/calling_nonexisting_contract_throws.sol")
     # f() -> FAILURE
     r = harness.call(app, "f()", expect_revert=True)
     assert r.reverted
@@ -117,8 +117,8 @@ def test_calling_nonexisting_contract_throws(harness):
     assert r.abi_return == 7
 
 def test_calling_other_functions(harness):
-    """functionCall/calling_other_functions.sol"""
-    app = harness.compile_and_deploy("functionCall/calling_other_functions.sol")
+    """functionCall/contracts/calling_other_functions.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/calling_other_functions.sol")
     # run(uint256): 0 -> 0
     r = harness.call(app, "run(uint256)", 0)
     assert r.abi_return == 0
@@ -136,8 +136,8 @@ def test_calling_other_functions(harness):
     assert r.abi_return == 1
 
 def test_calling_uninitialized_function(harness):
-    """functionCall/calling_uninitialized_function.sol"""
-    app = harness.compile_and_deploy("functionCall/calling_uninitialized_function.sol")
+    """functionCall/contracts/calling_uninitialized_function.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/calling_uninitialized_function.sol")
     # intern() -> FAILURE, hex"4e487b71", 0x51 # This should throw exceptions #
     r = harness.call(app, "intern()", expect_revert=True)
     assert r.reverted
@@ -146,50 +146,50 @@ def test_calling_uninitialized_function(harness):
     assert r.reverted
 
 def test_calling_uninitialized_function_in_detail(harness):
-    """functionCall/calling_uninitialized_function_in_detail.sol"""
-    app = harness.compile_and_deploy("functionCall/calling_uninitialized_function_in_detail.sol")
+    """functionCall/contracts/calling_uninitialized_function_in_detail.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/calling_uninitialized_function_in_detail.sol")
     # t() -> FAILURE, hex"4e487b71", 0x51
     r = harness.call(app, "t()", expect_revert=True)
     assert r.reverted
 
 def test_calling_uninitialized_function_through_array(harness):
-    """functionCall/calling_uninitialized_function_through_array.sol"""
-    app = harness.compile_and_deploy("functionCall/calling_uninitialized_function_through_array.sol")
+    """functionCall/contracts/calling_uninitialized_function_through_array.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/calling_uninitialized_function_through_array.sol")
     # t() -> FAILURE, hex"4e487b71", 0x51
     r = harness.call(app, "t()", expect_revert=True)
     assert r.reverted
 
 def test_conditional_with_arguments(harness):
-    """functionCall/conditional_with_arguments.sol"""
-    app = harness.compile_and_deploy("functionCall/conditional_with_arguments.sol")
+    """functionCall/contracts/conditional_with_arguments.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/conditional_with_arguments.sol")
     # f() -> 1
     r = harness.call(app, "f()")
     assert r.abi_return == 1
 
 def test_creation_function_call_no_args(harness):
-    """functionCall/creation_function_call_no_args.sol"""
-    app = harness.compile_and_deploy("functionCall/creation_function_call_no_args.sol")
+    """functionCall/contracts/creation_function_call_no_args.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/creation_function_call_no_args.sol")
     # f() -> 2
     r = harness.call(app, "f()")
     assert r.abi_return == 2
 
 def test_creation_function_call_with_args(harness):
-    """functionCall/creation_function_call_with_args.sol"""
-    app = harness.compile_and_deploy("functionCall/creation_function_call_with_args.sol", ctor_args=[2])
+    """functionCall/contracts/creation_function_call_with_args.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/creation_function_call_with_args.sol", ctor_args=[2])
     # f() -> 2
     r = harness.call(app, "f()")
     assert r.abi_return == 2
 
 def test_creation_function_call_with_salt(harness):
-    """functionCall/creation_function_call_with_salt.sol"""
-    app = harness.compile_and_deploy("functionCall/creation_function_call_with_salt.sol", ctor_args=[2])
+    """functionCall/contracts/creation_function_call_with_salt.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/creation_function_call_with_salt.sol", ctor_args=[2])
     # f() -> 2
     r = harness.call(app, "f()")
     assert r.abi_return == 2
 
 def test_delegatecall_return_value(harness):
-    """functionCall/delegatecall_return_value.sol"""
-    app = harness.compile_and_deploy("functionCall/delegatecall_return_value.sol")
+    """functionCall/contracts/delegatecall_return_value.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/delegatecall_return_value.sol")
     # get() -> 0x00
     r = harness.call(app, "get()")
     assert r.abi_return == 0
@@ -227,8 +227,8 @@ def test_delegatecall_return_value(harness):
     assert tuple(r.abi_return) == (1, 64, 32, 42)
 
 def test_delegatecall_return_value_pre_byzantium(harness):
-    """functionCall/delegatecall_return_value_pre_byzantium.sol"""
-    app = harness.compile_and_deploy("functionCall/delegatecall_return_value_pre_byzantium.sol", evm_version='spuriousDragon')
+    """functionCall/contracts/delegatecall_return_value_pre_byzantium.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/delegatecall_return_value_pre_byzantium.sol", evm_version='spuriousDragon')
     # get() -> 0x00
     r = harness.call(app, "get()")
     assert r.abi_return == 0
@@ -264,15 +264,15 @@ def test_delegatecall_return_value_pre_byzantium(harness):
     assert r.abi_return is True
 
 def test_disordered_named_args(harness):
-    """functionCall/disordered_named_args.sol"""
-    app = harness.compile_and_deploy("functionCall/disordered_named_args.sol")
+    """functionCall/contracts/disordered_named_args.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/disordered_named_args.sol")
     # b() -> 123
     r = harness.call(app, "b()")
     assert r.abi_return == 123
 
 def test_external_call(harness):
-    """functionCall/external_call.sol"""
-    app = harness.compile_and_deploy("functionCall/external_call.sol")
+    """functionCall/contracts/external_call.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/external_call.sol")
     # g(uint256): 4 -> 5
     r = harness.call(app, "g(uint256)", 4)
     assert r.abi_return == 5
@@ -281,8 +281,8 @@ def test_external_call(harness):
     assert r.abi_return == 5
 
 def test_external_call_at_construction_time(harness):
-    """functionCall/external_call_at_construction_time.sol"""
-    app = harness.compile_and_deploy("functionCall/external_call_at_construction_time.sol")
+    """functionCall/contracts/external_call_at_construction_time.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/external_call_at_construction_time.sol")
     # f(uint256): 0 -> FAILURE
     r = harness.call(app, "f(uint256)", 0, expect_revert=True)
     assert r.reverted
@@ -294,15 +294,15 @@ def test_external_call_at_construction_time(harness):
     assert r.abi_return == 3
 
 def test_external_call_dynamic_returndata(harness):
-    """functionCall/external_call_dynamic_returndata.sol"""
-    app = harness.compile_and_deploy("functionCall/external_call_dynamic_returndata.sol")
+    """functionCall/contracts/external_call_dynamic_returndata.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/external_call_dynamic_returndata.sol")
     # dt(uint256): 4 -> 6
     r = harness.call(app, "dt(uint256)", 4)
     assert r.abi_return == 6
 
 def test_external_call_to_nonexisting(harness):
-    """functionCall/external_call_to_nonexisting.sol"""
-    app = harness.compile_and_deploy("functionCall/external_call_to_nonexisting.sol", fund_wei=1000000000000000000)
+    """functionCall/contracts/external_call_to_nonexisting.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/external_call_to_nonexisting.sol", fund_wei=1000000000000000000)
     # f(uint256): 0 -> FAILURE
     r = harness.call(app, "f(uint256)", 0, expect_revert=True)
     assert r.reverted
@@ -326,8 +326,8 @@ def test_external_call_to_nonexisting(harness):
     assert r.abi_return == 7
 
 def test_external_call_to_nonexisting_debugstrings(harness):
-    """functionCall/external_call_to_nonexisting_debugstrings.sol"""
-    app = harness.compile_and_deploy("functionCall/external_call_to_nonexisting_debugstrings.sol", fund_wei=1000000000000000000)
+    """functionCall/contracts/external_call_to_nonexisting_debugstrings.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/external_call_to_nonexisting_debugstrings.sol", fund_wei=1000000000000000000)
     # f(uint256): 0 -> FAILURE, hex"08c379a0", 0x20, 37, "Target contract does not contain", " code"
     r = harness.call(app, "f(uint256)", 0, expect_revert=True)
     assert r.reverted
@@ -351,8 +351,8 @@ def test_external_call_to_nonexisting_debugstrings(harness):
     assert r.abi_return == 7
 
 def test_external_call_value(harness):
-    """functionCall/external_call_value.sol"""
-    app = harness.compile_and_deploy("functionCall/external_call_value.sol")
+    """functionCall/contracts/external_call_value.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/external_call_value.sol")
     # g(uint256), 1 ether: 4 -> 1000000000000000000000, 4
     r = harness.call(app, "g(uint256)", 4, payment_wei=1000000000000000000)
     assert tuple(r.abi_return) == (1000000000000000000000, 4)
@@ -361,15 +361,15 @@ def test_external_call_value(harness):
     assert tuple(r.abi_return) == (10000, 2)
 
 def test_external_function(harness):
-    """functionCall/external_function.sol"""
-    app = harness.compile_and_deploy("functionCall/external_function.sol")
+    """functionCall/contracts/external_function.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/external_function.sol")
     # test(uint256,uint256): 2, 3 -> 9, 3
     r = harness.call(app, "test(uint256,uint256)", 2, 3)
     assert tuple(r.abi_return) == (9, 3)
 
 def test_external_public_override(harness):
-    """functionCall/external_public_override.sol"""
-    app = harness.compile_and_deploy("functionCall/external_public_override.sol")
+    """functionCall/contracts/external_public_override.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/external_public_override.sol")
     # f() -> 2
     r = harness.call(app, "f()")
     assert r.abi_return == 2
@@ -378,8 +378,8 @@ def test_external_public_override(harness):
     assert r.abi_return == 2
 
 def test_failed_create(harness):
-    """functionCall/failed_create.sol"""
-    app = harness.compile_and_deploy("functionCall/failed_create.sol")
+    """functionCall/contracts/failed_create.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/failed_create.sol")
     # f(uint256): 20 ->
     r = harness.call(app, "f(uint256)", 20)
     # (void return — call succeeding is the assertion)
@@ -406,15 +406,15 @@ def test_failed_create(harness):
     assert r.abi_return == 2
 
 def test_file_level_call_via_module(harness):
-    """functionCall/file_level_call_via_module.sol"""
-    app = harness.compile_and_deploy("functionCall/file_level_call_via_module.sol")
+    """functionCall/contracts/file_level_call_via_module.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/file_level_call_via_module.sol")
     # f() -> 7, 3
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (7, 3)
 
 def test_gas_and_value_basic(harness):
-    """functionCall/gas_and_value_basic.sol"""
-    app = harness.compile_and_deploy("functionCall/gas_and_value_basic.sol", fund_wei=20)
+    """functionCall/contracts/gas_and_value_basic.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/gas_and_value_basic.sol", fund_wei=20)
     # sendAmount(uint256): 5 -> 5
     r = harness.call(app, "sendAmount(uint256)", 5)
     assert r.abi_return == 5
@@ -427,8 +427,8 @@ def test_gas_and_value_basic(harness):
     assert not r.reverted
 
 def test_mapping_array_internal_argument(harness):
-    """functionCall/mapping_array_internal_argument.sol"""
-    app = harness.compile_and_deploy("functionCall/mapping_array_internal_argument.sol")
+    """functionCall/contracts/mapping_array_internal_argument.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/mapping_array_internal_argument.sol")
     # set(uint8,uint8,uint8,uint8,uint8): 1, 21, 22, 42, 43 -> 0, 0, 0, 0
     r = harness.call(app, "set(uint8,uint8,uint8,uint8,uint8)", 1, 21, 22, 42, 43)
     assert tuple(r.abi_return) == (0, 0, 0, 0)
@@ -443,8 +443,8 @@ def test_mapping_array_internal_argument(harness):
     assert tuple(r.abi_return) == (10, 30, 11, 31)
 
 def test_mapping_internal_argument(harness):
-    """functionCall/mapping_internal_argument.sol"""
-    app = harness.compile_and_deploy("functionCall/mapping_internal_argument.sol")
+    """functionCall/contracts/mapping_internal_argument.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/mapping_internal_argument.sol")
     # set(uint8,uint8,uint8): 1, 21, 42 -> 0, 0
     r = harness.call(app, "set(uint8,uint8,uint8)", 1, 21, 42)
     assert tuple(r.abi_return) == (0, 0)
@@ -459,8 +459,8 @@ def test_mapping_internal_argument(harness):
     assert tuple(r.abi_return) == (10, 11)
 
 def test_mapping_internal_return(harness):
-    """functionCall/mapping_internal_return.sol"""
-    app = harness.compile_and_deploy("functionCall/mapping_internal_return.sol")
+    """functionCall/contracts/mapping_internal_return.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/mapping_internal_return.sol")
     # g() -> 0, 42, 0, 0, 84, 21
     r = harness.call(app, "g()")
     # TODO: verify structural decoding matches expected: 0, 42, 0, 0, 84, 21
@@ -471,8 +471,8 @@ def test_mapping_internal_return(harness):
     assert not r.reverted
 
 def test_member_accessors(harness):
-    """functionCall/member_accessors.sol"""
-    app = harness.compile_and_deploy("functionCall/member_accessors.sol")
+    """functionCall/contracts/member_accessors.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/member_accessors.sol")
     # data() -> 8
     r = harness.call(app, "data()")
     assert r.abi_return == 8
@@ -491,8 +491,8 @@ def test_member_accessors(harness):
     assert r.reverted
 
 def test_multiple_functions(harness):
-    """functionCall/multiple_functions.sol"""
-    app = harness.compile_and_deploy("functionCall/multiple_functions.sol")
+    """functionCall/contracts/multiple_functions.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/multiple_functions.sol")
     # a() -> 0
     r = harness.call(app, "a()")
     assert r.abi_return == 0
@@ -510,16 +510,16 @@ def test_multiple_functions(harness):
     assert r.reverted
 
 def test_multiple_return_values(harness):
-    """functionCall/multiple_return_values.sol"""
-    app = harness.compile_and_deploy("functionCall/multiple_return_values.sol")
+    """functionCall/contracts/multiple_return_values.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/multiple_return_values.sol")
     # run(bool,uint256): true, 0xcd -> 0xcd, true, 0
     r = harness.call(app, "run(bool,uint256)", True, 205)
     # TODO: verify expected: 0xcd | true | 0
     assert not r.reverted
 
 def test_named_args(harness):
-    """functionCall/named_args.sol"""
-    app = harness.compile_and_deploy("functionCall/named_args.sol")
+    """functionCall/contracts/named_args.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/named_args.sol")
     # b() -> 123
     r = harness.call(app, "b()")
     assert r.abi_return == 123
@@ -528,8 +528,8 @@ def test_named_args(harness):
     assert r.abi_return == 123
 
 def test_named_args_overload(harness):
-    """functionCall/named_args_overload.sol"""
-    app = harness.compile_and_deploy("functionCall/named_args_overload.sol")
+    """functionCall/contracts/named_args_overload.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/named_args_overload.sol")
     # call(uint256): 0 -> 0
     r = harness.call(app, "call(uint256)", 0)
     assert r.abi_return == 0
@@ -550,8 +550,8 @@ def test_named_args_overload(harness):
     assert r.abi_return == 500
 
 def test_precompile_extcodesize_check(harness):
-    """functionCall/precompile_extcodesize_check.sol"""
-    app = harness.compile_and_deploy("functionCall/precompile_extcodesize_check.sol")
+    """functionCall/contracts/precompile_extcodesize_check.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/precompile_extcodesize_check.sol")
     # testHighLevel() -> true
     r = harness.call(app, "testHighLevel()")
     assert r.abi_return is True
@@ -563,36 +563,36 @@ def test_precompile_extcodesize_check(harness):
     assert r.reverted
 
 def test_return_size_bigger_than_expected(harness):
-    """functionCall/return_size_bigger_than_expected.sol"""
-    app = harness.compile_and_deploy("functionCall/return_size_bigger_than_expected.sol", via_yul_behavior=True)
+    """functionCall/contracts/return_size_bigger_than_expected.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/return_size_bigger_than_expected.sol", via_yul_behavior=True)
     # test() -> 0x20
     r = harness.call(app, "test()")
     assert r.abi_return == 32
 
 def test_return_size_shorter_than_expected(harness):
-    """functionCall/return_size_shorter_than_expected.sol"""
-    app = harness.compile_and_deploy("functionCall/return_size_shorter_than_expected.sol", via_yul_behavior=True, evm_version='homestead')
+    """functionCall/contracts/return_size_shorter_than_expected.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/return_size_shorter_than_expected.sol", via_yul_behavior=True, evm_version='homestead')
     # test() -> 0x0500
     r = harness.call(app, "test()")
     assert r.abi_return == 1280
 
 def test_return_size_shorter_than_expected_evm_version_after_homestead(harness):
-    """functionCall/return_size_shorter_than_expected_evm_version_after_homestead.sol"""
-    app = harness.compile_and_deploy("functionCall/return_size_shorter_than_expected_evm_version_after_homestead.sol", via_yul_behavior=True)
+    """functionCall/contracts/return_size_shorter_than_expected_evm_version_after_homestead.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/return_size_shorter_than_expected_evm_version_after_homestead.sol", via_yul_behavior=True)
     # test() -> FAILURE
     r = harness.call(app, "test()", expect_revert=True)
     assert r.reverted
 
 def test_send_zero_ether(harness):
-    """functionCall/send_zero_ether.sol"""
-    app = harness.compile_and_deploy("functionCall/send_zero_ether.sol", fund_wei=20)
+    """functionCall/contracts/send_zero_ether.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/send_zero_ether.sol", fund_wei=20)
     # s() -> true
     r = harness.call(app, "s()")
     assert r.abi_return is True
 
 def test_transaction_status(harness):
-    """functionCall/transaction_status.sol"""
-    app = harness.compile_and_deploy("functionCall/transaction_status.sol")
+    """functionCall/contracts/transaction_status.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/transaction_status.sol")
     # f() ->
     r = harness.call(app, "f()")
     # (void return — call succeeding is the assertion)
@@ -604,8 +604,8 @@ def test_transaction_status(harness):
     assert r.reverted
 
 def test_value_test(harness):
-    """functionCall/value_test.sol"""
-    app = harness.compile_and_deploy("functionCall/value_test.sol")
+    """functionCall/contracts/value_test.sol"""
+    app = harness.compile_and_deploy("functionCall/contracts/value_test.sol")
     # f(), 1 ether -> 1000000000000000000
     r = harness.call(app, "f()", payment_wei=1000000000000000000)
     assert r.abi_return == 1000000000000000000

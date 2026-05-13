@@ -11,15 +11,15 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_base_slot_max_value(harness):
-    """storageLayoutSpecifier/base_slot_max_value.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/base_slot_max_value.sol")
+    """storageLayoutSpecifier/contracts/base_slot_max_value.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/base_slot_max_value.sol")
     # f(uint256): 4 -> 8
     r = harness.call(app, "f(uint256)", 4)
     assert r.abi_return == 8
 
 def test_constructor(harness):
-    """storageLayoutSpecifier/constructor.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/constructor.sol", ctor_args=[1, 2, 3])
+    """storageLayoutSpecifier/contracts/constructor.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/constructor.sol", ctor_args=[1, 2, 3])
     # x() -> 2
     r = harness.call(app, "x()")
     assert r.abi_return == 2
@@ -31,8 +31,8 @@ def test_constructor(harness):
     assert r.abi_return == 6
 
 def test_delete(harness):
-    """storageLayoutSpecifier/delete.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/delete.sol")
+    """storageLayoutSpecifier/contracts/delete.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/delete.sol")
     # fillArray() -> 3
     r = harness.call(app, "fillArray()")
     assert r.abi_return == 3
@@ -56,15 +56,15 @@ def test_delete(harness):
     assert r.abi_return == 0
 
 def test_delete_transient_storage(harness):
-    """storageLayoutSpecifier/delete_transient_storage.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/delete_transient_storage.sol")
+    """storageLayoutSpecifier/contracts/delete_transient_storage.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/delete_transient_storage.sol")
     # f() ->
     r = harness.call(app, "f()")
     # (void return — call succeeding is the assertion)
 
 def test_dynamic_array_storage_end(harness):
-    """storageLayoutSpecifier/dynamic_array_storage_end.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/dynamic_array_storage_end.sol")
+    """storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol")
     # init() ->
     r = harness.call(app, "init()")
     # (void return — call succeeding is the assertion)
@@ -76,8 +76,8 @@ def test_dynamic_array_storage_end(harness):
     # (void return — call succeeding is the assertion)
 
 def test_function_from_base_contract(harness):
-    """storageLayoutSpecifier/function_from_base_contract.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/function_from_base_contract.sol")
+    """storageLayoutSpecifier/contracts/function_from_base_contract.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/function_from_base_contract.sol")
     # f() -> 1
     r = harness.call(app, "f()")
     assert r.abi_return == 1
@@ -98,8 +98,8 @@ def test_function_from_base_contract(harness):
     assert r.abi_return == 6
 
 def test_getters(harness):
-    """storageLayoutSpecifier/getters.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/getters.sol")
+    """storageLayoutSpecifier/contracts/getters.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/getters.sol")
     # x() -> 1
     r = harness.call(app, "x()")
     assert r.abi_return == 1
@@ -111,8 +111,8 @@ def test_getters(harness):
     assert r.abi_return == 3
 
 def test_inheritance_from_abstract_contract(harness):
-    """storageLayoutSpecifier/inheritance_from_abstract_contract.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/inheritance_from_abstract_contract.sol")
+    """storageLayoutSpecifier/contracts/inheritance_from_abstract_contract.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/inheritance_from_abstract_contract.sol")
     # f() -> 10
     r = harness.call(app, "f()")
     assert r.abi_return == 10
@@ -124,8 +124,8 @@ def test_inheritance_from_abstract_contract(harness):
     assert r.abi_return == 10
 
 def test_inheritance_from_interface(harness):
-    """storageLayoutSpecifier/inheritance_from_interface.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/inheritance_from_interface.sol")
+    """storageLayoutSpecifier/contracts/inheritance_from_interface.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/inheritance_from_interface.sol")
     # f(uint256): 8 -> 6
     r = harness.call(app, "f(uint256)", 8)
     assert r.abi_return == 6
@@ -134,8 +134,8 @@ def test_inheritance_from_interface(harness):
     assert r.abi_return == 6
 
 def test_inheritance_from_same_base_state_var_slots(harness):
-    """storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol")
+    """storageLayoutSpecifier/contracts/inheritance_from_same_base_state_var_slots.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/inheritance_from_same_base_state_var_slots.sol")
     # contractASlots() -> 0
     r = harness.call(app, "contractASlots()")
     assert r.abi_return == 0
@@ -147,8 +147,8 @@ def test_inheritance_from_same_base_state_var_slots(harness):
     assert tuple(r.abi_return) == (9, 10)
 
 def test_inheritance_simple(harness):
-    """storageLayoutSpecifier/inheritance_simple.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/inheritance_simple.sol")
+    """storageLayoutSpecifier/contracts/inheritance_simple.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/inheritance_simple.sol")
     # f() -> 8
     r = harness.call(app, "f()")
     assert r.abi_return == 8
@@ -160,8 +160,8 @@ def test_inheritance_simple(harness):
     assert r.abi_return == 8
 
 def test_inheritance_state_variable_slot_offset(harness):
-    """storageLayoutSpecifier/inheritance_state_variable_slot_offset.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/inheritance_state_variable_slot_offset.sol")
+    """storageLayoutSpecifier/contracts/inheritance_state_variable_slot_offset.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/inheritance_state_variable_slot_offset.sol")
     # xSlotOffset() -> 7, 0
     r = harness.call(app, "xSlotOffset()")
     assert tuple(r.abi_return) == (7, 0)
@@ -176,8 +176,8 @@ def test_inheritance_state_variable_slot_offset(harness):
     assert tuple(r.abi_return) == (9, 0)
 
 def test_inline_assembly_direct_load(harness):
-    """storageLayoutSpecifier/inline_assembly_direct_load.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/inline_assembly_direct_load.sol")
+    """storageLayoutSpecifier/contracts/inline_assembly_direct_load.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/inline_assembly_direct_load.sol")
     # f() -> 16
     r = harness.call(app, "f()")
     assert r.abi_return == 16
@@ -186,8 +186,8 @@ def test_inline_assembly_direct_load(harness):
     assert r.abi_return == 16
 
 def test_inline_assembly_direct_store(harness):
-    """storageLayoutSpecifier/inline_assembly_direct_store.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/inline_assembly_direct_store.sol")
+    """storageLayoutSpecifier/contracts/inline_assembly_direct_store.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/inline_assembly_direct_store.sol")
     # f() -> 16
     r = harness.call(app, "f()")
     assert r.abi_return == 16
@@ -196,8 +196,8 @@ def test_inline_assembly_direct_store(harness):
     assert r.abi_return == 16
 
 def test_last_allowed_storage_slot(harness):
-    """storageLayoutSpecifier/last_allowed_storage_slot.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/last_allowed_storage_slot.sol")
+    """storageLayoutSpecifier/contracts/last_allowed_storage_slot.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/last_allowed_storage_slot.sol")
     # f(uint256): 4 -> 8
     r = harness.call(app, "f(uint256)", 4)
     assert r.abi_return == 8
@@ -206,8 +206,8 @@ def test_last_allowed_storage_slot(harness):
     assert r.abi_return == 8
 
 def test_mapping_storage_end(harness):
-    """storageLayoutSpecifier/mapping_storage_end.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/mapping_storage_end.sol")
+    """storageLayoutSpecifier/contracts/mapping_storage_end.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/mapping_storage_end.sol")
     # init() ->
     r = harness.call(app, "init()")
     # (void return — call succeeding is the assertion)
@@ -216,8 +216,8 @@ def test_mapping_storage_end(harness):
     # (void return — call succeeding is the assertion)
 
 def test_multiple_inheritance(harness):
-    """storageLayoutSpecifier/multiple_inheritance.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/multiple_inheritance.sol")
+    """storageLayoutSpecifier/contracts/multiple_inheritance.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/multiple_inheritance.sol")
     # test() -> 1, 2, 3, 5
     r = harness.call(app, "test()")
     assert tuple(r.abi_return) == (1, 2, 3, 5)
@@ -235,8 +235,8 @@ def test_multiple_inheritance(harness):
     assert r.abi_return == 5
 
 def test_multiple_inheritance_state_var_slots(harness):
-    """storageLayoutSpecifier/multiple_inheritance_state_var_slots.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/multiple_inheritance_state_var_slots.sol")
+    """storageLayoutSpecifier/contracts/multiple_inheritance_state_var_slots.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/multiple_inheritance_state_var_slots.sol")
     # xSlotOffset() -> 2, 0
     r = harness.call(app, "xSlotOffset()")
     assert tuple(r.abi_return) == (2, 0)
@@ -251,8 +251,8 @@ def test_multiple_inheritance_state_var_slots(harness):
     assert tuple(r.abi_return) == (4, 0)
 
 def test_state_variable_arithmetic_expression(harness):
-    """storageLayoutSpecifier/state_variable_arithmetic_expression.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/state_variable_arithmetic_expression.sol")
+    """storageLayoutSpecifier/contracts/state_variable_arithmetic_expression.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/state_variable_arithmetic_expression.sol")
     # f(uint256): 2 -> 0
     r = harness.call(app, "f(uint256)", 2)
     assert r.abi_return == 0
@@ -273,8 +273,8 @@ def test_state_variable_arithmetic_expression(harness):
     assert r.abi_return == 15
 
 def test_state_variable_constant_and_immutable(harness):
-    """storageLayoutSpecifier/state_variable_constant_and_immutable.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/state_variable_constant_and_immutable.sol")
+    """storageLayoutSpecifier/contracts/state_variable_constant_and_immutable.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/state_variable_constant_and_immutable.sol")
     # f() -> 11
     r = harness.call(app, "f()")
     assert r.abi_return == 11
@@ -283,8 +283,8 @@ def test_state_variable_constant_and_immutable(harness):
     assert r.abi_return == 200
 
 def test_state_variable_dynamic_array(harness):
-    """storageLayoutSpecifier/state_variable_dynamic_array.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/state_variable_dynamic_array.sol")
+    """storageLayoutSpecifier/contracts/state_variable_dynamic_array.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/state_variable_dynamic_array.sol")
     # initA() -> 1, 2, 3
     r = harness.call(app, "initA()")
     assert tuple(r.abi_return) == (1, 2, 3)
@@ -314,8 +314,8 @@ def test_state_variable_dynamic_array(harness):
     assert r.abi_return == 3
 
 def test_state_variable_enum(harness):
-    """storageLayoutSpecifier/state_variable_enum.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/state_variable_enum.sol")
+    """storageLayoutSpecifier/contracts/state_variable_enum.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/state_variable_enum.sol")
     # cSlotOffset() -> 42, 0
     r = harness.call(app, "cSlotOffset()")
     assert tuple(r.abi_return) == (42, 0)
@@ -330,8 +330,8 @@ def test_state_variable_enum(harness):
     assert r.abi_return is True
 
 def test_state_variable_mapping(harness):
-    """storageLayoutSpecifier/state_variable_mapping.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/state_variable_mapping.sol")
+    """storageLayoutSpecifier/contracts/state_variable_mapping.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/state_variable_mapping.sol")
     # setup() ->
     r = harness.call(app, "setup()")
     # (void return — call succeeding is the assertion)
@@ -346,8 +346,8 @@ def test_state_variable_mapping(harness):
     assert r.abi_return == 'Monster'
 
 def test_state_variable_reference_types_slot_offset(harness):
-    """storageLayoutSpecifier/state_variable_reference_types_slot_offset.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/state_variable_reference_types_slot_offset.sol")
+    """storageLayoutSpecifier/contracts/state_variable_reference_types_slot_offset.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/state_variable_reference_types_slot_offset.sol")
     # s1SlotOffset() -> 42, 0
     r = harness.call(app, "s1SlotOffset()")
     assert tuple(r.abi_return) == (42, 0)
@@ -365,8 +365,8 @@ def test_state_variable_reference_types_slot_offset(harness):
     assert tuple(r.abi_return) == (70, 0)
 
 def test_state_variable_slot_offset(harness):
-    """storageLayoutSpecifier/state_variable_slot_offset.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/state_variable_slot_offset.sol")
+    """storageLayoutSpecifier/contracts/state_variable_slot_offset.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/state_variable_slot_offset.sol")
     # xSlotOffset() -> 7, 0
     r = harness.call(app, "xSlotOffset()")
     assert tuple(r.abi_return) == (7, 0)
@@ -378,8 +378,8 @@ def test_state_variable_slot_offset(harness):
     assert tuple(r.abi_return) == (8, 0)
 
 def test_state_variable_struct(harness):
-    """storageLayoutSpecifier/state_variable_struct.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/state_variable_struct.sol")
+    """storageLayoutSpecifier/contracts/state_variable_struct.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/state_variable_struct.sol")
     # initS1() -> 7, 0x0abc, 1
     r = harness.call(app, "initS1()")
     assert tuple(r.abi_return) == (7, 2748, 1)
@@ -394,15 +394,15 @@ def test_state_variable_struct(harness):
     assert tuple(r.abi_return) == (8, 3567, 0)
 
 def test_state_variables_transient(harness):
-    """storageLayoutSpecifier/state_variables_transient.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/state_variables_transient.sol")
+    """storageLayoutSpecifier/contracts/state_variables_transient.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/state_variables_transient.sol")
     # test() -> 2
     r = harness.call(app, "test()")
     assert r.abi_return == 2
 
 def test_storage_reference_array(harness):
-    """storageLayoutSpecifier/storage_reference_array.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/storage_reference_array.sol")
+    """storageLayoutSpecifier/contracts/storage_reference_array.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/storage_reference_array.sol")
     # initUsingReference() ->
     r = harness.call(app, "initUsingReference()")
     # (void return — call succeeding is the assertion)
@@ -414,8 +414,8 @@ def test_storage_reference_array(harness):
     assert r.abi_return == 10
 
 def test_storage_reference_inheritance(harness):
-    """storageLayoutSpecifier/storage_reference_inheritance.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/storage_reference_inheritance.sol")
+    """storageLayoutSpecifier/contracts/storage_reference_inheritance.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/storage_reference_inheritance.sol")
     # InitUsingReference() ->
     r = harness.call(app, "InitUsingReference()")
     # (void return — call succeeding is the assertion)
@@ -425,8 +425,8 @@ def test_storage_reference_inheritance(harness):
     assert not r.reverted
 
 def test_storage_reference_library_function(harness):
-    """storageLayoutSpecifier/storage_reference_library_function.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/storage_reference_library_function.sol")
+    """storageLayoutSpecifier/contracts/storage_reference_library_function.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/storage_reference_library_function.sol")
     # initUsingReference() ->
     r = harness.call(app, "initUsingReference()")
     # (void return — call succeeding is the assertion)
@@ -436,8 +436,8 @@ def test_storage_reference_library_function(harness):
     assert not r.reverted
 
 def test_transient_state_variable_slot_offset(harness):
-    """storageLayoutSpecifier/transient_state_variable_slot_offset.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/transient_state_variable_slot_offset.sol")
+    """storageLayoutSpecifier/contracts/transient_state_variable_slot_offset.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/transient_state_variable_slot_offset.sol")
     # xSlotOffset() -> 0, 0
     r = harness.call(app, "xSlotOffset()")
     assert tuple(r.abi_return) == (0, 0)
@@ -452,24 +452,24 @@ def test_transient_state_variable_slot_offset(harness):
     assert tuple(r.abi_return) == (8, 0)
 
 def test_variable_cleanup(harness):
-    """storageLayoutSpecifier/variable_cleanup.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/variable_cleanup.sol")
+    """storageLayoutSpecifier/contracts/variable_cleanup.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/variable_cleanup.sol")
     # f(uint256,int256,bytes3): 0x0100, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f, "abc" -> 0x00, 0x7f, "ab"
     r = harness.call(app, "f(uint256,int256,bytes3)", 256, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f, bytes.fromhex('616263'))
     # TODO: verify expected: 0x00 | 0x7f | "ab"
     assert not r.reverted
 
 def test_variable_cleanup_sstore(harness):
-    """storageLayoutSpecifier/variable_cleanup_sstore.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/variable_cleanup_sstore.sol")
+    """storageLayoutSpecifier/contracts/variable_cleanup_sstore.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/variable_cleanup_sstore.sol")
     # f() -> 0x10, 127, "ab"
     r = harness.call(app, "f()")
     # TODO: verify expected: 0x10 | 127 | "ab"
     assert not r.reverted
 
 def test_virtual_functions(harness):
-    """storageLayoutSpecifier/virtual_functions.sol"""
-    app = harness.compile_and_deploy("storageLayoutSpecifier/virtual_functions.sol")
+    """storageLayoutSpecifier/contracts/virtual_functions.sol"""
+    app = harness.compile_and_deploy("storageLayoutSpecifier/contracts/virtual_functions.sol")
     # f() -> 1
     r = harness.call(app, "f()")
     assert r.abi_return == 1

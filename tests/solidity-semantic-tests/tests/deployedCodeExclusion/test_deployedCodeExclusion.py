@@ -11,85 +11,85 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_bound_function(harness):
-    """deployedCodeExclusion/bound_function.sol"""
-    app = harness.compile_and_deploy("deployedCodeExclusion/bound_function.sol")
+    """deployedCodeExclusion/contracts/bound_function.sol"""
+    app = harness.compile_and_deploy("deployedCodeExclusion/contracts/bound_function.sol")
     # test() -> true
     r = harness.call(app, "test()")
     assert r.abi_return is True
 
 def test_library_function(harness):
-    """deployedCodeExclusion/library_function.sol"""
-    app = harness.compile_and_deploy("deployedCodeExclusion/library_function.sol")
+    """deployedCodeExclusion/contracts/library_function.sol"""
+    app = harness.compile_and_deploy("deployedCodeExclusion/contracts/library_function.sol")
     # test() -> true
     r = harness.call(app, "test()")
     assert r.abi_return is True
 
 def test_library_function_deployed(harness):
-    """deployedCodeExclusion/library_function_deployed.sol"""
-    app = harness.compile_and_deploy("deployedCodeExclusion/library_function_deployed.sol")
+    """deployedCodeExclusion/contracts/library_function_deployed.sol"""
+    app = harness.compile_and_deploy("deployedCodeExclusion/contracts/library_function_deployed.sol")
     # test() -> true
     r = harness.call(app, "test()")
     assert r.abi_return is True
 
 def test_module_function(harness):
-    """deployedCodeExclusion/module_function.sol"""
-    app = harness.compile_and_deploy("deployedCodeExclusion/module_function.sol")
+    """deployedCodeExclusion/contracts/module_function.sol"""
+    app = harness.compile_and_deploy("deployedCodeExclusion/contracts/module_function.sol")
     # test() -> true
     r = harness.call(app, "test()")
     assert r.abi_return is True
 
 def test_module_function_deployed(harness):
-    """deployedCodeExclusion/module_function_deployed.sol"""
-    app = harness.compile_and_deploy("deployedCodeExclusion/module_function_deployed.sol")
+    """deployedCodeExclusion/contracts/module_function_deployed.sol"""
+    app = harness.compile_and_deploy("deployedCodeExclusion/contracts/module_function_deployed.sol")
     # test() -> true
     r = harness.call(app, "test()")
     assert r.abi_return is True
 
 def test_static_base_function(harness):
-    """deployedCodeExclusion/static_base_function.sol"""
-    app = harness.compile_and_deploy("deployedCodeExclusion/static_base_function.sol")
+    """deployedCodeExclusion/contracts/static_base_function.sol"""
+    app = harness.compile_and_deploy("deployedCodeExclusion/contracts/static_base_function.sol")
     # test() -> true
     r = harness.call(app, "test()")
     assert r.abi_return is True
 
 def test_static_base_function_deployed(harness):
-    """deployedCodeExclusion/static_base_function_deployed.sol"""
-    app = harness.compile_and_deploy("deployedCodeExclusion/static_base_function_deployed.sol")
+    """deployedCodeExclusion/contracts/static_base_function_deployed.sol"""
+    app = harness.compile_and_deploy("deployedCodeExclusion/contracts/static_base_function_deployed.sol")
     # test() -> true
     r = harness.call(app, "test()")
     assert r.abi_return is True
 
 def test_subassembly_deduplication(harness):
-    """deployedCodeExclusion/subassembly_deduplication.sol"""
-    app = harness.compile_and_deploy("deployedCodeExclusion/subassembly_deduplication.sol")
+    """deployedCodeExclusion/contracts/subassembly_deduplication.sol"""
+    app = harness.compile_and_deploy("deployedCodeExclusion/contracts/subassembly_deduplication.sol")
     # test() -> true
     r = harness.call(app, "test()")
     assert r.abi_return is True
 
 def test_super_function(harness):
-    """deployedCodeExclusion/super_function.sol"""
-    app = harness.compile_and_deploy("deployedCodeExclusion/super_function.sol")
+    """deployedCodeExclusion/contracts/super_function.sol"""
+    app = harness.compile_and_deploy("deployedCodeExclusion/contracts/super_function.sol")
     # test() -> true
     r = harness.call(app, "test()")
     assert r.abi_return is True
 
 def test_super_function_deployed(harness):
-    """deployedCodeExclusion/super_function_deployed.sol"""
-    app = harness.compile_and_deploy("deployedCodeExclusion/super_function_deployed.sol")
+    """deployedCodeExclusion/contracts/super_function_deployed.sol"""
+    app = harness.compile_and_deploy("deployedCodeExclusion/contracts/super_function_deployed.sol")
     # test() -> true
     r = harness.call(app, "test()")
     assert r.abi_return is True
 
 def test_virtual_function(harness):
-    """deployedCodeExclusion/virtual_function.sol"""
-    app = harness.compile_and_deploy("deployedCodeExclusion/virtual_function.sol")
+    """deployedCodeExclusion/contracts/virtual_function.sol"""
+    app = harness.compile_and_deploy("deployedCodeExclusion/contracts/virtual_function.sol")
     # test() -> true
     r = harness.call(app, "test()")
     assert r.abi_return is True
 
 def test_virtual_function_deployed(harness):
-    """deployedCodeExclusion/virtual_function_deployed.sol"""
-    app = harness.compile_and_deploy("deployedCodeExclusion/virtual_function_deployed.sol")
+    """deployedCodeExclusion/contracts/virtual_function_deployed.sol"""
+    app = harness.compile_and_deploy("deployedCodeExclusion/contracts/virtual_function_deployed.sol")
     # test() -> true
     r = harness.call(app, "test()")
     assert r.abi_return is True

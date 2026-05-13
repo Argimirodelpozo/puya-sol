@@ -11,51 +11,51 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_multiple_equals_signs(harness):
-    """externalSource/multiple_equals_signs.sol"""
-    app = harness.compile_and_deploy("externalSource/multiple_equals_signs.sol")
+    """externalSource/contracts/multiple_equals_signs.sol"""
+    app = harness.compile_and_deploy("externalSource/contracts/multiple_equals_signs.sol")
     # constructor-only test — deployment succeeding is the assertion
 
 def test_multiple_external_source(harness):
-    """externalSource/multiple_external_source.sol"""
-    app = harness.compile_and_deploy("externalSource/multiple_external_source.sol")
+    """externalSource/contracts/multiple_external_source.sol"""
+    app = harness.compile_and_deploy("externalSource/contracts/multiple_external_source.sol")
     # constructor-only test — deployment succeeding is the assertion
 
 def test_multisource(harness):
-    """externalSource/multisource.sol"""
-    app = harness.compile_and_deploy("externalSource/multisource.sol")
+    """externalSource/contracts/multisource.sol"""
+    app = harness.compile_and_deploy("externalSource/contracts/multisource.sol")
     # constructor-only test — deployment succeeding is the assertion
 
 def test_non_normalized_paths(harness):
-    """externalSource/non_normalized_paths.sol"""
-    app = harness.compile_and_deploy("externalSource/non_normalized_paths.sol")
+    """externalSource/contracts/non_normalized_paths.sol"""
+    app = harness.compile_and_deploy("externalSource/contracts/non_normalized_paths.sol")
     # constructor-only test — deployment succeeding is the assertion
 
 def test_relative_imports(harness):
-    """externalSource/relative_imports.sol"""
-    app = harness.compile_and_deploy("externalSource/relative_imports.sol")
+    """externalSource/contracts/relative_imports.sol"""
+    app = harness.compile_and_deploy("externalSource/contracts/relative_imports.sol")
     # constructor-only test — deployment succeeding is the assertion
 
 def test_source(harness):
-    """externalSource/source.sol"""
-    app = harness.compile_and_deploy("externalSource/source.sol")
+    """externalSource/contracts/source.sol"""
+    app = harness.compile_and_deploy("externalSource/contracts/source.sol")
     # constructor-only test — deployment succeeding is the assertion
 
 def test_source_import(harness):
-    """externalSource/source_import.sol"""
-    app = harness.compile_and_deploy("externalSource/source_import.sol")
+    """externalSource/contracts/source_import.sol"""
+    app = harness.compile_and_deploy("externalSource/contracts/source_import.sol")
     # constructor-only test — deployment succeeding is the assertion
 
 def test_source_import_subdir(harness):
-    """externalSource/source_import_subdir.sol"""
-    app = harness.compile_and_deploy("externalSource/source_import_subdir.sol")
+    """externalSource/contracts/source_import_subdir.sol"""
+    app = harness.compile_and_deploy("externalSource/contracts/source_import_subdir.sol")
     # constructor-only test — deployment succeeding is the assertion
 
 def test_source_name_starting_with_dots(harness):
-    """externalSource/source_name_starting_with_dots.sol"""
-    app = harness.compile_and_deploy("externalSource/source_name_starting_with_dots.sol")
+    """externalSource/contracts/source_name_starting_with_dots.sol"""
+    app = harness.compile_and_deploy("externalSource/contracts/source_name_starting_with_dots.sol")
     # constructor-only test — deployment succeeding is the assertion
 
 def test_source_remapping(harness):
-    """externalSource/source_remapping.sol"""
-    app = harness.compile_and_deploy("externalSource/source_remapping.sol")
+    """externalSource/contracts/source_remapping.sol"""
+    app = harness.compile_and_deploy("externalSource/contracts/source_remapping.sol")
     # constructor-only test — deployment succeeding is the assertion

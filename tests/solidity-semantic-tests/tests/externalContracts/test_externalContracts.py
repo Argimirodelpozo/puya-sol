@@ -11,8 +11,8 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_FixedFeeRegistrar(harness):
-    """externalContracts/FixedFeeRegistrar.sol"""
-    app = harness.compile_and_deploy("externalContracts/FixedFeeRegistrar.sol")
+    """externalContracts/contracts/FixedFeeRegistrar.sol"""
+    app = harness.compile_and_deploy("externalContracts/contracts/FixedFeeRegistrar.sol")
     # reserve(string), 69 ether: 0x20, 3, "abc" ->
     r = harness.call(app, "reserve(string)", 32, 3, bytes.fromhex('616263'), payment_wei=69000000000000000000)
     # (void return — call succeeding is the assertion)
@@ -84,8 +84,8 @@ def test_FixedFeeRegistrar(harness):
     assert r.abi_return == 0
 
 def test_base64(harness):
-    """externalContracts/base64.sol"""
-    app = harness.compile_and_deploy("externalContracts/base64.sol")
+    """externalContracts/contracts/base64.sol"""
+    app = harness.compile_and_deploy("externalContracts/contracts/base64.sol")
     # encode_inline_asm(bytes): 0x20, 0 -> 0x20, 0
     r = harness.call(app, "encode_inline_asm(bytes)", 32, 0)
     assert tuple(r.abi_return) == (32, 0)
@@ -136,8 +136,8 @@ def test_base64(harness):
     # (void return — call succeeding is the assertion)
 
 def test_deposit_contract(harness):
-    """externalContracts/deposit_contract.sol"""
-    app = harness.compile_and_deploy("externalContracts/deposit_contract.sol")
+    """externalContracts/contracts/deposit_contract.sol"""
+    app = harness.compile_and_deploy("externalContracts/contracts/deposit_contract.sol")
     # supportsInterface(bytes4): 0x0 -> 0
     r = harness.call(app, "supportsInterface(bytes4)", 0)
     assert r.abi_return == 0
@@ -191,8 +191,8 @@ def test_deposit_contract(harness):
     assert tuple(r.abi_return) == (32, 8, 904625697166532776746648320380374280103671755200316906558262375061821325312)
 
 def test_prbmath_signed(harness):
-    """externalContracts/prbmath_signed.sol"""
-    app = harness.compile_and_deploy("externalContracts/prbmath_signed.sol")
+    """externalContracts/contracts/prbmath_signed.sol"""
+    app = harness.compile_and_deploy("externalContracts/contracts/prbmath_signed.sol")
     # div(int256,int256): 3141592653589793238, 88714123 -> 35412542528203691288251815328
     r = harness.call(app, "div(int256,int256)", 0x2b992ddfa23249d6, 88714123)
     assert r.abi_return == 35412542528203691288251815328
@@ -225,8 +225,8 @@ def test_prbmath_signed(harness):
     assert tuple(r.abi_return) == (998882724338592125, 1000000000000000000, 1000000000000000000)
 
 def test_prbmath_unsigned(harness):
-    """externalContracts/prbmath_unsigned.sol"""
-    app = harness.compile_and_deploy("externalContracts/prbmath_unsigned.sol")
+    """externalContracts/contracts/prbmath_unsigned.sol"""
+    app = harness.compile_and_deploy("externalContracts/contracts/prbmath_unsigned.sol")
     # div(uint256,uint256): 3141592653589793238, 88714123 -> 35412542528203691288251815328
     r = harness.call(app, "div(uint256,uint256)", 0x2b992ddfa23249d6, 88714123)
     assert r.abi_return == 35412542528203691288251815328
@@ -259,15 +259,15 @@ def test_prbmath_unsigned(harness):
     assert tuple(r.abi_return) == (998882724338592125, 1000000000000000000, 1000000000000000000)
 
 def test_ramanujan_pi(harness):
-    """externalContracts/ramanujan_pi.sol"""
-    app = harness.compile_and_deploy("externalContracts/ramanujan_pi.sol")
+    """externalContracts/contracts/ramanujan_pi.sol"""
+    app = harness.compile_and_deploy("externalContracts/contracts/ramanujan_pi.sol")
     # prb_pi() -> 3141592656369545286
     r = harness.call(app, "prb_pi()")
     assert r.abi_return == 3141592656369545286
 
 def test_snark(harness):
-    """externalContracts/snark.sol"""
-    app = harness.compile_and_deploy("externalContracts/snark.sol")
+    """externalContracts/contracts/snark.sol"""
+    app = harness.compile_and_deploy("externalContracts/contracts/snark.sol")
     # f() -> true
     r = harness.call(app, "f()")
     assert r.abi_return is True
@@ -282,8 +282,8 @@ def test_snark(harness):
     assert r.abi_return is True
 
 def test_strings(harness):
-    """externalContracts/strings.sol"""
-    app = harness.compile_and_deploy("externalContracts/strings.sol")
+    """externalContracts/contracts/strings.sol"""
+    app = harness.compile_and_deploy("externalContracts/contracts/strings.sol")
     # toSlice(string): 0x20, 11, "hello world" -> 11, 0xa0
     r = harness.call(app, "toSlice(string)", 32, 11, bytes.fromhex('68656c6c6f20776f726c64'))
     assert tuple(r.abi_return) == (11, 160)

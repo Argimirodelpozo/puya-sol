@@ -11,15 +11,15 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_assembly_access(harness):
-    """memoryManagement/assembly_access.sol"""
-    app = harness.compile_and_deploy("memoryManagement/assembly_access.sol")
+    """memoryManagement/contracts/assembly_access.sol"""
+    app = harness.compile_and_deploy("memoryManagement/contracts/assembly_access.sol")
     # f() ->
     r = harness.call(app, "f()")
     # (void return — call succeeding is the assertion)
 
 def test_memory_types_initialisation(harness):
-    """memoryManagement/memory_types_initialisation.sol"""
-    app = harness.compile_and_deploy("memoryManagement/memory_types_initialisation.sol")
+    """memoryManagement/contracts/memory_types_initialisation.sol"""
+    app = harness.compile_and_deploy("memoryManagement/contracts/memory_types_initialisation.sol")
     # stat() -> 0, 0, 0, 0, 0
     r = harness.call(app, "stat()")
     # TODO: verify structural decoding matches expected: 0, 0, 0, 0, 0
@@ -36,15 +36,15 @@ def test_memory_types_initialisation(harness):
     assert not r.reverted
 
 def test_return_variable(harness):
-    """memoryManagement/return_variable.sol"""
-    app = harness.compile_and_deploy("memoryManagement/return_variable.sol")
+    """memoryManagement/contracts/return_variable.sol"""
+    app = harness.compile_and_deploy("memoryManagement/contracts/return_variable.sol")
     # f() -> 0x0500, 0x0500, 0x0a00
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (1280, 1280, 2560)
 
 def test_static_memory_array_allocation(harness):
-    """memoryManagement/static_memory_array_allocation.sol"""
-    app = harness.compile_and_deploy("memoryManagement/static_memory_array_allocation.sol")
+    """memoryManagement/contracts/static_memory_array_allocation.sol"""
+    app = harness.compile_and_deploy("memoryManagement/contracts/static_memory_array_allocation.sol")
     # withValue() -> 0x00
     r = harness.call(app, "withValue()")
     assert r.abi_return == 0
@@ -53,8 +53,8 @@ def test_static_memory_array_allocation(harness):
     assert r.abi_return == 640
 
 def test_struct_allocation(harness):
-    """memoryManagement/struct_allocation.sol"""
-    app = harness.compile_and_deploy("memoryManagement/struct_allocation.sol")
+    """memoryManagement/contracts/struct_allocation.sol"""
+    app = harness.compile_and_deploy("memoryManagement/contracts/struct_allocation.sol")
     # withValue() -> 0x00
     r = harness.call(app, "withValue()")
     assert r.abi_return == 0

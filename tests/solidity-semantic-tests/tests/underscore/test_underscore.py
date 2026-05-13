@@ -11,8 +11,8 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_as_function(harness):
-    """underscore/as_function.sol"""
-    app = harness.compile_and_deploy("underscore/as_function.sol")
+    """underscore/contracts/as_function.sol"""
+    app = harness.compile_and_deploy("underscore/contracts/as_function.sol")
     # _() -> 88
     r = harness.call(app, "_()")
     assert r.abi_return == 88

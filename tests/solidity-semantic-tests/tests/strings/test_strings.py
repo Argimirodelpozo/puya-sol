@@ -11,8 +11,8 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_constant_string_literal(harness):
-    """strings/constant_string_literal.sol"""
-    app = harness.compile_and_deploy("strings/constant_string_literal.sol")
+    """strings/contracts/constant_string_literal.sol"""
+    app = harness.compile_and_deploy("strings/contracts/constant_string_literal.sol")
     # b() -> 0x6162636465666768696a6b6c6d6e6f7071000000000000000000000000000000
     r = harness.call(app, "b()")
     assert r.abi_return == 44048183304486788312148433451363384677561671644786151922963192794228216299520
@@ -33,8 +33,8 @@ def test_constant_string_literal(harness):
     assert r.abi_return == 2
 
 def test_empty_storage_string(harness):
-    """strings/empty_storage_string.sol"""
-    app = harness.compile_and_deploy("strings/empty_storage_string.sol")
+    """strings/contracts/empty_storage_string.sol"""
+    app = harness.compile_and_deploy("strings/contracts/empty_storage_string.sol")
     # f() -> 0x20, 0
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (32, 0)
@@ -87,15 +87,15 @@ def test_empty_storage_string(harness):
     assert tuple(r.abi_return) == (32, 0)
 
 def test_empty_string(harness):
-    """strings/empty_string.sol"""
-    app = harness.compile_and_deploy("strings/empty_string.sol")
+    """strings/contracts/empty_string.sol"""
+    app = harness.compile_and_deploy("strings/contracts/empty_string.sol")
     # f() -> 0x20, 0
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (32, 0)
 
 def test_empty_string_input(harness):
-    """strings/empty_string_input.sol"""
-    app = harness.compile_and_deploy("strings/empty_string_input.sol")
+    """strings/contracts/empty_string_input.sol"""
+    app = harness.compile_and_deploy("strings/contracts/empty_string_input.sol")
     # f() -> 0x20, 0
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (32, 0)
@@ -129,8 +129,8 @@ def test_empty_string_input(harness):
     assert not r.reverted
 
 def test_return_string(harness):
-    """strings/return_string.sol"""
-    app = harness.compile_and_deploy("strings/return_string.sol")
+    """strings/contracts/return_string.sol"""
+    app = harness.compile_and_deploy("strings/contracts/return_string.sol")
     # set(string): 0x20, 5, "Julia" ->
     r = harness.call(app, "set(string)", 32, 5, bytes.fromhex('4a756c6961'))
     # (void return — call succeeding is the assertion)
@@ -145,15 +145,15 @@ def test_return_string(harness):
     assert r.abi_return == 'Julia'
 
 def test_string_escapes(harness):
-    """strings/string_escapes.sol"""
-    app = harness.compile_and_deploy("strings/string_escapes.sol")
+    """strings/contracts/string_escapes.sol"""
+    app = harness.compile_and_deploy("strings/contracts/string_escapes.sol")
     # f() -> 0x090a0d27225c0000000000000000000000000000000000000000000000000000
     r = harness.call(app, "f()")
     assert r.abi_return == 4088574885656074156409271147257688673164889634092489131729182745150422515712
 
 def test_unicode_escapes(harness):
-    """strings/unicode_escapes.sol"""
-    app = harness.compile_and_deploy("strings/unicode_escapes.sol")
+    """strings/contracts/unicode_escapes.sol"""
+    app = harness.compile_and_deploy("strings/contracts/unicode_escapes.sol")
     # oneByteUTF8() -> 0x20, 7, "aaa$aaa"
     r = harness.call(app, "oneByteUTF8()")
     assert r.abi_return == 'aaa$aaa'
@@ -168,8 +168,8 @@ def test_unicode_escapes(harness):
     assert r.abi_return == '$\\xc2\\xa2\\xe2\\x82\\xac'
 
 def test_unicode_string(harness):
-    """strings/unicode_string.sol"""
-    app = harness.compile_and_deploy("strings/unicode_string.sol")
+    """strings/contracts/unicode_string.sol"""
+    app = harness.compile_and_deploy("strings/contracts/unicode_string.sol")
     # f() -> 0x20, 0x14, "\xf0\x9f\x98\x83, \xf0\x9f\x98\xad, and \xf0\x9f\x98\x88"
     r = harness.call(app, "f()")
     assert r.abi_return == '\\xf0\\x9f\\x98\\x83, \\xf0\\x9f\\x98\\xad, and \\xf0\\x9f\\x98\\x88'

@@ -11,15 +11,15 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_abicodec(harness):
-    """userDefinedValueType/abicodec.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/abicodec.sol")
+    """userDefinedValueType/contracts/abicodec.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/abicodec.sol")
     # g() -> true
     r = harness.call(app, "g()")
     assert r.abi_return is True
 
 def test_assembly_access_bytes2_abicoder_v1(harness):
-    """userDefinedValueType/assembly_access_bytes2_abicoder_v1.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/assembly_access_bytes2_abicoder_v1.sol")
+    """userDefinedValueType/contracts/assembly_access_bytes2_abicoder_v1.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/assembly_access_bytes2_abicoder_v1.sol")
     # f(bytes2): "ab" -> 0x6162000000000000000000000000000000000000000000000000000000000000
     r = harness.call(app, "f(bytes2)", bytes.fromhex('6162'))
     assert r.abi_return == 44047497324925121336511606693520958599579173549109180625971642598225011015680
@@ -40,8 +40,8 @@ def test_assembly_access_bytes2_abicoder_v1(harness):
     assert r.abi_return == 44047497324925121336511606693520958599579173549109180625971642598225011015680
 
 def test_assembly_access_bytes2_abicoder_v2(harness):
-    """userDefinedValueType/assembly_access_bytes2_abicoder_v2.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/assembly_access_bytes2_abicoder_v2.sol")
+    """userDefinedValueType/contracts/assembly_access_bytes2_abicoder_v2.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/assembly_access_bytes2_abicoder_v2.sol")
     # f(bytes2): "ab" -> 0x6162000000000000000000000000000000000000000000000000000000000000
     r = harness.call(app, "f(bytes2)", bytes.fromhex('6162'))
     assert r.abi_return == 44047497324925121336511606693520958599579173549109180625971642598225011015680
@@ -62,8 +62,8 @@ def test_assembly_access_bytes2_abicoder_v2(harness):
     assert r.abi_return == 44047497324925121336511606693520958599579173549109180625971642598225011015680
 
 def test_calldata(harness):
-    """userDefinedValueType/calldata.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/calldata.sol")
+    """userDefinedValueType/contracts/calldata.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/calldata.sol")
     # test_f() -> true
     r = harness.call(app, "test_f()")
     assert r.abi_return is True
@@ -87,8 +87,8 @@ def test_calldata(harness):
     assert r.reverted
 
 def test_calldata_to_storage(harness):
-    """userDefinedValueType/calldata_to_storage.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/calldata_to_storage.sol")
+    """userDefinedValueType/contracts/calldata_to_storage.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/calldata_to_storage.sol")
     # s() -> 0, 0, 0x00, 0
     r = harness.call(app, "s()")
     assert tuple(r.abi_return) == (0, 0, 0, 0)
@@ -120,8 +120,8 @@ def test_calldata_to_storage(harness):
     assert r.abi_return == 44955656716221210881917421608902818716714500272103248770446148185689417580544
 
 def test_cleanup(harness):
-    """userDefinedValueType/cleanup.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/cleanup.sol")
+    """userDefinedValueType/contracts/cleanup.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/cleanup.sol")
     # ret() -> 0xff
     r = harness.call(app, "ret()")
     assert r.abi_return == 255
@@ -139,8 +139,8 @@ def test_cleanup(harness):
     assert tuple(r.abi_return) == (1, 255, 2)
 
 def test_cleanup_abicoderv1(harness):
-    """userDefinedValueType/cleanup_abicoderv1.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/cleanup_abicoderv1.sol")
+    """userDefinedValueType/contracts/cleanup_abicoderv1.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/cleanup_abicoderv1.sol")
     # ret() -> 0xff
     r = harness.call(app, "ret()")
     assert r.abi_return == 255
@@ -158,8 +158,8 @@ def test_cleanup_abicoderv1(harness):
     assert tuple(r.abi_return) == (1, 255, 2)
 
 def test_constant(harness):
-    """userDefinedValueType/constant.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/constant.sol")
+    """userDefinedValueType/contracts/constant.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/constant.sol")
     # s() -> 165521356710917456517261742455526507355687727119203895813322792776
     r = harness.call(app, "s()")
     assert r.abi_return == 165521356710917456517261742455526507355687727119203895813322792776
@@ -171,8 +171,8 @@ def test_constant(harness):
     assert r.abi_return == 165521356710917456517261742455526507355687727119203895813322792776
 
 def test_conversion(harness):
-    """userDefinedValueType/conversion.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/conversion.sol")
+    """userDefinedValueType/contracts/conversion.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/conversion.sol")
     # f(uint256): 1 -> 1
     r = harness.call(app, "f(uint256)", 1)
     assert r.abi_return == 1
@@ -247,8 +247,8 @@ def test_conversion(harness):
     assert r.abi_return == 1
 
 def test_conversion_abicoderv1(harness):
-    """userDefinedValueType/conversion_abicoderv1.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/conversion_abicoderv1.sol")
+    """userDefinedValueType/contracts/conversion_abicoderv1.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/conversion_abicoderv1.sol")
     # f(uint256): 1 -> 1
     r = harness.call(app, "f(uint256)", 1)
     assert r.abi_return == 1
@@ -323,8 +323,8 @@ def test_conversion_abicoderv1(harness):
     assert r.abi_return == 1
 
 def test_dirty_slot(harness):
-    """userDefinedValueType/dirty_slot.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/dirty_slot.sol")
+    """userDefinedValueType/contracts/dirty_slot.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/dirty_slot.sol")
     # a() -> 13
     r = harness.call(app, "a()")
     assert r.abi_return == 13
@@ -363,8 +363,8 @@ def test_dirty_slot(harness):
     assert r.reverted
 
 def test_dirty_uint8_read(harness):
-    """userDefinedValueType/dirty_uint8_read.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/dirty_uint8_read.sol")
+    """userDefinedValueType/contracts/dirty_uint8_read.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/dirty_uint8_read.sol")
     # x() -> -5
     r = harness.call(app, "x()")
     assert r.abi_return == -5
@@ -376,8 +376,8 @@ def test_dirty_uint8_read(harness):
     assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639931
 
 def test_erc20(harness):
-    """userDefinedValueType/erc20.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/erc20.sol")
+    """userDefinedValueType/contracts/erc20.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/erc20.sol")
     # totalSupply() -> 20
     r = harness.call(app, "totalSupply()")
     assert r.abi_return == 20
@@ -398,8 +398,8 @@ def test_erc20(harness):
     assert r.reverted
 
 def test_fixedpoint(harness):
-    """userDefinedValueType/fixedpoint.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/fixedpoint.sol")
+    """userDefinedValueType/contracts/fixedpoint.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/fixedpoint.sol")
     # add(uint256,uint256): 0, 0 -> 0
     r = harness.call(app, "add(uint256,uint256)", 0, 0)
     assert r.abi_return == 0
@@ -435,8 +435,8 @@ def test_fixedpoint(harness):
     assert r.reverted
 
 def test_immutable_signed(harness):
-    """userDefinedValueType/immutable_signed.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/immutable_signed.sol")
+    """userDefinedValueType/contracts/immutable_signed.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/immutable_signed.sol")
     # direct() -> -2, 0x6162000000000000000000000000000000000000000000000000000000000000
     r = harness.call(app, "direct()")
     assert tuple(r.abi_return) == (-2, 44047497324925121336511606693520958599579173549109180625971642598225011015680)
@@ -445,15 +445,15 @@ def test_immutable_signed(harness):
     assert tuple(r.abi_return) == (115792089237316195423570985008687907853269984665640564039457584007913129639934, 44047497324925121336511606693520958599579173549109180625971642598225011015680)
 
 def test_in_parenthesis(harness):
-    """userDefinedValueType/in_parenthesis.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/in_parenthesis.sol")
+    """userDefinedValueType/contracts/in_parenthesis.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/in_parenthesis.sol")
     # f() -> 5, 10
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (5, 10)
 
 def test_mapping_key(harness):
-    """userDefinedValueType/mapping_key.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/mapping_key.sol")
+    """userDefinedValueType/contracts/mapping_key.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/mapping_key.sol")
     # set(int256,int256): 1, 1 ->
     r = harness.call(app, "set(int256,int256)", 1, 1)
     # (void return — call succeeding is the assertion)
@@ -471,8 +471,8 @@ def test_mapping_key(harness):
     assert r.abi_return == 0
 
 def test_memory_to_storage(harness):
-    """userDefinedValueType/memory_to_storage.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/memory_to_storage.sol")
+    """userDefinedValueType/contracts/memory_to_storage.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/memory_to_storage.sol")
     # s() -> 0, 0, 0x00, 0
     r = harness.call(app, "s()")
     assert tuple(r.abi_return) == (0, 0, 0, 0)
@@ -504,8 +504,8 @@ def test_memory_to_storage(harness):
     assert r.abi_return == 44955656716221210881917421608902818716714500272103248770446148185689417580544
 
 def test_multisource(harness):
-    """userDefinedValueType/multisource.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/multisource.sol")
+    """userDefinedValueType/contracts/multisource.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/multisource.sol")
     # f(int256): 5 -> 5
     r = harness.call(app, "f(int256)", 5)
     assert r.abi_return == 5
@@ -514,8 +514,8 @@ def test_multisource(harness):
     assert r.abi_return == 1
 
 def test_multisource_module(harness):
-    """userDefinedValueType/multisource_module.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/multisource_module.sol")
+    """userDefinedValueType/contracts/multisource_module.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/multisource_module.sol")
     # f(int256): 5 -> 5
     r = harness.call(app, "f(int256)", 5)
     assert r.abi_return == 5
@@ -524,8 +524,8 @@ def test_multisource_module(harness):
     assert r.abi_return == 1
 
 def test_ownable(harness):
-    """userDefinedValueType/ownable.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/ownable.sol")
+    """userDefinedValueType/contracts/ownable.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/ownable.sol")
     # renounceOwnership() ->
     r = harness.call(app, "renounceOwnership()")
     # (void return — call succeeding is the assertion)
@@ -537,8 +537,8 @@ def test_ownable(harness):
     assert r.reverted
 
 def test_parameter(harness):
-    """userDefinedValueType/parameter.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/parameter.sol")
+    """userDefinedValueType/contracts/parameter.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/parameter.sol")
     # id(address): 5 -> 5
     r = harness.call(app, "id(address)", 5)
     assert r.abi_return == 5
@@ -586,8 +586,8 @@ def test_parameter(harness):
     assert r.reverted
 
 def test_simple(harness):
-    """userDefinedValueType/simple.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/simple.sol")
+    """userDefinedValueType/contracts/simple.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/simple.sol")
     # f() -> 0
     r = harness.call(app, "f()")
     assert r.abi_return == 0
@@ -596,8 +596,8 @@ def test_simple(harness):
     assert tuple(r.abi_return) == (1, 1)
 
 def test_storage_layout(harness):
-    """userDefinedValueType/storage_layout.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/storage_layout.sol")
+    """userDefinedValueType/contracts/storage_layout.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/storage_layout.sol")
     # storage_a() -> 0, 0
     r = harness.call(app, "storage_a()")
     assert tuple(r.abi_return) == (0, 0)
@@ -621,8 +621,8 @@ def test_storage_layout(harness):
     assert tuple(r.abi_return) == (2, 20)
 
 def test_storage_layout_struct(harness):
-    """userDefinedValueType/storage_layout_struct.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/storage_layout_struct.sol")
+    """userDefinedValueType/contracts/storage_layout_struct.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/storage_layout_struct.sol")
     # storage_a() -> 0, 0
     r = harness.call(app, "storage_a()")
     assert tuple(r.abi_return) == (0, 0)
@@ -700,8 +700,8 @@ def test_storage_layout_struct(harness):
     assert tuple(r.abi_return) == (115792089237316195423570985008687907853269984665640564039457584007913129639934, 115792089237316195423570985008687907853269984665640564039457584007913129639934, 115792089237316195423570985008687907853269984665640564039457584007913129639933, 115792089237316195423570985008687907853269984665640564039457584007913129639933)
 
 def test_storage_signed(harness):
-    """userDefinedValueType/storage_signed.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/storage_signed.sol")
+    """userDefinedValueType/contracts/storage_signed.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/storage_signed.sol")
     # a() -> -2
     r = harness.call(app, "a()")
     assert r.abi_return == -2
@@ -725,15 +725,15 @@ def test_storage_signed(harness):
     assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639934
 
 def test_wrap_unwrap(harness):
-    """userDefinedValueType/wrap_unwrap.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/wrap_unwrap.sol")
+    """userDefinedValueType/contracts/wrap_unwrap.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/wrap_unwrap.sol")
     # f() ->
     r = harness.call(app, "f()")
     # (void return — call succeeding is the assertion)
 
 def test_wrap_unwrap_via_contract_name(harness):
-    """userDefinedValueType/wrap_unwrap_via_contract_name.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/wrap_unwrap_via_contract_name.sol")
+    """userDefinedValueType/contracts/wrap_unwrap_via_contract_name.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/wrap_unwrap_via_contract_name.sol")
     # f(uint256): 0x42 -> 0x42
     r = harness.call(app, "f(uint256)", 66)
     assert r.abi_return == 66
@@ -748,8 +748,8 @@ def test_wrap_unwrap_via_contract_name(harness):
     assert r.abi_return == 66
 
 def test_zero_cost_abstraction_comparison_elementary(harness):
-    """userDefinedValueType/zero_cost_abstraction_comparison_elementary.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/zero_cost_abstraction_comparison_elementary.sol")
+    """userDefinedValueType/contracts/zero_cost_abstraction_comparison_elementary.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/zero_cost_abstraction_comparison_elementary.sol")
     # getX() -> 0
     r = harness.call(app, "getX()")
     assert r.abi_return == 0
@@ -764,8 +764,8 @@ def test_zero_cost_abstraction_comparison_elementary(harness):
     assert r.abi_return == 299
 
 def test_zero_cost_abstraction_comparison_userdefined(harness):
-    """userDefinedValueType/zero_cost_abstraction_comparison_userdefined.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/zero_cost_abstraction_comparison_userdefined.sol")
+    """userDefinedValueType/contracts/zero_cost_abstraction_comparison_userdefined.sol"""
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/zero_cost_abstraction_comparison_userdefined.sol")
     # getX() -> 0
     r = harness.call(app, "getX()")
     assert r.abi_return == 0

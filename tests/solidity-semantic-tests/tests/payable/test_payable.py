@@ -11,8 +11,8 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_no_nonpayable_circumvention_by_modifier(harness):
-    """payable/no_nonpayable_circumvention_by_modifier.sol"""
-    app = harness.compile_and_deploy("payable/no_nonpayable_circumvention_by_modifier.sol")
+    """payable/contracts/no_nonpayable_circumvention_by_modifier.sol"""
+    app = harness.compile_and_deploy("payable/contracts/no_nonpayable_circumvention_by_modifier.sol")
     # f(), 27 wei -> FAILURE
     r = harness.call(app, "f()", payment_wei=27, expect_revert=True)
     assert r.reverted

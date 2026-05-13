@@ -11,15 +11,15 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_assign_at_declaration(harness):
-    """immutable/assign_at_declaration.sol"""
-    app = harness.compile_and_deploy("immutable/assign_at_declaration.sol")
+    """immutable/contracts/assign_at_declaration.sol"""
+    app = harness.compile_and_deploy("immutable/contracts/assign_at_declaration.sol")
     # f() -> 2
     r = harness.call(app, "f()")
     assert r.abi_return == 2
 
 def test_assign_from_immutables(harness):
-    """immutable/assign_from_immutables.sol"""
-    app = harness.compile_and_deploy("immutable/assign_from_immutables.sol")
+    """immutable/contracts/assign_from_immutables.sol"""
+    app = harness.compile_and_deploy("immutable/contracts/assign_from_immutables.sol")
     # a() -> 1
     r = harness.call(app, "a()")
     assert r.abi_return == 1
@@ -34,8 +34,8 @@ def test_assign_from_immutables(harness):
     assert r.abi_return == 1
 
 def test_delete(harness):
-    """immutable/delete.sol"""
-    app = harness.compile_and_deploy("immutable/delete.sol")
+    """immutable/contracts/delete.sol"""
+    app = harness.compile_and_deploy("immutable/contracts/delete.sol")
     # a() -> 0
     r = harness.call(app, "a()")
     assert r.abi_return == 0
@@ -47,8 +47,8 @@ def test_delete(harness):
     assert r.abi_return == 0
 
 def test_fun_read_in_ctor(harness):
-    """immutable/fun_read_in_ctor.sol"""
-    app = harness.compile_and_deploy("immutable/fun_read_in_ctor.sol")
+    """immutable/contracts/fun_read_in_ctor.sol"""
+    app = harness.compile_and_deploy("immutable/contracts/fun_read_in_ctor.sol")
     # readX() -> 3
     r = harness.call(app, "readX()")
     assert r.abi_return == 3
@@ -57,50 +57,50 @@ def test_fun_read_in_ctor(harness):
     assert r.abi_return == 3
 
 def test_getter(harness):
-    """immutable/getter.sol"""
-    app = harness.compile_and_deploy("immutable/getter.sol")
+    """immutable/contracts/getter.sol"""
+    app = harness.compile_and_deploy("immutable/contracts/getter.sol")
     # x() -> 1
     r = harness.call(app, "x()")
     assert r.abi_return == 1
 
 def test_getter_call_in_constructor(harness):
-    """immutable/getter_call_in_constructor.sol"""
-    app = harness.compile_and_deploy("immutable/getter_call_in_constructor.sol")
+    """immutable/contracts/getter_call_in_constructor.sol"""
+    app = harness.compile_and_deploy("immutable/contracts/getter_call_in_constructor.sol")
     # f() -> true
     r = harness.call(app, "f()")
     assert r.abi_return is True
 
 def test_immutable_signed(harness):
-    """immutable/immutable_signed.sol"""
-    app = harness.compile_and_deploy("immutable/immutable_signed.sol")
+    """immutable/contracts/immutable_signed.sol"""
+    app = harness.compile_and_deploy("immutable/contracts/immutable_signed.sol")
     # viaasm() -> 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0x6162000000000000000000000000000000000000000000000000000000000000
     r = harness.call(app, "viaasm()")
     assert tuple(r.abi_return) == (115792089237316195423570985008687907853269984665640564039457584007913129639934, 44047497324925121336511606693520958599579173549109180625971642598225011015680)
 
 def test_immutable_tag_too_large_bug(harness):
-    """immutable/immutable_tag_too_large_bug.sol"""
-    app = harness.compile_and_deploy("immutable/immutable_tag_too_large_bug.sol", via_yul_behavior=True)
+    """immutable/contracts/immutable_tag_too_large_bug.sol"""
+    app = harness.compile_and_deploy("immutable/contracts/immutable_tag_too_large_bug.sol", via_yul_behavior=True)
     # f() -> -1, 1
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (-1, 1)
 
 def test_increment_decrement(harness):
-    """immutable/increment_decrement.sol"""
-    app = harness.compile_and_deploy("immutable/increment_decrement.sol")
+    """immutable/contracts/increment_decrement.sol"""
+    app = harness.compile_and_deploy("immutable/contracts/increment_decrement.sol")
     # f() -> -1, 4
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (-1, 4)
 
 def test_inheritance(harness):
-    """immutable/inheritance.sol"""
-    app = harness.compile_and_deploy("immutable/inheritance.sol")
+    """immutable/contracts/inheritance.sol"""
+    app = harness.compile_and_deploy("immutable/contracts/inheritance.sol")
     # f() -> 4, 3, 2, 1
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (4, 3, 2, 1)
 
 def test_internal_function_pointer(harness):
-    """immutable/internal_function_pointer.sol"""
-    app = harness.compile_and_deploy("immutable/internal_function_pointer.sol")
+    """immutable/contracts/internal_function_pointer.sol"""
+    app = harness.compile_and_deploy("immutable/contracts/internal_function_pointer.sol")
     # f() -> 7
     r = harness.call(app, "f()")
     assert r.abi_return == 7
@@ -109,8 +109,8 @@ def test_internal_function_pointer(harness):
     assert r.abi_return == 7
 
 def test_multi_creation(harness):
-    """immutable/multi_creation.sol"""
-    app = harness.compile_and_deploy("immutable/multi_creation.sol")
+    """immutable/contracts/multi_creation.sol"""
+    app = harness.compile_and_deploy("immutable/contracts/multi_creation.sol")
     # f() -> 3, 7, 5
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (3, 7, 5)
@@ -122,22 +122,22 @@ def test_multi_creation(harness):
     assert r.abi_return == 5
 
 def test_multiple_initializations(harness):
-    """immutable/multiple_initializations.sol"""
-    app = harness.compile_and_deploy("immutable/multiple_initializations.sol")
+    """immutable/contracts/multiple_initializations.sol"""
+    app = harness.compile_and_deploy("immutable/contracts/multiple_initializations.sol")
     # get() -> 0xff
     r = harness.call(app, "get()")
     assert r.abi_return == 255
 
 def test_read_in_ctor(harness):
-    """immutable/read_in_ctor.sol"""
-    app = harness.compile_and_deploy("immutable/read_in_ctor.sol")
+    """immutable/contracts/read_in_ctor.sol"""
+    app = harness.compile_and_deploy("immutable/contracts/read_in_ctor.sol")
     # readX() -> 3
     r = harness.call(app, "readX()")
     assert r.abi_return == 3
 
 def test_small_types_in_reverse(harness):
-    """immutable/small_types_in_reverse.sol"""
-    app = harness.compile_and_deploy("immutable/small_types_in_reverse.sol")
+    """immutable/contracts/small_types_in_reverse.sol"""
+    app = harness.compile_and_deploy("immutable/contracts/small_types_in_reverse.sol")
     # a() -> 4660
     r = harness.call(app, "a()")
     assert r.abi_return == 4660
@@ -158,23 +158,23 @@ def test_small_types_in_reverse(harness):
     assert r.abi_return == 65535
 
 def test_stub(harness):
-    """immutable/stub.sol"""
-    app = harness.compile_and_deploy("immutable/stub.sol")
+    """immutable/contracts/stub.sol"""
+    app = harness.compile_and_deploy("immutable/contracts/stub.sol")
     # f() -> 84, 23
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (84, 23)
 
 def test_uninitialized(harness):
-    """immutable/uninitialized.sol"""
-    app = harness.compile_and_deploy("immutable/uninitialized.sol")
+    """immutable/contracts/uninitialized.sol"""
+    app = harness.compile_and_deploy("immutable/contracts/uninitialized.sol")
     # get() -> 0, false, 0x0
     r = harness.call(app, "get()")
     # TODO: verify expected: 0 | false | 0x0
     assert not r.reverted
 
 def test_use_scratch(harness):
-    """immutable/use_scratch.sol"""
-    app = harness.compile_and_deploy("immutable/use_scratch.sol", ctor_args=[3])
+    """immutable/contracts/use_scratch.sol"""
+    app = harness.compile_and_deploy("immutable/contracts/use_scratch.sol", ctor_args=[3])
     # f() -> 84, 23
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (84, 23)

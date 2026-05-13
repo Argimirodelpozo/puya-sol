@@ -11,8 +11,8 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_shift_bytes(harness):
-    """optimizer/shift_bytes.sol"""
-    app = harness.compile_and_deploy("optimizer/shift_bytes.sol")
+    """optimizer/contracts/shift_bytes.sol"""
+    app = harness.compile_and_deploy("optimizer/contracts/shift_bytes.sol")
     # f(uint256): 0x0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f -> 0x1f, 0x1f, 3
     r = harness.call(app, "f(uint256)", 0x102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f)
     assert tuple(r.abi_return) == (31, 31, 3)
@@ -21,8 +21,8 @@ def test_shift_bytes(harness):
     assert tuple(r.abi_return) == (1, 3, 5)
 
 def test_unused_store_storage_removal_bug(harness):
-    """optimizer/unused_store_storage_removal_bug.sol"""
-    app = harness.compile_and_deploy("optimizer/unused_store_storage_removal_bug.sol")
+    """optimizer/contracts/unused_store_storage_removal_bug.sol"""
+    app = harness.compile_and_deploy("optimizer/contracts/unused_store_storage_removal_bug.sol")
     # f() ->
     r = harness.call(app, "f()")
     # (void return — call succeeding is the assertion)

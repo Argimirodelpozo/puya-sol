@@ -11,8 +11,8 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_function_selector_via_contract_name(harness):
-    """functionSelector/function_selector_via_contract_name.sol"""
-    app = harness.compile_and_deploy("functionSelector/function_selector_via_contract_name.sol")
+    """functionSelector/contracts/function_selector_via_contract_name.sol"""
+    app = harness.compile_and_deploy("functionSelector/contracts/function_selector_via_contract_name.sol")
     # test1() -> left(0x26121ff0), left(0xe420264a), left(0x26121ff0), left(0xe420264a)
     r = harness.call(app, "test1()")
     # TODO: verify expected: left(0x26121ff0) | left(0xe420264a) | left(0x26121ff0) | left(0xe420264a)

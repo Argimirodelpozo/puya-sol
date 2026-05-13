@@ -11,8 +11,8 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_blobhash(harness):
-    """state/blobhash.sol"""
-    app = harness.compile_and_deploy("state/blobhash.sol")
+    """state/contracts/blobhash.sol"""
+    app = harness.compile_and_deploy("state/contracts/blobhash.sol")
     # f(uint256): 0 -> 0x0100000000000000000000000000000000000000000000000000000000000001
     r = harness.call(app, "f(uint256)", 0)
     assert r.abi_return == 452312848583266388373324160190187140051835877600158453279131187530910662657
@@ -33,8 +33,8 @@ def test_blobhash(harness):
     assert r.abi_return == 0
 
 def test_block_basefee(harness):
-    """state/block_basefee.sol"""
-    app = harness.compile_and_deploy("state/block_basefee.sol")
+    """state/contracts/block_basefee.sol"""
+    app = harness.compile_and_deploy("state/contracts/block_basefee.sol")
     # f() -> 0
     r = harness.call(app, "f()")
     assert r.abi_return == 0
@@ -49,8 +49,8 @@ def test_block_basefee(harness):
     assert r.abi_return == 0
 
 def test_block_blobbasefee(harness):
-    """state/block_blobbasefee.sol"""
-    app = harness.compile_and_deploy("state/block_blobbasefee.sol")
+    """state/contracts/block_blobbasefee.sol"""
+    app = harness.compile_and_deploy("state/contracts/block_blobbasefee.sol")
     # f() -> 0
     r = harness.call(app, "f()")
     assert r.abi_return == 0
@@ -65,8 +65,8 @@ def test_block_blobbasefee(harness):
     assert r.abi_return == 0
 
 def test_block_chainid(harness):
-    """state/block_chainid.sol"""
-    app = harness.compile_and_deploy("state/block_chainid.sol")
+    """state/contracts/block_chainid.sol"""
+    app = harness.compile_and_deploy("state/contracts/block_chainid.sol")
     # f() -> true
     r = harness.call(app, "f()")
     assert r.abi_return is True
@@ -78,8 +78,8 @@ def test_block_chainid(harness):
     assert r.abi_return is True
 
 def test_block_coinbase(harness):
-    """state/block_coinbase.sol"""
-    app = harness.compile_and_deploy("state/block_coinbase.sol")
+    """state/contracts/block_coinbase.sol"""
+    app = harness.compile_and_deploy("state/contracts/block_coinbase.sol")
     # f() -> true
     r = harness.call(app, "f()")
     assert r.abi_return is True
@@ -91,8 +91,8 @@ def test_block_coinbase(harness):
     assert r.abi_return is True
 
 def test_block_difficulty(harness):
-    """state/block_difficulty.sol"""
-    app = harness.compile_and_deploy("state/block_difficulty.sol", evm_version='london')
+    """state/contracts/block_difficulty.sol"""
+    app = harness.compile_and_deploy("state/contracts/block_difficulty.sol", evm_version='london')
     # f() -> 0
     r = harness.call(app, "f()")
     assert r.abi_return == 0
@@ -104,8 +104,8 @@ def test_block_difficulty(harness):
     assert r.abi_return == 0
 
 def test_block_difficulty_post_paris(harness):
-    """state/block_difficulty_post_paris.sol"""
-    app = harness.compile_and_deploy("state/block_difficulty_post_paris.sol")
+    """state/contracts/block_difficulty_post_paris.sol"""
+    app = harness.compile_and_deploy("state/contracts/block_difficulty_post_paris.sol")
     # f() -> 0
     r = harness.call(app, "f()")
     assert r.abi_return == 0
@@ -117,8 +117,8 @@ def test_block_difficulty_post_paris(harness):
     assert r.abi_return == 0
 
 def test_block_gaslimit(harness):
-    """state/block_gaslimit.sol"""
-    app = harness.compile_and_deploy("state/block_gaslimit.sol")
+    """state/contracts/block_gaslimit.sol"""
+    app = harness.compile_and_deploy("state/contracts/block_gaslimit.sol")
     # f() -> 70000
     r = harness.call(app, "f()")
     assert r.abi_return == 70000
@@ -130,8 +130,8 @@ def test_block_gaslimit(harness):
     assert r.abi_return == 70000
 
 def test_block_number(harness):
-    """state/block_number.sol"""
-    app = harness.compile_and_deploy("state/block_number.sol")
+    """state/contracts/block_number.sol"""
+    app = harness.compile_and_deploy("state/contracts/block_number.sol")
     # f() -> true
     r = harness.call(app, "f()")
     assert r.abi_return is True
@@ -140,22 +140,22 @@ def test_block_number(harness):
     assert r.abi_return is True
 
 def test_block_prevrandao(harness):
-    """state/block_prevrandao.sol"""
-    app = harness.compile_and_deploy("state/block_prevrandao.sol")
+    """state/contracts/block_prevrandao.sol"""
+    app = harness.compile_and_deploy("state/contracts/block_prevrandao.sol")
     # f() -> true
     r = harness.call(app, "f()")
     assert r.abi_return is True
 
 def test_block_prevrandao_pre_paris(harness):
-    """state/block_prevrandao_pre_paris.sol"""
-    app = harness.compile_and_deploy("state/block_prevrandao_pre_paris.sol", evm_version='london')
+    """state/contracts/block_prevrandao_pre_paris.sol"""
+    app = harness.compile_and_deploy("state/contracts/block_prevrandao_pre_paris.sol", evm_version='london')
     # f() -> true
     r = harness.call(app, "f()")
     assert r.abi_return is True
 
 def test_block_timestamp(harness):
-    """state/block_timestamp.sol"""
-    app = harness.compile_and_deploy("state/block_timestamp.sol")
+    """state/contracts/block_timestamp.sol"""
+    app = harness.compile_and_deploy("state/contracts/block_timestamp.sol")
     # f() -> true
     r = harness.call(app, "f()")
     assert r.abi_return is True
@@ -164,8 +164,8 @@ def test_block_timestamp(harness):
     assert r.abi_return is True
 
 def test_blockhash_basic(harness):
-    """state/blockhash_basic.sol"""
-    app = harness.compile_and_deploy("state/blockhash_basic.sol")
+    """state/contracts/blockhash_basic.sol"""
+    app = harness.compile_and_deploy("state/contracts/blockhash_basic.sol")
     # genesisHash() -> 0x3737373737373737373737373737373737373737373737373737373737373737
     r = harness.call(app, "genesisHash()")
     assert r.abi_return == 24974764345303493130574134021481705615411173163177376557530067138961655412535
@@ -189,8 +189,8 @@ def test_blockhash_basic(harness):
     assert r.abi_return == 0
 
 def test_gasleft(harness):
-    """state/gasleft.sol"""
-    app = harness.compile_and_deploy("state/gasleft.sol")
+    """state/contracts/gasleft.sol"""
+    app = harness.compile_and_deploy("state/contracts/gasleft.sol")
     # f() -> true
     r = harness.call(app, "f()")
     assert r.abi_return is True
@@ -202,8 +202,8 @@ def test_gasleft(harness):
     assert r.abi_return is True
 
 def test_msg_data(harness):
-    """state/msg_data.sol"""
-    app = harness.compile_and_deploy("state/msg_data.sol")
+    """state/contracts/msg_data.sol"""
+    app = harness.compile_and_deploy("state/contracts/msg_data.sol")
     # f() -> 0x20, 4, 17219911917854084299749778639755835327755045716242581057573779540915269926912
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (32, 4, 17219911917854084299749778639755835327755045716242581057573779540915269926912)
@@ -213,15 +213,15 @@ def test_msg_data(harness):
     assert not r.reverted
 
 def test_msg_sender(harness):
-    """state/msg_sender.sol"""
-    app = harness.compile_and_deploy("state/msg_sender.sol")
+    """state/contracts/msg_sender.sol"""
+    app = harness.compile_and_deploy("state/contracts/msg_sender.sol")
     # f() -> true
     r = harness.call(app, "f()")
     assert r.abi_return is True
 
 def test_msg_sig(harness):
-    """state/msg_sig.sol"""
-    app = harness.compile_and_deploy("state/msg_sig.sol")
+    """state/contracts/msg_sig.sol"""
+    app = harness.compile_and_deploy("state/contracts/msg_sig.sol")
     # f() -> 0x26121ff000000000000000000000000000000000000000000000000000000000
     r = harness.call(app, "f()")
     assert r.abi_return == 17219911917854084299749778639755835327755045716242581057573779540915269926912
@@ -230,8 +230,8 @@ def test_msg_sig(harness):
     assert r.abi_return == 102264414861304285884729579275374176073311626045629144087797787832582884294656
 
 def test_msg_value(harness):
-    """state/msg_value.sol"""
-    app = harness.compile_and_deploy("state/msg_value.sol")
+    """state/contracts/msg_value.sol"""
+    app = harness.compile_and_deploy("state/contracts/msg_value.sol")
     # f() -> 0
     r = harness.call(app, "f()")
     assert r.abi_return == 0
@@ -240,8 +240,8 @@ def test_msg_value(harness):
     assert r.abi_return == 12000000000000000000
 
 def test_tx_gasprice(harness):
-    """state/tx_gasprice.sol"""
-    app = harness.compile_and_deploy("state/tx_gasprice.sol")
+    """state/contracts/tx_gasprice.sol"""
+    app = harness.compile_and_deploy("state/contracts/tx_gasprice.sol")
     # f() -> true
     r = harness.call(app, "f()")
     assert r.abi_return is True
@@ -253,8 +253,8 @@ def test_tx_gasprice(harness):
     assert r.abi_return is True
 
 def test_tx_origin(harness):
-    """state/tx_origin.sol"""
-    app = harness.compile_and_deploy("state/tx_origin.sol")
+    """state/contracts/tx_origin.sol"""
+    app = harness.compile_and_deploy("state/contracts/tx_origin.sol")
     # f() -> true
     r = harness.call(app, "f()")
     assert r.abi_return is True
@@ -266,15 +266,15 @@ def test_tx_origin(harness):
     assert r.abi_return is True
 
 def test_uncalled_blobhash(harness):
-    """state/uncalled_blobhash.sol"""
-    app = harness.compile_and_deploy("state/uncalled_blobhash.sol")
+    """state/contracts/uncalled_blobhash.sol"""
+    app = harness.compile_and_deploy("state/contracts/uncalled_blobhash.sol")
     # f() -> 0x0100000000000000000000000000000000000000000000000000000000000001
     r = harness.call(app, "f()")
     assert r.abi_return == 452312848583266388373324160190187140051835877600158453279131187530910662657
 
 def test_uncalled_blockhash(harness):
-    """state/uncalled_blockhash.sol"""
-    app = harness.compile_and_deploy("state/uncalled_blockhash.sol")
+    """state/contracts/uncalled_blockhash.sol"""
+    app = harness.compile_and_deploy("state/contracts/uncalled_blockhash.sol")
     # f() -> 0x3737373737373737373737373737373737373737373737373737373737373738
     r = harness.call(app, "f()")
     assert r.abi_return == 24974764345303493130574134021481705615411173163177376557530067138961655412536

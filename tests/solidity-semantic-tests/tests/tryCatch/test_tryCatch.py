@@ -11,8 +11,8 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_assert_(harness):
-    """tryCatch/assert.sol"""
-    app = harness.compile_and_deploy("tryCatch/assert.sol")
+    """tryCatch/contracts/assert.sol"""
+    app = harness.compile_and_deploy("tryCatch/contracts/assert.sol")
     # f(bool): true -> 1
     r = harness.call(app, "f(bool)", True)
     assert r.abi_return == 1
@@ -21,8 +21,8 @@ def test_assert_(harness):
     assert r.abi_return == 2
 
 def test_assert_pre_byzantium(harness):
-    """tryCatch/assert_pre_byzantium.sol"""
-    app = harness.compile_and_deploy("tryCatch/assert_pre_byzantium.sol", evm_version='spuriousDragon')
+    """tryCatch/contracts/assert_pre_byzantium.sol"""
+    app = harness.compile_and_deploy("tryCatch/contracts/assert_pre_byzantium.sol", evm_version='spuriousDragon')
     # f(bool): true -> 1
     r = harness.call(app, "f(bool)", True)
     assert r.abi_return == 1
@@ -31,8 +31,8 @@ def test_assert_pre_byzantium(harness):
     assert r.abi_return == 2
 
 def test_create(harness):
-    """tryCatch/create.sol"""
-    app = harness.compile_and_deploy("tryCatch/create.sol")
+    """tryCatch/contracts/create.sol"""
+    app = harness.compile_and_deploy("tryCatch/contracts/create.sol")
     # f() -> false, 0x40, 13, "test message."
     r = harness.call(app, "f()")
     # TODO: verify expected: false | 0x40 | 13 | "test message."
@@ -43,8 +43,8 @@ def test_create(harness):
     assert not r.reverted
 
 def test_invalid_error_encoding(harness):
-    """tryCatch/invalid_error_encoding.sol"""
-    app = harness.compile_and_deploy("tryCatch/invalid_error_encoding.sol")
+    """tryCatch/contracts/invalid_error_encoding.sol"""
+    app = harness.compile_and_deploy("tryCatch/contracts/invalid_error_encoding.sol")
     # f1() -> 2
     r = harness.call(app, "f1()")
     assert r.abi_return == 2
@@ -95,8 +95,8 @@ def test_invalid_error_encoding(harness):
     assert r.abi_return == 1
 
 def test_lowLevel(harness):
-    """tryCatch/lowLevel.sol"""
-    app = harness.compile_and_deploy("tryCatch/lowLevel.sol")
+    """tryCatch/contracts/lowLevel.sol"""
+    app = harness.compile_and_deploy("tryCatch/contracts/lowLevel.sol")
     # f(bool): true -> 1, 2, 96, 0
     r = harness.call(app, "f(bool)", True)
     assert tuple(r.abi_return) == (1, 2, 96, 0)
@@ -106,8 +106,8 @@ def test_lowLevel(harness):
     assert not r.reverted
 
 def test_malformed_error(harness):
-    """tryCatch/malformed_error.sol"""
-    app = harness.compile_and_deploy("tryCatch/malformed_error.sol")
+    """tryCatch/contracts/malformed_error.sol"""
+    app = harness.compile_and_deploy("tryCatch/contracts/malformed_error.sol")
     # a() -> 0x00
     r = harness.call(app, "a()")
     assert r.abi_return == 0
@@ -128,8 +128,8 @@ def test_malformed_error(harness):
     assert r.abi_return == 'abcdefg'
 
 def test_malformed_panic(harness):
-    """tryCatch/malformed_panic.sol"""
-    app = harness.compile_and_deploy("tryCatch/malformed_panic.sol")
+    """tryCatch/contracts/malformed_panic.sol"""
+    app = harness.compile_and_deploy("tryCatch/contracts/malformed_panic.sol")
     # a() -> 0x00
     r = harness.call(app, "a()")
     assert r.abi_return == 0
@@ -144,8 +144,8 @@ def test_malformed_panic(harness):
     assert r.abi_return == 67
 
 def test_malformed_panic_2(harness):
-    """tryCatch/malformed_panic_2.sol"""
-    app = harness.compile_and_deploy("tryCatch/malformed_panic_2.sol")
+    """tryCatch/contracts/malformed_panic_2.sol"""
+    app = harness.compile_and_deploy("tryCatch/contracts/malformed_panic_2.sol")
     # a() -> FAILURE, hex"4e487b"
     r = harness.call(app, "a()", expect_revert=True)
     assert r.reverted
@@ -160,8 +160,8 @@ def test_malformed_panic_2(harness):
     assert r.abi_return == 67
 
 def test_malformed_panic_3(harness):
-    """tryCatch/malformed_panic_3.sol"""
-    app = harness.compile_and_deploy("tryCatch/malformed_panic_3.sol")
+    """tryCatch/contracts/malformed_panic_3.sol"""
+    app = harness.compile_and_deploy("tryCatch/contracts/malformed_panic_3.sol")
     # a() -> FAILURE, hex"4e487b"
     r = harness.call(app, "a()", expect_revert=True)
     assert r.reverted
@@ -176,8 +176,8 @@ def test_malformed_panic_3(harness):
     assert r.abi_return == 67
 
 def test_malformed_panic_4(harness):
-    """tryCatch/malformed_panic_4.sol"""
-    app = harness.compile_and_deploy("tryCatch/malformed_panic_4.sol")
+    """tryCatch/contracts/malformed_panic_4.sol"""
+    app = harness.compile_and_deploy("tryCatch/contracts/malformed_panic_4.sol")
     # a() -> 0x00
     r = harness.call(app, "a()")
     assert r.abi_return == 0
@@ -189,8 +189,8 @@ def test_malformed_panic_4(harness):
     assert r.abi_return == 67
 
 def test_nested(harness):
-    """tryCatch/nested.sol"""
-    app = harness.compile_and_deploy("tryCatch/nested.sol")
+    """tryCatch/contracts/nested.sol"""
+    app = harness.compile_and_deploy("tryCatch/contracts/nested.sol")
     # f(bool,bool): true, true -> 1, 2, 96, 7, "success"
     r = harness.call(app, "f(bool,bool)", True, True)
     # TODO: verify expected: 1 | 2 | 96 | 7 | "success"
@@ -209,8 +209,8 @@ def test_nested(harness):
     assert not r.reverted
 
 def test_panic(harness):
-    """tryCatch/panic.sol"""
-    app = harness.compile_and_deploy("tryCatch/panic.sol")
+    """tryCatch/contracts/panic.sol"""
+    app = harness.compile_and_deploy("tryCatch/contracts/panic.sol")
     # onlyPanic(bool,uint256,uint256): true, 7, 6 -> 1, 0x00
     r = harness.call(app, "onlyPanic(bool,uint256,uint256)", True, 7, 6)
     assert tuple(r.abi_return) == (1, 0)
@@ -239,8 +239,8 @@ def test_panic(harness):
     assert not r.reverted
 
 def test_require(harness):
-    """tryCatch/require.sol"""
-    app = harness.compile_and_deploy("tryCatch/require.sol")
+    """tryCatch/contracts/require.sol"""
+    app = harness.compile_and_deploy("tryCatch/contracts/require.sol")
     # f(bool): true -> 1
     r = harness.call(app, "f(bool)", True)
     assert r.abi_return == 1
@@ -249,8 +249,8 @@ def test_require(harness):
     assert r.abi_return == 2
 
 def test_require_pre_byzantium(harness):
-    """tryCatch/require_pre_byzantium.sol"""
-    app = harness.compile_and_deploy("tryCatch/require_pre_byzantium.sol", evm_version='spuriousDragon')
+    """tryCatch/contracts/require_pre_byzantium.sol"""
+    app = harness.compile_and_deploy("tryCatch/contracts/require_pre_byzantium.sol", evm_version='spuriousDragon')
     # f(bool): true -> 1
     r = harness.call(app, "f(bool)", True)
     assert r.abi_return == 1
@@ -259,15 +259,15 @@ def test_require_pre_byzantium(harness):
     assert r.abi_return == 2
 
 def test_return_function(harness):
-    """tryCatch/return_function.sol"""
-    app = harness.compile_and_deploy("tryCatch/return_function.sol")
+    """tryCatch/contracts/return_function.sol"""
+    app = harness.compile_and_deploy("tryCatch/contracts/return_function.sol")
     # f() -> 0x1, 0x1234946644cd0000000000000000, 9
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (1, 369249164733261476318508228804608, 9)
 
 def test_simple(harness):
-    """tryCatch/simple.sol"""
-    app = harness.compile_and_deploy("tryCatch/simple.sol")
+    """tryCatch/contracts/simple.sol"""
+    app = harness.compile_and_deploy("tryCatch/contracts/simple.sol")
     # f(bool): true -> 1, 2
     r = harness.call(app, "f(bool)", True)
     assert tuple(r.abi_return) == (1, 2)
@@ -276,8 +276,8 @@ def test_simple(harness):
     assert tuple(r.abi_return) == (9, 10)
 
 def test_simple_notuple(harness):
-    """tryCatch/simple_notuple.sol"""
-    app = harness.compile_and_deploy("tryCatch/simple_notuple.sol")
+    """tryCatch/contracts/simple_notuple.sol"""
+    app = harness.compile_and_deploy("tryCatch/contracts/simple_notuple.sol")
     # f(bool): true -> 13
     r = harness.call(app, "f(bool)", True)
     assert r.abi_return == 13
@@ -286,8 +286,8 @@ def test_simple_notuple(harness):
     assert r.abi_return == 9
 
 def test_structured(harness):
-    """tryCatch/structured.sol"""
-    app = harness.compile_and_deploy("tryCatch/structured.sol")
+    """tryCatch/contracts/structured.sol"""
+    app = harness.compile_and_deploy("tryCatch/contracts/structured.sol")
     # f(bool): true -> 1, 2, 0x60, 7, "success"
     r = harness.call(app, "f(bool)", True)
     # TODO: verify expected: 1 | 2 | 0x60 | 7 | "success"
@@ -298,8 +298,8 @@ def test_structured(harness):
     assert not r.reverted
 
 def test_structuredAndLowLevel(harness):
-    """tryCatch/structuredAndLowLevel.sol"""
-    app = harness.compile_and_deploy("tryCatch/structuredAndLowLevel.sol")
+    """tryCatch/contracts/structuredAndLowLevel.sol"""
+    app = harness.compile_and_deploy("tryCatch/contracts/structuredAndLowLevel.sol")
     # f(bool): true -> 1, 2, 96, 7, "success"
     r = harness.call(app, "f(bool)", True)
     # TODO: verify expected: 1 | 2 | 96 | 7 | "success"
@@ -310,8 +310,8 @@ def test_structuredAndLowLevel(harness):
     assert not r.reverted
 
 def test_try_catch_library_call(harness):
-    """tryCatch/try_catch_library_call.sol"""
-    app = harness.compile_and_deploy("tryCatch/try_catch_library_call.sol")
+    """tryCatch/contracts/try_catch_library_call.sol"""
+    app = harness.compile_and_deploy("tryCatch/contracts/try_catch_library_call.sol")
     # f(bool): true -> 8, 0x40, 0
     r = harness.call(app, "f(bool)", True)
     assert tuple(r.abi_return) == (8, 64, 0)

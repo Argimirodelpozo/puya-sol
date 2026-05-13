@@ -11,8 +11,8 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_function_type_array_to_storage(harness):
-    """conversions/function_type_array_to_storage.sol"""
-    app = harness.compile_and_deploy("conversions/function_type_array_to_storage.sol")
+    """conversions/contracts/function_type_array_to_storage.sol"""
+    app = harness.compile_and_deploy("conversions/contracts/function_type_array_to_storage.sol")
     # testViewToDefault() -> 12, 22
     r = harness.call(app, "testViewToDefault()")
     assert tuple(r.abi_return) == (12, 22)
@@ -24,8 +24,8 @@ def test_function_type_array_to_storage(harness):
     assert tuple(r.abi_return) == (13, 23)
 
 def test_string_to_bytes(harness):
-    """conversions/string_to_bytes.sol"""
-    app = harness.compile_and_deploy("conversions/string_to_bytes.sol")
+    """conversions/contracts/string_to_bytes.sol"""
+    app = harness.compile_and_deploy("conversions/contracts/string_to_bytes.sol")
     # f(string): 32, 5, "Hello" -> 32, 5, "Hello"
     r = harness.call(app, "f(string)", 32, 5, bytes.fromhex('48656c6c6f'))
     assert r.abi_return == 'Hello'

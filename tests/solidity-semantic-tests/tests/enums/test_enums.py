@@ -11,15 +11,15 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_constructing_enums_from_ints(harness):
-    """enums/constructing_enums_from_ints.sol"""
-    app = harness.compile_and_deploy("enums/constructing_enums_from_ints.sol")
+    """enums/contracts/constructing_enums_from_ints.sol"""
+    app = harness.compile_and_deploy("enums/contracts/constructing_enums_from_ints.sol")
     # test() -> 1
     r = harness.call(app, "test()")
     assert r.abi_return == 1
 
 def test_enum_explicit_overflow(harness):
-    """enums/enum_explicit_overflow.sol"""
-    app = harness.compile_and_deploy("enums/enum_explicit_overflow.sol")
+    """enums/contracts/enum_explicit_overflow.sol"""
+    app = harness.compile_and_deploy("enums/contracts/enum_explicit_overflow.sol")
     # getChoiceExp(uint256): 2 -> 2
     r = harness.call(app, "getChoiceExp(uint256)", 2)
     assert r.abi_return == 2
@@ -41,8 +41,8 @@ def test_enum_explicit_overflow(harness):
     assert r.abi_return == 0
 
 def test_enum_explicit_overflow_homestead(harness):
-    """enums/enum_explicit_overflow_homestead.sol"""
-    app = harness.compile_and_deploy("enums/enum_explicit_overflow_homestead.sol", evm_version='spuriousDragon')
+    """enums/contracts/enum_explicit_overflow_homestead.sol"""
+    app = harness.compile_and_deploy("enums/contracts/enum_explicit_overflow_homestead.sol", evm_version='spuriousDragon')
     # getChoiceExp(uint256): 3 -> FAILURE # These should throw #
     r = harness.call(app, "getChoiceExp(uint256)", 3, expect_revert=True)
     assert r.reverted
@@ -61,8 +61,8 @@ def test_enum_explicit_overflow_homestead(harness):
     assert r.abi_return == 0
 
 def test_enum_referencing(harness):
-    """enums/enum_referencing.sol"""
-    app = harness.compile_and_deploy("enums/enum_referencing.sol")
+    """enums/contracts/enum_referencing.sol"""
+    app = harness.compile_and_deploy("enums/contracts/enum_referencing.sol")
     # f() -> 3
     r = harness.call(app, "f()")
     assert r.abi_return == 3
@@ -86,8 +86,8 @@ def test_enum_referencing(harness):
     assert r.abi_return == 3
 
 def test_enum_with_256_members(harness):
-    """enums/enum_with_256_members.sol"""
-    app = harness.compile_and_deploy("enums/enum_with_256_members.sol")
+    """enums/contracts/enum_with_256_members.sol"""
+    app = harness.compile_and_deploy("enums/contracts/enum_with_256_members.sol")
     # getMinMax() -> 0, 255
     r = harness.call(app, "getMinMax()")
     assert tuple(r.abi_return) == (0, 255)
@@ -117,8 +117,8 @@ def test_enum_with_256_members(harness):
     assert r.reverted
 
 def test_invalid_enum_logged(harness):
-    """enums/invalid_enum_logged.sol"""
-    app = harness.compile_and_deploy("enums/invalid_enum_logged.sol")
+    """enums/contracts/invalid_enum_logged.sol"""
+    app = harness.compile_and_deploy("enums/contracts/invalid_enum_logged.sol")
     # test_log_ok() -> 1
     r = harness.call(app, "test_log_ok()")
     assert r.abi_return == 1
@@ -127,8 +127,8 @@ def test_invalid_enum_logged(harness):
     assert r.reverted
 
 def test_minmax(harness):
-    """enums/minmax.sol"""
-    app = harness.compile_and_deploy("enums/minmax.sol")
+    """enums/contracts/minmax.sol"""
+    app = harness.compile_and_deploy("enums/contracts/minmax.sol")
     # min() -> 0
     r = harness.call(app, "min()")
     assert r.abi_return == 0
@@ -137,29 +137,29 @@ def test_minmax(harness):
     assert r.abi_return == 3
 
 def test_using_contract_enums_with_explicit_contract_name(harness):
-    """enums/using_contract_enums_with_explicit_contract_name.sol"""
-    app = harness.compile_and_deploy("enums/using_contract_enums_with_explicit_contract_name.sol")
+    """enums/contracts/using_contract_enums_with_explicit_contract_name.sol"""
+    app = harness.compile_and_deploy("enums/contracts/using_contract_enums_with_explicit_contract_name.sol")
     # answer() -> 1
     r = harness.call(app, "answer()")
     assert r.abi_return == 1
 
 def test_using_enums(harness):
-    """enums/using_enums.sol"""
-    app = harness.compile_and_deploy("enums/using_enums.sol")
+    """enums/contracts/using_enums.sol"""
+    app = harness.compile_and_deploy("enums/contracts/using_enums.sol")
     # getChoice() -> 2
     r = harness.call(app, "getChoice()")
     assert r.abi_return == 2
 
 def test_using_inherited_enum(harness):
-    """enums/using_inherited_enum.sol"""
-    app = harness.compile_and_deploy("enums/using_inherited_enum.sol")
+    """enums/contracts/using_inherited_enum.sol"""
+    app = harness.compile_and_deploy("enums/contracts/using_inherited_enum.sol")
     # answer() -> 1
     r = harness.call(app, "answer()")
     assert r.abi_return == 1
 
 def test_using_inherited_enum_excplicitly(harness):
-    """enums/using_inherited_enum_excplicitly.sol"""
-    app = harness.compile_and_deploy("enums/using_inherited_enum_excplicitly.sol")
+    """enums/contracts/using_inherited_enum_excplicitly.sol"""
+    app = harness.compile_and_deploy("enums/contracts/using_inherited_enum_excplicitly.sol")
     # answer() -> 1
     r = harness.call(app, "answer()")
     assert r.abi_return == 1

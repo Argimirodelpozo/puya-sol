@@ -11,8 +11,8 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_compound_assign(harness):
-    """operators/compound_assign.sol"""
-    app = harness.compile_and_deploy("operators/compound_assign.sol")
+    """operators/contracts/compound_assign.sol"""
+    app = harness.compile_and_deploy("operators/contracts/compound_assign.sol")
     # f(uint256,uint256): 0, 6 -> 7
     r = harness.call(app, "f(uint256,uint256)", 0, 6)
     assert r.abi_return == 7
@@ -39,8 +39,8 @@ def test_compound_assign(harness):
     assert r.abi_return == 408349672884251
 
 def test_compound_assign_transient_storage(harness):
-    """operators/compound_assign_transient_storage.sol"""
-    app = harness.compile_and_deploy("operators/compound_assign_transient_storage.sol")
+    """operators/contracts/compound_assign_transient_storage.sol"""
+    app = harness.compile_and_deploy("operators/contracts/compound_assign_transient_storage.sol")
     # f(uint256,uint256): 0, 6 -> 7
     r = harness.call(app, "f(uint256,uint256)", 0, 6)
     assert r.abi_return == 7
@@ -67,8 +67,8 @@ def test_compound_assign_transient_storage(harness):
     assert r.abi_return == 371
 
 def test_transient_storage_variable_increment_decrement(harness):
-    """operators/transient_storage_variable_increment_decrement.sol"""
-    app = harness.compile_and_deploy("operators/transient_storage_variable_increment_decrement.sol")
+    """operators/contracts/transient_storage_variable_increment_decrement.sol"""
+    app = harness.compile_and_deploy("operators/contracts/transient_storage_variable_increment_decrement.sol")
     # f() -> 1
     r = harness.call(app, "f()")
     assert r.abi_return == 1

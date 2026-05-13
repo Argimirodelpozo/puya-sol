@@ -324,7 +324,7 @@ def render_test_file(category: str, sol_files: list[Path]) -> str:
         stem = sol.stem
         fname = "test_" + _sanitize_function_name(stem)
         test = parse_test_file(sol)
-        rel = f"{category}/{sol.name}"
+        rel = f"{category}/contracts/{sol.name}"
 
         body.append(f"def {fname}(harness):")
         body.append(f'    """{rel}"""')
@@ -387,7 +387,9 @@ def main():
 
     summary = []
     for cat_dir in categories:
-        sol_files = sorted(cat_dir.glob("*.sol"))
+        contracts_dir = cat_dir / "contracts"
+        sol_dir = contracts_dir if contracts_dir.exists() else cat_dir
+        sol_files = sorted(sol_dir.glob("*.sol"))
         if not sol_files:
             continue
         out_path = cat_dir / f"test_{_sanitize_function_name(cat_dir.name)}.py"

@@ -11,8 +11,8 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_array_mapping_struct(harness):
-    """getters/array_mapping_struct.sol"""
-    app = harness.compile_and_deploy("getters/array_mapping_struct.sol")
+    """getters/contracts/array_mapping_struct.sol"""
+    app = harness.compile_and_deploy("getters/contracts/array_mapping_struct.sol")
     # m(uint256,uint256): 0, 0 -> 0x00, 0x00
     r = harness.call(app, "m(uint256,uint256)", 0, 0)
     assert tuple(r.abi_return) == (0, 0)
@@ -39,8 +39,8 @@ def test_array_mapping_struct(harness):
     assert tuple(r.abi_return) == (0, 0)
 
 def test_arrays(harness):
-    """getters/arrays.sol"""
-    app = harness.compile_and_deploy("getters/arrays.sol")
+    """getters/contracts/arrays.sol"""
+    app = harness.compile_and_deploy("getters/contracts/arrays.sol")
     # a(uint256,uint256): 0, 0 -> FAILURE
     r = harness.call(app, "a(uint256,uint256)", 0, 0, expect_revert=True)
     assert r.reverted
@@ -55,15 +55,15 @@ def test_arrays(harness):
     assert r.reverted
 
 def test_bytes(harness):
-    """getters/bytes.sol"""
-    app = harness.compile_and_deploy("getters/bytes.sol")
+    """getters/contracts/bytes.sol"""
+    app = harness.compile_and_deploy("getters/contracts/bytes.sol")
     # b() -> 0x20, 0x03, 0x6162630000000000000000000000000000000000000000000000000000000000
     r = harness.call(app, "b()")
     assert tuple(r.abi_return) == (32, 3, 44048180597813453602326562734351324025098966208897425494240603688123167145984)
 
 def test_mapping(harness):
-    """getters/mapping.sol"""
-    app = harness.compile_and_deploy("getters/mapping.sol")
+    """getters/contracts/mapping.sol"""
+    app = harness.compile_and_deploy("getters/contracts/mapping.sol")
     # x(uint256,uint256): 1, 2 -> 3
     r = harness.call(app, "x(uint256,uint256)", 1, 2)
     assert r.abi_return == 3
@@ -72,8 +72,8 @@ def test_mapping(harness):
     assert r.abi_return == 0
 
 def test_mapping_array_struct(harness):
-    """getters/mapping_array_struct.sol"""
-    app = harness.compile_and_deploy("getters/mapping_array_struct.sol")
+    """getters/contracts/mapping_array_struct.sol"""
+    app = harness.compile_and_deploy("getters/contracts/mapping_array_struct.sol")
     # m(uint256,uint256): 0, 0 -> FAILURE
     r = harness.call(app, "m(uint256,uint256)", 0, 0, expect_revert=True)
     assert r.reverted
@@ -100,8 +100,8 @@ def test_mapping_array_struct(harness):
     assert tuple(r.abi_return) == (0, 0)
 
 def test_mapping_of_string(harness):
-    """getters/mapping_of_string.sol"""
-    app = harness.compile_and_deploy("getters/mapping_of_string.sol")
+    """getters/contracts/mapping_of_string.sol"""
+    app = harness.compile_and_deploy("getters/contracts/mapping_of_string.sol")
     # x(string,uint256): 0x40, 0, 3, "abc" -> 1
     r = harness.call(app, "x(string,uint256)", 64, 0, 3, bytes.fromhex('616263'))
     assert r.abi_return == 1
@@ -122,8 +122,8 @@ def test_mapping_of_string(harness):
     assert r.abi_return == 0
 
 def test_mapping_to_struct(harness):
-    """getters/mapping_to_struct.sol"""
-    app = harness.compile_and_deploy("getters/mapping_to_struct.sol")
+    """getters/contracts/mapping_to_struct.sol"""
+    app = harness.compile_and_deploy("getters/contracts/mapping_to_struct.sol")
     # x(uint256,uint256): 1, 2 -> 3, 4, 5, 6
     r = harness.call(app, "x(uint256,uint256)", 1, 2)
     assert tuple(r.abi_return) == (3, 4, 5, 6)
@@ -132,8 +132,8 @@ def test_mapping_to_struct(harness):
     assert tuple(r.abi_return) == (0, 0, 0, 0)
 
 def test_mapping_with_names(harness):
-    """getters/mapping_with_names.sol"""
-    app = harness.compile_and_deploy("getters/mapping_with_names.sol")
+    """getters/contracts/mapping_with_names.sol"""
+    app = harness.compile_and_deploy("getters/contracts/mapping_with_names.sol")
     # x(uint256,uint256): 1, 2 -> 3
     r = harness.call(app, "x(uint256,uint256)", 1, 2)
     assert r.abi_return == 3
@@ -142,8 +142,8 @@ def test_mapping_with_names(harness):
     assert r.abi_return == 0
 
 def test_string_and_bytes(harness):
-    """getters/string_and_bytes.sol"""
-    app = harness.compile_and_deploy("getters/string_and_bytes.sol")
+    """getters/contracts/string_and_bytes.sol"""
+    app = harness.compile_and_deploy("getters/contracts/string_and_bytes.sol")
     # a() -> 0x20, 11, "hello world"
     r = harness.call(app, "a()")
     assert r.abi_return == 'hello world'
@@ -158,22 +158,22 @@ def test_string_and_bytes(harness):
     assert r.abi_return == 'abcd'
 
 def test_struct_with_bytes(harness):
-    """getters/struct_with_bytes.sol"""
-    app = harness.compile_and_deploy("getters/struct_with_bytes.sol")
+    """getters/contracts/struct_with_bytes.sol"""
+    app = harness.compile_and_deploy("getters/contracts/struct_with_bytes.sol")
     # s() -> 7, 0x40, 3, 0x6162630000000000000000000000000000000000000000000000000000000000
     r = harness.call(app, "s()")
     assert tuple(r.abi_return) == (7, 64, 3, 44048180597813453602326562734351324025098966208897425494240603688123167145984)
 
 def test_struct_with_bytes_simple(harness):
-    """getters/struct_with_bytes_simple.sol"""
-    app = harness.compile_and_deploy("getters/struct_with_bytes_simple.sol")
+    """getters/contracts/struct_with_bytes_simple.sol"""
+    app = harness.compile_and_deploy("getters/contracts/struct_with_bytes_simple.sol")
     # s() -> 0x07, 0x40, 0x03, 0x6162630000000000000000000000000000000000000000000000000000000000
     r = harness.call(app, "s()")
     assert tuple(r.abi_return) == (7, 64, 3, 44048180597813453602326562734351324025098966208897425494240603688123167145984)
 
 def test_transient_value_types(harness):
-    """getters/transient_value_types.sol"""
-    app = harness.compile_and_deploy("getters/transient_value_types.sol")
+    """getters/contracts/transient_value_types.sol"""
+    app = harness.compile_and_deploy("getters/contracts/transient_value_types.sol")
     # x() -> 0
     r = harness.call(app, "x()")
     assert r.abi_return == 0
@@ -185,8 +185,8 @@ def test_transient_value_types(harness):
     assert r.abi_return == 0
 
 def test_transient_value_types_multi_frame_call(harness):
-    """getters/transient_value_types_multi_frame_call.sol"""
-    app = harness.compile_and_deploy("getters/transient_value_types_multi_frame_call.sol")
+    """getters/contracts/transient_value_types_multi_frame_call.sol"""
+    app = harness.compile_and_deploy("getters/contracts/transient_value_types_multi_frame_call.sol")
     # x() -> 0
     r = harness.call(app, "x()")
     assert r.abi_return == 0
@@ -201,8 +201,8 @@ def test_transient_value_types_multi_frame_call(harness):
     assert r.abi_return == 0
 
 def test_value_types(harness):
-    """getters/value_types.sol"""
-    app = harness.compile_and_deploy("getters/value_types.sol")
+    """getters/contracts/value_types.sol"""
+    app = harness.compile_and_deploy("getters/contracts/value_types.sol")
     # a() -> 3
     r = harness.call(app, "a()")
     assert r.abi_return == 3

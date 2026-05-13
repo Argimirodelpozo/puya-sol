@@ -11,8 +11,8 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_assert_(harness):
-    """viaYul/assert.sol"""
-    app = harness.compile_and_deploy("viaYul/assert.sol")
+    """viaYul/contracts/assert.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/assert.sol")
     # f(bool): true -> true
     r = harness.call(app, "f(bool)", True)
     assert r.abi_return is True
@@ -27,8 +27,8 @@ def test_assert_(harness):
     assert r.abi_return is True
 
 def test_assert_and_require(harness):
-    """viaYul/assert_and_require.sol"""
-    app = harness.compile_and_deploy("viaYul/assert_and_require.sol")
+    """viaYul/contracts/assert_and_require.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/assert_and_require.sol")
     # f(bool): true -> true
     r = harness.call(app, "f(bool)", True)
     assert r.abi_return is True
@@ -43,8 +43,8 @@ def test_assert_and_require(harness):
     assert r.reverted
 
 def test_assign_tuple_from_function_call(harness):
-    """viaYul/assign_tuple_from_function_call.sol"""
-    app = harness.compile_and_deploy("viaYul/assign_tuple_from_function_call.sol")
+    """viaYul/contracts/assign_tuple_from_function_call.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/assign_tuple_from_function_call.sol")
     # g() -> 3, 2, 1
     r = harness.call(app, "g()")
     assert tuple(r.abi_return) == (3, 2, 1)
@@ -53,8 +53,8 @@ def test_assign_tuple_from_function_call(harness):
     assert r.abi_return == 3
 
 def test_comparison(harness):
-    """viaYul/comparison.sol"""
-    app = harness.compile_and_deploy("viaYul/comparison.sol")
+    """viaYul/contracts/comparison.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/comparison.sol")
     # f(address): 0x1234 -> false
     r = harness.call(app, "f(address)", 4660)
     assert r.abi_return is False
@@ -156,8 +156,8 @@ def test_comparison(harness):
     assert r.abi_return is True
 
 def test_comparison_functions(harness):
-    """viaYul/comparison_functions.sol"""
-    app = harness.compile_and_deploy("viaYul/comparison_functions.sol")
+    """viaYul/contracts/comparison_functions.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/comparison_functions.sol")
     # equal() -> true, false, false
     r = harness.call(app, "equal()")
     assert tuple(r.abi_return) == (True, False, False)
@@ -166,15 +166,15 @@ def test_comparison_functions(harness):
     assert tuple(r.abi_return) == (False, True, True)
 
 def test_copy_struct_invalid_ir_bug(harness):
-    """viaYul/copy_struct_invalid_ir_bug.sol"""
-    app = harness.compile_and_deploy("viaYul/copy_struct_invalid_ir_bug.sol")
+    """viaYul/contracts/copy_struct_invalid_ir_bug.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/copy_struct_invalid_ir_bug.sol")
     # f() ->
     r = harness.call(app, "f()")
     # (void return — call succeeding is the assertion)
 
 def test_define_tuple_from_function_call(harness):
-    """viaYul/define_tuple_from_function_call.sol"""
-    app = harness.compile_and_deploy("viaYul/define_tuple_from_function_call.sol")
+    """viaYul/contracts/define_tuple_from_function_call.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/define_tuple_from_function_call.sol")
     # g() -> 3, 2, 1
     r = harness.call(app, "g()")
     assert tuple(r.abi_return) == (3, 2, 1)
@@ -183,8 +183,8 @@ def test_define_tuple_from_function_call(harness):
     assert r.abi_return == 3
 
 def test_delete(harness):
-    """viaYul/delete.sol"""
-    app = harness.compile_and_deploy("viaYul/delete.sol")
+    """viaYul/contracts/delete.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/delete.sol")
     # call_deleted_internal_func() -> FAILURE, hex"4e487b71", 0x51
     r = harness.call(app, "call_deleted_internal_func()", expect_revert=True)
     assert r.reverted
@@ -193,8 +193,8 @@ def test_delete(harness):
     assert r.abi_return is True
 
 def test_detect_add_overflow(harness):
-    """viaYul/detect_add_overflow.sol"""
-    app = harness.compile_and_deploy("viaYul/detect_add_overflow.sol")
+    """viaYul/contracts/detect_add_overflow.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/detect_add_overflow.sol")
     # f(uint256,uint256): 5, 6 -> 11
     r = harness.call(app, "f(uint256,uint256)", 5, 6)
     assert r.abi_return == 11
@@ -218,8 +218,8 @@ def test_detect_add_overflow(harness):
     assert r.reverted
 
 def test_detect_add_overflow_signed(harness):
-    """viaYul/detect_add_overflow_signed.sol"""
-    app = harness.compile_and_deploy("viaYul/detect_add_overflow_signed.sol")
+    """viaYul/contracts/detect_add_overflow_signed.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/detect_add_overflow_signed.sol")
     # f(int256,int256): 5, 6 -> 11
     r = harness.call(app, "f(int256,int256)", 5, 6)
     assert r.abi_return == 11
@@ -306,8 +306,8 @@ def test_detect_add_overflow_signed(harness):
     assert r.abi_return == -128
 
 def test_detect_div_overflow(harness):
-    """viaYul/detect_div_overflow.sol"""
-    app = harness.compile_and_deploy("viaYul/detect_div_overflow.sol")
+    """viaYul/contracts/detect_div_overflow.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/detect_div_overflow.sol")
     # f(uint256,uint256): 10, 3 -> 3
     r = harness.call(app, "f(uint256,uint256)", 10, 3)
     assert r.abi_return == 3
@@ -349,8 +349,8 @@ def test_detect_div_overflow(harness):
     assert r.abi_return == 0
 
 def test_detect_mod_zero(harness):
-    """viaYul/detect_mod_zero.sol"""
-    app = harness.compile_and_deploy("viaYul/detect_mod_zero.sol")
+    """viaYul/contracts/detect_mod_zero.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/detect_mod_zero.sol")
     # f(uint256,uint256): 10, 3 -> 1
     r = harness.call(app, "f(uint256,uint256)", 10, 3)
     assert r.abi_return == 1
@@ -395,8 +395,8 @@ def test_detect_mod_zero(harness):
     assert r.abi_return == 0
 
 def test_detect_mod_zero_signed(harness):
-    """viaYul/detect_mod_zero_signed.sol"""
-    app = harness.compile_and_deploy("viaYul/detect_mod_zero_signed.sol")
+    """viaYul/contracts/detect_mod_zero_signed.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/detect_mod_zero_signed.sol")
     # f(int256,int256): 10, 3 -> 1
     r = harness.call(app, "f(int256,int256)", 10, 3)
     assert r.abi_return == 1
@@ -477,8 +477,8 @@ def test_detect_mod_zero_signed(harness):
     assert r.abi_return == -1
 
 def test_detect_mul_overflow(harness):
-    """viaYul/detect_mul_overflow.sol"""
-    app = harness.compile_and_deploy("viaYul/detect_mul_overflow.sol")
+    """viaYul/contracts/detect_mul_overflow.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/detect_mul_overflow.sol")
     # f(uint256,uint256): 5, 6 -> 30
     r = harness.call(app, "f(uint256,uint256)", 5, 6)
     assert r.abi_return == 30
@@ -559,8 +559,8 @@ def test_detect_mul_overflow(harness):
     assert r.abi_return == 0
 
 def test_detect_mul_overflow_signed(harness):
-    """viaYul/detect_mul_overflow_signed.sol"""
-    app = harness.compile_and_deploy("viaYul/detect_mul_overflow_signed.sol")
+    """viaYul/contracts/detect_mul_overflow_signed.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/detect_mul_overflow_signed.sol")
     # f(int256,int256): 5, 6 -> 30
     r = harness.call(app, "f(int256,int256)", 5, 6)
     assert r.abi_return == 30
@@ -775,8 +775,8 @@ def test_detect_mul_overflow_signed(harness):
     assert r.reverted
 
 def test_detect_sub_overflow(harness):
-    """viaYul/detect_sub_overflow.sol"""
-    app = harness.compile_and_deploy("viaYul/detect_sub_overflow.sol")
+    """viaYul/contracts/detect_sub_overflow.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/detect_sub_overflow.sol")
     # f(uint256,uint256): 6, 5 -> 1
     r = harness.call(app, "f(uint256,uint256)", 6, 5)
     assert r.abi_return == 1
@@ -797,8 +797,8 @@ def test_detect_sub_overflow(harness):
     assert r.reverted
 
 def test_detect_sub_overflow_signed(harness):
-    """viaYul/detect_sub_overflow_signed.sol"""
-    app = harness.compile_and_deploy("viaYul/detect_sub_overflow_signed.sol")
+    """viaYul/contracts/detect_sub_overflow_signed.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/detect_sub_overflow_signed.sol")
     # f(int256,int256): 5, 6 -> -1
     r = harness.call(app, "f(int256,int256)", 5, 6)
     assert r.abi_return == -1
@@ -894,57 +894,57 @@ def test_detect_sub_overflow_signed(harness):
     assert r.reverted
 
 def test_dirty_calldata_struct(harness):
-    """viaYul/dirty_calldata_struct.sol"""
-    app = harness.compile_and_deploy("viaYul/dirty_calldata_struct.sol", via_yul_behavior=True)
+    """viaYul/contracts/dirty_calldata_struct.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/dirty_calldata_struct.sol", via_yul_behavior=True)
     # f((uint16[])): 0x20, 0x20, 0x01, 0x0180 -> true
     r = harness.call(app, "f((uint16[]))", 32, 32, 1, 384)
     assert r.abi_return is True
 
 def test_dirty_memory_dynamic_array(harness):
-    """viaYul/dirty_memory_dynamic_array.sol"""
-    app = harness.compile_and_deploy("viaYul/dirty_memory_dynamic_array.sol", via_yul_behavior=True)
+    """viaYul/contracts/dirty_memory_dynamic_array.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/dirty_memory_dynamic_array.sol", via_yul_behavior=True)
     # f() -> true
     r = harness.call(app, "f()")
     assert r.abi_return is True
 
 def test_dirty_memory_int32(harness):
-    """viaYul/dirty_memory_int32.sol"""
-    app = harness.compile_and_deploy("viaYul/dirty_memory_int32.sol", via_yul_behavior=True)
+    """viaYul/contracts/dirty_memory_int32.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/dirty_memory_int32.sol", via_yul_behavior=True)
     # f() -> true
     r = harness.call(app, "f()")
     assert r.abi_return is True
 
 def test_dirty_memory_static_array(harness):
-    """viaYul/dirty_memory_static_array.sol"""
-    app = harness.compile_and_deploy("viaYul/dirty_memory_static_array.sol", via_yul_behavior=True)
+    """viaYul/contracts/dirty_memory_static_array.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/dirty_memory_static_array.sol", via_yul_behavior=True)
     # f() -> true
     r = harness.call(app, "f()")
     assert r.abi_return is True
 
 def test_dirty_memory_struct(harness):
-    """viaYul/dirty_memory_struct.sol"""
-    app = harness.compile_and_deploy("viaYul/dirty_memory_struct.sol", via_yul_behavior=True)
+    """viaYul/contracts/dirty_memory_struct.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/dirty_memory_struct.sol", via_yul_behavior=True)
     # f() -> true
     r = harness.call(app, "f()")
     assert r.abi_return is True
 
 def test_dirty_memory_uint32(harness):
-    """viaYul/dirty_memory_uint32.sol"""
-    app = harness.compile_and_deploy("viaYul/dirty_memory_uint32.sol", via_yul_behavior=True)
+    """viaYul/contracts/dirty_memory_uint32.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/dirty_memory_uint32.sol", via_yul_behavior=True)
     # f() -> true
     r = harness.call(app, "f()")
     assert r.abi_return is True
 
 def test_empty_return_corrupted_free_memory_pointer(harness):
-    """viaYul/empty_return_corrupted_free_memory_pointer.sol"""
-    app = harness.compile_and_deploy("viaYul/empty_return_corrupted_free_memory_pointer.sol")
+    """viaYul/contracts/empty_return_corrupted_free_memory_pointer.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/empty_return_corrupted_free_memory_pointer.sol")
     # f() ->
     r = harness.call(app, "f()")
     # (void return — call succeeding is the assertion)
 
 def test_exp(harness):
-    """viaYul/exp.sol"""
-    app = harness.compile_and_deploy("viaYul/exp.sol")
+    """viaYul/contracts/exp.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/exp.sol")
     # f(uint256,uint256): 0, 0 -> 1
     r = harness.call(app, "f(uint256,uint256)", 0, 0)
     assert r.abi_return == 1
@@ -980,8 +980,8 @@ def test_exp(harness):
     assert r.abi_return == 16384
 
 def test_exp_literals(harness):
-    """viaYul/exp_literals.sol"""
-    app = harness.compile_and_deploy("viaYul/exp_literals.sol", via_yul_behavior=True)
+    """viaYul/contracts/exp_literals.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/exp_literals.sol", via_yul_behavior=True)
     # exp_2(uint256): 255 -> 57896044618658097711785492504343953926634992332820282019728792003956564819968
     r = harness.call(app, "exp_2(uint256)", 255)
     assert r.abi_return == 57896044618658097711785492504343953926634992332820282019728792003956564819968
@@ -1032,8 +1032,8 @@ def test_exp_literals(harness):
     assert r.reverted
 
 def test_exp_literals_success(harness):
-    """viaYul/exp_literals_success.sol"""
-    app = harness.compile_and_deploy("viaYul/exp_literals_success.sol")
+    """viaYul/contracts/exp_literals_success.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/exp_literals_success.sol")
     # exp_2(uint256): 255 -> 57896044618658097711785492504343953926634992332820282019728792003956564819968
     r = harness.call(app, "exp_2(uint256)", 255)
     assert r.abi_return == 57896044618658097711785492504343953926634992332820282019728792003956564819968
@@ -1060,8 +1060,8 @@ def test_exp_literals_success(harness):
     assert r.abi_return == -452312848583266388373324160190187140051835877600158453279131187530910662656
 
 def test_exp_neg(harness):
-    """viaYul/exp_neg.sol"""
-    app = harness.compile_and_deploy("viaYul/exp_neg.sol")
+    """viaYul/contracts/exp_neg.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/exp_neg.sol")
     # f(int256,uint256): 0, 0 -> 1
     r = harness.call(app, "f(int256,uint256)", 0, 0)
     assert r.abi_return == 1
@@ -1139,8 +1139,8 @@ def test_exp_neg(harness):
     assert r.abi_return == -57896044618658097711785492504343953926634992332820282019728792003956564819968
 
 def test_exp_neg_overflow(harness):
-    """viaYul/exp_neg_overflow.sol"""
-    app = harness.compile_and_deploy("viaYul/exp_neg_overflow.sol")
+    """viaYul/contracts/exp_neg_overflow.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/exp_neg_overflow.sol")
     # f(int8,uint256): 2, 6 -> 64
     r = harness.call(app, "f(int8,uint256)", 2, 6)
     assert r.abi_return == 64
@@ -1224,8 +1224,8 @@ def test_exp_neg_overflow(harness):
     assert r.reverted
 
 def test_exp_overflow(harness):
-    """viaYul/exp_overflow.sol"""
-    app = harness.compile_and_deploy("viaYul/exp_overflow.sol")
+    """viaYul/contracts/exp_overflow.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/exp_overflow.sol")
     # f(uint8,uint8): 2, 7 -> 0x80
     r = harness.call(app, "f(uint8,uint8)", 2, 7)
     assert r.abi_return == 128
@@ -1288,8 +1288,8 @@ def test_exp_overflow(harness):
     assert r.reverted
 
 def test_exp_various(harness):
-    """viaYul/exp_various.sol"""
-    app = harness.compile_and_deploy("viaYul/exp_various.sol")
+    """viaYul/contracts/exp_various.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/exp_various.sol")
     # f(uint8,uint8): 0, 0 -> 1
     r = harness.call(app, "f(uint8,uint8)", 0, 0)
     assert r.abi_return == 1
@@ -1409,8 +1409,8 @@ def test_exp_various(harness):
     assert r.abi_return == 452312848583266388373324160190187140051835877600158453279131187530910662656
 
 def test_function_address(harness):
-    """viaYul/function_address.sol"""
-    app = harness.compile_and_deploy("viaYul/function_address.sol")
+    """viaYul/contracts/function_address.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/function_address.sol")
     # f() -> 0x1234
     r = harness.call(app, "f()")
     assert r.abi_return == 4660
@@ -1422,8 +1422,8 @@ def test_function_address(harness):
     assert r.abi_return == 4660
 
 def test_function_entry_checks(harness):
-    """viaYul/function_entry_checks.sol"""
-    app = harness.compile_and_deploy("viaYul/function_entry_checks.sol")
+    """viaYul/contracts/function_entry_checks.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/function_entry_checks.sol")
     # f() -> 0
     r = harness.call(app, "f()")
     assert r.abi_return == 0
@@ -1453,8 +1453,8 @@ def test_function_entry_checks(harness):
     assert r.reverted
 
 def test_function_pointers(harness):
-    """viaYul/function_pointers.sol"""
-    app = harness.compile_and_deploy("viaYul/function_pointers.sol")
+    """viaYul/contracts/function_pointers.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/function_pointers.sol")
     # f() -> FAILURE, hex"4e487b71", 0x51
     r = harness.call(app, "f()", expect_revert=True)
     assert r.reverted
@@ -1469,8 +1469,8 @@ def test_function_pointers(harness):
     assert r.reverted
 
 def test_function_selector(harness):
-    """viaYul/function_selector.sol"""
-    app = harness.compile_and_deploy("viaYul/function_selector.sol")
+    """viaYul/contracts/function_selector.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/function_selector.sol")
     # f() -> left(0x26121ff0)
     r = harness.call(app, "f()")
     # TODO: verify expected: left(0x26121ff0)
@@ -1481,8 +1481,8 @@ def test_function_selector(harness):
     assert not r.reverted
 
 def test_if_(harness):
-    """viaYul/if.sol"""
-    app = harness.compile_and_deploy("viaYul/if.sol")
+    """viaYul/contracts/if.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/if.sol")
     # f(bool): 0 -> 23
     r = harness.call(app, "f(bool)", 0)
     assert r.abi_return == 23
@@ -1539,8 +1539,8 @@ def test_if_(harness):
     assert tuple(r.abi_return) == (23, 13)
 
 def test_keccak(harness):
-    """viaYul/keccak.sol"""
-    app = harness.compile_and_deploy("viaYul/keccak.sol")
+    """viaYul/contracts/keccak.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/keccak.sol")
     # keccak1() -> 0x64e604787cbf194841e7b68d7cd28786f6c9a0a3ab9f8b0a0e87cb4387ab0107
     r = harness.call(app, "keccak1()")
     assert r.abi_return == 45637690538541992090000098772847886457082422231295691457910964509567538102535
@@ -1549,29 +1549,29 @@ def test_keccak(harness):
     assert r.abi_return == 45637690538541992090000098772847886457082422231295691457910964509567538102535
 
 def test_local_address_assignment(harness):
-    """viaYul/local_address_assignment.sol"""
-    app = harness.compile_and_deploy("viaYul/local_address_assignment.sol")
+    """viaYul/contracts/local_address_assignment.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/local_address_assignment.sol")
     # f(address): 0x1234 -> 0x1234
     r = harness.call(app, "f(address)", 4660)
     assert r.abi_return == 4660
 
 def test_local_assignment(harness):
-    """viaYul/local_assignment.sol"""
-    app = harness.compile_and_deploy("viaYul/local_assignment.sol")
+    """viaYul/contracts/local_assignment.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/local_assignment.sol")
     # f(uint256): 6 -> 6
     r = harness.call(app, "f(uint256)", 6)
     assert r.abi_return == 6
 
 def test_local_bool_assignment(harness):
-    """viaYul/local_bool_assignment.sol"""
-    app = harness.compile_and_deploy("viaYul/local_bool_assignment.sol")
+    """viaYul/contracts/local_bool_assignment.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/local_bool_assignment.sol")
     # f(bool): true -> true
     r = harness.call(app, "f(bool)", True)
     assert r.abi_return is True
 
 def test_local_tuple_assignment(harness):
-    """viaYul/local_tuple_assignment.sol"""
-    app = harness.compile_and_deploy("viaYul/local_tuple_assignment.sol")
+    """viaYul/contracts/local_tuple_assignment.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/local_tuple_assignment.sol")
     # x() -> 17
     r = harness.call(app, "x()")
     assert r.abi_return == 17
@@ -1592,15 +1592,15 @@ def test_local_tuple_assignment(harness):
     assert tuple(r.abi_return) == (42, 23, 17, 13)
 
 def test_local_variable_without_init(harness):
-    """viaYul/local_variable_without_init.sol"""
-    app = harness.compile_and_deploy("viaYul/local_variable_without_init.sol")
+    """viaYul/contracts/local_variable_without_init.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/local_variable_without_init.sol")
     # f() -> 0
     r = harness.call(app, "f()")
     assert r.abi_return == 0
 
 def test_mapping_enum_key_getter(harness):
-    """viaYul/mapping_enum_key_getter.sol"""
-    app = harness.compile_and_deploy("viaYul/mapping_enum_key_getter.sol")
+    """viaYul/contracts/mapping_enum_key_getter.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/mapping_enum_key_getter.sol")
     # table(uint8): 0 -> 0
     r = harness.call(app, "table(uint8)", 0)
     assert r.abi_return == 0
@@ -1648,8 +1648,8 @@ def test_mapping_enum_key_getter(harness):
     assert r.reverted
 
 def test_mapping_getters(harness):
-    """viaYul/mapping_getters.sol"""
-    app = harness.compile_and_deploy("viaYul/mapping_getters.sol")
+    """viaYul/contracts/mapping_getters.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/mapping_getters.sol")
     # m1(uint256): 0 -> 0
     r = harness.call(app, "m1(uint256)", 0)
     assert r.abi_return == 0
@@ -1733,36 +1733,36 @@ def test_mapping_getters(harness):
     assert r.abi_return == 35
 
 def test_mapping_string_key(harness):
-    """viaYul/mapping_string_key.sol"""
-    app = harness.compile_and_deploy("viaYul/mapping_string_key.sol")
+    """viaYul/contracts/mapping_string_key.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/mapping_string_key.sol")
     # set(string): 0x20, 32, "01234567890123456789012345678901" ->
     r = harness.call(app, "set(string)", 32, 32, bytes.fromhex('3031323334353637383930313233343536373839303132333435363738393031'))
     # (void return — call succeeding is the assertion)
 
 def test_memory_struct_allow(harness):
-    """viaYul/memory_struct_allow.sol"""
-    app = harness.compile_and_deploy("viaYul/memory_struct_allow.sol")
+    """viaYul/contracts/memory_struct_allow.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/memory_struct_allow.sol")
     # f() -> 0, 0
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (0, 0)
 
 def test_msg_sender(harness):
-    """viaYul/msg_sender.sol"""
-    app = harness.compile_and_deploy("viaYul/msg_sender.sol")
+    """viaYul/contracts/msg_sender.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/msg_sender.sol")
     # test() -> true
     r = harness.call(app, "test()")
     assert r.abi_return is True
 
 def test_negation_bug(harness):
-    """viaYul/negation_bug.sol"""
-    app = harness.compile_and_deploy("viaYul/negation_bug.sol")
+    """viaYul/contracts/negation_bug.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/negation_bug.sol")
     # f() ->
     r = harness.call(app, "f()")
     # (void return — call succeeding is the assertion)
 
 def test_require(harness):
-    """viaYul/require.sol"""
-    app = harness.compile_and_deploy("viaYul/require.sol")
+    """viaYul/contracts/require.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/require.sol")
     # f(bool): true -> true
     r = harness.call(app, "f(bool)", True)
     assert r.abi_return is True
@@ -1795,29 +1795,29 @@ def test_require(harness):
     assert r.reverted
 
 def test_return_(harness):
-    """viaYul/return.sol"""
-    app = harness.compile_and_deploy("viaYul/return.sol")
+    """viaYul/contracts/return.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/return.sol")
     # f() -> 7
     r = harness.call(app, "f()")
     assert r.abi_return == 7
 
 def test_return_and_convert(harness):
-    """viaYul/return_and_convert.sol"""
-    app = harness.compile_and_deploy("viaYul/return_and_convert.sol")
+    """viaYul/contracts/return_and_convert.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/return_and_convert.sol")
     # f() -> 255
     r = harness.call(app, "f()")
     assert r.abi_return == 255
 
 def test_return_storage_pointers(harness):
-    """viaYul/return_storage_pointers.sol"""
-    app = harness.compile_and_deploy("viaYul/return_storage_pointers.sol")
+    """viaYul/contracts/return_storage_pointers.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/return_storage_pointers.sol")
     # g() -> 0, 0
     r = harness.call(app, "g()")
     assert tuple(r.abi_return) == (0, 0)
 
 def test_short_circuit(harness):
-    """viaYul/short_circuit.sol"""
-    app = harness.compile_and_deploy("viaYul/short_circuit.sol")
+    """viaYul/contracts/short_circuit.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/short_circuit.sol")
     # or(uint256): 0 -> true, 0
     r = harness.call(app, "or(uint256)", 0)
     # TODO: verify expected: true | 0
@@ -1836,29 +1836,29 @@ def test_short_circuit(harness):
     assert not r.reverted
 
 def test_simple_assignment(harness):
-    """viaYul/simple_assignment.sol"""
-    app = harness.compile_and_deploy("viaYul/simple_assignment.sol")
+    """viaYul/contracts/simple_assignment.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/simple_assignment.sol")
     # f(uint256,uint256): 5, 6 -> 5, 6
     r = harness.call(app, "f(uint256,uint256)", 5, 6)
     assert tuple(r.abi_return) == (5, 6)
 
 def test_simple_inline_asm(harness):
-    """viaYul/simple_inline_asm.sol"""
-    app = harness.compile_and_deploy("viaYul/simple_inline_asm.sol")
+    """viaYul/contracts/simple_inline_asm.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/simple_inline_asm.sol")
     # f() -> 6
     r = harness.call(app, "f()")
     assert r.abi_return == 6
 
 def test_smoke_test(harness):
-    """viaYul/smoke_test.sol"""
-    app = harness.compile_and_deploy("viaYul/smoke_test.sol")
+    """viaYul/contracts/smoke_test.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/smoke_test.sol")
     # f() -> FAILURE
     r = harness.call(app, "f()", expect_revert=True)
     assert r.reverted
 
 def test_string_format(harness):
-    """viaYul/string_format.sol"""
-    app = harness.compile_and_deploy("viaYul/string_format.sol")
+    """viaYul/contracts/string_format.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/string_format.sol")
     # f1() -> 0x20, 6, left(0x616263616263)
     r = harness.call(app, "f1()")
     # TODO: verify expected: 0x20 | 6 | left(0x616263616263)
@@ -1876,8 +1876,8 @@ def test_string_format(harness):
     assert not r.reverted
 
 def test_string_literals(harness):
-    """viaYul/string_literals.sol"""
-    app = harness.compile_and_deploy("viaYul/string_literals.sol")
+    """viaYul/contracts/string_literals.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/string_literals.sol")
     # short_dyn() -> 0x20, 3, "abc"
     r = harness.call(app, "short_dyn()")
     assert r.abi_return == 'abc'
@@ -1900,8 +1900,8 @@ def test_string_literals(harness):
     assert r.abi_return == 44048180597813453602326562734351324025098966208897425494240603688123167145984
 
 def test_struct_member_access(harness):
-    """viaYul/struct_member_access.sol"""
-    app = harness.compile_and_deploy("viaYul/struct_member_access.sol")
+    """viaYul/contracts/struct_member_access.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/struct_member_access.sol")
     # f((uint256,uint256[],uint256)): 0x20, 42, 0x60, 21, 3, 1, 2, 3 -> 42, 0x60, 21, 3, 1, 2, 3
     r = harness.call(app, "f((uint256,uint256[],uint256))", 32, 42, 96, 21, 3, 1, 2, 3)
     # TODO: verify structural decoding matches expected: 42, 96, 21, 3, 1, 2, 3
@@ -1920,15 +1920,15 @@ def test_struct_member_access(harness):
     assert not r.reverted
 
 def test_tuple_evaluation_order(harness):
-    """viaYul/tuple_evaluation_order.sol"""
-    app = harness.compile_and_deploy("viaYul/tuple_evaluation_order.sol")
+    """viaYul/contracts/tuple_evaluation_order.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/tuple_evaluation_order.sol")
     # f() -> 3, 1
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (3, 1)
 
 def test_unary_fixedbytes(harness):
-    """viaYul/unary_fixedbytes.sol"""
-    app = harness.compile_and_deploy("viaYul/unary_fixedbytes.sol")
+    """viaYul/contracts/unary_fixedbytes.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/unary_fixedbytes.sol")
     # conv(bytes25): left(0xff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff) -> 0xff00ff00ff00ff00ff00ff00ff00ff00ffffffffffffffffffffffffffffffff
     r = harness.call(app, "conv(bytes25)", 0xff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00000000000000)
     assert r.abi_return == 115341536360906404779899502576747487978355861310392627753169668796238104887295
@@ -1976,8 +1976,8 @@ def test_unary_fixedbytes(harness):
     assert r.abi_return == 76893184259155286023465107232331813808812099192026937057452301880254812651520
 
 def test_unary_operations(harness):
-    """viaYul/unary_operations.sol"""
-    app = harness.compile_and_deploy("viaYul/unary_operations.sol", via_yul_behavior=True)
+    """viaYul/contracts/unary_operations.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/unary_operations.sol", via_yul_behavior=True)
     # preincr_s8(int8): 128 -> FAILURE
     r = harness.call(app, "preincr_s8(int8)", 128, expect_revert=True)
     assert r.reverted
@@ -2127,15 +2127,15 @@ def test_unary_operations(harness):
     assert r.abi_return == 32767
 
 def test_various_inline_asm(harness):
-    """viaYul/various_inline_asm.sol"""
-    app = harness.compile_and_deploy("viaYul/various_inline_asm.sol")
+    """viaYul/contracts/various_inline_asm.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/various_inline_asm.sol")
     # f() -> 70
     r = harness.call(app, "f()")
     assert r.abi_return == 70
 
 def test_virtual_functions(harness):
-    """viaYul/virtual_functions.sol"""
-    app = harness.compile_and_deploy("viaYul/virtual_functions.sol")
+    """viaYul/contracts/virtual_functions.sol"""
+    app = harness.compile_and_deploy("viaYul/contracts/virtual_functions.sol")
     # f() -> 3
     r = harness.call(app, "f()")
     assert r.abi_return == 3

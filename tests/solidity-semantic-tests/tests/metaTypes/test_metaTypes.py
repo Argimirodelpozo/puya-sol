@@ -11,8 +11,8 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_name_other_contract(harness):
-    """metaTypes/name_other_contract.sol"""
-    app = harness.compile_and_deploy("metaTypes/name_other_contract.sol")
+    """metaTypes/contracts/name_other_contract.sol"""
+    app = harness.compile_and_deploy("metaTypes/contracts/name_other_contract.sol")
     # c() -> 0x20, 1, "C"
     r = harness.call(app, "c()")
     assert r.abi_return == 'C'

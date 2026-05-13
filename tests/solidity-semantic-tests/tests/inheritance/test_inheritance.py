@@ -11,8 +11,8 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_access_base_storage(harness):
-    """inheritance/access_base_storage.sol"""
-    app = harness.compile_and_deploy("inheritance/access_base_storage.sol")
+    """inheritance/contracts/access_base_storage.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/access_base_storage.sol")
     # setData(uint256,uint256): 1, 2 -> true
     r = harness.call(app, "setData(uint256,uint256)", 1, 2)
     assert r.abi_return is True
@@ -24,8 +24,8 @@ def test_access_base_storage(harness):
     assert tuple(r.abi_return) == (1, 2)
 
 def test_address_overload_resolution(harness):
-    """inheritance/address_overload_resolution.sol"""
-    app = harness.compile_and_deploy("inheritance/address_overload_resolution.sol")
+    """inheritance/contracts/address_overload_resolution.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/address_overload_resolution.sol")
     # f() -> 1
     r = harness.call(app, "f()")
     assert r.abi_return == 1
@@ -34,8 +34,8 @@ def test_address_overload_resolution(harness):
     assert r.abi_return == 5
 
 def test_base_access_to_function_type_variables(harness):
-    """inheritance/base_access_to_function_type_variables.sol"""
-    app = harness.compile_and_deploy("inheritance/base_access_to_function_type_variables.sol")
+    """inheritance/contracts/base_access_to_function_type_variables.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/base_access_to_function_type_variables.sol")
     # g() -> 2
     r = harness.call(app, "g()")
     assert r.abi_return == 2
@@ -50,36 +50,36 @@ def test_base_access_to_function_type_variables(harness):
     assert r.abi_return == 2
 
 def test_constructor_inheritance_init_order(harness):
-    """inheritance/constructor_inheritance_init_order.sol"""
-    app = harness.compile_and_deploy("inheritance/constructor_inheritance_init_order.sol", via_yul_behavior=True)
+    """inheritance/contracts/constructor_inheritance_init_order.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/constructor_inheritance_init_order.sol", via_yul_behavior=True)
     # y() -> 42
     r = harness.call(app, "y()")
     assert r.abi_return == 42
 
 def test_constructor_inheritance_init_order_2(harness):
-    """inheritance/constructor_inheritance_init_order_2.sol"""
-    app = harness.compile_and_deploy("inheritance/constructor_inheritance_init_order_2.sol")
+    """inheritance/contracts/constructor_inheritance_init_order_2.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/constructor_inheritance_init_order_2.sol")
     # y() -> 42
     r = harness.call(app, "y()")
     assert r.abi_return == 42
 
 def test_constructor_inheritance_init_order_3_legacy(harness):
-    """inheritance/constructor_inheritance_init_order_3_legacy.sol"""
-    app = harness.compile_and_deploy("inheritance/constructor_inheritance_init_order_3_legacy.sol")
+    """inheritance/contracts/constructor_inheritance_init_order_3_legacy.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/constructor_inheritance_init_order_3_legacy.sol")
     # x() -> 4
     r = harness.call(app, "x()")
     assert r.abi_return == 4
 
 def test_constructor_inheritance_init_order_3_viaIR(harness):
-    """inheritance/constructor_inheritance_init_order_3_viaIR.sol"""
-    app = harness.compile_and_deploy("inheritance/constructor_inheritance_init_order_3_viaIR.sol", via_yul_behavior=True)
+    """inheritance/contracts/constructor_inheritance_init_order_3_viaIR.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/constructor_inheritance_init_order_3_viaIR.sol", via_yul_behavior=True)
     # x() -> 2
     r = harness.call(app, "x()")
     assert r.abi_return == 2
 
 def test_constructor_with_params(harness):
-    """inheritance/constructor_with_params.sol"""
-    app = harness.compile_and_deploy("inheritance/constructor_with_params.sol", ctor_args=[2, 0])
+    """inheritance/contracts/constructor_with_params.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/constructor_with_params.sol", ctor_args=[2, 0])
     # i() -> 2
     r = harness.call(app, "i()")
     assert r.abi_return == 2
@@ -88,8 +88,8 @@ def test_constructor_with_params(harness):
     assert r.abi_return == 0
 
 def test_constructor_with_params_diamond_inheritance(harness):
-    """inheritance/constructor_with_params_diamond_inheritance.sol"""
-    app = harness.compile_and_deploy("inheritance/constructor_with_params_diamond_inheritance.sol", ctor_args=[2, 0])
+    """inheritance/contracts/constructor_with_params_diamond_inheritance.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/constructor_with_params_diamond_inheritance.sol", ctor_args=[2, 0])
     # i() -> 2
     r = harness.call(app, "i()")
     assert r.abi_return == 2
@@ -101,8 +101,8 @@ def test_constructor_with_params_diamond_inheritance(harness):
     assert r.abi_return == 1
 
 def test_constructor_with_params_inheritance(harness):
-    """inheritance/constructor_with_params_inheritance.sol"""
-    app = harness.compile_and_deploy("inheritance/constructor_with_params_inheritance.sol", ctor_args=[2, 0])
+    """inheritance/contracts/constructor_with_params_inheritance.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/constructor_with_params_inheritance.sol", ctor_args=[2, 0])
     # i() -> 2
     r = harness.call(app, "i()")
     assert r.abi_return == 2
@@ -111,8 +111,8 @@ def test_constructor_with_params_inheritance(harness):
     assert r.abi_return == 1
 
 def test_constructor_with_params_inheritance_2(harness):
-    """inheritance/constructor_with_params_inheritance_2.sol"""
-    app = harness.compile_and_deploy("inheritance/constructor_with_params_inheritance_2.sol")
+    """inheritance/contracts/constructor_with_params_inheritance_2.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/constructor_with_params_inheritance_2.sol")
     # i() -> 2
     r = harness.call(app, "i()")
     assert r.abi_return == 2
@@ -121,15 +121,15 @@ def test_constructor_with_params_inheritance_2(harness):
     assert r.abi_return == 1
 
 def test_derived_overload_base_function_direct(harness):
-    """inheritance/derived_overload_base_function_direct.sol"""
-    app = harness.compile_and_deploy("inheritance/derived_overload_base_function_direct.sol")
+    """inheritance/contracts/derived_overload_base_function_direct.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/derived_overload_base_function_direct.sol")
     # g() -> 2
     r = harness.call(app, "g()")
     assert r.abi_return == 2
 
 def test_derived_overload_base_function_indirect(harness):
-    """inheritance/derived_overload_base_function_indirect.sol"""
-    app = harness.compile_and_deploy("inheritance/derived_overload_base_function_indirect.sol")
+    """inheritance/contracts/derived_overload_base_function_indirect.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/derived_overload_base_function_indirect.sol")
     # g() -> 10
     r = harness.call(app, "g()")
     assert r.abi_return == 10
@@ -138,8 +138,8 @@ def test_derived_overload_base_function_indirect(harness):
     assert r.abi_return == 2
 
 def test_explicit_base_class(harness):
-    """inheritance/explicit_base_class.sol"""
-    app = harness.compile_and_deploy("inheritance/explicit_base_class.sol")
+    """inheritance/contracts/explicit_base_class.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/explicit_base_class.sol")
     # g() -> 3
     r = harness.call(app, "g()")
     assert r.abi_return == 3
@@ -148,57 +148,57 @@ def test_explicit_base_class(harness):
     assert r.abi_return == 1
 
 def test_inherited_constant_state_var(harness):
-    """inheritance/inherited_constant_state_var.sol"""
-    app = harness.compile_and_deploy("inheritance/inherited_constant_state_var.sol")
+    """inheritance/contracts/inherited_constant_state_var.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/inherited_constant_state_var.sol")
     # f() -> 7
     r = harness.call(app, "f()")
     assert r.abi_return == 7
 
 def test_inherited_function(harness):
-    """inheritance/inherited_function.sol"""
-    app = harness.compile_and_deploy("inheritance/inherited_function.sol")
+    """inheritance/contracts/inherited_function.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/inherited_function.sol")
     # g() -> 1
     r = harness.call(app, "g()")
     assert r.abi_return == 1
 
 def test_inherited_function_calldata_calldata_interface(harness):
-    """inheritance/inherited_function_calldata_calldata_interface.sol"""
-    app = harness.compile_and_deploy("inheritance/inherited_function_calldata_calldata_interface.sol")
+    """inheritance/contracts/inherited_function_calldata_calldata_interface.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/inherited_function_calldata_calldata_interface.sol")
     # g() -> 42
     r = harness.call(app, "g()")
     assert r.abi_return == 42
 
 def test_inherited_function_calldata_memory(harness):
-    """inheritance/inherited_function_calldata_memory.sol"""
-    app = harness.compile_and_deploy("inheritance/inherited_function_calldata_memory.sol")
+    """inheritance/contracts/inherited_function_calldata_memory.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/inherited_function_calldata_memory.sol")
     # g() -> 23
     r = harness.call(app, "g()")
     assert r.abi_return == 23
 
 def test_inherited_function_calldata_memory_interface(harness):
-    """inheritance/inherited_function_calldata_memory_interface.sol"""
-    app = harness.compile_and_deploy("inheritance/inherited_function_calldata_memory_interface.sol")
+    """inheritance/contracts/inherited_function_calldata_memory_interface.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/inherited_function_calldata_memory_interface.sol")
     # g() -> 42
     r = harness.call(app, "g()")
     assert r.abi_return == 42
 
 def test_inherited_function_from_a_library(harness):
-    """inheritance/inherited_function_from_a_library.sol"""
-    app = harness.compile_and_deploy("inheritance/inherited_function_from_a_library.sol")
+    """inheritance/contracts/inherited_function_from_a_library.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/inherited_function_from_a_library.sol")
     # g() -> 1
     r = harness.call(app, "g()")
     assert r.abi_return == 1
 
 def test_inherited_function_through_dispatch(harness):
-    """inheritance/inherited_function_through_dispatch.sol"""
-    app = harness.compile_and_deploy("inheritance/inherited_function_through_dispatch.sol")
+    """inheritance/contracts/inherited_function_through_dispatch.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/inherited_function_through_dispatch.sol")
     # g() -> 1
     r = harness.call(app, "g()")
     assert r.abi_return == 1
 
 def test_interface_inheritance_conversions(harness):
-    """inheritance/interface_inheritance_conversions.sol"""
-    app = harness.compile_and_deploy("inheritance/interface_inheritance_conversions.sol")
+    """inheritance/contracts/interface_inheritance_conversions.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/interface_inheritance_conversions.sol")
     # convertParent() -> 1
     r = harness.call(app, "convertParent()")
     assert r.abi_return == 1
@@ -210,8 +210,8 @@ def test_interface_inheritance_conversions(harness):
     assert tuple(r.abi_return) == (1, 3)
 
 def test_member_notation_ctor(harness):
-    """inheritance/member_notation_ctor.sol"""
-    app = harness.compile_and_deploy("inheritance/member_notation_ctor.sol")
+    """inheritance/contracts/member_notation_ctor.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/member_notation_ctor.sol")
     # g(int256): -1 -> -1
     r = harness.call(app, "g(int256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
     assert r.abi_return == -1
@@ -220,22 +220,22 @@ def test_member_notation_ctor(harness):
     assert r.abi_return == 10
 
 def test_overloaded_function_call_resolve_to_first(harness):
-    """inheritance/overloaded_function_call_resolve_to_first.sol"""
-    app = harness.compile_and_deploy("inheritance/overloaded_function_call_resolve_to_first.sol")
+    """inheritance/contracts/overloaded_function_call_resolve_to_first.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/overloaded_function_call_resolve_to_first.sol")
     # g() -> 3
     r = harness.call(app, "g()")
     assert r.abi_return == 3
 
 def test_overloaded_function_call_resolve_to_second(harness):
-    """inheritance/overloaded_function_call_resolve_to_second.sol"""
-    app = harness.compile_and_deploy("inheritance/overloaded_function_call_resolve_to_second.sol")
+    """inheritance/contracts/overloaded_function_call_resolve_to_second.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/overloaded_function_call_resolve_to_second.sol")
     # g() -> 10
     r = harness.call(app, "g()")
     assert r.abi_return == 10
 
 def test_overloaded_function_call_with_if_else(harness):
-    """inheritance/overloaded_function_call_with_if_else.sol"""
-    app = harness.compile_and_deploy("inheritance/overloaded_function_call_with_if_else.sol")
+    """inheritance/contracts/overloaded_function_call_with_if_else.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/overloaded_function_call_with_if_else.sol")
     # g(bool): true -> 3
     r = harness.call(app, "g(bool)", True)
     assert r.abi_return == 3
@@ -244,43 +244,43 @@ def test_overloaded_function_call_with_if_else(harness):
     assert r.abi_return == 10
 
 def test_pass_dynamic_arguments_to_the_base(harness):
-    """inheritance/pass_dynamic_arguments_to_the_base.sol"""
-    app = harness.compile_and_deploy("inheritance/pass_dynamic_arguments_to_the_base.sol")
+    """inheritance/contracts/pass_dynamic_arguments_to_the_base.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/pass_dynamic_arguments_to_the_base.sol")
     # m_i() -> 4
     r = harness.call(app, "m_i()")
     assert r.abi_return == 4
 
 def test_pass_dynamic_arguments_to_the_base_base(harness):
-    """inheritance/pass_dynamic_arguments_to_the_base_base.sol"""
-    app = harness.compile_and_deploy("inheritance/pass_dynamic_arguments_to_the_base_base.sol")
+    """inheritance/contracts/pass_dynamic_arguments_to_the_base_base.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/pass_dynamic_arguments_to_the_base_base.sol")
     # m_i() -> 4
     r = harness.call(app, "m_i()")
     assert r.abi_return == 4
 
 def test_pass_dynamic_arguments_to_the_base_base_with_gap(harness):
-    """inheritance/pass_dynamic_arguments_to_the_base_base_with_gap.sol"""
-    app = harness.compile_and_deploy("inheritance/pass_dynamic_arguments_to_the_base_base_with_gap.sol")
+    """inheritance/contracts/pass_dynamic_arguments_to_the_base_base_with_gap.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/pass_dynamic_arguments_to_the_base_base_with_gap.sol")
     # m_i() -> 4
     r = harness.call(app, "m_i()")
     assert r.abi_return == 4
 
 def test_state_variables_init_order(harness):
-    """inheritance/state_variables_init_order.sol"""
-    app = harness.compile_and_deploy("inheritance/state_variables_init_order.sol")
+    """inheritance/contracts/state_variables_init_order.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/state_variables_init_order.sol")
     # x() -> 1
     r = harness.call(app, "x()")
     assert r.abi_return == 1
 
 def test_state_variables_init_order_2(harness):
-    """inheritance/state_variables_init_order_2.sol"""
-    app = harness.compile_and_deploy("inheritance/state_variables_init_order_2.sol")
+    """inheritance/contracts/state_variables_init_order_2.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/state_variables_init_order_2.sol")
     # z() -> 1
     r = harness.call(app, "z()")
     assert r.abi_return == 1
 
 def test_state_variables_init_order_3(harness):
-    """inheritance/state_variables_init_order_3.sol"""
-    app = harness.compile_and_deploy("inheritance/state_variables_init_order_3.sol", via_yul_behavior=True)
+    """inheritance/contracts/state_variables_init_order_3.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/state_variables_init_order_3.sol", via_yul_behavior=True)
     # a() -> 17
     r = harness.call(app, "a()")
     assert r.abi_return == 17
@@ -307,22 +307,22 @@ def test_state_variables_init_order_3(harness):
     assert r.abi_return == 42
 
 def test_super_in_constructor(harness):
-    """inheritance/super_in_constructor.sol"""
-    app = harness.compile_and_deploy("inheritance/super_in_constructor.sol")
+    """inheritance/contracts/super_in_constructor.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/super_in_constructor.sol")
     # f() -> 15
     r = harness.call(app, "f()")
     assert r.abi_return == 15
 
 def test_super_in_constructor_assignment(harness):
-    """inheritance/super_in_constructor_assignment.sol"""
-    app = harness.compile_and_deploy("inheritance/super_in_constructor_assignment.sol")
+    """inheritance/contracts/super_in_constructor_assignment.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/super_in_constructor_assignment.sol")
     # f() -> 15
     r = harness.call(app, "f()")
     assert r.abi_return == 15
 
 def test_super_overload(harness):
-    """inheritance/super_overload.sol"""
-    app = harness.compile_and_deploy("inheritance/super_overload.sol")
+    """inheritance/contracts/super_overload.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/super_overload.sol")
     # g() -> 10
     r = harness.call(app, "g()")
     assert r.abi_return == 10
@@ -331,22 +331,22 @@ def test_super_overload(harness):
     assert r.abi_return == 2
 
 def test_transient_storage_state_variable(harness):
-    """inheritance/transient_storage_state_variable.sol"""
-    app = harness.compile_and_deploy("inheritance/transient_storage_state_variable.sol")
+    """inheritance/contracts/transient_storage_state_variable.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/transient_storage_state_variable.sol")
     # f() -> 1, 2, 3, 4
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (1, 2, 3, 4)
 
 def test_transient_storage_state_variable_abstract_contract(harness):
-    """inheritance/transient_storage_state_variable_abstract_contract.sol"""
-    app = harness.compile_and_deploy("inheritance/transient_storage_state_variable_abstract_contract.sol")
+    """inheritance/contracts/transient_storage_state_variable_abstract_contract.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/transient_storage_state_variable_abstract_contract.sol")
     # f() -> 1, 1, 2, 2
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (1, 1, 2, 2)
 
 def test_value_for_constructor(harness):
-    """inheritance/value_for_constructor.sol"""
-    app = harness.compile_and_deploy("inheritance/value_for_constructor.sol", fund_wei=22)
+    """inheritance/contracts/value_for_constructor.sol"""
+    app = harness.compile_and_deploy("inheritance/contracts/value_for_constructor.sol", fund_wei=22)
     # getFlag() -> true
     r = harness.call(app, "getFlag()")
     assert r.abi_return is True

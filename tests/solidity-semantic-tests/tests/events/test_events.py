@@ -11,22 +11,22 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_emit_three_identical_events(harness):
-    """events/emit_three_identical_events.sol"""
-    app = harness.compile_and_deploy("events/emit_three_identical_events.sol")
+    """events/contracts/emit_three_identical_events.sol"""
+    app = harness.compile_and_deploy("events/contracts/emit_three_identical_events.sol")
     # terminate() ->
     r = harness.call(app, "terminate()")
     # (void return — call succeeding is the assertion)
 
 def test_emit_two_identical_events(harness):
-    """events/emit_two_identical_events.sol"""
-    app = harness.compile_and_deploy("events/emit_two_identical_events.sol")
+    """events/contracts/emit_two_identical_events.sol"""
+    app = harness.compile_and_deploy("events/contracts/emit_two_identical_events.sol")
     # terminate() ->
     r = harness.call(app, "terminate()")
     # (void return — call succeeding is the assertion)
 
 def test_event(harness):
-    """events/event.sol"""
-    app = harness.compile_and_deploy("events/event.sol")
+    """events/contracts/event.sol"""
+    app = harness.compile_and_deploy("events/contracts/event.sol")
     # deposit(bytes32,bool), 18 wei: 0x1234, true ->
     r = harness.call(app, "deposit(bytes32,bool)", 4660, True, payment_wei=18)
     # (void return — call succeeding is the assertion)
@@ -35,153 +35,153 @@ def test_event(harness):
     # (void return — call succeeding is the assertion)
 
 def test_event_access_through_base_name_emit(harness):
-    """events/event_access_through_base_name_emit.sol"""
-    app = harness.compile_and_deploy("events/event_access_through_base_name_emit.sol")
+    """events/contracts/event_access_through_base_name_emit.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_access_through_base_name_emit.sol")
     # f() -> 1
     r = harness.call(app, "f()")
     assert r.abi_return == 1
 
 def test_event_anonymous(harness):
-    """events/event_anonymous.sol"""
-    app = harness.compile_and_deploy("events/event_anonymous.sol")
+    """events/contracts/event_anonymous.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_anonymous.sol")
     # deposit() ->
     r = harness.call(app, "deposit()")
     # (void return — call succeeding is the assertion)
 
 def test_event_anonymous_with_signature_collision(harness):
-    """events/event_anonymous_with_signature_collision.sol"""
-    app = harness.compile_and_deploy("events/event_anonymous_with_signature_collision.sol")
+    """events/contracts/event_anonymous_with_signature_collision.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_anonymous_with_signature_collision.sol")
     # deposit(bytes32), 18 wei: 0x1234 ->
     r = harness.call(app, "deposit(bytes32)", 4660, payment_wei=18)
     # (void return — call succeeding is the assertion)
 
 def test_event_anonymous_with_signature_collision2(harness):
-    """events/event_anonymous_with_signature_collision2.sol"""
-    app = harness.compile_and_deploy("events/event_anonymous_with_signature_collision2.sol")
+    """events/contracts/event_anonymous_with_signature_collision2.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_anonymous_with_signature_collision2.sol")
     # deposit(bytes32), 18 wei: 0x1234 ->
     r = harness.call(app, "deposit(bytes32)", 4660, payment_wei=18)
     # (void return — call succeeding is the assertion)
 
 def test_event_anonymous_with_topics(harness):
-    """events/event_anonymous_with_topics.sol"""
-    app = harness.compile_and_deploy("events/event_anonymous_with_topics.sol")
+    """events/contracts/event_anonymous_with_topics.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_anonymous_with_topics.sol")
     # deposit(bytes32), 18 wei: 0x1234 ->
     r = harness.call(app, "deposit(bytes32)", 4660, payment_wei=18)
     # (void return — call succeeding is the assertion)
 
 def test_event_constructor(harness):
-    """events/event_constructor.sol"""
-    app = harness.compile_and_deploy("events/event_constructor.sol")
+    """events/contracts/event_constructor.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_constructor.sol")
     # constructor-only test — deployment succeeding is the assertion
 
 def test_event_dynamic_array_memory(harness):
-    """events/event_dynamic_array_memory.sol"""
-    app = harness.compile_and_deploy("events/event_dynamic_array_memory.sol")
+    """events/contracts/event_dynamic_array_memory.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_dynamic_array_memory.sol")
     # createEvent(uint256): 42 ->
     r = harness.call(app, "createEvent(uint256)", 42)
     # (void return — call succeeding is the assertion)
 
 def test_event_dynamic_array_memory_v2(harness):
-    """events/event_dynamic_array_memory_v2.sol"""
-    app = harness.compile_and_deploy("events/event_dynamic_array_memory_v2.sol")
+    """events/contracts/event_dynamic_array_memory_v2.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_dynamic_array_memory_v2.sol")
     # createEvent(uint256): 42 ->
     r = harness.call(app, "createEvent(uint256)", 42)
     # (void return — call succeeding is the assertion)
 
 def test_event_dynamic_array_storage(harness):
-    """events/event_dynamic_array_storage.sol"""
-    app = harness.compile_and_deploy("events/event_dynamic_array_storage.sol")
+    """events/contracts/event_dynamic_array_storage.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_dynamic_array_storage.sol")
     # createEvent(uint256): 42 ->
     r = harness.call(app, "createEvent(uint256)", 42)
     # (void return — call succeeding is the assertion)
 
 def test_event_dynamic_array_storage_v2(harness):
-    """events/event_dynamic_array_storage_v2.sol"""
-    app = harness.compile_and_deploy("events/event_dynamic_array_storage_v2.sol")
+    """events/contracts/event_dynamic_array_storage_v2.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_dynamic_array_storage_v2.sol")
     # createEvent(uint256): 42 ->
     r = harness.call(app, "createEvent(uint256)", 42)
     # (void return — call succeeding is the assertion)
 
 def test_event_dynamic_nested_array_memory_v2(harness):
-    """events/event_dynamic_nested_array_memory_v2.sol"""
-    app = harness.compile_and_deploy("events/event_dynamic_nested_array_memory_v2.sol")
+    """events/contracts/event_dynamic_nested_array_memory_v2.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_dynamic_nested_array_memory_v2.sol")
     # createEvent(uint256): 42 ->
     r = harness.call(app, "createEvent(uint256)", 42)
     # (void return — call succeeding is the assertion)
 
 def test_event_dynamic_nested_array_storage_v2(harness):
-    """events/event_dynamic_nested_array_storage_v2.sol"""
-    app = harness.compile_and_deploy("events/event_dynamic_nested_array_storage_v2.sol")
+    """events/contracts/event_dynamic_nested_array_storage_v2.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_dynamic_nested_array_storage_v2.sol")
     # createEvent(uint256): 42 ->
     r = harness.call(app, "createEvent(uint256)", 42)
     # (void return — call succeeding is the assertion)
 
 def test_event_emit(harness):
-    """events/event_emit.sol"""
-    app = harness.compile_and_deploy("events/event_emit.sol")
+    """events/contracts/event_emit.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_emit.sol")
     # deposit(bytes32), 18 wei: 0x1234 ->
     r = harness.call(app, "deposit(bytes32)", 4660, payment_wei=18)
     # (void return — call succeeding is the assertion)
 
 def test_event_emit_file_level(harness):
-    """events/event_emit_file_level.sol"""
-    app = harness.compile_and_deploy("events/event_emit_file_level.sol")
+    """events/contracts/event_emit_file_level.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_emit_file_level.sol")
     # deposit(bytes32), 18 wei: 0x1234 ->
     r = harness.call(app, "deposit(bytes32)", 4660, payment_wei=18)
     # (void return — call succeeding is the assertion)
 
 def test_event_emit_from_a_foreign_contract(harness):
-    """events/event_emit_from_a_foreign_contract.sol"""
-    app = harness.compile_and_deploy("events/event_emit_from_a_foreign_contract.sol")
+    """events/contracts/event_emit_from_a_foreign_contract.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_emit_from_a_foreign_contract.sol")
     # test() ->
     r = harness.call(app, "test()")
     # (void return — call succeeding is the assertion)
 
 def test_event_emit_from_a_foreign_contract_same_name(harness):
-    """events/event_emit_from_a_foreign_contract_same_name.sol"""
-    app = harness.compile_and_deploy("events/event_emit_from_a_foreign_contract_same_name.sol")
+    """events/contracts/event_emit_from_a_foreign_contract_same_name.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_emit_from_a_foreign_contract_same_name.sol")
     # test() ->
     r = harness.call(app, "test()")
     # (void return — call succeeding is the assertion)
 
 def test_event_emit_from_module_via_member_access(harness):
-    """events/event_emit_from_module_via_member_access.sol"""
-    app = harness.compile_and_deploy("events/event_emit_from_module_via_member_access.sol")
+    """events/contracts/event_emit_from_module_via_member_access.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_emit_from_module_via_member_access.sol")
     # returnAddress() ->
     r = harness.call(app, "returnAddress()")
     # (void return — call succeeding is the assertion)
 
 def test_event_emit_from_other_contract(harness):
-    """events/event_emit_from_other_contract.sol"""
-    app = harness.compile_and_deploy("events/event_emit_from_other_contract.sol")
+    """events/contracts/event_emit_from_other_contract.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_emit_from_other_contract.sol")
     # deposit(bytes32), 18 wei: 0x1234 ->
     r = harness.call(app, "deposit(bytes32)", 4660, payment_wei=18)
     # (void return — call succeeding is the assertion)
 
 def test_event_emit_interface_event_via_library(harness):
-    """events/event_emit_interface_event_via_library.sol"""
-    app = harness.compile_and_deploy("events/event_emit_interface_event_via_library.sol")
+    """events/contracts/event_emit_interface_event_via_library.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_emit_interface_event_via_library.sol")
     # g() ->
     r = harness.call(app, "g()")
     # (void return — call succeeding is the assertion)
 
 def test_event_emit_via_interface(harness):
-    """events/event_emit_via_interface.sol"""
-    app = harness.compile_and_deploy("events/event_emit_via_interface.sol")
+    """events/contracts/event_emit_via_interface.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_emit_via_interface.sol")
     # emitEvent(uint256): 100 ->
     r = harness.call(app, "emitEvent(uint256)", 100)
     # (void return — call succeeding is the assertion)
 
 def test_event_indexed_function(harness):
-    """events/event_indexed_function.sol"""
-    app = harness.compile_and_deploy("events/event_indexed_function.sol")
+    """events/contracts/event_indexed_function.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_indexed_function.sol")
     # f() ->
     r = harness.call(app, "f()")
     # (void return — call succeeding is the assertion)
 
 def test_event_indexed_function2(harness):
-    """events/event_indexed_function2.sol"""
-    app = harness.compile_and_deploy("events/event_indexed_function2.sol")
+    """events/contracts/event_indexed_function2.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_indexed_function2.sol")
     # f1() ->
     r = harness.call(app, "f1()")
     # (void return — call succeeding is the assertion)
@@ -190,57 +190,57 @@ def test_event_indexed_function2(harness):
     # (void return — call succeeding is the assertion)
 
 def test_event_indexed_mixed(harness):
-    """events/event_indexed_mixed.sol"""
-    app = harness.compile_and_deploy("events/event_indexed_mixed.sol")
+    """events/contracts/event_indexed_mixed.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_indexed_mixed.sol")
     # deposit() ->
     r = harness.call(app, "deposit()")
     # (void return — call succeeding is the assertion)
 
 def test_event_indexed_string(harness):
-    """events/event_indexed_string.sol"""
-    app = harness.compile_and_deploy("events/event_indexed_string.sol")
+    """events/contracts/event_indexed_string.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_indexed_string.sol")
     # deposit() ->
     r = harness.call(app, "deposit()")
     # (void return — call succeeding is the assertion)
 
 def test_event_lots_of_data(harness):
-    """events/event_lots_of_data.sol"""
-    app = harness.compile_and_deploy("events/event_lots_of_data.sol")
+    """events/contracts/event_lots_of_data.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_lots_of_data.sol")
     # deposit(bytes32), 18 wei: 0x1234 ->
     r = harness.call(app, "deposit(bytes32)", 4660, payment_wei=18)
     # (void return — call succeeding is the assertion)
 
 def test_event_no_arguments(harness):
-    """events/event_no_arguments.sol"""
-    app = harness.compile_and_deploy("events/event_no_arguments.sol")
+    """events/contracts/event_no_arguments.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_no_arguments.sol")
     # deposit() ->
     r = harness.call(app, "deposit()")
     # (void return — call succeeding is the assertion)
 
 def test_event_really_lots_of_data(harness):
-    """events/event_really_lots_of_data.sol"""
-    app = harness.compile_and_deploy("events/event_really_lots_of_data.sol")
+    """events/contracts/event_really_lots_of_data.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_really_lots_of_data.sol")
     # deposit() ->
     r = harness.call(app, "deposit()")
     # (void return — call succeeding is the assertion)
 
 def test_event_really_lots_of_data_from_storage(harness):
-    """events/event_really_lots_of_data_from_storage.sol"""
-    app = harness.compile_and_deploy("events/event_really_lots_of_data_from_storage.sol")
+    """events/contracts/event_really_lots_of_data_from_storage.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_really_lots_of_data_from_storage.sol")
     # deposit() ->
     r = harness.call(app, "deposit()")
     # (void return — call succeeding is the assertion)
 
 def test_event_really_really_lots_of_data_from_storage(harness):
-    """events/event_really_really_lots_of_data_from_storage.sol"""
-    app = harness.compile_and_deploy("events/event_really_really_lots_of_data_from_storage.sol")
+    """events/contracts/event_really_really_lots_of_data_from_storage.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_really_really_lots_of_data_from_storage.sol")
     # deposit() ->
     r = harness.call(app, "deposit()")
     # (void return — call succeeding is the assertion)
 
 def test_event_selector(harness):
-    """events/event_selector.sol"""
-    app = harness.compile_and_deploy("events/event_selector.sol")
+    """events/contracts/event_selector.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_selector.sol")
     # test1() -> 0x92bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028, 0x2ff0672f372fbe844b353429d4510ea5e43683af134c54f75f789ff57bc0c0, 0x92bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028, 0x92bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028
     r = harness.call(app, "test1()")
     assert tuple(r.abi_return) == (66369780382333686747531266010219861741175586311421417686517335350473919995944, 84701013014700633381896489586161358225060424425641365676549285893971361984, 66369780382333686747531266010219861741175586311421417686517335350473919995944, 66369780382333686747531266010219861741175586311421417686517335350473919995944)
@@ -253,15 +253,15 @@ def test_event_selector(harness):
     assert r.abi_return == 18320653573920188446226298860793104238698786666923688161409786579693587521834
 
 def test_event_selector_file_level(harness):
-    """events/event_selector_file_level.sol"""
-    app = harness.compile_and_deploy("events/event_selector_file_level.sol")
+    """events/contracts/event_selector_file_level.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_selector_file_level.sol")
     # main() -> 0x92bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028, 0x92bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028
     r = harness.call(app, "main()")
     assert tuple(r.abi_return) == (66369780382333686747531266010219861741175586311421417686517335350473919995944, 66369780382333686747531266010219861741175586311421417686517335350473919995944)
 
 def test_event_shadowing_file_level(harness):
-    """events/event_shadowing_file_level.sol"""
-    app = harness.compile_and_deploy("events/event_shadowing_file_level.sol")
+    """events/contracts/event_shadowing_file_level.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_shadowing_file_level.sol")
     # main() -> 0x3e9992c940c54ea252d3a34557cc3d3014281525c43d694f89d5f3dfd820b07d, 0x3e9992c940c54ea252d3a34557cc3d3014281525c43d694f89d5f3dfd820b07d, 0x92bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028
     r = harness.call(app, "main()")
     assert tuple(r.abi_return) == (28314737293810674527488474353404243661761185637991170190359344066147653824637, 28314737293810674527488474353404243661761185637991170190359344066147653824637, 66369780382333686747531266010219861741175586311421417686517335350473919995944)
@@ -270,41 +270,41 @@ def test_event_shadowing_file_level(harness):
     assert tuple(r.abi_return) == (66369780382333686747531266010219861741175586311421417686517335350473919995944, 28314737293810674527488474353404243661761185637991170190359344066147653824637, 66369780382333686747531266010219861741175586311421417686517335350473919995944)
 
 def test_event_signature_in_library(harness):
-    """events/event_signature_in_library.sol"""
-    app = harness.compile_and_deploy("events/event_signature_in_library.sol")
+    """events/contracts/event_signature_in_library.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_signature_in_library.sol")
     # constructor-only test — deployment succeeding is the assertion
 
 def test_event_static_calldata_uint_array_and_dynamic_array(harness):
-    """events/event_static_calldata_uint_array_and_dynamic_array.sol"""
-    app = harness.compile_and_deploy("events/event_static_calldata_uint_array_and_dynamic_array.sol")
+    """events/contracts/event_static_calldata_uint_array_and_dynamic_array.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_static_calldata_uint_array_and_dynamic_array.sol")
     # f(uint256[],uint256[1]): 0x40, 0xff, 1, 0xffff ->
     r = harness.call(app, "f(uint256[],uint256[1])", 64, 255, 1, 65535)
     # (void return — call succeeding is the assertion)
 
 def test_event_string(harness):
-    """events/event_string.sol"""
-    app = harness.compile_and_deploy("events/event_string.sol")
+    """events/contracts/event_string.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_string.sol")
     # deposit() ->
     r = harness.call(app, "deposit()")
     # (void return — call succeeding is the assertion)
 
 def test_event_struct_memory_v2(harness):
-    """events/event_struct_memory_v2.sol"""
-    app = harness.compile_and_deploy("events/event_struct_memory_v2.sol")
+    """events/contracts/event_struct_memory_v2.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_struct_memory_v2.sol")
     # createEvent(uint256): 42 ->
     r = harness.call(app, "createEvent(uint256)", 42)
     # (void return — call succeeding is the assertion)
 
 def test_event_struct_storage_v2(harness):
-    """events/event_struct_storage_v2.sol"""
-    app = harness.compile_and_deploy("events/event_struct_storage_v2.sol")
+    """events/contracts/event_struct_storage_v2.sol"""
+    app = harness.compile_and_deploy("events/contracts/event_struct_storage_v2.sol")
     # createEvent(uint256): 42 ->
     r = harness.call(app, "createEvent(uint256)", 42)
     # (void return — call succeeding is the assertion)
 
 def test_events_with_same_name(harness):
-    """events/events_with_same_name.sol"""
-    app = harness.compile_and_deploy("events/events_with_same_name.sol")
+    """events/contracts/events_with_same_name.sol"""
+    app = harness.compile_and_deploy("events/contracts/events_with_same_name.sol")
     # deposit() -> 1
     r = harness.call(app, "deposit()")
     assert r.abi_return == 1
@@ -319,8 +319,8 @@ def test_events_with_same_name(harness):
     assert r.abi_return == 4
 
 def test_events_with_same_name_file_level(harness):
-    """events/events_with_same_name_file_level.sol"""
-    app = harness.compile_and_deploy("events/events_with_same_name_file_level.sol")
+    """events/contracts/events_with_same_name_file_level.sol"""
+    app = harness.compile_and_deploy("events/contracts/events_with_same_name_file_level.sol")
     # deposit() -> 1
     r = harness.call(app, "deposit()")
     assert r.abi_return == 1
@@ -335,8 +335,8 @@ def test_events_with_same_name_file_level(harness):
     assert r.abi_return == 4
 
 def test_events_with_same_name_inherited_emit(harness):
-    """events/events_with_same_name_inherited_emit.sol"""
-    app = harness.compile_and_deploy("events/events_with_same_name_inherited_emit.sol")
+    """events/contracts/events_with_same_name_inherited_emit.sol"""
+    app = harness.compile_and_deploy("events/contracts/events_with_same_name_inherited_emit.sol")
     # deposit() -> 1
     r = harness.call(app, "deposit()")
     assert r.abi_return == 1
@@ -348,8 +348,8 @@ def test_events_with_same_name_inherited_emit(harness):
     assert r.abi_return == 1
 
 def test_simple(harness):
-    """events/simple.sol"""
-    app = harness.compile_and_deploy("events/simple.sol")
+    """events/contracts/simple.sol"""
+    app = harness.compile_and_deploy("events/contracts/simple.sol")
     # f() ->
     r = harness.call(app, "f()")
     # (void return — call succeeding is the assertion)

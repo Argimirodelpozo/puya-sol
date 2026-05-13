@@ -11,46 +11,46 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_abi_decode_calldata(harness):
-    """abiEncodeDecode/abi_decode_calldata.sol"""
-    app = harness.compile_and_deploy("abiEncodeDecode/abi_decode_calldata.sol")
+    """abiEncodeDecode/contracts/abi_decode_calldata.sol"""
+    app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_decode_calldata.sol")
     # f(bytes): 0x20, 0x80, 0x21, 0x40, 0x7, "abcdefg" -> 0x21, 0x40, 0x7, "abcdefg"
     r = harness.call(app, "f(bytes)", 32, 128, 33, 64, 7, bytes.fromhex('61626364656667'))
     # TODO: verify expected: 0x21 | 0x40 | 0x7 | "abcdefg"
     assert not r.reverted
 
 def test_abi_decode_simple(harness):
-    """abiEncodeDecode/abi_decode_simple.sol"""
-    app = harness.compile_and_deploy("abiEncodeDecode/abi_decode_simple.sol")
+    """abiEncodeDecode/contracts/abi_decode_simple.sol"""
+    app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_decode_simple.sol")
     # f(bytes): 0x20, 0x80, 0x21, 0x40, 0x7, "abcdefg" -> 0x21, 0x40, 0x7, "abcdefg"
     r = harness.call(app, "f(bytes)", 32, 128, 33, 64, 7, bytes.fromhex('61626364656667'))
     # TODO: verify expected: 0x21 | 0x40 | 0x7 | "abcdefg"
     assert not r.reverted
 
 def test_abi_decode_simple_storage(harness):
-    """abiEncodeDecode/abi_decode_simple_storage.sol"""
-    app = harness.compile_and_deploy("abiEncodeDecode/abi_decode_simple_storage.sol")
+    """abiEncodeDecode/contracts/abi_decode_simple_storage.sol"""
+    app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_decode_simple_storage.sol")
     # f(bytes): 0x20, 0x80, 0x21, 0x40, 0x7, "abcdefg" -> 0x21, 0x40, 0x7, "abcdefg"
     r = harness.call(app, "f(bytes)", 32, 128, 33, 64, 7, bytes.fromhex('61626364656667'))
     # TODO: verify expected: 0x21 | 0x40 | 0x7 | "abcdefg"
     assert not r.reverted
 
 def test_abi_encode_call(harness):
-    """abiEncodeDecode/abi_encode_call.sol"""
-    app = harness.compile_and_deploy("abiEncodeDecode/abi_encode_call.sol")
+    """abiEncodeDecode/contracts/abi_encode_call.sol"""
+    app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_call.sol")
     # callExternal() -> true
     r = harness.call(app, "callExternal()")
     assert r.abi_return is True
 
 def test_abi_encode_call_declaration(harness):
-    """abiEncodeDecode/abi_encode_call_declaration.sol"""
-    app = harness.compile_and_deploy("abiEncodeDecode/abi_encode_call_declaration.sol")
+    """abiEncodeDecode/contracts/abi_encode_call_declaration.sol"""
+    app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_call_declaration.sol")
     # test() -> 11116
     r = harness.call(app, "test()")
     assert r.abi_return == 11116
 
 def test_abi_encode_call_is_consistent(harness):
-    """abiEncodeDecode/abi_encode_call_is_consistent.sol"""
-    app = harness.compile_and_deploy("abiEncodeDecode/abi_encode_call_is_consistent.sol")
+    """abiEncodeDecode/contracts/abi_encode_call_is_consistent.sol"""
+    app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_call_is_consistent.sol")
     # assertConsistentSelectors() ->
     r = harness.call(app, "assertConsistentSelectors()")
     # (void return — call succeeding is the assertion)
@@ -88,15 +88,15 @@ def test_abi_encode_call_is_consistent(harness):
     assert not r.reverted
 
 def test_abi_encode_call_memory(harness):
-    """abiEncodeDecode/abi_encode_call_memory.sol"""
-    app = harness.compile_and_deploy("abiEncodeDecode/abi_encode_call_memory.sol")
+    """abiEncodeDecode/contracts/abi_encode_call_memory.sol"""
+    app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_call_memory.sol")
     # test() -> 0xa7a0d53700000000000000000000000000000000000000000000000000000000
     r = harness.call(app, "test()")
     assert r.abi_return == 75820412798538961434450374661564614143690048118980576262982101388227132784640
 
 def test_abi_encode_call_special_args(harness):
-    """abiEncodeDecode/abi_encode_call_special_args.sol"""
-    app = harness.compile_and_deploy("abiEncodeDecode/abi_encode_call_special_args.sol")
+    """abiEncodeDecode/contracts/abi_encode_call_special_args.sol"""
+    app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_call_special_args.sol")
     # assertConsistentSelectors() ->
     r = harness.call(app, "assertConsistentSelectors()")
     # (void return — call succeeding is the assertion)
@@ -124,8 +124,8 @@ def test_abi_encode_call_special_args(harness):
     assert not r.reverted
 
 def test_abi_encode_call_uint_bytes(harness):
-    """abiEncodeDecode/abi_encode_call_uint_bytes.sol"""
-    app = harness.compile_and_deploy("abiEncodeDecode/abi_encode_call_uint_bytes.sol")
+    """abiEncodeDecode/contracts/abi_encode_call_uint_bytes.sol"""
+    app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_call_uint_bytes.sol")
     # f() -> 0x20, 0x60, 0x1234000000000000000000000000000000000000000000000000000000000000, 0x6162000000000000000000000000000000000000000000000000000000000000, 0x1234000000000000000000000000000000000000000000000000000000000000
     r = harness.call(app, "f()")
     # TODO: verify structural decoding matches expected: 32, 96, 8233507321867270975858166353462000283756074959440384344846684898023608156160, 44047497324925121336511606693520958599579173549109180625971642598225011015680, 8233507321867270975858166353462000283756074959440384344846684898023608156160
@@ -135,16 +135,16 @@ def test_abi_encode_call_uint_bytes(harness):
     assert tuple(r.abi_return) == (32, 64, 4660, 4660)
 
 def test_abi_encode_empty_string_v1(harness):
-    """abiEncodeDecode/abi_encode_empty_string_v1.sol"""
-    app = harness.compile_and_deploy("abiEncodeDecode/abi_encode_empty_string_v1.sol")
+    """abiEncodeDecode/contracts/abi_encode_empty_string_v1.sol"""
+    app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_empty_string_v1.sol")
     # f() -> 0x40, 0xa0, 0x40, 0x20, 0x0, 0x0
     r = harness.call(app, "f()")
     # TODO: verify structural decoding matches expected: 64, 160, 64, 32, 0, 0
     assert not r.reverted
 
 def test_abi_encode_with_selector(harness):
-    """abiEncodeDecode/abi_encode_with_selector.sol"""
-    app = harness.compile_and_deploy("abiEncodeDecode/abi_encode_with_selector.sol")
+    """abiEncodeDecode/contracts/abi_encode_with_selector.sol"""
+    app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_with_selector.sol")
     # f0() -> 0x20, 4, 8234104107246695022420661102507966550300666591269321702959126607540084801536
     r = harness.call(app, "f0()")
     assert tuple(r.abi_return) == (32, 4, 8234104107246695022420661102507966550300666591269321702959126607540084801536)
@@ -161,8 +161,8 @@ def test_abi_encode_with_selector(harness):
     assert tuple(r.abi_return) == (32, 36, 8234104134206641689571300897174981637320297264906466125499699088643695050751, -26959946667150639794667015087019630673637144422540572481103610249216)
 
 def test_abi_encode_with_selectorv2(harness):
-    """abiEncodeDecode/abi_encode_with_selectorv2.sol"""
-    app = harness.compile_and_deploy("abiEncodeDecode/abi_encode_with_selectorv2.sol")
+    """abiEncodeDecode/contracts/abi_encode_with_selectorv2.sol"""
+    app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_with_selectorv2.sol")
     # f0() -> 0x20, 4, 8234104107246695022420661102507966550300666591269321702959126607540084801536
     r = harness.call(app, "f0()")
     assert tuple(r.abi_return) == (32, 4, 8234104107246695022420661102507966550300666591269321702959126607540084801536)
@@ -183,8 +183,8 @@ def test_abi_encode_with_selectorv2(harness):
     assert not r.reverted
 
 def test_abi_encode_with_signature(harness):
-    """abiEncodeDecode/abi_encode_with_signature.sol"""
-    app = harness.compile_and_deploy("abiEncodeDecode/abi_encode_with_signature.sol")
+    """abiEncodeDecode/contracts/abi_encode_with_signature.sol"""
+    app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_with_signature.sol")
     # f0() -> 0x20, 4, -34435155370463444793260793355178157075203752403645521721995013737368954863616
     r = harness.call(app, "f0()")
     assert tuple(r.abi_return) == (32, 4, -34435155370463444793260793355178157075203752403645521721995013737368954863616)
@@ -202,8 +202,8 @@ def test_abi_encode_with_signature(harness):
     assert not r.reverted
 
 def test_abi_encode_with_signaturev2(harness):
-    """abiEncodeDecode/abi_encode_with_signaturev2.sol"""
-    app = harness.compile_and_deploy("abiEncodeDecode/abi_encode_with_signaturev2.sol")
+    """abiEncodeDecode/contracts/abi_encode_with_signaturev2.sol"""
+    app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_with_signaturev2.sol")
     # f0() -> 0x20, 4, -34435155370463444793260793355178157075203752403645521721995013737368954863616
     r = harness.call(app, "f0()")
     assert tuple(r.abi_return) == (32, 4, -34435155370463444793260793355178157075203752403645521721995013737368954863616)
@@ -225,8 +225,8 @@ def test_abi_encode_with_signaturev2(harness):
     assert not r.reverted
 
 def test_contract_array(harness):
-    """abiEncodeDecode/contract_array.sol"""
-    app = harness.compile_and_deploy("abiEncodeDecode/contract_array.sol")
+    """abiEncodeDecode/contracts/contract_array.sol"""
+    app = harness.compile_and_deploy("abiEncodeDecode/contracts/contract_array.sol")
     # f(bytes): 0x20, 0xA0, 0x20, 3, 0x01, 0x02, 0x03 -> 0x20, 3, 0x01, 0x02, 0x03
     r = harness.call(app, "f(bytes)", 32, 160, 32, 3, 1, 2, 3)
     # TODO: verify structural decoding matches expected: 32, 3, 1, 2, 3
@@ -237,8 +237,8 @@ def test_contract_array(harness):
     assert not r.reverted
 
 def test_contract_array_v2(harness):
-    """abiEncodeDecode/contract_array_v2.sol"""
-    app = harness.compile_and_deploy("abiEncodeDecode/contract_array_v2.sol")
+    """abiEncodeDecode/contracts/contract_array_v2.sol"""
+    app = harness.compile_and_deploy("abiEncodeDecode/contracts/contract_array_v2.sol")
     # f(bytes): 0x20, 0xA0, 0x20, 3, 0x01, 0x02, 0x03 -> 0x20, 3, 0x01, 0x02, 0x03
     r = harness.call(app, "f(bytes)", 32, 160, 32, 3, 1, 2, 3)
     # TODO: verify structural decoding matches expected: 32, 3, 1, 2, 3
@@ -255,22 +255,22 @@ def test_contract_array_v2(harness):
     assert not r.reverted
 
 def test_offset_overflow_in_array_decoding(harness):
-    """abiEncodeDecode/offset_overflow_in_array_decoding.sol"""
-    app = harness.compile_and_deploy("abiEncodeDecode/offset_overflow_in_array_decoding.sol")
+    """abiEncodeDecode/contracts/offset_overflow_in_array_decoding.sol"""
+    app = harness.compile_and_deploy("abiEncodeDecode/contracts/offset_overflow_in_array_decoding.sol")
     # test() -> FAILURE
     r = harness.call(app, "test()", expect_revert=True)
     assert r.reverted
 
 def test_offset_overflow_in_array_decoding_2(harness):
-    """abiEncodeDecode/offset_overflow_in_array_decoding_2.sol"""
-    app = harness.compile_and_deploy("abiEncodeDecode/offset_overflow_in_array_decoding_2.sol")
+    """abiEncodeDecode/contracts/offset_overflow_in_array_decoding_2.sol"""
+    app = harness.compile_and_deploy("abiEncodeDecode/contracts/offset_overflow_in_array_decoding_2.sol")
     # withinArray() -> FAILURE
     r = harness.call(app, "withinArray()", expect_revert=True)
     assert r.reverted
 
 def test_offset_overflow_in_array_decoding_3(harness):
-    """abiEncodeDecode/offset_overflow_in_array_decoding_3.sol"""
-    app = harness.compile_and_deploy("abiEncodeDecode/offset_overflow_in_array_decoding_3.sol")
+    """abiEncodeDecode/contracts/offset_overflow_in_array_decoding_3.sol"""
+    app = harness.compile_and_deploy("abiEncodeDecode/contracts/offset_overflow_in_array_decoding_3.sol")
     # test() -> FAILURE
     r = harness.call(app, "test()", expect_revert=True)
     assert r.reverted

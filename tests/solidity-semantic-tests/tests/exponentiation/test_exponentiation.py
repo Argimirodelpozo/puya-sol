@@ -11,8 +11,8 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_literal_base(harness):
-    """exponentiation/literal_base.sol"""
-    app = harness.compile_and_deploy("exponentiation/literal_base.sol")
+    """exponentiation/contracts/literal_base.sol"""
+    app = harness.compile_and_deploy("exponentiation/contracts/literal_base.sol")
     # f(uint256): 0 -> 1, 1
     r = harness.call(app, "f(uint256)", 0)
     assert tuple(r.abi_return) == (1, 1)
@@ -39,15 +39,15 @@ def test_literal_base(harness):
     assert tuple(r.abi_return) == (0, 0)
 
 def test_signed_base(harness):
-    """exponentiation/signed_base.sol"""
-    app = harness.compile_and_deploy("exponentiation/signed_base.sol")
+    """exponentiation/contracts/signed_base.sol"""
+    app = harness.compile_and_deploy("exponentiation/contracts/signed_base.sol")
     # f() -> 9, -27
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (9, -27)
 
 def test_small_exp(harness):
-    """exponentiation/small_exp.sol"""
-    app = harness.compile_and_deploy("exponentiation/small_exp.sol")
+    """exponentiation/contracts/small_exp.sol"""
+    app = harness.compile_and_deploy("exponentiation/contracts/small_exp.sol")
     # f() -> 4
     r = harness.call(app, "f()")
     assert r.abi_return == 4

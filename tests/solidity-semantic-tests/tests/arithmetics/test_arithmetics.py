@@ -11,15 +11,15 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_addmod_mulmod(harness):
-    """arithmetics/addmod_mulmod.sol"""
-    app = harness.compile_and_deploy("arithmetics/addmod_mulmod.sol")
+    """arithmetics/contracts/addmod_mulmod.sol"""
+    app = harness.compile_and_deploy("arithmetics/contracts/addmod_mulmod.sol")
     # test() -> 0
     r = harness.call(app, "test()")
     assert r.abi_return == 0
 
 def test_addmod_mulmod_zero(harness):
-    """arithmetics/addmod_mulmod_zero.sol"""
-    app = harness.compile_and_deploy("arithmetics/addmod_mulmod_zero.sol")
+    """arithmetics/contracts/addmod_mulmod_zero.sol"""
+    app = harness.compile_and_deploy("arithmetics/contracts/addmod_mulmod_zero.sol")
     # f(uint256): 0 -> FAILURE, hex"4e487b71", 0x12
     r = harness.call(app, "f(uint256)", 0, expect_revert=True)
     assert r.reverted
@@ -31,15 +31,15 @@ def test_addmod_mulmod_zero(harness):
     assert r.abi_return == 2
 
 def test_block_inside_unchecked(harness):
-    """arithmetics/block_inside_unchecked.sol"""
-    app = harness.compile_and_deploy("arithmetics/block_inside_unchecked.sol")
+    """arithmetics/contracts/block_inside_unchecked.sol"""
+    app = harness.compile_and_deploy("arithmetics/contracts/block_inside_unchecked.sol")
     # f() -> 0x00
     r = harness.call(app, "f()")
     assert r.abi_return == 0
 
 def test_check_var_init(harness):
-    """arithmetics/check_var_init.sol"""
-    app = harness.compile_and_deploy("arithmetics/check_var_init.sol")
+    """arithmetics/contracts/check_var_init.sol"""
+    app = harness.compile_and_deploy("arithmetics/contracts/check_var_init.sol")
     # f() -> FAILURE, hex"4e487b71", 0x11
     r = harness.call(app, "f()", expect_revert=True)
     assert r.reverted
@@ -48,8 +48,8 @@ def test_check_var_init(harness):
     assert r.abi_return == 1
 
 def test_checked_add_v1(harness):
-    """arithmetics/checked_add_v1.sol"""
-    app = harness.compile_and_deploy("arithmetics/checked_add_v1.sol")
+    """arithmetics/contracts/checked_add_v1.sol"""
+    app = harness.compile_and_deploy("arithmetics/contracts/checked_add_v1.sol")
     # f(uint16,uint16): 65534, 0 -> 0xfffe
     r = harness.call(app, "f(uint16,uint16)", 65534, 0)
     assert r.abi_return == 65534
@@ -64,8 +64,8 @@ def test_checked_add_v1(harness):
     assert r.reverted
 
 def test_checked_add_v2(harness):
-    """arithmetics/checked_add_v2.sol"""
-    app = harness.compile_and_deploy("arithmetics/checked_add_v2.sol")
+    """arithmetics/contracts/checked_add_v2.sol"""
+    app = harness.compile_and_deploy("arithmetics/contracts/checked_add_v2.sol")
     # f(uint16,uint16): 65534, 0 -> 0xfffe
     r = harness.call(app, "f(uint16,uint16)", 65534, 0)
     assert r.abi_return == 65534
@@ -80,8 +80,8 @@ def test_checked_add_v2(harness):
     assert r.reverted
 
 def test_checked_called_by_unchecked(harness):
-    """arithmetics/checked_called_by_unchecked.sol"""
-    app = harness.compile_and_deploy("arithmetics/checked_called_by_unchecked.sol")
+    """arithmetics/contracts/checked_called_by_unchecked.sol"""
+    app = harness.compile_and_deploy("arithmetics/contracts/checked_called_by_unchecked.sol")
     # f(uint16,uint16,uint16): 0xe000, 0xe500, 2 -> FAILURE, hex"4e487b71", 0x11
     r = harness.call(app, "f(uint16,uint16,uint16)", 57344, 58624, 2, expect_revert=True)
     assert r.reverted
@@ -90,8 +90,8 @@ def test_checked_called_by_unchecked(harness):
     assert r.abi_return == 0
 
 def test_checked_modifier_called_by_unchecked(harness):
-    """arithmetics/checked_modifier_called_by_unchecked.sol"""
-    app = harness.compile_and_deploy("arithmetics/checked_modifier_called_by_unchecked.sol")
+    """arithmetics/contracts/checked_modifier_called_by_unchecked.sol"""
+    app = harness.compile_and_deploy("arithmetics/contracts/checked_modifier_called_by_unchecked.sol")
     # f(uint16,uint16,uint16): 0xe000, 0xe500, 2 -> 58626
     r = harness.call(app, "f(uint16,uint16,uint16)", 57344, 58624, 2)
     assert r.abi_return == 58626
@@ -100,8 +100,8 @@ def test_checked_modifier_called_by_unchecked(harness):
     assert r.reverted
 
 def test_divisiod_by_zero(harness):
-    """arithmetics/divisiod_by_zero.sol"""
-    app = harness.compile_and_deploy("arithmetics/divisiod_by_zero.sol")
+    """arithmetics/contracts/divisiod_by_zero.sol"""
+    app = harness.compile_and_deploy("arithmetics/contracts/divisiod_by_zero.sol")
     # div(uint256,uint256): 7, 2 -> 3
     r = harness.call(app, "div(uint256,uint256)", 7, 2)
     assert r.abi_return == 3
@@ -116,8 +116,8 @@ def test_divisiod_by_zero(harness):
     assert r.reverted
 
 def test_exp_associativity(harness):
-    """arithmetics/exp_associativity.sol"""
-    app = harness.compile_and_deploy("arithmetics/exp_associativity.sol")
+    """arithmetics/contracts/exp_associativity.sol"""
+    app = harness.compile_and_deploy("arithmetics/contracts/exp_associativity.sol")
     # test_hardcode1(uint256,uint256,uint256): 2, 3, 4 -> 2417851639229258349412352
     r = harness.call(app, "test_hardcode1(uint256,uint256,uint256)", 2, 3, 4)
     assert r.abi_return == 2417851639229258349412352
@@ -138,8 +138,8 @@ def test_exp_associativity(harness):
     assert r.abi_return is True
 
 def test_signed_mod(harness):
-    """arithmetics/signed_mod.sol"""
-    app = harness.compile_and_deploy("arithmetics/signed_mod.sol")
+    """arithmetics/contracts/signed_mod.sol"""
+    app = harness.compile_and_deploy("arithmetics/contracts/signed_mod.sol")
     # f(int256,int256): 7, 5 -> 2
     r = harness.call(app, "f(int256,int256)", 7, 5)
     assert r.abi_return == 2
@@ -163,8 +163,8 @@ def test_signed_mod(harness):
     assert r.abi_return == -57896044618658097711785492504343953926634992332820282019728792003956564819968
 
 def test_unchecked_called_by_checked(harness):
-    """arithmetics/unchecked_called_by_checked.sol"""
-    app = harness.compile_and_deploy("arithmetics/unchecked_called_by_checked.sol")
+    """arithmetics/contracts/unchecked_called_by_checked.sol"""
+    app = harness.compile_and_deploy("arithmetics/contracts/unchecked_called_by_checked.sol")
     # f(uint16): 7 -> 0x0207
     r = harness.call(app, "f(uint16)", 7)
     assert r.abi_return == 519
@@ -176,8 +176,8 @@ def test_unchecked_called_by_checked(harness):
     assert r.reverted
 
 def test_unchecked_div_by_zero(harness):
-    """arithmetics/unchecked_div_by_zero.sol"""
-    app = harness.compile_and_deploy("arithmetics/unchecked_div_by_zero.sol")
+    """arithmetics/contracts/unchecked_div_by_zero.sol"""
+    app = harness.compile_and_deploy("arithmetics/contracts/unchecked_div_by_zero.sol")
     # div(uint256,uint256): 7, 2 -> 3
     r = harness.call(app, "div(uint256,uint256)", 7, 2)
     assert r.abi_return == 3

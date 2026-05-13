@@ -11,8 +11,8 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_c99_scoping_activation(harness):
-    """scoping/c99_scoping_activation.sol"""
-    app = harness.compile_and_deploy("scoping/c99_scoping_activation.sol")
+    """scoping/contracts/c99_scoping_activation.sol"""
+    app = harness.compile_and_deploy("scoping/contracts/c99_scoping_activation.sol")
     # f() -> 3
     r = harness.call(app, "f()")
     assert r.abi_return == 3

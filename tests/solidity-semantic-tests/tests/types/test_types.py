@@ -11,8 +11,8 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_array_mapping_abstract_constructor_param(harness):
-    """types/array_mapping_abstract_constructor_param.sol"""
-    app = harness.compile_and_deploy("types/array_mapping_abstract_constructor_param.sol")
+    """types/contracts/array_mapping_abstract_constructor_param.sol"""
+    app = harness.compile_and_deploy("types/contracts/array_mapping_abstract_constructor_param.sol")
     # m(uint256,uint256,uint256): 0, 0, 0 -> FAILURE
     r = harness.call(app, "m(uint256,uint256,uint256)", 0, 0, 0, expect_revert=True)
     assert r.reverted
@@ -24,100 +24,100 @@ def test_array_mapping_abstract_constructor_param(harness):
     assert r.abi_return == 0
 
 def test_assign_calldata_value_type(harness):
-    """types/assign_calldata_value_type.sol"""
-    app = harness.compile_and_deploy("types/assign_calldata_value_type.sol")
+    """types/contracts/assign_calldata_value_type.sol"""
+    app = harness.compile_and_deploy("types/contracts/assign_calldata_value_type.sol")
     # f(uint256): 23 -> 42, 23
     r = harness.call(app, "f(uint256)", 23)
     assert tuple(r.abi_return) == (42, 23)
 
 def test_convert_fixed_bytes_to_fixed_bytes_greater_size(harness):
-    """types/convert_fixed_bytes_to_fixed_bytes_greater_size.sol"""
-    app = harness.compile_and_deploy("types/convert_fixed_bytes_to_fixed_bytes_greater_size.sol")
+    """types/contracts/convert_fixed_bytes_to_fixed_bytes_greater_size.sol"""
+    app = harness.compile_and_deploy("types/contracts/convert_fixed_bytes_to_fixed_bytes_greater_size.sol")
     # bytesToBytes(bytes2): "ab" -> "ab"
     r = harness.call(app, "bytesToBytes(bytes2)", bytes.fromhex('6162'))
     # TODO: verify expected: "ab"
     assert not r.reverted
 
 def test_convert_fixed_bytes_to_fixed_bytes_same_size(harness):
-    """types/convert_fixed_bytes_to_fixed_bytes_same_size.sol"""
-    app = harness.compile_and_deploy("types/convert_fixed_bytes_to_fixed_bytes_same_size.sol")
+    """types/contracts/convert_fixed_bytes_to_fixed_bytes_same_size.sol"""
+    app = harness.compile_and_deploy("types/contracts/convert_fixed_bytes_to_fixed_bytes_same_size.sol")
     # bytesToBytes(bytes4): "abcd" -> "abcd"
     r = harness.call(app, "bytesToBytes(bytes4)", bytes.fromhex('61626364'))
     # TODO: verify expected: "abcd"
     assert not r.reverted
 
 def test_convert_fixed_bytes_to_fixed_bytes_smaller_size(harness):
-    """types/convert_fixed_bytes_to_fixed_bytes_smaller_size.sol"""
-    app = harness.compile_and_deploy("types/convert_fixed_bytes_to_fixed_bytes_smaller_size.sol")
+    """types/contracts/convert_fixed_bytes_to_fixed_bytes_smaller_size.sol"""
+    app = harness.compile_and_deploy("types/contracts/convert_fixed_bytes_to_fixed_bytes_smaller_size.sol")
     # bytesToBytes(bytes4): "abcd" -> "ab"
     r = harness.call(app, "bytesToBytes(bytes4)", bytes.fromhex('61626364'))
     # TODO: verify expected: "ab"
     assert not r.reverted
 
 def test_convert_fixed_bytes_to_uint_greater_size(harness):
-    """types/convert_fixed_bytes_to_uint_greater_size.sol"""
-    app = harness.compile_and_deploy("types/convert_fixed_bytes_to_uint_greater_size.sol")
+    """types/contracts/convert_fixed_bytes_to_uint_greater_size.sol"""
+    app = harness.compile_and_deploy("types/contracts/convert_fixed_bytes_to_uint_greater_size.sol")
     # bytesToUint(bytes4): "abcd" -> 0x61626364
     r = harness.call(app, "bytesToUint(bytes4)", bytes.fromhex('61626364'))
     assert r.abi_return == 1633837924
 
 def test_convert_fixed_bytes_to_uint_same_min_size(harness):
-    """types/convert_fixed_bytes_to_uint_same_min_size.sol"""
-    app = harness.compile_and_deploy("types/convert_fixed_bytes_to_uint_same_min_size.sol")
+    """types/contracts/convert_fixed_bytes_to_uint_same_min_size.sol"""
+    app = harness.compile_and_deploy("types/contracts/convert_fixed_bytes_to_uint_same_min_size.sol")
     # bytesToUint(bytes1): "a" -> 0x61
     r = harness.call(app, "bytesToUint(bytes1)", bytes.fromhex('61'))
     assert r.abi_return == 97
 
 def test_convert_fixed_bytes_to_uint_same_type(harness):
-    """types/convert_fixed_bytes_to_uint_same_type.sol"""
-    app = harness.compile_and_deploy("types/convert_fixed_bytes_to_uint_same_type.sol")
+    """types/contracts/convert_fixed_bytes_to_uint_same_type.sol"""
+    app = harness.compile_and_deploy("types/contracts/convert_fixed_bytes_to_uint_same_type.sol")
     # bytesToUint(bytes32): "abc2" -> left(0x61626332)
     r = harness.call(app, "bytesToUint(bytes32)", bytes.fromhex('61626332'))
     # TODO: verify expected: left(0x61626332)
     assert not r.reverted
 
 def test_convert_fixed_bytes_to_uint_smaller_size(harness):
-    """types/convert_fixed_bytes_to_uint_smaller_size.sol"""
-    app = harness.compile_and_deploy("types/convert_fixed_bytes_to_uint_smaller_size.sol")
+    """types/contracts/convert_fixed_bytes_to_uint_smaller_size.sol"""
+    app = harness.compile_and_deploy("types/contracts/convert_fixed_bytes_to_uint_smaller_size.sol")
     # bytesToUint(bytes4): "abcd" -> 0x6364
     r = harness.call(app, "bytesToUint(bytes4)", bytes.fromhex('61626364'))
     assert r.abi_return == 25444
 
 def test_convert_uint_to_fixed_bytes_greater_size(harness):
-    """types/convert_uint_to_fixed_bytes_greater_size.sol"""
-    app = harness.compile_and_deploy("types/convert_uint_to_fixed_bytes_greater_size.sol")
+    """types/contracts/convert_uint_to_fixed_bytes_greater_size.sol"""
+    app = harness.compile_and_deploy("types/contracts/convert_uint_to_fixed_bytes_greater_size.sol")
     # UintToBytes(uint16): 0x6162 -> "\x00\x00\x00\x00\x00\x00ab"
     r = harness.call(app, "UintToBytes(uint16)", 24930)
     # TODO: verify expected: "\x00\x00\x00\x00\x00\x00ab"
     assert not r.reverted
 
 def test_convert_uint_to_fixed_bytes_same_min_size(harness):
-    """types/convert_uint_to_fixed_bytes_same_min_size.sol"""
-    app = harness.compile_and_deploy("types/convert_uint_to_fixed_bytes_same_min_size.sol")
+    """types/contracts/convert_uint_to_fixed_bytes_same_min_size.sol"""
+    app = harness.compile_and_deploy("types/contracts/convert_uint_to_fixed_bytes_same_min_size.sol")
     # UintToBytes(uint8): 0x61 -> "a"
     r = harness.call(app, "UintToBytes(uint8)", 97)
     # TODO: verify expected: "a"
     assert not r.reverted
 
 def test_convert_uint_to_fixed_bytes_same_size(harness):
-    """types/convert_uint_to_fixed_bytes_same_size.sol"""
-    app = harness.compile_and_deploy("types/convert_uint_to_fixed_bytes_same_size.sol")
+    """types/contracts/convert_uint_to_fixed_bytes_same_size.sol"""
+    app = harness.compile_and_deploy("types/contracts/convert_uint_to_fixed_bytes_same_size.sol")
     # uintToBytes(uint256): left(0x616263) -> left(0x616263)
     r = harness.call(app, "uintToBytes(uint256)", 0x6162630000000000000000000000000000000000000000000000000000000000)
     # TODO: verify expected: left(0x616263)
     assert not r.reverted
 
 def test_convert_uint_to_fixed_bytes_smaller_size(harness):
-    """types/convert_uint_to_fixed_bytes_smaller_size.sol"""
-    app = harness.compile_and_deploy("types/convert_uint_to_fixed_bytes_smaller_size.sol")
+    """types/contracts/convert_uint_to_fixed_bytes_smaller_size.sol"""
+    app = harness.compile_and_deploy("types/contracts/convert_uint_to_fixed_bytes_smaller_size.sol")
     # uintToBytes(uint32): 0x61626364 -> "cd"
     r = harness.call(app, "uintToBytes(uint32)", 1633837924)
     # TODO: verify expected: "cd"
     assert not r.reverted
 
 def test_external_function_to_address(harness):
-    """types/external_function_to_address.sol"""
-    app = harness.compile_and_deploy("types/external_function_to_address.sol")
+    """types/contracts/external_function_to_address.sol"""
+    app = harness.compile_and_deploy("types/contracts/external_function_to_address.sol")
     # f() -> true
     r = harness.call(app, "f()")
     assert r.abi_return is True
@@ -126,8 +126,8 @@ def test_external_function_to_address(harness):
     assert r.abi_return == 66
 
 def test_mapping_abstract_constructor_param(harness):
-    """types/mapping_abstract_constructor_param.sol"""
-    app = harness.compile_and_deploy("types/mapping_abstract_constructor_param.sol")
+    """types/contracts/mapping_abstract_constructor_param.sol"""
+    app = harness.compile_and_deploy("types/contracts/mapping_abstract_constructor_param.sol")
     # m(uint256): 1 -> 0
     r = harness.call(app, "m(uint256)", 1)
     assert r.abi_return == 0
@@ -136,8 +136,8 @@ def test_mapping_abstract_constructor_param(harness):
     assert r.abi_return == 20
 
 def test_mapping_contract_key(harness):
-    """types/mapping_contract_key.sol"""
-    app = harness.compile_and_deploy("types/mapping_contract_key.sol")
+    """types/contracts/mapping_contract_key.sol"""
+    app = harness.compile_and_deploy("types/contracts/mapping_contract_key.sol")
     # get(address): 0 -> 0
     r = harness.call(app, "get(address)", 0)
     assert r.abi_return == 0
@@ -185,8 +185,8 @@ def test_mapping_contract_key(harness):
     assert r.abi_return == 0
 
 def test_mapping_contract_key_getter(harness):
-    """types/mapping_contract_key_getter.sol"""
-    app = harness.compile_and_deploy("types/mapping_contract_key_getter.sol")
+    """types/contracts/mapping_contract_key_getter.sol"""
+    app = harness.compile_and_deploy("types/contracts/mapping_contract_key_getter.sol")
     # table(address): 0 -> 0
     r = harness.call(app, "table(address)", 0)
     assert r.abi_return == 0
@@ -270,8 +270,8 @@ def test_mapping_contract_key_getter(harness):
     assert r.abi_return == 0
 
 def test_mapping_contract_key_library(harness):
-    """types/mapping_contract_key_library.sol"""
-    app = harness.compile_and_deploy("types/mapping_contract_key_library.sol")
+    """types/contracts/mapping_contract_key_library.sol"""
+    app = harness.compile_and_deploy("types/contracts/mapping_contract_key_library.sol")
     # get(address): 0 -> 0
     r = harness.call(app, "get(address)", 0)
     assert r.abi_return == 0
@@ -319,8 +319,8 @@ def test_mapping_contract_key_library(harness):
     assert r.abi_return == 0
 
 def test_mapping_enum_key_getter_v1(harness):
-    """types/mapping_enum_key_getter_v1.sol"""
-    app = harness.compile_and_deploy("types/mapping_enum_key_getter_v1.sol")
+    """types/contracts/mapping_enum_key_getter_v1.sol"""
+    app = harness.compile_and_deploy("types/contracts/mapping_enum_key_getter_v1.sol")
     # table(uint8): 0 -> 0
     r = harness.call(app, "table(uint8)", 0)
     assert r.abi_return == 0
@@ -404,8 +404,8 @@ def test_mapping_enum_key_getter_v1(harness):
     assert r.reverted
 
 def test_mapping_enum_key_getter_v2(harness):
-    """types/mapping_enum_key_getter_v2.sol"""
-    app = harness.compile_and_deploy("types/mapping_enum_key_getter_v2.sol")
+    """types/contracts/mapping_enum_key_getter_v2.sol"""
+    app = harness.compile_and_deploy("types/contracts/mapping_enum_key_getter_v2.sol")
     # table(uint8): 0 -> 0
     r = harness.call(app, "table(uint8)", 0)
     assert r.abi_return == 0
@@ -489,8 +489,8 @@ def test_mapping_enum_key_getter_v2(harness):
     assert r.reverted
 
 def test_mapping_enum_key_library_v1(harness):
-    """types/mapping_enum_key_library_v1.sol"""
-    app = harness.compile_and_deploy("types/mapping_enum_key_library_v1.sol")
+    """types/contracts/mapping_enum_key_library_v1.sol"""
+    app = harness.compile_and_deploy("types/contracts/mapping_enum_key_library_v1.sol")
     # get(uint8): 0 -> 0
     r = harness.call(app, "get(uint8)", 0)
     assert r.abi_return == 0
@@ -538,8 +538,8 @@ def test_mapping_enum_key_library_v1(harness):
     assert r.reverted
 
 def test_mapping_enum_key_library_v2(harness):
-    """types/mapping_enum_key_library_v2.sol"""
-    app = harness.compile_and_deploy("types/mapping_enum_key_library_v2.sol")
+    """types/contracts/mapping_enum_key_library_v2.sol"""
+    app = harness.compile_and_deploy("types/contracts/mapping_enum_key_library_v2.sol")
     # get(uint8): 0 -> 0
     r = harness.call(app, "get(uint8)", 0)
     assert r.abi_return == 0
@@ -587,8 +587,8 @@ def test_mapping_enum_key_library_v2(harness):
     assert r.reverted
 
 def test_mapping_enum_key_v1(harness):
-    """types/mapping_enum_key_v1.sol"""
-    app = harness.compile_and_deploy("types/mapping_enum_key_v1.sol")
+    """types/contracts/mapping_enum_key_v1.sol"""
+    app = harness.compile_and_deploy("types/contracts/mapping_enum_key_v1.sol")
     # get(uint8): 0 -> 0
     r = harness.call(app, "get(uint8)", 0)
     assert r.abi_return == 0
@@ -642,8 +642,8 @@ def test_mapping_enum_key_v1(harness):
     assert r.reverted
 
 def test_mapping_enum_key_v2(harness):
-    """types/mapping_enum_key_v2.sol"""
-    app = harness.compile_and_deploy("types/mapping_enum_key_v2.sol")
+    """types/contracts/mapping_enum_key_v2.sol"""
+    app = harness.compile_and_deploy("types/contracts/mapping_enum_key_v2.sol")
     # get(uint8): 0 -> 0
     r = harness.call(app, "get(uint8)", 0)
     assert r.abi_return == 0
@@ -697,8 +697,8 @@ def test_mapping_enum_key_v2(harness):
     assert r.reverted
 
 def test_mapping_simple(harness):
-    """types/mapping_simple.sol"""
-    app = harness.compile_and_deploy("types/mapping_simple.sol")
+    """types/contracts/mapping_simple.sol"""
+    app = harness.compile_and_deploy("types/contracts/mapping_simple.sol")
     # get(uint8): 0 -> 0
     r = harness.call(app, "get(uint8)", 0)
     assert r.abi_return == 0
@@ -746,8 +746,8 @@ def test_mapping_simple(harness):
     assert r.abi_return == 0
 
 def test_nested_tuples(harness):
-    """types/nested_tuples.sol"""
-    app = harness.compile_and_deploy("types/nested_tuples.sol")
+    """types/contracts/nested_tuples.sol"""
+    app = harness.compile_and_deploy("types/contracts/nested_tuples.sol")
     # f0() -> 2, true
     r = harness.call(app, "f0()")
     # TODO: verify expected: 2 | true
@@ -766,22 +766,22 @@ def test_nested_tuples(harness):
     assert r.abi_return == 4
 
 def test_packing_signed_types(harness):
-    """types/packing_signed_types.sol"""
-    app = harness.compile_and_deploy("types/packing_signed_types.sol")
+    """types/contracts/packing_signed_types.sol"""
+    app = harness.compile_and_deploy("types/contracts/packing_signed_types.sol")
     # run() -> 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffa
     r = harness.call(app, "run()")
     assert r.abi_return == 115792089237316195423570985008687907853269984665640564039457584007913129639930
 
 def test_packing_unpacking_types(harness):
-    """types/packing_unpacking_types.sol"""
-    app = harness.compile_and_deploy("types/packing_unpacking_types.sol")
+    """types/contracts/packing_unpacking_types.sol"""
+    app = harness.compile_and_deploy("types/contracts/packing_unpacking_types.sol")
     # run(bool,uint32,uint64): true, 0x0f0f0f0f, 0xf0f0f0f0f0f0f0f0 -> 0x0000000000000000000000000000000000000001f0f0f0f00f0f0f0f0f0f0f0f
     r = harness.call(app, "run(bool,uint32,uint64)", True, 252645135, 0xf0f0f0f0f0f0f0f0)
     assert r.abi_return == 153795844864354234087135710991
 
 def test_strings(harness):
-    """types/strings.sol"""
-    app = harness.compile_and_deploy("types/strings.sol")
+    """types/contracts/strings.sol"""
+    app = harness.compile_and_deploy("types/contracts/strings.sol")
     # fixedBytesHex() -> "\xaa\xbb\x00\xff"
     r = harness.call(app, "fixedBytesHex()")
     # TODO: verify expected: "\xaa\xbb\x00\xff"
@@ -796,8 +796,8 @@ def test_strings(harness):
     assert not r.reverted
 
 def test_struct_mapping_abstract_constructor_param(harness):
-    """types/struct_mapping_abstract_constructor_param.sol"""
-    app = harness.compile_and_deploy("types/struct_mapping_abstract_constructor_param.sol")
+    """types/contracts/struct_mapping_abstract_constructor_param.sol"""
+    app = harness.compile_and_deploy("types/contracts/struct_mapping_abstract_constructor_param.sol")
     # getM(uint256,uint256): 0, 0 -> 0
     r = harness.call(app, "getM(uint256,uint256)", 0, 0)
     assert r.abi_return == 0
@@ -809,15 +809,15 @@ def test_struct_mapping_abstract_constructor_param(harness):
     assert r.abi_return == 0
 
 def test_tuple_assign_multi_slot_grow(harness):
-    """types/tuple_assign_multi_slot_grow.sol"""
-    app = harness.compile_and_deploy("types/tuple_assign_multi_slot_grow.sol")
+    """types/contracts/tuple_assign_multi_slot_grow.sol"""
+    app = harness.compile_and_deploy("types/contracts/tuple_assign_multi_slot_grow.sol")
     # f() -> 0x30, 0x31, 0x32
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (48, 49, 50)
 
 def test_type_conversion_cleanup(harness):
-    """types/type_conversion_cleanup.sol"""
-    app = harness.compile_and_deploy("types/type_conversion_cleanup.sol")
+    """types/contracts/type_conversion_cleanup.sol"""
+    app = harness.compile_and_deploy("types/contracts/type_conversion_cleanup.sol")
     # test() -> 0xffffffffffffffffffffffffffffffff
     r = harness.call(app, "test()")
     assert r.abi_return == 340282366920938463463374607431768211455

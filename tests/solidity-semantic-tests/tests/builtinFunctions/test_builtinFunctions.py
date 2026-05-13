@@ -11,15 +11,15 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_assignment_to_const_var_involving_keccak(harness):
-    """builtinFunctions/assignment_to_const_var_involving_keccak.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/assignment_to_const_var_involving_keccak.sol")
+    """builtinFunctions/contracts/assignment_to_const_var_involving_keccak.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/assignment_to_const_var_involving_keccak.sol")
     # f() -> 0x4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45
     r = harness.call(app, "f()")
     assert r.abi_return == 35286403120855365962805127237049809881669876751651884979611909062921250761797
 
 def test_blobhash(harness):
-    """builtinFunctions/blobhash.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/blobhash.sol")
+    """builtinFunctions/contracts/blobhash.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/blobhash.sol")
     # f() -> 0x0100000000000000000000000000000000000000000000000000000000000001
     r = harness.call(app, "f()")
     assert r.abi_return == 452312848583266388373324160190187140051835877600158453279131187530910662657
@@ -31,29 +31,29 @@ def test_blobhash(harness):
     assert r.abi_return == 0
 
 def test_blobhash_shadow_resolution(harness):
-    """builtinFunctions/blobhash_shadow_resolution.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/blobhash_shadow_resolution.sol")
+    """builtinFunctions/contracts/blobhash_shadow_resolution.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/blobhash_shadow_resolution.sol")
     # f() -> 0x03
     r = harness.call(app, "f()")
     assert r.abi_return == 3
 
 def test_blockhash(harness):
-    """builtinFunctions/blockhash.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/blockhash.sol")
+    """builtinFunctions/contracts/blockhash.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/blockhash.sol")
     # test() -> true
     r = harness.call(app, "test()")
     assert r.abi_return is True
 
 def test_blockhash_shadow_resolution(harness):
-    """builtinFunctions/blockhash_shadow_resolution.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/blockhash_shadow_resolution.sol")
+    """builtinFunctions/contracts/blockhash_shadow_resolution.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/blockhash_shadow_resolution.sol")
     # f() -> 0
     r = harness.call(app, "f()")
     assert r.abi_return == 0
 
 def test_erc7201_equivalent_solidity_spec(harness):
-    """builtinFunctions/erc7201_equivalent_solidity_spec.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/erc7201_equivalent_solidity_spec.sol")
+    """builtinFunctions/contracts/erc7201_equivalent_solidity_spec.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/erc7201_equivalent_solidity_spec.sol")
     # builtinMatchesSolidityImplementation() -> true
     r = harness.call(app, "builtinMatchesSolidityImplementation()")
     assert r.abi_return is True
@@ -62,29 +62,29 @@ def test_erc7201_equivalent_solidity_spec(harness):
     assert r.abi_return == 10958655983261152271848436692291137275443024275653522991983264966744321209600
 
 def test_erc7201_equivalent_solidity_spec_comptime(harness):
-    """builtinFunctions/erc7201_equivalent_solidity_spec_comptime.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/erc7201_equivalent_solidity_spec_comptime.sol")
+    """builtinFunctions/contracts/erc7201_equivalent_solidity_spec_comptime.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/erc7201_equivalent_solidity_spec_comptime.sol")
     # builtinMatchesSolidityImplementation() -> true
     r = harness.call(app, "builtinMatchesSolidityImplementation()")
     assert r.abi_return is True
 
 def test_erc7201_layout_specifier_slot_match_comptime(harness):
-    """builtinFunctions/erc7201_layout_specifier_slot_match_comptime.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/erc7201_layout_specifier_slot_match_comptime.sol")
+    """builtinFunctions/contracts/erc7201_layout_specifier_slot_match_comptime.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/erc7201_layout_specifier_slot_match_comptime.sol")
     # builtinMatchesSolidityImplementation() -> true
     r = harness.call(app, "builtinMatchesSolidityImplementation()")
     assert r.abi_return is True
 
 def test_erc7201_overflow_expression(harness):
-    """builtinFunctions/erc7201_overflow_expression.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/erc7201_overflow_expression.sol")
+    """builtinFunctions/contracts/erc7201_overflow_expression.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/erc7201_overflow_expression.sol")
     # f() -> FAILURE, hex"4e487b71", 0x11
     r = harness.call(app, "f()", expect_revert=True)
     assert r.reverted
 
 def test_erc7201_param_abi_encode(harness):
-    """builtinFunctions/erc7201_param_abi_encode.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/erc7201_param_abi_encode.sol")
+    """builtinFunctions/contracts/erc7201_param_abi_encode.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/erc7201_param_abi_encode.sol")
     # builtinMatchesSolidityImplementation() -> true
     r = harness.call(app, "builtinMatchesSolidityImplementation()")
     assert r.abi_return is True
@@ -93,15 +93,15 @@ def test_erc7201_param_abi_encode(harness):
     assert r.abi_return == -14651554186193368082021334953908208762193027200365752719897746810709432803072
 
 def test_erc7201_param_array_string_literal(harness):
-    """builtinFunctions/erc7201_param_array_string_literal.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/erc7201_param_array_string_literal.sol")
+    """builtinFunctions/contracts/erc7201_param_array_string_literal.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/erc7201_param_array_string_literal.sol")
     # test() -> true
     r = harness.call(app, "test()")
     assert r.abi_return is True
 
 def test_erc7201_param_locations(harness):
-    """builtinFunctions/erc7201_param_locations.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/erc7201_param_locations.sol")
+    """builtinFunctions/contracts/erc7201_param_locations.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/erc7201_param_locations.sol")
     # storageVar() -> true
     r = harness.call(app, "storageVar()")
     assert r.abi_return is True
@@ -122,29 +122,29 @@ def test_erc7201_param_locations(harness):
     assert r.abi_return is True
 
 def test_erc7201_param_pure_function(harness):
-    """builtinFunctions/erc7201_param_pure_function.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/erc7201_param_pure_function.sol")
+    """builtinFunctions/contracts/erc7201_param_pure_function.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/erc7201_param_pure_function.sol")
     # builtinMatchesSolidityImplementation() -> true
     r = harness.call(app, "builtinMatchesSolidityImplementation()")
     assert r.abi_return is True
 
 def test_erc7201_param_string_concat(harness):
-    """builtinFunctions/erc7201_param_string_concat.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/erc7201_param_string_concat.sol")
+    """builtinFunctions/contracts/erc7201_param_string_concat.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/erc7201_param_string_concat.sol")
     # builtinMatchesSolidityImplementation() -> true
     r = harness.call(app, "builtinMatchesSolidityImplementation()")
     assert r.abi_return is True
 
 def test_erc7201_param_string_literal_with_escaped_chars(harness):
-    """builtinFunctions/erc7201_param_string_literal_with_escaped_chars.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/erc7201_param_string_literal_with_escaped_chars.sol")
+    """builtinFunctions/contracts/erc7201_param_string_literal_with_escaped_chars.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/erc7201_param_string_literal_with_escaped_chars.sol")
     # builtinMatchesSolidityImplementation() -> true
     r = harness.call(app, "builtinMatchesSolidityImplementation()")
     assert r.abi_return is True
 
 def test_erc7201_param_ternary_operator(harness):
-    """builtinFunctions/erc7201_param_ternary_operator.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/erc7201_param_ternary_operator.sol")
+    """builtinFunctions/contracts/erc7201_param_ternary_operator.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/erc7201_param_ternary_operator.sol")
     # simple() -> true
     r = harness.call(app, "simple()")
     assert r.abi_return is True
@@ -153,36 +153,36 @@ def test_erc7201_param_ternary_operator(harness):
     assert r.abi_return is True
 
 def test_erc7201_param_unicode_string_literal(harness):
-    """builtinFunctions/erc7201_param_unicode_string_literal.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/erc7201_param_unicode_string_literal.sol")
+    """builtinFunctions/contracts/erc7201_param_unicode_string_literal.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/erc7201_param_unicode_string_literal.sol")
     # builtinMatchesSolidityImplementation() -> true
     r = harness.call(app, "builtinMatchesSolidityImplementation()")
     assert r.abi_return is True
 
 def test_erc7201_param_unicode_string_variable(harness):
-    """builtinFunctions/erc7201_param_unicode_string_variable.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/erc7201_param_unicode_string_variable.sol")
+    """builtinFunctions/contracts/erc7201_param_unicode_string_variable.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/erc7201_param_unicode_string_variable.sol")
     # builtinMatchesSolidityImplementation() -> true
     r = harness.call(app, "builtinMatchesSolidityImplementation()")
     assert r.abi_return is True
 
 def test_erc7201_param_with_zero_last_byte_of_inner_hash(harness):
-    """builtinFunctions/erc7201_param_with_zero_last_byte_of_inner_hash.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/erc7201_param_with_zero_last_byte_of_inner_hash.sol")
+    """builtinFunctions/contracts/erc7201_param_with_zero_last_byte_of_inner_hash.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/erc7201_param_with_zero_last_byte_of_inner_hash.sol")
     # builtinMatchesSolidityImplementation() -> true
     r = harness.call(app, "builtinMatchesSolidityImplementation()")
     assert r.abi_return is True
 
 def test_erc7201_param_with_zero_last_byte_of_inner_hash_comptime(harness):
-    """builtinFunctions/erc7201_param_with_zero_last_byte_of_inner_hash_comptime.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/erc7201_param_with_zero_last_byte_of_inner_hash_comptime.sol")
+    """builtinFunctions/contracts/erc7201_param_with_zero_last_byte_of_inner_hash_comptime.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/erc7201_param_with_zero_last_byte_of_inner_hash_comptime.sol")
     # builtinMatchesSolidityImplementation() -> true
     r = harness.call(app, "builtinMatchesSolidityImplementation()")
     assert r.abi_return is True
 
 def test_function_types_sig(harness):
-    """builtinFunctions/function_types_sig.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/function_types_sig.sol")
+    """builtinFunctions/contracts/function_types_sig.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/function_types_sig.sol")
     # f() -> 0x26121ff000000000000000000000000000000000000000000000000000000000
     r = harness.call(app, "f()")
     assert r.abi_return == 17219911917854084299749778639755835327755045716242581057573779540915269926912
@@ -197,15 +197,15 @@ def test_function_types_sig(harness):
     assert r.abi_return == 5578665072623452413191958827265286417202259116272936857707509894687498436608
 
 def test_iterated_keccak256_with_bytes(harness):
-    """builtinFunctions/iterated_keccak256_with_bytes.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/iterated_keccak256_with_bytes.sol")
+    """builtinFunctions/contracts/iterated_keccak256_with_bytes.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/iterated_keccak256_with_bytes.sol")
     # foo() -> 0xb338eefce206f9f57b83aa738deecd5326dc4b72dd81ee6a7c621a6facb7acdc
     r = harness.call(app, "foo()")
     assert r.abi_return == 81064592765372817159845741028275376000365320033790514016917613221788490640604
 
 def test_keccak256(harness):
-    """builtinFunctions/keccak256.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/keccak256.sol")
+    """builtinFunctions/contracts/keccak256.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/keccak256.sol")
     # f(int256): 4 -> 0x8a35acfbc15ff81a39ae7d344fd709f28e8600b4aa8c65c6b64bfe7fe36bd19b
     r = harness.call(app, "f(int256)", 4)
     assert r.abi_return == 62514009886607029107290561805838585334079798074568712924583230797734656856475
@@ -217,29 +217,29 @@ def test_keccak256(harness):
     assert r.abi_return == 76789851457802156565283866979031212934421734113360677815664780851587518795705
 
 def test_keccak256_empty(harness):
-    """builtinFunctions/keccak256_empty.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/keccak256_empty.sol")
+    """builtinFunctions/contracts/keccak256_empty.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/keccak256_empty.sol")
     # f() -> 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
     r = harness.call(app, "f()")
     assert r.abi_return == 89477152217924674838424037953991966239322087453347756267410168184682657981552
 
 def test_keccak256_multiple_arguments(harness):
-    """builtinFunctions/keccak256_multiple_arguments.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/keccak256_multiple_arguments.sol")
+    """builtinFunctions/contracts/keccak256_multiple_arguments.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/keccak256_multiple_arguments.sol")
     # foo(uint256,uint256,uint256): 0xa, 0xc, 0xd -> 0xbc740a98aae5923e8f04c9aa798c9ee82f69e319997699f2782c40828db9fd81
     r = harness.call(app, "foo(uint256,uint256,uint256)", 10, 12, 13)
     assert r.abi_return == 85239842926541264634154666327463972906709059378906552613586341771123147537793
 
 def test_keccak256_multiple_arguments_with_numeric_literals(harness):
-    """builtinFunctions/keccak256_multiple_arguments_with_numeric_literals.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/keccak256_multiple_arguments_with_numeric_literals.sol")
+    """builtinFunctions/contracts/keccak256_multiple_arguments_with_numeric_literals.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/keccak256_multiple_arguments_with_numeric_literals.sol")
     # foo(uint256,uint16): 0xa, 0xc -> 0x88acd45f75907e7c560318bc1a5249850a0999c4896717b1167d05d116e6dbad
     r = harness.call(app, "foo(uint256,uint16)", 10, 12)
     assert r.abi_return == 61819910846267543446242086161023601988610643930522389071654317431727835241389
 
 def test_keccak256_multiple_arguments_with_string_literals(harness):
-    """builtinFunctions/keccak256_multiple_arguments_with_string_literals.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/keccak256_multiple_arguments_with_string_literals.sol")
+    """builtinFunctions/contracts/keccak256_multiple_arguments_with_string_literals.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/keccak256_multiple_arguments_with_string_literals.sol")
     # foo() -> 0x41b1a0649752af1b28b3dc29a1556eee781e4a4c3a1f7f53f90fa834de098c4d
     r = harness.call(app, "foo()")
     assert r.abi_return == 29714174079724412745887019504253973571029824035614949642323418802670541573197
@@ -248,8 +248,8 @@ def test_keccak256_multiple_arguments_with_string_literals(harness):
     assert r.abi_return == 47748954911445452833847828877350899715607415561591670347703179290839474790726
 
 def test_keccak256_packed(harness):
-    """builtinFunctions/keccak256_packed.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/keccak256_packed.sol")
+    """builtinFunctions/contracts/keccak256_packed.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/keccak256_packed.sol")
     # f(int256): 4 -> 0xd270285b9966fefc715561efcd09d5b6a8deb15596f7c53cb4a1bb73aa55ac3a
     r = harness.call(app, "f(int256)", 4)
     assert r.abi_return == 95183863613105289674943871047709809424547296864956777631899359142068901751866
@@ -261,36 +261,36 @@ def test_keccak256_packed(harness):
     assert r.abi_return == 85248082031449023985059491939699956408088110354102027088226743004047620283667
 
 def test_keccak256_packed_complex_types(harness):
-    """builtinFunctions/keccak256_packed_complex_types.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/keccak256_packed_complex_types.sol")
+    """builtinFunctions/contracts/keccak256_packed_complex_types.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/keccak256_packed_complex_types.sol")
     # f() -> 0xba4f20407251e4607cd66b90bfea19ec6971699c03e4a4f3ea737d5818ac27ae, 0xba4f20407251e4607cd66b90bfea19ec6971699c03e4a4f3ea737d5818ac27ae, 0xe7490fade3a8e31113ecb6c0d2635e28a6f5ca8359a57afe914827f41ddf0848
     r = harness.call(app, "f()")
     assert tuple(r.abi_return) == (84269993347964014300195658947572255396004753318263724057427059822633029478318, 84269993347964014300195658947572255396004753318263724057427059822633029478318, 104613356072704699328120257376527735614470975369668734659467872912728506959944)
 
 def test_keccak256_with_bytes(harness):
-    """builtinFunctions/keccak256_with_bytes.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/keccak256_with_bytes.sol")
+    """builtinFunctions/contracts/keccak256_with_bytes.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/keccak256_with_bytes.sol")
     # foo() -> true
     r = harness.call(app, "foo()")
     assert r.abi_return is True
 
 def test_msg_sig(harness):
-    """builtinFunctions/msg_sig.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/msg_sig.sol")
+    """builtinFunctions/contracts/msg_sig.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/msg_sig.sol")
     # foo(uint256): 0x0 -> 0x2fbebd3800000000000000000000000000000000000000000000000000000000
     r = harness.call(app, "foo(uint256)", 0)
     assert r.abi_return == 21595710765537970053158715724290765331353339170889642771493255651078870925312
 
 def test_msg_sig_after_internal_call_is_same(harness):
-    """builtinFunctions/msg_sig_after_internal_call_is_same.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/msg_sig_after_internal_call_is_same.sol")
+    """builtinFunctions/contracts/msg_sig_after_internal_call_is_same.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/msg_sig_after_internal_call_is_same.sol")
     # foo(uint256): 0x0 -> 0x2fbebd3800000000000000000000000000000000000000000000000000000000
     r = harness.call(app, "foo(uint256)", 0)
     assert r.abi_return == 21595710765537970053158715724290765331353339170889642771493255651078870925312
 
 def test_ripemd160(harness):
-    """builtinFunctions/ripemd160.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/ripemd160.sol")
+    """builtinFunctions/contracts/ripemd160.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/ripemd160.sol")
     # f(int256): 4 -> 0x1b0f3c404d12075c68c938f9f60ebea4f74941a0000000000000000000000000
     r = harness.call(app, "f(int256)", 4)
     assert r.abi_return == 12239365456053725440107558875761931117347152855322617053615694768895724355584
@@ -302,15 +302,15 @@ def test_ripemd160(harness):
     assert r.abi_return == 13097468180871836274597881871755309280971053328054043821123942875702197485568
 
 def test_ripemd160_empty(harness):
-    """builtinFunctions/ripemd160_empty.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/ripemd160_empty.sol")
+    """builtinFunctions/contracts/ripemd160_empty.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/ripemd160_empty.sol")
     # f() -> 0x9c1185a5c5e9fc54612808977ee8f548b2258d31000000000000000000000000
     r = harness.call(app, "f()")
     assert r.abi_return == 70591763180588889921896472592087647508930935365384853188857905717740272877568
 
 def test_ripemd160_packed(harness):
-    """builtinFunctions/ripemd160_packed.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/ripemd160_packed.sol")
+    """builtinFunctions/contracts/ripemd160_packed.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/ripemd160_packed.sol")
     # f(int256): 4 -> 0xf93175303eba2a7b372174fc9330237f5ad202fc000000000000000000000000
     r = harness.call(app, "f(int256)", 4)
     assert r.abi_return == 112713283608413432366500292079636390015042877224965778699306835103129784025088
@@ -322,8 +322,8 @@ def test_ripemd160_packed(harness):
     assert r.abi_return == 87131874548254851242104262105679177295925122029417861264957203483662101774336
 
 def test_sha256(harness):
-    """builtinFunctions/sha256.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/sha256.sol")
+    """builtinFunctions/contracts/sha256.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/sha256.sol")
     # f(int256): 4 -> 0xe38990d0c7fc009880a9c07c23842e886c6bbdc964ce6bdd5817ad357335ee6f
     r = harness.call(app, "f(int256)", 4)
     assert r.abi_return == 102918074156479767208844353797675673170264177419479145455589118040061966151279
@@ -335,15 +335,15 @@ def test_sha256(harness):
     assert r.abi_return == 79419909877869412302011273272600157910097194791702522154213193972579280109649
 
 def test_sha256_empty(harness):
-    """builtinFunctions/sha256_empty.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/sha256_empty.sol")
+    """builtinFunctions/contracts/sha256_empty.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/sha256_empty.sol")
     # f() -> 0xe3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
     r = harness.call(app, "f()")
     assert r.abi_return == 102987336249554097029535212322581322789799900648198034993379397001115665086549
 
 def test_sha256_packed(harness):
-    """builtinFunctions/sha256_packed.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/sha256_packed.sol")
+    """builtinFunctions/contracts/sha256_packed.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/sha256_packed.sol")
     # f(int256): 4 -> 0x804e0d7003cfd70fc925dc103174d9f898ebb142ecc2a286da1abd22ac2ce3ac
     r = harness.call(app, "f(int256)", 4)
     assert r.abi_return == 58033951432328784014309100941220065668419038229569888230017781326780325225388

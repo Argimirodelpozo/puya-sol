@@ -11,8 +11,8 @@ from framework import Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Revert
 
 
 def test_evmone_support(harness):
-    """shanghai/evmone_support.sol"""
-    app = harness.compile_and_deploy("shanghai/evmone_support.sol")
+    """shanghai/contracts/evmone_support.sol"""
+    app = harness.compile_and_deploy("shanghai/contracts/evmone_support.sol")
     # bytecode() -> 0x20, 4, 0x60205ff300000000000000000000000000000000000000000000000000000000
     r = harness.call(app, "bytecode()")
     assert tuple(r.abi_return) == (32, 4, 43479234787236466803551061304173321300670960283493682185538338749387338940416)
@@ -21,8 +21,8 @@ def test_evmone_support(harness):
     assert r.abi_return is True
 
 def test_push0(harness):
-    """shanghai/push0.sol"""
-    app = harness.compile_and_deploy("shanghai/push0.sol")
+    """shanghai/contracts/push0.sol"""
+    app = harness.compile_and_deploy("shanghai/contracts/push0.sol")
     # zero() -> 0
     r = harness.call(app, "zero()")
     assert r.abi_return == 0

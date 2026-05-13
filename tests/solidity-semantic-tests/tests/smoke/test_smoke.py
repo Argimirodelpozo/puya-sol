@@ -11,7 +11,7 @@ from framework import Panic, ErrorString, Reverted, rpad, lpad, hex_bytes
 def test_alignment(harness):
     """alignment.sol — state vars, bytes32 with explicit padding,
     new C() child app, multi-return tuple."""
-    app = harness.compile_and_deploy("smoke/alignment.sol")  # picks last contract D
+    app = harness.compile_and_deploy("smoke/contracts/alignment.sol")  # picks last contract D
 
     assert harness.call(app, "stateBool()").abi_return is True
     assert harness.call(app, "stateDecimal()").abi_return == 42
@@ -43,7 +43,7 @@ def test_alignment(harness):
 def test_basic(harness):
     """basic.sol — void returns, payable msg.value, multi-return, bytes32 arg,
     unchecked arithmetic, msg.data.length."""
-    app = harness.compile_and_deploy("smoke/basic.sol")
+    app = harness.compile_and_deploy("smoke/contracts/basic.sol")
 
     # d() returns nothing
     assert harness.call(app, "d()").abi_return is None
@@ -81,7 +81,7 @@ def test_constructor(harness):
     """constructor.sol — payable constructor with one arg, value forwarding."""
     # constructor(), 2 wei: 3 — pay 2 wei, ctor arg uint256 = 3
     app = harness.compile_and_deploy(
-        "smoke/constructor.sol",
+        "smoke/contracts/constructor.sol",
         ctor_args=[3],
         fund_wei=2,
     )
@@ -99,7 +99,7 @@ def test_constructor(harness):
 
 def test_arrays(harness):
     """arrays.sol — fixed-size array returns, struct[N] array, string[N] array."""
-    app = harness.compile_and_deploy("smoke/arrays.sol")
+    app = harness.compile_and_deploy("smoke/contracts/arrays.sol")
 
     # r() returns bool[3] memory
     r = harness.call(app, "r()").abi_return
@@ -132,7 +132,7 @@ def test_arrays(harness):
 
 def test_bytes_and_strings(harness):
     """bytes_and_strings.sol — dynamic bytes parameter passthrough, multi-return strings."""
-    app = harness.compile_and_deploy("smoke/bytes_and_strings.sol")
+    app = harness.compile_and_deploy("smoke/contracts/bytes_and_strings.sol")
 
     # e(bytes) returns the bytes verbatim
     assert bytes(harness.call(app, "e(bytes)", b"\xAB\x33\xBB").abi_return) == b"\xAB\x33\xBB"
@@ -157,7 +157,7 @@ def test_bytes_and_strings(harness):
 
 def test_structs(harness):
     """structs.sol — struct memory return."""
-    app = harness.compile_and_deploy("smoke/structs.sol")
+    app = harness.compile_and_deploy("smoke/contracts/structs.sol")
     s = harness.call(app, "s()").abi_return
     assert tuple(s) == (23, 42)
     t = harness.call(app, "t()").abi_return
@@ -174,7 +174,7 @@ def test_failure(harness):
     revert payload.
     """
     import pytest
-    app = harness.compile_and_deploy("smoke/failure.sol", evm_version="byzantium")
+    app = harness.compile_and_deploy("smoke/contracts/failure.sol", evm_version="byzantium")
 
     for sig, args in [
         ("e()", ()),
@@ -188,7 +188,7 @@ def test_failure(harness):
 
 def test_multiline(harness):
     """multiline.sol — multi-line method signature + nonexistent fn fallback."""
-    app = harness.compile_and_deploy("smoke/multiline.sol")
+    app = harness.compile_and_deploy("smoke/contracts/multiline.sol")
     # f sums 5 uints, all 1 → 5
     assert (
         harness.call(app, "f(uint256,uint256,uint256,uint256,uint256)", 1, 1, 1, 1, 1).abi_return
@@ -203,7 +203,7 @@ def test_multiline_comments(harness):
     """multiline_comments.sol — same as multiline.sol but assertions are
     formatted across multiple lines with parser-comment markers.
     The new framework doesn't parse those comments — we just run the call."""
-    app = harness.compile_and_deploy("smoke/multiline_comments.sol")
+    app = harness.compile_and_deploy("smoke/contracts/multiline_comments.sol")
     assert (
         harness.call(app, "f(uint256,uint256,uint256,uint256,uint256)", 1, 1, 1, 1, 1).abi_return
         == 5
