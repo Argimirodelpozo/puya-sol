@@ -1,0 +1,170 @@
+"""High-level test harness.
+
+A `Harness` instance compiles a .sol file once per test, deploys one of
+its contracts, and exposes a typed `call()` method.
+
+Pytest usage:
+
+    def test_my_contract(harness):
+        app = harness.compile_and_deploy("smoke/basic.sol")
+        result = harness.call(app, "f(uint256)", 3)
+        assert result.abi_return == (3, 3)
+
+Or split:
+
+    def test_explicit_steps(harness):
+        artifacts = harness.compile("smoke/basic.sol")
+        app = harness.deploy(artifacts, "C")
+        ...
+"""
+from __future__ import annotations
+
+import shutil
+from pathlib import Path
+from typing import Any
+
+from .compile import CompiledArtifacts, CompileError, compile_sol
+from .deploy import DeployedApp, DeployError, deploy
+from .call import Result, call as _call, call_raw as _call_raw
+from .localnet import LocalNet
+from .paths import OUT_DIR, TESTS_DIR
+
+
+class App:
+    """Public-facing handle returned from `Harness.deploy()`.
+
+    Delegates to the underlying `DeployedApp` plus a back-pointer to the
+    Harness so callers can do `app.call("f()")` without threading the
+    harness through.
+    """
+
+    def __init__(self, harness: "Harness", deployed: DeployedApp, contract_name: str):
+        self._harness = harness
+        self._deployed = deployed
+        self.name = contract_name
+
+    @property
+    def app_id(self) -> int:
+        return self._deployed.app_id
+
+    @property
+    def app_addr(self) -> str:
+        return self._deployed.app_addr
+
+    @property
+    def app_spec(self):
+        return self._deployed.app_spec
+
+    @property
+    def client(self):
+        return self._deployed.client
+
+    @property
+    def balance_baseline(self) -> int:
+        return self._deployed.balance_baseline
+
+    def call(self, sig: str, *args, **kwargs) -> Result:
+        return self._harness.call(self, sig, *args, **kwargs)
+
+
+class Harness:
+    """Per-test compile + deploy + call orchestrator.
+
+    Usage is via the `harness` pytest fixture; tests rarely build one
+    directly. Each test gets its own output directory under `out/<id>/`.
+    """
+
+    def __init__(self, localnet: LocalNet, out_dir: Path):
+        self.localnet = localnet
+        self.out_dir = out_dir
+        self.out_dir.mkdir(parents=True, exist_ok=True)
+
+    @staticmethod
+    def resolve_sol_path(spec: str | Path) -> Path:
+        """Accept absolute Path, relative-to-tests Path, or 'category/file.sol' string."""
+        if isinstance(spec, Path) and spec.is_absolute():
+            return spec
+        p = Path(spec)
+        if p.exists():
+            return p.resolve()
+        candidate = TESTS_DIR / p
+        if candidate.exists():
+            return candidate.resolve()
+        raise FileNotFoundError(f"can't find .sol file: {spec}")
+
+    def compile(
+        self,
+        sol_path: str | Path,
+        **opts,
+    ) -> CompiledArtifacts:
+        """Compile a .sol file. Raises CompileError on failure."""
+        resolved = self.resolve_sol_path(sol_path)
+        return compile_sol(resolved, self.out_dir, **opts)
+
+    def deploy(
+        self,
+        artifacts: CompiledArtifacts,
+        contract_name: str | None = None,
+        **deploy_opts,
+    ) -> App:
+        """Deploy a named contract from the compiled artifacts. Raises DeployError on failure."""
+        name = artifacts.last_deployable(contract_name)
+        if name is None:
+            raise DeployError("no deployable contract in compile output")
+        deployed = deploy(self.localnet, artifacts.by_contract[name], **deploy_opts)
+        return App(self, deployed, name)
+
+    def compile_and_deploy(
+        self,
+        sol_path: str | Path,
+        contract_name: str | None = None,
+        *,
+        ensure_budget: dict[str, int] | None = None,
+        via_yul_behavior: bool = False,
+        evm_version: str | None = None,
+        ctor_args: list | None = None,
+        fund_wei: int = 0,
+        postinit_args: list | None = None,
+    ) -> App:
+        """Common path: compile a .sol file and deploy one of its contracts."""
+        artifacts = self.compile(
+            sol_path,
+            ensure_budget=ensure_budget,
+            via_yul_behavior=via_yul_behavior,
+            evm_version=evm_version,
+        )
+        return self.deploy(
+            artifacts,
+            contract_name,
+            ctor_args=ctor_args,
+            fund_wei=fund_wei,
+            postinit_args=postinit_args,
+        )
+
+    def call(
+        self,
+        app: App,
+        sig: str,
+        *args: Any,
+        **opts,
+    ) -> Result:
+        """Call a method on the deployed app. See call.call() for options."""
+        return _call(self.localnet, app, sig, args, **opts)
+
+    def call_raw(
+        self,
+        app: App,
+        selector: bytes,
+        **opts,
+    ) -> Result:
+        """Submit a raw 4-byte selector call (skip ABI dispatch).
+
+        See call.call_raw() for keyword options. Use for fallback /
+        allowNonExistingFunctions-style tests where the test wants to
+        verify the router's behaviour on an unknown selector.
+        """
+        return _call_raw(self.localnet, app, selector, **opts)
+
+    def cleanup(self) -> None:
+        """Remove the per-test output directory."""
+        shutil.rmtree(self.out_dir, ignore_errors=True)
