@@ -10,15 +10,10 @@ from framework import (
 def test_array_multiple_local_vars(harness):
     """functionCall/contracts/array_multiple_local_vars.sol"""
     app = harness.compile_and_deploy("functionCall/contracts/array_multiple_local_vars.sol")
-    # f(uint256[]): 32, 3, 1000, 1, 2 -> 3
-    r = harness.call(app, "f(uint256[])", 32, 3, 1000, 1, 2)
-    assert as_int(r.abi_return) == 3
-    # f(uint256[]): 32, 3, 100, 500, 300 -> 600
-    r = harness.call(app, "f(uint256[])", 32, 3, 100, 500, 300)
-    assert as_int(r.abi_return) == 600
-    # f(uint256[]): 32, 11, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 111 -> 55
-    r = harness.call(app, "f(uint256[])", 32, 11, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 111)
-    assert as_int(r.abi_return) == 55
+    # f(seq) sums seq[i] (skipping values ≥ 1000) until sum ≥ 500.
+    assert as_int(harness.call(app, "f(uint256[])", [1000, 1, 2]).abi_return) == 3
+    assert as_int(harness.call(app, "f(uint256[])", [100, 500, 300]).abi_return) == 600
+    assert as_int(harness.call(app, "f(uint256[])", [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 111]).abi_return) == 55
 
 def test_bare_call_no_returndatacopy(harness):
     """functionCall/contracts/bare_call_no_returndatacopy.sol"""
