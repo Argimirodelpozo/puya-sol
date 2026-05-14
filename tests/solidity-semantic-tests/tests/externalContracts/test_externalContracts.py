@@ -86,61 +86,9 @@ def test_FixedFeeRegistrar(harness):
 def test_base64(harness):
     """externalContracts/contracts/base64.sol"""
 
-@pytest.mark.skip(reason="ETH 2.0 deposit contract: ERC-165 interface IDs use EVM 32-byte selector layout + 32 ether ctor + sha256 budget exceeded.")
+@pytest.mark.skip(reason="32 ether (3.2e19) payment overflows AVM microalgo accounts and `supportsInterface(bytes4)` round-trips through ARC4 dispatcher with EVM-keccak256 selector layout.")
 def test_deposit_contract(harness):
-    """externalContracts/contracts/deposit_contract.sol"""
-    app = harness.compile_and_deploy("externalContracts/contracts/deposit_contract.sol")
-    # supportsInterface(bytes4): 0x0 -> 0
-    r = harness.call(app, "supportsInterface(bytes4)", 0)
-    assert as_int(r.abi_return) == 0
-    # supportsInterface(bytes4): 0xffffffff00000000000000000000000000000000000000000000000000000000 -> false # defined to be false by ERC-165 #
-    r = harness.call(app, "supportsInterface(bytes4)", 0xffffffff00000000000000000000000000000000000000000000000000000000)
-    # TODO: verify expected: false # defined to be false by ERC-165 #
-    assert not r.reverted
-    # supportsInterface(bytes4): 0x01ffc9a700000000000000000000000000000000000000000000000000000000 -> true # ERC-165 id #
-    r = harness.call(app, "supportsInterface(bytes4)", 0x1ffc9a700000000000000000000000000000000000000000000000000000000)
-    # TODO: verify expected: true # ERC-165 id #
-    assert not r.reverted
-    # supportsInterface(bytes4): 0x8564090700000000000000000000000000000000000000000000000000000000 -> true # the deposit interface id #
-    r = harness.call(app, "supportsInterface(bytes4)", 0x8564090700000000000000000000000000000000000000000000000000000000)
-    # TODO: verify expected: true # the deposit interface id #
-    assert not r.reverted
-    # get_deposit_root() -> 0xd70a234731285c6804c2a4f56711ddb8c82c99740f207854891028af34e27e5e
-    r = harness.call(app, "get_deposit_root()")
-    assert as_int(r.abi_return) == 97265174396505314209556402511040080631145938316814330575766876638812984999518
-    # get_deposit_count() -> 0x20, 8, 0 # TODO: check balance and logs after each deposit #
-    r = harness.call(app, "get_deposit_count()")
-    # TODO: verify expected: 0x20 | 8 | 0 # TODO: check balance and logs after each deposit #
-    assert not r.reverted
-    # deposit(bytes,bytes,bytes,bytes32), 32 ether: 0 -> FAILURE # Empty input #
-    r = harness.call(app, "deposit(bytes,bytes,bytes,bytes32)", 0, payment_wei=32000000000000000000, expect_revert=True)
-    assert r.reverted
-    # get_deposit_root() -> 0xd70a234731285c6804c2a4f56711ddb8c82c99740f207854891028af34e27e5e
-    r = harness.call(app, "get_deposit_root()")
-    assert as_int(r.abi_return) == 97265174396505314209556402511040080631145938316814330575766876638812984999518
-    # get_deposit_count() -> 0x20, 8, 0
-    r = harness.call(app, "get_deposit_count()")
-    assert tuple(as_int(x) for x in r.abi_return) == (32, 8, 0)
-    # deposit(bytes,bytes,bytes,bytes32), 1 ether: 0x80, 0xe0, 0x120, 0xaa4a8d0b7d9077248630f1a4701ae9764e42271d7f22b7838778411857fd349e, 0x30, 0x933ad9491b62059dd065b560d256d8957a8c402cc6e8d8ee7290ae11e8f73292, 0x67a8811c397529dac52ae1342ba58c9500000000000000000000000000000000, 0x20, 0x00f50428677c60f997aadeab24aabf7fceaef491c96a52b463ae91f95611cf71, 0x60, 0xa29d01cc8c6296a8150e515b5995390ef841dc18948aa3e79be6d7c1851b4cbb, 0x5d6ff49fa70b9c782399506a22a85193151b9b691245cebafd2063012443c132, 0x4b6c36debaedefb7b2d71b0503ffdc00150aaffd42e63358238ec888901738b8 -> # txhash: 0x7085c586686d666e8bb6e9477a0f0b09565b2060a11f1c4209d3a52295033832 #
-    r = harness.call(app, "deposit(bytes,bytes,bytes,bytes32)", 128, 224, 288, 0xaa4a8d0b7d9077248630f1a4701ae9764e42271d7f22b7838778411857fd349e, 48, 0x933ad9491b62059dd065b560d256d8957a8c402cc6e8d8ee7290ae11e8f73292, 0x67a8811c397529dac52ae1342ba58c9500000000000000000000000000000000, 32, 0xf50428677c60f997aadeab24aabf7fceaef491c96a52b463ae91f95611cf71, 96, 0xa29d01cc8c6296a8150e515b5995390ef841dc18948aa3e79be6d7c1851b4cbb, 0x5d6ff49fa70b9c782399506a22a85193151b9b691245cebafd2063012443c132, 0x4b6c36debaedefb7b2d71b0503ffdc00150aaffd42e63358238ec888901738b8, payment_wei=1000000000000000000)
-    # TODO: verify expected: # txhash: 0x7085c586686d666e8bb6e9477a0f0b09565b2060a11f1c4209d3a52295033832 #
-    assert not r.reverted
-    # get_deposit_root() -> 0x2089653123d9c721215120b6db6738ba273bbc5228ac093b1f983badcdc8a438
-    r = harness.call(app, "get_deposit_root()")
-    assert as_int(r.abi_return) == 14716767603733094437689435645873038451717577593199503049703782010867344254008
-    # get_deposit_count() -> 0x20, 8, 0x0100000000000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "get_deposit_count()")
-    assert tuple(as_int(x) for x in r.abi_return) == (32, 8, 452312848583266388373324160190187140051835877600158453279131187530910662656)
-    # deposit(bytes,bytes,bytes,bytes32), 32 ether: 0x80, 0xe0, 0x120, 0xdbd986dc85ceb382708cf90a3500f500f0a393c5ece76963ac3ed72eccd2c301, 0x30, 0xb2ce0f79f90e7b3a113ca5783c65756f96c4b4673c2b5c1eb4efc22280259441, 0x06d601211e8866dc5b50dc48a244dd7c00000000000000000000000000000000, 0x20, 0x00344b6c73f71b11c56aba0d01b7d8ad83559f209d0a4101a515f6ad54c89771, 0x60, 0x945caaf82d18e78c033927d51f452ebcd76524497b91d7a11219cb3db6a1d369, 0x7595fc095ce489e46b2ef129591f2f6d079be4faaf345a02c5eb133c072e7c56, 0x0c6c3617eee66b4b878165c502357d49485326bc6b31bc96873f308c8f19c09d -> # txhash: 0x404d8e109822ce448e68f45216c12cb051b784d068fbe98317ab8e50c58304ac #
-    r = harness.call(app, "deposit(bytes,bytes,bytes,bytes32)", 128, 224, 288, 0xdbd986dc85ceb382708cf90a3500f500f0a393c5ece76963ac3ed72eccd2c301, 48, 0xb2ce0f79f90e7b3a113ca5783c65756f96c4b4673c2b5c1eb4efc22280259441, 0x6d601211e8866dc5b50dc48a244dd7c00000000000000000000000000000000, 32, 0x344b6c73f71b11c56aba0d01b7d8ad83559f209d0a4101a515f6ad54c89771, 96, 0x945caaf82d18e78c033927d51f452ebcd76524497b91d7a11219cb3db6a1d369, 0x7595fc095ce489e46b2ef129591f2f6d079be4faaf345a02c5eb133c072e7c56, 0xc6c3617eee66b4b878165c502357d49485326bc6b31bc96873f308c8f19c09d, payment_wei=32000000000000000000)
-    # TODO: verify expected: # txhash: 0x404d8e109822ce448e68f45216c12cb051b784d068fbe98317ab8e50c58304ac #
-    assert not r.reverted
-    # get_deposit_root() -> 0x40255975859377d912c53aa853245ebd939bdd2b33a28e084babdcc1ed8238ee
-    r = harness.call(app, "get_deposit_root()")
-    assert as_int(r.abi_return) == 29014013074531673165507518994136311552691550960539730258963015614797346650350
-    # get_deposit_count() -> 0x20, 8, 0x0200000000000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "get_deposit_count()")
-    assert tuple(as_int(x) for x in r.abi_return) == (32, 8, 904625697166532776746648320380374280103671755200316906558262375061821325312)
+    """externalContracts/contracts/deposit_contract.sol — ETH 2.0 deposit contract."""
 
 @pytest.mark.skip(reason="prbmath_signed contract exceeds AVM single-program size; the upstream puya-sol prbmath examples use --split-contracts which the test harness doesn't wire.")
 def test_prbmath_signed(harness):

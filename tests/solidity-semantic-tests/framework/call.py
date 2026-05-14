@@ -179,6 +179,7 @@ def call(
     extra_apps: list[int] | None = None,
     extra_accounts: list[str] | None = None,
     boxes: list[tuple[int, bytes]] | None = None,
+    budget_pool: int = 0,
 ) -> Result:
     """Call a Solidity ABI method on a deployed app.
 
@@ -188,6 +189,10 @@ def call(
         can capture revert details from the failing txn's logs/message.
     extra_fee: additional flat fee (microAlgos) on top of the default
         2× min-fee for the app call.
+    budget_pool: prepend N dummy budget-helper app calls to the group,
+        each contributing 700 extra opcode budget via fee pooling. Use
+        when the call is known to exceed the default 700-op budget by a
+        large margin (auto-retry handles smaller overshoots).
 
     Method lookup:
       1. exact name + ARC4-normalized signature
@@ -215,6 +220,21 @@ def call(
         )
 
     encoded_args = _encode_args(abi_method, args)
+
+    # If caller pre-allocated a budget pool, use the retry helper directly.
+    if budget_pool > 0:
+        result = _retry_with_budget_pool(
+            algod=algod, localnet=localnet, app=app,
+            sender=sender, signer=signer, abi_method=abi_method,
+            encoded_args=encoded_args, payment_wei=payment_wei,
+            extra_fee=extra_fee, extra_apps=extra_apps,
+            extra_accounts=extra_accounts, boxes=boxes,
+            pool_size=budget_pool,
+        )
+        if result is not None:
+            return result
+        # Fall through to plain call if pool execution failed.
+
     atc = _build_atc(
         algod=algod,
         app=app,

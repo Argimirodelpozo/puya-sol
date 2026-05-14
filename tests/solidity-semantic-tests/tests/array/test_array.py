@@ -83,17 +83,11 @@ def test_array_memory_create(harness):
 def test_array_memory_index_access(harness):
     """array/contracts/array_memory_index_access.sol"""
     app = harness.compile_and_deploy("array/contracts/array_memory_index_access.sol")
-    # index(uint256): 0 -> true
-    r = harness.call(app, "index(uint256)", 0)
-    assert bool(as_int(r.abi_return)) is True
-    # index(uint256): 10 -> true
-    r = harness.call(app, "index(uint256)", 10)
-    assert bool(as_int(r.abi_return)) is True
-    # index(uint256): 20 -> true
-    r = harness.call(app, "index(uint256)", 20)
-    assert bool(as_int(r.abi_return)) is True
-    # index(uint256): 0xFF — 255 element loop runs out of opcode budget on AVM;
-    # skip the largest case rather than ballooning budget pool.
+    for n in (0, 10, 20):
+        r = harness.call(app, "index(uint256)", n)
+        assert bool(as_int(r.abi_return)) is True
+    # index(255) constructs `uint256[255]` ≈ 8160 bytes — exceeds AVM 4096-byte
+    # value cap on `concat` (not a budget issue). Skip the largest case.
     # accessIndex(uint256,int256): 10, 1 -> 2
     r = harness.call(app, "accessIndex(uint256,int256)", 10, 1)
     assert as_int(r.abi_return) == 2

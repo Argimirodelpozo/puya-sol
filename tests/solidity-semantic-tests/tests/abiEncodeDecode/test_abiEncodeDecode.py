@@ -52,7 +52,7 @@ def test_abi_encode_call(harness):
     r = harness.call(app, "callExternal()")
     assert bool(as_int(r.abi_return)) is True
 
-@pytest.mark.skip(reason="`abi.encodeCall(fn, args)` round-trip via staticcall — uses keccak256 EVM selectors that don't match AVM's sha512_256 selectors.")
+@pytest.mark.skip(reason="`abi.encodeCall(fn, args)` round-trip via staticcall asserts `r == 2` etc. — internal `require` fails after first inner call. Likely puya-sol generates different selector bytes from what the contract's dispatcher expects.")
 def test_abi_encode_call_declaration(harness):
     """abiEncodeDecode/contracts/abi_encode_call_declaration.sol"""
 
