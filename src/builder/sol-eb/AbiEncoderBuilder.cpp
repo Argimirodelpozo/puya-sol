@@ -377,18 +377,39 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeCall(
 
 	auto const& targetFnExpr = *_callNode.arguments()[0];
 	FunctionDefinition const* targetFuncDef = nullptr;
-	if (auto const* fnType = dynamic_cast<FunctionType const*>(targetFnExpr.annotation().type))
-		if (fnType->hasDeclaration())
-			targetFuncDef = dynamic_cast<FunctionDefinition const*>(&fnType->declaration());
+	FunctionType const* fnType = dynamic_cast<FunctionType const*>(targetFnExpr.annotation().type);
+	if (fnType && fnType->hasDeclaration())
+		targetFuncDef = dynamic_cast<FunctionDefinition const*>(&fnType->declaration());
 
-	if (!targetFuncDef)
+	// Compile-time selector when we have a function definition; otherwise
+	// runtime-extract from the fn-ptr value (external fn-ptrs are encoded
+	// as 12 bytes: itob(appId, 8) ++ selector(4)).
+	std::shared_ptr<awst::Expression> selector;
+	if (targetFuncDef)
+	{
+		selector = awst::makeMethodConstant(
+			buildARC4MethodSelector(_ctx, targetFuncDef), awst::WType::bytesType(), _loc);
+	}
+	else if (fnType && fnType->kind() == FunctionType::Kind::External)
+	{
+		auto fnVal = _ctx.buildExpr(targetFnExpr);
+		if (!fnVal)
+			return nullptr;
+		// Coerce fn-ptr value to plain bytes (it's typed as bytes[12] at the
+		// AWST level for external fn-ptrs).
+		if (fnVal->wtype && fnVal->wtype->kind() == awst::WTypeKind::Bytes)
+			fnVal = awst::makeReinterpretCast(std::move(fnVal), awst::WType::bytesType(), _loc);
+		// Extract bytes 8..12 (the 4-byte selector at the tail).
+		selector = awst::makeExtract(std::move(fnVal), 8, 4, _loc);
+	}
+	else
+	{
+		// Unsupported function-pointer kind (internal, library, etc.).
 		return nullptr;
-
-	auto methodConst = awst::makeMethodConstant(
-		buildARC4MethodSelector(_ctx, targetFuncDef), awst::WType::bytesType(), _loc);
+	}
 
 	std::vector<std::shared_ptr<awst::Expression>> parts;
-	parts.push_back(std::move(methodConst));
+	parts.push_back(std::move(selector));
 
 	auto const& argsExpr = *_callNode.arguments()[1];
 	std::vector<ASTPointer<Expression const>> callArgs;
@@ -404,7 +425,17 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeCall(
 	// expression type) so that implicit conversions at the callsite — e.g.
 	// `0x1234` → bytes2, `"ab"` → bytes2 — produce the EVM ABI layout for
 	// that parameter (bytesN left-aligned in a 32-byte word).
-	auto const& targetParams = targetFuncDef->parameters();
+	std::vector<solidity::frontend::Type const*> paramTypes;
+	if (targetFuncDef)
+	{
+		for (auto const& p : targetFuncDef->parameters())
+			paramTypes.push_back(p ? p->type() : nullptr);
+	}
+	else if (fnType)
+	{
+		for (auto const* pt : fnType->parameterTypes())
+			paramTypes.push_back(pt);
+	}
 	for (size_t i = 0; i < callArgs.size(); ++i)
 	{
 		auto const& arg = callArgs[i];
@@ -412,7 +443,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeCall(
 		std::shared_ptr<awst::Expression> encoded;
 
 		solidity::frontend::Type const* paramType =
-			i < targetParams.size() && targetParams[i] ? targetParams[i]->type() : nullptr;
+			i < paramTypes.size() ? paramTypes[i] : nullptr;
 		auto const* fb = dynamic_cast<FixedBytesType const*>(paramType);
 		if (fb)
 		{
