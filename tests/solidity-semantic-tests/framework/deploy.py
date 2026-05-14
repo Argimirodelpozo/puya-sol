@@ -235,6 +235,14 @@ def _default_encode(v) -> bytes:
     if isinstance(v, bytes):
         return v
     if isinstance(v, str):
+        # Algorand address (58-char base32)? Decode to the 32-byte payload.
+        # Otherwise treat as raw string (ASCII bytes).
+        if len(v) == 58:
+            try:
+                from algosdk import encoding as _enc
+                return _enc.decode_address(v)
+            except Exception:
+                pass
         return v.encode()
     if isinstance(v, bool):
         # Constructor reads bool via `extract_uint64` (8-byte field) so encode

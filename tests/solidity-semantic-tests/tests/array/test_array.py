@@ -676,7 +676,11 @@ def test_fixed_arrays_as_return_type(harness):
 
 def test_fixed_arrays_in_constructors(harness):
     """array/contracts/fixed_arrays_in_constructors.sol"""
-    pytest.fail("Compiler-side: address[3] ctor arg decode mangles the address bytes. r() returns ctor-arg `x=4` correctly, but ch()=s[2] reads `s[2]` as a derived/repeating-pattern value instead of the raw 32-byte address(3) passed in. Decode of fixed-size address arrays in ctor args needs fixing.")
+    from algosdk import encoding
+    addrs = [encoding.encode_address(v.to_bytes(32, "big")) for v in (1, 2, 3)]
+    app = harness.compile_and_deploy("array/contracts/fixed_arrays_in_constructors.sol", ctor_args=[addrs, 4])
+    assert as_int(harness.call(app, "r()").abi_return) == 4
+    assert as_int(harness.call(app, "ch()").abi_return) == 3
 
 def test_fixed_arrays_in_storage(harness):
     """array/contracts/fixed_arrays_in_storage.sol"""
