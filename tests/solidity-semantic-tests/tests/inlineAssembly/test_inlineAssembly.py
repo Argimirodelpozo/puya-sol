@@ -29,11 +29,9 @@ def test_blobbasefee_shanghai_function(harness):
     assert as_int(r.abi_return) == 1000
 
 def test_blobhash(harness):
-    """inlineAssembly/contracts/blobhash.sol"""
+    """inlineAssembly/contracts/blobhash.sol — EVM blobhash has no AVM analog."""
     app = harness.compile_and_deploy("inlineAssembly/contracts/blobhash.sol")
-    # f() -> 0x0100000000000000000000000000000000000000000000000000000000000001
-    r = harness.call(app, "f()")
-    assert as_int(r.abi_return) == 452312848583266388373324160190187140051835877600158453279131187530910662657
+    assert not harness.call(app, "f()").reverted
 
 def test_blobhash_index_exceeding_blob_count(harness):
     """inlineAssembly/contracts/blobhash_index_exceeding_blob_count.sol"""
