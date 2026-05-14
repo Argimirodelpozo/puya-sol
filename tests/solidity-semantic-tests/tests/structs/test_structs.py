@@ -313,22 +313,15 @@ def test_struct_constructor_nested(harness):
 def test_struct_containing_bytes_copy_and_delete(harness):
     """structs/contracts/struct_containing_bytes_copy_and_delete.sol"""
     app = harness.compile_and_deploy("structs/contracts/struct_containing_bytes_copy_and_delete.sol")
-    # set(uint256,bytes,uint256): 12, 0x60, 13, 33, "12345678901234567890123456789012", "3" -> true
-    r = harness.call(app, "set(uint256,bytes,uint256)", 12, 96, 13, 33, bytes.fromhex('3132333435363738393031323334353637383930313233343536373839303132'), bytes.fromhex('33'))
-    assert bool(as_int(r.abi_return)) is True
-    # test(uint256): 32 -> "3"
+    # set(a, data, b) — a=12, b=13, data = 33-byte buffer "1234...12" + "3"
+    payload = b"12345678901234567890123456789012" + b"3"
+    assert harness.call(app, "set(uint256,bytes,uint256)", 12, payload, 13).abi_return is True
+    # test(32) returns data[32] = b"3".
     r = harness.call(app, "test(uint256)", 32)
-    # TODO: verify expected: "3"
-    assert not r.reverted
-    # copy() -> true
-    r = harness.call(app, "copy()")
-    assert bool(as_int(r.abi_return)) is True
-    # set(uint256,bytes,uint256): 12, 0x60, 13, 33, "12345678901234567890123456789012", "3" -> true
-    r = harness.call(app, "set(uint256,bytes,uint256)", 12, 96, 13, 33, bytes.fromhex('3132333435363738393031323334353637383930313233343536373839303132'), bytes.fromhex('33'))
-    assert bool(as_int(r.abi_return)) is True
-    # del() -> true
-    r = harness.call(app, "del()")
-    assert bool(as_int(r.abi_return)) is True
+    assert bytes(r.abi_return) == b"3"
+    assert harness.call(app, "copy()").abi_return is True
+    assert harness.call(app, "set(uint256,bytes,uint256)", 12, payload, 13).abi_return is True
+    assert harness.call(app, "del()").abi_return is True
 
 def test_struct_copy(harness):
     """structs/contracts/struct_copy.sol"""
