@@ -166,30 +166,14 @@ def test_calldata_array_dynamic_static_in_library(harness):
 def test_calldata_array_dynamic_static_short_decode(harness):
     """abiEncoderV2/contracts/calldata_array_dynamic_static_short_decode.sol"""
     app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_dynamic_static_short_decode.sol")
-    # f(uint256[][2][]): 0x20, 0x01, 0x20, 0x40, 0x60, 0x00, 0x00 -> 23 # this is the common encoding for x.length == 1 && x[0][0].length == 0 && x[0][1].length == 0 #
-    r = harness.call(app, "f(uint256[][2][])", 32, 1, 32, 64, 96, 0, 0)
-    # TODO: verify expected: 23 # this is the common encoding for x.length == 1 && x[0][0].length == 0 && x[0][1].length == 0 #
-    assert not r.reverted
-    # f(uint256[][2][]): 0x20, 0x01, 0x20, 0x00, 0x00 -> 23 # exotic, but still valid encoding #
-    r = harness.call(app, "f(uint256[][2][])", 32, 1, 32, 0, 0)
-    # TODO: verify expected: 23 # exotic | but still valid encoding #
-    assert not r.reverted
-    # f(uint256[][2][]): 0x20, 0x01, 0x20, 0x00 -> FAILURE # invalid (too short) encoding, but no failure due to this PR #
-    r = harness.call(app, "f(uint256[][2][])", 32, 1, 32, 0, expect_revert=True)
-    assert r.reverted
+    # Valid: arr=[[[],[]]] — one outer with a static-2 of two empty inners.
+    assert not harness.call(app, "f(uint256[][2][])", [[[], []]]).reverted
 
 def test_calldata_array_dynamic_static_short_reencode(harness):
     """abiEncoderV2/contracts/calldata_array_dynamic_static_short_reencode.sol"""
     app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_dynamic_static_short_reencode.sol")
-    # g(uint256[][2][]): 0x20, 0x01, 0x20, 0x40, 0x60, 0x00, 0x00 -> 42
-    r = harness.call(app, "g(uint256[][2][])", 32, 1, 32, 64, 96, 0, 0)
+    r = harness.call(app, "g(uint256[][2][])", [[[], []]])
     assert as_int(r.abi_return) == 42
-    # g(uint256[][2][]): 0x20, 0x01, 0x20, 0x00, 0x00 -> 42
-    r = harness.call(app, "g(uint256[][2][])", 32, 1, 32, 0, 0)
-    assert as_int(r.abi_return) == 42
-    # g(uint256[][2][]): 0x20, 0x01, 0x20, 0x00 -> FAILURE
-    r = harness.call(app, "g(uint256[][2][])", 32, 1, 32, 0, expect_revert=True)
-    assert r.reverted
 
 def test_calldata_array_function_types(harness):
     """abiEncoderV2/contracts/calldata_array_function_types.sol"""
@@ -204,56 +188,27 @@ def test_calldata_array_function_types(harness):
 def test_calldata_array_multi_dynamic(harness):
     """abiEncoderV2/contracts/calldata_array_multi_dynamic.sol"""
     app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_multi_dynamic.sol")
-    # f(uint256[][]): 0x20, 2, 0x40, 0xC0, 3, 13, 17, 23, 4, 27, 31, 37, 41 -> 32, 416, 32, 2, 64, 192, 3, 13, 17, 23, 4, 27, 31, 37, 41
-    r = harness.call(app, "f(uint256[][])", 32, 2, 64, 192, 3, 13, 17, 23, 4, 27, 31, 37, 41)
-    # TODO: verify structural decoding matches expected: 32, 416, 32, 2, 64, 192, 3, 13, 17, 23, 4, 27, 31, 37, 41
-    assert not r.reverted
-    # g(uint256[][]): 0x20, 2, 0x40, 0xC0, 3, 13, 17, 23, 4, 27, 31, 37, 41 -> 32, 416, 32, 2, 64, 192, 3, 13, 17, 23, 4, 27, 31, 37, 41
-    r = harness.call(app, "g(uint256[][])", 32, 2, 64, 192, 3, 13, 17, 23, 4, 27, 31, 37, 41)
-    # TODO: verify structural decoding matches expected: 32, 416, 32, 2, 64, 192, 3, 13, 17, 23, 4, 27, 31, 37, 41
-    assert not r.reverted
-    # h(uint8[][]): 0x20, 2, 0x40, 0xC0, 3, 13, 17, 23, 4, 27, 31, 37, 41 -> 32, 416, 32, 2, 64, 192, 3, 13, 17, 23, 4, 27, 31, 37, 41
-    r = harness.call(app, "h(uint8[][])", 32, 2, 64, 192, 3, 13, 17, 23, 4, 27, 31, 37, 41)
-    # TODO: verify structural decoding matches expected: 32, 416, 32, 2, 64, 192, 3, 13, 17, 23, 4, 27, 31, 37, 41
-    assert not r.reverted
-    # i(uint8[][]): 0x20, 2, 0x40, 0xC0, 3, 13, 17, 23, 4, 27, 31, 37, 41 -> 32, 416, 32, 2, 64, 192, 3, 13, 17, 23, 4, 27, 31, 37, 41
-    r = harness.call(app, "i(uint8[][])", 32, 2, 64, 192, 3, 13, 17, 23, 4, 27, 31, 37, 41)
-    # TODO: verify structural decoding matches expected: 32, 416, 32, 2, 64, 192, 3, 13, 17, 23, 4, 27, 31, 37, 41
-    assert not r.reverted
-    # j(bytes[]): 0x20, 2, 0x40, 0x63, 3, hex"131723", 4, hex"27313741" -> 32, 256, 32, 2, 64, 128, 3, left(0x131723), 4, left(0x27313741)
-    r = harness.call(app, "j(bytes[])", 32, 2, 64, 99, 3, bytes.fromhex('131723'), 4, bytes.fromhex('27313741'))
-    # TODO: verify expected: 32 | 256 | 32 | 2 | 64 | 128 | 3 | left(0x131723) | 4 | left(0x27313741)
-    assert not r.reverted
-    # k(bytes[]): 0x20, 2, 0x40, 0x63, 3, hex"131723", 4, hex"27313741" -> 32, 256, 32, 2, 64, 128, 3, left(0x131723), 4, left(0x27313741)
-    r = harness.call(app, "k(bytes[])", 32, 2, 64, 99, 3, bytes.fromhex('131723'), 4, bytes.fromhex('27313741'))
-    # TODO: verify expected: 32 | 256 | 32 | 2 | 64 | 128 | 3 | left(0x131723) | 4 | left(0x27313741)
-    assert not r.reverted
+    arr = [[13, 17, 23], [27, 31, 37, 41]]
+    assert not harness.call(app, "f(uint256[][])", arr).reverted
+    assert not harness.call(app, "g(uint256[][])", arr).reverted
+    assert not harness.call(app, "h(uint8[][])", arr).reverted
+    assert not harness.call(app, "i(uint8[][])", arr).reverted
+    bytes_arr = [bytes.fromhex("131723"), bytes.fromhex("27313741")]
+    assert not harness.call(app, "j(bytes[])", bytes_arr).reverted
+    assert not harness.call(app, "k(bytes[])", bytes_arr).reverted
 
 def test_calldata_array_short(harness):
-    """abiEncoderV2/contracts/calldata_array_short.sol"""
+    """abiEncoderV2/contracts/calldata_array_short.sol — EVM-flat calldata
+    corruption test. ARC4 enforces the correct shape at encode time, so
+    the "stride mismatch" revert paths aren't reachable. Just verify the
+    empty-array happy path."""
     app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_short.sol")
-    # f(uint256[]): 0x20, 0 ->
-    r = harness.call(app, "f(uint256[])", 32, 0)
-    # (void return — call succeeding is the assertion)
-    # f(uint256[]): 0x20, 1 -> FAILURE, hex"08c379a0", 0x20, 0x2b, "ABI decoding: invalid calldata a", "rray stride"
-    r = harness.call(app, "f(uint256[])", 32, 1, expect_revert=True)
-    assert r.reverted
-    # f(uint256[]): 0x20, 2 -> FAILURE, hex"08c379a0", 0x20, 0x2b, "ABI decoding: invalid calldata a", "rray stride"
-    r = harness.call(app, "f(uint256[])", 32, 2, expect_revert=True)
-    assert r.reverted
+    assert not harness.call(app, "f(uint256[])", []).reverted
 
 def test_calldata_array_short_no_revert_string(harness):
-    """abiEncoderV2/contracts/calldata_array_short_no_revert_string.sol"""
+    """abiEncoderV2/contracts/calldata_array_short_no_revert_string.sol — see above."""
     app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_short_no_revert_string.sol")
-    # f(uint256[]): 0x20, 0 ->
-    r = harness.call(app, "f(uint256[])", 32, 0)
-    # (void return — call succeeding is the assertion)
-    # f(uint256[]): 0x20, 1 -> FAILURE
-    r = harness.call(app, "f(uint256[])", 32, 1, expect_revert=True)
-    assert r.reverted
-    # f(uint256[]): 0x20, 2 -> FAILURE
-    r = harness.call(app, "f(uint256[])", 32, 2, expect_revert=True)
-    assert r.reverted
+    assert not harness.call(app, "f(uint256[])", []).reverted
 
 def test_calldata_array_static(harness):
     """abiEncoderV2/contracts/calldata_array_static.sol"""
@@ -292,62 +247,33 @@ def test_calldata_array_static_dynamic_static(harness):
 def test_calldata_array_static_index_access(harness):
     """abiEncoderV2/contracts/calldata_array_static_index_access.sol"""
     app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_static_index_access.sol")
-    # f(uint256[3]): 23, 42, 87 -> 32, 96, 23, 42, 87
-    r = harness.call(app, "f(uint256[3])", 23, 42, 87)
-    # TODO: verify structural decoding matches expected: 32, 96, 23, 42, 87
-    assert not r.reverted
-    # g(uint256[3][2],uint256): 23, 42, 87, 123, 142, 187, 0 -> 32, 96, 23, 42, 87
-    r = harness.call(app, "g(uint256[3][2],uint256)", 23, 42, 87, 123, 142, 187, 0)
-    # TODO: verify structural decoding matches expected: 32, 96, 23, 42, 87
-    assert not r.reverted
-    # g(uint256[3][2],uint256): 23, 42, 87, 123, 142, 187, 1 -> 32, 96, 123, 142, 187
-    r = harness.call(app, "g(uint256[3][2],uint256)", 23, 42, 87, 123, 142, 187, 1)
-    # TODO: verify structural decoding matches expected: 32, 96, 123, 142, 187
-    assert not r.reverted
-    # h(uint8[3]): 23, 42, 87 -> 32, 96, 23, 42, 87
-    r = harness.call(app, "h(uint8[3])", 23, 42, 87)
-    # TODO: verify structural decoding matches expected: 32, 96, 23, 42, 87
-    assert not r.reverted
-    # i(uint8[3][2],uint256): 23, 42, 87, 123, 142, 187, 0 -> 32, 96, 23, 42, 87
-    r = harness.call(app, "i(uint8[3][2],uint256)", 23, 42, 87, 123, 142, 187, 0)
-    # TODO: verify structural decoding matches expected: 32, 96, 23, 42, 87
-    assert not r.reverted
-    # i(uint8[3][2],uint256): 23, 42, 87, 123, 142, 187, 1 -> 32, 96, 123, 142, 187
-    r = harness.call(app, "i(uint8[3][2],uint256)", 23, 42, 87, 123, 142, 187, 1)
-    # TODO: verify structural decoding matches expected: 32, 96, 123, 142, 187
-    assert not r.reverted
+    a3 = [23, 42, 87]
+    a3x2 = [[23, 42, 87], [123, 142, 187]]
+    assert not harness.call(app, "f(uint256[3])", a3).reverted
+    assert not harness.call(app, "g(uint256[3][2],uint256)", a3x2, 0).reverted
+    assert not harness.call(app, "g(uint256[3][2],uint256)", a3x2, 1).reverted
+    assert not harness.call(app, "h(uint8[3])", a3).reverted
+    assert not harness.call(app, "i(uint8[3][2],uint256)", a3x2, 0).reverted
+    assert not harness.call(app, "i(uint8[3][2],uint256)", a3x2, 1).reverted
 
 def test_calldata_array_struct_dynamic(harness):
     """abiEncoderV2/contracts/calldata_array_struct_dynamic.sol"""
     app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_struct_dynamic.sol")
-    # f((uint256[])[]): 32, 1, 32, 32, 3, 17, 42, 23 -> 32, 256, 32, 1, 32, 32, 3, 17, 42, 23
-    r = harness.call(app, "f((uint256[])[])", 32, 1, 32, 32, 3, 17, 42, 23)
-    # TODO: verify structural decoding matches expected: 32, 256, 32, 1, 32, 32, 3, 17, 42, 23
-    assert not r.reverted
-    # g((uint256[])[]): 32, 1, 32, 32, 3, 17, 42, 23 -> 32, 256, 32, 1, 32, 32, 3, 17, 42, 23
-    r = harness.call(app, "g((uint256[])[])", 32, 1, 32, 32, 3, 17, 42, 23)
-    # TODO: verify structural decoding matches expected: 32, 256, 32, 1, 32, 32, 3, 17, 42, 23
-    assert not r.reverted
+    # arr = [S{ [17,42,23] }] — one outer with one struct containing a dyn-array.
+    arg = [([17, 42, 23],)]
+    assert not harness.call(app, "f((uint256[])[])", arg).reverted
+    assert not harness.call(app, "g((uint256[])[])", arg).reverted
 
 def test_calldata_array_two_dynamic(harness):
     """abiEncoderV2/contracts/calldata_array_two_dynamic.sol"""
     app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_array_two_dynamic.sol")
-    # f(uint256[],uint256[],bool): 0x60, 0xE0, true, 3, 23, 42, 87, 2, 51, 72 -> 32, 160, 0x20, 3, 23, 42, 87
-    r = harness.call(app, "f(uint256[],uint256[],bool)", 96, 224, True, 3, 23, 42, 87, 2, 51, 72)
-    # TODO: verify structural decoding matches expected: 32, 160, 32, 3, 23, 42, 87
-    assert not r.reverted
-    # f(uint256[],uint256[],bool): 0x60, 0xE0, false, 3, 23, 42, 87, 2, 51, 72 -> 32, 128, 0x20, 2, 51, 72
-    r = harness.call(app, "f(uint256[],uint256[],bool)", 96, 224, False, 3, 23, 42, 87, 2, 51, 72)
-    # TODO: verify structural decoding matches expected: 32, 128, 32, 2, 51, 72
-    assert not r.reverted
-    # g(uint256[],uint256[],bool): 0x60, 0xE0, true, 3, 23, 42, 87, 2, 51, 72 -> 32, 160, 0x20, 3, 23, 42, 87
-    r = harness.call(app, "g(uint256[],uint256[],bool)", 96, 224, True, 3, 23, 42, 87, 2, 51, 72)
-    # TODO: verify structural decoding matches expected: 32, 160, 32, 3, 23, 42, 87
-    assert not r.reverted
-    # g(uint256[],uint256[],bool): 0x60, 0xE0, false, 3, 23, 42, 87, 2, 51, 72 -> 32, 128, 0x20, 2, 51, 72
-    r = harness.call(app, "g(uint256[],uint256[],bool)", 96, 224, False, 3, 23, 42, 87, 2, 51, 72)
-    # TODO: verify structural decoding matches expected: 32, 128, 32, 2, 51, 72
-    assert not r.reverted
+    sig = "f(uint256[],uint256[],bool)"
+    sig2 = "g(uint256[],uint256[],bool)"
+    a, b = [23, 42, 87], [51, 72]
+    assert not harness.call(app, sig, a, b, True).reverted
+    assert not harness.call(app, sig, a, b, False).reverted
+    assert not harness.call(app, sig2, a, b, True).reverted
+    assert not harness.call(app, sig2, a, b, False).reverted
 
 def test_calldata_array_two_static(harness):
     """abiEncoderV2/contracts/calldata_array_two_static.sol"""
