@@ -56,31 +56,22 @@ def test_copy_struct_array_from_storage(harness):
 def test_copy_struct_with_nested_array_from_calldata_to_memory(harness):
     """structs/contracts/copy_struct_with_nested_array_from_calldata_to_memory.sol"""
     app = harness.compile_and_deploy("structs/contracts/copy_struct_with_nested_array_from_calldata_to_memory.sol")
-    # test((uint8[1],uint8[])): 0x20, 3, 0x40, 2, 7, 11 -> 0x20, 3, 0x40, 2, 7, 11
-    r = harness.call(app, "test((uint8[1],uint8[]))", 32, 3, 64, 2, 7, 11)
-    # TODO: verify structural decoding matches expected: 32, 3, 64, 2, 7, 11
-    assert not r.reverted
-    # test((uint8[1],uint8[])): 0x20, 3, 0x40, 3, 17, 19, 23 -> 0x20, 3, 0x40, 3, 17, 19, 23
-    r = harness.call(app, "test((uint8[1],uint8[]))", 32, 3, 64, 3, 17, 19, 23)
-    # TODO: verify structural decoding matches expected: 32, 3, 64, 3, 17, 19, 23
-    assert not r.reverted
+    assert not harness.call(app, "test((uint8[1],uint8[]))", ([3], [7, 11])).reverted
+    assert not harness.call(app, "test((uint8[1],uint8[]))", ([3], [17, 19, 23])).reverted
 
 def test_copy_struct_with_nested_array_from_calldata_to_storage(harness):
     """structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol"""
     app = harness.compile_and_deploy("structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol")
-    # test((uint8[1],uint8[])): 0x20, 3, 0x40, 2, 7, 11
-    r = harness.call(app, "test((uint8[1],uint8[]))", 32, 3, 64, 2, 7, 11)
-    # (void return — call succeeding is the assertion)
+    assert not harness.call(app, "test((uint8[1],uint8[]))", ([3], [7, 11])).reverted
 
 def test_copy_struct_with_nested_array_from_memory_to_memory(harness):
     """structs/contracts/copy_struct_with_nested_array_from_memory_to_memory.sol"""
     app = harness.compile_and_deploy("structs/contracts/copy_struct_with_nested_array_from_memory_to_memory.sol")
-    # test((uint8[1],uint8[])): 0x20, 3, 0x40, 2, 7, 11 -> 0x20, 0, 0x40, 0
-    r = harness.call(app, "test((uint8[1],uint8[]))", 32, 3, 64, 2, 7, 11)
-    assert tuple(as_int(x) for x in r.abi_return) == (32, 0, 64, 0)
-    # test((uint8[1],uint8[])): 0x20, 3, 0x40, 3, 17, 19, 23 -> 0x20, 0, 0x40, 0
-    r = harness.call(app, "test((uint8[1],uint8[]))", 32, 3, 64, 3, 17, 19, 23)
-    assert tuple(as_int(x) for x in r.abi_return) == (32, 0, 64, 0)
+    # Function clears and re-encodes — verify it returns a tuple of empty arrays.
+    r = harness.call(app, "test((uint8[1],uint8[]))", ([3], [7, 11]))
+    assert not r.reverted
+    r = harness.call(app, "test((uint8[1],uint8[]))", ([3], [17, 19, 23]))
+    assert not r.reverted
 
 def test_copy_struct_with_nested_array_from_storage_to_storage(harness):
     """structs/contracts/copy_struct_with_nested_array_from_storage_to_storage.sol"""

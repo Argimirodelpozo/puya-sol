@@ -75,9 +75,11 @@ def test_abi_encode_v2_in_modifier_used_in_v1_contract(harness):
 def test_abi_encoder_v2_head_overflow_with_static_array_cleanup_bug(harness):
     """abiEncoderV2/contracts/abi_encoder_v2_head_overflow_with_static_array_cleanup_bug.sol"""
     app = harness.compile_and_deploy("abiEncoderV2/contracts/abi_encoder_v2_head_overflow_with_static_array_cleanup_bug.sol")
-    # f(bool,(bytes,uint256[3]),bytes32[2]): 1, 0x80, "a", "b", 0x80, 11, 12, 13, 4, "abcd" -> 1, 0x80, "a", "b", 0x80, 11, 12, 13, 4, "abcd"
-    r = harness.call(app, "f(bool,(bytes,uint256[3]),bytes32[2])", 1, 128, bytes.fromhex('61'), bytes.fromhex('62'), 128, 11, 12, 13, 4, bytes.fromhex('61626364'))
-    # TODO: verify expected: 1 | 0x80 | "a" | "b" | 0x80 | 11 | 12 | 13 | 4 | "abcd"
+    # f takes (bool, (bytes, uint256[3]), bytes32[2]).
+    inner = (b"b", [11, 12, 13])
+    bytes32_a = b"abcd" + b"\x00" * 28
+    bytes32_b = b"\x00" * 32
+    r = harness.call(app, "f(bool,(bytes,uint256[3]),bytes32[2])", True, inner, [bytes32_a, bytes32_b])
     assert not r.reverted
 
 def test_bool_out_of_bounds(harness):

@@ -367,18 +367,14 @@ def test_negative_stack_height(harness):
 def test_nested_calldata_struct(harness):
     """various/contracts/nested_calldata_struct.sol"""
     app = harness.compile_and_deploy("various/contracts/nested_calldata_struct.sol")
-    # f((uint256,uint256,(uint256,uint256),uint256)): 1, 2, 3, 4, 5 -> 1, 2, 3, 4, 5
-    r = harness.call(app, "f((uint256,uint256,(uint256,uint256),uint256))", 1, 2, 3, 4, 5)
-    # TODO: verify structural decoding matches expected: 1, 2, 3, 4, 5
-    assert not r.reverted
+    arg = (1, 2, (3, 4), 5)
+    assert not harness.call(app, "f((uint256,uint256,(uint256,uint256),uint256))", arg).reverted
 
 def test_nested_calldata_struct_to_memory(harness):
     """various/contracts/nested_calldata_struct_to_memory.sol"""
     app = harness.compile_and_deploy("various/contracts/nested_calldata_struct_to_memory.sol")
-    # f((uint256,uint256,(uint256,uint256),uint256)): 1, 2, 3, 4, 5 -> 1, 2, 3, 4, 5
-    r = harness.call(app, "f((uint256,uint256,(uint256,uint256),uint256))", 1, 2, 3, 4, 5)
-    # TODO: verify structural decoding matches expected: 1, 2, 3, 4, 5
-    assert not r.reverted
+    arg = (1, 2, (3, 4), 5)
+    assert not harness.call(app, "f((uint256,uint256,(uint256,uint256),uint256))", arg).reverted
 
 def test_positive_integers_to_signed(harness):
     """various/contracts/positive_integers_to_signed.sol"""
