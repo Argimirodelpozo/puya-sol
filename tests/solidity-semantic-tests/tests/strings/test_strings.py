@@ -86,44 +86,30 @@ def test_empty_storage_string(harness):
 def test_empty_string(harness):
     """strings/contracts/empty_string.sol"""
     app = harness.compile_and_deploy("strings/contracts/empty_string.sol")
-    # f() -> 0x20, 0
-    r = harness.call(app, "f()")
-    assert tuple(as_int(x) for x in r.abi_return) == (32, 0)
+    # f() returns "".
+    assert harness.call(app, "f()").abi_return == ""
 
 def test_empty_string_input(harness):
-    """strings/contracts/empty_string_input.sol"""
+    """strings/contracts/empty_string_input.sol
+
+    The original isoltest fixture exercises calldata-tail-trimming
+    behaviour (passing 0 extra bytes vs an empty `string` argument).
+    With ARC4 dispatching there's no equivalent trim case — we just
+    verify the canonical empty-string call shape works.
+    """
     app = harness.compile_and_deploy("strings/contracts/empty_string_input.sol")
-    # f() -> 0x20, 0
-    r = harness.call(app, "f()")
-    assert tuple(as_int(x) for x in r.abi_return) == (32, 0)
-    # g(string): 0x20, 0, "" -> 0x20, 0
-    r = harness.call(app, "g(string)", '')
-    assert tuple(as_int(x) for x in r.abi_return) == (32, 0)
-    # g(string): 0x20, 0 -> 0x20, 0
-    r = harness.call(app, "g(string)", 32, 0)
-    assert tuple(as_int(x) for x in r.abi_return) == (32, 0)
-    # h(string,uint256): 0x40, 0x888, 0, "" -> 0x40, 0x0888, 0
-    r = harness.call(app, "h(string,uint256)", 64, 2184, 0, bytes.fromhex(''))
-    assert tuple(as_int(x) for x in r.abi_return) == (64, 2184, 0)
-    # h(string,uint256): 0x40, 0x888, 0 -> 0x40, 0x0888, 0
-    r = harness.call(app, "h(string,uint256)", 64, 2184, 0)
-    assert tuple(as_int(x) for x in r.abi_return) == (64, 2184, 0)
-    # i(string,uint256,string): 0x60, 0x888, 0x60, 0, "" -> 0x60, 0x80, 0x0888, 0, 0
-    r = harness.call(app, "i(string,uint256,string)", 96, 2184, 96, 0, bytes.fromhex(''))
-    # TODO: verify structural decoding matches expected: 96, 128, 2184, 0, 0
-    assert not r.reverted
-    # i(string,uint256,string): 0x60, 0x888, 0x60, 0 -> 0x60, 0x80, 0x0888, 0, 0
-    r = harness.call(app, "i(string,uint256,string)", 96, 2184, 96, 0)
-    # TODO: verify structural decoding matches expected: 96, 128, 2184, 0, 0
-    assert not r.reverted
-    # j(string,uint256): 0x40, 0x888, 0, "" -> 0x60, 0x80, 0x0888, 0, 0
-    r = harness.call(app, "j(string,uint256)", 64, 2184, 0, bytes.fromhex(''))
-    # TODO: verify structural decoding matches expected: 96, 128, 2184, 0, 0
-    assert not r.reverted
-    # j(string,uint256): 0x40, 0x888, 0 -> 0x60, 0x80, 0x0888, 0, 0
-    r = harness.call(app, "j(string,uint256)", 64, 2184, 0)
-    # TODO: verify structural decoding matches expected: 96, 128, 2184, 0, 0
-    assert not r.reverted
+    assert harness.call(app, "f()").abi_return == ""
+    assert harness.call(app, "g(string)", "").abi_return == ""
+    # h(s, v) returns (s, v).
+    r = harness.call(app, "h(string,uint256)", "", 0x888)
+    assert r.abi_return[0] == ""
+    assert as_int(r.abi_return[1]) == 0x888
+    # i(msg1, v, msg2) returns (msg1, msg2, v) — note the deliberate reorder.
+    r = harness.call(app, "i(string,uint256,string)", "", 0x888, "")
+    assert (r.abi_return[0], r.abi_return[1], as_int(r.abi_return[2])) == ("", "", 0x888)
+    # j(msg1, v) returns (msg1, "", v).
+    r = harness.call(app, "j(string,uint256)", "", 0x888)
+    assert (r.abi_return[0], r.abi_return[1], as_int(r.abi_return[2])) == ("", "", 0x888)
 
 def test_return_string(harness):
     """strings/contracts/return_string.sol"""
@@ -151,25 +137,17 @@ def test_string_escapes(harness):
 def test_unicode_escapes(harness):
     """strings/contracts/unicode_escapes.sol"""
     app = harness.compile_and_deploy("strings/contracts/unicode_escapes.sol")
-    # oneByteUTF8() -> 0x20, 7, "aaa$aaa"
-    r = harness.call(app, "oneByteUTF8()")
-    assert r.abi_return == 'aaa$aaa'
-    # twoBytesUTF8() -> 0x20, 8, "aaa\xc2\xa2aaa"
-    r = harness.call(app, "twoBytesUTF8()")
-    assert r.abi_return == 'aaa\\xc2\\xa2aaa'
-    # threeBytesUTF8() -> 0x20, 9, "aaa\xe2\x82\xacaaa"
-    r = harness.call(app, "threeBytesUTF8()")
-    assert r.abi_return == 'aaa\\xe2\\x82\\xacaaa'
-    # combined() -> 0x20, 6, "$\xc2\xa2\xe2\x82\xac"
-    r = harness.call(app, "combined()")
-    assert r.abi_return == '$\\xc2\\xa2\\xe2\\x82\\xac'
+    # algosdk utf-8-decodes the returned `string`, so we compare against
+    # the human-readable form (¢, €, etc.) rather than the raw bytes.
+    assert harness.call(app, "oneByteUTF8()").abi_return == "aaa$aaa"
+    assert harness.call(app, "twoBytesUTF8()").abi_return == "aaa¢aaa"
+    assert harness.call(app, "threeBytesUTF8()").abi_return == "aaa€aaa"
+    assert harness.call(app, "combined()").abi_return == "$¢€"
+
 
 def test_unicode_string(harness):
     """strings/contracts/unicode_string.sol"""
     app = harness.compile_and_deploy("strings/contracts/unicode_string.sol")
-    # f() -> 0x20, 0x14, "\xf0\x9f\x98\x83, \xf0\x9f\x98\xad, and \xf0\x9f\x98\x88"
-    r = harness.call(app, "f()")
-    assert r.abi_return == '\\xf0\\x9f\\x98\\x83, \\xf0\\x9f\\x98\\xad, and \\xf0\\x9f\\x98\\x88'
-    # g() -> 0x20, 0x14, "\xf0\x9f\x98\x83, \xf0\x9f\x98\xad, and \xf0\x9f\x98\x88"
-    r = harness.call(app, "g()")
-    assert r.abi_return == '\\xf0\\x9f\\x98\\x83, \\xf0\\x9f\\x98\\xad, and \\xf0\\x9f\\x98\\x88'
+    expected = "😃, 😭, and 😈"
+    assert harness.call(app, "f()").abi_return == expected
+    assert harness.call(app, "g()").abi_return == expected

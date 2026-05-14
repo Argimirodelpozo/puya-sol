@@ -33,9 +33,9 @@ def test_copy_from_mapping(harness):
 def test_copy_from_storage(harness):
     """structs/contracts/copy_from_storage.sol"""
     app = harness.compile_and_deploy("structs/contracts/copy_from_storage.sol")
-    # f() -> 0x20, 1, 13
+    # f returns S[] with one struct {x = 13}.
     r = harness.call(app, "f()")
-    assert tuple(as_int(x) for x in r.abi_return) == (32, 1, 13)
+    assert [tuple(as_int(y) for y in x) for x in r.abi_return] == [(13,)]
 
 def test_copy_struct_array_from_storage(harness):
     """structs/contracts/copy_struct_array_from_storage.sol"""
@@ -184,8 +184,8 @@ def test_function_type_copy(harness):
 def test_global_(harness):
     """structs/contracts/global.sol"""
     app = harness.compile_and_deploy("structs/contracts/global.sol")
-    # f((uint256,uint256)): 42, 23 -> 42, 23
-    r = harness.call(app, "f((uint256,uint256))", 42, 23)
+    # f(s) returns (s.a, s.b).
+    r = harness.call(app, "f((uint256,uint256))", (42, 23))
     assert tuple(as_int(x) for x in r.abi_return) == (42, 23)
 
 def test_lone_struct_array_type(harness):

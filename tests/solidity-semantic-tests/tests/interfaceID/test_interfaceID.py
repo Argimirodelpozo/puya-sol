@@ -11,32 +11,32 @@ def test_homer(harness):
     """interfaceID/contracts/homer.sol"""
     app = harness.compile_and_deploy("interfaceID/contracts/homer.sol")
     # supportsInterface(bytes4): left(0x01ffc9a0) -> false
-    r = harness.call(app, "supportsInterface(bytes4)", 0x1ffc9a000000000000000000000000000000000000000000000000000000000)
+    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("01ffc9a0"))
     assert bool(as_int(r.abi_return)) is False
     # supportsInterface(bytes4): left(0x01ffc9a7) -> true
-    r = harness.call(app, "supportsInterface(bytes4)", 0x1ffc9a700000000000000000000000000000000000000000000000000000000)
+    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("01ffc9a7"))
     assert bool(as_int(r.abi_return)) is True
     # supportsInterface(bytes4): left(0x73b6b492) -> true
-    r = harness.call(app, "supportsInterface(bytes4)", 0x73b6b49200000000000000000000000000000000000000000000000000000000)
+    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("73b6b492"))
     assert bool(as_int(r.abi_return)) is True
     # supportsInterface(bytes4): left(0x70b6b492) -> false
-    r = harness.call(app, "supportsInterface(bytes4)", 0x70b6b49200000000000000000000000000000000000000000000000000000000)
+    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("70b6b492"))
     assert bool(as_int(r.abi_return)) is False
 
 def test_homer_interfaceId(harness):
     """interfaceID/contracts/homer_interfaceId.sol"""
     app = harness.compile_and_deploy("interfaceID/contracts/homer_interfaceId.sol")
     # supportsInterface(bytes4): left(0x01ffc9a0) -> false
-    r = harness.call(app, "supportsInterface(bytes4)", 0x1ffc9a000000000000000000000000000000000000000000000000000000000)
+    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("01ffc9a0"))
     assert bool(as_int(r.abi_return)) is False
     # supportsInterface(bytes4): left(0x01ffc9a7) -> true
-    r = harness.call(app, "supportsInterface(bytes4)", 0x1ffc9a700000000000000000000000000000000000000000000000000000000)
+    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("01ffc9a7"))
     assert bool(as_int(r.abi_return)) is True
     # supportsInterface(bytes4): left(0x73b6b492) -> true
-    r = harness.call(app, "supportsInterface(bytes4)", 0x73b6b49200000000000000000000000000000000000000000000000000000000)
+    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("73b6b492"))
     assert bool(as_int(r.abi_return)) is True
     # supportsInterface(bytes4): left(0x70b6b492) -> false
-    r = harness.call(app, "supportsInterface(bytes4)", 0x70b6b49200000000000000000000000000000000000000000000000000000000)
+    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("70b6b492"))
     assert bool(as_int(r.abi_return)) is False
 
 def test_interfaceId_events(harness):
@@ -91,30 +91,30 @@ def test_lisa(harness):
     """interfaceID/contracts/lisa.sol"""
     app = harness.compile_and_deploy("interfaceID/contracts/lisa.sol")
     # supportsInterface(bytes4): left(0x01ffc9a0) -> false
-    r = harness.call(app, "supportsInterface(bytes4)", 0x1ffc9a000000000000000000000000000000000000000000000000000000000)
+    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("01ffc9a0"))
     assert bool(as_int(r.abi_return)) is False
     # supportsInterface(bytes4): left(0x01ffc9a7) -> true
-    r = harness.call(app, "supportsInterface(bytes4)", 0x1ffc9a700000000000000000000000000000000000000000000000000000000)
+    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("01ffc9a7"))
     assert bool(as_int(r.abi_return)) is True
     # supportsInterface(bytes4): left(0x73b6b492) -> true
-    r = harness.call(app, "supportsInterface(bytes4)", 0x73b6b49200000000000000000000000000000000000000000000000000000000)
+    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("73b6b492"))
     assert bool(as_int(r.abi_return)) is True
     # supportsInterface(bytes4): left(0x70b6b492) -> false
-    r = harness.call(app, "supportsInterface(bytes4)", 0x70b6b49200000000000000000000000000000000000000000000000000000000)
+    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("70b6b492"))
     assert bool(as_int(r.abi_return)) is False
 
 def test_lisa_interfaceId(harness):
     """interfaceID/contracts/lisa_interfaceId.sol"""
     app = harness.compile_and_deploy("interfaceID/contracts/lisa_interfaceId.sol")
     # supportsInterface(bytes4): left(0x01ffc9a0) -> false
-    r = harness.call(app, "supportsInterface(bytes4)", 0x1ffc9a000000000000000000000000000000000000000000000000000000000)
+    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("01ffc9a0"))
     assert bool(as_int(r.abi_return)) is False
     # supportsInterface(bytes4): left(0x01ffc9a7) -> true
-    r = harness.call(app, "supportsInterface(bytes4)", 0x1ffc9a700000000000000000000000000000000000000000000000000000000)
+    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("01ffc9a7"))
     assert bool(as_int(r.abi_return)) is True
     # supportsInterface(bytes4): left(0x73b6b492) -> true
-    r = harness.call(app, "supportsInterface(bytes4)", 0x73b6b49200000000000000000000000000000000000000000000000000000000)
+    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("73b6b492"))
     assert bool(as_int(r.abi_return)) is True
     # supportsInterface(bytes4): left(0x70b6b492) -> false
-    r = harness.call(app, "supportsInterface(bytes4)", 0x70b6b49200000000000000000000000000000000000000000000000000000000)
+    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("70b6b492"))
     assert bool(as_int(r.abi_return)) is False

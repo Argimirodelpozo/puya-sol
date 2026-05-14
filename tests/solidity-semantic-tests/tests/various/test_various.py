@@ -1,6 +1,7 @@
 """Tests for the various category."""
 import pytest
 
+from algosdk import encoding
 from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
     as_int, as_bytes,
@@ -42,10 +43,11 @@ def test_assignment_to_const_var_involving_expression(harness):
 
 def test_balance(harness):
     """various/contracts/balance.sol"""
+    # AVM apps always carry a minimum balance for state schema/MBR; subtract
+    # that baseline so the test asserts on just the ctor-forwarded 23 wei.
     app = harness.compile_and_deploy("various/contracts/balance.sol", fund_wei=23)
-    # getBalance() -> 23
     r = harness.call(app, "getBalance()")
-    assert as_int(r.abi_return) == 23
+    assert as_int(r.abi_return) - app.balance_baseline == 23
 
 def test_byte_optimization_bug(harness):
     """various/contracts/byte_optimization_bug.sol"""
@@ -223,19 +225,19 @@ def test_erc20(harness):
     r = harness.call(app, "totalSupply()")
     assert as_int(r.abi_return) == 20
     # transfer(address,uint256): 2, 5 -> true
-    r = harness.call(app, "transfer(address,uint256)", 2, 5)
+    r = harness.call(app, "transfer(address,uint256)", encoding.encode_address((2).to_bytes(32, "big")), 5)
     assert bool(as_int(r.abi_return)) is True
     # decreaseAllowance(address,uint256): 2, 0 -> true
-    r = harness.call(app, "decreaseAllowance(address,uint256)", 2, 0)
+    r = harness.call(app, "decreaseAllowance(address,uint256)", encoding.encode_address((2).to_bytes(32, "big")), 0)
     assert bool(as_int(r.abi_return)) is True
     # decreaseAllowance(address,uint256): 2, 1 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "decreaseAllowance(address,uint256)", 2, 1, expect_revert=True)
+    r = harness.call(app, "decreaseAllowance(address,uint256)", encoding.encode_address((2).to_bytes(32, "big")), 1, expect_revert=True)
     assert r.reverted
     # transfer(address,uint256): 2, 14 -> true
-    r = harness.call(app, "transfer(address,uint256)", 2, 14)
+    r = harness.call(app, "transfer(address,uint256)", encoding.encode_address((2).to_bytes(32, "big")), 14)
     assert bool(as_int(r.abi_return)) is True
     # transfer(address,uint256): 2, 2 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "transfer(address,uint256)", 2, 2, expect_revert=True)
+    r = harness.call(app, "transfer(address,uint256)", encoding.encode_address((2).to_bytes(32, "big")), 2, expect_revert=True)
     assert r.reverted
 
 def test_external_types_in_calls(harness):
@@ -332,9 +334,8 @@ def test_many_subassemblies(harness):
 def test_memory_overwrite(harness):
     """various/contracts/memory_overwrite.sol"""
     app = harness.compile_and_deploy("various/contracts/memory_overwrite.sol")
-    # f() -> 0x20, 5, "b23a5"
-    r = harness.call(app, "f()")
-    assert r.abi_return == 'b23a5'
+    # f returns bytes "b23a5".
+    assert bytes(harness.call(app, "f()").abi_return) == b"b23a5"
 
 def test_multi_modifiers(harness):
     """various/contracts/multi_modifiers.sol"""
@@ -473,7 +474,7 @@ def test_selfdestruct_post_cancun_multiple_beneficiaries(harness):
     r = harness.call(app, "exists()")
     assert bool(as_int(r.abi_return)) is True
     # terminate(address): 0x1111111111111111111111111111111111111111 ->
-    r = harness.call(app, "terminate(address)", 0x1111111111111111111111111111111111111111)
+    r = harness.call(app, "terminate(address)", encoding.encode_address((97433442488726861213578988847752201310395502865).to_bytes(32, "big")))
     # (void return — call succeeding is the assertion)
     # exists() -> true
     r = harness.call(app, "exists()")
@@ -593,10 +594,10 @@ def test_selfdestruct_pre_cancun_multiple_beneficiaries(harness):
     r = harness.call(app, "exists()")
     assert bool(as_int(r.abi_return)) is True
     # terminate(address): 0x1111111111111111111111111111111111111111 ->
-    r = harness.call(app, "terminate(address)", 0x1111111111111111111111111111111111111111)
+    r = harness.call(app, "terminate(address)", encoding.encode_address((97433442488726861213578988847752201310395502865).to_bytes(32, "big")))
     # (void return — call succeeding is the assertion)
     # terminate(address): 0x2222222222222222222222222222222222222222 -> FAILURE
-    r = harness.call(app, "terminate(address)", 0x2222222222222222222222222222222222222222, expect_revert=True)
+    r = harness.call(app, "terminate(address)", encoding.encode_address((194866884977453722427157977695504402620791005730).to_bytes(32, "big")), expect_revert=True)
     assert r.reverted
     # exists() -> false
     r = harness.call(app, "exists()")
@@ -811,10 +812,10 @@ def test_transient_storage_reentrancy_lock(harness):
     """various/contracts/transient_storage_reentrancy_lock.sol"""
     app = harness.compile_and_deploy("various/contracts/transient_storage_reentrancy_lock.sol")
     # test(address,bool): 0x1234abcd, true -> FAILURE, hex"08c379a0", 0x20, 0x12, "Reentrancy attempt"
-    r = harness.call(app, "test(address,bool)", 305441741, True, expect_revert=True)
+    r = harness.call(app, "test(address,bool)", encoding.encode_address((305441741).to_bytes(32, "big")), True, expect_revert=True)
     assert r.reverted
     # test(address,bool): 0x1234abcd, false ->
-    r = harness.call(app, "test(address,bool)", 305441741, False)
+    r = harness.call(app, "test(address,bool)", encoding.encode_address((305441741).to_bytes(32, "big")), False)
     # (void return — call succeeding is the assertion)
 
 def test_tuples(harness):

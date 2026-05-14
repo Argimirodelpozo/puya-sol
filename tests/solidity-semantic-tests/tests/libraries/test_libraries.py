@@ -1,6 +1,7 @@
 """Tests for the libraries category."""
 import pytest
 
+from algosdk import encoding
 from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
     as_int, as_bytes,
@@ -10,31 +11,27 @@ from framework import (
 def test_attached_internal_library_function_accepting_calldata(harness):
     """libraries/contracts/attached_internal_library_function_accepting_calldata.sol"""
     app = harness.compile_and_deploy("libraries/contracts/attached_internal_library_function_accepting_calldata.sol")
-    # Returns two bytes32 values, each = first char "a" right-padded.
-    expected = b"a".ljust(32, b"\x00")
+    # Returns two bytes1 values = first char of "abcd" = b"a".
     r = harness.call(app, "f(bytes)", b"abcd")
-    assert [bytes(x) for x in r.abi_return] == [expected, expected]
+    assert [bytes(x) for x in r.abi_return] == [b"a", b"a"]
 
 def test_attached_internal_library_function_returning_calldata(harness):
     """libraries/contracts/attached_internal_library_function_returning_calldata.sol"""
     app = harness.compile_and_deploy("libraries/contracts/attached_internal_library_function_returning_calldata.sol")
-    # f(bytes): 0x20, 4, "abcd" -> 0x6100000000000000000000000000000000000000000000000000000000000000, 0x6100000000000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "f(bytes)", 'abcd')
-    assert tuple(as_int(x) for x in r.abi_return) == (43874346312576839672212443538448152585028080127215369968075725190498334277632, 43874346312576839672212443538448152585028080127215369968075725190498334277632)
+    r = harness.call(app, "f(bytes)", b"abcd")
+    assert [bytes(x) for x in r.abi_return] == [b"a", b"a"]
 
 def test_attached_public_library_function_accepting_calldata_sol(harness):
     """libraries/contracts/attached_public_library_function_accepting_calldata.sol.sol"""
     app = harness.compile_and_deploy("libraries/contracts/attached_public_library_function_accepting_calldata.sol.sol")
-    # f(bytes): 0x20, 4, "abcd" -> 0x6100000000000000000000000000000000000000000000000000000000000000, 0x6100000000000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "f(bytes)", 'abcd')
-    assert tuple(as_int(x) for x in r.abi_return) == (43874346312576839672212443538448152585028080127215369968075725190498334277632, 43874346312576839672212443538448152585028080127215369968075725190498334277632)
+    r = harness.call(app, "f(bytes)", b"abcd")
+    assert [bytes(x) for x in r.abi_return] == [b"a", b"a"]
 
 def test_attached_public_library_function_returning_calldata(harness):
     """libraries/contracts/attached_public_library_function_returning_calldata.sol"""
     app = harness.compile_and_deploy("libraries/contracts/attached_public_library_function_returning_calldata.sol")
-    # f(bytes): 0x20, 4, "abcd" -> 0x6100000000000000000000000000000000000000000000000000000000000000, 0x6100000000000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "f(bytes)", 'abcd')
-    assert tuple(as_int(x) for x in r.abi_return) == (43874346312576839672212443538448152585028080127215369968075725190498334277632, 43874346312576839672212443538448152585028080127215369968075725190498334277632)
+    r = harness.call(app, "f(bytes)", b"abcd")
+    assert [bytes(x) for x in r.abi_return] == [b"a", b"a"]
 
 def test_external_call_with_function_pointer_parameter(harness):
     """libraries/contracts/external_call_with_function_pointer_parameter.sol"""
@@ -82,20 +79,20 @@ def test_internal_library_function_attached_to_address(harness):
     """libraries/contracts/internal_library_function_attached_to_address.sol"""
     app = harness.compile_and_deploy("libraries/contracts/internal_library_function_attached_to_address.sol")
     # foo(address,address): 0x111122223333444455556666777788889999aAaa, 0x111122223333444455556666777788889999aAaa -> true
-    r = harness.call(app, "foo(address,address)", 0x111122223333444455556666777788889999aaaa, 0x111122223333444455556666777788889999aaaa)
+    r = harness.call(app, "foo(address,address)", encoding.encode_address((97434929227759267208256849212272652248082393770).to_bytes(32, "big")), encoding.encode_address((97434929227759267208256849212272652248082393770).to_bytes(32, "big")))
     assert bool(as_int(r.abi_return)) is True
     # foo(address,address): 0x111122223333444455556666777788889999aAaa, 0x0000000000000000000000000000000000000000 -> false
-    r = harness.call(app, "foo(address,address)", 0x111122223333444455556666777788889999aaaa, 0)
+    r = harness.call(app, "foo(address,address)", encoding.encode_address((97434929227759267208256849212272652248082393770).to_bytes(32, "big")), 0)
     assert bool(as_int(r.abi_return)) is False
 
 def test_internal_library_function_attached_to_address_named_send_transfer(harness):
     """libraries/contracts/internal_library_function_attached_to_address_named_send_transfer.sol"""
     app = harness.compile_and_deploy("libraries/contracts/internal_library_function_attached_to_address_named_send_transfer.sol")
     # useTransfer(address): 0x111122223333444455556666777788889999aAaa ->
-    r = harness.call(app, "useTransfer(address)", 0x111122223333444455556666777788889999aaaa)
+    r = harness.call(app, "useTransfer(address)", encoding.encode_address((97434929227759267208256849212272652248082393770).to_bytes(32, "big")))
     # (void return — call succeeding is the assertion)
     # useSend(address): 0x111122223333444455556666777788889999aAaa ->
-    r = harness.call(app, "useSend(address)", 0x111122223333444455556666777788889999aaaa)
+    r = harness.call(app, "useSend(address)", encoding.encode_address((97434929227759267208256849212272652248082393770).to_bytes(32, "big")))
     # (void return — call succeeding is the assertion)
 
 def test_internal_library_function_attached_to_array_named_pop_push(harness):
@@ -162,10 +159,9 @@ def test_internal_library_function_attached_to_fixed_array(harness):
 def test_internal_library_function_attached_to_fixed_bytes(harness):
     """libraries/contracts/internal_library_function_attached_to_fixed_bytes.sol"""
     app = harness.compile_and_deploy("libraries/contracts/internal_library_function_attached_to_fixed_bytes.sol")
-    # sum(bytes2,bytes2): left(0x1100), left(0x0022) -> left(0x1122)
-    r = harness.call(app, "sum(bytes2,bytes2)", 0x1100000000000000000000000000000000000000000000000000000000000000, 0x22000000000000000000000000000000000000000000000000000000000000)
-    # TODO: verify expected: left(0x1122)
-    assert not r.reverted
+    # sum(bytes2, bytes2) returns bytes2 = OR of the two args.
+    r = harness.call(app, "sum(bytes2,bytes2)", b"\x11\x00", b"\x00\x22")
+    assert bytes(r.abi_return) == b"\x11\x22"
 
 def test_internal_library_function_attached_to_integer(harness):
     """libraries/contracts/internal_library_function_attached_to_integer.sol"""

@@ -1,6 +1,7 @@
 """Tests for the viaYul category."""
 import pytest
 
+from algosdk import encoding
 from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
     as_int, as_bytes,
@@ -53,10 +54,10 @@ def test_comparison(harness):
     """viaYul/contracts/comparison.sol"""
     app = harness.compile_and_deploy("viaYul/contracts/comparison.sol")
     # f(address): 0x1234 -> false
-    r = harness.call(app, "f(address)", 4660)
+    r = harness.call(app, "f(address)", encoding.encode_address((4660).to_bytes(32, "big")))
     assert bool(as_int(r.abi_return)) is False
     # f(address): 0x00 -> true
-    r = harness.call(app, "f(address)", 0)
+    r = harness.call(app, "f(address)", encoding.encode_address((0).to_bytes(32, "big")))
     assert bool(as_int(r.abi_return)) is True
     # g() -> true
     r = harness.call(app, "g()")
@@ -260,16 +261,16 @@ def test_detect_add_overflow_signed(harness):
     r = harness.call(app, "g(int8,int8)", 5, 6)
     assert as_int(r.abi_return) == 11
     # g(int8,int8): -2, 1 -> -1
-    r = harness.call(app, "g(int8,int8)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 1)
+    r = harness.call(app, "g(int8,int8)", -2, 1)
     assert as_int(r.abi_return) in (-1, 115792089237316195423570985008687907853269984665640564039457584007913129639935)
     # g(int8,int8): -2, 2 -> 0
-    r = harness.call(app, "g(int8,int8)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 2)
+    r = harness.call(app, "g(int8,int8)", -2, 2)
     assert as_int(r.abi_return) == 0
     # g(int8,int8): 2, -2 -> 0
-    r = harness.call(app, "g(int8,int8)", 2, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe)
+    r = harness.call(app, "g(int8,int8)", 2, -2)
     assert as_int(r.abi_return) == 0
     # g(int8,int8): -5, -6 -> -11
-    r = harness.call(app, "g(int8,int8)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffa)
+    r = harness.call(app, "g(int8,int8)", -5, -6)
     assert as_int(r.abi_return) in (-11, 115792089237316195423570985008687907853269984665640564039457584007913129639925)
     # g(int8,int8): 126, 1 -> 127
     r = harness.call(app, "g(int8,int8)", 126, 1)
@@ -284,22 +285,22 @@ def test_detect_add_overflow_signed(harness):
     r = harness.call(app, "g(int8,int8)", 1, 127, expect_revert=True)
     assert r.reverted
     # g(int8,int8): -127, -1 -> -128
-    r = harness.call(app, "g(int8,int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff81, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
+    r = harness.call(app, "g(int8,int8)", -127, -1)
     assert as_int(r.abi_return) in (-128, 115792089237316195423570985008687907853269984665640564039457584007913129639808)
     # g(int8,int8): -1, -127 -> -128
-    r = harness.call(app, "g(int8,int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff81)
+    r = harness.call(app, "g(int8,int8)", -1, -127)
     assert as_int(r.abi_return) in (-128, 115792089237316195423570985008687907853269984665640564039457584007913129639808)
     # g(int8,int8): -127, -2 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "g(int8,int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff81, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, expect_revert=True)
+    r = harness.call(app, "g(int8,int8)", -127, -2, expect_revert=True)
     assert r.reverted
     # g(int8,int8): -2, -127 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "g(int8,int8)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff81, expect_revert=True)
+    r = harness.call(app, "g(int8,int8)", -2, -127, expect_revert=True)
     assert r.reverted
     # g(int8,int8): -128, 0 -> -128
-    r = harness.call(app, "g(int8,int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80, 0)
+    r = harness.call(app, "g(int8,int8)", -128, 0)
     assert as_int(r.abi_return) in (-128, 115792089237316195423570985008687907853269984665640564039457584007913129639808)
     # g(int8,int8): 0, -128 -> -128
-    r = harness.call(app, "g(int8,int8)", 0, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80)
+    r = harness.call(app, "g(int8,int8)", 0, -128)
     assert as_int(r.abi_return) in (-128, 115792089237316195423570985008687907853269984665640564039457584007913129639808)
 
 def test_detect_div_overflow(harness):
@@ -318,28 +319,28 @@ def test_detect_div_overflow(harness):
     r = harness.call(app, "f(uint256,uint256)", 0, 1)
     assert as_int(r.abi_return) == 0
     # g(int8,int8): -10, 3 -> -3
-    r = harness.call(app, "g(int8,int8)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff6, 3)
+    r = harness.call(app, "g(int8,int8)", -10, 3)
     assert as_int(r.abi_return) in (-3, 115792089237316195423570985008687907853269984665640564039457584007913129639933)
     # g(int8,int8): -10, -3 -> 3
-    r = harness.call(app, "g(int8,int8)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff6, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd)
+    r = harness.call(app, "g(int8,int8)", -10, -3)
     assert as_int(r.abi_return) == 3
     # g(int8,int8): -10, 0 -> FAILURE, hex"4e487b71", 0x12
-    r = harness.call(app, "g(int8,int8)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff6, 0, expect_revert=True)
+    r = harness.call(app, "g(int8,int8)", -10, 0, expect_revert=True)
     assert r.reverted
     # g(int8,int8): -128, 1 -> -128
-    r = harness.call(app, "g(int8,int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80, 1)
+    r = harness.call(app, "g(int8,int8)", -128, 1)
     assert as_int(r.abi_return) in (-128, 115792089237316195423570985008687907853269984665640564039457584007913129639808)
     # g(int8,int8): -128, -2 -> 64
-    r = harness.call(app, "g(int8,int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe)
+    r = harness.call(app, "g(int8,int8)", -128, -2)
     assert as_int(r.abi_return) == 64
     # g(int8,int8): -128, 2 -> -64
-    r = harness.call(app, "g(int8,int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80, 2)
+    r = harness.call(app, "g(int8,int8)", -128, 2)
     assert as_int(r.abi_return) in (-64, 115792089237316195423570985008687907853269984665640564039457584007913129639872)
     # g(int8,int8): -128, -1 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "g(int8,int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, expect_revert=True)
+    r = harness.call(app, "g(int8,int8)", -128, -1, expect_revert=True)
     assert r.reverted
     # g(int8,int8): -127, -1 -> 127
-    r = harness.call(app, "g(int8,int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff81, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
+    r = harness.call(app, "g(int8,int8)", -127, -1)
     assert as_int(r.abi_return) == 127
     # h(uint256,uint256): 0x8000000000000000000000000000000000000000000000000000000000000000, -1 -> 0
     r = harness.call(app, "h(uint256,uint256)", 0x8000000000000000000000000000000000000000000000000000000000000000, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
@@ -440,13 +441,13 @@ def test_detect_mod_zero_signed(harness):
     r = harness.call(app, "g(int8,int8)", 11, 2)
     assert as_int(r.abi_return) == 1
     # g(int8,int8): -10, 3 -> -1
-    r = harness.call(app, "g(int8,int8)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff6, 3)
+    r = harness.call(app, "g(int8,int8)", -10, 3)
     assert as_int(r.abi_return) in (-1, 115792089237316195423570985008687907853269984665640564039457584007913129639935)
     # g(int8,int8): 10, -3 -> 1
-    r = harness.call(app, "g(int8,int8)", 10, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd)
+    r = harness.call(app, "g(int8,int8)", 10, -3)
     assert as_int(r.abi_return) == 1
     # g(int8,int8): -10, -3 -> -1
-    r = harness.call(app, "g(int8,int8)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff6, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd)
+    r = harness.call(app, "g(int8,int8)", -10, -3)
     assert as_int(r.abi_return) in (-1, 115792089237316195423570985008687907853269984665640564039457584007913129639935)
     # g(int8,int8): 2, 2 -> 0
     r = harness.call(app, "g(int8,int8)", 2, 2)
@@ -455,7 +456,7 @@ def test_detect_mod_zero_signed(harness):
     r = harness.call(app, "g(int8,int8)", 1, 0, expect_revert=True)
     assert r.reverted
     # g(int8,int8): -1, 0 -> FAILURE, hex"4e487b71", 0x12
-    r = harness.call(app, "g(int8,int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 0, expect_revert=True)
+    r = harness.call(app, "g(int8,int8)", -1, 0, expect_revert=True)
     assert r.reverted
     # g(int8,int8): 0, 0 -> FAILURE, hex"4e487b71", 0x12
     r = harness.call(app, "g(int8,int8)", 0, 0, expect_revert=True)
@@ -464,13 +465,13 @@ def test_detect_mod_zero_signed(harness):
     r = harness.call(app, "g(int8,int8)", 0, 1)
     assert as_int(r.abi_return) == 0
     # g(int8,int8): 0, -1 -> 0
-    r = harness.call(app, "g(int8,int8)", 0, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
+    r = harness.call(app, "g(int8,int8)", 0, -1)
     assert as_int(r.abi_return) == 0
     # g(int8,int8): -128, -128 -> 0
-    r = harness.call(app, "g(int8,int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80)
+    r = harness.call(app, "g(int8,int8)", -128, -128)
     assert as_int(r.abi_return) == 0
     # g(int8,int8): -128, 127 -> -1
-    r = harness.call(app, "g(int8,int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80, 127)
+    r = harness.call(app, "g(int8,int8)", -128, 127)
     assert as_int(r.abi_return) in (-1, 115792089237316195423570985008687907853269984665640564039457584007913129639935)
 
 def test_detect_mul_overflow(harness):
@@ -653,10 +654,10 @@ def test_detect_mul_overflow_signed(harness):
     r = harness.call(app, "g(int8,int8)", 5, 6)
     assert as_int(r.abi_return) == 30
     # g(int8,int8): -1, 1 -> -1
-    r = harness.call(app, "g(int8,int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 1)
+    r = harness.call(app, "g(int8,int8)", -1, 1)
     assert as_int(r.abi_return) in (-1, 115792089237316195423570985008687907853269984665640564039457584007913129639935)
     # g(int8,int8): -1, 2 -> -2 # positive, positive #
-    r = harness.call(app, "g(int8,int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 2)
+    r = harness.call(app, "g(int8,int8)", -1, 2)
     # TODO: verify expected: -2 # positive | positive #
     assert not r.reverted
     # g(int8,int8): 63, 2 -> 126
@@ -678,85 +679,85 @@ def test_detect_mul_overflow_signed(harness):
     r = harness.call(app, "g(int8,int8)", 2, 64, expect_revert=True)
     assert r.reverted
     # g(int8,int8): 64, -2 -> -128
-    r = harness.call(app, "g(int8,int8)", 64, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe)
+    r = harness.call(app, "g(int8,int8)", 64, -2)
     assert as_int(r.abi_return) in (-128, 115792089237316195423570985008687907853269984665640564039457584007913129639808)
     # g(int8,int8): 65, -2 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "g(int8,int8)", 65, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, expect_revert=True)
+    r = harness.call(app, "g(int8,int8)", 65, -2, expect_revert=True)
     assert r.reverted
     # g(int8,int8): 2, -64 -> -128
-    r = harness.call(app, "g(int8,int8)", 2, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc0)
+    r = harness.call(app, "g(int8,int8)", 2, -64)
     assert as_int(r.abi_return) in (-128, 115792089237316195423570985008687907853269984665640564039457584007913129639808)
     # g(int8,int8): 2, -65 -> FAILURE, hex"4e487b71", 0x11 # negative, positive #
-    r = harness.call(app, "g(int8,int8)", 2, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbf, expect_revert=True)
+    r = harness.call(app, "g(int8,int8)", 2, -65, expect_revert=True)
     assert r.reverted
     # g(int8,int8): 2, -65 -> FAILURE, hex"4e487b71", 0x11 # negative, positive #
-    r = harness.call(app, "g(int8,int8)", 2, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbf, expect_revert=True)
+    r = harness.call(app, "g(int8,int8)", 2, -65, expect_revert=True)
     assert r.reverted
     # g(int8,int8): 2, -65 -> FAILURE, hex"4e487b71", 0x11 # negative, positive #
-    r = harness.call(app, "g(int8,int8)", 2, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbf, expect_revert=True)
+    r = harness.call(app, "g(int8,int8)", 2, -65, expect_revert=True)
     assert r.reverted
     # g(int8,int8): -2, 64 -> -128
-    r = harness.call(app, "g(int8,int8)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 64)
+    r = harness.call(app, "g(int8,int8)", -2, 64)
     assert as_int(r.abi_return) in (-128, 115792089237316195423570985008687907853269984665640564039457584007913129639808)
     # g(int8,int8): -2, 65 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "g(int8,int8)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 65, expect_revert=True)
+    r = harness.call(app, "g(int8,int8)", -2, 65, expect_revert=True)
     assert r.reverted
     # g(int8,int8): -64, 2 -> -128
-    r = harness.call(app, "g(int8,int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc0, 2)
+    r = harness.call(app, "g(int8,int8)", -64, 2)
     assert as_int(r.abi_return) in (-128, 115792089237316195423570985008687907853269984665640564039457584007913129639808)
     # g(int8,int8): -65, 2 -> FAILURE, hex"4e487b71", 0x11 # negative, negative #
-    r = harness.call(app, "g(int8,int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbf, 2, expect_revert=True)
+    r = harness.call(app, "g(int8,int8)", -65, 2, expect_revert=True)
     assert r.reverted
     # g(int8,int8): -65, 2 -> FAILURE, hex"4e487b71", 0x11 # negative, negative #
-    r = harness.call(app, "g(int8,int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbf, 2, expect_revert=True)
+    r = harness.call(app, "g(int8,int8)", -65, 2, expect_revert=True)
     assert r.reverted
     # g(int8,int8): -65, 2 -> FAILURE, hex"4e487b71", 0x11 # negative, negative #
-    r = harness.call(app, "g(int8,int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbf, 2, expect_revert=True)
+    r = harness.call(app, "g(int8,int8)", -65, 2, expect_revert=True)
     assert r.reverted
     # g(int8,int8): -63, -2 -> 126
-    r = harness.call(app, "g(int8,int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc1, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe)
+    r = harness.call(app, "g(int8,int8)", -63, -2)
     assert as_int(r.abi_return) == 126
     # g(int8,int8): -64, -2 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "g(int8,int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc0, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, expect_revert=True)
+    r = harness.call(app, "g(int8,int8)", -64, -2, expect_revert=True)
     assert r.reverted
     # g(int8,int8): -2, -63 -> 126
-    r = harness.call(app, "g(int8,int8)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc1)
+    r = harness.call(app, "g(int8,int8)", -2, -63)
     assert as_int(r.abi_return) == 126
     # g(int8,int8): -2, -64 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "g(int8,int8)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc0, expect_revert=True)
+    r = harness.call(app, "g(int8,int8)", -2, -64, expect_revert=True)
     assert r.reverted
     # h(int160,int160): -1, 1 -> -1
-    r = harness.call(app, "h(int160,int160)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 1)
+    r = harness.call(app, "h(int160,int160)", -1, 1)
     assert as_int(r.abi_return) in (-1, 115792089237316195423570985008687907853269984665640564039457584007913129639935)
     # h(int160,int160): 1, -1 -> -1
-    r = harness.call(app, "h(int160,int160)", 1, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
+    r = harness.call(app, "h(int160,int160)", 1, -1)
     assert as_int(r.abi_return) in (-1, 115792089237316195423570985008687907853269984665640564039457584007913129639935)
     # h(int160,int160): -1, 2 -> -2
-    r = harness.call(app, "h(int160,int160)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 2)
+    r = harness.call(app, "h(int160,int160)", -1, 2)
     assert as_int(r.abi_return) in (-2, 115792089237316195423570985008687907853269984665640564039457584007913129639934)
     # h(int160,int160): 2, -1 -> -2
-    r = harness.call(app, "h(int160,int160)", 2, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
+    r = harness.call(app, "h(int160,int160)", 2, -1)
     assert as_int(r.abi_return) in (-2, 115792089237316195423570985008687907853269984665640564039457584007913129639934)
     # h(int160,int160): -1, 0xFFFFFFFFFFFFFFFFFFFFFFFF8000000000000000000000000000000000000000 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "h(int160,int160)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffff8000000000000000000000000000000000000000, expect_revert=True)
+    r = harness.call(app, "h(int160,int160)", -1, -730750818665451459101842416358141509827966271488, expect_revert=True)
     assert r.reverted
     # h(int160,int160): -1, 0xFFFFFFFFFFFFFFFFFFFFFFFF8000000000000000000000000000000000000000 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "h(int160,int160)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffff8000000000000000000000000000000000000000, expect_revert=True)
+    r = harness.call(app, "h(int160,int160)", -1, -730750818665451459101842416358141509827966271488, expect_revert=True)
     assert r.reverted
     # h(int160,int160): 0xFFFFFFFFFFFFFFFFFFFFFFFF8000000000000000000000000000000000000000, -1 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "h(int160,int160)", 0xffffffffffffffffffffffff8000000000000000000000000000000000000000, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, expect_revert=True)
+    r = harness.call(app, "h(int160,int160)", -730750818665451459101842416358141509827966271488, -1, expect_revert=True)
     assert r.reverted
     # h(int160,int160): 0x0000000000000000000000004000000000000000000000000000000000000000, -2 -> 0xFFFFFFFFFFFFFFFFFFFFFFFF8000000000000000000000000000000000000000
-    r = harness.call(app, "h(int160,int160)", 0x4000000000000000000000000000000000000000, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe)
+    r = harness.call(app, "h(int160,int160)", 0x4000000000000000000000000000000000000000, -2)
     assert as_int(r.abi_return) == 115792089237316195423570985007957157034604533206538721623099442498085163368448
     # h(int160,int160): -2, 0x0000000000000000000000004000000000000000000000000000000000000000 -> 0xFFFFFFFFFFFFFFFFFFFFFFFF8000000000000000000000000000000000000000
-    r = harness.call(app, "h(int160,int160)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0x4000000000000000000000000000000000000000)
+    r = harness.call(app, "h(int160,int160)", -2, 0x4000000000000000000000000000000000000000)
     assert as_int(r.abi_return) == 115792089237316195423570985007957157034604533206538721623099442498085163368448
     # h(int160,int160): -2, 0x0000000000000000000000004000000000000000000000000000000000000001 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "h(int160,int160)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0x4000000000000000000000000000000000000001, expect_revert=True)
+    r = harness.call(app, "h(int160,int160)", -2, 0x4000000000000000000000000000000000000001, expect_revert=True)
     assert r.reverted
     # h(int160,int160): 0x0000000000000000000000004000000000000000000000000000000000000001, -2 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "h(int160,int160)", 0x4000000000000000000000000000000000000001, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, expect_revert=True)
+    r = harness.call(app, "h(int160,int160)", 0x4000000000000000000000000000000000000001, -2, expect_revert=True)
     assert r.reverted
     # h(int160,int160): 0x0000000000000000000000004000000000000000000000000000000000000001, 2 -> FAILURE, hex"4e487b71", 0x11
     r = harness.call(app, "h(int160,int160)", 0x4000000000000000000000000000000000000001, 2, expect_revert=True)
@@ -851,43 +852,43 @@ def test_detect_sub_overflow_signed(harness):
     r = harness.call(app, "g(int8,int8)", 5, 6)
     assert as_int(r.abi_return) in (-1, 115792089237316195423570985008687907853269984665640564039457584007913129639935)
     # g(int8,int8): -2, 1 -> -3
-    r = harness.call(app, "g(int8,int8)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 1)
+    r = harness.call(app, "g(int8,int8)", -2, 1)
     assert as_int(r.abi_return) in (-3, 115792089237316195423570985008687907853269984665640564039457584007913129639933)
     # g(int8,int8): -2, 2 -> -4
-    r = harness.call(app, "g(int8,int8)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 2)
+    r = harness.call(app, "g(int8,int8)", -2, 2)
     assert as_int(r.abi_return) in (-4, 115792089237316195423570985008687907853269984665640564039457584007913129639932)
     # g(int8,int8): 2, -2 -> 4
-    r = harness.call(app, "g(int8,int8)", 2, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe)
+    r = harness.call(app, "g(int8,int8)", 2, -2)
     assert as_int(r.abi_return) == 4
     # g(int8,int8): 2, 2 -> 0
     r = harness.call(app, "g(int8,int8)", 2, 2)
     assert as_int(r.abi_return) == 0
     # g(int8,int8): -5, -6 -> 1
-    r = harness.call(app, "g(int8,int8)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffa)
+    r = harness.call(app, "g(int8,int8)", -5, -6)
     assert as_int(r.abi_return) == 1
     # g(int8,int8): 126, -1 -> 127
-    r = harness.call(app, "g(int8,int8)", 126, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
+    r = harness.call(app, "g(int8,int8)", 126, -1)
     assert as_int(r.abi_return) == 127
     # g(int8,int8): 1, -126 -> 127
-    r = harness.call(app, "g(int8,int8)", 1, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff82)
+    r = harness.call(app, "g(int8,int8)", 1, -126)
     assert as_int(r.abi_return) == 127
     # g(int8,int8): 127, -1 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "g(int8,int8)", 127, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, expect_revert=True)
+    r = harness.call(app, "g(int8,int8)", 127, -1, expect_revert=True)
     assert r.reverted
     # g(int8,int8): 1, -127 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "g(int8,int8)", 1, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff81, expect_revert=True)
+    r = harness.call(app, "g(int8,int8)", 1, -127, expect_revert=True)
     assert r.reverted
     # g(int8,int8): -127, 1 -> -128
-    r = harness.call(app, "g(int8,int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff81, 1)
+    r = harness.call(app, "g(int8,int8)", -127, 1)
     assert as_int(r.abi_return) in (-128, 115792089237316195423570985008687907853269984665640564039457584007913129639808)
     # g(int8,int8): -1, 127 -> -128
-    r = harness.call(app, "g(int8,int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 127)
+    r = harness.call(app, "g(int8,int8)", -1, 127)
     assert as_int(r.abi_return) in (-128, 115792089237316195423570985008687907853269984665640564039457584007913129639808)
     # g(int8,int8): -127, 2 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "g(int8,int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff81, 2, expect_revert=True)
+    r = harness.call(app, "g(int8,int8)", -127, 2, expect_revert=True)
     assert r.reverted
     # g(int8,int8): -2, 127 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "g(int8,int8)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 127, expect_revert=True)
+    r = harness.call(app, "g(int8,int8)", -2, 127, expect_revert=True)
     assert r.reverted
 
 def test_dirty_calldata_struct(harness):
@@ -1148,13 +1149,13 @@ def test_exp_neg_overflow(harness):
     r = harness.call(app, "f(int8,uint256)", 2, 8, expect_revert=True)
     assert r.reverted
     # f(int8,uint256): -2, 6 -> 64
-    r = harness.call(app, "f(int8,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 6)
+    r = harness.call(app, "f(int8,uint256)", -2, 6)
     assert as_int(r.abi_return) == 64
     # f(int8,uint256): -2, 7 -> -128
-    r = harness.call(app, "f(int8,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 7)
+    r = harness.call(app, "f(int8,uint256)", -2, 7)
     assert as_int(r.abi_return) in (-128, 115792089237316195423570985008687907853269984665640564039457584007913129639808)
     # f(int8,uint256): -2, 8 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "f(int8,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 8, expect_revert=True)
+    r = harness.call(app, "f(int8,uint256)", -2, 8, expect_revert=True)
     assert r.reverted
     # f(int8,uint256): 6, 3 -> FAILURE, hex"4e487b71", 0x11
     r = harness.call(app, "f(int8,uint256)", 6, 3, expect_revert=True)
@@ -1166,13 +1167,13 @@ def test_exp_neg_overflow(harness):
     r = harness.call(app, "f(int8,uint256)", 7, 3, expect_revert=True)
     assert r.reverted
     # f(int8,uint256): -7, 2 -> 0x31
-    r = harness.call(app, "f(int8,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff9, 2)
+    r = harness.call(app, "f(int8,uint256)", -7, 2)
     assert as_int(r.abi_return) == 49
     # f(int8,uint256): -7, 3 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "f(int8,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff9, 3, expect_revert=True)
+    r = harness.call(app, "f(int8,uint256)", -7, 3, expect_revert=True)
     assert r.reverted
     # f(int8,uint256): -7, 4 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "f(int8,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff9, 4, expect_revert=True)
+    r = harness.call(app, "f(int8,uint256)", -7, 4, expect_revert=True)
     assert r.reverted
     # f(int8,uint256): 127, 31 -> FAILURE, hex"4e487b71", 0x11
     r = harness.call(app, "f(int8,uint256)", 127, 31, expect_revert=True)
@@ -1181,31 +1182,31 @@ def test_exp_neg_overflow(harness):
     r = harness.call(app, "f(int8,uint256)", 127, 131, expect_revert=True)
     assert r.reverted
     # f(int8,uint256): -128, 0 -> 1
-    r = harness.call(app, "f(int8,uint256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80, 0)
+    r = harness.call(app, "f(int8,uint256)", -128, 0)
     assert as_int(r.abi_return) == 1
     # f(int8,uint256): -128, 1 -> -128
-    r = harness.call(app, "f(int8,uint256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80, 1)
+    r = harness.call(app, "f(int8,uint256)", -128, 1)
     assert as_int(r.abi_return) in (-128, 115792089237316195423570985008687907853269984665640564039457584007913129639808)
     # f(int8,uint256): -128, 31 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "f(int8,uint256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80, 31, expect_revert=True)
+    r = harness.call(app, "f(int8,uint256)", -128, 31, expect_revert=True)
     assert r.reverted
     # f(int8,uint256): -128, 131 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "f(int8,uint256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80, 131, expect_revert=True)
+    r = harness.call(app, "f(int8,uint256)", -128, 131, expect_revert=True)
     assert r.reverted
     # f(int8,uint256): -11, 2 -> 121
-    r = harness.call(app, "f(int8,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff5, 2)
+    r = harness.call(app, "f(int8,uint256)", -11, 2)
     assert as_int(r.abi_return) == 121
     # f(int8,uint256): -12, 2 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "f(int8,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff4, 2, expect_revert=True)
+    r = harness.call(app, "f(int8,uint256)", -12, 2, expect_revert=True)
     assert r.reverted
     # f(int8,uint256): 12, 2 -> FAILURE, hex"4e487b71", 0x11
     r = harness.call(app, "f(int8,uint256)", 12, 2, expect_revert=True)
     assert r.reverted
     # f(int8,uint256): -5, 3 -> -125
-    r = harness.call(app, "f(int8,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb, 3)
+    r = harness.call(app, "f(int8,uint256)", -5, 3)
     assert as_int(r.abi_return) in (-125, 115792089237316195423570985008687907853269984665640564039457584007913129639811)
     # f(int8,uint256): -6, 3 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "f(int8,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffa, 3, expect_revert=True)
+    r = harness.call(app, "f(int8,uint256)", -6, 3, expect_revert=True)
     assert r.reverted
     # g(int256,uint256): -7, 90 -> 11450477594321044359340126713545146077054004823284978858214566372120240027249
     r = harness.call(app, "g(int256,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff9, 90)
@@ -1549,7 +1550,7 @@ def test_local_address_assignment(harness):
     """viaYul/contracts/local_address_assignment.sol"""
     app = harness.compile_and_deploy("viaYul/contracts/local_address_assignment.sol")
     # f(address): 0x1234 -> 0x1234
-    r = harness.call(app, "f(address)", 4660)
+    r = harness.call(app, "f(address)", encoding.encode_address((4660).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 4660
 
 def test_local_assignment(harness):
@@ -1994,28 +1995,28 @@ def test_unary_operations(harness):
     r = harness.call(app, "postincr_s8(int8)", 126)
     assert tuple(as_int(x) for x in r.abi_return) == (126, 127)
     # predecr_s8(int8): -128 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "predecr_s8(int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80, expect_revert=True)
+    r = harness.call(app, "predecr_s8(int8)", -128, expect_revert=True)
     assert r.reverted
     # postdecr_s8(int8): -128 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "postdecr_s8(int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80, expect_revert=True)
+    r = harness.call(app, "postdecr_s8(int8)", -128, expect_revert=True)
     assert r.reverted
     # predecr_s8(int8): -127 -> -128, -128
-    r = harness.call(app, "predecr_s8(int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff81)
+    r = harness.call(app, "predecr_s8(int8)", -127)
     assert tuple(as_int(x) for x in r.abi_return) == (-128, -128)
     # postdecr_s8(int8): -127 -> -127, -128
-    r = harness.call(app, "postdecr_s8(int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff81)
+    r = harness.call(app, "postdecr_s8(int8)", -127)
     assert tuple(as_int(x) for x in r.abi_return) == (-127, -128)
     # preincr_s8(int8): -5 -> -4, -4
-    r = harness.call(app, "preincr_s8(int8)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb)
+    r = harness.call(app, "preincr_s8(int8)", -5)
     assert tuple(as_int(x) for x in r.abi_return) == (-4, -4)
     # postincr_s8(int8): -5 -> -5, -4
-    r = harness.call(app, "postincr_s8(int8)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb)
+    r = harness.call(app, "postincr_s8(int8)", -5)
     assert tuple(as_int(x) for x in r.abi_return) == (-5, -4)
     # predecr_s8(int8): -5 -> -6, -6
-    r = harness.call(app, "predecr_s8(int8)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb)
+    r = harness.call(app, "predecr_s8(int8)", -5)
     assert tuple(as_int(x) for x in r.abi_return) == (-6, -6)
     # postdecr_s8(int8): -5 -> -5, -6
-    r = harness.call(app, "postdecr_s8(int8)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb)
+    r = harness.call(app, "postdecr_s8(int8)", -5)
     assert tuple(as_int(x) for x in r.abi_return) == (-5, -6)
     # preincr_u8(uint8): 255 -> FAILURE, hex"4e487b71", 0x11
     r = harness.call(app, "preincr_u8(uint8)", 255, expect_revert=True)
@@ -2105,22 +2106,22 @@ def test_unary_operations(harness):
     r = harness.call(app, "negate(int256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
     assert as_int(r.abi_return) == 1
     # negate_s8(int8): -128 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "negate_s8(int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80, expect_revert=True)
+    r = harness.call(app, "negate_s8(int8)", -128, expect_revert=True)
     assert r.reverted
     # negate_s8(int8): -138 -> FAILURE
-    r = harness.call(app, "negate_s8(int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff76, expect_revert=True)
+    r = harness.call(app, "negate_s8(int8)", -138, expect_revert=True)
     assert r.reverted
     # negate_s8(int8): -127 -> 127
-    r = harness.call(app, "negate_s8(int8)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff81)
+    r = harness.call(app, "negate_s8(int8)", -127)
     assert as_int(r.abi_return) == 127
     # negate_s8(int8): 127 -> -127
     r = harness.call(app, "negate_s8(int8)", 127)
     assert as_int(r.abi_return) in (-127, 115792089237316195423570985008687907853269984665640564039457584007913129639809)
     # negate_s16(int16): -32768 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "negate_s16(int16)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8000, expect_revert=True)
+    r = harness.call(app, "negate_s16(int16)", -32768, expect_revert=True)
     assert r.reverted
     # negate_s16(int16): -32767 -> 32767
-    r = harness.call(app, "negate_s16(int16)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8001)
+    r = harness.call(app, "negate_s16(int16)", -32767)
     assert as_int(r.abi_return) == 32767
 
 def test_various_inline_asm(harness):

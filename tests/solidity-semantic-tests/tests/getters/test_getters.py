@@ -199,31 +199,19 @@ def test_transient_value_types_multi_frame_call(harness):
 
 def test_value_types(harness):
     """getters/contracts/value_types.sol"""
+    from algosdk import encoding
     app = harness.compile_and_deploy("getters/contracts/value_types.sol")
-    # a() -> 3
-    r = harness.call(app, "a()")
-    assert as_int(r.abi_return) == 3
-    # b() -> 4
-    r = harness.call(app, "b()")
-    assert as_int(r.abi_return) == 4
-    # c() -> 5
-    r = harness.call(app, "c()")
-    assert as_int(r.abi_return) == 5
-    # d() -> 6
-    r = harness.call(app, "d()")
-    assert as_int(r.abi_return) == 6
-    # e() -> 0x7f00000000000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "e()")
-    assert as_int(r.abi_return) == 57443731770074831323412168344153766786583156455220123566449660816425654157312
-    # f() -> 0x6465616462656566313564656164000000000010000000000000000000000000
-    r = harness.call(app, "f()")
-    assert as_int(r.abi_return) == 45410408587621877570176092079161104025617164191141970807559803119332539498496
-    # g() -> 0x6465616462656566313564656164000000000000000000000000000000000010
-    r = harness.call(app, "g()")
-    assert as_int(r.abi_return) == 45410408587621877570176092079161104025617164189874320207331573717835836293136
-    # h() -> true
-    r = harness.call(app, "h()")
-    assert bool(as_int(r.abi_return)) is True
-    # i() -> 0x5555555555555555555555555555555555555555
-    r = harness.call(app, "i()")
-    assert as_int(r.abi_return) == 487167212443634306067894944238761006551977514325
+    assert as_int(harness.call(app, "a()").abi_return) == 3
+    assert as_int(harness.call(app, "b()").abi_return) == 4
+    assert as_int(harness.call(app, "c()").abi_return) == 5
+    assert as_int(harness.call(app, "d()").abi_return) == 6
+    # Fixed-byte getters: bytes1 / bytes20 / bytes32 return their raw bytes.
+    assert bytes(harness.call(app, "e()").abi_return) == b"\x7f"
+    assert bytes(harness.call(app, "f()").abi_return) == bytes.fromhex("6465616462656566313564656164000000000010")
+    assert bytes(harness.call(app, "g()").abi_return) == bytes.fromhex("6465616462656566313564656164000000000000000000000000000000000010")
+    assert harness.call(app, "h()").abi_return is True
+    # `i` is an `address` — algosdk returns it as a 58-char algorand address;
+    # decode to compare against the 20-byte EVM value (zero-padded to 32 by AVM).
+    addr_str = harness.call(app, "i()").abi_return
+    raw = encoding.decode_address(addr_str)
+    assert int.from_bytes(raw, "big") == 0x5555555555555555555555555555555555555555

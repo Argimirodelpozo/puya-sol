@@ -1,6 +1,7 @@
 """Tests for the inlineAssembly category."""
 import pytest
 
+from algosdk import encoding
 from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
     as_int, as_bytes,
@@ -228,10 +229,10 @@ def test_external_function_pointer_address_assignment(harness):
     """inlineAssembly/contracts/external_function_pointer_address_assignment.sol"""
     app = harness.compile_and_deploy("inlineAssembly/contracts/external_function_pointer_address_assignment.sol")
     # testYul(address): 0x1234567890 -> 0x1234567890
-    r = harness.call(app, "testYul(address)", 0x1234567890)
+    r = harness.call(app, "testYul(address)", encoding.encode_address((78187493520).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 78187493520
     # testYul(address): 0xC0FFEE3EA7 -> 0xC0FFEE3EA7
-    r = harness.call(app, "testYul(address)", 0xc0ffee3ea7)
+    r = harness.call(app, "testYul(address)", encoding.encode_address((828927524519).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 828927524519
 
 def test_external_function_pointer_selector(harness):

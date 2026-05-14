@@ -1,6 +1,7 @@
 """Tests for the userDefinedValueType category."""
 import pytest
 
+from algosdk import encoding
 from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
     as_int, as_bytes,
@@ -379,19 +380,19 @@ def test_erc20(harness):
     r = harness.call(app, "totalSupply()")
     assert as_int(r.abi_return) == 20
     # transfer(address,uint256): 2, 5 -> true
-    r = harness.call(app, "transfer(address,uint256)", 2, 5)
+    r = harness.call(app, "transfer(address,uint256)", encoding.encode_address((2).to_bytes(32, "big")), 5)
     assert bool(as_int(r.abi_return)) is True
     # decreaseAllowance(address,uint256): 2, 0 -> true
-    r = harness.call(app, "decreaseAllowance(address,uint256)", 2, 0)
+    r = harness.call(app, "decreaseAllowance(address,uint256)", encoding.encode_address((2).to_bytes(32, "big")), 0)
     assert bool(as_int(r.abi_return)) is True
     # decreaseAllowance(address,uint256): 2, 1 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "decreaseAllowance(address,uint256)", 2, 1, expect_revert=True)
+    r = harness.call(app, "decreaseAllowance(address,uint256)", encoding.encode_address((2).to_bytes(32, "big")), 1, expect_revert=True)
     assert r.reverted
     # transfer(address,uint256): 2, 14 -> true
-    r = harness.call(app, "transfer(address,uint256)", 2, 14)
+    r = harness.call(app, "transfer(address,uint256)", encoding.encode_address((2).to_bytes(32, "big")), 14)
     assert bool(as_int(r.abi_return)) is True
     # transfer(address,uint256): 2, 2 -> FAILURE, hex"4e487b71", 0x11
-    r = harness.call(app, "transfer(address,uint256)", 2, 2, expect_revert=True)
+    r = harness.call(app, "transfer(address,uint256)", encoding.encode_address((2).to_bytes(32, "big")), 2, expect_revert=True)
     assert r.reverted
 
 def test_fixedpoint(harness):
@@ -507,7 +508,7 @@ def test_multisource(harness):
     r = harness.call(app, "f(int256)", 5)
     assert as_int(r.abi_return) == 5
     # f(address): 1 -> 1
-    r = harness.call(app, "f(address)", 1)
+    r = harness.call(app, "f(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 1
 
 def test_multisource_module(harness):
@@ -530,56 +531,56 @@ def test_ownable(harness):
     r = harness.call(app, "owner()")
     assert as_int(r.abi_return) == 0
     # setOwner(address): 0x1212121212121212121212121212120000000012 -> FAILURE, hex"5fc483c5"
-    r = harness.call(app, "setOwner(address)", 0x1212121212121212121212121212120000000012, expect_revert=True)
+    r = harness.call(app, "setOwner(address)", encoding.encode_address((103164821458651970696730694074090566015747358738).to_bytes(32, "big")), expect_revert=True)
     assert r.reverted
 
 def test_parameter(harness):
     """userDefinedValueType/contracts/parameter.sol"""
     app = harness.compile_and_deploy("userDefinedValueType/contracts/parameter.sol")
     # id(address): 5 -> 5
-    r = harness.call(app, "id(address)", 5)
+    r = harness.call(app, "id(address)", encoding.encode_address((5).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 5
     # id(address): 0xffffffffffffffffffffffffffffffffffffffff -> 0xffffffffffffffffffffffffffffffffffffffff
-    r = harness.call(app, "id(address)", 0xffffffffffffffffffffffffffffffffffffffff)
+    r = harness.call(app, "id(address)", encoding.encode_address((1461501637330902918203684832716283019655932542975).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 1461501637330902918203684832716283019655932542975
     # id(address): 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff -> FAILURE
-    r = harness.call(app, "id(address)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, expect_revert=True)
+    r = harness.call(app, "id(address)", encoding.encode_address((115792089237316195423570985008687907853269984665640564039457584007913129639935).to_bytes(32, "big")), expect_revert=True)
     assert r.reverted
     # unwrap(address): 5 -> 5
-    r = harness.call(app, "unwrap(address)", 5)
+    r = harness.call(app, "unwrap(address)", encoding.encode_address((5).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 5
     # unwrap(address): 0xffffffffffffffffffffffffffffffffffffffff -> 0xffffffffffffffffffffffffffffffffffffffff
-    r = harness.call(app, "unwrap(address)", 0xffffffffffffffffffffffffffffffffffffffff)
+    r = harness.call(app, "unwrap(address)", encoding.encode_address((1461501637330902918203684832716283019655932542975).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 1461501637330902918203684832716283019655932542975
     # unwrap(address): 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff -> FAILURE
-    r = harness.call(app, "unwrap(address)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, expect_revert=True)
+    r = harness.call(app, "unwrap(address)", encoding.encode_address((115792089237316195423570985008687907853269984665640564039457584007913129639935).to_bytes(32, "big")), expect_revert=True)
     assert r.reverted
     # wrap(address): 5 -> 5
-    r = harness.call(app, "wrap(address)", 5)
+    r = harness.call(app, "wrap(address)", encoding.encode_address((5).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 5
     # wrap(address): 0xffffffffffffffffffffffffffffffffffffffff -> 0xffffffffffffffffffffffffffffffffffffffff
-    r = harness.call(app, "wrap(address)", 0xffffffffffffffffffffffffffffffffffffffff)
+    r = harness.call(app, "wrap(address)", encoding.encode_address((1461501637330902918203684832716283019655932542975).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 1461501637330902918203684832716283019655932542975
     # wrap(address): 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff -> FAILURE
-    r = harness.call(app, "wrap(address)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, expect_revert=True)
+    r = harness.call(app, "wrap(address)", encoding.encode_address((115792089237316195423570985008687907853269984665640564039457584007913129639935).to_bytes(32, "big")), expect_revert=True)
     assert r.reverted
     # unwrap_assembly(address): 5 -> 5
-    r = harness.call(app, "unwrap_assembly(address)", 5)
+    r = harness.call(app, "unwrap_assembly(address)", encoding.encode_address((5).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 5
     # unwrap_assembly(address): 0xffffffffffffffffffffffffffffffffffffffff -> 0xffffffffffffffffffffffffffffffffffffffff
-    r = harness.call(app, "unwrap_assembly(address)", 0xffffffffffffffffffffffffffffffffffffffff)
+    r = harness.call(app, "unwrap_assembly(address)", encoding.encode_address((1461501637330902918203684832716283019655932542975).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 1461501637330902918203684832716283019655932542975
     # unwrap_assembly(address): 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff -> FAILURE
-    r = harness.call(app, "unwrap_assembly(address)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, expect_revert=True)
+    r = harness.call(app, "unwrap_assembly(address)", encoding.encode_address((115792089237316195423570985008687907853269984665640564039457584007913129639935).to_bytes(32, "big")), expect_revert=True)
     assert r.reverted
     # wrap_assembly(address): 5 -> 5
-    r = harness.call(app, "wrap_assembly(address)", 5)
+    r = harness.call(app, "wrap_assembly(address)", encoding.encode_address((5).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 5
     # wrap_assembly(address): 0xffffffffffffffffffffffffffffffffffffffff -> 0xffffffffffffffffffffffffffffffffffffffff
-    r = harness.call(app, "wrap_assembly(address)", 0xffffffffffffffffffffffffffffffffffffffff)
+    r = harness.call(app, "wrap_assembly(address)", encoding.encode_address((1461501637330902918203684832716283019655932542975).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 1461501637330902918203684832716283019655932542975
     # wrap_assembly(address): 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff -> FAILURE
-    r = harness.call(app, "wrap_assembly(address)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, expect_revert=True)
+    r = harness.call(app, "wrap_assembly(address)", encoding.encode_address((115792089237316195423570985008687907853269984665640564039457584007913129639935).to_bytes(32, "big")), expect_revert=True)
     assert r.reverted
 
 def test_simple(harness):
@@ -678,7 +679,7 @@ def test_storage_layout_struct(harness):
     r = harness.call(app, "storage_d()")
     assert tuple(as_int(x) for x in r.abi_return) == (6, 0)
     # set_d(int96,address): 39614081257132168796771975167, 1461501637330902918203684832716283019655932542975 ->
-    r = harness.call(app, "set_d(int96,address)", 0x7fffffffffffffffffffffff, 0xffffffffffffffffffffffffffffffffffffffff)
+    r = harness.call(app, "set_d(int96,address)", 0x7fffffffffffffffffffffff, encoding.encode_address((1461501637330902918203684832716283019655932542975).to_bytes(32, "big")))
     # (void return — call succeeding is the assertion)
     # read_slot(uint256): 6 -> -39614081257132168796771975169
     r = harness.call(app, "read_slot(uint256)", 6)
@@ -687,7 +688,7 @@ def test_storage_layout_struct(harness):
     r = harness.call(app, "storage_rd()")
     assert tuple(as_int(x) for x in r.abi_return) == (7, 0)
     # set_rd(int96,address): 39614081257132168796771975167, 1461501637330902918203684832716283019655932542975 ->
-    r = harness.call(app, "set_rd(int96,address)", 0x7fffffffffffffffffffffff, 0xffffffffffffffffffffffffffffffffffffffff)
+    r = harness.call(app, "set_rd(int96,address)", 0x7fffffffffffffffffffffff, encoding.encode_address((1461501637330902918203684832716283019655932542975).to_bytes(32, "big")))
     # (void return — call succeeding is the assertion)
     # read_slot(uint256): 7 -> -39614081257132168796771975169
     r = harness.call(app, "read_slot(uint256)", 7)

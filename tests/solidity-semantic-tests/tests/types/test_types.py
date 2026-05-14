@@ -1,6 +1,7 @@
 """Tests for the types category."""
 import pytest
 
+from algosdk import encoding
 from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
     as_int, as_bytes,
@@ -136,183 +137,183 @@ def test_mapping_contract_key(harness):
     """types/contracts/mapping_contract_key.sol"""
     app = harness.compile_and_deploy("types/contracts/mapping_contract_key.sol")
     # get(address): 0 -> 0
-    r = harness.call(app, "get(address)", 0)
+    r = harness.call(app, "get(address)", encoding.encode_address((0).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # get(address): 0x01 -> 0
-    r = harness.call(app, "get(address)", 1)
+    r = harness.call(app, "get(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # get(address): 0xa7 -> 0
-    r = harness.call(app, "get(address)", 167)
+    r = harness.call(app, "get(address)", encoding.encode_address((167).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # set(address,uint8): 0x01, 0xa1 ->
-    r = harness.call(app, "set(address,uint8)", 1, 161)
+    r = harness.call(app, "set(address,uint8)", encoding.encode_address((1).to_bytes(32, "big")), 161)
     # (void return — call succeeding is the assertion)
     # get(address): 0 -> 0
-    r = harness.call(app, "get(address)", 0)
+    r = harness.call(app, "get(address)", encoding.encode_address((0).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # get(address): 0x01 -> 0xa1
-    r = harness.call(app, "get(address)", 1)
+    r = harness.call(app, "get(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 161
     # get(address): 0xa7 -> 0
-    r = harness.call(app, "get(address)", 167)
+    r = harness.call(app, "get(address)", encoding.encode_address((167).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # set(address,uint8): 0x00, 0xef ->
-    r = harness.call(app, "set(address,uint8)", 0, 239)
+    r = harness.call(app, "set(address,uint8)", encoding.encode_address((0).to_bytes(32, "big")), 239)
     # (void return — call succeeding is the assertion)
     # get(address): 0 -> 0xef
-    r = harness.call(app, "get(address)", 0)
+    r = harness.call(app, "get(address)", encoding.encode_address((0).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 239
     # get(address): 0x01 -> 0xa1
-    r = harness.call(app, "get(address)", 1)
+    r = harness.call(app, "get(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 161
     # get(address): 0xa7 -> 0
-    r = harness.call(app, "get(address)", 167)
+    r = harness.call(app, "get(address)", encoding.encode_address((167).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # set(address,uint8): 0x01, 0x05 ->
-    r = harness.call(app, "set(address,uint8)", 1, 5)
+    r = harness.call(app, "set(address,uint8)", encoding.encode_address((1).to_bytes(32, "big")), 5)
     # (void return — call succeeding is the assertion)
     # get(address): 0 -> 0xef
-    r = harness.call(app, "get(address)", 0)
+    r = harness.call(app, "get(address)", encoding.encode_address((0).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 239
     # get(address): 0x01 -> 0x05
-    r = harness.call(app, "get(address)", 1)
+    r = harness.call(app, "get(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 5
     # get(address): 0xa7 -> 0
-    r = harness.call(app, "get(address)", 167)
+    r = harness.call(app, "get(address)", encoding.encode_address((167).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
 
 def test_mapping_contract_key_getter(harness):
     """types/contracts/mapping_contract_key_getter.sol"""
     app = harness.compile_and_deploy("types/contracts/mapping_contract_key_getter.sol")
     # table(address): 0 -> 0
-    r = harness.call(app, "table(address)", 0)
+    r = harness.call(app, "table(address)", encoding.encode_address((0).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # table(address): 0x01 -> 0
-    r = harness.call(app, "table(address)", 1)
+    r = harness.call(app, "table(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # table(address): 0xa7 -> 0
-    r = harness.call(app, "table(address)", 167)
+    r = harness.call(app, "table(address)", encoding.encode_address((167).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # get(address): 0 -> 0
-    r = harness.call(app, "get(address)", 0)
+    r = harness.call(app, "get(address)", encoding.encode_address((0).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # get(address): 0x01 -> 0
-    r = harness.call(app, "get(address)", 1)
+    r = harness.call(app, "get(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # get(address): 0xa7 -> 0
-    r = harness.call(app, "get(address)", 167)
+    r = harness.call(app, "get(address)", encoding.encode_address((167).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # set(address,uint8): 0x01, 0xa1 ->
-    r = harness.call(app, "set(address,uint8)", 1, 161)
+    r = harness.call(app, "set(address,uint8)", encoding.encode_address((1).to_bytes(32, "big")), 161)
     # (void return — call succeeding is the assertion)
     # table(address): 0 -> 0
-    r = harness.call(app, "table(address)", 0)
+    r = harness.call(app, "table(address)", encoding.encode_address((0).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # table(address): 0x01 -> 0xa1
-    r = harness.call(app, "table(address)", 1)
+    r = harness.call(app, "table(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 161
     # table(address): 0xa7 -> 0
-    r = harness.call(app, "table(address)", 167)
+    r = harness.call(app, "table(address)", encoding.encode_address((167).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # get(address): 0 -> 0
-    r = harness.call(app, "get(address)", 0)
+    r = harness.call(app, "get(address)", encoding.encode_address((0).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # get(address): 0x01 -> 0xa1
-    r = harness.call(app, "get(address)", 1)
+    r = harness.call(app, "get(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 161
     # get(address): 0xa7 -> 0
-    r = harness.call(app, "get(address)", 167)
+    r = harness.call(app, "get(address)", encoding.encode_address((167).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # set(address,uint8): 0x00, 0xef ->
-    r = harness.call(app, "set(address,uint8)", 0, 239)
+    r = harness.call(app, "set(address,uint8)", encoding.encode_address((0).to_bytes(32, "big")), 239)
     # (void return — call succeeding is the assertion)
     # table(address): 0 -> 0xef
-    r = harness.call(app, "table(address)", 0)
+    r = harness.call(app, "table(address)", encoding.encode_address((0).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 239
     # table(address): 0x01 -> 0xa1
-    r = harness.call(app, "table(address)", 1)
+    r = harness.call(app, "table(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 161
     # table(address): 0xa7 -> 0
-    r = harness.call(app, "table(address)", 167)
+    r = harness.call(app, "table(address)", encoding.encode_address((167).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # get(address): 0 -> 0xef
-    r = harness.call(app, "get(address)", 0)
+    r = harness.call(app, "get(address)", encoding.encode_address((0).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 239
     # get(address): 0x01 -> 0xa1
-    r = harness.call(app, "get(address)", 1)
+    r = harness.call(app, "get(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 161
     # get(address): 0xa7 -> 0
-    r = harness.call(app, "get(address)", 167)
+    r = harness.call(app, "get(address)", encoding.encode_address((167).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # set(address,uint8): 0x01, 0x05 ->
-    r = harness.call(app, "set(address,uint8)", 1, 5)
+    r = harness.call(app, "set(address,uint8)", encoding.encode_address((1).to_bytes(32, "big")), 5)
     # (void return — call succeeding is the assertion)
     # table(address): 0 -> 0xef
-    r = harness.call(app, "table(address)", 0)
+    r = harness.call(app, "table(address)", encoding.encode_address((0).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 239
     # table(address): 0x01 -> 0x05
-    r = harness.call(app, "table(address)", 1)
+    r = harness.call(app, "table(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 5
     # table(address): 0xa7 -> 0
-    r = harness.call(app, "table(address)", 167)
+    r = harness.call(app, "table(address)", encoding.encode_address((167).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # get(address): 0 -> 0xef
-    r = harness.call(app, "get(address)", 0)
+    r = harness.call(app, "get(address)", encoding.encode_address((0).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 239
     # get(address): 0x01 -> 0x05
-    r = harness.call(app, "get(address)", 1)
+    r = harness.call(app, "get(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 5
     # get(address): 0xa7 -> 0
-    r = harness.call(app, "get(address)", 167)
+    r = harness.call(app, "get(address)", encoding.encode_address((167).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
 
 def test_mapping_contract_key_library(harness):
     """types/contracts/mapping_contract_key_library.sol"""
     app = harness.compile_and_deploy("types/contracts/mapping_contract_key_library.sol")
     # get(address): 0 -> 0
-    r = harness.call(app, "get(address)", 0)
+    r = harness.call(app, "get(address)", encoding.encode_address((0).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # get(address): 0x01 -> 0
-    r = harness.call(app, "get(address)", 1)
+    r = harness.call(app, "get(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # get(address): 0xa7 -> 0
-    r = harness.call(app, "get(address)", 167)
+    r = harness.call(app, "get(address)", encoding.encode_address((167).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # set(address,uint8): 0x01, 0xa1 ->
-    r = harness.call(app, "set(address,uint8)", 1, 161)
+    r = harness.call(app, "set(address,uint8)", encoding.encode_address((1).to_bytes(32, "big")), 161)
     # (void return — call succeeding is the assertion)
     # get(address): 0 -> 0
-    r = harness.call(app, "get(address)", 0)
+    r = harness.call(app, "get(address)", encoding.encode_address((0).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # get(address): 0x01 -> 0xa1
-    r = harness.call(app, "get(address)", 1)
+    r = harness.call(app, "get(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 161
     # get(address): 0xa7 -> 0
-    r = harness.call(app, "get(address)", 167)
+    r = harness.call(app, "get(address)", encoding.encode_address((167).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # set(address,uint8): 0x00, 0xef ->
-    r = harness.call(app, "set(address,uint8)", 0, 239)
+    r = harness.call(app, "set(address,uint8)", encoding.encode_address((0).to_bytes(32, "big")), 239)
     # (void return — call succeeding is the assertion)
     # get(address): 0 -> 0xef
-    r = harness.call(app, "get(address)", 0)
+    r = harness.call(app, "get(address)", encoding.encode_address((0).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 239
     # get(address): 0x01 -> 0xa1
-    r = harness.call(app, "get(address)", 1)
+    r = harness.call(app, "get(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 161
     # get(address): 0xa7 -> 0
-    r = harness.call(app, "get(address)", 167)
+    r = harness.call(app, "get(address)", encoding.encode_address((167).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # set(address,uint8): 0x01, 0x05 ->
-    r = harness.call(app, "set(address,uint8)", 1, 5)
+    r = harness.call(app, "set(address,uint8)", encoding.encode_address((1).to_bytes(32, "big")), 5)
     # (void return — call succeeding is the assertion)
     # get(address): 0 -> 0xef
-    r = harness.call(app, "get(address)", 0)
+    r = harness.call(app, "get(address)", encoding.encode_address((0).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 239
     # get(address): 0x01 -> 0x05
-    r = harness.call(app, "get(address)", 1)
+    r = harness.call(app, "get(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 5
     # get(address): 0xa7 -> 0
-    r = harness.call(app, "get(address)", 167)
+    r = harness.call(app, "get(address)", encoding.encode_address((167).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
 
 def test_mapping_enum_key_getter_v1(harness):

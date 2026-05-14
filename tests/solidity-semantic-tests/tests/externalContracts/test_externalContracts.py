@@ -1,6 +1,7 @@
 """Tests for the externalContracts category."""
 import pytest
 
+from algosdk import encoding
 from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
     as_int, as_bytes,
@@ -38,7 +39,7 @@ def test_FixedFeeRegistrar(harness):
     r = harness.call(app, "setContent(string,bytes32)", 64, 0, 3, bytes.fromhex('616263'))
     # (void return — call succeeding is the assertion)
     # transfer(string,address): 0x40, 555, 3, "abc" ->
-    r = harness.call(app, "transfer(string,address)", 64, 555, 3, bytes.fromhex('616263'))
+    r = harness.call(app, "transfer(string,address)", 64, encoding.encode_address((555).to_bytes(32, "big")), 3, bytes.fromhex('616263'))
     # (void return — call succeeding is the assertion)
     # owner(string): 0x20, 3, "abc" -> 555
     r = harness.call(app, "owner(string)", 'abc')
@@ -50,10 +51,10 @@ def test_FixedFeeRegistrar(harness):
     r = harness.call(app, "setContent(string,bytes32)", 64, 333, 3, bytes.fromhex('646566'))
     # (void return — call succeeding is the assertion)
     # setAddr(string,address): 0x40, 124, 3, "def" ->
-    r = harness.call(app, "setAddr(string,address)", 64, 124, 3, bytes.fromhex('646566'))
+    r = harness.call(app, "setAddr(string,address)", 64, encoding.encode_address((124).to_bytes(32, "big")), 3, bytes.fromhex('646566'))
     # (void return — call succeeding is the assertion)
     # setSubRegistrar(string,address): 0x40, 125, 3, "def" ->
-    r = harness.call(app, "setSubRegistrar(string,address)", 64, 125, 3, bytes.fromhex('646566'))
+    r = harness.call(app, "setSubRegistrar(string,address)", 64, encoding.encode_address((125).to_bytes(32, "big")), 3, bytes.fromhex('646566'))
     # (void return — call succeeding is the assertion)
     # content(string): 0x20, 3, "def" -> 333
     r = harness.call(app, "content(string)", 'def')
@@ -65,7 +66,7 @@ def test_FixedFeeRegistrar(harness):
     r = harness.call(app, "subRegistrar(string)", 'def')
     assert as_int(r.abi_return) == 125
     # disown(string,address): 0x40, 0x124, 3, "def" ->
-    r = harness.call(app, "disown(string,address)", 64, 292, 3, bytes.fromhex('646566'))
+    r = harness.call(app, "disown(string,address)", 64, encoding.encode_address((292).to_bytes(32, "big")), 3, bytes.fromhex('646566'))
     # (void return — call succeeding is the assertion)
     # owner(string): 0x20, 3, "def" -> 0
     r = harness.call(app, "owner(string)", 'def')

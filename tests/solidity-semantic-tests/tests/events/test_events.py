@@ -1,6 +1,7 @@
 """Tests for the events category."""
 import pytest
 
+from algosdk import encoding
 from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
     as_int, as_bytes,
@@ -306,13 +307,13 @@ def test_events_with_same_name(harness):
     r = harness.call(app, "deposit()")
     assert as_int(r.abi_return) == 1
     # deposit(address): 0x5082a85c489be6aa0f2e6693bf09cc1bbd35e988 -> 2
-    r = harness.call(app, "deposit(address)", 0x5082a85c489be6aa0f2e6693bf09cc1bbd35e988)
+    r = harness.call(app, "deposit(address)", encoding.encode_address((459633024808244335532108103627335112557220718984).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 2
     # deposit(address,uint256): 0x5082a85c489be6aa0f2e6693bf09cc1bbd35e988, 100 -> 3
-    r = harness.call(app, "deposit(address,uint256)", 0x5082a85c489be6aa0f2e6693bf09cc1bbd35e988, 100)
+    r = harness.call(app, "deposit(address,uint256)", encoding.encode_address((459633024808244335532108103627335112557220718984).to_bytes(32, "big")), 100)
     assert as_int(r.abi_return) == 3
     # deposit(address,bool): 0x5082a85c489be6aa0f2e6693bf09cc1bbd35e988, false -> 4
-    r = harness.call(app, "deposit(address,bool)", 0x5082a85c489be6aa0f2e6693bf09cc1bbd35e988, False)
+    r = harness.call(app, "deposit(address,bool)", encoding.encode_address((459633024808244335532108103627335112557220718984).to_bytes(32, "big")), False)
     assert as_int(r.abi_return) == 4
 
 def test_events_with_same_name_file_level(harness):
@@ -322,13 +323,13 @@ def test_events_with_same_name_file_level(harness):
     r = harness.call(app, "deposit()")
     assert as_int(r.abi_return) == 1
     # deposit(address): 0x5082a85c489be6aa0f2e6693bf09cc1bbd35e988 -> 2
-    r = harness.call(app, "deposit(address)", 0x5082a85c489be6aa0f2e6693bf09cc1bbd35e988)
+    r = harness.call(app, "deposit(address)", encoding.encode_address((459633024808244335532108103627335112557220718984).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 2
     # deposit(address,uint256): 0x5082a85c489be6aa0f2e6693bf09cc1bbd35e988, 100 -> 3
-    r = harness.call(app, "deposit(address,uint256)", 0x5082a85c489be6aa0f2e6693bf09cc1bbd35e988, 100)
+    r = harness.call(app, "deposit(address,uint256)", encoding.encode_address((459633024808244335532108103627335112557220718984).to_bytes(32, "big")), 100)
     assert as_int(r.abi_return) == 3
     # deposit(address,bool): 0x5082a85c489be6aa0f2e6693bf09cc1bbd35e988, false -> 4
-    r = harness.call(app, "deposit(address,bool)", 0x5082a85c489be6aa0f2e6693bf09cc1bbd35e988, False)
+    r = harness.call(app, "deposit(address,bool)", encoding.encode_address((459633024808244335532108103627335112557220718984).to_bytes(32, "big")), False)
     assert as_int(r.abi_return) == 4
 
 def test_events_with_same_name_inherited_emit(harness):
@@ -338,10 +339,10 @@ def test_events_with_same_name_inherited_emit(harness):
     r = harness.call(app, "deposit()")
     assert as_int(r.abi_return) == 1
     # deposit(address): 0x5082a85c489be6aa0f2e6693bf09cc1bbd35e988 -> 1
-    r = harness.call(app, "deposit(address)", 0x5082a85c489be6aa0f2e6693bf09cc1bbd35e988)
+    r = harness.call(app, "deposit(address)", encoding.encode_address((459633024808244335532108103627335112557220718984).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 1
     # deposit(address,uint256): 0x5082a85c489be6aa0f2e6693bf09cc1bbd35e988, 100 -> 1
-    r = harness.call(app, "deposit(address,uint256)", 0x5082a85c489be6aa0f2e6693bf09cc1bbd35e988, 100)
+    r = harness.call(app, "deposit(address,uint256)", encoding.encode_address((459633024808244335532108103627335112557220718984).to_bytes(32, "big")), 100)
     assert as_int(r.abi_return) == 1
 
 def test_simple(harness):

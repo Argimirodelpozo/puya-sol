@@ -192,16 +192,17 @@ def test_same_function_in_construction_and_runtime_equality_check(harness):
 def test_selector_1(harness):
     """functionTypes/contracts/selector_1.sol"""
     app = harness.compile_and_deploy("functionTypes/contracts/selector_1.sol", via_yul_behavior=True)
-    # test() -> 0xcf9f23b500000000000000000000000000000000000000000000000000000000, 0x7defb41000000000000000000000000000000000000000000000000000000000, 0xcf9f23b500000000000000000000000000000000000000000000000000000000, 0x7defb41000000000000000000000000000000000000000000000000000000000
+    s1 = bytes.fromhex("cf9f23b5")
+    s2 = bytes.fromhex("7defb410")
     r = harness.call(app, "test()")
-    assert tuple(as_int(x) for x in r.abi_return) == (93909934780908389925680208513171772481190584319973189686494540973005321797632, 56962625267091901377327903097178401288657785329182381021111551275490816819200, 93909934780908389925680208513171772481190584319973189686494540973005321797632, 56962625267091901377327903097178401288657785329182381021111551275490816819200)
+    assert [bytes(x) for x in r.abi_return] == [s1, s2, s1, s2]
+
 
 def test_selector_2(harness):
     """functionTypes/contracts/selector_2.sol"""
     app = harness.compile_and_deploy("functionTypes/contracts/selector_2.sol", via_yul_behavior=True)
-    # test() -> 0xcf9f23b500000000000000000000000000000000000000000000000000000000, 0x7defb41000000000000000000000000000000000000000000000000000000000
     r = harness.call(app, "test()")
-    assert tuple(as_int(x) for x in r.abi_return) == (93909934780908389925680208513171772481190584319973189686494540973005321797632, 56962625267091901377327903097178401288657785329182381021111551275490816819200)
+    assert [bytes(x) for x in r.abi_return] == [bytes.fromhex("cf9f23b5"), bytes.fromhex("7defb410")]
 
 def test_selector_assignment_expression(harness):
     """functionTypes/contracts/selector_assignment_expression.sol"""
@@ -223,22 +224,14 @@ def test_selector_expression_side_effect(harness):
 def test_selector_ternary(harness):
     """functionTypes/contracts/selector_ternary.sol"""
     app = harness.compile_and_deploy("functionTypes/contracts/selector_ternary.sol")
-    # h(bool): true -> 0x26121ff000000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "h(bool)", True)
-    assert as_int(r.abi_return) == 17219911917854084299749778639755835327755045716242581057573779540915269926912
-    # h(bool): false -> 0xe2179b8e00000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "h(bool)", False)
-    assert as_int(r.abi_return) == 102264414861304285884729579275374176073311626045629144087797787832582884294656
+    assert bytes(harness.call(app, "h(bool)", True).abi_return) == bytes.fromhex("26121ff0")
+    assert bytes(harness.call(app, "h(bool)", False).abi_return) == bytes.fromhex("e2179b8e")
 
 def test_selector_ternary_function_pointer_from_function_call(harness):
     """functionTypes/contracts/selector_ternary_function_pointer_from_function_call.sol"""
     app = harness.compile_and_deploy("functionTypes/contracts/selector_ternary_function_pointer_from_function_call.sol")
-    # test(bool): true -> 0x26121ff000000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "test(bool)", True)
-    assert as_int(r.abi_return) == 17219911917854084299749778639755835327755045716242581057573779540915269926912
-    # test(bool): false -> 0xe2179b8e00000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "test(bool)", False)
-    assert as_int(r.abi_return) == 102264414861304285884729579275374176073311626045629144087797787832582884294656
+    assert bytes(harness.call(app, "test(bool)", True).abi_return) == bytes.fromhex("26121ff0")
+    assert bytes(harness.call(app, "test(bool)", False).abi_return) == bytes.fromhex("e2179b8e")
 
 def test_stack_height_check_on_adding_gas_variable_to_function(harness):
     """functionTypes/contracts/stack_height_check_on_adding_gas_variable_to_function.sol"""

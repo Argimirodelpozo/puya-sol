@@ -1,6 +1,7 @@
 """Tests for the storage category."""
 import pytest
 
+from algosdk import encoding
 from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
     as_int, as_bytes,
@@ -66,14 +67,12 @@ def test_chop_sign_bits(harness):
     # y(uint256): 1 -> -6
     r = harness.call(app, "y(uint256)", 1)
     assert as_int(r.abi_return) in (-6, 115792089237316195423570985008687907853269984665640564039457584007913129639930)
-    # f() -> 0x20, 2, -3, -4
-    r = harness.call(app, "f()")
-    assert tuple(as_int(x) for x in r.abi_return) == (32, 2, -3, -4)
-    # g() -> -3, -4
-    r = harness.call(app, "g()")
-    assert tuple(as_int(x) for x in r.abi_return) == (-3, -4)
+    # f() returns int16[] = [-3, -4].
+    assert list(harness.call(app, "f()").abi_return) == [-3, -4]
+    # g() returns int16[2] = [-3, -4].
+    assert list(harness.call(app, "g()").abi_return) == [-3, -4]
     # h(int8): -10 -> -10
-    r = harness.call(app, "h(int8)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff6)
+    r = harness.call(app, "h(int8)", -10)
     assert as_int(r.abi_return) in (-10, 115792089237316195423570985008687907853269984665640564039457584007913129639926)
 
 def test_complex_accessors(harness):
@@ -281,82 +280,82 @@ def test_mapping_state(harness):
     """storage/contracts/mapping_state.sol"""
     app = harness.compile_and_deploy("storage/contracts/mapping_state.sol")
     # getVoteCount(address): 0 -> 0
-    r = harness.call(app, "getVoteCount(address)", 0)
+    r = harness.call(app, "getVoteCount(address)", encoding.encode_address((0).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # getVoteCount(address): 1 -> 0
-    r = harness.call(app, "getVoteCount(address)", 1)
+    r = harness.call(app, "getVoteCount(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # getVoteCount(address): 2 -> 0
-    r = harness.call(app, "getVoteCount(address)", 2)
+    r = harness.call(app, "getVoteCount(address)", encoding.encode_address((2).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # vote(address,address): 0, 2 -> false
-    r = harness.call(app, "vote(address,address)", 0, 2)
+    r = harness.call(app, "vote(address,address)", encoding.encode_address((0).to_bytes(32, "big")), encoding.encode_address((2).to_bytes(32, "big")))
     assert bool(as_int(r.abi_return)) is False
     # getVoteCount(address): 0 -> 0
-    r = harness.call(app, "getVoteCount(address)", 0)
+    r = harness.call(app, "getVoteCount(address)", encoding.encode_address((0).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # getVoteCount(address): 1 -> 0
-    r = harness.call(app, "getVoteCount(address)", 1)
+    r = harness.call(app, "getVoteCount(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # getVoteCount(address): 2 -> 0
-    r = harness.call(app, "getVoteCount(address)", 2)
+    r = harness.call(app, "getVoteCount(address)", encoding.encode_address((2).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # grantVoteRight(address): 0 ->
-    r = harness.call(app, "grantVoteRight(address)", 0)
+    r = harness.call(app, "grantVoteRight(address)", encoding.encode_address((0).to_bytes(32, "big")))
     # (void return — call succeeding is the assertion)
     # grantVoteRight(address): 1 ->
-    r = harness.call(app, "grantVoteRight(address)", 1)
+    r = harness.call(app, "grantVoteRight(address)", encoding.encode_address((1).to_bytes(32, "big")))
     # (void return — call succeeding is the assertion)
     # vote(address,address): 0, 2 -> true
-    r = harness.call(app, "vote(address,address)", 0, 2)
+    r = harness.call(app, "vote(address,address)", encoding.encode_address((0).to_bytes(32, "big")), encoding.encode_address((2).to_bytes(32, "big")))
     assert bool(as_int(r.abi_return)) is True
     # getVoteCount(address): 0 -> 0
-    r = harness.call(app, "getVoteCount(address)", 0)
+    r = harness.call(app, "getVoteCount(address)", encoding.encode_address((0).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # getVoteCount(address): 1 -> 0
-    r = harness.call(app, "getVoteCount(address)", 1)
+    r = harness.call(app, "getVoteCount(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # getVoteCount(address): 2 -> 1
-    r = harness.call(app, "getVoteCount(address)", 2)
+    r = harness.call(app, "getVoteCount(address)", encoding.encode_address((2).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 1
     # vote(address,address): 0, 1 -> false
-    r = harness.call(app, "vote(address,address)", 0, 1)
+    r = harness.call(app, "vote(address,address)", encoding.encode_address((0).to_bytes(32, "big")), encoding.encode_address((1).to_bytes(32, "big")))
     assert bool(as_int(r.abi_return)) is False
     # getVoteCount(address): 0 -> 0
-    r = harness.call(app, "getVoteCount(address)", 0)
+    r = harness.call(app, "getVoteCount(address)", encoding.encode_address((0).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # getVoteCount(address): 1 -> 0
-    r = harness.call(app, "getVoteCount(address)", 1)
+    r = harness.call(app, "getVoteCount(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # getVoteCount(address): 2 -> 1
-    r = harness.call(app, "getVoteCount(address)", 2)
+    r = harness.call(app, "getVoteCount(address)", encoding.encode_address((2).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 1
     # vote(address,address): 2, 1 -> false
-    r = harness.call(app, "vote(address,address)", 2, 1)
+    r = harness.call(app, "vote(address,address)", encoding.encode_address((2).to_bytes(32, "big")), encoding.encode_address((1).to_bytes(32, "big")))
     assert bool(as_int(r.abi_return)) is False
     # getVoteCount(address): 0 -> 0
-    r = harness.call(app, "getVoteCount(address)", 0)
+    r = harness.call(app, "getVoteCount(address)", encoding.encode_address((0).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # getVoteCount(address): 1 -> 0
-    r = harness.call(app, "getVoteCount(address)", 1)
+    r = harness.call(app, "getVoteCount(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # getVoteCount(address): 2 -> 1
-    r = harness.call(app, "getVoteCount(address)", 2)
+    r = harness.call(app, "getVoteCount(address)", encoding.encode_address((2).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 1
     # grantVoteRight(address): 2 ->
-    r = harness.call(app, "grantVoteRight(address)", 2)
+    r = harness.call(app, "grantVoteRight(address)", encoding.encode_address((2).to_bytes(32, "big")))
     # (void return — call succeeding is the assertion)
     # vote(address,address): 2, 1 -> true
-    r = harness.call(app, "vote(address,address)", 2, 1)
+    r = harness.call(app, "vote(address,address)", encoding.encode_address((2).to_bytes(32, "big")), encoding.encode_address((1).to_bytes(32, "big")))
     assert bool(as_int(r.abi_return)) is True
     # getVoteCount(address): 0 -> 0
-    r = harness.call(app, "getVoteCount(address)", 0)
+    r = harness.call(app, "getVoteCount(address)", encoding.encode_address((0).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
     # getVoteCount(address): 1 -> 1
-    r = harness.call(app, "getVoteCount(address)", 1)
+    r = harness.call(app, "getVoteCount(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 1
     # getVoteCount(address): 2 -> 1
-    r = harness.call(app, "getVoteCount(address)", 2)
+    r = harness.call(app, "getVoteCount(address)", encoding.encode_address((2).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 1
 
 def test_mapping_string_key(harness):

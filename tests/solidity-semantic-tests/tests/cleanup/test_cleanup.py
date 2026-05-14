@@ -1,6 +1,7 @@
 """Tests for the cleanup category."""
 import pytest
 
+from algosdk import encoding
 from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
     as_int, as_bytes,
@@ -102,21 +103,21 @@ def test_cleanup_address_types_v1(harness):
     """cleanup/contracts/cleanup_address_types_v1.sol"""
     app = harness.compile_and_deploy("cleanup/contracts/cleanup_address_types_v1.sol")
     # f(address): 0xffff1234567890123456789012345678901234567890 -> 0x0 # We input longer data on purpose.#
-    r = harness.call(app, "f(address)", 0xffff1234567890123456789012345678901234567890)
+    r = harness.call(app, "f(address)", encoding.encode_address((95779613731486029874698491610985192245656521314564240).to_bytes(32, "big")))
     # TODO: verify expected: 0x0 # We input longer data on purpose.#
     assert not r.reverted
     # g(address): 0xffff1234567890123456789012345678901234567890 -> 0x0
-    r = harness.call(app, "g(address)", 0xffff1234567890123456789012345678901234567890)
+    r = harness.call(app, "g(address)", encoding.encode_address((95779613731486029874698491610985192245656521314564240).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
 
 def test_cleanup_address_types_v2(harness):
     """cleanup/contracts/cleanup_address_types_v2.sol"""
     app = harness.compile_and_deploy("cleanup/contracts/cleanup_address_types_v2.sol")
     # f(address): 0xffff1234567890123456789012345678901234567890 -> FAILURE # We input longer data on purpose.#
-    r = harness.call(app, "f(address)", 0xffff1234567890123456789012345678901234567890, expect_revert=True)
+    r = harness.call(app, "f(address)", encoding.encode_address((95779613731486029874698491610985192245656521314564240).to_bytes(32, "big")), expect_revert=True)
     assert r.reverted
     # g(address): 0xffff1234567890123456789012345678901234567890 -> FAILURE
-    r = harness.call(app, "g(address)", 0xffff1234567890123456789012345678901234567890, expect_revert=True)
+    r = harness.call(app, "g(address)", encoding.encode_address((95779613731486029874698491610985192245656521314564240).to_bytes(32, "big")), expect_revert=True)
     assert r.reverted
 
 def test_cleanup_bytes_types_shortening_OldCodeGen(harness):

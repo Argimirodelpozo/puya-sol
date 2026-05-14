@@ -168,8 +168,8 @@ def test_calldata_attached_to_dynamic_array_or_slice(harness):
 def test_calldata_attached_to_static_array(harness):
     """calldata/contracts/calldata_attached_to_static_array.sol"""
     app = harness.compile_and_deploy("calldata/contracts/calldata_attached_to_static_array.sol")
-    # test(uint256,uint256[2],uint256): 7, 66, 77, 4 -> 77, 66
-    r = harness.call(app, "test(uint256,uint256[2],uint256)", 7, 66, 77, 4)
+    # test(_, [a, b], _) returns (b, a) via the attached `reverse()` lib fn.
+    r = harness.call(app, "test(uint256,uint256[2],uint256)", 7, [66, 77], 4)
     assert tuple(as_int(x) for x in r.abi_return) == (77, 66)
 
 def test_calldata_attached_to_struct(harness):
@@ -290,8 +290,8 @@ def test_calldata_struct_cleaning(harness):
 def test_calldata_struct_internal(harness):
     """calldata/contracts/calldata_struct_internal.sol"""
     app = harness.compile_and_deploy("calldata/contracts/calldata_struct_internal.sol")
-    # f(uint256,(uint256,uint256),uint256): 7, 1, 2, 4 -> 1, 2
-    r = harness.call(app, "f(uint256,(uint256,uint256),uint256)", 7, 1, 2, 4)
+    # f(_, S{x, y}, _) returns (x, y).
+    r = harness.call(app, "f(uint256,(uint256,uint256),uint256)", 7, (1, 2), 4)
     assert tuple(as_int(x) for x in r.abi_return) == (1, 2)
 
 def test_copy_from_calldata_removes_bytes_data(harness):
