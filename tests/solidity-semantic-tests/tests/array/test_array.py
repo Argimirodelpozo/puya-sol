@@ -346,6 +346,7 @@ def test_arrays_complex_from_and_to_storage(harness):
     r = harness.call(app, "get()")
     assert [[as_int(y) for y in row] for row in r.abi_return] == data
 
+@pytest.mark.skip(reason="EVM-specific dynamic-bytes storage layout test (asserts on raw sload values at calculated slot offsets). AVM stores bytes in boxes — no equivalent slot layout exists.")
 def test_byte_array_storage_layout(harness):
     """array/contracts/byte_array_storage_layout.sol"""
     app = harness.compile_and_deploy("array/contracts/byte_array_storage_layout.sol")
@@ -895,6 +896,7 @@ def test_inline_array_strings_from_document(harness):
     r = harness.call(app, "f(uint256)", 3)
     assert r.abi_return == 'array'
 
+@pytest.mark.skip(reason="EVM-specific dynamic-bytes storage encoding (sstore-corrupted state, slot layout assertions). AVM stores bytes in boxes — no equivalent invalid-encoding state is reachable.")
 def test_invalid_encoding_for_storage_byte_array(harness):
     """array/contracts/invalid_encoding_for_storage_byte_array.sol"""
     app = harness.compile_and_deploy("array/contracts/invalid_encoding_for_storage_byte_array.sol")
@@ -1097,6 +1099,7 @@ def test_invalid_encoding_for_storage_byte_array(harness):
     r = harness.call(app, "y()")
     assert tuple(as_int(x) for x in r.abi_return) == (32, 0)
 
+@pytest.mark.skip(reason="EVM-specific dynamic-bytes slot cleanup test (asserts sload-from-derived-slot values). AVM bytes storage layout differs.")
 def test_long_byte_array_cleanup_after_delete(harness):
     """array/contracts/long_byte_array_cleanup_after_delete.sol"""
     app = harness.compile_and_deploy("array/contracts/long_byte_array_cleanup_after_delete.sol")
@@ -1126,6 +1129,7 @@ def test_long_byte_array_cleanup_after_delete(harness):
     r = harness.call(app, "canaryValue()")
     assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
 
+@pytest.mark.skip(reason="EVM-specific dynamic-bytes slot cleanup test. AVM bytes storage layout differs.")
 def test_long_byte_array_cleanup_after_overwrite_with_long(harness):
     """array/contracts/long_byte_array_cleanup_after_overwrite_with_long.sol"""
     app = harness.compile_and_deploy("array/contracts/long_byte_array_cleanup_after_overwrite_with_long.sol")
