@@ -10,8 +10,7 @@ from framework import (
 def test_calldata_memory_copy(harness):
     """using/contracts/calldata_memory_copy.sol"""
     app = harness.compile_and_deploy("using/contracts/calldata_memory_copy.sol")
-    # f(uint256[]): 0x20, 3, 1, 2, 8 -> 11
-    r = harness.call(app, "f(uint256[])", 32, 3, 1, 2, 8)
+    r = harness.call(app, "f(uint256[])", [1, 2, 8])
     assert as_int(r.abi_return) == 11
 
 def test_free_function_braces(harness):
