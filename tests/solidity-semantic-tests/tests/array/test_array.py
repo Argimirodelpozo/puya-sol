@@ -37,7 +37,7 @@ def test_array_3d_new(harness):
 
 def test_array_function_pointers(harness):
     """array/contracts/array_function_pointers.sol"""
-    pytest.fail("`function()[]` arrays with uninitialized entries; compiler-side regression — falls back to fn-ptr stubs not yet supported in puya-sol.")
+    pytest.fail("Compiler-side: puya-sol exits 1 compiling `function() internal returns (uint)[]` allocations. Internal fn-ptr arrays not supported.")
 
 def test_array_memory_as_parameter(harness):
     """array/contracts/array_memory_as_parameter.sol"""
@@ -521,7 +521,7 @@ def test_create_dynamic_array_with_zero_length(harness):
 
 def test_create_memory_array(harness):
     """array/contracts/create_memory_array.sol"""
-    pytest.fail("Compiler-side: 300-element struct array with nested bytes triggers puya-sol exit 2 (allocation/codegen).")
+    pytest.fail("Exceeds AVM 4096-byte concat cap: `new uint256[2][](300)` is 300×64=19200 bytes; `new S[](180)` similar. Tests memory arrays beyond AVM addressable-bytes limit.")
 
 def test_create_memory_array_too_large(harness):
     """array/contracts/create_memory_array_too_large.sol"""
@@ -676,7 +676,7 @@ def test_fixed_arrays_as_return_type(harness):
 
 def test_fixed_arrays_in_constructors(harness):
     """array/contracts/fixed_arrays_in_constructors.sol"""
-    pytest.fail("Compiler-side: fixed-array ctor arg layout mismatch — `extract 64 32 is beyond length: 32` at deployment (calldata vs global put alignment).")
+    pytest.fail("Compiler-side: address[3] ctor arg decode mangles the address bytes. r() returns ctor-arg `x=4` correctly, but ch()=s[2] reads `s[2]` as a derived/repeating-pattern value instead of the raw 32-byte address(3) passed in. Decode of fixed-size address arrays in ctor args needs fixing.")
 
 def test_fixed_arrays_in_storage(harness):
     """array/contracts/fixed_arrays_in_storage.sol"""
@@ -850,7 +850,7 @@ def test_memory(harness):
 
 def test_memory_arrays_of_various_sizes(harness):
     """array/contracts/memory_arrays_of_various_sizes.sol"""
-    pytest.fail("None abi_return on f(); compiler-side issue with memory array allocation across sizes.")
+    pytest.fail("Compiler-side: nested dynamic memory arrays (`uint[][] memory rows; rows[i] = new uint[](i)`) hit `extract end 64 beyond length 32`. Memory array allocation/access codegen needs work for variable-sized nested arrays.")
 
 def test_nested_calldata_storage(harness):
     """array/contracts/nested_calldata_storage.sol"""
