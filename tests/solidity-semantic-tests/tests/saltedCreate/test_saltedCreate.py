@@ -10,9 +10,10 @@ from framework import (
 def test_prediction_example(harness):
     """saltedCreate/contracts/prediction_example.sol"""
     app = harness.compile_and_deploy("saltedCreate/contracts/prediction_example.sol")
-    # createDSalted(bytes32,uint256): 42, 64 ->
-    r = harness.call(app, "createDSalted(bytes32,uint256)", 42, 64)
-    # (void return — call succeeding is the assertion)
+    # bytes32 salt = 0x000...2a, uint256 arg = 64.
+    salt = b"\x00" * 31 + b"\x2a"
+    r = harness.call(app, "createDSalted(bytes32,uint256)", salt, 64)
+    assert not r.reverted
 
 def test_salted_create(harness):
     """saltedCreate/contracts/salted_create.sol"""
