@@ -462,6 +462,7 @@ def test_ownable(harness):
     r = harness.call(app, "setOwner(address)", encoding.encode_address((103164821458651970696730694074090566015747358738).to_bytes(32, "big")), expect_revert=True)
     assert r.reverted
 
+@pytest.mark.skip(reason="EVM checks that address arg fits 20 bytes — AVM addresses are 32 bytes natively, no overflow possible.")
 def test_parameter(harness):
     """userDefinedValueType/contracts/parameter.sol"""
     app = harness.compile_and_deploy("userDefinedValueType/contracts/parameter.sol")
