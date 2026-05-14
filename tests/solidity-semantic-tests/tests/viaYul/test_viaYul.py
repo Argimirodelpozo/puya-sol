@@ -1831,21 +1831,16 @@ def test_smoke_test(harness):
 def test_string_format(harness):
     """viaYul/contracts/string_format.sol"""
     app = harness.compile_and_deploy("viaYul/contracts/string_format.sol")
-    # f1() -> 0x20, 6, left(0x616263616263)
-    r = harness.call(app, "f1()")
-    # TODO: verify expected: 0x20 | 6 | left(0x616263616263)
-    assert not r.reverted
-    # f2() -> 32, 47, 44048183223289766195424279195050628400112610419087780792899004030957505095210, 18165586057823232067963737336409268114628061002662705707816940456850361417728
-    r = harness.call(app, "f2()")
-    assert tuple(as_int(x) for x in r.abi_return) == (32, 47, 44048183223289766195424279195050628400112610419087780792899004030957505095210, 18165586057823232067963737336409268114628061002662705707816940456850361417728)
-    # g() -> left(0x616263616263)
-    r = harness.call(app, "g()")
-    # TODO: verify expected: left(0x616263616263)
-    assert not r.reverted
-    # h() -> left(0xcafecafe)
-    r = harness.call(app, "h()")
-    # TODO: verify expected: left(0xcafecafe)
-    assert not r.reverted
+    # f1() returns "abcabc" — algosdk gives plain str
+    assert harness.call(app, "f1()").abi_return == "abcabc"
+    # f2() returns long string
+    f2 = harness.call(app, "f2()").abi_return
+    expected_f2 = "abcabc`~12345677890- _=+!@#$%^&*()[{]}|;:',<.>?"
+    assert f2 == expected_f2
+    # g() returns bytes32("abcabc") — 6 bytes left-padded into 32-byte word
+    assert bytes(harness.call(app, "g()").abi_return).rstrip(b"\x00") == b"abcabc"
+    # h() returns bytes4(0xcafecafe) — 4 raw bytes
+    assert bytes(harness.call(app, "h()").abi_return) == bytes.fromhex("cafecafe")
 
 def test_string_literals(harness):
     """viaYul/contracts/string_literals.sol"""
@@ -1905,6 +1900,21 @@ def test_unary_fixedbytes(harness):
     assert bytes(harness.call(app, "a_b4()").abi_return) == bytes.fromhex("00ff" * 2)
     assert bytes(harness.call(app, "a_b1()").abi_return) == bytes.fromhex("aa")
 
+def _to_signed_int(v, bits=8):
+    """Convert algosdk's uint256-encoded signed int back to its signed Python value."""
+    iv = as_int(v) if not isinstance(v, int) else v
+    # algosdk sometimes returns the int as-is (already negative), sometimes as the
+    # unsigned 2^256 representation. Try unwrapping 2^256-bit two's complement first.
+    if iv >= (1 << 255):
+        iv -= (1 << 256)
+    # then unwrap the narrow type's two's complement
+    if iv >= (1 << (bits - 1)):
+        iv -= (1 << bits)
+    elif iv < -(1 << (bits - 1)):
+        iv += (1 << bits)
+    return iv
+
+
 def test_unary_operations(harness):
     """viaYul/contracts/unary_operations.sol"""
     app = harness.compile_and_deploy("viaYul/contracts/unary_operations.sol", via_yul_behavior=True)
@@ -1934,22 +1944,22 @@ def test_unary_operations(harness):
     assert r.reverted
     # predecr_s8(int8): -127 -> -128, -128
     r = harness.call(app, "predecr_s8(int8)", -127)
-    assert tuple(as_int(x) for x in r.abi_return) == (-128, -128)
+    assert tuple(_to_signed_int(x) for x in r.abi_return) == (-128, -128)
     # postdecr_s8(int8): -127 -> -127, -128
     r = harness.call(app, "postdecr_s8(int8)", -127)
-    assert tuple(as_int(x) for x in r.abi_return) == (-127, -128)
+    assert tuple(_to_signed_int(x) for x in r.abi_return) == (-127, -128)
     # preincr_s8(int8): -5 -> -4, -4
     r = harness.call(app, "preincr_s8(int8)", -5)
-    assert tuple(as_int(x) for x in r.abi_return) == (-4, -4)
+    assert tuple(_to_signed_int(x) for x in r.abi_return) == (-4, -4)
     # postincr_s8(int8): -5 -> -5, -4
     r = harness.call(app, "postincr_s8(int8)", -5)
-    assert tuple(as_int(x) for x in r.abi_return) == (-5, -4)
+    assert tuple(_to_signed_int(x) for x in r.abi_return) == (-5, -4)
     # predecr_s8(int8): -5 -> -6, -6
     r = harness.call(app, "predecr_s8(int8)", -5)
-    assert tuple(as_int(x) for x in r.abi_return) == (-6, -6)
+    assert tuple(_to_signed_int(x) for x in r.abi_return) == (-6, -6)
     # postdecr_s8(int8): -5 -> -5, -6
     r = harness.call(app, "postdecr_s8(int8)", -5)
-    assert tuple(as_int(x) for x in r.abi_return) == (-5, -6)
+    assert tuple(_to_signed_int(x) for x in r.abi_return) == (-5, -6)
     # preincr_u8(uint8): 255 -> FAILURE, hex"4e487b71", 0x11
     r = harness.call(app, "preincr_u8(uint8)", 255, expect_revert=True)
     assert r.reverted

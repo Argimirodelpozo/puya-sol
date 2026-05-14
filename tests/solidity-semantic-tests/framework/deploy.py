@@ -237,7 +237,9 @@ def _default_encode(v) -> bytes:
     if isinstance(v, str):
         return v.encode()
     if isinstance(v, bool):
-        return b"\x80" if v else b"\x00"
+        # Constructor reads bool via `extract_uint64` (8-byte field) so encode
+        # as itob(1)/itob(0) rather than ARC4 1-byte `\x80`/`\x00`.
+        return (1 if v else 0).to_bytes(8, "big")
     if isinstance(v, int):
         # 32-byte big-endian (Solidity uint256 default)
         return v.to_bytes(32, "big", signed=v < 0)
