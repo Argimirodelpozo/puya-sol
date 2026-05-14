@@ -25,9 +25,11 @@ def test_denominations_in_array_sizes(harness):
 def test_escape(harness):
     """literals/contracts/escape.sol"""
     app = harness.compile_and_deploy("literals/contracts/escape.sol")
-    # f() -> 2, 0x5c00000000000000000000000000000000000000000000000000000000000000, 0x5c00000000000000000000000000000000000000000000000000000000000000
+    # f() returns (length, b[0], b[1]) for "\\\\" (2-byte string with 2 backslashes).
     r = harness.call(app, "f()")
-    assert tuple(as_int(x) for x in r.abi_return) == (2, 41612782069660507730345822737497216884768900739214577701680069252843780964352, 41612782069660507730345822737497216884768900739214577701680069252843780964352)
+    assert as_int(r.abi_return[0]) == 2
+    assert bytes(r.abi_return[1]) == b"\\"
+    assert bytes(r.abi_return[2]) == b"\\"
 
 def test_ether(harness):
     """literals/contracts/ether.sol"""
