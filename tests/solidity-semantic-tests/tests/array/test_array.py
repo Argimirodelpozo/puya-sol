@@ -370,20 +370,15 @@ def test_byte_array_transitional_2(harness):
 def test_bytes_length_member(harness):
     """array/contracts/bytes_length_member.sol
 
-    Original isoltest case stores `msg.data` (including trailing junk
-    bytes appended past the ABI signature) and reads `data.length` = 68.
-    AVM's ABI dispatcher rejects trailing args; only the empty-state and
-    successful `set()` invariants are reachable from this side.
+    Original isoltest case stored msg.data including trailing junk bytes
+    (4-byte selector + 64-byte uint256[2] = 68 bytes). AVM's ApplicationArgs
+    are structured per-slot, so msg.data on AVM is just the 4-byte selector.
     """
     app = harness.compile_and_deploy("array/contracts/bytes_length_member.sol")
     assert as_int(harness.call(app, "getLength()").abi_return) == 0
     assert harness.call(app, "set()").abi_return is True
-    # After set(), getLength() reflects the AVM-side msg.data — exact size
-    # depends on the dispatcher framing and is intentionally not asserted.
-    assert not harness.call(app, "getLength()").reverted
-    # getLength() -> 68
-    r = harness.call(app, "getLength()")
-    assert as_int(r.abi_return) == 68
+    # On AVM msg.data for a bare set() call is the 4-byte ARC4 selector.
+    assert as_int(harness.call(app, "getLength()").abi_return) == 4
 
 def test_bytes_to_fixed_bytes_cleanup(harness):
     """array/contracts/bytes_to_fixed_bytes_cleanup.sol"""
