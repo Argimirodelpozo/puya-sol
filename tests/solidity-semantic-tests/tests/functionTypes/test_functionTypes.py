@@ -122,8 +122,7 @@ def test_function_external_delete_storage(harness):
 def test_function_type_library_internal(harness):
     """functionTypes/contracts/function_type_library_internal.sol"""
     app = harness.compile_and_deploy("functionTypes/contracts/function_type_library_internal.sol")
-    # f(uint256[]): 0x20, 0x3, 0x1, 0x7, 0x3 -> 11
-    r = harness.call(app, "f(uint256[])", 32, 3, 1, 7, 3)
+    r = harness.call(app, "f(uint256[])", [1, 7, 3])
     assert as_int(r.abi_return) == 11
 
 def test_inline_array_with_value_call_option(harness):

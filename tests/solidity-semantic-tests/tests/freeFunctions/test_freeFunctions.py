@@ -81,6 +81,5 @@ def test_recursion(harness):
 def test_storage_calldata_refs(harness):
     """freeFunctions/contracts/storage_calldata_refs.sol"""
     app = harness.compile_and_deploy("freeFunctions/contracts/storage_calldata_refs.sol")
-    # f(uint256,uint256[]): 7, 0x40, 3, 8, 9, 10 -> 7, 9
-    r = harness.call(app, "f(uint256,uint256[])", 7, 64, 3, 8, 9, 10)
+    r = harness.call(app, "f(uint256,uint256[])", 7, [8, 9, 10])
     assert tuple(as_int(x) for x in r.abi_return) == (7, 9)

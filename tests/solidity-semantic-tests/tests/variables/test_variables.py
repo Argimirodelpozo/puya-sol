@@ -72,36 +72,32 @@ def test_public_state_overridding(harness):
 def test_public_state_overridding_dynamic_struct(harness):
     """variables/contracts/public_state_overridding_dynamic_struct.sol"""
     app = harness.compile_and_deploy("variables/contracts/public_state_overridding_dynamic_struct.sol")
-    # test() -> 0, 64, 0
+    # test() returns (v, s) — the auto-generated struct getter.
     r = harness.call(app, "test()")
-    assert tuple(as_int(x) for x in r.abi_return) == (0, 64, 0)
-    # set() ->
-    r = harness.call(app, "set()")
-    # (void return — call succeeding is the assertion)
-    # test() -> 2, 0x40, 8, "statevar"
+    assert as_int(r.abi_return[0]) == 0
+    assert r.abi_return[1] == ""
+    harness.call(app, "set()")
     r = harness.call(app, "test()")
-    # TODO: verify expected: 2 | 0x40 | 8 | "statevar"
-    assert not r.reverted
+    assert as_int(r.abi_return[0]) == 2
+    assert r.abi_return[1] == "statevar"
 
 def test_public_state_overridding_mapping_to_dynamic_struct(harness):
     """variables/contracts/public_state_overridding_mapping_to_dynamic_struct.sol"""
     app = harness.compile_and_deploy("variables/contracts/public_state_overridding_mapping_to_dynamic_struct.sol")
-    # test(uint256): 0 -> 0, 64, 0
+    # test(uint256) returns (v, s) — mapping(uint256 => S) auto-getter.
     r = harness.call(app, "test(uint256)", 0)
-    assert tuple(as_int(x) for x in r.abi_return) == (0, 64, 0)
-    # test(uint256): 42 -> 0, 64, 0
+    assert as_int(r.abi_return[0]) == 0
+    assert r.abi_return[1] == ""
     r = harness.call(app, "test(uint256)", 42)
-    assert tuple(as_int(x) for x in r.abi_return) == (0, 64, 0)
-    # set() ->
-    r = harness.call(app, "set()")
-    # (void return — call succeeding is the assertion)
-    # test(uint256): 0 -> 0, 64, 0
+    assert as_int(r.abi_return[0]) == 0
+    assert r.abi_return[1] == ""
+    harness.call(app, "set()")
     r = harness.call(app, "test(uint256)", 0)
-    assert tuple(as_int(x) for x in r.abi_return) == (0, 64, 0)
-    # test(uint256): 42 -> 2, 0x40, 8, "statevar"
+    assert as_int(r.abi_return[0]) == 0
+    assert r.abi_return[1] == ""
     r = harness.call(app, "test(uint256)", 42)
-    # TODO: verify expected: 2 | 0x40 | 8 | "statevar"
-    assert not r.reverted
+    assert as_int(r.abi_return[0]) == 2
+    assert r.abi_return[1] == "statevar"
 
 def test_storing_invalid_boolean(harness):
     """variables/contracts/storing_invalid_boolean.sol"""
