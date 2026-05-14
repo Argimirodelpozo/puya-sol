@@ -324,73 +324,193 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 				if (auto const* encCallExpr = dynamic_cast<FunctionCall const*>(&dataArg))
 				{
 					auto const* encMA = dynamic_cast<MemberAccess const*>(&encCallExpr->expression());
+					// Two recognised self-call shapes:
+					//   address(this).call(abi.encodeWithSignature("fn(types)", args...))
+					//   address(this).call(abi.encodeWithSelector(this.fn.selector, args...))
+					// Both lower to a direct InstanceMethodTarget call on the
+					// contract's `fn`.
+					std::string fnName;
+					size_t firstArgIdx = 1;  // index in encCallExpr args where method args start
 					if (encMA && encMA->memberName() == "encodeWithSignature"
 						&& !encCallExpr->arguments().empty())
 					{
-						auto const* sigLit = dynamic_cast<Literal const*>(encCallExpr->arguments()[0].get());
-						if (sigLit)
+						if (auto const* sigLit = dynamic_cast<Literal const*>(encCallExpr->arguments()[0].get()))
 						{
 							std::string sig = sigLit->value();
 							auto parenPos = sig.find('(');
 							if (parenPos != std::string::npos)
+								fnName = sig.substr(0, parenPos);
+						}
+					}
+					else if (encMA && encMA->memberName() == "encodeWithSelector"
+						&& !encCallExpr->arguments().empty())
+					{
+						// `this.fn.selector` is MemberAccess(memberName="selector",
+						// expr=MemberAccess(memberName="fn", expr=this)).
+						if (auto const* selMA = dynamic_cast<MemberAccess const*>(encCallExpr->arguments()[0].get()))
+						{
+							if (selMA->memberName() == "selector")
 							{
-								std::string fnName = sig.substr(0, parenPos);
-								size_t nArgs = encCallExpr->arguments().size() - 1;
-								FunctionDefinition const* target = nullptr;
-								if (_ctx.currentContract)
+								if (auto const* fnMA = dynamic_cast<MemberAccess const*>(&selMA->expression()))
 								{
-									for (auto const* base : _ctx.currentContract->annotation().linearizedBaseContracts)
-									{
-										for (auto const* func : base->definedFunctions())
-										{
-											if (func->isImplemented() && func->name() == fnName
-												&& func->parameters().size() == nArgs)
-											{
-												target = func;
-												goto foundEwSTarget;
-											}
-										}
-									}
-								}
-								foundEwSTarget:;
-								if (target)
-								{
-									auto* retType = target->returnParameters().size() > 0
-										? _ctx.typeMapper.map(target->returnParameters()[0]->type())
-										: awst::WType::voidType();
-									if (!retType) retType = awst::WType::voidType();
-									auto call = awst::makeSubroutineCall(
-										awst::InstanceMethodTarget{target->name()},
-										retType, _loc);
-									for (size_t i = 1; i < encCallExpr->arguments().size(); ++i)
-										awst::pushCallArg(call->args,
-											_ctx.buildExpr(*encCallExpr->arguments()[i]));
-									std::shared_ptr<awst::Expression> dataBytes;
-									if (retType == awst::WType::voidType())
-									{
-										auto stmt = awst::makeExpressionStatement(call, _loc);
-										_ctx.prePendingStatements.push_back(std::move(stmt));
-										dataBytes = awst::makeBytesConstant({}, _loc);
-									}
-									else if (retType == awst::WType::biguintType())
-										dataBytes = awst::makeReinterpretCast(std::move(call), awst::WType::bytesType(), _loc);
-									else if (retType == awst::WType::uint64Type())
-									{
-										dataBytes = awst::makeItob(std::move(call), _loc);
-									}
-									else if (retType == awst::WType::bytesType()
-										|| retType->kind() == awst::WTypeKind::Bytes)
-										dataBytes = awst::makeReinterpretCast(std::move(call), awst::WType::bytesType(), _loc);
-									else
-									{
-										auto stmt = awst::makeExpressionStatement(call, _loc);
-										_ctx.prePendingStatements.push_back(std::move(stmt));
-										dataBytes = awst::makeBytesConstant({}, _loc);
-									}
-									return std::make_unique<GenericResultBuilder>(_ctx,
-										makeBoolBytesTuple(true, std::move(dataBytes), _loc));
+									// expression() is `this`; accept any base
+									// (member access on `this` is implicit on
+									// the contract's own scope).
+									fnName = fnMA->memberName();
 								}
 							}
+						}
+					}
+					if (!fnName.empty())
+					{
+						size_t nArgs = encCallExpr->arguments().size() - firstArgIdx;
+						FunctionDefinition const* target = nullptr;
+						if (_ctx.currentContract)
+						{
+							for (auto const* base : _ctx.currentContract->annotation().linearizedBaseContracts)
+							{
+								for (auto const* func : base->definedFunctions())
+								{
+									if (func->isImplemented() && func->name() == fnName
+										&& func->parameters().size() == nArgs)
+									{
+										target = func;
+										goto foundEwSTarget;
+									}
+								}
+							}
+						}
+						foundEwSTarget:;
+						if (target)
+						{
+							// AVM can't self-call (no recursive inner-txn into
+							// the same app); rewrite this `address(this).call(...)`
+							// pattern into a direct subroutine call to the
+							// resolved method. Solidity programs that depend
+							// on revert isolation across the boundary will see
+							// different behaviour — the inner revert propagates
+							// here instead of being caught as success=false.
+							Logger::instance().warning(
+								"`address(this).call(abi.encode" +
+								std::string(encMA->memberName() == "encodeWithSelector"
+									? "WithSelector" : "WithSignature") +
+								"(...))` self-call rewritten to direct `" + fnName +
+								"(...)` invocation. AVM doesn't support self inner-txn "
+								"calls; revert-isolation semantics may differ.",
+								_loc);
+
+							// Helper: ABI-encode a single value (per its solidity
+							// type) into an exact 32-byte big-endian word —
+							// matches what the EVM ABI returns at the boundary
+							// and what `abi.decode(ret, (...))` expects.
+							// Uses makeLeftPadToN (not makeLeftPad) so the
+							// result is *exactly* 32 bytes even when the input
+							// is already 32 bytes (biguint minimal-rep can be
+							// shorter, but we always emit 32).
+							auto encodeAs32 = [&_loc](std::shared_ptr<awst::Expression> v)
+								-> std::shared_ptr<awst::Expression>
+							{
+								if (v->wtype == awst::WType::uint64Type())
+								{
+									auto bytes = awst::makeItob(std::move(v), _loc);
+									return awst::makeLeftPadToN(std::move(bytes), 32, _loc);
+								}
+								if (v->wtype == awst::WType::biguintType())
+								{
+									auto bytes = awst::makeReinterpretCast(
+										std::move(v), awst::WType::bytesType(), _loc);
+									return awst::makeLeftPadToN(std::move(bytes), 32, _loc);
+								}
+								if (v->wtype == awst::WType::boolType())
+								{
+									auto asInt = awst::makeReinterpretCast(
+										std::move(v), awst::WType::uint64Type(), _loc);
+									auto bytes = awst::makeItob(std::move(asInt), _loc);
+									return awst::makeLeftPadToN(std::move(bytes), 32, _loc);
+								}
+								if (v->wtype && v->wtype->kind() == awst::WTypeKind::Bytes)
+								{
+									// bytesN: right-pad (EVM convention for
+									// fixed-bytes return) — extract 32 bytes
+									// from the right-padded result via
+									// makeRightPad which uses raw concat (so
+									// we'd need len-aware trimming; for the
+									// common case of len <= 32, left-side stays
+									// untouched and right gets zeros, total 32).
+									auto bw = dynamic_cast<awst::BytesWType const*>(v->wtype);
+									int len = bw && bw->length() ? *bw->length() : 32;
+									auto bytes = awst::makeReinterpretCast(
+										std::move(v), awst::WType::bytesType(), _loc);
+									if (len < 32)
+										return awst::makeRightPad(std::move(bytes), 32 - len, _loc);
+									return bytes;
+								}
+								// Fallback — leave as-is.
+								return awst::makeReinterpretCast(
+									std::move(v), awst::WType::bytesType(), _loc);
+							};
+
+							size_t nReturns = target->returnParameters().size();
+							if (nReturns == 0)
+							{
+								// Void target: just emit the call, return empty bytes.
+								auto call = awst::makeSubroutineCall(
+									awst::InstanceMethodTarget{target->name()},
+									awst::WType::voidType(), _loc);
+								for (size_t i = firstArgIdx; i < encCallExpr->arguments().size(); ++i)
+									awst::pushCallArg(call->args,
+										_ctx.buildExpr(*encCallExpr->arguments()[i]));
+								auto stmt = awst::makeExpressionStatement(call, _loc);
+								_ctx.prePendingStatements.push_back(std::move(stmt));
+								return std::make_unique<GenericResultBuilder>(_ctx,
+									makeBoolBytesTuple(true, awst::makeBytesConstant({}, _loc), _loc));
+							}
+							if (nReturns == 1)
+							{
+								auto* retType = _ctx.typeMapper.map(target->returnParameters()[0]->type());
+								if (!retType) retType = awst::WType::voidType();
+								auto call = awst::makeSubroutineCall(
+									awst::InstanceMethodTarget{target->name()},
+									retType, _loc);
+								for (size_t i = firstArgIdx; i < encCallExpr->arguments().size(); ++i)
+									awst::pushCallArg(call->args,
+										_ctx.buildExpr(*encCallExpr->arguments()[i]));
+								auto dataBytes = encodeAs32(std::move(call));
+								return std::make_unique<GenericResultBuilder>(_ctx,
+									makeBoolBytesTuple(true, std::move(dataBytes), _loc));
+							}
+
+							// Multi-return: call returns a tuple. Use
+							// SingleEvaluation so the call runs once and each
+							// TupleItemExpression reads from the cached result;
+							// then ABI-encode each element to 32 bytes and concat.
+							std::vector<awst::WType const*> tupleTypes;
+							for (auto const& ret : target->returnParameters())
+							{
+								auto* pt = _ctx.typeMapper.map(ret->type());
+								tupleTypes.push_back(pt ? pt : awst::WType::voidType());
+							}
+							auto* tupleTypeOwned = new awst::WTuple(std::move(tupleTypes));
+							auto call = awst::makeSubroutineCall(
+								awst::InstanceMethodTarget{target->name()},
+								tupleTypeOwned, _loc);
+							for (size_t i = firstArgIdx; i < encCallExpr->arguments().size(); ++i)
+								awst::pushCallArg(call->args,
+									_ctx.buildExpr(*encCallExpr->arguments()[i]));
+							auto cachedCall = awst::makeSingleEvaluation(std::move(call), tupleTypeOwned, 0, _loc);
+
+							std::vector<std::shared_ptr<awst::Expression>> parts;
+							for (size_t i = 0; i < nReturns; ++i)
+							{
+								auto* itemType = tupleTypeOwned->types()[i];
+								auto item = awst::makeTupleItem(cachedCall, static_cast<int>(i), itemType, _loc);
+								parts.push_back(encodeAs32(std::move(item)));
+							}
+							std::shared_ptr<awst::Expression> dataBytes = std::move(parts[0]);
+							for (size_t i = 1; i < parts.size(); ++i)
+								dataBytes = awst::makeConcat(std::move(dataBytes), std::move(parts[i]), _loc);
+							return std::make_unique<GenericResultBuilder>(_ctx,
+								makeBoolBytesTuple(true, std::move(dataBytes), _loc));
 						}
 					}
 				}

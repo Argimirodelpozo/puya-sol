@@ -10,7 +10,9 @@ from framework import (
 
 def test_abicodec(harness):
     """userDefinedValueType/contracts/abicodec.sol"""
-    pytest.fail("UDVT with abi.decode/encode call returns None abi_return on AVM (compiler-side).")
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/abicodec.sol")
+    r = harness.call(app, "g()", extra_fee=10000)
+    assert bool(as_int(r.abi_return)) is True
 
 def test_assembly_access_bytes2_abicoder_v1(harness):
     """userDefinedValueType/contracts/assembly_access_bytes2_abicoder_v1.sol"""
