@@ -17,20 +17,15 @@ def test_assembly_access(harness):
 def test_memory_types_initialisation(harness):
     """memoryManagement/contracts/memory_types_initialisation.sol"""
     app = harness.compile_and_deploy("memoryManagement/contracts/memory_types_initialisation.sol")
-    # stat() -> 0, 0, 0, 0, 0
-    r = harness.call(app, "stat()")
-    # TODO: verify structural decoding matches expected: 0, 0, 0, 0, 0
-    assert not r.reverted
-    # dyn() -> 0x20, 0
-    r = harness.call(app, "dyn()")
-    assert tuple(as_int(x) for x in r.abi_return) == (32, 0)
-    # nested() -> 0x20, 0
-    r = harness.call(app, "nested()")
-    assert tuple(as_int(x) for x in r.abi_return) == (32, 0)
-    # nestedStat() -> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    # stat() returns a uint[5] memory — algosdk decodes as a 5-list of zeros.
+    assert tuple(as_int(x) for x in harness.call(app, "stat()").abi_return) == (0, 0, 0, 0, 0)
+    # dyn() returns an empty uint[] — algosdk decodes as empty list.
+    assert list(harness.call(app, "dyn()").abi_return) == []
+    # nested() returns an empty uint[3][] — empty list.
+    assert list(harness.call(app, "nested()").abi_return) == []
+    # nestedStat() returns a uint[3][7] memory — 21 zeros.
     r = harness.call(app, "nestedStat()")
-    # TODO: verify structural decoding matches expected: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-    assert not r.reverted
+    assert sum(as_int(y) for x in r.abi_return for y in x) == 0
 
 def test_return_variable(harness):
     """memoryManagement/contracts/return_variable.sol"""

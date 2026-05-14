@@ -91,24 +91,14 @@ def test_calldata_assign_from_nowhere(harness):
 def test_calldata_length_read(harness):
     """inlineAssembly/contracts/calldata_length_read.sol"""
     app = harness.compile_and_deploy("inlineAssembly/contracts/calldata_length_read.sol")
-    # lenBytesRead(bytes): 0x20, 4, "abcd" -> 4
-    r = harness.call(app, "lenBytesRead(bytes)", 'abcd')
-    assert as_int(r.abi_return) == 4
-    # lenBytesRead(bytes): 0x20, 0, "abcd" -> 0x00
-    r = harness.call(app, "lenBytesRead(bytes)", '')
-    assert as_int(r.abi_return) == 0
-    # lenBytesRead(bytes): 0x20, 0x21, "abcd", "ef" -> 33
-    r = harness.call(app, "lenBytesRead(bytes)", 32, 33, bytes.fromhex('61626364'), bytes.fromhex('6566'))
-    assert as_int(r.abi_return) == 33
-    # lenStringRead(string): 0x20, 4, "abcd" -> 4
-    r = harness.call(app, "lenStringRead(string)", 'abcd')
-    assert as_int(r.abi_return) == 4
-    # lenStringRead(string): 0x20, 0, "abcd" -> 0x00
-    r = harness.call(app, "lenStringRead(string)", '')
-    assert as_int(r.abi_return) == 0
-    # lenStringRead(string): 0x20, 0x21, "abcd", "ef" -> 33
-    r = harness.call(app, "lenStringRead(string)", 32, 33, bytes.fromhex('61626364'), bytes.fromhex('6566'))
-    assert as_int(r.abi_return) == 33
+    assert as_int(harness.call(app, "lenBytesRead(bytes)", b"abcd").abi_return) == 4
+    assert as_int(harness.call(app, "lenBytesRead(bytes)", b"").abi_return) == 0
+    # 33-byte input.
+    arg33 = b"abcd" * 8 + b"e"
+    assert as_int(harness.call(app, "lenBytesRead(bytes)", arg33).abi_return) == 33
+    assert as_int(harness.call(app, "lenStringRead(string)", "abcd").abi_return) == 4
+    assert as_int(harness.call(app, "lenStringRead(string)", "").abi_return) == 0
+    assert as_int(harness.call(app, "lenStringRead(string)", "abcd" * 8 + "e").abi_return) == 33
 
 def test_calldata_offset_read(harness):
     """inlineAssembly/contracts/calldata_offset_read.sol"""
@@ -580,9 +570,9 @@ def test_mcopy_as_identifier_pre_cancun(harness):
 def test_mcopy_empty(harness):
     """inlineAssembly/contracts/mcopy_empty.sol"""
     app = harness.compile_and_deploy("inlineAssembly/contracts/mcopy_empty.sol")
-    # mcopy_zero(bytes): 0x20, 0x20, 0xffeeddccbbaa9988776655443322110000112233445566778899aabbccddeeff -> 0x20, 0x20, 0xffeeddccbbaa9988776655443322110000112233445566778899aabbccddeeff
-    r = harness.call(app, "mcopy_zero(bytes)", 32, 32, 0xffeeddccbbaa9988776655443322110000112233445566778899aabbccddeeff)
-    assert tuple(as_int(x) for x in r.abi_return) == (32, 32, 115761816795685524522806652725025505785880228478355084463266898959573796646655)
+    arg = bytes.fromhex("ffeeddccbbaa9988776655443322110000112233445566778899aabbccddeeff")
+    r = harness.call(app, "mcopy_zero(bytes)", arg)
+    assert bytes(r.abi_return) == arg
 
 def test_mcopy_overlap(harness):
     """inlineAssembly/contracts/mcopy_overlap.sol"""
@@ -635,9 +625,11 @@ def test_prevrandao(harness):
 def test_selfbalance(harness):
     """inlineAssembly/contracts/selfbalance.sol"""
     app = harness.compile_and_deploy("inlineAssembly/contracts/selfbalance.sol")
-    # f(), 254 wei -> 254
+    # f() returns address(this).balance after the payment lands. AVM total
+    # balance includes the MBR baseline — verify the 254 microalgos are
+    # observable, not the absolute value.
     r = harness.call(app, "f()", payment_wei=254)
-    assert as_int(r.abi_return) == 254
+    assert as_int(r.abi_return) - app.balance_baseline == 254
 
 def test_shadowing_local_function_opcode(harness):
     """inlineAssembly/contracts/shadowing_local_function_opcode.sol"""
