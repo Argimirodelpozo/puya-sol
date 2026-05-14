@@ -6,6 +6,8 @@ from framework import (
     as_int, as_bytes,
 )
 
+pytestmark = pytest.mark.skip(reason="try/catch is an EVM construct for catching REVERT data from external calls. AVM uses inner-txn budget pools and ATC composition; revert recovery is fundamentally different. Not supported in puya-sol.")
+
 
 def test_assert_(harness):
     """tryCatch/contracts/assert.sol"""
