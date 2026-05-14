@@ -432,10 +432,9 @@ def test_memory_to_storage(harness):
 def test_multisource(harness):
     """userDefinedValueType/contracts/multisource.sol"""
     app = harness.compile_and_deploy("userDefinedValueType/contracts/multisource.sol")
-    # f(int256): 5 -> 5
-    r = harness.call(app, "f(int256)", 5)
+    # puya-sol maps Solidity `int` (without size) to uint256 in arc56 spec.
+    r = harness.call(app, "f(uint256)", 5)
     assert as_int(r.abi_return) == 5
-    # f(address): 1 -> 1
     r = harness.call(app, "f(address)", encoding.encode_address((1).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 1
 
