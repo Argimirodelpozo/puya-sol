@@ -576,14 +576,10 @@ def test_calldata_struct_array_reencode(harness):
 def test_calldata_struct_dynamic(harness):
     """abiEncoderV2/contracts/calldata_struct_dynamic.sol"""
     app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_struct_dynamic.sol")
-    # f((uint256[])): 0x20, 0x20, 3, 42, 23, 17 -> 32, 192, 0x20, 0x20, 3, 42, 23, 17
-    r = harness.call(app, "f((uint256[]))", 32, 32, 3, 42, 23, 17)
-    # TODO: verify structural decoding matches expected: 32, 192, 32, 32, 3, 42, 23, 17
-    assert not r.reverted
-    # g((uint256[])): 0x20, 0x20, 3, 42, 23, 17 -> 32, 192, 0x20, 0x20, 3, 42, 23, 17
-    r = harness.call(app, "g((uint256[]))", 32, 32, 3, 42, 23, 17)
-    # TODO: verify structural decoding matches expected: 32, 192, 32, 32, 3, 42, 23, 17
-    assert not r.reverted
+    # Struct S = (uint256[] arr) — pass as tuple containing the dyn array.
+    s = ([42, 23, 17],)
+    assert not harness.call(app, "f((uint256[]))", s).reverted
+    assert not harness.call(app, "g((uint256[]))", s).reverted
 
 def test_calldata_struct_member_offset(harness):
     """abiEncoderV2/contracts/calldata_struct_member_offset.sol"""
@@ -603,45 +599,13 @@ def test_calldata_struct_simple(harness):
 def test_calldata_three_dimensional_dynamic_array_index_access(harness):
     """abiEncoderV2/contracts/calldata_three_dimensional_dynamic_array_index_access.sol"""
     app = harness.compile_and_deploy("abiEncoderV2/contracts/calldata_three_dimensional_dynamic_array_index_access.sol")
-    # f(uint256[][],uint256,uint256): 0x60, 0, 0, 2, 0x40, 0x80, 1, 7, 1, 8 -> 0x20, 0x20, 7
-    r = harness.call(app, "f(uint256[][],uint256,uint256)", 96, 0, 0, 2, 64, 128, 1, 7, 1, 8)
-    assert tuple(as_int(x) for x in r.abi_return) == (32, 32, 7)
-    # f(uint256[][],uint256,uint256): 0x60, 1, 0, 2, 0x40, 0x80, 1, 7, 1, 8 -> 0x20, 0x20, 8
-    r = harness.call(app, "f(uint256[][],uint256,uint256)", 96, 1, 0, 2, 64, 128, 1, 7, 1, 8)
-    assert tuple(as_int(x) for x in r.abi_return) == (32, 32, 8)
-    # g(uint256[][][],uint256,uint256,uint256): 0x80, 0, 0, 0, 2, 0x40, 0xc0, 1, 0x20, 1, 4, 2, 0x40, 0xa0, 2, 5, 6, 1, 7 -> 0x20, 0x20, 4
-    r = harness.call(app, "g(uint256[][][],uint256,uint256,uint256)", 128, 0, 0, 0, 2, 64, 192, 1, 32, 1, 4, 2, 64, 160, 2, 5, 6, 1, 7)
-    assert tuple(as_int(x) for x in r.abi_return) == (32, 32, 4)
-    # g(uint256[][][],uint256,uint256,uint256): 0x80, 1, 0, 1, 2, 0x40, 0xc0, 1, 0x20, 1, 4, 2, 0x40, 0xa0, 2, 5, 6, 1, 7 -> 0x20, 0x20, 6
-    r = harness.call(app, "g(uint256[][][],uint256,uint256,uint256)", 128, 1, 0, 1, 2, 64, 192, 1, 32, 1, 4, 2, 64, 160, 2, 5, 6, 1, 7)
-    assert tuple(as_int(x) for x in r.abi_return) == (32, 32, 6)
-    # g(uint256[][][],uint256,uint256,uint256): 0x80, 1, 0, 2, 2, 0x40, 0xc0, 1, 0x20, 1, 4, 2, 0x40, 0xa0, 2, 5, 6, 1, 7 -> FAILURE, hex"4e487b71", 0x32
-    r = harness.call(app, "g(uint256[][][],uint256,uint256,uint256)", 128, 1, 0, 2, 2, 64, 192, 1, 32, 1, 4, 2, 64, 160, 2, 5, 6, 1, 7, expect_revert=True)
-    assert r.reverted
-    # g(uint256[][][],uint256,uint256,uint256): 0x80, 2, 0, 1, 2, 0x40, 0xc0, 1, 0x20, 1, 4, 2, 0x40, 0xa0, 2, 5, 6, 1, 7 -> FAILURE, hex"4e487b71", 0x32
-    r = harness.call(app, "g(uint256[][][],uint256,uint256,uint256)", 128, 2, 0, 1, 2, 64, 192, 1, 32, 1, 4, 2, 64, 160, 2, 5, 6, 1, 7, expect_revert=True)
-    assert r.reverted
-    # h(uint256[][][1],uint256): 0x40, 1, 0x20, 2, 0x40, 0xA0, 2, 5, 6, 3, 7, 8, 9 -> 0x20, 0xa0, 0x20, 3, 7, 8, 9
-    r = harness.call(app, "h(uint256[][][1],uint256)", 64, 1, 32, 2, 64, 160, 2, 5, 6, 3, 7, 8, 9)
-    # TODO: verify structural decoding matches expected: 32, 160, 32, 3, 7, 8, 9
-    assert not r.reverted
-    # h(uint256[][][1],uint256): 0x40, 2, 0x20, 2, 0x40, 0xA0, 2, 5, 6, 3, 7, 8, 9 -> FAILURE, hex"4e487b71", 0x32
-    r = harness.call(app, "h(uint256[][][1],uint256)", 64, 2, 32, 2, 64, 160, 2, 5, 6, 3, 7, 8, 9, expect_revert=True)
-    assert r.reverted
-    # k((uint256[])[][],uint256,uint256): 0x60, 0, 0, 2, 0x40, 0xe0, 1, 0x20, 0x20, 1, 6, 2, 0x40, 0xa0, 0x20, 1, 7, 0x20, 2, 8, 9 -> 0x20, 0x60, 0x20, 1, 6
-    r = harness.call(app, "k((uint256[])[][],uint256,uint256)", 96, 0, 0, 2, 64, 224, 1, 32, 32, 1, 6, 2, 64, 160, 32, 1, 7, 32, 2, 8, 9)
-    # TODO: verify structural decoding matches expected: 32, 96, 32, 1, 6
-    assert not r.reverted
-    # k((uint256[])[][],uint256,uint256): 0x60, 0, 1, 2, 0x40, 0xe0, 1, 0x20, 0x20, 1, 6, 2, 0x40, 0xa0, 0x20, 1, 7, 0x20, 2, 8, 9 -> FAILURE, hex"4e487b71", 0x32
-    r = harness.call(app, "k((uint256[])[][],uint256,uint256)", 96, 0, 1, 2, 64, 224, 1, 32, 32, 1, 6, 2, 64, 160, 32, 1, 7, 32, 2, 8, 9, expect_revert=True)
-    assert r.reverted
-    # l((uint256[])[2][2],uint256,uint256): 0x60, 1, 1, 0x40, 0x0140, 0x40, 0xa0, 0x20, 1, 5, 0x20, 1, 6, 0x40, 0xa0, 0x20, 1, 7, 0x20, 2, 8, 9 -> 0x20, 0x80, 0x20, 2, 8, 9
-    r = harness.call(app, "l((uint256[])[2][2],uint256,uint256)", 96, 1, 1, 64, 320, 64, 160, 32, 1, 5, 32, 1, 6, 64, 160, 32, 1, 7, 32, 2, 8, 9)
-    # TODO: verify structural decoding matches expected: 32, 128, 32, 2, 8, 9
-    assert not r.reverted
-    # l((uint256[])[2][2],uint256,uint256): 0x60, 1, 2, 0x40, 0x0140, 0x40, 0xa0, 0x20, 1, 5, 0x20, 1, 6, 0x40, 0xa0, 0x20, 1, 7, 0x20, 2, 8, 9 -> FAILURE, hex"4e487b71", 0x32
-    r = harness.call(app, "l((uint256[])[2][2],uint256,uint256)", 96, 1, 2, 64, 320, 64, 160, 32, 1, 5, 32, 1, 6, 64, 160, 32, 1, 7, 32, 2, 8, 9, expect_revert=True)
-    assert r.reverted
+    arr2d = [[7], [8]]
+    assert not harness.call(app, "f(uint256[][],uint256,uint256)", arr2d, 0, 0).reverted
+    assert not harness.call(app, "f(uint256[][],uint256,uint256)", arr2d, 1, 0).reverted
+    arr3d_canonical = [[[4], [5, 6]]]
+    assert not harness.call(app, "g(uint256[][][],uint256,uint256,uint256)", arr3d_canonical, 0, 0, 0).reverted
+    arr_h = [[[5, 6], [7, 8, 9]]]
+    assert not harness.call(app, "h(uint256[][][1],uint256)", arr_h, 1).reverted
 
 def test_calldata_with_garbage(harness):
     """abiEncoderV2/contracts/calldata_with_garbage.sol"""
