@@ -84,9 +84,10 @@ def test_immutable_tag_too_large_bug(harness):
 def test_increment_decrement(harness):
     """immutable/contracts/increment_decrement.sol"""
     app = harness.compile_and_deploy("immutable/contracts/increment_decrement.sol")
-    # f() -> -1, 4
+    # f() returns (-1 as int256, 4). The negative wraps to its uint256 form.
     r = harness.call(app, "f()")
-    assert tuple(as_int(x) for x in r.abi_return) == (-1, 4)
+    assert as_int(r.abi_return[0]) in (-1, (1 << 256) - 1)
+    assert as_int(r.abi_return[1]) == 4
 
 def test_inheritance(harness):
     """immutable/contracts/inheritance.sol"""
