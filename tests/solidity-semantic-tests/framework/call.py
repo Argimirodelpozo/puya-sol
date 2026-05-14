@@ -436,7 +436,14 @@ def _raw_call_inner(
     if expect_revert:
         return _simulate_for_revert(algod, _new_atc())
     try:
-        _new_atc().execute(algod, wait_rounds=4)
+        atc = _new_atc()
+        # Populate box refs / foreign apps via simulate, matching the
+        # ABI-call path so fallback contracts with boxes work.
+        try:
+            atc = au.populate_app_call_resources(atc, algod)
+        except Exception:
+            pass
+        atc.execute(algod, wait_rounds=4)
         return Result()
     except Exception as e:
         sim_result = _simulate_for_revert(algod, _new_atc())

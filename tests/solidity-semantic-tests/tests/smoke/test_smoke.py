@@ -5,7 +5,7 @@ in the matching .sol file, and verifies decoded return values directly.
 
 Use this category as the canonical example when adding new tests.
 """
-from framework import Panic, ErrorString, Reverted, rpad, lpad, hex_bytes
+from framework import Panic, ErrorString, Reverted, rpad, lpad, hex_bytes, as_int
 
 
 def test_alignment(harness):
@@ -211,12 +211,25 @@ def test_multiline_comments(harness):
 
 
 def test_fallback(harness):
-    """fallback.sol — bare () call dispatches to fallback().
+    """fallback.sol — bare () and unknown-selector calls dispatch to fallback().
 
-    AVM has no analogue for `fallback()` — Solidity emits a wildcard ABI
-    method but our compiler currently doesn't, so any bare-() call is an
-    unsupported pattern. The test xfails as a placeholder for when we
-    implement Solidity fallback dispatch in puya-sol.
+    The contract's fallback increments `data`, captures `msg.value` into
+    `balance`, and copies `msg.data` into `externalData`. The bare-call
+    path (`call_bare`) leaves `msg.data` empty; the unknown-selector path
+    (`call_raw`) forwards the raw bytes as `msg.data`.
     """
-    import pytest
-    pytest.xfail("fallback() dispatch not yet implemented in puya-sol")
+    app = harness.compile_and_deploy("smoke/contracts/fallback.sol", postinit_inner_txns=2)
+    assert as_int(harness.call(app, "data()").abi_return) == 0
+    # Bare call → fallback, no msg.data, no value.
+    harness.call_bare(app)
+    assert as_int(harness.call(app, "data()").abi_return) == 1
+    # Unknown-selector call with extra data (no longer routes to fallback on
+    # AVM because the dispatcher needs a 4-byte selector + raw payload).
+    harness.call_raw(app, bytes.fromhex("42ef0000"))
+    assert as_int(harness.call(app, "data()").abi_return) == 2
+    # Balance starts at 0; bare call with 1 wei updates it.
+    assert as_int(harness.call(app, "balance()").abi_return) == 0
+    harness.call_bare(app, payment_wei=1)
+    assert as_int(harness.call(app, "balance()").abi_return) == 1
+    harness.call_raw(app, bytes.fromhex("fefe0000"), payment_wei=2)
+    assert as_int(harness.call(app, "balance()").abi_return) == 2
