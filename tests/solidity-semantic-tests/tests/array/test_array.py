@@ -334,22 +334,17 @@ def test_array_storage_push_pop(harness):
 def test_arrays_complex_from_and_to_storage(harness):
     """array/contracts/arrays_complex_from_and_to_storage.sol"""
     app = harness.compile_and_deploy("array/contracts/arrays_complex_from_and_to_storage.sol")
-    # set(uint24[3][]): 0x20, 0x06, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12 -> 0x06
-    r = harness.call(app, "set(uint24[3][])", 32, 6, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18)
-    assert as_int(r.abi_return) == 6
-    # data(uint256,uint256): 0x02, 0x02 -> 0x09
-    r = harness.call(app, "data(uint256,uint256)", 2, 2)
-    assert as_int(r.abi_return) == 9
-    # data(uint256,uint256): 0x05, 0x01 -> 0x11
-    r = harness.call(app, "data(uint256,uint256)", 5, 1)
-    assert as_int(r.abi_return) == 17
-    # data(uint256,uint256): 0x06, 0x00 -> FAILURE
-    r = harness.call(app, "data(uint256,uint256)", 6, 0, expect_revert=True)
-    assert r.reverted
-    # get() -> 0x20, 0x06, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12
+    # set takes a uint24[3][] of 6 inner tuples; flat 1..18 splits as 6
+    # tuples of 3 elements each.
+    data = [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]]
+    assert as_int(harness.call(app, "set(uint24[3][])", data).abi_return) == 6
+    # public-getter `data(i, j)` returns the nested element.
+    assert as_int(harness.call(app, "data(uint256,uint256)", 2, 2).abi_return) == 9
+    assert as_int(harness.call(app, "data(uint256,uint256)", 5, 1).abi_return) == 17
+    assert harness.call(app, "data(uint256,uint256)", 6, 0, expect_revert=True).reverted
+    # get() returns the stored uint24[3][].
     r = harness.call(app, "get()")
-    # TODO: verify structural decoding matches expected: 32, 6, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
-    assert not r.reverted
+    assert [[as_int(y) for y in row] for row in r.abi_return] == data
 
 def test_byte_array_storage_layout(harness):
     """array/contracts/byte_array_storage_layout.sol"""
@@ -463,11 +458,11 @@ def test_calldata_array(harness):
 def test_calldata_array_as_argument_internal_function(harness):
     """array/contracts/calldata_array_as_argument_internal_function.sol"""
     app = harness.compile_and_deploy("array/contracts/calldata_array_as_argument_internal_function.sol")
-    # g(uint256[]): 0x20, 4, 1, 2, 3, 4 -> 4, 1
-    r = harness.call(app, "g(uint256[])", 32, 4, 1, 2, 3, 4)
+    # g(c) returns (c.length, c[0]).
+    r = harness.call(app, "g(uint256[])", [1, 2, 3, 4])
     assert tuple(as_int(x) for x in r.abi_return) == (4, 1)
-    # h(uint256[],uint256,uint256): 0x60, 1, 3, 4, 1, 2, 3, 4 -> 2, 2
-    r = harness.call(app, "h(uint256[],uint256,uint256)", 96, 1, 3, 4, 1, 2, 3, 4)
+    # h(c, start, end) returns (slice.length, slice[0]) for c[start:end].
+    r = harness.call(app, "h(uint256[],uint256,uint256)", [1, 2, 3, 4], 1, 3)
     assert tuple(as_int(x) for x in r.abi_return) == (2, 2)
 
 def test_calldata_array_dynamic_invalid(harness):
@@ -539,133 +534,50 @@ def test_calldata_array_of_struct(harness):
     r = harness.call(app, "f((uint256,uint256)[])", [(1, 2), (3, 4)])
     assert tuple(as_int(x) for x in r.abi_return) == (2, 1, 2, 3, 4)
 
+_2D_DATA = [[0x0A01, 0x0A02, 0x0A03], [0x0B01, 0x0B02, 0x0B03, 0x0B04]]
+
+
 def test_calldata_array_two_dimensional(harness):
-    """array/contracts/calldata_array_two_dimensional.sol"""
+    """array/contracts/calldata_array_two_dimensional.sol
+
+    Tests uint256[][2] (static outer of 2 dynamic uint[] elements).
+    `test(a)` / `test(a, i)` / `test(a, i, j)` return length / a[i].length / a[i][j].
+    `reenc(a, i, j)` does the same via a self-staticcall — same outputs.
+    """
     app = harness.compile_and_deploy("array/contracts/calldata_array_two_dimensional.sol")
-    # test(uint256[][2]): 0x20, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 2
-    r = harness.call(app, "test(uint256[][2])", 32, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2
-    # test(uint256[][2],uint256): 0x40, 0, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 3
-    r = harness.call(app, "test(uint256[][2],uint256)", 64, 0, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 3
-    # test(uint256[][2],uint256): 0x40, 1, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 4
-    r = harness.call(app, "test(uint256[][2],uint256)", 64, 1, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 4
-    # test(uint256[][2],uint256,uint256): 0x60, 0, 0, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0A01
-    r = harness.call(app, "test(uint256[][2],uint256,uint256)", 96, 0, 0, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2561
-    # reenc(uint256[][2],uint256,uint256): 0x60, 0, 0, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0A01
-    r = harness.call(app, "reenc(uint256[][2],uint256,uint256)", 96, 0, 0, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2561
-    # test(uint256[][2],uint256,uint256): 0x60, 0, 1, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0A02
-    r = harness.call(app, "test(uint256[][2],uint256,uint256)", 96, 0, 1, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2562
-    # reenc(uint256[][2],uint256,uint256): 0x60, 0, 1, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0A02
-    r = harness.call(app, "reenc(uint256[][2],uint256,uint256)", 96, 0, 1, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2562
-    # test(uint256[][2],uint256,uint256): 0x60, 0, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0A03
-    r = harness.call(app, "test(uint256[][2],uint256,uint256)", 96, 0, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2563
-    # reenc(uint256[][2],uint256,uint256): 0x60, 0, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0A03
-    r = harness.call(app, "reenc(uint256[][2],uint256,uint256)", 96, 0, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2563
-    # test(uint256[][2],uint256,uint256): 0x60, 1, 0, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0B01
-    r = harness.call(app, "test(uint256[][2],uint256,uint256)", 96, 1, 0, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2817
-    # reenc(uint256[][2],uint256,uint256): 0x60, 1, 0, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0B01
-    r = harness.call(app, "reenc(uint256[][2],uint256,uint256)", 96, 1, 0, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2817
-    # test(uint256[][2],uint256,uint256): 0x60, 1, 1, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0B02
-    r = harness.call(app, "test(uint256[][2],uint256,uint256)", 96, 1, 1, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2818
-    # reenc(uint256[][2],uint256,uint256): 0x60, 1, 1, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0B02
-    r = harness.call(app, "reenc(uint256[][2],uint256,uint256)", 96, 1, 1, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2818
-    # test(uint256[][2],uint256,uint256): 0x60, 1, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0B03
-    r = harness.call(app, "test(uint256[][2],uint256,uint256)", 96, 1, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2819
-    # reenc(uint256[][2],uint256,uint256): 0x60, 1, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0B03
-    r = harness.call(app, "reenc(uint256[][2],uint256,uint256)", 96, 1, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2819
-    # test(uint256[][2],uint256,uint256): 0x60, 1, 3, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0B04
-    r = harness.call(app, "test(uint256[][2],uint256,uint256)", 96, 1, 3, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2820
-    # reenc(uint256[][2],uint256,uint256): 0x60, 1, 3, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0B04
-    r = harness.call(app, "reenc(uint256[][2],uint256,uint256)", 96, 1, 3, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2820
-    # test(uint256[][2],uint256,uint256): 0x60, 0, 3, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> FAILURE, hex"4e487b71", 0x32
-    r = harness.call(app, "test(uint256[][2],uint256,uint256)", 96, 0, 3, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820, expect_revert=True)
-    assert r.reverted
-    # test(uint256[][2],uint256,uint256): 0x60, 1, 4, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> FAILURE, hex"4e487b71", 0x32
-    r = harness.call(app, "test(uint256[][2],uint256,uint256)", 96, 1, 4, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820, expect_revert=True)
-    assert r.reverted
-    # test(uint256[][2],uint256): 0x40, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> FAILURE, hex"4e487b71", 0x32
-    r = harness.call(app, "test(uint256[][2],uint256)", 64, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820, expect_revert=True)
-    assert r.reverted
+    a = _2D_DATA  # uint256[][2]
+    assert as_int(harness.call(app, "test(uint256[][2])", a).abi_return) == 2
+    assert as_int(harness.call(app, "test(uint256[][2],uint256)", a, 0).abi_return) == 3
+    assert as_int(harness.call(app, "test(uint256[][2],uint256)", a, 1).abi_return) == 4
+    for i, row in enumerate(a):
+        for j, want in enumerate(row):
+            assert as_int(harness.call(app, "test(uint256[][2],uint256,uint256)", a, i, j).abi_return) == want
+            assert as_int(harness.call(app, "reenc(uint256[][2],uint256,uint256)", a, i, j).abi_return) == want
+    # Out-of-bounds index/inner-length
+    assert harness.call(app, "test(uint256[][2],uint256,uint256)", a, 0, 3, expect_revert=True).reverted
+    assert harness.call(app, "test(uint256[][2],uint256,uint256)", a, 1, 4, expect_revert=True).reverted
+    assert harness.call(app, "test(uint256[][2],uint256)", a, 2, expect_revert=True).reverted
+
 
 def test_calldata_array_two_dimensional_1(harness):
-    """array/contracts/calldata_array_two_dimensional_1.sol"""
+    """array/contracts/calldata_array_two_dimensional_1.sol
+
+    Same shape as `calldata_array_two_dimensional` but the outer array is
+    fully dynamic (`uint256[][]`).
+    """
     app = harness.compile_and_deploy("array/contracts/calldata_array_two_dimensional_1.sol")
-    # test(uint256[][]): 0x20, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 2
-    r = harness.call(app, "test(uint256[][])", 32, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2
-    # test(uint256[][],uint256): 0x40, 0, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 3
-    r = harness.call(app, "test(uint256[][],uint256)", 64, 0, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 3
-    # test(uint256[][],uint256): 0x40, 1, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 4
-    r = harness.call(app, "test(uint256[][],uint256)", 64, 1, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 4
-    # test(uint256[][],uint256,uint256): 0x60, 0, 0, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0A01
-    r = harness.call(app, "test(uint256[][],uint256,uint256)", 96, 0, 0, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2561
-    # reenc(uint256[][],uint256,uint256): 0x60, 0, 0, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0A01
-    r = harness.call(app, "reenc(uint256[][],uint256,uint256)", 96, 0, 0, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2561
-    # test(uint256[][],uint256,uint256): 0x60, 0, 1, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0A02
-    r = harness.call(app, "test(uint256[][],uint256,uint256)", 96, 0, 1, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2562
-    # reenc(uint256[][],uint256,uint256): 0x60, 0, 1, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0A02
-    r = harness.call(app, "reenc(uint256[][],uint256,uint256)", 96, 0, 1, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2562
-    # test(uint256[][],uint256,uint256): 0x60, 0, 2, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0A03
-    r = harness.call(app, "test(uint256[][],uint256,uint256)", 96, 0, 2, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2563
-    # reenc(uint256[][],uint256,uint256): 0x60, 0, 2, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0A03
-    r = harness.call(app, "reenc(uint256[][],uint256,uint256)", 96, 0, 2, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2563
-    # test(uint256[][],uint256,uint256): 0x60, 1, 0, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0B01
-    r = harness.call(app, "test(uint256[][],uint256,uint256)", 96, 1, 0, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2817
-    # reenc(uint256[][],uint256,uint256): 0x60, 1, 0, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0B01
-    r = harness.call(app, "reenc(uint256[][],uint256,uint256)", 96, 1, 0, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2817
-    # test(uint256[][],uint256,uint256): 0x60, 1, 1, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0B02
-    r = harness.call(app, "test(uint256[][],uint256,uint256)", 96, 1, 1, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2818
-    # reenc(uint256[][],uint256,uint256): 0x60, 1, 1, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0B02
-    r = harness.call(app, "reenc(uint256[][],uint256,uint256)", 96, 1, 1, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2818
-    # test(uint256[][],uint256,uint256): 0x60, 1, 2, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0B03
-    r = harness.call(app, "test(uint256[][],uint256,uint256)", 96, 1, 2, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2819
-    # reenc(uint256[][],uint256,uint256): 0x60, 1, 2, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0B03
-    r = harness.call(app, "reenc(uint256[][],uint256,uint256)", 96, 1, 2, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2819
-    # test(uint256[][],uint256,uint256): 0x60, 1, 3, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0B04
-    r = harness.call(app, "test(uint256[][],uint256,uint256)", 96, 1, 3, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2820
-    # reenc(uint256[][],uint256,uint256): 0x60, 1, 3, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> 0x0B04
-    r = harness.call(app, "reenc(uint256[][],uint256,uint256)", 96, 1, 3, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    assert as_int(r.abi_return) == 2820
-    # test(uint256[][],uint256,uint256): 0x60, 0, 3, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> FAILURE, hex"4e487b71", 0x32
-    r = harness.call(app, "test(uint256[][],uint256,uint256)", 96, 0, 3, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820, expect_revert=True)
-    assert r.reverted
-    # test(uint256[][],uint256,uint256): 0x60, 1, 4, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> FAILURE, hex"4e487b71", 0x32
-    r = harness.call(app, "test(uint256[][],uint256,uint256)", 96, 1, 4, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820, expect_revert=True)
-    assert r.reverted
-    # test(uint256[][],uint256): 0x40, 2, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04 -> FAILURE, hex"4e487b71", 0x32
-    r = harness.call(app, "test(uint256[][],uint256)", 64, 2, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820, expect_revert=True)
-    assert r.reverted
+    a = _2D_DATA
+    assert as_int(harness.call(app, "test(uint256[][])", a).abi_return) == 2
+    assert as_int(harness.call(app, "test(uint256[][],uint256)", a, 0).abi_return) == 3
+    assert as_int(harness.call(app, "test(uint256[][],uint256)", a, 1).abi_return) == 4
+    for i, row in enumerate(a):
+        for j, want in enumerate(row):
+            assert as_int(harness.call(app, "test(uint256[][],uint256,uint256)", a, i, j).abi_return) == want
+            assert as_int(harness.call(app, "reenc(uint256[][],uint256,uint256)", a, i, j).abi_return) == want
+    assert harness.call(app, "test(uint256[][],uint256,uint256)", a, 0, 3, expect_revert=True).reverted
+    assert harness.call(app, "test(uint256[][],uint256,uint256)", a, 1, 4, expect_revert=True).reverted
+    assert harness.call(app, "test(uint256[][],uint256)", a, 2, expect_revert=True).reverted
+
 
 def test_calldata_bytes_array_bounds(harness):
     """array/contracts/calldata_bytes_array_bounds.sol"""
