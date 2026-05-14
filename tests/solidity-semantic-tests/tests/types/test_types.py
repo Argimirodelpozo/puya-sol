@@ -312,7 +312,16 @@ def test_mapping_contract_key_library(harness):
 
 def test_mapping_enum_key_getter_v1(harness):
     """types/contracts/mapping_enum_key_getter_v1.sol"""
-    pytest.fail("EVM enum-out-of-range check on uint8 arg — AVM dispatcher doesn't enforce enum range.")
+    app = harness.compile_and_deploy("types/contracts/mapping_enum_key_getter_v1.sol")
+    for v in (0, 1):
+        assert as_int(harness.call(app, "table(uint8)", v).abi_return) == 0
+    # Public getter accepts any uint8 (no range check on auto-getter for v1).
+    assert as_int(harness.call(app, "table(uint8)", 0xa7).abi_return) == 0
+    # get() function (user-written) DOES range-check via enum read.
+    assert harness.call(app, "get(uint8)", 0xa7, expect_revert=True).reverted
+    harness.call(app, "set(uint8,uint8)", 1, 0xa1)
+    assert as_int(harness.call(app, "table(uint8)", 1).abi_return) == 0xa1
+    assert as_int(harness.call(app, "get(uint8)", 1).abi_return) == 0xa1
 
 def test_mapping_enum_key_getter_v2(harness):
     """types/contracts/mapping_enum_key_getter_v2.sol"""
@@ -401,7 +410,12 @@ def test_mapping_enum_key_getter_v2(harness):
 
 def test_mapping_enum_key_library_v1(harness):
     """types/contracts/mapping_enum_key_library_v1.sol"""
-    pytest.fail("EVM enum-out-of-range check on uint8 arg — AVM dispatcher doesn't enforce enum range.")
+    app = harness.compile_and_deploy("types/contracts/mapping_enum_key_library_v1.sol")
+    for v in (0, 1, 2):
+        assert as_int(harness.call(app, "get(uint8)", v).abi_return) == 0
+    assert harness.call(app, "get(uint8)", 0xa7, expect_revert=True).reverted
+    harness.call(app, "set(uint8,uint8)", 1, 0xa1)
+    assert as_int(harness.call(app, "get(uint8)", 1).abi_return) == 0xa1
 
 def test_mapping_enum_key_library_v2(harness):
     """types/contracts/mapping_enum_key_library_v2.sol"""
@@ -454,7 +468,19 @@ def test_mapping_enum_key_library_v2(harness):
 
 def test_mapping_enum_key_v1(harness):
     """types/contracts/mapping_enum_key_v1.sol"""
-    pytest.fail("EVM enum-out-of-range check on uint8 arg — AVM dispatcher doesn't enforce enum range.")
+    app = harness.compile_and_deploy("types/contracts/mapping_enum_key_v1.sol")
+    for v in (0, 1, 2):
+        assert as_int(harness.call(app, "get(uint8)", v).abi_return) == 0
+    # Out-of-range enum (3, 0xa7) must panic — Solidity semantics regardless of abicoder version.
+    assert harness.call(app, "get(uint8)", 3, expect_revert=True).reverted
+    assert harness.call(app, "get(uint8)", 0xa7, expect_revert=True).reverted
+    harness.call(app, "set(uint8,uint8)", 1, 0xa1)
+    assert as_int(harness.call(app, "get(uint8)", 1).abi_return) == 0xa1
+    harness.call(app, "set(uint8,uint8)", 0, 0xef)
+    assert as_int(harness.call(app, "get(uint8)", 0).abi_return) == 0xef
+    assert as_int(harness.call(app, "get(uint8)", 1).abi_return) == 0xa1
+    harness.call(app, "set(uint8,uint8)", 1, 0x05)
+    assert as_int(harness.call(app, "get(uint8)", 1).abi_return) == 0x05
 
 def test_mapping_enum_key_v2(harness):
     """types/contracts/mapping_enum_key_v2.sol"""

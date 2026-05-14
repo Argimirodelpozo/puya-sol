@@ -1137,29 +1137,35 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), loc, "ABI bool validation"), loc);
 					maskStmts.push_back(std::move(assertStmt));
 				}
+			}
 
-				// ABI v2 validation for enum params: assert value < member count
-				for (size_t pi = 0; pi < _func.parameters().size(); ++pi)
-				{
-					auto const& param = _func.parameters()[pi];
-					auto const* solType = param->annotation().type;
-					auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(solType);
-					if (!enumType)
-						continue;
-					auto loc = makeLoc(param->location());
-					unsigned memberCount = enumType->numberOfMembers();
+			// Enum range check fires regardless of abicoder version. Solidity
+			// semantics: any read of an enum value with `numericValue >= numberOfMembers`
+			// panics (0x21). For abicoder v2 the check is at the dispatch
+			// boundary; for v1 solc inserts it at the first use site. We emit
+			// it at the boundary for both versions — equivalent for params
+			// that are read at least once in the body, and a strict superset
+			// otherwise (the panic happens earlier, which is still correct).
+			for (size_t pi = 0; pi < _func.parameters().size(); ++pi)
+			{
+				auto const& param = _func.parameters()[pi];
+				auto const* solType = param->annotation().type;
+				auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(solType);
+				if (!enumType)
+					continue;
+				auto loc = makeLoc(param->location());
+				unsigned memberCount = enumType->numberOfMembers();
 
-					auto paramVar = awst::makeVarExpression(param->name().empty()
-						? "_param" + std::to_string(pi)
-						: param->name(), awst::WType::uint64Type(), loc);
+				auto paramVar = awst::makeVarExpression(param->name().empty()
+					? "_param" + std::to_string(pi)
+					: param->name(), awst::WType::uint64Type(), loc);
 
-					auto maxVal = awst::makeIntegerConstant(memberCount - 1, loc);
+				auto maxVal = awst::makeIntegerConstant(memberCount - 1, loc);
 
-					auto cmp = awst::makeNumericCompare(paramVar, awst::NumericComparison::Lte, std::move(maxVal), loc);
+				auto cmp = awst::makeNumericCompare(paramVar, awst::NumericComparison::Lte, std::move(maxVal), loc);
 
-					auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), loc, "ABI enum validation"), loc);
-					maskStmts.push_back(std::move(assertStmt));
-				}
+				auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), loc, "ABI enum validation"), loc);
+				maskStmts.push_back(std::move(assertStmt));
 			}
 
 			if (!maskStmts.empty())
