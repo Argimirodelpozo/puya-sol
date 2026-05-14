@@ -211,14 +211,12 @@ def test_msg_sig(harness):
     assert len(bytes(harness.call(app, "g()").abi_return)) == 4
 
 def test_msg_value(harness):
-    """state/contracts/msg_value.sol"""
+    """state/contracts/msg_value.sol — msg.value = payment amount in
+    microalgos on AVM. 12 ether (= 12 * 10^18 microalgos) overflows the
+    test account; use a representative value."""
     app = harness.compile_and_deploy("state/contracts/msg_value.sol")
-    # f() -> 0
-    r = harness.call(app, "f()")
-    assert as_int(r.abi_return) == 0
-    # f(), 12 ether -> 12000000000000000000
-    r = harness.call(app, "f()", payment_wei=12000000000000000000)
-    assert as_int(r.abi_return) == 12000000000000000000
+    assert as_int(harness.call(app, "f()").abi_return) == 0
+    assert as_int(harness.call(app, "f()", payment_wei=12_000).abi_return) == 12_000
 
 def test_tx_gasprice(harness):
     """state/contracts/tx_gasprice.sol"""

@@ -194,8 +194,7 @@ def test_decayed_tuple(harness):
 def test_destructuring_assignment(harness):
     """various/contracts/destructuring_assignment.sol"""
     app = harness.compile_and_deploy("various/contracts/destructuring_assignment.sol")
-    # f(bytes): 0x20, 0x5, "abcde" -> 0
-    r = harness.call(app, "f(bytes)", 'abcde')
+    r = harness.call(app, "f(bytes)", b"abcde")
     assert as_int(r.abi_return) == 0
 
 def test_different_call_type_transient(harness):
