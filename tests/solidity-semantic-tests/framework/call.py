@@ -367,7 +367,7 @@ def _retry_with_budget_pool(
 def call_raw(
     localnet,
     app,
-    selector: bytes,
+    selector: bytes | None,
     *,
     extra_args: tuple = (),
     payment_wei: int = 0,
@@ -378,6 +378,9 @@ def call_raw(
 
     Use for: fallback dispatch tests, allowNonExistingFunctions cases,
     or hand-crafted calldata where you control the byte layout.
+
+    Pass selector=None to make a bare call (NumAppArgs == 0). The
+    AVM-side router treats this as the receive()/fallback() entry path.
     """
     algod = localnet.algod
     sender = localnet.account.address
@@ -390,7 +393,7 @@ def call_raw(
 
 
 def _raw_call_inner(
-    algod, app, sender, signer, selector: bytes, *,
+    algod, app, sender, signer, selector: bytes | None, *,
     extra_args: tuple, payment_wei: int,
     extra_fee: int, expect_revert: bool,
 ) -> Result:
@@ -398,7 +401,12 @@ def _raw_call_inner(
     sp.flat_fee = True
     sp.fee = 2000 + extra_fee
 
-    app_args = [selector] + list(extra_args)
+    # selector=None means a bare call with no app_args (NumAppArgs == 0)
+    # — used to invoke Solidity `receive()`/`fallback()` dispatch.
+    if selector is None:
+        app_args = list(extra_args) or None
+    else:
+        app_args = [selector] + list(extra_args)
     txns = []
     if payment_wei > 0:
         sp_pay = algod.suggested_params()

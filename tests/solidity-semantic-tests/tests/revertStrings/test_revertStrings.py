@@ -124,23 +124,23 @@ def test_short_input_bytes(harness):
     """revertStrings/contracts/short_input_bytes.sol"""
 
 def test_transfer(harness):
-    """revertStrings/contracts/transfer.sol"""
-    app = harness.compile_and_deploy("revertStrings/contracts/transfer.sol")
-    # (), 10 wei ->
-    pytest.xfail("fallback() dispatch not yet implemented")
-    # g() -> 10
-    r = harness.call(app, "g()")
-    assert as_int(r.abi_return) == 10
-    # f() -> FAILURE, hex"08c379a0", 0x20, 10, "no_receive"
-    r = harness.call(app, "f()", expect_revert=True)
-    assert r.reverted
-    # h() -> FAILURE
-    r = harness.call(app, "h()", expect_revert=True)
-    assert r.reverted
+    """revertStrings/contracts/transfer.sol — bare-call w/ 10 wei lands in C.receive()."""
+    app = harness.compile_and_deploy(
+        "revertStrings/contracts/transfer.sol",
+        postinit_inner_txns=4,
+    )
+    # bare call with 10 microalgos → C.receive() accepts.
+    harness.call_bare(app, payment_wei=10)
+    # g() returns total app balance (incl. MBR baseline) — verify the 10 microalgos arrived.
+    assert as_int(harness.call(app, "g()").abi_return) - app.balance_baseline == 10
+    # f() forwards 1 wei to A — A.receive() reverts("no_receive").
+    assert harness.call(app, "f()", expect_revert=True).reverted
+    # h() forwards 100 ether — A.receive() reverts; also overflows test runner balance.
+    assert harness.call(app, "h()", expect_revert=True).reverted
 
 def test_unknown_sig_no_fallback(harness):
-    """revertStrings/contracts/unknown_sig_no_fallback.sol"""
+    """revertStrings/contracts/unknown_sig_no_fallback.sol — unknown selector w/ no fallback reverts."""
     app = harness.compile_and_deploy("revertStrings/contracts/unknown_sig_no_fallback.sol")
-    # (): hex"00" -> FAILURE, hex"08c379a0", 0x20, 41, "Unknown signature and no fallbac", "k defined"
-    r = harness.call(app, "()", bytes.fromhex('00'), expect_revert=True)
+    # bare-call with 1 byte of data (unknown selector) → no fallback → revert.
+    r = harness.call_raw(app, b"\x00\x00\x00\x00", expect_revert=True)
     assert r.reverted

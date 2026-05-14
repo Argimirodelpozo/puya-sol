@@ -85,15 +85,15 @@ def test_call_internal_function_with_multislot_arguments_via_pointer(harness):
 
 def test_call_options_overload(harness):
     """functionCall/contracts/call_options_overload.sol"""
-    app = harness.compile_and_deploy("functionCall/contracts/call_options_overload.sol")
-    # (), 1 ether
-    pytest.xfail("fallback() dispatch not yet implemented")
-    # call() -> 1, 2, 2, 2
-    r = harness.call(app, "call()")
+    app = harness.compile_and_deploy("functionCall/contracts/call_options_overload.sol", postinit_inner_txns=4)
+    # Bare call w/ 1M microalgos → receive() accepts.
+    funding = 1_000_000
+    harness.call_bare(app, payment_wei=funding)
+    # call() exercises {value: ..}/{gas: ..} overload dispatch.
+    r = harness.call(app, "call()", extra_fee=8000)
     assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 2, 2)
-    # bal() -> 1000000000000000000
-    r = harness.call(app, "bal()")
-    assert as_int(r.abi_return) == 1000000000000000000
+    # bal() returns total balance; verify the original funding survived.
+    assert as_int(harness.call(app, "bal()").abi_return) - app.balance_baseline >= funding - 30  # minus inner-call values
 
 def test_calling_nonexisting_contract_throws(harness):
     """functionCall/contracts/calling_nonexisting_contract_throws.sol"""

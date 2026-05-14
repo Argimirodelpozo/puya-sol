@@ -170,7 +170,7 @@ class Harness:
     def call_raw(
         self,
         app: App,
-        selector: bytes,
+        selector: bytes | None,
         **opts,
     ) -> Result:
         """Submit a raw 4-byte selector call (skip ABI dispatch).
@@ -178,8 +178,15 @@ class Harness:
         See call.call_raw() for keyword options. Use for fallback /
         allowNonExistingFunctions-style tests where the test wants to
         verify the router's behaviour on an unknown selector.
+
+        `selector=None` makes a bare call with NumAppArgs==0 — exercises
+        Solidity's `receive()`/`fallback()` entry path.
         """
         return _call_raw(self.localnet, app, selector, **opts)
+
+    def call_bare(self, app: App, **opts) -> Result:
+        """Bare app call (NumAppArgs==0) that triggers receive()/fallback()."""
+        return _call_raw(self.localnet, app, None, **opts)
 
     def cleanup(self) -> None:
         """Remove the per-test output directory."""
