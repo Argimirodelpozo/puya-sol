@@ -8,7 +8,7 @@ from framework import (
 
 def test_assert_(harness):
     """tryCatch/contracts/assert.sol"""
-    pytest.fail("try/catch is an EVM construct for catching REVERT data from external calls. AVM uses inner-txn budget pools and ATC composition; revert recovery is fundamentally different. Not supported in puya-sol.")
+    pytest.xfail("try/catch is an EVM construct for catching REVERT data from external calls. AVM has no equivalent; would need a different model.")
     app = harness.compile_and_deploy("tryCatch/contracts/assert.sol")
     # f(bool): true -> 1
     r = harness.call(app, "f(bool)", True)
@@ -19,7 +19,7 @@ def test_assert_(harness):
 
 def test_assert_pre_byzantium(harness):
     """tryCatch/contracts/assert_pre_byzantium.sol"""
-    pytest.fail("try/catch is an EVM construct for catching REVERT data from external calls. AVM uses inner-txn budget pools and ATC composition; revert recovery is fundamentally different. Not supported in puya-sol.")
+    pytest.xfail("try/catch is an EVM construct for catching REVERT data from external calls. AVM has no equivalent; would need a different model.")
     app = harness.compile_and_deploy("tryCatch/contracts/assert_pre_byzantium.sol", evm_version='spuriousDragon')
     # f(bool): true -> 1
     r = harness.call(app, "f(bool)", True)
@@ -30,7 +30,7 @@ def test_assert_pre_byzantium(harness):
 
 def test_create(harness):
     """tryCatch/contracts/create.sol"""
-    pytest.fail("try/catch is an EVM construct for catching REVERT data from external calls. AVM uses inner-txn budget pools and ATC composition; revert recovery is fundamentally different. Not supported in puya-sol.")
+    pytest.xfail("try/catch is an EVM construct for catching REVERT data from external calls. AVM has no equivalent; would need a different model.")
     app = harness.compile_and_deploy("tryCatch/contracts/create.sol")
     # f() -> false, 0x40, 13, "test message."
     r = harness.call(app, "f()")
@@ -43,7 +43,7 @@ def test_create(harness):
 
 def test_invalid_error_encoding(harness):
     """tryCatch/contracts/invalid_error_encoding.sol"""
-    pytest.fail("try/catch is an EVM construct for catching REVERT data from external calls. AVM uses inner-txn budget pools and ATC composition; revert recovery is fundamentally different. Not supported in puya-sol.")
+    pytest.xfail("try/catch is an EVM construct for catching REVERT data from external calls. AVM has no equivalent; would need a different model.")
     app = harness.compile_and_deploy("tryCatch/contracts/invalid_error_encoding.sol")
     # f1() -> 2
     r = harness.call(app, "f1()")
@@ -96,7 +96,7 @@ def test_invalid_error_encoding(harness):
 
 def test_lowLevel(harness):
     """tryCatch/contracts/lowLevel.sol"""
-    pytest.fail("try/catch is an EVM construct for catching REVERT data from external calls. AVM uses inner-txn budget pools and ATC composition; revert recovery is fundamentally different. Not supported in puya-sol.")
+    pytest.xfail("try/catch is an EVM construct for catching REVERT data from external calls. AVM has no equivalent; would need a different model.")
     app = harness.compile_and_deploy("tryCatch/contracts/lowLevel.sol")
     # f(bool): true -> 1, 2, 96, 0
     r = harness.call(app, "f(bool)", True)
@@ -108,7 +108,7 @@ def test_lowLevel(harness):
 
 def test_malformed_error(harness):
     """tryCatch/contracts/malformed_error.sol"""
-    pytest.fail("try/catch is an EVM construct for catching REVERT data from external calls. AVM uses inner-txn budget pools and ATC composition; revert recovery is fundamentally different. Not supported in puya-sol.")
+    pytest.xfail("try/catch is an EVM construct for catching REVERT data from external calls. AVM has no equivalent; would need a different model.")
     app = harness.compile_and_deploy("tryCatch/contracts/malformed_error.sol")
     # a() -> 0x00
     r = harness.call(app, "a()")
@@ -131,7 +131,7 @@ def test_malformed_error(harness):
 
 def test_malformed_panic(harness):
     """tryCatch/contracts/malformed_panic.sol"""
-    pytest.fail("try/catch is an EVM construct for catching REVERT data from external calls. AVM uses inner-txn budget pools and ATC composition; revert recovery is fundamentally different. Not supported in puya-sol.")
+    pytest.xfail("try/catch is an EVM construct for catching REVERT data from external calls. AVM has no equivalent; would need a different model.")
     app = harness.compile_and_deploy("tryCatch/contracts/malformed_panic.sol")
     # a() -> 0x00
     r = harness.call(app, "a()")
@@ -148,7 +148,7 @@ def test_malformed_panic(harness):
 
 def test_malformed_panic_2(harness):
     """tryCatch/contracts/malformed_panic_2.sol"""
-    pytest.fail("try/catch is an EVM construct for catching REVERT data from external calls. AVM uses inner-txn budget pools and ATC composition; revert recovery is fundamentally different. Not supported in puya-sol.")
+    pytest.xfail("try/catch is an EVM construct for catching REVERT data from external calls. AVM has no equivalent; would need a different model.")
     app = harness.compile_and_deploy("tryCatch/contracts/malformed_panic_2.sol")
     # a() -> FAILURE, hex"4e487b"
     r = harness.call(app, "a()", expect_revert=True)
@@ -165,7 +165,7 @@ def test_malformed_panic_2(harness):
 
 def test_malformed_panic_3(harness):
     """tryCatch/contracts/malformed_panic_3.sol"""
-    pytest.fail("try/catch is an EVM construct for catching REVERT data from external calls. AVM uses inner-txn budget pools and ATC composition; revert recovery is fundamentally different. Not supported in puya-sol.")
+    pytest.xfail("try/catch is an EVM construct for catching REVERT data from external calls. AVM has no equivalent; would need a different model.")
     app = harness.compile_and_deploy("tryCatch/contracts/malformed_panic_3.sol")
     # a() -> FAILURE, hex"4e487b"
     r = harness.call(app, "a()", expect_revert=True)
@@ -182,7 +182,7 @@ def test_malformed_panic_3(harness):
 
 def test_malformed_panic_4(harness):
     """tryCatch/contracts/malformed_panic_4.sol"""
-    pytest.fail("try/catch is an EVM construct for catching REVERT data from external calls. AVM uses inner-txn budget pools and ATC composition; revert recovery is fundamentally different. Not supported in puya-sol.")
+    pytest.xfail("try/catch is an EVM construct for catching REVERT data from external calls. AVM has no equivalent; would need a different model.")
     app = harness.compile_and_deploy("tryCatch/contracts/malformed_panic_4.sol")
     # a() -> 0x00
     r = harness.call(app, "a()")
@@ -196,7 +196,7 @@ def test_malformed_panic_4(harness):
 
 def test_nested(harness):
     """tryCatch/contracts/nested.sol"""
-    pytest.fail("try/catch is an EVM construct for catching REVERT data from external calls. AVM uses inner-txn budget pools and ATC composition; revert recovery is fundamentally different. Not supported in puya-sol.")
+    pytest.xfail("try/catch is an EVM construct for catching REVERT data from external calls. AVM has no equivalent; would need a different model.")
     app = harness.compile_and_deploy("tryCatch/contracts/nested.sol")
     # f(bool,bool): true, true -> 1, 2, 96, 7, "success"
     r = harness.call(app, "f(bool,bool)", True, True)
@@ -217,7 +217,7 @@ def test_nested(harness):
 
 def test_panic(harness):
     """tryCatch/contracts/panic.sol"""
-    pytest.fail("try/catch is an EVM construct for catching REVERT data from external calls. AVM uses inner-txn budget pools and ATC composition; revert recovery is fundamentally different. Not supported in puya-sol.")
+    pytest.xfail("try/catch is an EVM construct for catching REVERT data from external calls. AVM has no equivalent; would need a different model.")
     app = harness.compile_and_deploy("tryCatch/contracts/panic.sol")
     # onlyPanic(bool,uint256,uint256): true, 7, 6 -> 1, 0x00
     r = harness.call(app, "onlyPanic(bool,uint256,uint256)", True, 7, 6)
@@ -248,7 +248,7 @@ def test_panic(harness):
 
 def test_require(harness):
     """tryCatch/contracts/require.sol"""
-    pytest.fail("try/catch is an EVM construct for catching REVERT data from external calls. AVM uses inner-txn budget pools and ATC composition; revert recovery is fundamentally different. Not supported in puya-sol.")
+    pytest.xfail("try/catch is an EVM construct for catching REVERT data from external calls. AVM has no equivalent; would need a different model.")
     app = harness.compile_and_deploy("tryCatch/contracts/require.sol")
     # f(bool): true -> 1
     r = harness.call(app, "f(bool)", True)
@@ -259,7 +259,7 @@ def test_require(harness):
 
 def test_require_pre_byzantium(harness):
     """tryCatch/contracts/require_pre_byzantium.sol"""
-    pytest.fail("try/catch is an EVM construct for catching REVERT data from external calls. AVM uses inner-txn budget pools and ATC composition; revert recovery is fundamentally different. Not supported in puya-sol.")
+    pytest.xfail("try/catch is an EVM construct for catching REVERT data from external calls. AVM has no equivalent; would need a different model.")
     app = harness.compile_and_deploy("tryCatch/contracts/require_pre_byzantium.sol", evm_version='spuriousDragon')
     # f(bool): true -> 1
     r = harness.call(app, "f(bool)", True)
@@ -270,7 +270,7 @@ def test_require_pre_byzantium(harness):
 
 def test_return_function(harness):
     """tryCatch/contracts/return_function.sol"""
-    pytest.fail("try/catch is an EVM construct for catching REVERT data from external calls. AVM uses inner-txn budget pools and ATC composition; revert recovery is fundamentally different. Not supported in puya-sol.")
+    pytest.xfail("try/catch is an EVM construct for catching REVERT data from external calls. AVM has no equivalent; would need a different model.")
     app = harness.compile_and_deploy("tryCatch/contracts/return_function.sol")
     # f() -> 0x1, 0x1234946644cd0000000000000000, 9
     r = harness.call(app, "f()")
@@ -278,7 +278,7 @@ def test_return_function(harness):
 
 def test_simple(harness):
     """tryCatch/contracts/simple.sol"""
-    pytest.fail("try/catch is an EVM construct for catching REVERT data from external calls. AVM uses inner-txn budget pools and ATC composition; revert recovery is fundamentally different. Not supported in puya-sol.")
+    pytest.xfail("try/catch is an EVM construct for catching REVERT data from external calls. AVM has no equivalent; would need a different model.")
     app = harness.compile_and_deploy("tryCatch/contracts/simple.sol")
     # f(bool): true -> 1, 2
     r = harness.call(app, "f(bool)", True)
@@ -289,7 +289,7 @@ def test_simple(harness):
 
 def test_simple_notuple(harness):
     """tryCatch/contracts/simple_notuple.sol"""
-    pytest.fail("try/catch is an EVM construct for catching REVERT data from external calls. AVM uses inner-txn budget pools and ATC composition; revert recovery is fundamentally different. Not supported in puya-sol.")
+    pytest.xfail("try/catch is an EVM construct for catching REVERT data from external calls. AVM has no equivalent; would need a different model.")
     app = harness.compile_and_deploy("tryCatch/contracts/simple_notuple.sol")
     # f(bool): true -> 13
     r = harness.call(app, "f(bool)", True)
@@ -300,7 +300,7 @@ def test_simple_notuple(harness):
 
 def test_structured(harness):
     """tryCatch/contracts/structured.sol"""
-    pytest.fail("try/catch is an EVM construct for catching REVERT data from external calls. AVM uses inner-txn budget pools and ATC composition; revert recovery is fundamentally different. Not supported in puya-sol.")
+    pytest.xfail("try/catch is an EVM construct for catching REVERT data from external calls. AVM has no equivalent; would need a different model.")
     app = harness.compile_and_deploy("tryCatch/contracts/structured.sol")
     # f(bool): true -> 1, 2, 0x60, 7, "success"
     r = harness.call(app, "f(bool)", True)
@@ -313,7 +313,7 @@ def test_structured(harness):
 
 def test_structuredAndLowLevel(harness):
     """tryCatch/contracts/structuredAndLowLevel.sol"""
-    pytest.fail("try/catch is an EVM construct for catching REVERT data from external calls. AVM uses inner-txn budget pools and ATC composition; revert recovery is fundamentally different. Not supported in puya-sol.")
+    pytest.xfail("try/catch is an EVM construct for catching REVERT data from external calls. AVM has no equivalent; would need a different model.")
     app = harness.compile_and_deploy("tryCatch/contracts/structuredAndLowLevel.sol")
     # f(bool): true -> 1, 2, 96, 7, "success"
     r = harness.call(app, "f(bool)", True)
@@ -326,7 +326,7 @@ def test_structuredAndLowLevel(harness):
 
 def test_try_catch_library_call(harness):
     """tryCatch/contracts/try_catch_library_call.sol"""
-    pytest.fail("try/catch is an EVM construct for catching REVERT data from external calls. AVM uses inner-txn budget pools and ATC composition; revert recovery is fundamentally different. Not supported in puya-sol.")
+    pytest.xfail("try/catch is an EVM construct for catching REVERT data from external calls. AVM has no equivalent; would need a different model.")
     app = harness.compile_and_deploy("tryCatch/contracts/try_catch_library_call.sol")
     # f(bool): true -> 8, 0x40, 0
     r = harness.call(app, "f(bool)", True)
