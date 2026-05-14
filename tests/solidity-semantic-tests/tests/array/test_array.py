@@ -745,7 +745,13 @@ def test_fixed_arrays_in_constructors(harness):
 
 def test_fixed_arrays_in_storage(harness):
     """array/contracts/fixed_arrays_in_storage.sol"""
-    app = harness.compile_and_deploy("array/contracts/fixed_arrays_in_storage.sol")
+    # Contract has large fixed arrays — needs extra MBR funding and many
+    # box refs for the postinit (one ref per box slot).
+    app = harness.compile_and_deploy(
+        "array/contracts/fixed_arrays_in_storage.sol",
+        fund_wei=20_000_000,
+        postinit_budget_pool=14,
+    )
     # setIDStatic(uint256): 0xb ->
     r = harness.call(app, "setIDStatic(uint256)", 11)
     # (void return — call succeeding is the assertion)

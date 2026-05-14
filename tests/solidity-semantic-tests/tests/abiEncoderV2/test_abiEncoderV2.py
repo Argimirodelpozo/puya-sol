@@ -844,16 +844,21 @@ def test_memory_dynamic_array_and_calldata_bytes(harness):
     assert bytes(harness.call(app, "g(uint256[],bytes)", [0xffff], b"12345678").abi_return) == encoded([0xffff], b"12345678")
 
 def test_memory_dynamic_array_and_calldata_static_array(harness):
-    """abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol"""
+    """abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol
+
+    f/g return abi.encode(a, b) where a is uint256[] (dynamic, has head)
+    and b is uint256[1] (static, inlined). EVM layout:
+      [head_a=0x40][b[0]][length_a=1][a[0]]
+    """
     app = harness.compile_and_deploy("abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol")
-    # f / g return abi.encode(a, b) where a is uint256[] and b is uint256[1].
-    # head_a (= 0x40), head_b (= 0x80), length_a, a[0], b[0]
-    expected = b"".join(v.to_bytes(32, "big") for v in (0x40, 0x80, 1, 0xff, 0xffff))
+    expected = b"".join(v.to_bytes(32, "big") for v in (0x40, 0xffff, 1, 0xff))
     assert bytes(harness.call(app, "f(uint256[],uint256[1])", [0xff], [0xffff]).abi_return) == expected
     assert bytes(harness.call(app, "g(uint256[],uint256[1])", [0xff], [0xffff]).abi_return) == expected
-    # h(uint256[],uint256[1]): 0x40, 0xff, 1, 0xffff -> 0x40, 0xff, 1, 0xffff
-    r = harness.call(app, "h(uint256[],uint256[1])", 64, 255, 1, 65535)
-    assert tuple(as_int(x) for x in r.abi_return) == (64, 255, 1, 65535)
+    # h returns (a, b) — algosdk decodes as tuple ([0xff], [0xffff]).
+    r = harness.call(app, "h(uint256[],uint256[1])", [0xff], [0xffff])
+    a, b = r.abi_return
+    assert [as_int(x) for x in a] == [0xff]
+    assert [as_int(x) for x in b] == [0xffff]
 
 def test_memory_params_in_external_function(harness):
     """abiEncoderV2/contracts/memory_params_in_external_function.sol"""
