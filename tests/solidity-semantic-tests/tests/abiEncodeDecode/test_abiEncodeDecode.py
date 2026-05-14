@@ -97,22 +97,10 @@ def test_abi_encode_call_is_consistent(harness):
 
 def test_abi_encode_call_memory(harness):
     """abiEncodeDecode/contracts/abi_encode_call_memory.sol"""
-    pytest.fail("""Blocked by `new D()` child-contract creation, NOT selectors.
-
-The contract does:
-    x[0] = this.something;
-    x[1] = (new D()).something;   // ← inner app creation
-    bytes memory a = abi.encodeCall(x[0], ());
-    bytes memory b = abi.encodeCall(x[1], ());
-
-`new D()` deploys a child app. AVM inner-app creation requires the parent's
-ApprovalProgram source to be available at call time and burns fee/min-balance
-differently from EVM CREATE. The wider class of `new C()` tests is skipped
-across the suite for this reason.
-
-If/when child-app creation lands, this test should pass: the AVM selector
-for `something()void` is `0x40e33532` (sha512_256("something()void")[:4]),
-not the EVM keccak256 value `0xa7a0d537` from the fixture comment.""")
+    app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_call_memory.sol", postinit_inner_txns=4)
+    # AVM selector = sha512_256("something()void")[:4]
+    r = harness.call(app, "test()", extra_fee=5000)
+    assert bytes(r.abi_return) == bytes.fromhex("40e33532")
 
 def test_abi_encode_call_special_args(harness):
     """abiEncodeDecode/contracts/abi_encode_call_special_args.sol"""
