@@ -93,15 +93,13 @@ def test_cleanup_in_compound_assign(harness):
 def test_dirty_calldata_bytes(harness):
     """cleanup/contracts/dirty_calldata_bytes.sol"""
     app = harness.compile_and_deploy("cleanup/contracts/dirty_calldata_bytes.sol")
-    # f(bytes): 0x20, 0x04, "dead" -> true
-    r = harness.call(app, "f(bytes)", 'dead')
+    r = harness.call(app, "f(bytes)", b"dead")
     assert bool(as_int(r.abi_return)) is True
 
 def test_dirty_calldata_dynamic_array(harness):
     """cleanup/contracts/dirty_calldata_dynamic_array.sol"""
     app = harness.compile_and_deploy("cleanup/contracts/dirty_calldata_dynamic_array.sol")
-    # f(int16[]): 0x20, 0x02, 0x7fff, 0x7fff -> true
-    r = harness.call(app, "f(int16[])", 32, 2, 32767, 32767)
+    r = harness.call(app, "f(int16[])", [32767, 32767])
     assert bool(as_int(r.abi_return)) is True
 
 def test_exp_cleanup(harness):
