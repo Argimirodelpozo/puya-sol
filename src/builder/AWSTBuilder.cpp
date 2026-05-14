@@ -99,18 +99,10 @@ void AWSTBuilder::registerFunctionIds(
 				if (!func->isImplemented())
 					continue;
 
-				// Skip functions with non-internal function-type parameters
-				{
-					bool hasNonInternalFnParam = false;
-					for (auto const& p: func->parameters())
-					{
-						if (auto const* ft = dynamic_cast<solidity::frontend::FunctionType const*>(p->type()))
-							if (ft->kind() != solidity::frontend::FunctionType::Kind::Internal)
-							{ hasNonInternalFnParam = true; break; }
-					}
-					if (hasNonInternalFnParam)
-						continue;
-				}
+				// Functions with function-pointer parameters (internal OR external):
+				// keep registration so call sites can resolve them, but the actual
+				// translation in translateLibraryFunctions will route them through
+				// per-contract internalization (see m_internalizableLibFuncs).
 
 				std::string baseName = libraryName + "." + func->name();
 				std::string qualifiedName = baseName;
@@ -246,25 +238,45 @@ void AWSTBuilder::translateLibraryFunctions(
 					}
 				}
 
-				// Skip library functions with non-internal function-type
-				// parameters (external/delegate-call pointers can't be
-				// represented on AVM). Internal function pointers work via
-				// our dispatch table mechanism.
-				bool hasNonInternalFnParam = false;
+				// Library functions with function-pointer parameters (internal
+				// or external fn-ptr type) become "internalizable": emit
+				// per-contract as an internal method of each using-contract
+				// instead of as a root subroutine. The fn-ptr dispatcher's
+				// case branches may invoke contract instance methods, which
+				// puya rejects from a root subroutine scope — hosting the
+				// function inside the contract resolves that.
+				//
+				// This mirrors Solidity's behavior: INTERNAL library functions
+				// are inlined into the calling contract's bytecode (no separate
+				// deployment). For EXTERNAL library functions, Solidity deploys
+				// the library as its own contract and uses DELEGATECALL — we
+				// warn here since the AVM equivalent (separate child app +
+				// inner-txn delegate) isn't wired up, and we still internalize
+				// best-effort so the test compiles.
+				bool hasFnParam = false;
 				for (auto const& p: func->parameters())
 				{
-					if (auto const* ft = dynamic_cast<solidity::frontend::FunctionType const*>(p->type()))
+					if (dynamic_cast<solidity::frontend::FunctionType const*>(p->type()))
 					{
-						if (ft->kind() != solidity::frontend::FunctionType::Kind::Internal)
-						{
-							hasNonInternalFnParam = true;
-							break;
-						}
+						hasFnParam = true;
+						break;
 					}
 				}
-				if (hasNonInternalFnParam)
+				if (hasFnParam)
 				{
-					Logger::instance().debug("Skipping library function with non-internal function-type param: " + qualifiedName);
+					if (func->visibility() == solidity::frontend::Visibility::External)
+					{
+						awst::SourceLocation warnLoc;
+						warnLoc.file = _sourceFile;
+						Logger::instance().warning(
+							"external library function `" + qualifiedName + "` internalized "
+							"into using-contract — Solidity would normally deploy this as a "
+							"separate contract and DELEGATECALL it; AVM has no DELEGATECALL "
+							"equivalent. Behaviour may diverge for storage-mutating bodies.",
+							warnLoc);
+					}
+					Logger::instance().debug("Registering internalizable library function: " + qualifiedName);
+					m_internalizableLibFuncs.push_back(func);
 					continue;
 				}
 
@@ -539,6 +551,40 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	}
 
 	sub->body = sol_ast::buildBlock(blk, _func.body());
+
+	// Inline any modifier bodies into this library/free function. Same
+	// implementation the contract-method path uses; sharing it keeps
+	// modifier semantics identical across both translation paths.
+	// `currentContract` is null — libraries and free functions have no
+	// enclosing contract for virtual-override resolution.
+	if (!_func.modifiers().empty())
+	{
+		std::vector<solidity::frontend::VariableDeclaration const*> namedReturnList;
+		for (auto const& rp: returnParams)
+			if (!rp->name().empty())
+				namedReturnList.push_back(rp.get());
+
+		std::vector<solidity::frontend::VariableDeclaration const*> mappingKeyList;
+		for (size_t idx: mappingStorageParams)
+			mappingKeyList.push_back(_func.parameters()[idx].get());
+		for (auto const& rp: returnParams)
+		{
+			if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
+				&& dynamic_cast<solidity::frontend::MappingType const*>(rp->type())
+				&& !rp->name().empty())
+			{
+				mappingKeyList.push_back(rp.get());
+			}
+		}
+
+		FunctionTranslationCtx ftCtx{
+			m_typeMapper, exprBuilder, tr, _sourceFile,
+			fnCtx.params, sub->returnType, fnCtx.paramBitWidths,
+			std::move(namedReturnList), std::move(mappingKeyList),
+			/*currentContract=*/nullptr,
+		};
+		inlineModifiers(ftCtx, _func, sub->body);
+	}
 
 	// Insert zero-initialization for named return variables — Solidity
 	// implicitly initializes named returns to their zero values. Skip
@@ -815,7 +861,8 @@ void AWSTBuilder::translateContracts(
 
 			ContractBuilder translator(
 				m_typeMapper, *m_storageMapper, _sourceFile, m_libraryFunctionIds,
-				_opupBudget, m_freeFunctionById, _ensureBudget, _viaYulBehavior
+				_opupBudget, m_freeFunctionById, _ensureBudget, _viaYulBehavior,
+				m_internalizableLibFuncs
 			);
 			auto awstContract = translator.build(*contract);
 

@@ -143,18 +143,12 @@ def test_internal_library_function_attached_to_enum(harness):
 
 def test_internal_library_function_attached_to_external_function_type(harness):
     """libraries/contracts/internal_library_function_attached_to_external_function_type.sol"""
-    pytest.xfail("""Puya scope rule: root subroutines can't call contract methods.
-
-Library function L.double(f, x) takes an external fn-ptr and dispatches via
-__funcptr_dispatch which case-branches to either a SubroutineID or an
-InstanceMethodTarget (for contract instance methods like C.identity).
-L.double is emitted as a root Subroutine (libraries are top-level in puya),
-so its dispatcher call into C.identity is rejected by puya:
-  `invocation of instance method outside of a contract method`
-
-Same rejection with ContractMethodTarget. The fix would require either
-(a) inlining internal library function bodies into the calling contract's
-method scope, or (b) puya allowing cross-scope calls. Neither is small.""")
+    app = harness.compile_and_deploy(
+        "libraries/contracts/internal_library_function_attached_to_external_function_type.sol",
+        postinit_inner_txns=4,
+    )
+    r = harness.call(app, "test(uint256)", 5, extra_fee=5000)
+    assert as_int(r.abi_return) == 10
 
 def test_internal_library_function_attached_to_fixed_array(harness):
     """libraries/contracts/internal_library_function_attached_to_fixed_array.sol"""
@@ -186,15 +180,15 @@ def test_internal_library_function_attached_to_interface(harness):
 
 def test_internal_library_function_attached_to_internal_function_type(harness):
     """libraries/contracts/internal_library_function_attached_to_internal_function_type.sol"""
-    pytest.xfail("""Puya scope rule: root subroutines can't call contract methods.
-See test_internal_library_function_attached_to_external_function_type for the
-full root-cause writeup. Same dispatcher-from-root-subroutine issue.""")
+    app = harness.compile_and_deploy("libraries/contracts/internal_library_function_attached_to_internal_function_type.sol")
+    r = harness.call(app, "test(uint256)", 5)
+    assert as_int(r.abi_return) == 10
 
 def test_internal_library_function_attached_to_internal_function_type_named_selector(harness):
     """libraries/contracts/internal_library_function_attached_to_internal_function_type_named_selector.sol"""
-    pytest.xfail("""Puya scope rule: root subroutines can't call contract methods.
-See test_internal_library_function_attached_to_external_function_type for the
-full root-cause writeup. Same dispatcher-from-root-subroutine issue.""")
+    app = harness.compile_and_deploy("libraries/contracts/internal_library_function_attached_to_internal_function_type_named_selector.sol")
+    r = harness.call(app, "test(uint256)", 5)
+    assert as_int(r.abi_return) == 10
 
 def test_internal_library_function_attached_to_literal(harness):
     """libraries/contracts/internal_library_function_attached_to_literal.sol"""

@@ -34,6 +34,17 @@ bool CallResolver::tryResolveLibraryOrFree(
 	{
 		if (contractDef->isLibrary())
 		{
+				// Internalized library function? Route to the per-contract
+				// internal method copy via InstanceMethodTarget rather than
+				// a root SubroutineID.
+				auto internalIt = _ctx.internalizedLibFuncNames.find(_funcDef->id());
+				if (internalIt != _ctx.internalizedLibFuncNames.end())
+				{
+					_result.target = awst::InstanceMethodTarget{internalIt->second};
+					_result.funcDef = _funcDef;
+					return true;
+				}
+
 				// Prefer AST ID lookup for precise overload resolution
 				auto byId = _ctx.freeFunctionById.find(_funcDef->id());
 				if (byId != _ctx.freeFunctionById.end())

@@ -40,6 +40,15 @@ private:
 	/// Maps free function AST ID → subroutine ID, for operator overload resolution.
 	std::unordered_map<int64_t, std::string> m_freeFunctionById;
 
+	/// Library functions with internal function-pointer parameters. Marked
+	/// "internalizable" because they need to be promoted into INTERNAL
+	/// METHODS of each using-contract (not emitted as root Subroutines).
+	/// Their body invokes the funcptr dispatcher whose case branches may
+	/// invoke contract instance methods — puya refuses to call instance
+	/// methods from a root Subroutine scope, so we host the library function
+	/// inside the contract instead.
+	std::vector<solidity::frontend::FunctionDefinition const*> m_internalizableLibFuncs;
+
 	// ── Build phases (executed in order from build()) ──
 
 	/// Phase 1: walk every source unit and register every library function and

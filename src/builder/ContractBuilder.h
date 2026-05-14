@@ -21,6 +21,59 @@
 namespace puyasol::builder
 {
 
+/// Per-function translation state. Bundles everything `buildBlock` and
+/// `inlineModifiers` need so the contract-method path (`ContractBuilder`)
+/// and the library/free-function path (`AWSTBuilder`) can share the same
+/// implementations instead of each carrying its own copy.
+///
+/// `currentContract` may be null when there is no enclosing contract
+/// (libraries, file-level free functions). In that case the modifier
+/// inliner skips virtual-override resolution, which is the only thing
+/// it needs `currentContract` for.
+struct FunctionTranslationCtx
+{
+	TypeMapper& typeMapper;
+	eb::ContractContext& exprBuilder;
+	sol_ast::TranslationContext& tr;
+	std::string sourceFile;
+
+	// Per-function state.
+	std::vector<std::pair<std::string, awst::WType const*>> params;
+	awst::WType const* returnType = nullptr;
+	std::map<std::string, unsigned> paramBitWidths;
+	std::vector<solidity::frontend::VariableDeclaration const*> namedReturns;
+	std::vector<solidity::frontend::VariableDeclaration const*> mappingKeyParams;
+
+	// Enclosing contract for modifier virtual-override lookup; nullable.
+	solidity::frontend::ContractDefinition const* currentContract = nullptr;
+};
+
+/// Make an `awst::SourceLocation` from a Solidity `SourceLocation`.
+awst::SourceLocation makeLoc(
+	std::string const& sourceFile,
+	solidity::langutil::SourceLocation const& solLoc);
+
+/// Translate a Solidity Block in the given function context.
+///
+/// If `placeholder` is non-null, any `_` (PlaceholderStatement) inside the
+/// block gets replaced by it. Used during modifier body translation, where
+/// `_` stands for the wrapped function body.
+std::shared_ptr<awst::Block> buildBlock(
+	FunctionTranslationCtx& ctx,
+	solidity::frontend::Block const& block,
+	std::shared_ptr<awst::Block> placeholder = nullptr);
+
+/// Inline modifier bodies into a function body in place.
+///
+/// Walks `func.modifiers()` outermost-first; each iteration translates the
+/// modifier's Solidity body with the current accumulator passed in as
+/// `placeholder`, so `_` inside the modifier expands to the wrapped body.
+/// The accumulator becomes the new body for the next iteration.
+void inlineModifiers(
+	FunctionTranslationCtx& ctx,
+	solidity::frontend::FunctionDefinition const& func,
+	std::shared_ptr<awst::Block>& body);
+
 /// Builds an AWST Contract node from a Solidity ContractDefinition.
 ///
 /// Orchestrates the translation of a complete contract including:
@@ -41,7 +94,8 @@ public:
 		uint64_t _opupBudget = 0,
 		FreeFunctionIdMap const& _freeFunctionById = {},
 		std::map<std::string, uint64_t> const& _ensureBudget = {},
-		bool _viaIR = false
+		bool _viaIR = false,
+		std::vector<solidity::frontend::FunctionDefinition const*> const& _internalizableLibFuncs = {}
 	);
 
 	/// Build AWST from a full contract definition.
@@ -67,6 +121,7 @@ private:
 	FreeFunctionIdMap const& m_freeFunctionById;
 	std::map<std::string, uint64_t> m_ensureBudget;
 	bool m_viaIR = false;
+	std::vector<solidity::frontend::FunctionDefinition const*> m_internalizableLibFuncs;
 
 	std::unique_ptr<eb::ContractContext> m_exprBuilder;
 
@@ -86,6 +141,11 @@ private:
 	/// Build a function body block with function context set.
 	std::shared_ptr<awst::Block> buildBlock(
 		solidity::frontend::Block const& _block);
+
+	/// Snapshot of the current per-function state as a `FunctionTranslationCtx`,
+	/// so the contract-method path can share the free-function `buildBlock` /
+	/// `inlineModifiers` implementations with the library/free-function path.
+	FunctionTranslationCtx makeFunctionCtx();
 
 	/// Set function context for inline assembly.
 	void setFunctionContext(

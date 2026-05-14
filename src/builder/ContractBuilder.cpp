@@ -35,7 +35,8 @@ ContractBuilder::ContractBuilder(
 	uint64_t _opupBudget,
 	FreeFunctionIdMap const& _freeFunctionById,
 	std::map<std::string, uint64_t> const& _ensureBudget,
-	bool _viaIR
+	bool _viaIR,
+	std::vector<solidity::frontend::FunctionDefinition const*> const& _internalizableLibFuncs
 )
 	: m_typeMapper(_typeMapper),
 	  m_storageMapper(_storageMapper),
@@ -44,49 +45,89 @@ ContractBuilder::ContractBuilder(
 	  m_opupBudget(_opupBudget),
 	  m_freeFunctionById(_freeFunctionById),
 	  m_ensureBudget(_ensureBudget),
-	  m_viaIR(_viaIR)
+	  m_viaIR(_viaIR),
+	  m_internalizableLibFuncs(_internalizableLibFuncs)
 {
 }
 
-awst::SourceLocation ContractBuilder::makeLoc(
-	solidity::langutil::SourceLocation const& _solLoc
-)
+// ── Shared free-function API ────────────────────────────────────────────
+// `makeLoc` / `buildBlock` are exposed as free functions so the
+// library/free-function path (in AWSTBuilder) and the contract-method path
+// (in ContractBuilder) can share the same translation primitives.
+
+awst::SourceLocation makeLoc(
+	std::string const& _sourceFile,
+	solidity::langutil::SourceLocation const& _solLoc)
 {
 	awst::SourceLocation loc;
-	loc.file = m_sourceFile;
+	loc.file = _sourceFile;
 	loc.line = _solLoc.start >= 0 ? _solLoc.start : 0;
 	loc.endLine = _solLoc.end >= 0 ? _solLoc.end : 0;
 	return loc;
 }
 
-std::shared_ptr<awst::Block> ContractBuilder::buildBlock(
-	solidity::frontend::Block const& _block)
+std::shared_ptr<awst::Block> buildBlock(
+	FunctionTranslationCtx& _ctx,
+	solidity::frontend::Block const& _block,
+	std::shared_ptr<awst::Block> _placeholder)
 {
 	// Build a fresh per-function context, then a top BlockContext (optionally
-	// with the current placeholder body for modifier inlining), then dispatch.
-	sol_ast::FunctionContext fn{*m_tr, m_currentParams, m_currentReturnType, m_currentBitWidths};
-	auto fnGuard = m_exprBuilder->pushScopeRaii(&fn);
-	auto blk = m_currentPlaceholder
-		? sol_ast::BlockContext::top(fn).withPlaceholder(m_currentPlaceholder)
+	// with the placeholder body for modifier inlining), then dispatch.
+	sol_ast::FunctionContext fn{_ctx.tr, _ctx.params, _ctx.returnType, _ctx.paramBitWidths};
+	auto fnGuard = _ctx.exprBuilder.pushScopeRaii(&fn);
+	auto blk = _placeholder
+		? sol_ast::BlockContext::top(fn).withPlaceholder(_placeholder)
 		: sol_ast::BlockContext::top(fn);
-	auto blkGuard = m_exprBuilder->pushScopeRaii(&blk);
+	auto blkGuard = _ctx.exprBuilder.pushScopeRaii(&blk);
 
 	// Register named return parameters so inner-block declarations of the
 	// same name get the unique-name shadow rename. Must happen *after* the
 	// BlockContext is pushed — `resolveVarName` writes into the innermost
 	// enclosing block via `nearestBlock(currentScope)`.
-	for (auto const* rp: m_currentNamedReturns)
+	for (auto const* rp: _ctx.namedReturns)
 		if (rp && !rp->name().empty())
 			blk.resolveVarName(rp->name(), rp->id());
 
 	// Register mapping-storage-ref params on the FunctionContext so that
 	// `m[k]` inside the body resolves the dynamic box-key prefix at
 	// runtime. Same scope-push ordering constraint as the named returns.
-	for (auto const* mp: m_currentMappingKeyParams)
+	for (auto const* mp: _ctx.mappingKeyParams)
 		if (mp && !mp->name().empty())
 			fn.setMappingKeyParam(mp->id(), mp->name());
 
 	return sol_ast::buildBlock(blk, _block);
+}
+
+// ── ContractBuilder thin wrappers (route through free-function API) ─────
+
+awst::SourceLocation ContractBuilder::makeLoc(
+	solidity::langutil::SourceLocation const& _solLoc
+)
+{
+	return ::puyasol::builder::makeLoc(m_sourceFile, _solLoc);
+}
+
+FunctionTranslationCtx ContractBuilder::makeFunctionCtx()
+{
+	return FunctionTranslationCtx{
+		m_typeMapper,
+		*m_exprBuilder,
+		*m_tr,
+		m_sourceFile,
+		m_currentParams,
+		m_currentReturnType,
+		m_currentBitWidths,
+		m_currentNamedReturns,
+		m_currentMappingKeyParams,
+		m_currentContract,
+	};
+}
+
+std::shared_ptr<awst::Block> ContractBuilder::buildBlock(
+	solidity::frontend::Block const& _block)
+{
+	auto ctx = makeFunctionCtx();
+	return ::puyasol::builder::buildBlock(ctx, _block, m_currentPlaceholder);
 }
 
 void ContractBuilder::setFunctionContext(
@@ -214,6 +255,18 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		m_libraryFunctionIds, m_overloadedNames, m_freeFunctionById
 	);
 	m_exprBuilder->currentContract = &_contract;
+
+	// Pre-populate the internalized library function map BEFORE translating any
+	// methods, so call resolver routes calls to these funcs as InstanceMethodTargets.
+	for (auto const* libFunc : m_internalizableLibFuncs)
+	{
+		if (!libFunc) continue;
+		auto const* libContract = libFunc->annotation().contract;
+		std::string methodName = "__intlib_"
+			+ (libContract ? libContract->name() : std::string("L"))
+			+ "_" + libFunc->name();
+		m_exprBuilder->internalizedLibFuncNames[libFunc->id()] = methodName;
+	}
 
 	// Build the per-contract TranslationContext. FunctionContext + BlockContext
 	// are constructed locally (in buildBlock and similar) on top of this.
@@ -379,6 +432,24 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// Emit MRO / fallback / explicit-base super subroutines now that all
 	// regular method bodies are translated.
 	emitSuperSubroutines(*contract, contractName);
+
+	// Emit internalized library functions as internal methods of this contract.
+	// These are library funcs with internal function-pointer params: their body
+	// invokes the funcptr dispatcher which case-branches to contract instance
+	// methods, so they must live in the contract's scope (puya rejects calling
+	// instance methods from root-level subroutines).
+	for (auto const* libFunc : m_internalizableLibFuncs)
+	{
+		if (!libFunc || !libFunc->isImplemented()) continue;
+		auto nameIt = m_exprBuilder->internalizedLibFuncNames.find(libFunc->id());
+		if (nameIt == m_exprBuilder->internalizedLibFuncNames.end()) continue;
+		clearSuperOverrides();
+		auto method = buildFunction(*libFunc, contractName, nameIt->second);
+		contract->methods.push_back(std::move(method));
+		for (auto& sub: m_modifierSubroutines)
+			contract->methods.push_back(std::move(sub));
+		m_modifierSubroutines.clear();
+	}
 
 	// Generate __storage_read/__storage_write dispatch subroutines
 	// for assembly sload/sstore support

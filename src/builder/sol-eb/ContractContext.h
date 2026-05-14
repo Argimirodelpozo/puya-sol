@@ -114,6 +114,11 @@ public:
 	std::unordered_map<std::string, std::string> const& libraryFunctionIds;
 	std::unordered_set<std::string> const& overloadedNames;
 	std::unordered_map<int64_t, std::string> const& freeFunctionById;
+	/// AST IDs of library functions promoted to per-contract internal methods.
+	/// Maps funcDef.id() → the synthesized method name on the current contract.
+	/// CallResolver consults this first, returning InstanceMethodTarget instead
+	/// of SubroutineID when the funcDef is internalized.
+	std::unordered_map<int64_t, std::string> internalizedLibFuncNames;
 
 	// ── Side-effect statement buffers (owned) ──
 	std::vector<std::shared_ptr<awst::Statement>> pendingStatements;
