@@ -598,11 +598,9 @@ def test_transaction_status(harness):
     assert r.reverted
 
 def test_value_test(harness):
-    """functionCall/contracts/value_test.sol"""
+    """functionCall/contracts/value_test.sol — msg.value on AVM is the
+    payment amount in microalgos. 1 ether (= 10^18 microalgos) would
+    overdraw the test account, so we substitute a representative amount."""
     app = harness.compile_and_deploy("functionCall/contracts/value_test.sol")
-    # f(), 1 ether -> 1000000000000000000
-    r = harness.call(app, "f()", payment_wei=1000000000000000000)
-    assert as_int(r.abi_return) == 1000000000000000000
-    # f(), 1 wei -> 1
-    r = harness.call(app, "f()", payment_wei=1)
-    assert as_int(r.abi_return) == 1
+    assert as_int(harness.call(app, "f()", payment_wei=10_000).abi_return) == 10_000
+    assert as_int(harness.call(app, "f()", payment_wei=1).abi_return) == 1

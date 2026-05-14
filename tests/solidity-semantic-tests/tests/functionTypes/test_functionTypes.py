@@ -129,8 +129,8 @@ def test_function_type_library_internal(harness):
 def test_inline_array_with_value_call_option(harness):
     """functionTypes/contracts/inline_array_with_value_call_option.sol"""
     app = harness.compile_and_deploy("functionTypes/contracts/inline_array_with_value_call_option.sol")
-    # h(), 1 ether -> 1
-    r = harness.call(app, "h()", payment_wei=1000000000000000000)
+    # 1 ether = 10^18 microalgos overflows; 10k microalgos is enough.
+    r = harness.call(app, "h()", payment_wei=10_000)
     assert as_int(r.abi_return) == 1
 
 def test_mapping_of_functions(harness):
