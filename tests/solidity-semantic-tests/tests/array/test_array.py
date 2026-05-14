@@ -1203,28 +1203,18 @@ def test_memory_arrays_of_various_sizes(harness):
 def test_nested_calldata_storage(harness):
     """array/contracts/nested_calldata_storage.sol"""
     app = harness.compile_and_deploy("array/contracts/nested_calldata_storage.sol", via_yul_behavior=True)
-    # i(uint256[][2]): 0x20, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04
-    r = harness.call(app, "i(uint256[][2])", 32, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    # (void return — call succeeding is the assertion)
-    # tmp_i(uint256,uint256): 0, 0 -> 0x0A01
-    r = harness.call(app, "tmp_i(uint256,uint256)", 0, 0)
-    assert as_int(r.abi_return) == 2561
-    # tmp_i(uint256,uint256): 1, 0 -> 0x0B01
-    r = harness.call(app, "tmp_i(uint256,uint256)", 1, 0)
-    assert as_int(r.abi_return) == 2817
+    arr = [[2561, 2562, 2563], [2817, 2818, 2819, 2820]]
+    harness.call(app, "i(uint256[][2])", arr)
+    assert as_int(harness.call(app, "tmp_i(uint256,uint256)", 0, 0).abi_return) == 2561
+    assert as_int(harness.call(app, "tmp_i(uint256,uint256)", 1, 0).abi_return) == 2817
 
 def test_nested_calldata_storage2(harness):
     """array/contracts/nested_calldata_storage2.sol"""
     app = harness.compile_and_deploy("array/contracts/nested_calldata_storage2.sol", via_yul_behavior=True)
-    # i(uint256[][]): 0x20, 2, 0x40, 0xC0, 3, 0x0A01, 0x0A02, 0x0A03, 4, 0x0B01, 0x0B02, 0x0B03, 0x0B04
-    r = harness.call(app, "i(uint256[][])", 32, 2, 64, 192, 3, 2561, 2562, 2563, 4, 2817, 2818, 2819, 2820)
-    # (void return — call succeeding is the assertion)
-    # tmp_i(uint256,uint256): 0, 0 -> 0x0A01
-    r = harness.call(app, "tmp_i(uint256,uint256)", 0, 0)
-    assert as_int(r.abi_return) == 2561
-    # tmp_i(uint256,uint256): 1, 0 -> 0x0B01
-    r = harness.call(app, "tmp_i(uint256,uint256)", 1, 0)
-    assert as_int(r.abi_return) == 2817
+    arr = [[2561, 2562, 2563], [2817, 2818, 2819, 2820]]
+    harness.call(app, "i(uint256[][])", arr)
+    assert as_int(harness.call(app, "tmp_i(uint256,uint256)", 0, 0).abi_return) == 2561
+    assert as_int(harness.call(app, "tmp_i(uint256,uint256)", 1, 0).abi_return) == 2817
 
 def test_reusing_memory(harness):
     """array/contracts/reusing_memory.sol"""
