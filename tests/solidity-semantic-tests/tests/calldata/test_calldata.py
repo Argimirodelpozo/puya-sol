@@ -150,19 +150,18 @@ def test_calldata_array_three_dimensional(harness):
 def test_calldata_attached_to_bytes(harness):
     """calldata/contracts/calldata_attached_to_bytes.sol"""
     app = harness.compile_and_deploy("calldata/contracts/calldata_attached_to_bytes.sol")
-    # test(uint256,bytes,uint256): 7, 0x60, 4, 2, "ab" -> "b", "a"
-    r = harness.call(app, "test(uint256,bytes,uint256)", 7, 96, 4, 2, bytes.fromhex('6162'))
-    # TODO: verify expected: "b" | "a"
-    assert not r.reverted
+    # test(_, b, _) returns (b[1], b[0]) via the attached `reverseBytes` lib fn.
+    r = harness.call(app, "test(uint256,bytes,uint256)", 7, b"ab", 4)
+    # Returns two bytes1 values = ("b", "a").
+    assert [bytes(x) for x in r.abi_return] == [b"b", b"a"]
+
 
 def test_calldata_attached_to_dynamic_array_or_slice(harness):
     """calldata/contracts/calldata_attached_to_dynamic_array_or_slice.sol"""
     app = harness.compile_and_deploy("calldata/contracts/calldata_attached_to_dynamic_array_or_slice.sol")
-    # testArray(uint256,uint256[],uint256): 7, 0x60, 4, 2, 66, 77 -> 77, 66
-    r = harness.call(app, "testArray(uint256,uint256[],uint256)", 7, 96, 4, 2, 66, 77)
+    r = harness.call(app, "testArray(uint256,uint256[],uint256)", 7, [66, 77], 4)
     assert tuple(as_int(x) for x in r.abi_return) == (77, 66)
-    # testSlice(uint256,uint256[],uint256): 7, 0x60, 4, 2, 66, 77 -> 77, 66
-    r = harness.call(app, "testSlice(uint256,uint256[],uint256)", 7, 96, 4, 2, 66, 77)
+    r = harness.call(app, "testSlice(uint256,uint256[],uint256)", 7, [66, 77], 4)
     assert tuple(as_int(x) for x in r.abi_return) == (77, 66)
 
 def test_calldata_attached_to_static_array(harness):
@@ -175,8 +174,7 @@ def test_calldata_attached_to_static_array(harness):
 def test_calldata_attached_to_struct(harness):
     """calldata/contracts/calldata_attached_to_struct.sol"""
     app = harness.compile_and_deploy("calldata/contracts/calldata_attached_to_struct.sol")
-    # test(uint256,(uint256,uint256),uint256): 7, 66, 77, 4 -> 77, 66
-    r = harness.call(app, "test(uint256,(uint256,uint256),uint256)", 7, 66, 77, 4)
+    r = harness.call(app, "test(uint256,(uint256,uint256),uint256)", 7, (66, 77), 4)
     assert tuple(as_int(x) for x in r.abi_return) == (77, 66)
 
 def test_calldata_bytes_array_bounds(harness):
@@ -203,10 +201,9 @@ def test_calldata_bytes_external(harness):
 def test_calldata_bytes_internal(harness):
     """calldata/contracts/calldata_bytes_internal.sol"""
     app = harness.compile_and_deploy("calldata/contracts/calldata_bytes_internal.sol")
-    # f(uint256,bytes,uint256): 7, 0x60, 7, 4, "abcd" -> "c"
-    r = harness.call(app, "f(uint256,bytes,uint256)", 7, 96, 7, 4, bytes.fromhex('61626364'))
-    # TODO: verify expected: "c"
-    assert not r.reverted
+    # f(_, b, _) returns b[2] as bytes1.
+    r = harness.call(app, "f(uint256,bytes,uint256)", 7, b"abcd", 4)
+    assert bytes(r.abi_return) == b"c"
 
 def test_calldata_bytes_to_memory(harness):
     """calldata/contracts/calldata_bytes_to_memory.sol"""
@@ -261,10 +258,12 @@ def test_calldata_memory_mixed(harness):
 def test_calldata_string_array(harness):
     """calldata/contracts/calldata_string_array.sol"""
     app = harness.compile_and_deploy("calldata/contracts/calldata_string_array.sol")
-    # f(string[]): 0x20, 0x1, 0x20, 0x2, hex"6162000000000000000000000000000000000000000000000000000000000000" -> 1, 2, 97, 0x80, 2, "ab"
-    r = harness.call(app, "f(string[])", 32, 1, 32, 2, bytes.fromhex('6162000000000000000000000000000000000000000000000000000000000000'))
-    # TODO: verify expected: 1 | 2 | 97 | 0x80 | 2 | "ab"
-    assert not r.reverted
+    # f(["ab"]) returns (length=1, byte-length=2, byte 'a'=97, the string "ab").
+    r = harness.call(app, "f(string[])", ["ab"])
+    assert as_int(r.abi_return[0]) == 1
+    assert as_int(r.abi_return[1]) == 2
+    assert as_int(r.abi_return[2]) == 97
+    assert r.abi_return[3] == "ab"
 
 def test_calldata_struct(harness):
     """calldata/contracts/calldata_struct.sol"""

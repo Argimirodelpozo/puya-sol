@@ -98,24 +98,14 @@ def test_mapping_array_struct(harness):
 def test_mapping_of_string(harness):
     """getters/contracts/mapping_of_string.sol"""
     app = harness.compile_and_deploy("getters/contracts/mapping_of_string.sol")
-    # x(string,uint256): 0x40, 0, 3, "abc" -> 1
-    r = harness.call(app, "x(string,uint256)", 64, 0, 3, bytes.fromhex('616263'))
-    assert as_int(r.abi_return) == 1
-    # x(string,uint256): 0x40, 1, 3, "abc" -> 2
-    r = harness.call(app, "x(string,uint256)", 64, 1, 3, bytes.fromhex('616263'))
-    assert as_int(r.abi_return) == 2
-    # x(string,uint256): 0x40, 2, 3, "abc" -> 3
-    r = harness.call(app, "x(string,uint256)", 64, 2, 3, bytes.fromhex('616263'))
-    assert as_int(r.abi_return) == 3
-    # x(string,uint256): 0x40, 0, 3, "def" -> 0x00
-    r = harness.call(app, "x(string,uint256)", 64, 0, 3, bytes.fromhex('646566'))
-    assert as_int(r.abi_return) == 0
-    # x(string,uint256): 0x40, 1, 3, "def" -> 9
-    r = harness.call(app, "x(string,uint256)", 64, 1, 3, bytes.fromhex('646566'))
-    assert as_int(r.abi_return) == 9
-    # x(string,uint256): 0x40, 2, 3, "def" -> 0x00
-    r = harness.call(app, "x(string,uint256)", 64, 2, 3, bytes.fromhex('646566'))
-    assert as_int(r.abi_return) == 0
+    # Public mapping getter `x(key, index)` returns x[key][index].
+    assert as_int(harness.call(app, "x(string,uint256)", "abc", 0).abi_return) == 1
+    assert as_int(harness.call(app, "x(string,uint256)", "abc", 1).abi_return) == 2
+    assert as_int(harness.call(app, "x(string,uint256)", "abc", 2).abi_return) == 3
+    assert as_int(harness.call(app, "x(string,uint256)", "def", 0).abi_return) == 0
+    assert as_int(harness.call(app, "x(string,uint256)", "def", 1).abi_return) == 9
+    assert as_int(harness.call(app, "x(string,uint256)", "def", 2).abi_return) == 0
+
 
 def test_mapping_to_struct(harness):
     """getters/contracts/mapping_to_struct.sol"""
@@ -146,10 +136,6 @@ def test_string_and_bytes(harness):
     assert harness.call(app, "b()").abi_return == "ABCD"
     assert bytes(harness.call(app, "c()").abi_return) == b"\xff\x07\x7f\xff"
     assert harness.call(app, "d()").abi_return == "abcd"
-    assert tuple(as_int(x) for x in r.abi_return) == (32, 4, -439061522557375173052089223601630338202760422010735733633791622124826263552)
-    # d() -> 0x20, 4, "abcd"
-    r = harness.call(app, "d()")
-    assert r.abi_return == 'abcd'
 
 def test_struct_with_bytes(harness):
     """getters/contracts/struct_with_bytes.sol"""

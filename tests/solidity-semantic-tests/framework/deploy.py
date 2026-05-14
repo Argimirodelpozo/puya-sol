@@ -84,6 +84,8 @@ def deploy(
     fund_wei: int = 0,
     extra_funding_microalgos: int = 0,
     postinit_args: list | None = None,
+    postinit_budget_pool: int = 0,
+    postinit_inner_txns: int = 0,
 ) -> DeployedApp:
     """Deploy the given compiled-contract artifacts. Raises DeployError on failure.
 
@@ -178,6 +180,8 @@ def deploy(
             postinit_spec=postinit_spec,
             ctor_args=ctor_args,
             postinit_args=postinit_args,
+            budget_pool=postinit_budget_pool,
+            inner_txns=postinit_inner_txns,
         )
 
     # Read balance after postInit so child-app deployments and box MBR are
@@ -252,18 +256,31 @@ def _call_postinit(
     postinit_spec,
     ctor_args: list | None,
     postinit_args: list | None,
+    budget_pool: int = 0,
+    inner_txns: int = 0,
 ) -> None:
-    """Call the __postInit method, populating box refs via simulate."""
+    """Call the __postInit method, populating box refs via simulate.
+
+    budget_pool: when > 0, prepend that many no-op app calls to the shared
+        budget helper. Each helper call contributes 700 extra opcode
+        budget via fee pooling.
+    inner_txns: number of inner txns the constructor body issues. Each
+        contributes 1000 microalgos to the postinit's flat fee so the
+        outer group covers their fees.
+    """
     import os
     from algosdk.atomic_transaction_composer import (
         AtomicTransactionComposer,
+        TransactionWithSigner,
     )
+    from algosdk.transaction import ApplicationCallTxn, OnComplete
 
     sender = localnet.account.address
     signer = localnet.client.account.get_signer(sender)
     sp = algod.suggested_params()
     sp.flat_fee = True
-    sp.fee = 4000
+    base_extra = max(4, inner_txns + 1)
+    sp.fee = 1000 * (budget_pool + base_extra) if (budget_pool or inner_txns) else 4000
 
     abi_method = postinit_spec.to_abi_method()
     args = postinit_args if postinit_args is not None else (ctor_args or [])
@@ -272,6 +289,20 @@ def _call_postinit(
         args.append(_zero_for_type(str(abi_method.args[len(args)].type)))
 
     atc = AtomicTransactionComposer()
+    if budget_pool > 0:
+        helper_id = localnet.budget_helper_id
+        sp_dummy = algod.suggested_params()
+        sp_dummy.flat_fee = True
+        sp_dummy.fee = 0
+        for i in range(budget_pool):
+            dummy = ApplicationCallTxn(
+                sender=sender,
+                sp=sp_dummy,
+                index=helper_id,
+                on_complete=OnComplete.NoOpOC,
+                note=os.urandom(8),
+            )
+            atc.add_transaction(TransactionWithSigner(dummy, signer))
     atc.add_method_call(
         app_id=app_id,
         method=abi_method,

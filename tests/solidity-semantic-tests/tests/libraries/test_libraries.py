@@ -78,11 +78,13 @@ def test_internal_library_function(harness):
 def test_internal_library_function_attached_to_address(harness):
     """libraries/contracts/internal_library_function_attached_to_address.sol"""
     app = harness.compile_and_deploy("libraries/contracts/internal_library_function_attached_to_address.sol")
-    # foo(address,address): 0x111122223333444455556666777788889999aAaa, 0x111122223333444455556666777788889999aAaa -> true
-    r = harness.call(app, "foo(address,address)", encoding.encode_address((97434929227759267208256849212272652248082393770).to_bytes(32, "big")), encoding.encode_address((97434929227759267208256849212272652248082393770).to_bytes(32, "big")))
+    addr_a = encoding.encode_address((97434929227759267208256849212272652248082393770).to_bytes(32, "big"))
+    zero = encoding.encode_address(b"\x00" * 32)
+    # foo(a, a) -> true (same address)
+    r = harness.call(app, "foo(address,address)", addr_a, addr_a)
     assert bool(as_int(r.abi_return)) is True
-    # foo(address,address): 0x111122223333444455556666777788889999aAaa, 0x0000000000000000000000000000000000000000 -> false
-    r = harness.call(app, "foo(address,address)", encoding.encode_address((97434929227759267208256849212272652248082393770).to_bytes(32, "big")), 0)
+    # foo(a, 0) -> false (different addresses)
+    r = harness.call(app, "foo(address,address)", addr_a, zero)
     assert bool(as_int(r.abi_return)) is False
 
 def test_internal_library_function_attached_to_address_named_send_transfer(harness):
@@ -393,12 +395,11 @@ def test_library_address_via_module(harness):
 def test_library_call_in_homestead(harness):
     """libraries/contracts/library_call_in_homestead.sol"""
     app = harness.compile_and_deploy("libraries/contracts/library_call_in_homestead.sol")
-    # f() ->
-    r = harness.call(app, "f()")
-    # (void return — call succeeding is the assertion)
-    # sender() -> 0x1212121212121212121212121212120000000012
+    # f() stores msg.sender into state — the library call delegates, so
+    # the sender is the test runner's account, not a fixed EVM address.
+    harness.call(app, "f()")
     r = harness.call(app, "sender()")
-    assert as_int(r.abi_return) == 103164821458651970696730694074090566015747358738
+    assert r.abi_return == harness.localnet.account.address
 
 def test_library_delegatecall_guard_pure(harness):
     """libraries/contracts/library_delegatecall_guard_pure.sol"""
@@ -469,7 +470,11 @@ def test_library_enum_as_an_expression(harness):
 
 def test_library_function_selectors(harness):
     """libraries/contracts/library_function_selectors.sol"""
-    app = harness.compile_and_deploy("libraries/contracts/library_function_selectors.sol")
+    # ctor pushes 42 zero values into storage array — needs extra opcode budget.
+    app = harness.compile_and_deploy(
+        "libraries/contracts/library_function_selectors.sol",
+        postinit_budget_pool=15,
+    )
     # f() -> false, true, 0
     r = harness.call(app, "f()")
     # TODO: verify expected: false | true | 0
@@ -497,7 +502,13 @@ def test_library_function_selectors_struct(harness):
 
 def test_library_references_preserve(harness):
     """libraries/contracts/library_references_preserve.sol"""
-    app = harness.compile_and_deploy("libraries/contracts/library_references_preserve.sol")
+    # ctor `new A()` + `new B()` performs two child-app deployments, each
+    # with their own create-txn + funding payment — needs extra inner-txn
+    # fee budget on the __postInit call.
+    app = harness.compile_and_deploy(
+        "libraries/contracts/library_references_preserve.sol",
+        postinit_inner_txns=8,
+    )
     # aSum() -> 4
     r = harness.call(app, "aSum()")
     assert as_int(r.abi_return) == 4

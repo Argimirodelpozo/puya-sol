@@ -107,7 +107,11 @@ class Harness:
         contract_name: str | None = None,
         **deploy_opts,
     ) -> App:
-        """Deploy a named contract from the compiled artifacts. Raises DeployError on failure."""
+        """Deploy a named contract from the compiled artifacts. Raises DeployError on failure.
+
+        Accepted deploy_opts: ctor_args, fund_wei, postinit_args,
+        postinit_budget_pool, extra_funding_microalgos.
+        """
         name = artifacts.last_deployable(contract_name)
         if name is None:
             raise DeployError("no deployable contract in compile output")
@@ -125,8 +129,18 @@ class Harness:
         ctor_args: list | None = None,
         fund_wei: int = 0,
         postinit_args: list | None = None,
+        postinit_budget_pool: int = 0,
+        postinit_inner_txns: int = 0,
     ) -> App:
-        """Common path: compile a .sol file and deploy one of its contracts."""
+        """Common path: compile a .sol file and deploy one of its contracts.
+
+        postinit_budget_pool: budget-helper opcode pool size for __postInit
+            call. Use when the constructor body is opcode-heavy (e.g. a
+            long ctor loop pushing into storage).
+        postinit_inner_txns: extra inner-txn fee headroom for the __postInit
+            call. Use when the ctor body issues inner txns (e.g. spawning
+            child apps with `new ChildContract()`).
+        """
         artifacts = self.compile(
             sol_path,
             ensure_budget=ensure_budget,
@@ -139,6 +153,8 @@ class Harness:
             ctor_args=ctor_args,
             fund_wei=fund_wei,
             postinit_args=postinit_args,
+            postinit_budget_pool=postinit_budget_pool,
+            postinit_inner_txns=postinit_inner_txns,
         )
 
     def call(
