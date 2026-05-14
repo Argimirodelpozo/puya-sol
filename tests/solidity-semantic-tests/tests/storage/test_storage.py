@@ -346,24 +346,12 @@ def test_mapping_state(harness):
 def test_mapping_string_key(harness):
     """storage/contracts/mapping_string_key.sol"""
     app = harness.compile_and_deploy("storage/contracts/mapping_string_key.sol")
-    # set(string,uint256): 0x40, 8, 3, "abc" ->
-    r = harness.call(app, "set(string,uint256)", 64, 8, 3, bytes.fromhex('616263'))
-    # (void return — call succeeding is the assertion)
-    # get(string): 0x20, 3, "abc" -> 8
-    r = harness.call(app, "get(string)", 'abc')
-    assert as_int(r.abi_return) == 8
-    # get(string): 0x20, 3, "abe" -> 0
-    r = harness.call(app, "get(string)", 'abe')
-    assert as_int(r.abi_return) == 0
-    # getFixed() -> 0
-    r = harness.call(app, "getFixed()")
-    assert as_int(r.abi_return) == 0
-    # setFixed(uint256): 9 ->
-    r = harness.call(app, "setFixed(uint256)", 9)
-    # (void return — call succeeding is the assertion)
-    # getFixed() -> 9
-    r = harness.call(app, "getFixed()")
-    assert as_int(r.abi_return) == 9
+    harness.call(app, "set(string,uint256)", "abc", 8)
+    assert as_int(harness.call(app, "get(string)", "abc").abi_return) == 8
+    assert as_int(harness.call(app, "get(string)", "abe").abi_return) == 0
+    assert as_int(harness.call(app, "getFixed()").abi_return) == 0
+    harness.call(app, "setFixed(uint256)", 9)
+    assert as_int(harness.call(app, "getFixed()").abi_return) == 9
 
 def test_mappings_array2d_pop_delete(harness):
     """storage/contracts/mappings_array2d_pop_delete.sol"""
@@ -641,14 +629,14 @@ def test_storage_boundary_array_assignment(harness):
     # TODO: verify structural decoding matches expected: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     assert not r.reverted
     # assignArray(uint256[10]): 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ->
-    r = harness.call(app, "assignArray(uint256[10])", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+    r = harness.call(app, "assignArray(uint256[10])", [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     # (void return — call succeeding is the assertion)
     # x() -> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
     r = harness.call(app, "x()")
     # TODO: verify structural decoding matches expected: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
     assert not r.reverted
     # assignArray(uint256[10]): 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 ->
-    r = harness.call(app, "assignArray(uint256[10])", 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)
+    r = harness.call(app, "assignArray(uint256[10])", [10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
     # (void return — call succeeding is the assertion)
     # x() -> 10, 20, 30, 40, 50, 60, 70, 80, 90, 100
     r = harness.call(app, "x()")

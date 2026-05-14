@@ -117,8 +117,7 @@ def test_copy_substructures_to_mapping(harness):
     # TODO: verify structural decoding matches expected: 32, 96, 160, 21, 3, 46332796673528066027243215619882264990369332300865266851730502456685210107904, 2, 13, 14
     assert not r.reverted
     # from_calldata((bytes,uint16[],uint16)): 0x20, 0x60, 0xa0, 21, 3, 0x666F6F0000000000000000000000000000000000000000000000000000000000, 2, 13, 14 -> 0x20, 0x60, 0xa0, 0x15, 3, 0x666F6F0000000000000000000000000000000000000000000000000000000000, 2, 13, 14
-    r = harness.call(app, "from_calldata((bytes,uint16[],uint16))", 32, 96, 160, 21, 3, 0x666f6f0000000000000000000000000000000000000000000000000000000000, 2, 13, 14)
-    # TODO: verify structural decoding matches expected: 32, 96, 160, 21, 3, 46332796673528066027243215619882264990369332300865266851730502456685210107904, 2, 13, 14
+    r = harness.call(app, "from_calldata((bytes,uint16[],uint16))", (b"foo", [13, 14], 21))
     assert not r.reverted
 
 def test_copy_to_mapping(harness):
@@ -137,8 +136,7 @@ def test_copy_to_mapping(harness):
     # TODO: verify structural decoding matches expected: 32, 96, 160, 21, 3, 46332796673528066027243215619882264990369332300865266851730502456685210107904, 2, 13, 14
     assert not r.reverted
     # from_calldata((bytes,uint16[],uint16)): 0x20, 0x60, 0xa0, 21, 3, 0x666F6F0000000000000000000000000000000000000000000000000000000000, 2, 13, 14 -> 0x20, 0x60, 0xa0, 21, 3, 0x666f6f0000000000000000000000000000000000000000000000000000000000, 2, 13, 14
-    r = harness.call(app, "from_calldata((bytes,uint16[],uint16))", 32, 96, 160, 21, 3, 0x666f6f0000000000000000000000000000000000000000000000000000000000, 2, 13, 14)
-    # TODO: verify structural decoding matches expected: 32, 96, 160, 21, 3, 46332796673528066027243215619882264990369332300865266851730502456685210107904, 2, 13, 14
+    r = harness.call(app, "from_calldata((bytes,uint16[],uint16))", (b"foo", [13, 14], 21))
     assert not r.reverted
 
 def test_delete_struct(harness):
