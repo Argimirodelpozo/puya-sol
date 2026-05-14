@@ -294,9 +294,12 @@ def test_ripemd160(harness):
     r = harness.call(app, "f(int256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
     assert as_int(r.abi_return) == 13097468180871836274597881871755309280971053328054043821123942875702197485568
 
-@pytest.mark.skip(reason="ripemd160 stub returns bytes20(0) — see ripemd160-wip.md; both impl paths too costly for 3 tests.")
 def test_ripemd160_empty(harness):
     """builtinFunctions/contracts/ripemd160_empty.sol"""
+    app = harness.compile_and_deploy("builtinFunctions/contracts/ripemd160_empty.sol")
+    # ripemd160("") = 0x9c1185a5c5e9fc54612808977ee8f548b2258d31 (20 raw bytes on AVM)
+    r = harness.call(app, "f()")
+    assert bytes(r.abi_return) == bytes.fromhex("9c1185a5c5e9fc54612808977ee8f548b2258d31")
 
 def test_ripemd160_packed(harness):
     """builtinFunctions/contracts/ripemd160_packed.sol"""

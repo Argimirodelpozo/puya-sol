@@ -95,11 +95,43 @@ def test_abi_encode_call_is_consistent(harness):
     # TODO: verify structural decoding matches expected: 32, 132, 23450202028776381066253055403048136312616272755117076566855971503345107992576, 26959946667150639794667015087019630673637144422540572481103610249216, 1725436586697640946858688965569256363112777243042596638790631055949824, 86060793054017993816230018372407419485142305772921726565498526629888, 0
     assert not r.reverted
 
-@pytest.mark.skip(reason="`abi.encodeCall` returns keccak256-based EVM selector. AVM selectors use sha512_256; values differ.")
+@pytest.mark.skip(reason="""Blocked by `new D()` child-contract creation, NOT selectors.
+
+The contract does:
+    x[0] = this.something;
+    x[1] = (new D()).something;   // ← inner app creation
+    bytes memory a = abi.encodeCall(x[0], ());
+    bytes memory b = abi.encodeCall(x[1], ());
+
+`new D()` deploys a child app. AVM inner-app creation requires the parent's
+ApprovalProgram source to be available at call time and burns fee/min-balance
+differently from EVM CREATE. The wider class of `new C()` tests is skipped
+across the suite for this reason.
+
+If/when child-app creation lands, this test should pass: the AVM selector
+for `something()void` is `0x40e33532` (sha512_256("something()void")[:4]),
+not the EVM keccak256 value `0xa7a0d537` from the fixture comment.""")
 def test_abi_encode_call_memory(harness):
     """abiEncodeDecode/contracts/abi_encode_call_memory.sol"""
 
-@pytest.mark.skip(reason="`abi.encodeCall` selectors are keccak256-based on EVM. AVM uses sha512_256; expected bytes won't match.")
+@pytest.mark.skip(reason="""Structural keccak256-vs-sha512_256 mismatch.
+
+The contract's `assertConsistentSelectors()` does:
+
+    assert(keccak256(fSignatureFromLiteralNoArgs()) == keccak256(fPointerNoArgs()));
+
+Where `fSignatureFromLiteralNoArgs()` calls `abi.encodeWithSignature("fNoArgs()")` —
+which returns `keccak256("fNoArgs()")[:4]`. And `fPointerNoArgs()` calls
+`abi.encodeCall(this.fNoArgs, ())` — which returns the contract's compiled
+selector. On EVM both are keccak256-based and match. On AVM, puya-sol's
+compiled selectors are `sha512_256("fNoArgs()void")[:4]` while the literal
+path still goes through `keccak256` at runtime, so they don't match. The
+internal assert fails and the contract reverts.
+
+To make this work we'd need either (a) a puya-sol intrinsic that recognizes
+`abi.encodeWithSignature` literal strings at compile time and substitutes
+the AVM selector, or (b) Solidity-level rewrites in the test fixtures.
+Out of scope for the migration; see [selector-divergence](selector-divergence.md).""")
 def test_abi_encode_call_special_args(harness):
     """abiEncodeDecode/contracts/abi_encode_call_special_args.sol"""
 

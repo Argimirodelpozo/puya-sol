@@ -21,20 +21,25 @@ def test_error_in_library_and_interface(harness):
     assert r.reverted
 
 def test_error_selector(harness):
-    """errors/contracts/error_selector.sol"""
+    """errors/contracts/error_selector.sol
+
+    SELECTOR NOTE: Error selectors are keccak256-based on BOTH EVM and AVM.
+    Solidity's `errorName.selector` is `bytes4(keccak256(canonicalSig))`
+    regardless of backend — puya-sol folds this at compile time so error
+    selectors appear as the same 4 bytes EVM uses. Only METHOD selectors
+    diverge between backends (AVM uses sha512_256 there). Reads of the
+    emitted TEAL confirm `0x92bbf6e8` (= keccak256("E()")[:4]) in the
+    bytecblock for this contract.
+    """
     app = harness.compile_and_deploy("errors/contracts/error_selector.sol")
-    # AVM selectors use sha512_256 (4 bytes) instead of EVM's keccak256.
-    # Verify the asserts pass within the contract (test1 has internal asserts) and
-    # selectors are consistent across the three views.
+    e1 = bytes.fromhex("92bbf6e8")  # keccak256("E()")[:4]
+    e2 = bytes.fromhex("002ff067")  # keccak256("E(uint256)")[:4] — leading zero byte
+    sel_F = bytes.fromhex("28811f59")  # keccak256("F()")[:4]
     r = harness.call(app, "test1()")
-    assert not r.reverted
-    sels1 = [bytes(x) for x in r.abi_return]
+    assert [bytes(x) for x in r.abi_return] == [e1, e2, e1, e1]
     r = harness.call(app, "test2()")
-    sels2 = [bytes(x) for x in r.abi_return]
-    # test1 and test2 should yield the same selector tuple.
-    assert sels1 == sels2
-    # test3 just returns a single bytes4
-    assert not harness.call(app, "test3()").reverted
+    assert [bytes(x) for x in r.abi_return] == [e1, e2, e1, e1]
+    assert bytes(harness.call(app, "test3()").abi_return) == sel_F
 
 def test_error_static_calldata_uint_array_and_dynamic_array(harness):
     """errors/contracts/error_static_calldata_uint_array_and_dynamic_array.sol"""
