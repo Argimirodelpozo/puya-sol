@@ -42,13 +42,19 @@ def _resolve_upstream_root(script_dir: Path) -> Path | None:
 
 
 def _upstream_test_dir(sol_path: Path, upstream_root: Path) -> Path:
-    """Map `tests/<category>/<name>.sol` to the upstream `<category>/` directory."""
+    """Map `tests/<category>/contracts/<name>.sol` to the upstream `<category>/` directory.
+
+    Our test tree puts contracts under `tests/<cat>/contracts/`, but the
+    upstream Solidity tree is flat: `semanticTests/<cat>/<name>.sol`. Drop
+    the `contracts` segment when building the upstream lookup path.
+    """
     try:
         tests_root = sol_path.parent
         rel_dir_parts: list[str] = []
         walker = tests_root
         while walker.name and walker.name != "tests":
-            rel_dir_parts.append(walker.name)
+            if walker.name != "contracts":
+                rel_dir_parts.append(walker.name)
             walker = walker.parent
         rel_dir = Path(*reversed(rel_dir_parts)) if rel_dir_parts else Path()
         return upstream_root / rel_dir
