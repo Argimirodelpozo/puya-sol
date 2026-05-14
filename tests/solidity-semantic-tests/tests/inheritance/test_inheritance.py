@@ -160,7 +160,10 @@ def test_inherited_function(harness):
 
 def test_inherited_function_calldata_calldata_interface(harness):
     """inheritance/contracts/inherited_function_calldata_calldata_interface.sol"""
-    pytest.fail("`new A()` deploys child contract; interface call across apps. AVM inner-app creation differs from EVM CREATE.")
+    app = harness.compile_and_deploy("inheritance/contracts/inherited_function_calldata_calldata_interface.sol")
+    # g() does `new A()` then `I(a).f(new uint256[](2))` → 42
+    r = harness.call(app, "g()", extra_fee=5000)
+    assert as_int(r.abi_return) == 42
 
 def test_inherited_function_calldata_memory(harness):
     """inheritance/contracts/inherited_function_calldata_memory.sol"""
@@ -171,7 +174,10 @@ def test_inherited_function_calldata_memory(harness):
 
 def test_inherited_function_calldata_memory_interface(harness):
     """inheritance/contracts/inherited_function_calldata_memory_interface.sol"""
-    pytest.fail("`new A()` deploys child contract; interface call across apps. AVM inner-app creation differs from EVM CREATE.")
+    app = harness.compile_and_deploy("inheritance/contracts/inherited_function_calldata_memory_interface.sol")
+    # g() does `new A()` then `I(a).f(new uint256[](2))` → 42
+    r = harness.call(app, "g()", extra_fee=5000)
+    assert as_int(r.abi_return) == 42
 
 def test_inherited_function_from_a_library(harness):
     """inheritance/contracts/inherited_function_from_a_library.sol"""
