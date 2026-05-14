@@ -54,9 +54,9 @@ def test_abi_encode_v2(harness):
     )
     assert bytes(harness.call(app, "f4()").abi_return) == expected_f4
 
-@pytest.mark.skip(reason="`new A()` child contract deploy + abi v2 across v1 boundary. AVM inner-app creation differs from EVM CREATE.")
 def test_abi_encode_v2_in_function_inherited_in_v1_contract(harness):
     """abiEncoderV2/contracts/abi_encode_v2_in_function_inherited_in_v1_contract.sol"""
+    pytest.fail("`new A()` child contract deploy + abi v2 across v1 boundary. AVM inner-app creation differs from EVM CREATE.")
 
 def test_abi_encode_v2_in_modifier_used_in_v1_contract(harness):
     """abiEncoderV2/contracts/abi_encode_v2_in_modifier_used_in_v1_contract.sol"""
@@ -138,9 +138,9 @@ def test_calldata_array_dynamic_index_access(harness):
     assert not harness.call(app, "k(bytes[2],uint256)", [bytes.fromhex("ab11ff"), bytes.fromhex("ff791432")], 0).reverted
     assert not harness.call(app, "k(bytes[2],uint256)", [bytes.fromhex("ab11ff"), bytes.fromhex("ff791432")], 1).reverted
 
-@pytest.mark.skip(reason="`abi.encodeWithSelector` for `uint256[][1][]` — extract_uint16 indexing fails; AVM ARC4 dynamic-static-dynamic shape encoder gap.")
 def test_calldata_array_dynamic_static_dynamic(harness):
     """abiEncoderV2/contracts/calldata_array_dynamic_static_dynamic.sol"""
+    pytest.fail("`abi.encodeWithSelector` for `uint256[][1][]` — extract_uint16 indexing fails; AVM ARC4 dynamic-static-dynamic shape encoder gap.")
 
 def test_calldata_array_dynamic_static_in_library(harness):
     """abiEncoderV2/contracts/calldata_array_dynamic_static_in_library.sol"""

@@ -60,17 +60,17 @@ def test_getter(harness):
     r = harness.call(app, "x()")
     assert as_int(r.abi_return) == 1
 
-@pytest.mark.skip(reason="try/catch on new A() — EVM-only revert catching. AVM has no try/catch.")
 def test_getter_call_in_constructor(harness):
     """immutable/contracts/getter_call_in_constructor.sol"""
+    pytest.fail("try/catch on new A() — EVM-only revert catching. AVM has no try/catch.")
 
-@pytest.mark.skip(reason="EVM Yul assembly assignment of int8(-2) to bytes32 sign-extends to int256 width. AVM stores int8 in 8 bytes; doesn't sign-extend.")
 def test_immutable_signed(harness):
     """immutable/contracts/immutable_signed.sol"""
+    pytest.fail("EVM Yul assembly assignment of int8(-2) to bytes32 sign-extends to int256 width. AVM stores int8 in 8 bytes; doesn't sign-extend.")
 
-@pytest.mark.skip(reason="EVM Yul-specific: `mload(a)` reads EVM scratchpad memory + signed int256 arithmetic overflows. Compile-via-Yul behavior test.")
 def test_immutable_tag_too_large_bug(harness):
     """immutable/contracts/immutable_tag_too_large_bug.sol"""
+    pytest.fail("EVM Yul-specific: `mload(a)` reads EVM scratchpad memory + signed int256 arithmetic overflows. Compile-via-Yul behavior test.")
 
 def test_increment_decrement(harness):
     """immutable/contracts/increment_decrement.sol"""
@@ -97,13 +97,13 @@ def test_internal_function_pointer(harness):
     r = harness.call(app, "callZ()")
     assert as_int(r.abi_return) == 7
 
-@pytest.mark.skip(reason="`new A{salt:0x00}()` in ctor — child contract creation with salt. AVM has no salted CREATE2; child apps deployed via inner txn with different semantics.")
 def test_multi_creation(harness):
     """immutable/contracts/multi_creation.sol"""
+    pytest.fail("`new A{salt:0x00}()` in ctor — child contract creation with salt. AVM has no salted CREATE2; child apps deployed via inner txn with different semantics.")
 
-@pytest.mark.skip(reason="Inheritance specifier args use ctor-arg immutables (A(A.x += 8)). Compiler-side: order-of-initialization not aligned with EVM semantics.")
 def test_multiple_initializations(harness):
     """immutable/contracts/multiple_initializations.sol"""
+    pytest.fail("Inheritance specifier args use ctor-arg immutables (A(A.x += 8)). Compiler-side: order-of-initialization not aligned with EVM semantics.")
 
 def test_read_in_ctor(harness):
     """immutable/contracts/read_in_ctor.sol"""

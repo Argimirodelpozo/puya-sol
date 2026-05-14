@@ -22,33 +22,33 @@ def test_bubble(harness):
     r = harness.call(app, "f()", expect_revert=True)
     assert r.reverted
 
-@pytest.mark.skip(reason="EVM-flat calldata corruption test; ARC4 encoding is structurally different")
 def test_calldata_array_dynamic_invalid(harness):
     """revertStrings/contracts/calldata_array_dynamic_invalid.sol"""
+    pytest.fail("EVM-flat calldata corruption test; ARC4 encoding is structurally different")
 
-@pytest.mark.skip(reason="EVM-flat calldata corruption test; ARC4 encoding is structurally different")
 def test_calldata_array_dynamic_static_short_decode(harness):
     """revertStrings/contracts/calldata_array_dynamic_static_short_decode.sol"""
+    pytest.fail("EVM-flat calldata corruption test; ARC4 encoding is structurally different")
 
-@pytest.mark.skip(reason="EVM-flat calldata corruption test; ARC4 encoding is structurally different")
 def test_calldata_array_dynamic_static_short_reencode(harness):
     """revertStrings/contracts/calldata_array_dynamic_static_short_reencode.sol"""
+    pytest.fail("EVM-flat calldata corruption test; ARC4 encoding is structurally different")
 
-@pytest.mark.skip(reason="EVM-flat calldata corruption test; ARC4 encoding is structurally different")
 def test_calldata_array_invalid_length(harness):
     """revertStrings/contracts/calldata_array_invalid_length.sol"""
+    pytest.fail("EVM-flat calldata corruption test; ARC4 encoding is structurally different")
 
-@pytest.mark.skip(reason="EVM-flat calldata corruption test; ARC4 encoding is structurally different")
 def test_calldata_arrays_too_large(harness):
     """revertStrings/contracts/calldata_arrays_too_large.sol"""
+    pytest.fail("EVM-flat calldata corruption test; ARC4 encoding is structurally different")
 
-@pytest.mark.skip(reason="EVM-flat calldata corruption test; ARC4 encoding is structurally different")
 def test_calldata_tail_short(harness):
     """revertStrings/contracts/calldata_tail_short.sol"""
+    pytest.fail("EVM-flat calldata corruption test; ARC4 encoding is structurally different")
 
-@pytest.mark.skip(reason="EVM-flat calldata corruption test; ARC4 encoding is structurally different")
 def test_calldata_too_short_v1(harness):
     """revertStrings/contracts/calldata_too_short_v1.sol"""
+    pytest.fail("EVM-flat calldata corruption test; ARC4 encoding is structurally different")
 
 def test_called_contract_has_code(harness):
     """revertStrings/contracts/called_contract_has_code.sol"""
@@ -95,33 +95,33 @@ def test_ether_non_payable_function(harness):
     r = harness.call(app, "()", expect_revert=True)
     assert r.reverted
 
-@pytest.mark.skip(reason="EVM dispatcher Calldata-too-short check; ARC4 has no equivalent")
 def test_function_entry_checks_v1(harness):
     """revertStrings/contracts/function_entry_checks_v1.sol"""
+    pytest.fail("EVM dispatcher Calldata-too-short check; ARC4 has no equivalent")
 
-@pytest.mark.skip(reason="EVM dispatcher Calldata-too-short check; ARC4 has no equivalent")
 def test_function_entry_checks_v2(harness):
     """revertStrings/contracts/function_entry_checks_v2.sol"""
+    pytest.fail("EVM dispatcher Calldata-too-short check; ARC4 has no equivalent")
 
-@pytest.mark.skip(reason="EVM calldata head/data-pointer corruption test; N/A on ARC4")
 def test_invalid_abi_decoding_calldata_v1(harness):
     """revertStrings/contracts/invalid_abi_decoding_calldata_v1.sol"""
+    pytest.fail("EVM calldata head/data-pointer corruption test; N/A on ARC4")
 
-@pytest.mark.skip(reason="EVM memory abi-decode corruption test; AVM has no analogous memory layout")
 def test_invalid_abi_decoding_memory_v1(harness):
     """revertStrings/contracts/invalid_abi_decoding_memory_v1.sol"""
+    pytest.fail("EVM memory abi-decode corruption test; AVM has no analogous memory layout")
 
-@pytest.mark.skip(reason="EVM-style address(L).call(...) returning encoded revert debug bytes; AVM inlines libs")
 def test_library_non_view_call(harness):
     """revertStrings/contracts/library_non_view_call.sol"""
+    pytest.fail("EVM-style address(L).call(...) returning encoded revert debug bytes; AVM inlines libs")
 
-@pytest.mark.skip(reason="EVM calldata stride/length check; ARC4 encoding eliminates this class of error")
 def test_short_input_array(harness):
     """revertStrings/contracts/short_input_array.sol"""
+    pytest.fail("EVM calldata stride/length check; ARC4 encoding eliminates this class of error")
 
-@pytest.mark.skip(reason="EVM calldata stride/length check; ARC4 encoding eliminates this class of error")
 def test_short_input_bytes(harness):
     """revertStrings/contracts/short_input_bytes.sol"""
+    pytest.fail("EVM calldata stride/length check; ARC4 encoding eliminates this class of error")
 
 def test_transfer(harness):
     """revertStrings/contracts/transfer.sol — bare-call w/ 10 wei lands in C.receive()."""

@@ -7,9 +7,9 @@ from framework import (
 )
 
 
-@pytest.mark.skip(reason="EVM-style replay-saved-calldata pattern: sender.fallback() saves msg.data, sender.forward() replays it via address(rec).call(savedData). On AVM the inner-call layout differs (ApplicationArgs slot-by-slot vs flat bytes), so the receiver's dispatcher can't decode the replayed payload.")
 def test_call_forward_bytes(harness):
     """fallback/contracts/call_forward_bytes.sol"""
+    pytest.fail("EVM-style replay-saved-calldata pattern: sender.fallback() saves msg.data, sender.forward() replays it via address(rec).call(savedData). On AVM the inner-call layout differs (ApplicationArgs slot-by-slot vs flat bytes), so the receiver's dispatcher can't decode the replayed payload.")
 
 def test_falback_return(harness):
     """fallback/contracts/falback_return.sol"""

@@ -158,9 +158,9 @@ def test_inherited_function(harness):
     r = harness.call(app, "g()")
     assert as_int(r.abi_return) == 1
 
-@pytest.mark.skip(reason="`new A()` deploys child contract; interface call across apps. AVM inner-app creation differs from EVM CREATE.")
 def test_inherited_function_calldata_calldata_interface(harness):
     """inheritance/contracts/inherited_function_calldata_calldata_interface.sol"""
+    pytest.fail("`new A()` deploys child contract; interface call across apps. AVM inner-app creation differs from EVM CREATE.")
 
 def test_inherited_function_calldata_memory(harness):
     """inheritance/contracts/inherited_function_calldata_memory.sol"""
@@ -169,9 +169,9 @@ def test_inherited_function_calldata_memory(harness):
     r = harness.call(app, "g()")
     assert as_int(r.abi_return) == 23
 
-@pytest.mark.skip(reason="`new A()` deploys child contract; interface call across apps. AVM inner-app creation differs from EVM CREATE.")
 def test_inherited_function_calldata_memory_interface(harness):
     """inheritance/contracts/inherited_function_calldata_memory_interface.sol"""
+    pytest.fail("`new A()` deploys child contract; interface call across apps. AVM inner-app creation differs from EVM CREATE.")
 
 def test_inherited_function_from_a_library(harness):
     """inheritance/contracts/inherited_function_from_a_library.sol"""

@@ -30,25 +30,25 @@ def test_bool_conversion_v2(harness):
         assert bool(harness.call(app, "f(bool)", v).abi_return) is v
         assert bool(harness.call(app, "g(bool)", v).abi_return) is v
 
-@pytest.mark.skip(reason="EVM-flat calldata format expected by test. AVM ARC4 has different byte-array encoding.")
 def test_byte_array_to_storage_cleanup(harness):
     """cleanup/contracts/byte_array_to_storage_cleanup.sol"""
+    pytest.fail("EVM-flat calldata format expected by test. AVM ARC4 has different byte-array encoding.")
 
-@pytest.mark.skip(reason="EVM stores address as 20 bytes; expected value is the 160-bit form. AVM addresses are 32-byte; full value won't match the 20-byte EVM form.")
 def test_cleanup_address_types_shortening(harness):
     """cleanup/contracts/cleanup_address_types_shortening.sol"""
+    pytest.fail("EVM stores address as 20 bytes; expected value is the 160-bit form. AVM addresses are 32-byte; full value won't match the 20-byte EVM form.")
 
-@pytest.mark.skip(reason="EVM-style 'overlong address gets truncated/cleaned' test — AVM has 32-byte addresses natively, so the EVM 20-byte truncation behavior doesn't apply")
 def test_cleanup_address_types_v1(harness):
     """cleanup/contracts/cleanup_address_types_v1.sol"""
+    pytest.fail("EVM-style 'overlong address gets truncated/cleaned' test — AVM has 32-byte addresses natively, so the EVM 20-byte truncation behavior doesn't apply")
 
-@pytest.mark.skip(reason="EVM-style 'overlong address reverts' test — AVM has 32-byte addresses natively")
 def test_cleanup_address_types_v2(harness):
     """cleanup/contracts/cleanup_address_types_v2.sol"""
+    pytest.fail("EVM-style 'overlong address reverts' test — AVM has 32-byte addresses natively")
 
-@pytest.mark.skip(reason="EVM 32-byte right-padding of bytes4. AVM returns 4 raw bytes; value as integer differs.")
 def test_cleanup_bytes_types_shortening_OldCodeGen(harness):
     """cleanup/contracts/cleanup_bytes_types_shortening_OldCodeGen.sol"""
+    pytest.fail("EVM 32-byte right-padding of bytes4. AVM returns 4 raw bytes; value as integer differs.")
 
 def test_cleanup_bytes_types_shortening_newCodeGen(harness):
     """cleanup/contracts/cleanup_bytes_types_shortening_newCodeGen.sol"""
@@ -57,13 +57,13 @@ def test_cleanup_bytes_types_shortening_newCodeGen(harness):
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) == 115790322390251417039241401711187164934754157181743688420499462401711837020160
 
-@pytest.mark.skip(reason="EVM-flat 'overlong bytes2/uint16 args truncate/revert' test — algosdk rejects oversized args at encode time, so the dispatcher never sees them")
 def test_cleanup_bytes_types_v1(harness):
     """cleanup/contracts/cleanup_bytes_types_v1.sol"""
+    pytest.fail("EVM-flat 'overlong bytes2/uint16 args truncate/revert' test — algosdk rejects oversized args at encode time, so the dispatcher never sees them")
 
-@pytest.mark.skip(reason="EVM-flat 'overlong bytes2/uint16 args revert' test — algosdk rejects oversized args at encode time")
 def test_cleanup_bytes_types_v2(harness):
     """cleanup/contracts/cleanup_bytes_types_v2.sol"""
+    pytest.fail("EVM-flat 'overlong bytes2/uint16 args revert' test — algosdk rejects oversized args at encode time")
 
 def test_cleanup_in_compound_assign(harness):
     """cleanup/contracts/cleanup_in_compound_assign.sol"""

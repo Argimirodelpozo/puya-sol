@@ -146,9 +146,9 @@ def test_block_timestamp(harness):
     r = harness.call(app, "f()")
     assert bool(as_int(r.abi_return)) is True
 
-@pytest.mark.skip(reason="EVM blockhash() returns hash of recent blocks. AVM has no equivalent — blocks aren't keccak256-chained. Test framework EVM-specific.")
 def test_blockhash_basic(harness):
     """state/contracts/blockhash_basic.sol"""
+    pytest.fail("EVM blockhash() returns hash of recent blocks. AVM has no equivalent — blocks aren't keccak256-chained. Test framework EVM-specific.")
 
 def test_gasleft(harness):
     """state/contracts/gasleft.sol"""
@@ -163,9 +163,9 @@ def test_gasleft(harness):
     r = harness.call(app, "f()")
     assert bool(as_int(r.abi_return)) is True
 
-@pytest.mark.skip(reason="EVM msg.data returns selector+encoded calldata blob. On AVM msg.data is just the 4-byte selector. EVM-specific test.")
 def test_msg_data(harness):
     """state/contracts/msg_data.sol"""
+    pytest.fail("EVM msg.data returns selector+encoded calldata blob. On AVM msg.data is just the 4-byte selector. EVM-specific test.")
 
 def test_msg_sender(harness):
     """state/contracts/msg_sender.sol"""

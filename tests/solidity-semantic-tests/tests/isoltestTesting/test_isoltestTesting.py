@@ -17,9 +17,9 @@ def test_account(harness):
         r = harness.call(app, "who_am_i()")
         assert r.abi_return == harness.localnet.account.address
 
-@pytest.mark.skip(reason="ctor does `payable(0x1234).transfer(500)` — EVM raw address 0x1234 not valid as AVM application/account address.")
 def test_balance_other_contract(harness):
     """isoltestTesting/contracts/balance_other_contract.sol"""
+    pytest.fail("ctor does `payable(0x1234).transfer(500)` — EVM raw address 0x1234 not valid as AVM application/account address.")
 
 def test_balance_with_balance(harness):
     """isoltestTesting/contracts/balance_with_balance.sol"""

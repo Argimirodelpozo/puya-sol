@@ -30,13 +30,13 @@ def _static_2x3_payload() -> bytes:
     return b"".join(v.to_bytes(32, "big") for v in (1, 2, 3, 4, 5, 6))
 
 
-@pytest.mark.skip(reason="abi.decode of raw bytes into a static uint256[2][3] doesn't surface a return value through AVM dispatcher; compiler-side limitation.")
 def test_abi_decode_static_array(harness):
     """abiEncoderV1/contracts/abi_decode_static_array.sol"""
+    pytest.fail("abi.decode of raw bytes into a static uint256[2][3] doesn't surface a return value through AVM dispatcher; compiler-side limitation.")
 
-@pytest.mark.skip(reason="see test_abi_decode_static_array")
 def test_abi_decode_static_array_v2(harness):
     """abiEncoderV1/contracts/abi_decode_static_array_v2.sol"""
+    pytest.fail("see test_abi_decode_static_array")
 
 def test_abi_decode_trivial(harness):
     """abiEncoderV1/contracts/abi_decode_trivial.sol"""
@@ -53,9 +53,9 @@ def test_abi_decode_v2(harness):
     # TODO: verify structural decoding matches expected: 32, 8, 64, 3, 9, 10, 11
     assert not r.reverted
 
-@pytest.mark.skip(reason="`abi.decode(bytes, (S))` of EVM-flat struct payload; AVM ARC4 has different layout — selector/offset words don't match.")
 def test_abi_decode_v2_calldata(harness):
     """abiEncoderV1/contracts/abi_decode_v2_calldata.sol"""
+    pytest.fail("`abi.decode(bytes, (S))` of EVM-flat struct payload; AVM ARC4 has different layout — selector/offset words don't match.")
 
 def test_abi_decode_v2_storage(harness):
     """abiEncoderV1/contracts/abi_decode_v2_storage.sol"""
@@ -202,10 +202,9 @@ def test_dynamic_arrays(harness):
     r = harness.call(app, "f(uint256,uint16[],uint256)", 6, [11, 12, 13, 14, 15, 16, 17], 9)
     assert tuple(as_int(x) for x in r.abi_return) == (7, 17, 9)
 
-@pytest.mark.skip(reason="EVM Yul inline-assembly checks memory pointer aliasing via raw mload offsets. AVM has no memory pointer concept; not translatable.")
 def test_dynamic_memory_copy(harness):
     """abiEncoderV1/contracts/dynamic_memory_copy.sol"""
-    pytest.skip("EVM-flat dynamic memory copy with raw bytes payload. AVM ARC4 layout differs.")
+    pytest.fail("EVM Yul inline-assembly checks memory pointer aliasing via raw mload offsets. AVM has no memory pointer concept; not translatable.")
 
 def test_enums(harness):
     """abiEncoderV1/contracts/enums.sol
@@ -265,9 +264,9 @@ def test_return_dynamic_types_cross_call_out_of_range_1(harness):
     r = harness.call(app, "f(uint256)", 128)
     assert bool(as_int(r.abi_return)) is True
 
-@pytest.mark.skip(reason="EVM Yul `return(0, x)` opcode emits raw bytes with caller-side length check. AVM uses ARC4 ApplicationArgs; no equivalent raw-return-length test.")
 def test_return_dynamic_types_cross_call_out_of_range_2(harness):
     """abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_2.sol"""
+    pytest.fail("EVM Yul `return(0, x)` opcode emits raw bytes with caller-side length check. AVM uses ARC4 ApplicationArgs; no equivalent raw-return-length test.")
 
 def test_return_dynamic_types_cross_call_simple(harness):
     """abiEncoderV1/contracts/return_dynamic_types_cross_call_simple.sol"""

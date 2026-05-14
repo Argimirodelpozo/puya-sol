@@ -37,15 +37,9 @@ def test_copy_from_storage(harness):
     r = harness.call(app, "f()")
     assert [tuple(as_int(y) for y in x) for x in r.abi_return] == [(13,)]
 
-@pytest.mark.skip(reason="puya-sol compile error on copy_struct_array_from_storage (compiler-side).")
 def test_copy_struct_array_from_storage(harness):
     """structs/contracts/copy_struct_array_from_storage.sol"""
-    # test3() -> true
-    r = harness.call(app, "test3()")
-    assert bool(as_int(r.abi_return)) is True
-    # test4() -> true
-    r = harness.call(app, "test4()")
-    assert bool(as_int(r.abi_return)) is True
+    pytest.fail("puya-sol compile error on copy_struct_array_from_storage (compiler-side).")
 
 def test_copy_struct_with_nested_array_from_calldata_to_memory(harness):
     """structs/contracts/copy_struct_with_nested_array_from_calldata_to_memory.sol"""
@@ -157,9 +151,9 @@ def test_event(harness):
     r = harness.call(app, "f()")
     # (void return — call succeeding is the assertion)
 
-@pytest.mark.skip(reason="Struct field of function-pointer type — currently surfaces None abi_return on AVM (compiler-side).")
 def test_function_type_copy(harness):
     """structs/contracts/function_type_copy.sol"""
+    pytest.fail("Struct field of function-pointer type — currently surfaces None abi_return on AVM (compiler-side).")
 
 def test_global_(harness):
     """structs/contracts/global.sol"""
@@ -223,27 +217,9 @@ def test_memory_structs_read_write(harness):
     r = harness.call(app, "testAssign()")
     assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3, 4)
 
-@pytest.mark.skip(reason="EVM-specific: msg.data on EVM is selector+encoded calldata blob. On AVM msg.data is just the 4-byte selector. v243 had it passing only due to test-harness EVM-compat fudging.")
 def test_msg_data_to_struct_member_copy(harness):
     """structs/contracts/msg_data_to_struct_member_copy.sol"""
-    app = harness.compile_and_deploy("structs/contracts/msg_data_to_struct_member_copy.sol")
-    # f() -> 0x20, 0x20, 4, 0x26121ff000000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "f()")
-    assert tuple(as_int(x) for x in r.abi_return) == (32, 32, 4, 17219911917854084299749778639755835327755045716242581057573779540915269926912)
-    # g() -> 0x20, 0x20, 4, 0xe2179b8e00000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "g()")
-    assert tuple(as_int(x) for x in r.abi_return) == (32, 32, 4, 102264414861304285884729579275374176073311626045629144087797787832582884294656)
-    # hashes() -> 0x26121ff000000000000000000000000000000000000000000000000000000000, 0xe2179b8e00000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "hashes()")
-    assert tuple(as_int(x) for x in r.abi_return) == (17219911917854084299749778639755835327755045716242581057573779540915269926912, 102264414861304285884729579275374176073311626045629144087797787832582884294656)
-    # large(uint256,uint256,uint256,uint256): 1, 2, 3, 4 -> 0x20, 0x20, 0x84, 0xe02492f800000000000000000000000000000000000000000000000000000000, 0x100000000000000000000000000000000000000000000000000000000, 0x200000000000000000000000000000000000000000000000000000000, 0x300000000000000000000000000000000000000000000000000000000, 0x400000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "large(uint256,uint256,uint256,uint256)", 1, 2, 3, 4)
-    # TODO: verify structural decoding matches expected: 32, 32, 132, 101382698918017097707161245144404298464765490926644769483516792872402539249664, 26959946667150639794667015087019630673637144422540572481103610249216, 53919893334301279589334030174039261347274288845081144962207220498432, 80879840001451919384001045261058892020911433267621717443310830747648, 107839786668602559178668060348078522694548577690162289924414440996864
-    assert not r.reverted
-    # another_large(uint256,uint256,uint256,uint256): 1, 2, 3, 4 -> 0x20, 0x20, 0x84, 0x2a46f85a00000000000000000000000000000000000000000000000000000000, 0x100000000000000000000000000000000000000000000000000000000, 0x200000000000000000000000000000000000000000000000000000000, 0x300000000000000000000000000000000000000000000000000000000, 0x400000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "another_large(uint256,uint256,uint256,uint256)", 1, 2, 3, 4)
-    # TODO: verify structural decoding matches expected: 32, 32, 132, 19122532994520879318127310892525066712363999234356044649309225915721155870720, 26959946667150639794667015087019630673637144422540572481103610249216, 53919893334301279589334030174039261347274288845081144962207220498432, 80879840001451919384001045261058892020911433267621717443310830747648, 107839786668602559178668060348078522694548577690162289924414440996864
-    assert not r.reverted
+    pytest.fail("EVM-specific: msg.data on EVM is selector+encoded calldata blob. On AVM msg.data is just the 4-byte selector. v243 had it passing only due to test-harness EVM-compat fudging.")
 
 def test_multislot_struct_allocation(harness):
     """structs/contracts/multislot_struct_allocation.sol"""
@@ -266,9 +242,9 @@ def test_packed_storage_structs_delete(harness):
     r = harness.call(app, "test()")
     assert as_int(r.abi_return) == 1
 
-@pytest.mark.skip(reason="Compiler-side: recursive struct with mapping-of-self member; layout codegen exits 2. v243: compilation failed.")
 def test_recursive_struct_2(harness):
     """structs/contracts/recursive_struct_2.sol"""
+    pytest.fail("Compiler-side: recursive struct with mapping-of-self member; layout codegen exits 2. v243: compilation failed.")
 
 def test_recursive_structs(harness):
     """structs/contracts/recursive_structs.sol"""
@@ -367,12 +343,9 @@ def test_struct_delete_storage(harness):
     r = harness.call(app, "f()")
     # (void return — call succeeding is the assertion)
 
-@pytest.mark.skip(reason="Compiler-side: struct field delete via via-yul codegen path doesn't fully zero packed slots on AVM.")
 def test_struct_delete_storage_nested_small(harness):
     """structs/contracts/struct_delete_storage_nested_small.sol"""
-    app = harness.compile_and_deploy("structs/contracts/struct_delete_storage_nested_small.sol", via_yul_behavior=True)
-    r = harness.call(app, "f()")
-    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0)
+    pytest.fail("Compiler-side: struct field delete via via-yul codegen path doesn't fully zero packed slots on AVM.")
 
 def test_struct_delete_storage_small(harness):
     """structs/contracts/struct_delete_storage_small.sol"""
@@ -391,10 +364,9 @@ def test_struct_delete_storage_with_array(harness):
     r = harness.call(app, "g()")
     # (void return — call succeeding is the assertion)
 
-@pytest.mark.skip(reason="`delete` on struct with packed sub-arrays: AVM box-keyed storage doesn't follow EVM slot-packing deletion. v243: 0p/1f.")
 def test_struct_delete_storage_with_arrays_small(harness):
     """structs/contracts/struct_delete_storage_with_arrays_small.sol"""
-    app = harness.compile_and_deploy("structs/contracts/struct_delete_storage_with_arrays_small.sol", via_yul_behavior=True)
+    pytest.fail("`delete` on struct with packed sub-arrays: AVM box-keyed storage doesn't follow EVM slot-packing deletion. v243: 0p/1f.")
 
 def test_struct_delete_struct_in_mapping(harness):
     """structs/contracts/struct_delete_struct_in_mapping.sol"""

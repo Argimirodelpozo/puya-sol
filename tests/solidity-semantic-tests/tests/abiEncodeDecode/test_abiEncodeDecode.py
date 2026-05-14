@@ -52,9 +52,9 @@ def test_abi_encode_call(harness):
     r = harness.call(app, "callExternal()")
     assert bool(as_int(r.abi_return)) is True
 
-@pytest.mark.skip(reason="`abi.encodeCall(fn, args)` round-trip via staticcall asserts `r == 2` etc. — internal `require` fails after first inner call. Likely puya-sol generates different selector bytes from what the contract's dispatcher expects.")
 def test_abi_encode_call_declaration(harness):
     """abiEncodeDecode/contracts/abi_encode_call_declaration.sol"""
+    pytest.fail("`abi.encodeCall(fn, args)` round-trip via staticcall asserts `r == 2` etc. — internal `require` fails after first inner call. Likely puya-sol generates different selector bytes from what the contract's dispatcher expects.")
 
 def test_abi_encode_call_is_consistent(harness):
     """abiEncodeDecode/contracts/abi_encode_call_is_consistent.sol"""
@@ -95,7 +95,9 @@ def test_abi_encode_call_is_consistent(harness):
     # TODO: verify structural decoding matches expected: 32, 132, 23450202028776381066253055403048136312616272755117076566855971503345107992576, 26959946667150639794667015087019630673637144422540572481103610249216, 1725436586697640946858688965569256363112777243042596638790631055949824, 86060793054017993816230018372407419485142305772921726565498526629888, 0
     assert not r.reverted
 
-@pytest.mark.skip(reason="""Blocked by `new D()` child-contract creation, NOT selectors.
+def test_abi_encode_call_memory(harness):
+    """abiEncodeDecode/contracts/abi_encode_call_memory.sol"""
+    pytest.fail("""Blocked by `new D()` child-contract creation, NOT selectors.
 
 The contract does:
     x[0] = this.something;
@@ -111,10 +113,10 @@ across the suite for this reason.
 If/when child-app creation lands, this test should pass: the AVM selector
 for `something()void` is `0x40e33532` (sha512_256("something()void")[:4]),
 not the EVM keccak256 value `0xa7a0d537` from the fixture comment.""")
-def test_abi_encode_call_memory(harness):
-    """abiEncodeDecode/contracts/abi_encode_call_memory.sol"""
 
-@pytest.mark.skip(reason="""Structural keccak256-vs-sha512_256 mismatch.
+def test_abi_encode_call_special_args(harness):
+    """abiEncodeDecode/contracts/abi_encode_call_special_args.sol"""
+    pytest.fail("""Structural keccak256-vs-sha512_256 mismatch.
 
 The contract's `assertConsistentSelectors()` does:
 
@@ -132,8 +134,6 @@ To make this work we'd need either (a) a puya-sol intrinsic that recognizes
 `abi.encodeWithSignature` literal strings at compile time and substitutes
 the AVM selector, or (b) Solidity-level rewrites in the test fixtures.
 Out of scope for the migration; see [selector-divergence](selector-divergence.md).""")
-def test_abi_encode_call_special_args(harness):
-    """abiEncodeDecode/contracts/abi_encode_call_special_args.sol"""
 
 def test_abi_encode_call_uint_bytes(harness):
     """abiEncodeDecode/contracts/abi_encode_call_uint_bytes.sol"""
@@ -290,9 +290,9 @@ def test_contract_array(harness):
     expected_g = b"".join(v.to_bytes(32, "big") for v in (32, 3, 0x42, 0x21, 0x23))
     assert bytes(harness.call(app, "g()").abi_return) == expected_g
 
-@pytest.mark.skip(reason="`abi.decode(bytes, (C[]))` where C is contract type. Test uses EVM-flat 32-byte-per-element layout; AVM 32-byte addresses don't match the EVM 20-byte address-in-word convention.")
 def test_contract_array_v2(harness):
     """abiEncodeDecode/contracts/contract_array_v2.sol"""
+    pytest.fail("`abi.decode(bytes, (C[]))` where C is contract type. Test uses EVM-flat 32-byte-per-element layout; AVM 32-byte addresses don't match the EVM 20-byte address-in-word convention.")
 
 def test_offset_overflow_in_array_decoding(harness):
     """abiEncodeDecode/contracts/offset_overflow_in_array_decoding.sol"""
@@ -301,9 +301,9 @@ def test_offset_overflow_in_array_decoding(harness):
     r = harness.call(app, "test()", expect_revert=True)
     assert r.reverted
 
-@pytest.mark.skip(reason="EVM-flat offset overflow test; deploy fails because the contract uses raw calldata-offset math. AVM has no equivalent layout.")
 def test_offset_overflow_in_array_decoding_2(harness):
     """abiEncodeDecode/contracts/offset_overflow_in_array_decoding_2.sol"""
+    pytest.fail("EVM-flat offset overflow test; deploy fails because the contract uses raw calldata-offset math. AVM has no equivalent layout.")
 
 def test_offset_overflow_in_array_decoding_3(harness):
     """abiEncodeDecode/contracts/offset_overflow_in_array_decoding_3.sol"""

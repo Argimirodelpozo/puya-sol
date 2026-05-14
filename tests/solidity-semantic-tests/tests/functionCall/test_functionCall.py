@@ -22,13 +22,9 @@ def test_bare_call_no_returndatacopy(harness):
     r = harness.call(app, "f()")
     assert bool(as_int(r.abi_return)) is True
 
-@pytest.mark.skip(reason="Compiler-side regression: using-for + free function ptr. v243: compilation failed.")
 def test_call_attached_library_function_on_function(harness):
     """functionCall/contracts/call_attached_library_function_on_function.sol"""
-    app = harness.compile_and_deploy("functionCall/contracts/call_attached_library_function_on_function.sol")
-    # f() -> 7
-    r = harness.call(app, "f()")
-    assert as_int(r.abi_return) == 7
+    pytest.fail("Compiler-side regression: using-for + free function ptr. v243: compilation failed.")
 
 def test_call_attached_library_function_on_storage_variable(harness):
     """functionCall/contracts/call_attached_library_function_on_storage_variable.sol"""
@@ -180,83 +176,13 @@ def test_creation_function_call_with_salt(harness):
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) == 2
 
-@pytest.mark.skip(reason="EVM `delegatecall` semantics: returns success+returndata tuple. AVM has no delegatecall; inner-txn model is different. v243: 7p/4f.")
 def test_delegatecall_return_value(harness):
     """functionCall/contracts/delegatecall_return_value.sol"""
-    app = harness.compile_and_deploy("functionCall/contracts/delegatecall_return_value.sol")
-    # get() -> 0x00
-    r = harness.call(app, "get()")
-    assert as_int(r.abi_return) == 0
-    # assert0_delegated() -> 0x01, 0x40, 0x0
-    r = harness.call(app, "assert0_delegated()")
-    assert tuple(as_int(x) for x in r.abi_return) == (1, 64, 0)
-    # get_delegated() -> 0x01, 0x40, 0x20, 0x0
-    r = harness.call(app, "get_delegated()")
-    assert tuple(as_int(x) for x in r.abi_return) == (1, 64, 32, 0)
-    # set(uint256): 0x01 ->
-    r = harness.call(app, "set(uint256)", 1)
-    # (void return — call succeeding is the assertion)
-    # get() -> 0x01
-    r = harness.call(app, "get()")
-    assert as_int(r.abi_return) == 1
-    # assert0_delegated() -> 0x00, 0x40, 0x24, 0x4e487b7100000000000000000000000000000000000000000000000000000000, 0x0100000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "assert0_delegated()")
-    # TODO: verify structural decoding matches expected: 0, 64, 36, 35408467139433450592217433187231851964531694900788300625387963629091585785856, 26959946667150639794667015087019630673637144422540572481103610249216
-    assert not r.reverted
-    # get_delegated() -> 0x01, 0x40, 0x20, 0x1
-    r = harness.call(app, "get_delegated()")
-    assert tuple(as_int(x) for x in r.abi_return) == (1, 64, 32, 1)
-    # set(uint256): 0x2a ->
-    r = harness.call(app, "set(uint256)", 42)
-    # (void return — call succeeding is the assertion)
-    # get() -> 0x2a
-    r = harness.call(app, "get()")
-    assert as_int(r.abi_return) == 42
-    # assert0_delegated() -> 0x00, 0x40, 0x24, 0x4e487b7100000000000000000000000000000000000000000000000000000000, 0x0100000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "assert0_delegated()")
-    # TODO: verify structural decoding matches expected: 0, 64, 36, 35408467139433450592217433187231851964531694900788300625387963629091585785856, 26959946667150639794667015087019630673637144422540572481103610249216
-    assert not r.reverted
-    # get_delegated() -> 0x01, 0x40, 0x20, 0x2a
-    r = harness.call(app, "get_delegated()")
-    assert tuple(as_int(x) for x in r.abi_return) == (1, 64, 32, 42)
+    pytest.fail("EVM `delegatecall` semantics: returns success+returndata tuple. AVM has no delegatecall; inner-txn model is different. v243: 7p/4f.")
 
-@pytest.mark.skip(reason="EVM pre-byzantium delegatecall return value semantics. AVM has no delegatecall. v243: 9p/2f.")
 def test_delegatecall_return_value_pre_byzantium(harness):
     """functionCall/contracts/delegatecall_return_value_pre_byzantium.sol"""
-    app = harness.compile_and_deploy("functionCall/contracts/delegatecall_return_value_pre_byzantium.sol", evm_version='spuriousDragon')
-    # get() -> 0x00
-    r = harness.call(app, "get()")
-    assert as_int(r.abi_return) == 0
-    # assert0_delegated() -> true
-    r = harness.call(app, "assert0_delegated()")
-    assert bool(as_int(r.abi_return)) is True
-    # get_delegated() -> true
-    r = harness.call(app, "get_delegated()")
-    assert bool(as_int(r.abi_return)) is True
-    # set(uint256): 0x01 ->
-    r = harness.call(app, "set(uint256)", 1)
-    # (void return — call succeeding is the assertion)
-    # get() -> 0x01
-    r = harness.call(app, "get()")
-    assert as_int(r.abi_return) == 1
-    # assert0_delegated() -> false
-    r = harness.call(app, "assert0_delegated()")
-    assert bool(as_int(r.abi_return)) is False
-    # get_delegated() -> true
-    r = harness.call(app, "get_delegated()")
-    assert bool(as_int(r.abi_return)) is True
-    # set(uint256): 0x2a ->
-    r = harness.call(app, "set(uint256)", 42)
-    # (void return — call succeeding is the assertion)
-    # get() -> 0x2a
-    r = harness.call(app, "get()")
-    assert as_int(r.abi_return) == 42
-    # assert0_delegated() -> false
-    r = harness.call(app, "assert0_delegated()")
-    assert bool(as_int(r.abi_return)) is False
-    # get_delegated() -> true
-    r = harness.call(app, "get_delegated()")
-    assert bool(as_int(r.abi_return)) is True
+    pytest.fail("EVM pre-byzantium delegatecall return value semantics. AVM has no delegatecall. v243: 9p/2f.")
 
 def test_disordered_named_args(harness):
     """functionCall/contracts/disordered_named_args.sol"""
@@ -275,19 +201,9 @@ def test_external_call(harness):
     r = harness.call(app, "f(uint256)", 2)
     assert as_int(r.abi_return) == 5
 
-@pytest.mark.skip(reason="EVM extcodesize check semantics for newly-constructed contract calls. AVM app-call dispatch doesn't have equivalent. v243: 1p/2f.")
 def test_external_call_at_construction_time(harness):
     """functionCall/contracts/external_call_at_construction_time.sol"""
-    app = harness.compile_and_deploy("functionCall/contracts/external_call_at_construction_time.sol")
-    # f(uint256): 0 -> FAILURE
-    r = harness.call(app, "f(uint256)", 0, expect_revert=True)
-    assert r.reverted
-    # f(uint256): 1 -> FAILURE
-    r = harness.call(app, "f(uint256)", 1, expect_revert=True)
-    assert r.reverted
-    # f(uint256): 2 -> 3
-    r = harness.call(app, "f(uint256)", 2)
-    assert as_int(r.abi_return) == 3
+    pytest.fail("EVM extcodesize check semantics for newly-constructed contract calls. AVM app-call dispatch doesn't have equivalent. v243: 1p/2f.")
 
 def test_external_call_dynamic_returndata(harness):
     """functionCall/contracts/external_call_dynamic_returndata.sol"""
@@ -296,61 +212,17 @@ def test_external_call_dynamic_returndata(harness):
     r = harness.call(app, "dt(uint256)", 4)
     assert as_int(r.abi_return) == 6
 
-@pytest.mark.skip(reason="EVM-specific: extcodesize check before calling nonexistent contracts. AVM apps are addressed by ID; no equivalent. v243: deployment failed.")
 def test_external_call_to_nonexisting(harness):
     """functionCall/contracts/external_call_to_nonexisting.sol"""
-    app = harness.compile_and_deploy("functionCall/contracts/external_call_to_nonexisting.sol", fund_wei=1000000000000000000)
-    # f(uint256): 0 -> FAILURE
-    r = harness.call(app, "f(uint256)", 0, expect_revert=True)
-    assert r.reverted
-    # f(uint256): 1 -> FAILURE
-    r = harness.call(app, "f(uint256)", 1, expect_revert=True)
-    assert r.reverted
-    # f(uint256): 2 -> FAILURE
-    r = harness.call(app, "f(uint256)", 2, expect_revert=True)
-    assert r.reverted
-    # f(uint256): 3 -> FAILURE
-    r = harness.call(app, "f(uint256)", 3, expect_revert=True)
-    assert r.reverted
-    # f(uint256): 4 -> FAILURE
-    r = harness.call(app, "f(uint256)", 4, expect_revert=True)
-    assert r.reverted
-    # f(uint256): 5 -> FAILURE
-    r = harness.call(app, "f(uint256)", 5, expect_revert=True)
-    assert r.reverted
-    # f(uint256): 6 -> 7
-    r = harness.call(app, "f(uint256)", 6)
-    assert as_int(r.abi_return) == 7
+    pytest.fail("EVM-specific: extcodesize check before calling nonexistent contracts. AVM apps are addressed by ID; no equivalent. v243: deployment failed.")
 
-@pytest.mark.skip(reason="EVM-specific: solc debug-string about extcodesize before call. AVM has no equivalent extcodesize. v243: deployment failed.")
 def test_external_call_to_nonexisting_debugstrings(harness):
     """functionCall/contracts/external_call_to_nonexisting_debugstrings.sol"""
-    app = harness.compile_and_deploy("functionCall/contracts/external_call_to_nonexisting_debugstrings.sol", fund_wei=1000000000000000000)
-    # f(uint256): 0 -> FAILURE, hex"08c379a0", 0x20, 37, "Target contract does not contain", " code"
-    r = harness.call(app, "f(uint256)", 0, expect_revert=True)
-    assert r.reverted
-    # f(uint256): 1 -> FAILURE, hex"08c379a0", 0x20, 37, "Target contract does not contain", " code"
-    r = harness.call(app, "f(uint256)", 1, expect_revert=True)
-    assert r.reverted
-    # f(uint256): 2 -> FAILURE, hex"08c379a0", 0x20, 37, "Target contract does not contain", " code"
-    r = harness.call(app, "f(uint256)", 2, expect_revert=True)
-    assert r.reverted
-    # f(uint256): 3 -> FAILURE, hex"08c379a0", 0x20, 37, "Target contract does not contain", " code"
-    r = harness.call(app, "f(uint256)", 3, expect_revert=True)
-    assert r.reverted
-    # f(uint256): 4 -> FAILURE, hex"08c379a0", 0x20, 37, "Target contract does not contain", " code"
-    r = harness.call(app, "f(uint256)", 4, expect_revert=True)
-    assert r.reverted
-    # f(uint256): 5 -> FAILURE, hex"08c379a0", 0x20, 37, "Target contract does not contain", " code"
-    r = harness.call(app, "f(uint256)", 5, expect_revert=True)
-    assert r.reverted
-    # f(uint256): 6 -> 7
-    r = harness.call(app, "f(uint256)", 6)
-    assert as_int(r.abi_return) == 7
+    pytest.fail("EVM-specific: solc debug-string about extcodesize before call. AVM has no equivalent extcodesize. v243: deployment failed.")
 
-@pytest.mark.skip(reason="`payment_wei=1e18` (1 ETH) overflows AVM microalgo accounts. EVM-specific. v243: 0p/2f.")
 def test_external_call_value(harness):
     """functionCall/contracts/external_call_value.sol"""
+    pytest.fail("`payment_wei=1e18` (1 ETH) overflows AVM microalgo accounts. EVM-specific. v243: 0p/2f.")
 
 def test_external_function(harness):
     """functionCall/contracts/external_function.sol"""
@@ -369,34 +241,9 @@ def test_external_public_override(harness):
     r = harness.call(app, "g()")
     assert as_int(r.abi_return) == 2
 
-@pytest.mark.skip(reason="EVM-specific: stack-depth (1023-deep recursion) bounded by EVM call stack. AVM has no equivalent stack-depth limit. v243: 4p/4f.")
 def test_failed_create(harness):
     """functionCall/contracts/failed_create.sol"""
-    app = harness.compile_and_deploy("functionCall/contracts/failed_create.sol")
-    # f(uint256): 20 ->
-    r = harness.call(app, "f(uint256)", 20)
-    # (void return — call succeeding is the assertion)
-    # x() -> 1
-    r = harness.call(app, "x()")
-    assert as_int(r.abi_return) == 1
-    # f(uint256): 20 -> FAILURE
-    r = harness.call(app, "f(uint256)", 20, expect_revert=True)
-    assert r.reverted
-    # x() -> 1
-    r = harness.call(app, "x()")
-    assert as_int(r.abi_return) == 1
-    # stack(uint256): 1023 -> FAILURE
-    r = harness.call(app, "stack(uint256)", 1023, expect_revert=True)
-    assert r.reverted
-    # x() -> 1
-    r = harness.call(app, "x()")
-    assert as_int(r.abi_return) == 1
-    # stack(uint256): 10 ->
-    r = harness.call(app, "stack(uint256)", 10)
-    # (void return — call succeeding is the assertion)
-    # x() -> 2
-    r = harness.call(app, "x()")
-    assert as_int(r.abi_return) == 2
+    pytest.fail("EVM-specific: stack-depth (1023-deep recursion) bounded by EVM call stack. AVM has no equivalent stack-depth limit. v243: 4p/4f.")
 
 def test_file_level_call_via_module(harness):
     """functionCall/contracts/file_level_call_via_module.sol"""
@@ -421,22 +268,9 @@ def test_gas_and_value_basic(harness):
     r = harness.call(app, "checkState()")
     assert not r.reverted
 
-@pytest.mark.skip(reason="Internal fn taking mapping(uint8=>uint8[4]) param. Compiler-side: storage-mapping pointer passing not supported. v243: 0p/4f.")
 def test_mapping_array_internal_argument(harness):
     """functionCall/contracts/mapping_array_internal_argument.sol"""
-    app = harness.compile_and_deploy("functionCall/contracts/mapping_array_internal_argument.sol")
-    # set(uint8,uint8,uint8,uint8,uint8): 1, 21, 22, 42, 43 -> 0, 0, 0, 0
-    r = harness.call(app, "set(uint8,uint8,uint8,uint8,uint8)", 1, 21, 22, 42, 43)
-    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0)
-    # get(uint8): 1 -> 21, 22, 42, 43
-    r = harness.call(app, "get(uint8)", 1)
-    assert tuple(as_int(x) for x in r.abi_return) == (21, 22, 42, 43)
-    # set(uint8,uint8,uint8,uint8,uint8): 1, 10, 30, 11, 31 -> 21, 22, 42, 43
-    r = harness.call(app, "set(uint8,uint8,uint8,uint8,uint8)", 1, 10, 30, 11, 31)
-    assert tuple(as_int(x) for x in r.abi_return) == (21, 22, 42, 43)
-    # get(uint8): 1 -> 10, 30, 11, 31
-    r = harness.call(app, "get(uint8)", 1)
-    assert tuple(as_int(x) for x in r.abi_return) == (10, 30, 11, 31)
+    pytest.fail("Internal fn taking mapping(uint8=>uint8[4]) param. Compiler-side: storage-mapping pointer passing not supported. v243: 0p/4f.")
 
 def test_mapping_internal_argument(harness):
     """functionCall/contracts/mapping_internal_argument.sol"""
@@ -545,35 +379,17 @@ def test_named_args_overload(harness):
     r = harness.call(app, "call(uint256)", 5)
     assert as_int(r.abi_return) == 500
 
-@pytest.mark.skip(reason="EVM-specific: extcodesize check before calling precompile addresses. AVM precompiles are routed via opcodes. v243: 1p/2f.")
 def test_precompile_extcodesize_check(harness):
     """functionCall/contracts/precompile_extcodesize_check.sol"""
-    app = harness.compile_and_deploy("functionCall/contracts/precompile_extcodesize_check.sol")
-    # testHighLevel() -> true
-    r = harness.call(app, "testHighLevel()")
-    assert bool(as_int(r.abi_return)) is True
-    # testLowLevel() -> 0xc76596d400000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "testLowLevel()")
-    assert as_int(r.abi_return) == 90189749399073340124083172608208815642393485993436412853902028917580719194112
-    # testHighLevel2() -> FAILURE
-    r = harness.call(app, "testHighLevel2()", expect_revert=True)
-    assert r.reverted
+    pytest.fail("EVM-specific: extcodesize check before calling precompile addresses. AVM precompiles are routed via opcodes. v243: 1p/2f.")
 
-@pytest.mark.skip(reason="EVM-specific: returndatacopy truncation when caller decodes shorter than callee returndata. ARC4 return values are not free-form byte ranges. v243: 0p/1f.")
 def test_return_size_bigger_than_expected(harness):
     """functionCall/contracts/return_size_bigger_than_expected.sol"""
-    app = harness.compile_and_deploy("functionCall/contracts/return_size_bigger_than_expected.sol", via_yul_behavior=True)
-    # test() -> 0x20
-    r = harness.call(app, "test()")
-    assert as_int(r.abi_return) == 32
+    pytest.fail("EVM-specific: returndatacopy truncation when caller decodes shorter than callee returndata. ARC4 return values are not free-form byte ranges. v243: 0p/1f.")
 
-@pytest.mark.skip(reason="EVM pre-Byzantium: returndata zero-extended when callee returns less. AVM ARC4 return values are not free-form byte ranges. v243: 0p/1f.")
 def test_return_size_shorter_than_expected(harness):
     """functionCall/contracts/return_size_shorter_than_expected.sol"""
-    app = harness.compile_and_deploy("functionCall/contracts/return_size_shorter_than_expected.sol", via_yul_behavior=True, evm_version='homestead')
-    # test() -> 0x0500
-    r = harness.call(app, "test()")
-    assert as_int(r.abi_return) == 1280
+    pytest.fail("EVM pre-Byzantium: returndata zero-extended when callee returns less. AVM ARC4 return values are not free-form byte ranges. v243: 0p/1f.")
 
 def test_return_size_shorter_than_expected_evm_version_after_homestead(harness):
     """functionCall/contracts/return_size_shorter_than_expected_evm_version_after_homestead.sol"""

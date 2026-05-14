@@ -8,13 +8,13 @@ from framework import (
 )
 
 
-@pytest.mark.skip(reason="address(x).code is EVM-specific (contract bytecode access). AVM has no equivalent.")
 def test_address_code(harness):
     """various/contracts/address_code.sol"""
+    pytest.fail("address(x).code is EVM-specific (contract bytecode access). AVM has no equivalent.")
 
-@pytest.mark.skip(reason="address(x).code is EVM-specific. AVM has no equivalent.")
 def test_address_code_complex(harness):
     """various/contracts/address_code_complex.sol"""
+    pytest.fail("address(x).code is EVM-specific. AVM has no equivalent.")
 
 def test_assignment_to_const_var_involving_expression(harness):
     """various/contracts/assignment_to_const_var_involving_expression.sol"""
@@ -41,13 +41,13 @@ def test_byte_optimization_bug(harness):
     r = harness.call(app, "g(uint256)", 2)
     assert as_int(r.abi_return) == 2
 
-@pytest.mark.skip(reason="address(x).code / type(C).runtimeCode is EVM-specific; AVM has no bytecode access.")
 def test_code_access_content(harness):
     """various/contracts/code_access_content.sol"""
+    pytest.fail("address(x).code / type(C).runtimeCode is EVM-specific; AVM has no bytecode access.")
 
-@pytest.mark.skip(reason="address(x).code is EVM-specific; AVM has no bytecode access.")
 def test_code_access_create(harness):
     """various/contracts/code_access_create.sol"""
+    pytest.fail("address(x).code is EVM-specific; AVM has no bytecode access.")
 
 def test_code_access_padding(harness):
     """various/contracts/code_access_padding.sol"""
@@ -57,13 +57,13 @@ def test_code_access_padding(harness):
     # TODO: verify expected: 0 # This checks that the allocation function pads to multiples of 32 bytes #
     assert not r.reverted
 
-@pytest.mark.skip(reason="type(C).runtimeCode is EVM-specific; AVM has no bytecode access.")
 def test_code_access_runtime(harness):
     """various/contracts/code_access_runtime.sol"""
+    pytest.fail("type(C).runtimeCode is EVM-specific; AVM has no bytecode access.")
 
-@pytest.mark.skip(reason="address(x).code.length is EVM-specific; AVM has no bytecode access.")
 def test_code_length(harness):
     """various/contracts/code_length.sol"""
+    pytest.fail("address(x).code.length is EVM-specific; AVM has no bytecode access.")
 
 def test_code_length_contract_member(harness):
     """various/contracts/code_length_contract_member.sol"""
@@ -73,9 +73,9 @@ def test_code_length_contract_member(harness):
     # TODO: verify expected: 0x20 | 0x20 | true
     assert not r.reverted
 
-@pytest.mark.skip(reason="Yul `balance(1)` returns 1 on EVM testkit (precompile address has 1 wei). AVM addresses don't follow EVM precompile convention.")
 def test_codebalance_assembly(harness):
     """various/contracts/codebalance_assembly.sol"""
+    pytest.fail("Yul `balance(1)` returns 1 on EVM testkit (precompile address has 1 wei). AVM addresses don't follow EVM precompile convention.")
 
 def test_codehash(harness):
     """various/contracts/codehash.sol"""
@@ -115,9 +115,9 @@ def test_crazy_elementary_typenames_on_stack(harness):
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) in (-7, 115792089237316195423570985008687907853269984665640564039457584007913129639929)
 
-@pytest.mark.skip(reason="ctor stores msg.data which on AVM is just the selector; compiler-side TEAL assert mismatch on calldata layout.")
 def test_create_calldata(harness):
     """various/contracts/create_calldata.sol"""
+    pytest.fail("ctor stores msg.data which on AVM is just the selector; compiler-side TEAL assert mismatch on calldata layout.")
 
 def test_create_random(harness):
     """various/contracts/create_random.sol — addresses derived from CREATE
@@ -149,9 +149,9 @@ def test_destructuring_assignment(harness):
     r = harness.call(app, "f(bytes)", b"abcde")
     assert as_int(r.abi_return) == 0
 
-@pytest.mark.skip(reason="Transient storage across delegatecall/call/staticcall is EVM-specific. AVM doesn't expose distinct call types from Solidity in the inner-txn path.")
 def test_different_call_type_transient(harness):
     """various/contracts/different_call_type_transient.sol"""
+    pytest.fail("Transient storage across delegatecall/call/staticcall is EVM-specific. AVM doesn't expose distinct call types from Solidity in the inner-txn path.")
 
 def test_empty_name_return_parameter(harness):
     """various/contracts/empty_name_return_parameter.sol"""
@@ -266,9 +266,9 @@ def test_literal_empty_string(harness):
     r = harness.call(app, "a()")
     assert as_int(r.abi_return) == 2
 
-@pytest.mark.skip(reason="11 nested salted-CREATE2 deployments; compile-time TEAL bytecblock hex-encoding issue.")
 def test_many_subassemblies(harness):
     """various/contracts/many_subassemblies.sol"""
+    pytest.fail("11 nested salted-CREATE2 deployments; compile-time TEAL bytecblock hex-encoding issue.")
 
 def test_memory_overwrite(harness):
     """various/contracts/memory_overwrite.sol"""
@@ -329,30 +329,23 @@ def test_positive_integers_to_signed(harness):
     r = harness.call(app, "q()")
     assert as_int(r.abi_return) == 250
 
-@pytest.mark.skip(reason="selfdestruct is EVM-specific; AVM has no contract self-destruct.")
 def test_selfdestruct_post_cancun(harness):
-    pass
+    pytest.fail("selfdestruct is EVM-specific; AVM has no contract self-destruct.")
 
-@pytest.mark.skip(reason="selfdestruct is EVM-specific; AVM has no contract self-destruct.")
 def test_selfdestruct_post_cancun_multiple_beneficiaries(harness):
-    pass
+    pytest.fail("selfdestruct is EVM-specific; AVM has no contract self-destruct.")
 
-@pytest.mark.skip(reason="selfdestruct is EVM-specific; AVM has no contract self-destruct.")
 def test_selfdestruct_post_cancun_redeploy(harness):
-    pass
+    pytest.fail("selfdestruct is EVM-specific; AVM has no contract self-destruct.")
 
-@pytest.mark.skip(reason="selfdestruct is EVM-specific; AVM has no contract self-destruct.")
 def test_selfdestruct_pre_cancun(harness):
-    pass
+    pytest.fail("selfdestruct is EVM-specific; AVM has no contract self-destruct.")
 
-@pytest.mark.skip(reason="selfdestruct is EVM-specific; AVM has no contract self-destruct.")
 def test_selfdestruct_pre_cancun_multiple_beneficiaries(harness):
-    pass
+    pytest.fail("selfdestruct is EVM-specific; AVM has no contract self-destruct.")
 
-@pytest.mark.skip(reason="selfdestruct is EVM-specific; AVM has no contract self-destruct.")
 def test_selfdestruct_pre_cancun_redeploy(harness):
-    pass
-
+    pytest.fail("selfdestruct is EVM-specific; AVM has no contract self-destruct.")
 
 def test_senders_balance(harness):
     """various/contracts/senders_balance.sol — D.f() calls C.f() which
@@ -382,9 +375,9 @@ def test_skip_dynamic_types(harness):
     r = harness.call(app, "g()")
     assert tuple(as_int(x) for x in r.abi_return) == (7, 8)
 
-@pytest.mark.skip(reason="Compiler-side: getbit out-of-bounds on empty bytes — array initialization codegen bug.")
 def test_skip_dynamic_types_for_static_arrays_with_dynamic_elements(harness):
     """various/contracts/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol"""
+    pytest.fail("Compiler-side: getbit out-of-bounds on empty bytes — array initialization codegen bug.")
 
 def test_skip_dynamic_types_for_structs(harness):
     """various/contracts/skip_dynamic_types_for_structs.sol"""
@@ -421,9 +414,9 @@ def test_staticcall_for_view_and_pure(harness):
     r = harness.call(app, "fpure()", expect_revert=True)
     assert r.reverted
 
-@pytest.mark.skip(reason="Pre-byzantium STATICCALL semantics on EVM. AVM has no equivalent opcode-version switching.")
 def test_staticcall_for_view_and_pure_pre_byzantium(harness):
     """various/contracts/staticcall_for_view_and_pure_pre_byzantium.sol"""
+    pytest.fail("Pre-byzantium STATICCALL semantics on EVM. AVM has no equivalent opcode-version switching.")
 
 def test_storage_string_as_mapping_key_without_variable(harness):
     """various/contracts/storage_string_as_mapping_key_without_variable.sol"""

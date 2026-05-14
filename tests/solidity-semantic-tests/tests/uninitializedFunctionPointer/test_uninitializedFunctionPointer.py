@@ -38,9 +38,9 @@ def test_storeInConstructor(harness):
     r = harness.call(app, "f()", expect_revert=True)
     assert r.reverted
 
-@pytest.mark.skip(reason="EVM legacy codegen: uninitialized internal fn pointer hits panic tag. AVM has no equivalent panic-tag dispatch.")
 def test_uninitialized_internal_storage_function_legacy(harness):
     """uninitializedFunctionPointer/contracts/uninitialized_internal_storage_function_legacy.sol"""
+    pytest.fail("EVM legacy codegen: uninitialized internal fn pointer hits panic tag. AVM has no equivalent panic-tag dispatch.")
 
 def test_uninitialized_internal_storage_function_via_yul(harness):
     """uninitializedFunctionPointer/contracts/uninitialized_internal_storage_function_via_yul.sol"""

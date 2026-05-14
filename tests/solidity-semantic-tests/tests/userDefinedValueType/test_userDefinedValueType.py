@@ -8,9 +8,9 @@ from framework import (
 )
 
 
-@pytest.mark.skip(reason="UDVT with abi.decode/encode call returns None abi_return on AVM (compiler-side).")
 def test_abicodec(harness):
     """userDefinedValueType/contracts/abicodec.sol"""
+    pytest.fail("UDVT with abi.decode/encode call returns None abi_return on AVM (compiler-side).")
 
 def test_assembly_access_bytes2_abicoder_v1(harness):
     """userDefinedValueType/contracts/assembly_access_bytes2_abicoder_v1.sol"""
@@ -260,60 +260,13 @@ def test_conversion_abicoderv1(harness):
     r = harness.call(app, "m(uint16)", 257)
     assert as_int(r.abi_return) == 1
 
-@pytest.mark.skip(reason="EVM-specific storage slot dirty-byte behavior — slot encoding differs on AVM.")
 def test_dirty_slot(harness):
     """userDefinedValueType/contracts/dirty_slot.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/contracts/dirty_slot.sol")
-    # a() -> 13
-    r = harness.call(app, "a()")
-    assert as_int(r.abi_return) == 13
-    # b() -> 0x0401000000000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "b()")
-    assert as_int(r.abi_return) == 1811018241397843937822879938261491478723170994297509432074646356324935270400
-    # get_b(uint256): 0 -> 0x0400000000000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "get_b(uint256)", 0)
-    assert as_int(r.abi_return) == 1809251394333065553493296640760748560207343510400633813116524750123642650624
-    # get_b(uint256): 1 -> 0x0100000000000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "get_b(uint256)", 1)
-    assert as_int(r.abi_return) == 452312848583266388373324160190187140051835877600158453279131187530910662656
-    # get_b(uint256): 2 -> FAILURE, hex"4e487b71", 0x32
-    r = harness.call(app, "get_b(uint256)", 2, expect_revert=True)
-    assert r.reverted
-    # write_a() ->
-    r = harness.call(app, "write_a()")
-    # (void return — call succeeding is the assertion)
-    # a() -> 0x2001
-    r = harness.call(app, "a()")
-    assert as_int(r.abi_return) == 8193
-    # write_b() ->
-    r = harness.call(app, "write_b()")
-    # (void return — call succeeding is the assertion)
-    # b() -> 0x5403000000000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "b()")
-    assert as_int(r.abi_return) == 37999579822188711776347979348477948519901696170103936932321384571200373522432
-    # get_b(uint256): 0 -> 0x5400000000000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "get_b(uint256)", 0)
-    assert as_int(r.abi_return) == 37994279280994376623359229455975719764354213718413310075447019752596495663104
-    # get_b(uint256): 1 -> 0x0300000000000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "get_b(uint256)", 1)
-    assert as_int(r.abi_return) == 1356938545749799165119972480570561420155507632800475359837393562592731987968
-    # get_b(uint256): 2 -> FAILURE, hex"4e487b71", 0x32
-    r = harness.call(app, "get_b(uint256)", 2, expect_revert=True)
-    assert r.reverted
+    pytest.fail("EVM-specific storage slot dirty-byte behavior — slot encoding differs on AVM.")
 
-@pytest.mark.skip(reason="EVM-specific dirty uint8 slot read with sign-extension expectations; AVM int8 doesn't auto sign-extend on read.")
 def test_dirty_uint8_read(harness):
     """userDefinedValueType/contracts/dirty_uint8_read.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/contracts/dirty_uint8_read.sol")
-    # x() -> -5
-    r = harness.call(app, "x()")
-    assert as_int(r.abi_return) in (-5, 115792089237316195423570985008687907853269984665640564039457584007913129639931)
-    # create_dirty_slot() ->
-    r = harness.call(app, "create_dirty_slot()")
-    # (void return — call succeeding is the assertion)
-    # read_unclean_value() -> 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
-    r = harness.call(app, "read_unclean_value()")
-    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639931
+    pytest.fail("EVM-specific dirty uint8 slot read with sign-extension expectations; AVM int8 doesn't auto sign-extend on read.")
 
 def test_erc20(harness):
     """userDefinedValueType/contracts/erc20.sol"""
@@ -374,16 +327,9 @@ def test_fixedpoint(harness):
     r = harness.call(app, "toUFixed256x18(uint256)", 0x12725dd1d243aba0e75fe645cc4873f9e65afe688c928e1f22, expect_revert=True)
     assert r.reverted
 
-@pytest.mark.skip(reason="See immutable.test_immutable_signed — EVM int8→int256 sign-extension via inline assembly doesn't apply on AVM.")
 def test_immutable_signed(harness):
     """userDefinedValueType/contracts/immutable_signed.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/contracts/immutable_signed.sol")
-    # direct() -> -2, 0x6162000000000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "direct()")
-    assert tuple(as_int(x) for x in r.abi_return) == (-2, 44047497324925121336511606693520958599579173549109180625971642598225011015680)
-    # viaasm() -> 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0x6162000000000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, "viaasm()")
-    assert tuple(as_int(x) for x in r.abi_return) == (115792089237316195423570985008687907853269984665640564039457584007913129639934, 44047497324925121336511606693520958599579173549109180625971642598225011015680)
+    pytest.fail("See immutable.test_immutable_signed — EVM int8→int256 sign-extension via inline assembly doesn't apply on AVM.")
 
 def test_in_parenthesis(harness):
     """userDefinedValueType/contracts/in_parenthesis.sol"""
@@ -461,55 +407,9 @@ def test_ownable(harness):
     r = harness.call(app, "setOwner(address)", encoding.encode_address((103164821458651970696730694074090566015747358738).to_bytes(32, "big")), expect_revert=True)
     assert r.reverted
 
-@pytest.mark.skip(reason="EVM checks that address arg fits 20 bytes — AVM addresses are 32 bytes natively, no overflow possible.")
 def test_parameter(harness):
     """userDefinedValueType/contracts/parameter.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/contracts/parameter.sol")
-    # id(address): 5 -> 5
-    r = harness.call(app, "id(address)", encoding.encode_address((5).to_bytes(32, "big")))
-    assert as_int(r.abi_return) == 5
-    # id(address): 0xffffffffffffffffffffffffffffffffffffffff -> 0xffffffffffffffffffffffffffffffffffffffff
-    r = harness.call(app, "id(address)", encoding.encode_address((1461501637330902918203684832716283019655932542975).to_bytes(32, "big")))
-    assert as_int(r.abi_return) == 1461501637330902918203684832716283019655932542975
-    # id(address): 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff -> FAILURE
-    r = harness.call(app, "id(address)", encoding.encode_address((115792089237316195423570985008687907853269984665640564039457584007913129639935).to_bytes(32, "big")), expect_revert=True)
-    assert r.reverted
-    # unwrap(address): 5 -> 5
-    r = harness.call(app, "unwrap(address)", encoding.encode_address((5).to_bytes(32, "big")))
-    assert as_int(r.abi_return) == 5
-    # unwrap(address): 0xffffffffffffffffffffffffffffffffffffffff -> 0xffffffffffffffffffffffffffffffffffffffff
-    r = harness.call(app, "unwrap(address)", encoding.encode_address((1461501637330902918203684832716283019655932542975).to_bytes(32, "big")))
-    assert as_int(r.abi_return) == 1461501637330902918203684832716283019655932542975
-    # unwrap(address): 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff -> FAILURE
-    r = harness.call(app, "unwrap(address)", encoding.encode_address((115792089237316195423570985008687907853269984665640564039457584007913129639935).to_bytes(32, "big")), expect_revert=True)
-    assert r.reverted
-    # wrap(address): 5 -> 5
-    r = harness.call(app, "wrap(address)", encoding.encode_address((5).to_bytes(32, "big")))
-    assert as_int(r.abi_return) == 5
-    # wrap(address): 0xffffffffffffffffffffffffffffffffffffffff -> 0xffffffffffffffffffffffffffffffffffffffff
-    r = harness.call(app, "wrap(address)", encoding.encode_address((1461501637330902918203684832716283019655932542975).to_bytes(32, "big")))
-    assert as_int(r.abi_return) == 1461501637330902918203684832716283019655932542975
-    # wrap(address): 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff -> FAILURE
-    r = harness.call(app, "wrap(address)", encoding.encode_address((115792089237316195423570985008687907853269984665640564039457584007913129639935).to_bytes(32, "big")), expect_revert=True)
-    assert r.reverted
-    # unwrap_assembly(address): 5 -> 5
-    r = harness.call(app, "unwrap_assembly(address)", encoding.encode_address((5).to_bytes(32, "big")))
-    assert as_int(r.abi_return) == 5
-    # unwrap_assembly(address): 0xffffffffffffffffffffffffffffffffffffffff -> 0xffffffffffffffffffffffffffffffffffffffff
-    r = harness.call(app, "unwrap_assembly(address)", encoding.encode_address((1461501637330902918203684832716283019655932542975).to_bytes(32, "big")))
-    assert as_int(r.abi_return) == 1461501637330902918203684832716283019655932542975
-    # unwrap_assembly(address): 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff -> FAILURE
-    r = harness.call(app, "unwrap_assembly(address)", encoding.encode_address((115792089237316195423570985008687907853269984665640564039457584007913129639935).to_bytes(32, "big")), expect_revert=True)
-    assert r.reverted
-    # wrap_assembly(address): 5 -> 5
-    r = harness.call(app, "wrap_assembly(address)", encoding.encode_address((5).to_bytes(32, "big")))
-    assert as_int(r.abi_return) == 5
-    # wrap_assembly(address): 0xffffffffffffffffffffffffffffffffffffffff -> 0xffffffffffffffffffffffffffffffffffffffff
-    r = harness.call(app, "wrap_assembly(address)", encoding.encode_address((1461501637330902918203684832716283019655932542975).to_bytes(32, "big")))
-    assert as_int(r.abi_return) == 1461501637330902918203684832716283019655932542975
-    # wrap_assembly(address): 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff -> FAILURE
-    r = harness.call(app, "wrap_assembly(address)", encoding.encode_address((115792089237316195423570985008687907853269984665640564039457584007913129639935).to_bytes(32, "big")), expect_revert=True)
-    assert r.reverted
+    pytest.fail("EVM checks that address arg fits 20 bytes — AVM addresses are 32 bytes natively, no overflow possible.")
 
 def test_simple(harness):
     """userDefinedValueType/contracts/simple.sol"""
@@ -546,111 +446,13 @@ def test_storage_layout(harness):
     r = harness.call(app, "storage_g()")
     assert tuple(as_int(x) for x in r.abi_return) == (2, 20)
 
-@pytest.mark.skip(reason="EVM-specific storage packing layout for UDVT struct fields; AVM box storage differs.")
 def test_storage_layout_struct(harness):
     """userDefinedValueType/contracts/storage_layout_struct.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/contracts/storage_layout_struct.sol")
-    # storage_a() -> 0, 0
-    r = harness.call(app, "storage_a()")
-    assert tuple(as_int(x) for x in r.abi_return) == (0, 0)
-    # set_a(int64,int64): 100, 200 ->
-    r = harness.call(app, "set_a(int64,int64)", 100, 200)
-    # (void return — call succeeding is the assertion)
-    # read_slot(uint256): 0 -> 0xc80000000000000064
-    r = harness.call(app, "read_slot(uint256)", 0)
-    assert as_int(r.abi_return) == 3689348814741910323300
-    # storage_ra() -> 1, 0
-    r = harness.call(app, "storage_ra()")
-    assert tuple(as_int(x) for x in r.abi_return) == (1, 0)
-    # set_ra(int64,int64): 100, 200 ->
-    r = harness.call(app, "set_ra(int64,int64)", 100, 200)
-    # (void return — call succeeding is the assertion)
-    # read_slot(uint256): 1 -> 0xc80000000000000064
-    r = harness.call(app, "read_slot(uint256)", 1)
-    assert as_int(r.abi_return) == 3689348814741910323300
-    # storage_b() -> 2, 0
-    r = harness.call(app, "storage_b()")
-    assert tuple(as_int(x) for x in r.abi_return) == (2, 0)
-    # set_b(int64,int64): 0, 200 ->
-    r = harness.call(app, "set_b(int64,int64)", 0, 200)
-    # (void return — call succeeding is the assertion)
-    # read_slot(uint256): 2 -> 3689348814741910323200
-    r = harness.call(app, "read_slot(uint256)", 2)
-    assert as_int(r.abi_return) == 3689348814741910323200
-    # storage_rb() -> 3, 0
-    r = harness.call(app, "storage_rb()")
-    assert tuple(as_int(x) for x in r.abi_return) == (3, 0)
-    # set_rb(int64,int64): 0, 200 ->
-    r = harness.call(app, "set_rb(int64,int64)", 0, 200)
-    # (void return — call succeeding is the assertion)
-    # read_slot(uint256): 3 -> 3689348814741910323200
-    r = harness.call(app, "read_slot(uint256)", 3)
-    assert as_int(r.abi_return) == 3689348814741910323200
-    # storage_c() -> 4, 0
-    r = harness.call(app, "storage_c()")
-    assert tuple(as_int(x) for x in r.abi_return) == (4, 0)
-    # set_c(int64,int64): 100, 0 ->
-    r = harness.call(app, "set_c(int64,int64)", 100, 0)
-    # (void return — call succeeding is the assertion)
-    # read_slot(uint256): 4 -> 0x64
-    r = harness.call(app, "read_slot(uint256)", 4)
-    assert as_int(r.abi_return) == 100
-    # storage_rc() -> 5, 0
-    r = harness.call(app, "storage_rc()")
-    assert tuple(as_int(x) for x in r.abi_return) == (5, 0)
-    # set_rc(int64,int64): 100, 0 ->
-    r = harness.call(app, "set_rc(int64,int64)", 100, 0)
-    # (void return — call succeeding is the assertion)
-    # read_slot(uint256): 5 -> 0x64
-    r = harness.call(app, "read_slot(uint256)", 5)
-    assert as_int(r.abi_return) == 100
-    # storage_d() -> 6, 0
-    r = harness.call(app, "storage_d()")
-    assert tuple(as_int(x) for x in r.abi_return) == (6, 0)
-    # set_d(int96,address): 39614081257132168796771975167, 1461501637330902918203684832716283019655932542975 ->
-    r = harness.call(app, "set_d(int96,address)", 0x7fffffffffffffffffffffff, encoding.encode_address((1461501637330902918203684832716283019655932542975).to_bytes(32, "big")))
-    # (void return — call succeeding is the assertion)
-    # read_slot(uint256): 6 -> -39614081257132168796771975169
-    r = harness.call(app, "read_slot(uint256)", 6)
-    assert as_int(r.abi_return) in (-39614081257132168796771975169, 115792089237316195423570985008687907853269984665600949958200451839116357664767)
-    # storage_rd() -> 7, 0
-    r = harness.call(app, "storage_rd()")
-    assert tuple(as_int(x) for x in r.abi_return) == (7, 0)
-    # set_rd(int96,address): 39614081257132168796771975167, 1461501637330902918203684832716283019655932542975 ->
-    r = harness.call(app, "set_rd(int96,address)", 0x7fffffffffffffffffffffff, encoding.encode_address((1461501637330902918203684832716283019655932542975).to_bytes(32, "big")))
-    # (void return — call succeeding is the assertion)
-    # read_slot(uint256): 7 -> -39614081257132168796771975169
-    r = harness.call(app, "read_slot(uint256)", 7)
-    assert as_int(r.abi_return) in (-39614081257132168796771975169, 115792089237316195423570985008687907853269984665600949958200451839116357664767)
-    # read_contents_asm() -> 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd
-    r = harness.call(app, "read_contents_asm()")
-    assert tuple(as_int(x) for x in r.abi_return) == (115792089237316195423570985008687907853269984665640564039457584007913129639934, 115792089237316195423570985008687907853269984665640564039457584007913129639934, 115792089237316195423570985008687907853269984665640564039457584007913129639933, 115792089237316195423570985008687907853269984665640564039457584007913129639933)
+    pytest.fail("EVM-specific storage packing layout for UDVT struct fields; AVM box storage differs.")
 
-@pytest.mark.skip(reason="EVM-specific int8 storage representation; bytes-from-int conversion fails on AVM.")
 def test_storage_signed(harness):
     """userDefinedValueType/contracts/storage_signed.sol"""
-    app = harness.compile_and_deploy("userDefinedValueType/contracts/storage_signed.sol")
-    # a() -> -2
-    r = harness.call(app, "a()")
-    assert as_int(r.abi_return) in (-2, 115792089237316195423570985008687907853269984665640564039457584007913129639934)
-    # direct() -> -2
-    r = harness.call(app, "direct()")
-    assert as_int(r.abi_return) in (-2, 115792089237316195423570985008687907853269984665640564039457584007913129639934)
-    # indirect() -> -2
-    r = harness.call(app, "indirect()")
-    assert as_int(r.abi_return) in (-2, 115792089237316195423570985008687907853269984665640564039457584007913129639934)
-    # toMemDirect() -> -2
-    r = harness.call(app, "toMemDirect()")
-    assert as_int(r.abi_return) in (-2, 115792089237316195423570985008687907853269984665640564039457584007913129639934)
-    # toMemIndirect() -> -2
-    r = harness.call(app, "toMemIndirect()")
-    assert as_int(r.abi_return) in (-2, 115792089237316195423570985008687907853269984665640564039457584007913129639934)
-    # div() -> -1
-    r = harness.call(app, "div()")
-    assert as_int(r.abi_return) in (-1, 115792089237316195423570985008687907853269984665640564039457584007913129639935)
-    # viaasm() -> 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe
-    r = harness.call(app, "viaasm()")
-    assert as_int(r.abi_return) == 115792089237316195423570985008687907853269984665640564039457584007913129639934
+    pytest.fail("EVM-specific int8 storage representation; bytes-from-int conversion fails on AVM.")
 
 def test_wrap_unwrap(harness):
     """userDefinedValueType/contracts/wrap_unwrap.sol"""

@@ -34,9 +34,9 @@ def test_block_inside_unchecked(harness):
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) == 0
 
-@pytest.mark.skip(reason="`new C()` child contract creation with payable ctor + value forwarding. AVM inner-app creation has different value semantics.")
 def test_check_var_init(harness):
     """arithmetics/contracts/check_var_init.sol"""
+    pytest.fail("`new C()` child contract creation with payable ctor + value forwarding. AVM inner-app creation has different value semantics.")
 
 def test_checked_add_v1(harness):
     """arithmetics/contracts/checked_add_v1.sol"""

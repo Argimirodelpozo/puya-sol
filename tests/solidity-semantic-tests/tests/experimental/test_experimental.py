@@ -6,11 +6,10 @@ from framework import (
     as_int, as_bytes,
 )
 
-pytestmark = pytest.mark.skip(reason="`pragma experimental solidity` — type-class / __builtin instantiation. Compiler-side: not supported in puya-sol.")
-
-
 def test_stub(harness):
     """experimental/contracts/stub.sol"""
 
+    pytest.fail("`pragma experimental solidity` — type-class / __builtin instantiation. Compiler-side: not supported in puya-sol.")
 def test_type_class(harness):
     """experimental/contracts/type_class.sol"""
+    pytest.fail("`pragma experimental solidity` — type-class / __builtin instantiation. Compiler-side: not supported in puya-sol.")

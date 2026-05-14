@@ -7,51 +7,13 @@ from framework import (
 )
 
 
-@pytest.mark.skip(reason="Compiler-side: auto-getter on mapping(uint=>Struct[]) — codegen exits 1.")
 def test_array_mapping_struct(harness):
     """getters/contracts/array_mapping_struct.sol"""
-    app = harness.compile_and_deploy("getters/contracts/array_mapping_struct.sol")
-    # m(uint256,uint256): 0, 0 -> 0x00, 0x00
-    r = harness.call(app, "m(uint256,uint256)", 0, 0)
-    assert tuple(as_int(x) for x in r.abi_return) == (0, 0)
-    # m(uint256,uint256): 1, 0 -> 1, 2
-    r = harness.call(app, "m(uint256,uint256)", 1, 0)
-    assert tuple(as_int(x) for x in r.abi_return) == (1, 2)
-    # m(uint256,uint256): 1, 1 -> 3, 4
-    r = harness.call(app, "m(uint256,uint256)", 1, 1)
-    assert tuple(as_int(x) for x in r.abi_return) == (3, 4)
-    # m(uint256,uint256): 1, 2 -> 0x00, 0x00
-    r = harness.call(app, "m(uint256,uint256)", 1, 2)
-    assert tuple(as_int(x) for x in r.abi_return) == (0, 0)
-    # n(uint256,uint256): 0, 0 -> 0x00, 0x00
-    r = harness.call(app, "n(uint256,uint256)", 0, 0)
-    assert tuple(as_int(x) for x in r.abi_return) == (0, 0)
-    # n(uint256,uint256): 1, 0 -> 7, 8
-    r = harness.call(app, "n(uint256,uint256)", 1, 0)
-    assert tuple(as_int(x) for x in r.abi_return) == (7, 8)
-    # n(uint256,uint256): 1, 1 -> 9, 0x0a
-    r = harness.call(app, "n(uint256,uint256)", 1, 1)
-    assert tuple(as_int(x) for x in r.abi_return) == (9, 10)
-    # n(uint256,uint256): 1, 2 -> 0x00, 0x00
-    r = harness.call(app, "n(uint256,uint256)", 1, 2)
-    assert tuple(as_int(x) for x in r.abi_return) == (0, 0)
+    pytest.fail("Compiler-side: auto-getter on mapping(uint=>Struct[]) — codegen exits 1.")
 
-@pytest.mark.skip(reason="Compiler-side: auto-getter on nested array of arrays — exits 1.")
 def test_arrays(harness):
     """getters/contracts/arrays.sol"""
-    app = harness.compile_and_deploy("getters/contracts/arrays.sol")
-    # a(uint256,uint256): 0, 0 -> FAILURE
-    r = harness.call(app, "a(uint256,uint256)", 0, 0, expect_revert=True)
-    assert r.reverted
-    # a(uint256,uint256): 1, 0 -> 3
-    r = harness.call(app, "a(uint256,uint256)", 1, 0)
-    assert as_int(r.abi_return) == 3
-    # a(uint256,uint256): 1, 1 -> 4
-    r = harness.call(app, "a(uint256,uint256)", 1, 1)
-    assert as_int(r.abi_return) == 4
-    # a(uint256,uint256): 2, 0 -> FAILURE
-    r = harness.call(app, "a(uint256,uint256)", 2, 0, expect_revert=True)
-    assert r.reverted
+    pytest.fail("Compiler-side: auto-getter on nested array of arrays — exits 1.")
 
 def test_bytes(harness):
     """getters/contracts/bytes.sol"""
@@ -169,9 +131,9 @@ def test_transient_value_types(harness):
     r = harness.call(app, "x()")
     assert as_int(r.abi_return) == 0
 
-@pytest.mark.skip(reason="EVM transient storage persists across multi-frame external calls within one tx. AVM transient (scratch) wipes between inner app calls — different semantic model.")
 def test_transient_value_types_multi_frame_call(harness):
     """getters/contracts/transient_value_types_multi_frame_call.sol"""
+    pytest.fail("EVM transient storage persists across multi-frame external calls within one tx. AVM transient (scratch) wipes between inner app calls — different semantic model.")
 
 def test_value_types(harness):
     """getters/contracts/value_types.sol"""

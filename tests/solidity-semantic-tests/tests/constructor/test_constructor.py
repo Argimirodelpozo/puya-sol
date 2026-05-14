@@ -7,9 +7,9 @@ from framework import (
 )
 
 
-@pytest.mark.skip(reason="EVM: type(C).creationCode + Yul `create` for child contract deploy. AVM has no creationCode. v243: 0p/1f.")
 def test_arrays_in_constructors(harness):
     """constructor/contracts/arrays_in_constructors.sol"""
+    pytest.fail("EVM: type(C).creationCode + Yul `create` for child contract deploy. AVM has no creationCode. v243: 0p/1f.")
 
 def test_base_constructor_arguments(harness):
     """constructor/contracts/base_constructor_arguments.sol"""
@@ -18,10 +18,9 @@ def test_base_constructor_arguments(harness):
     r = harness.call(app, "getA()")
     assert as_int(r.abi_return) == 49
 
-@pytest.mark.skip(reason="EVM: type(C).creationCode for child contract deploy. AVM has no creationCode. v243: 0p/1f.")
 def test_bytes_in_constructors_packer(harness):
     """constructor/contracts/bytes_in_constructors_packer.sol"""
-
+    pytest.fail("EVM: type(C).creationCode for child contract deploy. AVM has no creationCode. v243: 0p/1f.")
 
 def test_bytes_in_constructors_unpacker(harness):
     """constructor/contracts/bytes_in_constructors_unpacker.sol"""
@@ -33,9 +32,9 @@ def test_bytes_in_constructors_unpacker(harness):
     assert as_int(harness.call(app, "m_x()").abi_return) == 7
     assert bytes(harness.call(app, "m_s()").abi_return) == s
 
-@pytest.mark.skip(reason="EVM: tests Yul `create(value, ptr, len)` behavior with payable constructors. 2000 ether overflows microalgo arithmetic. v243: 4p/4f.")
 def test_callvalue_check(harness):
     """constructor/contracts/callvalue_check.sol"""
+    pytest.fail("EVM: tests Yul `create(value, ptr, len)` behavior with payable constructors. 2000 ether overflows microalgo arithmetic. v243: 4p/4f.")
 
 def test_constructor_arguments_external(harness):
     """constructor/contracts/constructor_arguments_external.sol"""
@@ -62,9 +61,9 @@ def test_constructor_function_argument(harness):
     app = harness.compile_and_deploy("constructor/contracts/constructor_function_argument.sol", ctor_args=[0xfdd67305928fcac8d213d1e47bfa6165cd0b87b946644cd0000000000000000])
     # constructor-only test — deployment succeeding is the assertion
 
-@pytest.mark.skip(reason="Compiler-side: constructor allocates struct array + dispatches fn-ptr. v243: 0p/1f.")
 def test_constructor_function_complex(harness):
     """constructor/contracts/constructor_function_complex.sol"""
+    pytest.fail("Compiler-side: constructor allocates struct array + dispatches fn-ptr. v243: 0p/1f.")
 
 def test_constructor_static_array_argument(harness):
     """constructor/contracts/constructor_static_array_argument.sol"""
@@ -128,9 +127,9 @@ def test_inline_member_init_inheritence_without_constructor(harness):
     r = harness.call(app, "getDMember()")
     assert as_int(r.abi_return) == 6
 
-@pytest.mark.skip(reason="`new B{value:10, salt:0x00}` deploys child contracts with payment. AVM inner-app creation has different value semantics. 2000 ether overflows microalgo arithmetic.")
 def test_no_callvalue_check(harness):
     """constructor/contracts/no_callvalue_check.sol"""
+    pytest.fail("`new B{value:10, salt:0x00}` deploys child contracts with payment. AVM inner-app creation has different value semantics. 2000 ether overflows microalgo arithmetic.")
 
 def test_order_of_evaluation(harness):
     """constructor/contracts/order_of_evaluation.sol"""

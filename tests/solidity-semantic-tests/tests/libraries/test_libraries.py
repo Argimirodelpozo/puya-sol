@@ -33,9 +33,9 @@ def test_attached_public_library_function_returning_calldata(harness):
     r = harness.call(app, "f(bytes)", b"abcd")
     assert [bytes(x) for x in r.abi_return] == [b"a", b"a"]
 
-@pytest.mark.skip(reason="Library function taking an external function pointer arg — compiler-side codegen for fn-ptr-via-library call.")
 def test_external_call_with_function_pointer_parameter(harness):
     """libraries/contracts/external_call_with_function_pointer_parameter.sol"""
+    pytest.fail("Library function taking an external function pointer arg — compiler-side codegen for fn-ptr-via-library call.")
 
 def test_external_call_with_storage_array_parameter(harness):
     """libraries/contracts/external_call_with_storage_array_parameter.sol"""
@@ -141,13 +141,9 @@ def test_internal_library_function_attached_to_enum(harness):
     r = harness.call(app, "equalsA(uint256)", 1)
     assert bool(as_int(r.abi_return)) is False
 
-@pytest.mark.skip(reason="puya-sol compile error on external function-type library attachment.")
 def test_internal_library_function_attached_to_external_function_type(harness):
     """libraries/contracts/internal_library_function_attached_to_external_function_type.sol"""
-    app = harness.compile_and_deploy("libraries/contracts/internal_library_function_attached_to_external_function_type.sol")
-    # test(uint256): 5 -> 10
-    r = harness.call(app, "test(uint256)", 5)
-    assert as_int(r.abi_return) == 10
+    pytest.fail("puya-sol compile error on external function-type library attachment.")
 
 def test_internal_library_function_attached_to_fixed_array(harness):
     """libraries/contracts/internal_library_function_attached_to_fixed_array.sol"""
@@ -177,21 +173,13 @@ def test_internal_library_function_attached_to_interface(harness):
     r = harness.call(app, "test()")
     assert as_int(r.abi_return) == 42
 
-@pytest.mark.skip(reason="puya-sol compile error on internal function-type library attachment.")
 def test_internal_library_function_attached_to_internal_function_type(harness):
     """libraries/contracts/internal_library_function_attached_to_internal_function_type.sol"""
-    app = harness.compile_and_deploy("libraries/contracts/internal_library_function_attached_to_internal_function_type.sol")
-    # test(uint256): 5 -> 10
-    r = harness.call(app, "test(uint256)", 5)
-    assert as_int(r.abi_return) == 10
+    pytest.fail("puya-sol compile error on internal function-type library attachment.")
 
-@pytest.mark.skip(reason="puya-sol compile error on named-selector internal fn-type library attachment.")
 def test_internal_library_function_attached_to_internal_function_type_named_selector(harness):
     """libraries/contracts/internal_library_function_attached_to_internal_function_type_named_selector.sol"""
-    app = harness.compile_and_deploy("libraries/contracts/internal_library_function_attached_to_internal_function_type_named_selector.sol")
-    # test(uint256): 5 -> 10
-    r = harness.call(app, "test(uint256)", 5)
-    assert as_int(r.abi_return) == 10
+    pytest.fail("puya-sol compile error on named-selector internal fn-type library attachment.")
 
 def test_internal_library_function_attached_to_literal(harness):
     """libraries/contracts/internal_library_function_attached_to_literal.sol"""
@@ -257,139 +245,17 @@ def test_internal_types_in_library(harness):
     r = harness.call(app, "f()")
     assert tuple(as_int(x) for x in r.abi_return) == (4, 17)
 
-@pytest.mark.skip(reason="`address(L)` on AVM doesn't return a meaningful address (libraries are inlined). The `address(L) == address(0)` comparison reverts.")
 def test_library_address(harness):
     """libraries/contracts/library_address.sol"""
-    app = harness.compile_and_deploy("libraries/contracts/library_address.sol")
-    r = harness.call(app, "addr()")
-    assert bool(as_int(r.abi_return)) is False
-    # g(uint256): 1 -> 1
-    r = harness.call(app, "g(uint256)", 1)
-    assert as_int(r.abi_return) == 1
-    # g(uint256): 2 -> 4
-    r = harness.call(app, "g(uint256)", 2)
-    assert as_int(r.abi_return) == 4
-    # g(uint256): 4 -> 16
-    r = harness.call(app, "g(uint256)", 4)
-    assert as_int(r.abi_return) == 16
-    # h(uint256): 1 -> 1
-    r = harness.call(app, "h(uint256)", 1)
-    assert as_int(r.abi_return) == 1
-    # h(uint256): 2 -> 4
-    r = harness.call(app, "h(uint256)", 2)
-    assert as_int(r.abi_return) == 4
-    # h(uint256): 4 -> 16
-    r = harness.call(app, "h(uint256)", 4)
-    assert as_int(r.abi_return) == 16
-    # i(uint256): 1 -> 1
-    r = harness.call(app, "i(uint256)", 1)
-    assert as_int(r.abi_return) == 1
-    # i(uint256): 2 -> 4
-    r = harness.call(app, "i(uint256)", 2)
-    assert as_int(r.abi_return) == 4
-    # i(uint256): 4 -> 16
-    r = harness.call(app, "i(uint256)", 4)
-    assert as_int(r.abi_return) == 16
-    # j(uint256): 1 -> 1
-    r = harness.call(app, "j(uint256)", 1)
-    assert as_int(r.abi_return) == 1
-    # j(uint256): 2 -> 4
-    r = harness.call(app, "j(uint256)", 2)
-    assert as_int(r.abi_return) == 4
-    # j(uint256): 4 -> 16
-    r = harness.call(app, "j(uint256)", 4)
-    assert as_int(r.abi_return) == 16
-    # k(uint256): 1 -> FAILURE, hex"4e487b71", 0x01
-    r = harness.call(app, "k(uint256)", 1, expect_revert=True)
-    assert r.reverted
-    # k(uint256): 2 -> FAILURE, hex"4e487b71", 0x01
-    r = harness.call(app, "k(uint256)", 2, expect_revert=True)
-    assert r.reverted
-    # k(uint256): 4 -> FAILURE, hex"4e487b71", 0x01
-    r = harness.call(app, "k(uint256)", 4, expect_revert=True)
-    assert r.reverted
+    pytest.fail("`address(L)` on AVM doesn't return a meaningful address (libraries are inlined). The `address(L) == address(0)` comparison reverts.")
 
-@pytest.mark.skip(reason="`address(L) == addr` library-address equality is EVM-specific. AVM has no separate library address.")
 def test_library_address_homestead(harness):
     """libraries/contracts/library_address_homestead.sol"""
-    app = harness.compile_and_deploy("libraries/contracts/library_address_homestead.sol")
-    # g(uint256,uint256): 1, 1 -> true
-    r = harness.call(app, "g(uint256,uint256)", 1, 1)
-    assert bool(as_int(r.abi_return)) is True
-    # g(uint256,uint256): 1, 2 -> false
-    r = harness.call(app, "g(uint256,uint256)", 1, 2)
-    assert bool(as_int(r.abi_return)) is False
-    # g(uint256,uint256): 2, 3 -> false
-    r = harness.call(app, "g(uint256,uint256)", 2, 3)
-    assert bool(as_int(r.abi_return)) is False
-    # g(uint256,uint256): 2, 4 -> true
-    r = harness.call(app, "g(uint256,uint256)", 2, 4)
-    assert bool(as_int(r.abi_return)) is True
-    # g(uint256,uint256): 2, 5 -> false
-    r = harness.call(app, "g(uint256,uint256)", 2, 5)
-    assert bool(as_int(r.abi_return)) is False
-    # g(uint256,uint256): 4, 15 -> false
-    r = harness.call(app, "g(uint256,uint256)", 4, 15)
-    assert bool(as_int(r.abi_return)) is False
-    # g(uint256,uint256): 4, 16 -> true
-    r = harness.call(app, "g(uint256,uint256)", 4, 16)
-    assert bool(as_int(r.abi_return)) is True
-    # g(uint256,uint256): 4, 17 -> false
-    r = harness.call(app, "g(uint256,uint256)", 4, 17)
-    assert bool(as_int(r.abi_return)) is False
+    pytest.fail("`address(L) == addr` library-address equality is EVM-specific. AVM has no separate library address.")
 
-@pytest.mark.skip(reason="`address(L)` library address access; AVM has no separate library address.")
 def test_library_address_via_module(harness):
     """libraries/contracts/library_address_via_module.sol"""
-    app = harness.compile_and_deploy("libraries/contracts/library_address_via_module.sol")
-    # addr() -> false
-    r = harness.call(app, "addr()")
-    assert bool(as_int(r.abi_return)) is False
-    # g(uint256): 1 -> 1
-    r = harness.call(app, "g(uint256)", 1)
-    assert as_int(r.abi_return) == 1
-    # g(uint256): 2 -> 4
-    r = harness.call(app, "g(uint256)", 2)
-    assert as_int(r.abi_return) == 4
-    # g(uint256): 4 -> 16
-    r = harness.call(app, "g(uint256)", 4)
-    assert as_int(r.abi_return) == 16
-    # h(uint256): 1 -> 1
-    r = harness.call(app, "h(uint256)", 1)
-    assert as_int(r.abi_return) == 1
-    # h(uint256): 2 -> 4
-    r = harness.call(app, "h(uint256)", 2)
-    assert as_int(r.abi_return) == 4
-    # h(uint256): 4 -> 16
-    r = harness.call(app, "h(uint256)", 4)
-    assert as_int(r.abi_return) == 16
-    # i(uint256): 1 -> 1
-    r = harness.call(app, "i(uint256)", 1)
-    assert as_int(r.abi_return) == 1
-    # i(uint256): 2 -> 4
-    r = harness.call(app, "i(uint256)", 2)
-    assert as_int(r.abi_return) == 4
-    # i(uint256): 4 -> 16
-    r = harness.call(app, "i(uint256)", 4)
-    assert as_int(r.abi_return) == 16
-    # j(uint256): 1 -> 1
-    r = harness.call(app, "j(uint256)", 1)
-    assert as_int(r.abi_return) == 1
-    # j(uint256): 2 -> 4
-    r = harness.call(app, "j(uint256)", 2)
-    assert as_int(r.abi_return) == 4
-    # j(uint256): 4 -> 16
-    r = harness.call(app, "j(uint256)", 4)
-    assert as_int(r.abi_return) == 16
-    # k(uint256): 1 -> FAILURE, hex"4e487b71", 0x01
-    r = harness.call(app, "k(uint256)", 1, expect_revert=True)
-    assert r.reverted
-    # k(uint256): 2 -> FAILURE, hex"4e487b71", 0x01
-    r = harness.call(app, "k(uint256)", 2, expect_revert=True)
-    assert r.reverted
-    # k(uint256): 4 -> FAILURE, hex"4e487b71", 0x01
-    r = harness.call(app, "k(uint256)", 4, expect_revert=True)
-    assert r.reverted
+    pytest.fail("`address(L)` library address access; AVM has no separate library address.")
 
 def test_library_call_in_homestead(harness):
     """libraries/contracts/library_call_in_homestead.sol"""
@@ -400,69 +266,21 @@ def test_library_call_in_homestead(harness):
     r = harness.call(app, "sender()")
     assert r.abi_return == harness.localnet.account.address
 
-@pytest.mark.skip(reason="EVM `.delegatecall()` returns TEAL extract_uint64 mismatch — compiler-side bug on library cross-call return handling.")
 def test_library_delegatecall_guard_pure(harness):
     """libraries/contracts/library_delegatecall_guard_pure.sol"""
-    app = harness.compile_and_deploy("libraries/contracts/library_delegatecall_guard_pure.sol")
-    # f() -> 23
-    r = harness.call(app, "f()")
-    assert as_int(r.abi_return) == 23
-    # g() -> true, 23
-    r = harness.call(app, "g()")
-    # TODO: verify expected: true | 23
-    assert not r.reverted
-    # h() -> true, 23
-    r = harness.call(app, "h()")
-    # TODO: verify expected: true | 23
-    assert not r.reverted
+    pytest.fail("EVM `.delegatecall()` returns TEAL extract_uint64 mismatch — compiler-side bug on library cross-call return handling.")
 
-@pytest.mark.skip(reason="EVM `.delegatecall()` returns TEAL extract_uint64 mismatch — compiler-side bug on library cross-call return handling.")
 def test_library_delegatecall_guard_view_needed(harness):
     """libraries/contracts/library_delegatecall_guard_view_needed.sol"""
-    app = harness.compile_and_deploy("libraries/contracts/library_delegatecall_guard_view_needed.sol")
-    # f() -> 1
-    r = harness.call(app, "f()")
-    assert as_int(r.abi_return) == 1
-    # g() -> true, 1
-    r = harness.call(app, "g()")
-    # TODO: verify expected: true | 1
-    assert not r.reverted
-    # h() -> true, 0 # this is bad - this should fail! #
-    r = harness.call(app, "h()")
-    # TODO: verify expected: true | 0 # this is bad - this should fail! #
-    assert not r.reverted
+    pytest.fail("EVM `.delegatecall()` returns TEAL extract_uint64 mismatch — compiler-side bug on library cross-call return handling.")
 
-@pytest.mark.skip(reason="EVM `.delegatecall()` library cross-call — compiler-side bug.")
 def test_library_delegatecall_guard_view_not_needed(harness):
     """libraries/contracts/library_delegatecall_guard_view_not_needed.sol"""
-    app = harness.compile_and_deploy("libraries/contracts/library_delegatecall_guard_view_not_needed.sol")
-    # f() -> 84
-    r = harness.call(app, "f()")
-    assert as_int(r.abi_return) == 84
-    # g() -> true, 84
-    r = harness.call(app, "g()")
-    # TODO: verify expected: true | 84
-    assert not r.reverted
-    # h() -> true, 84
-    r = harness.call(app, "h()")
-    # TODO: verify expected: true | 84
-    assert not r.reverted
+    pytest.fail("EVM `.delegatecall()` library cross-call — compiler-side bug.")
 
-@pytest.mark.skip(reason="EVM `.delegatecall()` / `.staticcall()` library cross-call — compiler-side bug.")
 def test_library_delegatecall_guard_view_staticcall(harness):
     """libraries/contracts/library_delegatecall_guard_view_staticcall.sol"""
-    app = harness.compile_and_deploy("libraries/contracts/library_delegatecall_guard_view_staticcall.sol")
-    # f() -> 42
-    r = harness.call(app, "f()")
-    assert as_int(r.abi_return) == 42
-    # g() -> true, 42
-    r = harness.call(app, "g()")
-    # TODO: verify expected: true | 42
-    assert not r.reverted
-    # h() -> true, 42
-    r = harness.call(app, "h()")
-    # TODO: verify expected: true | 42
-    assert not r.reverted
+    pytest.fail("EVM `.delegatecall()` / `.staticcall()` library cross-call — compiler-side bug.")
 
 def test_library_enum_as_an_expression(harness):
     """libraries/contracts/library_enum_as_an_expression.sol"""
@@ -519,12 +337,9 @@ def test_library_references_preserve(harness):
     r = harness.call(app, "bSum()")
     assert as_int(r.abi_return) == 5
 
-@pytest.mark.skip(reason="Library returning struct containing mapping — compiler-side: returns 0 instead of 123.")
 def test_library_return_struct_with_mapping(harness):
     """libraries/contracts/library_return_struct_with_mapping.sol"""
-    app = harness.compile_and_deploy("libraries/contracts/library_return_struct_with_mapping.sol")
-    r = harness.call(app, "f()")
-    assert as_int(r.abi_return) == 123
+    pytest.fail("Library returning struct containing mapping — compiler-side: returns 0 instead of 123.")
 
 def test_library_staticcall_delegatecall(harness):
     """libraries/contracts/library_staticcall_delegatecall.sol"""
@@ -824,9 +639,6 @@ def test_using_library_mappings_return(harness):
     # TODO: verify structural decoding matches expected: 1, 0, 42, 23, 0, 99
     assert not r.reverted
 
-@pytest.mark.skip(reason="Library push 20 items into storage array via box-backed slot — runs out of opcode budget (~170k opcodes).")
 def test_using_library_structs(harness):
     """libraries/contracts/using_library_structs.sol"""
-    app = harness.compile_and_deploy("libraries/contracts/using_library_structs.sol")
-    r = harness.call(app, "f()")
-    assert tuple(as_int(x) for x in r.abi_return) == (7, 8)
+    pytest.fail("Library push 20 items into storage array via box-backed slot — runs out of opcode budget (~170k opcodes).")

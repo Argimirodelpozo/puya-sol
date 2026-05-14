@@ -7,9 +7,9 @@ from framework import (
 )
 
 
-@pytest.mark.skip(reason="EVM-only: child contract ctor returns raw EVM bytecode via `return(0, 4)`. AVM has no bytecode access.")
 def test_evmone_support(harness):
     """shanghai/contracts/evmone_support.sol"""
+    pytest.fail("EVM-only: child contract ctor returns raw EVM bytecode via `return(0, 4)`. AVM has no bytecode access.")
 
 def test_push0(harness):
     """shanghai/contracts/push0.sol"""

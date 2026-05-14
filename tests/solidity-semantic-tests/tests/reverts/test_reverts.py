@@ -105,9 +105,9 @@ def test_revert(harness):
     r = harness.call(app, "a()")
     assert as_int(r.abi_return) == 42
 
-@pytest.mark.skip(reason="EVM Yul `call(...)` with mload(0) probe of returndata buffer. AVM has no flat returndata.")
 def test_revert_return_area(harness):
     """reverts/contracts/revert_return_area.sol"""
+    pytest.fail("EVM Yul `call(...)` with mload(0) probe of returndata buffer. AVM has no flat returndata.")
 
 def test_simple_throw(harness):
     """reverts/contracts/simple_throw.sol"""

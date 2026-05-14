@@ -8,9 +8,9 @@ from framework import (
 )
 
 
-@pytest.mark.skip(reason="Abstract ctor param of type `Struct[] storage` — compiler-side: storage pointer passing to abstract ctor not supported.")
 def test_array_mapping_abstract_constructor_param(harness):
     """types/contracts/array_mapping_abstract_constructor_param.sol"""
+    pytest.fail("Abstract ctor param of type `Struct[] storage` — compiler-side: storage pointer passing to abstract ctor not supported.")
 
 def test_assign_calldata_value_type(harness):
     """types/contracts/assign_calldata_value_type.sol"""
@@ -310,91 +310,9 @@ def test_mapping_contract_key_library(harness):
     r = harness.call(app, "get(address)", encoding.encode_address((167).to_bytes(32, "big")))
     assert as_int(r.abi_return) == 0
 
-@pytest.mark.skip(reason="EVM enum-out-of-range check on uint8 arg — AVM dispatcher doesn't enforce enum range.")
 def test_mapping_enum_key_getter_v1(harness):
     """types/contracts/mapping_enum_key_getter_v1.sol"""
-    app = harness.compile_and_deploy("types/contracts/mapping_enum_key_getter_v1.sol")
-    # table(uint8): 0 -> 0
-    r = harness.call(app, "table(uint8)", 0)
-    assert as_int(r.abi_return) == 0
-    # table(uint8): 0x01 -> 0
-    r = harness.call(app, "table(uint8)", 1)
-    assert as_int(r.abi_return) == 0
-    # table(uint8): 0xa7 -> 0
-    r = harness.call(app, "table(uint8)", 167)
-    assert as_int(r.abi_return) == 0
-    # get(uint8): 0 -> 0
-    r = harness.call(app, "get(uint8)", 0)
-    assert as_int(r.abi_return) == 0
-    # get(uint8): 0x01 -> 0
-    r = harness.call(app, "get(uint8)", 1)
-    assert as_int(r.abi_return) == 0
-    # get(uint8): 0xa7 -> FAILURE, hex"4e487b71", 33
-    r = harness.call(app, "get(uint8)", 167, expect_revert=True)
-    assert r.reverted
-    # set(uint8,uint8): 0x01, 0xa1 ->
-    r = harness.call(app, "set(uint8,uint8)", 1, 161)
-    # (void return — call succeeding is the assertion)
-    # table(uint8): 0 -> 0
-    r = harness.call(app, "table(uint8)", 0)
-    assert as_int(r.abi_return) == 0
-    # table(uint8): 0x01 -> 0xa1
-    r = harness.call(app, "table(uint8)", 1)
-    assert as_int(r.abi_return) == 161
-    # table(uint8): 0xa7 -> 0
-    r = harness.call(app, "table(uint8)", 167)
-    assert as_int(r.abi_return) == 0
-    # get(uint8): 0 -> 0
-    r = harness.call(app, "get(uint8)", 0)
-    assert as_int(r.abi_return) == 0
-    # get(uint8): 0x01 -> 0xa1
-    r = harness.call(app, "get(uint8)", 1)
-    assert as_int(r.abi_return) == 161
-    # get(uint8): 0xa7 -> FAILURE, hex"4e487b71", 33
-    r = harness.call(app, "get(uint8)", 167, expect_revert=True)
-    assert r.reverted
-    # set(uint8,uint8): 0x00, 0xef ->
-    r = harness.call(app, "set(uint8,uint8)", 0, 239)
-    # (void return — call succeeding is the assertion)
-    # table(uint8): 0 -> 0xef
-    r = harness.call(app, "table(uint8)", 0)
-    assert as_int(r.abi_return) == 239
-    # table(uint8): 0x01 -> 0xa1
-    r = harness.call(app, "table(uint8)", 1)
-    assert as_int(r.abi_return) == 161
-    # table(uint8): 0xa7 -> 0
-    r = harness.call(app, "table(uint8)", 167)
-    assert as_int(r.abi_return) == 0
-    # get(uint8): 0 -> 0xef
-    r = harness.call(app, "get(uint8)", 0)
-    assert as_int(r.abi_return) == 239
-    # get(uint8): 0x01 -> 0xa1
-    r = harness.call(app, "get(uint8)", 1)
-    assert as_int(r.abi_return) == 161
-    # get(uint8): 0xa7 -> FAILURE, hex"4e487b71", 33
-    r = harness.call(app, "get(uint8)", 167, expect_revert=True)
-    assert r.reverted
-    # set(uint8,uint8): 0x01, 0x05 ->
-    r = harness.call(app, "set(uint8,uint8)", 1, 5)
-    # (void return — call succeeding is the assertion)
-    # table(uint8): 0 -> 0xef
-    r = harness.call(app, "table(uint8)", 0)
-    assert as_int(r.abi_return) == 239
-    # table(uint8): 0x01 -> 0x05
-    r = harness.call(app, "table(uint8)", 1)
-    assert as_int(r.abi_return) == 5
-    # table(uint8): 0xa7 -> 0
-    r = harness.call(app, "table(uint8)", 167)
-    assert as_int(r.abi_return) == 0
-    # get(uint8): 0 -> 0xef
-    r = harness.call(app, "get(uint8)", 0)
-    assert as_int(r.abi_return) == 239
-    # get(uint8): 0x01 -> 0x05
-    r = harness.call(app, "get(uint8)", 1)
-    assert as_int(r.abi_return) == 5
-    # get(uint8): 0xa7 -> FAILURE, hex"4e487b71", 33
-    r = harness.call(app, "get(uint8)", 167, expect_revert=True)
-    assert r.reverted
+    pytest.fail("EVM enum-out-of-range check on uint8 arg — AVM dispatcher doesn't enforce enum range.")
 
 def test_mapping_enum_key_getter_v2(harness):
     """types/contracts/mapping_enum_key_getter_v2.sol"""
@@ -481,55 +399,9 @@ def test_mapping_enum_key_getter_v2(harness):
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
 
-@pytest.mark.skip(reason="EVM enum-out-of-range check on uint8 arg — AVM dispatcher doesn't enforce enum range.")
 def test_mapping_enum_key_library_v1(harness):
     """types/contracts/mapping_enum_key_library_v1.sol"""
-    app = harness.compile_and_deploy("types/contracts/mapping_enum_key_library_v1.sol")
-    # get(uint8): 0 -> 0
-    r = harness.call(app, "get(uint8)", 0)
-    assert as_int(r.abi_return) == 0
-    # get(uint8): 0x01 -> 0
-    r = harness.call(app, "get(uint8)", 1)
-    assert as_int(r.abi_return) == 0
-    # get(uint8): 0xa7 -> FAILURE, hex"4e487b71", 33
-    r = harness.call(app, "get(uint8)", 167, expect_revert=True)
-    assert r.reverted
-    # set(uint8,uint8): 0x01, 0xa1 ->
-    r = harness.call(app, "set(uint8,uint8)", 1, 161)
-    # (void return — call succeeding is the assertion)
-    # get(uint8): 0 -> 0
-    r = harness.call(app, "get(uint8)", 0)
-    assert as_int(r.abi_return) == 0
-    # get(uint8): 0x01 -> 0xa1
-    r = harness.call(app, "get(uint8)", 1)
-    assert as_int(r.abi_return) == 161
-    # get(uint8): 0xa7 -> FAILURE, hex"4e487b71", 33
-    r = harness.call(app, "get(uint8)", 167, expect_revert=True)
-    assert r.reverted
-    # set(uint8,uint8): 0x00, 0xef ->
-    r = harness.call(app, "set(uint8,uint8)", 0, 239)
-    # (void return — call succeeding is the assertion)
-    # get(uint8): 0 -> 0xef
-    r = harness.call(app, "get(uint8)", 0)
-    assert as_int(r.abi_return) == 239
-    # get(uint8): 0x01 -> 0xa1
-    r = harness.call(app, "get(uint8)", 1)
-    assert as_int(r.abi_return) == 161
-    # get(uint8): 0xa7 -> FAILURE, hex"4e487b71", 33
-    r = harness.call(app, "get(uint8)", 167, expect_revert=True)
-    assert r.reverted
-    # set(uint8,uint8): 0x01, 0x05 ->
-    r = harness.call(app, "set(uint8,uint8)", 1, 5)
-    # (void return — call succeeding is the assertion)
-    # get(uint8): 0 -> 0xef
-    r = harness.call(app, "get(uint8)", 0)
-    assert as_int(r.abi_return) == 239
-    # get(uint8): 0x01 -> 0x05
-    r = harness.call(app, "get(uint8)", 1)
-    assert as_int(r.abi_return) == 5
-    # get(uint8): 0xa7 -> FAILURE, hex"4e487b71", 33
-    r = harness.call(app, "get(uint8)", 167, expect_revert=True)
-    assert r.reverted
+    pytest.fail("EVM enum-out-of-range check on uint8 arg — AVM dispatcher doesn't enforce enum range.")
 
 def test_mapping_enum_key_library_v2(harness):
     """types/contracts/mapping_enum_key_library_v2.sol"""
@@ -580,61 +452,9 @@ def test_mapping_enum_key_library_v2(harness):
     r = harness.call(app, "get(uint8)", 167, expect_revert=True)
     assert r.reverted
 
-@pytest.mark.skip(reason="EVM enum-out-of-range check on uint8 arg — AVM dispatcher doesn't enforce enum range.")
 def test_mapping_enum_key_v1(harness):
     """types/contracts/mapping_enum_key_v1.sol"""
-    app = harness.compile_and_deploy("types/contracts/mapping_enum_key_v1.sol")
-    # get(uint8): 0 -> 0
-    r = harness.call(app, "get(uint8)", 0)
-    assert as_int(r.abi_return) == 0
-    # get(uint8): 0x01 -> 0
-    r = harness.call(app, "get(uint8)", 1)
-    assert as_int(r.abi_return) == 0
-    # get(uint8): 0x02 -> 0
-    r = harness.call(app, "get(uint8)", 2)
-    assert as_int(r.abi_return) == 0
-    # get(uint8): 0x03 -> FAILURE, hex"4e487b71", 33
-    r = harness.call(app, "get(uint8)", 3, expect_revert=True)
-    assert r.reverted
-    # get(uint8): 0xa7 -> FAILURE, hex"4e487b71", 33
-    r = harness.call(app, "get(uint8)", 167, expect_revert=True)
-    assert r.reverted
-    # set(uint8,uint8): 0x01, 0xa1 ->
-    r = harness.call(app, "set(uint8,uint8)", 1, 161)
-    # (void return — call succeeding is the assertion)
-    # get(uint8): 0 -> 0
-    r = harness.call(app, "get(uint8)", 0)
-    assert as_int(r.abi_return) == 0
-    # get(uint8): 0x01 -> 0xa1
-    r = harness.call(app, "get(uint8)", 1)
-    assert as_int(r.abi_return) == 161
-    # get(uint8): 0xa7 -> FAILURE, hex"4e487b71", 33
-    r = harness.call(app, "get(uint8)", 167, expect_revert=True)
-    assert r.reverted
-    # set(uint8,uint8): 0x00, 0xef ->
-    r = harness.call(app, "set(uint8,uint8)", 0, 239)
-    # (void return — call succeeding is the assertion)
-    # get(uint8): 0 -> 0xef
-    r = harness.call(app, "get(uint8)", 0)
-    assert as_int(r.abi_return) == 239
-    # get(uint8): 0x01 -> 0xa1
-    r = harness.call(app, "get(uint8)", 1)
-    assert as_int(r.abi_return) == 161
-    # get(uint8): 0xa7 -> FAILURE, hex"4e487b71", 33
-    r = harness.call(app, "get(uint8)", 167, expect_revert=True)
-    assert r.reverted
-    # set(uint8,uint8): 0x01, 0x05 ->
-    r = harness.call(app, "set(uint8,uint8)", 1, 5)
-    # (void return — call succeeding is the assertion)
-    # get(uint8): 0 -> 0xef
-    r = harness.call(app, "get(uint8)", 0)
-    assert as_int(r.abi_return) == 239
-    # get(uint8): 0x01 -> 0x05
-    r = harness.call(app, "get(uint8)", 1)
-    assert as_int(r.abi_return) == 5
-    # get(uint8): 0xa7 -> FAILURE, hex"4e487b71", 33
-    r = harness.call(app, "get(uint8)", 167, expect_revert=True)
-    assert r.reverted
+    pytest.fail("EVM enum-out-of-range check on uint8 arg — AVM dispatcher doesn't enforce enum range.")
 
 def test_mapping_enum_key_v2(harness):
     """types/contracts/mapping_enum_key_v2.sol"""
