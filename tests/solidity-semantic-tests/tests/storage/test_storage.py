@@ -237,44 +237,29 @@ def test_delete_overlapping_transient_before_storage_struct_delete_same_value_ty
     assert tuple(as_int(x) for x in r.abi_return) == (0, 0)
 
 def test_empty_nonempty_empty(harness):
-    """storage/contracts/empty_nonempty_empty.sol"""
+    """storage/contracts/empty_nonempty_empty.sol
+
+    The test cycles a `bytes` storage var through empty / nonempty / empty
+    states to exercise the storage layout's allocate/deallocate logic.
+    """
     app = harness.compile_and_deploy("storage/contracts/empty_nonempty_empty.sol")
-    # set(bytes): 0x20, 3, "abc"
-    r = harness.call(app, "set(bytes)", 'abc')
-    # (void return — call succeeding is the assertion)
-    # set(bytes): 0x20, 0
-    r = harness.call(app, "set(bytes)", 32, 0)
-    # (void return — call succeeding is the assertion)
-    # set(bytes): 0x20, 31, "1234567890123456789012345678901"
-    r = harness.call(app, "set(bytes)", '1234567890123456789012345678901')
-    # (void return — call succeeding is the assertion)
-    # set(bytes): 0x20, 36, "12345678901234567890123456789012", "XXXX"
-    r = harness.call(app, "set(bytes)", 32, 36, bytes.fromhex('3132333435363738393031323334353637383930313233343536373839303132'), bytes.fromhex('58585858'))
-    # (void return — call succeeding is the assertion)
-    # set(bytes): 0x20, 3, "abc"
-    r = harness.call(app, "set(bytes)", 'abc')
-    # (void return — call succeeding is the assertion)
-    # set(bytes): 0x20, 0
-    r = harness.call(app, "set(bytes)", 32, 0)
-    # (void return — call succeeding is the assertion)
-    # set(bytes): 0x20, 3, "abc"
-    r = harness.call(app, "set(bytes)", 'abc')
-    # (void return — call succeeding is the assertion)
-    # set(bytes): 0x20, 36, "12345678901234567890123456789012", "XXXX"
-    r = harness.call(app, "set(bytes)", 32, 36, bytes.fromhex('3132333435363738393031323334353637383930313233343536373839303132'), bytes.fromhex('58585858'))
-    # (void return — call succeeding is the assertion)
-    # set(bytes): 0x20, 0
-    r = harness.call(app, "set(bytes)", 32, 0)
-    # (void return — call succeeding is the assertion)
-    # set(bytes): 0x20, 66, "12345678901234567890123456789012", "12345678901234567890123456789012", "12"
-    r = harness.call(app, "set(bytes)", 32, 66, bytes.fromhex('3132333435363738393031323334353637383930313233343536373839303132'), bytes.fromhex('3132333435363738393031323334353637383930313233343536373839303132'), bytes.fromhex('3132'))
-    # (void return — call succeeding is the assertion)
-    # set(bytes): 0x20, 3, "abc"
-    r = harness.call(app, "set(bytes)", 'abc')
-    # (void return — call succeeding is the assertion)
-    # set(bytes): 0x20, 0
-    r = harness.call(app, "set(bytes)", 32, 0)
-    # (void return — call succeeding is the assertion)
+    long32 = bytes.fromhex("3132333435363738393031323334353637383930313233343536373839303132")
+    payloads = [
+        b"abc",
+        b"",
+        b"1234567890123456789012345678901",  # 31 bytes
+        long32 + b"XXXX",
+        b"abc",
+        b"",
+        b"abc",
+        long32 + b"XXXX",
+        b"",
+        long32 + long32 + b"12",  # 66 bytes
+        b"abc",
+        b"",
+    ]
+    for p in payloads:
+        assert not harness.call(app, "set(bytes)", p).reverted
 
 def test_mapping_state(harness):
     """storage/contracts/mapping_state.sol"""
