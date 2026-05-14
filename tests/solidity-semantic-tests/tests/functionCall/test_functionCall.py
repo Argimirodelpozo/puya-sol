@@ -24,7 +24,9 @@ def test_bare_call_no_returndatacopy(harness):
 
 def test_call_attached_library_function_on_function(harness):
     """functionCall/contracts/call_attached_library_function_on_function.sol"""
-    pytest.fail("Compiler-side regression: using-for + free function ptr. v243: compilation failed.")
+    app = harness.compile_and_deploy("functionCall/contracts/call_attached_library_function_on_function.sol")
+    r = harness.call(app, "f()", extra_fee=5000)
+    assert as_int(r.abi_return) == 7
 
 def test_call_attached_library_function_on_storage_variable(harness):
     """functionCall/contracts/call_attached_library_function_on_storage_variable.sol"""
@@ -202,8 +204,24 @@ def test_external_call(harness):
     assert as_int(r.abi_return) == 5
 
 def test_external_call_at_construction_time(harness):
-    """functionCall/contracts/external_call_at_construction_time.sol"""
-    pytest.fail("EVM extcodesize check semantics for newly-constructed contract calls. AVM app-call dispatch doesn't have equivalent. v243: 1p/2f.")
+    """functionCall/contracts/external_call_at_construction_time.sol
+
+    EVM semantics: f(0) and f(1) FAIL because the constructors `new T()` and
+    `new U()` call `this.f()` from within the constructor, and on EVM
+    `extcodesize` returns 0 mid-construction — solc's dispatcher emits a
+    pre-call check that reverts.
+
+    AVM has no `extcodesize`; mid-construction self-calls via AVM inner-txn
+    are well-defined and succeed (the app exists and accepts calls as soon
+    as it's created). So f(0) and f(1) RETURN their respective values
+    instead of failing. The third case (f(2)) makes no child contract and
+    returns 1+c=3 on both backends.
+    """
+    app = harness.compile_and_deploy("functionCall/contracts/external_call_at_construction_time.sol")
+    # AVM: f(c) always returns 1+c. No mid-construction revert.
+    assert as_int(harness.call(app, "f(uint256)", 0, extra_fee=10000).abi_return) == 1
+    assert as_int(harness.call(app, "f(uint256)", 1, extra_fee=10000).abi_return) == 2
+    assert as_int(harness.call(app, "f(uint256)", 2, extra_fee=10000).abi_return) == 3
 
 def test_external_call_dynamic_returndata(harness):
     """functionCall/contracts/external_call_dynamic_returndata.sol"""
@@ -270,7 +288,11 @@ def test_gas_and_value_basic(harness):
 
 def test_mapping_array_internal_argument(harness):
     """functionCall/contracts/mapping_array_internal_argument.sol"""
-    pytest.fail("Internal fn taking mapping(uint8=>uint8[4]) param. Compiler-side: storage-mapping pointer passing not supported. v243: 0p/4f.")
+    pytest.fail("""Compiler-side: set_internal reads old value, writes new, returns old.
+But puya-sol's codegen for `mapping(uint8=>uint8)[2] storage` reordering
+returns the NEW value instead of the OLD — read-after-write of the box-get
+seems to happen after the box-put. Subsequent get() returns correct values
+(set/store works), but the set()'s return tuple shows post-write reads.""")
 
 def test_mapping_internal_argument(harness):
     """functionCall/contracts/mapping_internal_argument.sol"""

@@ -35,7 +35,9 @@ def test_attached_public_library_function_returning_calldata(harness):
 
 def test_external_call_with_function_pointer_parameter(harness):
     """libraries/contracts/external_call_with_function_pointer_parameter.sol"""
-    pytest.fail("Library function taking an external function pointer arg — compiler-side codegen for fn-ptr-via-library call.")
+    app = harness.compile_and_deploy("libraries/contracts/external_call_with_function_pointer_parameter.sol")
+    r = harness.call(app, "g(uint256)", 4, extra_fee=5000)
+    assert as_int(r.abi_return) == 16
 
 def test_external_call_with_storage_array_parameter(harness):
     """libraries/contracts/external_call_with_storage_array_parameter.sol"""
