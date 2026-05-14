@@ -111,8 +111,8 @@ def test_erc7201_param_locations(harness):
     # calldataParam(string): 0x20, 12, "example.main" -> true
     r = harness.call(app, "calldataParam(string)", 'example.main')
     assert bool(as_int(r.abi_return)) is True
-    # calldataSlice(bytes): 0x20, 12, "example.main" -> true
-    r = harness.call(app, "calldataSlice(bytes)", 'example.main')
+    # calldataSlice(bytes): pass bytes (not string) for the bytes param.
+    r = harness.call(app, "calldataSlice(bytes)", b"example.main")
     assert bool(as_int(r.abi_return)) is True
     # literalParam() -> true
     r = harness.call(app, "literalParam()")
