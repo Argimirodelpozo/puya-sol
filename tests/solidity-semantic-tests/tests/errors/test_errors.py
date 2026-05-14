@@ -36,8 +36,7 @@ def test_error_selector(harness):
 def test_error_static_calldata_uint_array_and_dynamic_array(harness):
     """errors/contracts/error_static_calldata_uint_array_and_dynamic_array.sol"""
     app = harness.compile_and_deploy("errors/contracts/error_static_calldata_uint_array_and_dynamic_array.sol")
-    # f(uint256[],uint256[1]): 0x40, 0xff, 1, 0xffff -> FAILURE, hex"f42f106d", 0x40, 0xff, 1, 0xffff
-    r = harness.call(app, "f(uint256[],uint256[1])", 64, 255, 1, 65535, expect_revert=True)
+    r = harness.call(app, "f(uint256[],uint256[1])", [255], [65535], expect_revert=True)
     assert r.reverted
 
 def test_error_throw_from_module_via_member_access(harness):

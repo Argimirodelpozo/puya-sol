@@ -275,9 +275,8 @@ def test_event_signature_in_library(harness):
 def test_event_static_calldata_uint_array_and_dynamic_array(harness):
     """events/contracts/event_static_calldata_uint_array_and_dynamic_array.sol"""
     app = harness.compile_and_deploy("events/contracts/event_static_calldata_uint_array_and_dynamic_array.sol")
-    # f(uint256[],uint256[1]): 0x40, 0xff, 1, 0xffff ->
-    r = harness.call(app, "f(uint256[],uint256[1])", 64, 255, 1, 65535)
-    # (void return — call succeeding is the assertion)
+    r = harness.call(app, "f(uint256[],uint256[1])", [255], [65535])
+    assert not r.reverted
 
 def test_event_string(harness):
     """events/contracts/event_string.sol"""
