@@ -38,8 +38,14 @@ def test_copy_from_storage(harness):
     assert [tuple(as_int(y) for y in x) for x in r.abi_return] == [(13,)]
 
 def test_copy_struct_array_from_storage(harness):
-    """structs/contracts/copy_struct_array_from_storage.sol"""
-    pytest.fail("puya-sol compile error on copy_struct_array_from_storage (compiler-side).")
+    """structs/contracts/copy_struct_array_from_storage.sol — probe."""
+    app = harness.compile_and_deploy("structs/contracts/copy_struct_array_from_storage.sol", postinit_budget_pool=10)
+    r = harness.call(app, "test1()", extra_fee=5000)
+    assert bool(as_int(r.abi_return)) is True
+    r = harness.call(app, "test2()", extra_fee=5000)
+    assert bool(as_int(r.abi_return)) is True
+    r = harness.call(app, "test3()", extra_fee=5000)
+    assert bool(as_int(r.abi_return)) is True
 
 def test_copy_struct_with_nested_array_from_calldata_to_memory(harness):
     """structs/contracts/copy_struct_with_nested_array_from_calldata_to_memory.sol"""
