@@ -302,8 +302,13 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 	if (_memberName == "call" && _callValue)
 		return handleCallWithValue(_ctx, std::move(_receiver), std::move(_callValue), _loc);
 
-	// .call(abi.encodeCall(...)) → inner app call
-	if (_memberName == "call" && !_callValue && !_callNode.arguments().empty())
+	// .call(abi.encodeCall/Signature/Selector(...))  AND  .delegatecall(same)
+	// → for self-targets (address(this)), rewrite as a direct subroutine
+	// call. AVM has no DELEGATECALL and no self-recursive inner-txn, but
+	// both patterns reduce to "call the named function in this contract"
+	// when the receiver is self, which is just a callsub on AVM.
+	if ((_memberName == "call" || _memberName == "delegatecall")
+		&& !_callValue && !_callNode.arguments().empty())
 	{
 		auto const& dataArg = *_callNode.arguments()[0];
 
@@ -697,7 +702,10 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 		return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTupleEmpty(_loc));
 	}
 
-	// .delegatecall
+	// .delegatecall fallthrough — receiver wasn't address(this) and didn't
+	// match the call(abi.encode*(...)) pattern above. AVM has no
+	// DELEGATECALL between separate apps; emit a warning + (true, empty)
+	// stub for back-compat with code that ignores the return.
 	if (_memberName == "delegatecall")
 		return handleDelegatecall(_ctx, _callNode, _loc);
 
