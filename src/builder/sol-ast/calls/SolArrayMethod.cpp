@@ -183,12 +183,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					return idxExpr;
 				}
 				if (memberName == "pop")
-				{
-					auto popExpr = awst::makeArrayPop(baseAwst, elemType, m_loc);
-
-					auto decode = awst::makeARC4Decode(std::move(popExpr), rawElemType, m_loc);
-					return decode;
-				}
+					return awst::makeArrayPopDecode(baseAwst, elemType, rawElemType, m_loc);
 			}
 		}
 	}
@@ -257,12 +252,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 								return vc;
 							}
 							if (memberName == "pop")
-							{
-								auto popExpr = awst::makeArrayPop(aliasExpr, elemType, m_loc);
-
-								auto decode = awst::makeARC4Decode(std::move(popExpr), rawElemType, m_loc);
-								return decode;
-							}
+								return awst::makeArrayPopDecode(aliasExpr, elemType, rawElemType, m_loc);
 						}
 					}
 				}
@@ -554,12 +544,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					return awst::makeVoidConstant(m_loc);
 				}
 				if (memberName == "pop")
-				{
-					auto popExpr = awst::makeArrayPop(
-						std::move(baseAwst), elemType, m_loc);
-					return awst::makeARC4Decode(
-						std::move(popExpr), rawElemType, m_loc);
-				}
+					return awst::makeArrayPopDecode(
+						std::move(baseAwst), elemType, rawElemType, m_loc);
 			}
 		}
 	}
@@ -743,12 +729,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 		return vc;
 	}
 	else if (_memberName == "pop")
-	{
-		auto popExpr = awst::makeArrayPop(writeExpr, elemType, m_loc);
-
-		auto decode = awst::makeARC4Decode(std::move(popExpr), rawElemType, m_loc);
-		return decode;
-	}
+		return awst::makeArrayPopDecode(writeExpr, elemType, rawElemType, m_loc);
 
 	auto vc = awst::makeVoidConstant(m_loc);
 	return vc;

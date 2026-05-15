@@ -1138,6 +1138,16 @@ inline std::shared_ptr<ArrayExtend> makeArrayPushOne(
 	return makeArrayExtend(std::move(base), std::move(singleArr), std::move(loc));
 }
 
+// `base.pop()` returning a value: ArrayPop produces the (still ARC4-encoded)
+// element, ARC4Decode unwraps it to its native representation.
+inline std::shared_ptr<ARC4Decode> makeArrayPopDecode(
+	std::shared_ptr<Expression> base, WType const* arc4ElemType,
+	WType const* nativeElemType, SourceLocation loc)
+{
+	auto pop = makeArrayPop(std::move(base), arc4ElemType, loc);
+	return makeARC4Decode(std::move(pop), nativeElemType, std::move(loc));
+}
+
 struct ConvertArray: Expression
 {
 	std::string nodeType() const override { return "ConvertArray"; }
