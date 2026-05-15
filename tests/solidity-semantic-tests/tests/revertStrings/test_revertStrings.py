@@ -170,7 +170,7 @@ def test_invalid_abi_decoding_memory_v1(harness):  # currently fails
     r = harness.call(app, 'f(uint256,uint256,uint256)', 0, 0x20, 0x60, expect_revert=True)
     assert r.reverted
 
-def test_library_non_view_call(harness):  # currently fails
+def test_library_non_view_call(harness):
     """revertStrings/contracts/library_non_view_call.sol"""
     app = harness.compile_and_deploy('revertStrings/contracts/library_non_view_call.sol')
 

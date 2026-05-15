@@ -453,7 +453,7 @@ def test_variable_cleanup(harness):
     # TODO: verify expected: 0x00 | 0x7f | "ab"
     assert not r.reverted
 
-def test_variable_cleanup_sstore(harness):  # currently fails
+def test_variable_cleanup_sstore(harness):
     """storageLayoutSpecifier/contracts/variable_cleanup_sstore.sol"""
     app = harness.compile_and_deploy('storageLayoutSpecifier/contracts/variable_cleanup_sstore.sol')
     r = harness.call(app, 'f()')

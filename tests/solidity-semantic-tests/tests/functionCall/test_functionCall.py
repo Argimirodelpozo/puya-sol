@@ -323,7 +323,7 @@ def test_external_public_override(harness):
     r = harness.call(app, "g()")
     assert as_int(r.abi_return) == 2
 
-def test_failed_create(harness):  # currently fails
+def test_failed_create(harness):
     """functionCall/contracts/failed_create.sol"""
     app = harness.compile_and_deploy('functionCall/contracts/failed_create.sol')
 

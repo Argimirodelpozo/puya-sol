@@ -121,7 +121,7 @@ def test_transient_function_type_state_variable(harness):
     r = harness.call(app, "test()")
     assert bool(as_int(r.abi_return)) is True
 
-def test_transient_state_address_variable_members(harness):  # currently fails
+def test_transient_state_address_variable_members(harness):
     """variables/contracts/transient_state_address_variable_members.sol"""
     app = harness.compile_and_deploy('variables/contracts/transient_state_address_variable_members.sol')
 

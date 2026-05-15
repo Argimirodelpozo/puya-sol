@@ -140,7 +140,7 @@ def test_calldata_array_dynamic_index_access(harness):
     assert not harness.call(app, "k(bytes[2],uint256)", [bytes.fromhex("ab11ff"), bytes.fromhex("ff791432")], 0).reverted
     assert not harness.call(app, "k(bytes[2],uint256)", [bytes.fromhex("ab11ff"), bytes.fromhex("ff791432")], 1).reverted
 
-def test_calldata_array_dynamic_static_dynamic(harness):  # currently fails
+def test_calldata_array_dynamic_static_dynamic(harness):
     """abiEncoderV2/contracts/calldata_array_dynamic_static_dynamic.sol"""
     app = harness.compile_and_deploy('abiEncoderV2/contracts/calldata_array_dynamic_static_dynamic.sol')
     r = harness.call(app, 'g()')

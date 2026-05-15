@@ -19,6 +19,6 @@ def test_salted_create(harness):  # currently fails
     r = harness.call(app, 'same_salt()')
     assert r.abi_return is True
 
-def test_salted_create_with_value(harness):  # currently fails
+def test_salted_create_with_value(harness):
     """saltedCreate/contracts/salted_create_with_value.sol"""
     app = harness.compile_and_deploy('saltedCreate/contracts/salted_create_with_value.sol')

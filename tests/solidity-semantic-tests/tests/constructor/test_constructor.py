@@ -20,7 +20,7 @@ def test_base_constructor_arguments(harness):
     r = harness.call(app, "getA()")
     assert as_int(r.abi_return) == 49
 
-def test_bytes_in_constructors_packer(harness):  # currently fails
+def test_bytes_in_constructors_packer(harness):
     """constructor/contracts/bytes_in_constructors_packer.sol"""
     app = harness.compile_and_deploy('constructor/contracts/bytes_in_constructors_packer.sol')
 
@@ -34,7 +34,7 @@ def test_bytes_in_constructors_unpacker(harness):
     assert as_int(harness.call(app, "m_x()").abi_return) == 7
     assert bytes(harness.call(app, "m_s()").abi_return) == s
 
-def test_callvalue_check(harness):  # currently fails
+def test_callvalue_check(harness):
     """constructor/contracts/callvalue_check.sol"""
     app = harness.compile_and_deploy('constructor/contracts/callvalue_check.sol')
 

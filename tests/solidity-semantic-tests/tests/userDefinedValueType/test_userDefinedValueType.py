@@ -493,7 +493,7 @@ def test_storage_layout(harness):
     r = harness.call(app, "storage_g()")
     assert tuple(as_int(x) for x in r.abi_return) == (2, 20)
 
-def test_storage_layout_struct(harness):  # currently fails
+def test_storage_layout_struct(harness):
     """userDefinedValueType/contracts/storage_layout_struct.sol"""
     app = harness.compile_and_deploy('userDefinedValueType/contracts/storage_layout_struct.sol')
 

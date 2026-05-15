@@ -95,7 +95,7 @@ def test_code_length_contract_member(harness):
     # TODO: verify expected: 0x20 | 0x20 | true
     assert not r.reverted
 
-def test_codebalance_assembly(harness):  # currently fails
+def test_codebalance_assembly(harness):
     """various/contracts/codebalance_assembly.sol"""
     app = harness.compile_and_deploy('various/contracts/codebalance_assembly.sol')
 
@@ -360,27 +360,27 @@ def test_positive_integers_to_signed(harness):
     r = harness.call(app, "q()")
     assert as_int(r.abi_return) == 250
 
-def test_selfdestruct_post_cancun(harness):  # currently fails
+def test_selfdestruct_post_cancun(harness):
     """various/contracts/selfdestruct_post_cancun.sol"""
     app = harness.compile_and_deploy("various/contracts/selfdestruct_post_cancun.sol")
 
-def test_selfdestruct_post_cancun_multiple_beneficiaries(harness):  # currently fails
+def test_selfdestruct_post_cancun_multiple_beneficiaries(harness):
     """various/contracts/selfdestruct_post_cancun_multiple_beneficiaries.sol"""
     app = harness.compile_and_deploy("various/contracts/selfdestruct_post_cancun_multiple_beneficiaries.sol")
 
-def test_selfdestruct_post_cancun_redeploy(harness):  # currently fails
+def test_selfdestruct_post_cancun_redeploy(harness):
     """various/contracts/selfdestruct_post_cancun_redeploy.sol"""
     app = harness.compile_and_deploy("various/contracts/selfdestruct_post_cancun_redeploy.sol")
 
-def test_selfdestruct_pre_cancun(harness):  # currently fails
+def test_selfdestruct_pre_cancun(harness):
     """various/contracts/selfdestruct_pre_cancun.sol"""
     app = harness.compile_and_deploy("various/contracts/selfdestruct_pre_cancun.sol")
 
-def test_selfdestruct_pre_cancun_multiple_beneficiaries(harness):  # currently fails
+def test_selfdestruct_pre_cancun_multiple_beneficiaries(harness):
     """various/contracts/selfdestruct_pre_cancun_multiple_beneficiaries.sol"""
     app = harness.compile_and_deploy("various/contracts/selfdestruct_pre_cancun_multiple_beneficiaries.sol")
 
-def test_selfdestruct_pre_cancun_redeploy(harness):  # currently fails
+def test_selfdestruct_pre_cancun_redeploy(harness):
     """various/contracts/selfdestruct_pre_cancun_redeploy.sol"""
     app = harness.compile_and_deploy("various/contracts/selfdestruct_pre_cancun_redeploy.sol")
 

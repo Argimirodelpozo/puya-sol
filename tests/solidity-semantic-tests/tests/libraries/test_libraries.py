@@ -324,7 +324,7 @@ def test_library_references_preserve(harness):
     r = harness.call(app, "bSum()")
     assert as_int(r.abi_return) == 5
 
-def test_library_return_struct_with_mapping(harness):  # currently fails
+def test_library_return_struct_with_mapping(harness):
     """libraries/contracts/library_return_struct_with_mapping.sol"""
     app = harness.compile_and_deploy('libraries/contracts/library_return_struct_with_mapping.sol')
 
@@ -626,6 +626,6 @@ def test_using_library_mappings_return(harness):
     # TODO: verify structural decoding matches expected: 1, 0, 42, 23, 0, 99
     assert not r.reverted
 
-def test_using_library_structs(harness):  # currently fails
+def test_using_library_structs(harness):
     """libraries/contracts/using_library_structs.sol"""
     app = harness.compile_and_deploy('libraries/contracts/using_library_structs.sol')

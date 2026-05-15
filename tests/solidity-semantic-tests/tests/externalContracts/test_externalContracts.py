@@ -81,7 +81,7 @@ def test_ramanujan_pi(harness):
     r = harness.call(app, "prb_pi()")
     assert as_int(r.abi_return) == 3141592656369545286
 
-def test_snark(harness):  # currently fails
+def test_snark(harness):
     """externalContracts/contracts/snark.sol"""
     app = harness.compile_and_deploy('externalContracts/contracts/snark.sol')
 
