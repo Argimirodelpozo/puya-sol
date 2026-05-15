@@ -49,8 +49,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 
 		auto withinRange = awst::makeNumericCompare(std::move(indexExpr), awst::NumericComparison::Lt, std::move(two), m_loc);
 
-		auto round = awst::makeIntrinsicCall("global", awst::WType::uint64Type(), m_loc);
-		round->immediates = {std::string("Round")};
+		auto round = awst::makeGlobal(std::string("Round"), awst::WType::uint64Type(), m_loc);
 
 		auto two2 = awst::makeIntegerConstant("2", m_loc);
 
@@ -220,8 +219,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::handleBlockhash()
 	// constructed).
 	(void) buildExpr(*m_call.arguments()[0]);
 
-	auto round = awst::makeIntrinsicCall("global", awst::WType::uint64Type(), m_loc);
-	round->immediates = {std::string("Round")};
+	auto round = awst::makeGlobal(std::string("Round"), awst::WType::uint64Type(), m_loc);
 
 	auto two = awst::makeIntegerConstant("2", m_loc);
 

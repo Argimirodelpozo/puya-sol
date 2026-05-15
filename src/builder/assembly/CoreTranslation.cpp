@@ -362,8 +362,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 			return zero;
 		}
 
-		auto appId = awst::makeIntrinsicCall("global", awst::WType::uint64Type(), loc);
-		appId->immediates = {std::string("CurrentApplicationID")};
+		auto appId = awst::makeGlobal(std::string("CurrentApplicationID"), awst::WType::uint64Type(), loc);
 		auto appIdCast = awst::makeReinterpretCast(std::move(appId), awst::WType::applicationType(), loc);
 
 		auto* tupleType = m_typeMapper.createType<awst::WTuple>(
@@ -433,8 +432,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	if (funcName == "address")
 	{
 		// address() → global CurrentApplicationAddress, cast to biguint
-		auto addr = awst::makeIntrinsicCall("global", awst::WType::bytesType(), loc);
-		addr->immediates.push_back("CurrentApplicationAddress");
+		auto addr = awst::makeGlobal("CurrentApplicationAddress", awst::WType::bytesType(), loc);
 
 		auto cast = awst::makeReinterpretCast(std::move(addr), awst::WType::biguintType(), loc);
 		return cast;
@@ -442,8 +440,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	if (funcName == "caller" || funcName == "origin")
 	{
 		// caller() / origin() → txn Sender (32 bytes) → reinterpret as biguint
-		auto sender = awst::makeIntrinsicCall("txn", awst::WType::bytesType(), loc);
-		sender->immediates.push_back("Sender");
+		auto sender = awst::makeTxn("Sender", awst::WType::bytesType(), loc);
 
 		auto cast = awst::makeReinterpretCast(std::move(sender), awst::WType::biguintType(), loc);
 		return cast;
@@ -462,8 +459,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 			"not cryptographically equivalent to EVM " + funcName + ".",
 			loc);
 
-		auto round = awst::makeIntrinsicCall("global", awst::WType::uint64Type(), loc);
-		round->immediates = {std::string("Round")};
+		auto round = awst::makeGlobal(std::string("Round"), awst::WType::uint64Type(), loc);
 
 		auto two = awst::makeIntegerConstant("2", loc);
 
@@ -510,8 +506,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	if (funcName == "number")
 	{
 		// number() → global Round (block number equivalent)
-		auto round = awst::makeIntrinsicCall("global", awst::WType::uint64Type(), loc);
-		round->immediates = {std::string("Round")};
+		auto round = awst::makeGlobal(std::string("Round"), awst::WType::uint64Type(), loc);
 		// Convert to biguint (EVM returns uint256)
 		auto itob = awst::makeItob(std::move(round), loc);
 		return awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), loc);
@@ -521,8 +516,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		// Yul selfbalance() returns the balance of the executing contract.
 		// Map to AVM `balance(global CurrentApplicationAddress)` (uint64),
 		// then widen to biguint so the Yul value type matches EVM's uint256.
-		auto appAddr = awst::makeIntrinsicCall("global", awst::WType::bytesType(), loc);
-		appAddr->immediates = {std::string("CurrentApplicationAddress")};
+		auto appAddr = awst::makeGlobal(std::string("CurrentApplicationAddress"), awst::WType::bytesType(), loc);
 		auto bal = awst::makeIntrinsicCall("balance", awst::WType::uint64Type(), loc);
 		bal->stackArgs.push_back(std::move(appAddr));
 		auto itob = awst::makeItob(std::move(bal), loc);

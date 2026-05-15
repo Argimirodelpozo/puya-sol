@@ -196,8 +196,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::addressToAppId(
 			auto const* imm = std::get_if<std::string>(&intrinsic->immediates[0]);
 			if (imm && *imm == "CurrentApplicationAddress")
 			{
-				auto appId = awst::makeIntrinsicCall("global", awst::WType::uint64Type(), m_loc);
-				appId->immediates = {std::string("CurrentApplicationID")};
+				auto appId = awst::makeGlobal(std::string("CurrentApplicationID"), awst::WType::uint64Type(), m_loc);
 
 				auto cast = awst::makeReinterpretCast(std::move(appId), awst::WType::applicationType(), m_loc);
 				return cast;

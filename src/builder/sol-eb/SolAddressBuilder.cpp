@@ -39,8 +39,7 @@ std::shared_ptr<awst::Expression> detectAppIdIntrinsic(
 		return nullptr;
 	if (ic->opCode == "global" && *imm == "CurrentApplicationAddress")
 	{
-		auto idCall = awst::makeIntrinsicCall("global", awst::WType::uint64Type(), loc);
-		idCall->immediates = {std::string("CurrentApplicationID")};
+		auto idCall = awst::makeGlobal(std::string("CurrentApplicationID"), awst::WType::uint64Type(), loc);
 		return idCall;
 	}
 	if (ic->opCode == "txn" && *imm == "Sender")
@@ -50,8 +49,7 @@ std::shared_ptr<awst::Expression> detectAppIdIntrinsic(
 		// account, which (correctly) makes the convention-form check fall
 		// to \x00*24 + itob(0) = the zero address — equal to a stored
 		// address only when the user explicitly stored zero.
-		auto idCall = awst::makeIntrinsicCall("global", awst::WType::uint64Type(), loc);
-		idCall->immediates = {std::string("CallerApplicationID")};
+		auto idCall = awst::makeGlobal(std::string("CallerApplicationID"), awst::WType::uint64Type(), loc);
 		return idCall;
 	}
 	return nullptr;

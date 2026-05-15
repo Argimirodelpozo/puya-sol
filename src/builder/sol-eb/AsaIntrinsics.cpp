@@ -79,8 +79,7 @@ std::shared_ptr<awst::Expression> bigUIntToUint64(
 /// `global CurrentApplicationAddress` as account-typed expr.
 std::shared_ptr<awst::Expression> currentAppAddress(awst::SourceLocation const& _loc)
 {
-	auto addr = awst::makeIntrinsicCall("global", awst::WType::accountType(), _loc);
-	addr->immediates = {std::string("CurrentApplicationAddress")};
+	auto addr = awst::makeGlobal(std::string("CurrentApplicationAddress"), awst::WType::accountType(), _loc);
 	return addr;
 }
 

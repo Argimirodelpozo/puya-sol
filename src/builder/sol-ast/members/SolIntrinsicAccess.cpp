@@ -68,8 +68,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		Logger::instance().warning(
 			"block.prevrandao mapped to AVM block seed (BlkSeed) of previous round.", m_loc);
 
-		auto round = awst::makeIntrinsicCall("global", awst::WType::uint64Type(), m_loc);
-		round->immediates = {std::string("Round")};
+		auto round = awst::makeGlobal(std::string("Round"), awst::WType::uint64Type(), m_loc);
 
 		auto two = awst::makeIntegerConstant("2", m_loc);
 
@@ -87,14 +86,12 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 	// Handles the case where there's no preceding payment transaction.
 	if (baseName == "msg" && member == "value")
 	{
-		auto groupIdx = awst::makeIntrinsicCall("txn", awst::WType::uint64Type(), m_loc);
-		groupIdx->immediates = {std::string("GroupIndex")};
+		auto groupIdx = awst::makeTxn(std::string("GroupIndex"), awst::WType::uint64Type(), m_loc);
 
 		auto zero = awst::makeZero(m_loc);
 		auto hasPayment = awst::makeNumericCompare(groupIdx, awst::NumericComparison::Gt, std::move(zero), m_loc);
 
-		auto groupIdx2 = awst::makeIntrinsicCall("txn", awst::WType::uint64Type(), m_loc);
-		groupIdx2->immediates = {std::string("GroupIndex")};
+		auto groupIdx2 = awst::makeTxn(std::string("GroupIndex"), awst::WType::uint64Type(), m_loc);
 		auto one = awst::makeOne(m_loc);
 		auto payIdx = awst::makeUInt64BinOp(std::move(groupIdx2), awst::UInt64BinaryOperator::Sub, std::move(one), m_loc);
 
@@ -133,8 +130,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 	// ApplicationArgs (slot 0 is the selector, so 15 actual params).
 	if (baseName == "msg" && member == "data")
 	{
-		auto numAppArgs = awst::makeIntrinsicCall("txn", awst::WType::uint64Type(), m_loc);
-		numAppArgs->immediates = {std::string("NumAppArgs")};
+		auto numAppArgs = awst::makeTxn(std::string("NumAppArgs"), awst::WType::uint64Type(), m_loc);
 
 		auto zero = awst::makeZero(m_loc);
 
@@ -146,8 +142,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		{
 			auto slotIdx = awst::makeIntegerConstant(slot, m_loc);
 
-			auto numArgsCheck = awst::makeIntrinsicCall("txn", awst::WType::uint64Type(), m_loc);
-			numArgsCheck->immediates = {std::string("NumAppArgs")};
+			auto numArgsCheck = awst::makeTxn(std::string("NumAppArgs"), awst::WType::uint64Type(), m_loc);
 
 			auto slotIdxCmp = awst::makeIntegerConstant(slot, m_loc);
 

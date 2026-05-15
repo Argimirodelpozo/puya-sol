@@ -156,15 +156,13 @@ void ContractBuilder::prependNonPayableCheck(awst::ContractMethod& _method)
 
 	auto loc = _method.sourceLocation;
 
-	auto groupIdx = awst::makeIntrinsicCall("txn", awst::WType::uint64Type(), loc);
-	groupIdx->immediates = {std::string("GroupIndex")};
+	auto groupIdx = awst::makeTxn(std::string("GroupIndex"), awst::WType::uint64Type(), loc);
 
 	auto hasPayment = awst::makeNumericCompare(
 		groupIdx, awst::NumericComparison::Gt,
 		awst::makeIntegerConstant("0", loc), loc);
 
-	auto groupIdx2 = awst::makeIntrinsicCall("txn", awst::WType::uint64Type(), loc);
-	groupIdx2->immediates = {std::string("GroupIndex")};
+	auto groupIdx2 = awst::makeTxn(std::string("GroupIndex"), awst::WType::uint64Type(), loc);
 	auto payIdx = awst::makeUInt64BinOp(
 		std::move(groupIdx2), awst::UInt64BinaryOperator::Sub,
 		awst::makeIntegerConstant("1", loc), loc);

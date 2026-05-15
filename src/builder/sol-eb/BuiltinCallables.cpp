@@ -153,8 +153,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleSelfdestruct(
 		auto beneficiary = std::move(_args[0]);
 
 		// Get current app address for the Sender field
-		auto appAddr = awst::makeIntrinsicCall("global", awst::WType::accountType(), _loc);
-		appAddr->immediates = {std::string("CurrentApplicationAddress")};
+		auto appAddr = awst::makeGlobal(std::string("CurrentApplicationAddress"), awst::WType::accountType(), _loc);
 
 		static awst::WInnerTransactionFields s_payFieldsType(1); // pay
 		auto create = awst::makeCreateInnerTransaction(&s_payFieldsType, _loc);
@@ -194,8 +193,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleGasleft(
 	std::vector<std::shared_ptr<awst::Expression>>& /*_args*/,
 	awst::SourceLocation const& _loc)
 {
-	auto e = awst::makeIntrinsicCall("global", awst::WType::uint64Type(), _loc);
-	e->immediates = {std::string("OpcodeBudget")};
+	auto e = awst::makeGlobal(std::string("OpcodeBudget"), awst::WType::uint64Type(), _loc);
 	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(e));
 }
 

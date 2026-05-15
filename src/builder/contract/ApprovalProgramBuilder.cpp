@@ -273,8 +273,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 	// Create-time check: if (Txn.ApplicationID == 0) { base_ctors; ctor_body; return true; }
 	{
-		auto appIdCheck = awst::makeIntrinsicCall("txn", awst::WType::uint64Type(), method.sourceLocation);
-		appIdCheck->immediates = {std::string("ApplicationID")};
+		auto appIdCheck = awst::makeTxn(std::string("ApplicationID"), awst::WType::uint64Type(), method.sourceLocation);
 
 		auto zero = awst::makeZero(method.sourceLocation);
 
@@ -1452,8 +1451,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		// Step 1: Bare call check (NumAppArgs == 0).
 		// Call receive/fallback and return true — no selector to match.
 		{
-			auto numAppArgs = awst::makeIntrinsicCall("txn", awst::WType::uint64Type(), method.sourceLocation);
-			numAppArgs->immediates = {std::string("NumAppArgs")};
+			auto numAppArgs = awst::makeTxn(std::string("NumAppArgs"), awst::WType::uint64Type(), method.sourceLocation);
 
 			auto zero = awst::makeZero(method.sourceLocation);
 

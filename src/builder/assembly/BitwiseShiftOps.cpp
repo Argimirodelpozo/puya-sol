@@ -41,8 +41,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleGas(
 	// gas() → global OpcodeBudget (uint64) → itob → reinterpret as biguint
 	Logger::instance().debug(
 		"gas() mapped to AVM OpcodeBudget (analogous but not equivalent to EVM gas)", _loc);
-	auto gasCall = awst::makeIntrinsicCall("global", awst::WType::uint64Type(), _loc);
-	gasCall->immediates = {std::string("OpcodeBudget")};
+	auto gasCall = awst::makeGlobal(std::string("OpcodeBudget"), awst::WType::uint64Type(), _loc);
 
 	auto itobCall = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
 	itobCall->stackArgs.push_back(std::move(gasCall));
@@ -56,8 +55,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTimestamp(
 )
 {
 	// timestamp() → global LatestTimestamp (uint64) → itob → reinterpret as biguint
-	auto tsCall = awst::makeIntrinsicCall("global", awst::WType::uint64Type(), _loc);
-	tsCall->immediates.push_back("LatestTimestamp");
+	auto tsCall = awst::makeGlobal("LatestTimestamp", awst::WType::uint64Type(), _loc);
 
 	auto itobCall = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
 	itobCall->stackArgs.push_back(std::move(tsCall));

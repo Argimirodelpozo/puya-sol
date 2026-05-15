@@ -30,8 +30,7 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 	// 'this' → global CurrentApplicationAddress
 	if (name == "this")
 	{
-		auto call = awst::makeIntrinsicCall("global", awst::WType::accountType(), m_loc);
-		call->immediates = {std::string("CurrentApplicationAddress")};
+		auto call = awst::makeGlobal(std::string("CurrentApplicationAddress"), awst::WType::accountType(), m_loc);
 		return call;
 	}
 

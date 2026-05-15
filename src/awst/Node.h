@@ -702,6 +702,27 @@ inline std::shared_ptr<IntrinsicCall> makeConcat(
 	return node;
 }
 
+// `global <field>` — read a global field (e.g. "CurrentApplicationID",
+// "LatestTimestamp", "OpcodeBudget"). 20+ sites use the pattern of
+// creating the intrinsic then setting `immediates = {field}` manually.
+inline std::shared_ptr<IntrinsicCall> makeGlobal(
+	std::string field, WType const* wtype, SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("global", wtype, std::move(loc));
+	node->immediates = {std::move(field)};
+	return node;
+}
+
+// `txn <field>` — read a current-transaction field (e.g. "GroupIndex",
+// "Sender", "NumAppArgs", "ApplicationID").
+inline std::shared_ptr<IntrinsicCall> makeTxn(
+	std::string field, WType const* wtype, SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("txn", wtype, std::move(loc));
+	node->immediates = {std::move(field)};
+	return node;
+}
+
 // `box_put key value` — write `value` to the box stored at `key`. The
 // box's size must equal `len(value)` (otherwise it fails); callers that
 // resize must `box_del` first.
