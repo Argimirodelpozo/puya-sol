@@ -63,7 +63,9 @@ def test_constructor_function_argument(harness):
 
 def test_constructor_function_complex(harness):
     """constructor/contracts/constructor_function_complex.sol"""
-    pytest.fail("Compiler-side: constructor allocates struct array + dispatches fn-ptr. v243: 0p/1f.")
+    app = harness.compile_and_deploy("constructor/contracts/constructor_function_complex.sol", contract_name="C")
+    r = harness.call(app, "f()")
+    assert as_int(r.abi_return) == 16
 
 def test_constructor_static_array_argument(harness):
     """constructor/contracts/constructor_static_array_argument.sol"""
