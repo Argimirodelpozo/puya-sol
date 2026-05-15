@@ -12,8 +12,20 @@ def test_array_mapping_struct(harness):
     pytest.fail("Compiler-side: auto-getter on mapping(uint=>Struct[]) — codegen exits 1.")
 
 def test_arrays(harness):
-    """getters/contracts/arrays.sol"""
-    pytest.fail("Compiler-side: auto-getter on nested array of arrays — exits 1.")
+    """getters/contracts/arrays.sol — `uint8[][2] public a; a[1].push(N)`
+    auto-getter. The 2D state-array `arr[i].push()` codegen now unwraps
+    inner StateGet inside the IndexExpression chain so puya accepts the
+    write target.
+    """
+    app = harness.compile_and_deploy("getters/contracts/arrays.sol")
+    # a(uint, uint): 0, 0 -> out of bounds (a[0] is empty)
+    assert harness.call(app, "a(uint256,uint256)", 0, 0, expect_revert=True).reverted
+    # a(uint, uint): 1, 0 -> 3
+    assert as_int(harness.call(app, "a(uint256,uint256)", 1, 0).abi_return) == 3
+    # a(uint, uint): 1, 1 -> 4
+    assert as_int(harness.call(app, "a(uint256,uint256)", 1, 1).abi_return) == 4
+    # a(uint, uint): 2, 0 -> out of bounds (static array has only 2 elements)
+    assert harness.call(app, "a(uint256,uint256)", 2, 0, expect_revert=True).reverted
 
 def test_bytes(harness):
     """getters/contracts/bytes.sol"""

@@ -26,7 +26,7 @@ def test_accessors_mapping_for_array(harness):
 
 def test_array_accessor(harness):
     """storage/contracts/array_accessor.sol"""
-    pytest.fail("Compiler-side: dynamicData getter codegen mishandles ARC4 element extraction (`extract 2 0` on len=1) — not regression, was 3p/5f in v243.")
+    pytest.fail("Compiler-side: `.finalArray.push()` on nested mapping→struct→dynamic-array path emits empty loop body (VoidConstant) — `multiple_map[2][1][2].finalArray.push();` doesn't generate ArrayExtend. Separate bug from arr[i].push() on 2D state arrays (which is now fixed).")
 
 def test_chop_sign_bits(harness):
     """storage/contracts/chop_sign_bits.sol"""

@@ -9,6 +9,8 @@
 
 #include <libsolidity/ast/AST.h>
 
+#include <functional>
+
 namespace puyasol::builder::sol_ast
 {
 
@@ -40,8 +42,38 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 			auto baseAwst = buildExpr(baseExpr);
 			if (auto const* sg = dynamic_cast<awst::StateGet const*>(baseAwst.get()))
 				baseAwst = sg->field;
+			// Nested: `arr[i].push(v)` where arr is a state variable 2D array
+			// stored in a single box → buildExpr returns
+			// `IndexExpression(StateGet(BV), i)`. Puya's IR builder accepts
+			// `IndexExpression(StorageExpression, …)` as a writable target but
+			// rejects `StateGet` inside the chain. Walk down through
+			// IndexExpression chains and rebuild with the StateGet unwrapped.
+			{
+				std::function<std::shared_ptr<awst::Expression>(
+					std::shared_ptr<awst::Expression>)> unwrapChain;
+				unwrapChain = [&](std::shared_ptr<awst::Expression> e)
+					-> std::shared_ptr<awst::Expression> {
+					if (auto const* ie = dynamic_cast<awst::IndexExpression const*>(e.get()))
+					{
+						auto newBase = unwrapChain(ie->base);
+						if (newBase == ie->base)
+							return e;
+						auto ne = std::make_shared<awst::IndexExpression>();
+						ne->sourceLocation = ie->sourceLocation;
+						ne->wtype = ie->wtype;
+						ne->base = std::move(newBase);
+						ne->index = ie->index;
+						return ne;
+					}
+					if (auto const* sg = dynamic_cast<awst::StateGet const*>(e.get()))
+						return sg->field;
+					return e;
+				};
+				baseAwst = unwrapChain(baseAwst);
+			}
 
-			if (dynamic_cast<awst::BoxValueExpression const*>(baseAwst.get()))
+			if (dynamic_cast<awst::BoxValueExpression const*>(baseAwst.get())
+				|| dynamic_cast<awst::IndexExpression const*>(baseAwst.get()))
 			{
 				auto* rawElemType = m_ctx.typeMapper.map(innerArrType->baseType());
 				auto* elemType = m_ctx.typeMapper.mapSolTypeToARC4(
@@ -54,8 +86,11 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				// reads it. Guarded by `box_len.exists` so subsequent pushes
 				// (which grew the box past 2 bytes) skip the create.
 				auto emitEnsureBox = [&]() {
-					auto const* bv = static_cast<awst::BoxValueExpression const*>(baseAwst.get());
-					if (!bv->key)
+					// Nested case (IndexExpression base): the outer box
+					// already holds the whole multi-dim array; no per-entry
+					// box to create.
+					auto const* bv = dynamic_cast<awst::BoxValueExpression const*>(baseAwst.get());
+					if (!bv || !bv->key)
 						return;
 					auto boxKey = bv->key;
 
