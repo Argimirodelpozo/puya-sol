@@ -412,7 +412,7 @@ def test_skip_dynamic_types(harness):
     r = harness.call(app, "g()")
     assert tuple(as_int(x) for x in r.abi_return) == (7, 8)
 
-def test_skip_dynamic_types_for_static_arrays_with_dynamic_elements(harness):  # currently fails
+def test_skip_dynamic_types_for_static_arrays_with_dynamic_elements(harness):
     """various/contracts/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol"""
     app = harness.compile_and_deploy('various/contracts/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol')
     r = harness.call(app, 'g()')

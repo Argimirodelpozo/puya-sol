@@ -72,6 +72,23 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 
 		if (n > 0)
 		{
+			// Special case: `new bool[](N)` — bypass puya's ARC4 encoder, which
+			// has a bug for arc4.bool elements (packs bools onto an empty bytes
+			// buffer via setbit, instead of bzero((N+7)/8); subsequent
+			// getbit/setbit then errors with "index beyond byteslice"). Emit
+			// the pre-encoded form directly: uint16(N) ++ bzero(ceil(N/8)).
+			if (elemType == awst::WType::arc4BoolType()
+				&& resultType->kind() == awst::WTypeKind::ARC4DynamicArray)
+			{
+				auto byteLen = static_cast<size_t>((n + 7) / 8);
+				std::vector<uint8_t> data;
+				data.reserve(2 + byteLen);
+				data.push_back(static_cast<uint8_t>((n >> 8) & 0xFF));
+				data.push_back(static_cast<uint8_t>(n & 0xFF));
+				data.insert(data.end(), byteLen, 0);
+				return awst::makeBytesConstant(
+					std::move(data), m_loc, awst::BytesEncoding::Base16, resultType);
+			}
 			// Compile-time known: N default values
 			for (unsigned long long i = 0; i < n; ++i)
 				e->values.push_back(
