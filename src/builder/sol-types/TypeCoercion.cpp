@@ -287,10 +287,22 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 				_loc, awst::BytesEncoding::Base16, _type);
 		}
 
-		// Dynamic-size struct (a field has variable encoding). Fall back
-		// to NewStruct + recursive defaults; if that struct also contains
-		// bools at a dynamic offset, this path will still hit the puya
-		// bug. None of AAVE V4's mapping value types reach here today.
+		// Dynamic-size struct (a field has variable encoding). Use the
+		// `arc4DefaultEncoding` helper which builds the correct head+tail
+		// byte layout including dynamic-field offsets — avoids puya's
+		// buggy NewStruct encoder path (which mispacks bools onto an empty
+		// bytes buffer instead of bzero(1)) and produces the right struct
+		// size (head + sum of dynamic-field empty tails) for cases like
+		// `struct { uint a; uint8 b; mapping(K=>V) c; bool d; }` where the
+		// mapping is bytes-typed at the AWST level.
+		if (auto def = arc4DefaultEncoding(_type))
+			return awst::makeBytesConstant(
+				std::move(*def), _loc, awst::BytesEncoding::Base16, _type);
+
+		// Fallback (some field's default isn't statically computable):
+		// NewStruct + recursive defaults. May still hit the puya
+		// bool-packing bug if any field is arc4.bool — not reached today
+		// by AAVE V4 / the bundled tests.
 		auto const* structType = static_cast<awst::ARC4Struct const*>(_type);
 		auto expr = awst::makeNewStruct(_type, _loc);
 		for (auto const& [name, fieldType]: structType->fields())
@@ -521,6 +533,8 @@ std::optional<std::vector<uint8_t>> TypeCoercion::arc4DefaultEncoding(
 		if (_type == awst::WType::uint64Type())
 			return std::vector<uint8_t>(8, 0);
 		if (_type == awst::WType::boolType())
+			return std::vector<uint8_t>{0};
+		if (_type == awst::WType::arc4BoolType())
 			return std::vector<uint8_t>{0};
 		if (_type == awst::WType::accountType())
 			return std::vector<uint8_t>(32, 0);

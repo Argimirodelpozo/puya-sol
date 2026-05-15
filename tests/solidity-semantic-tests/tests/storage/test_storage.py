@@ -26,7 +26,7 @@ def test_accessors_mapping_for_array(harness):
 
 def test_array_accessor(harness):
     """storage/contracts/array_accessor.sol"""
-    pytest.fail("Compiler-side: assignment codegen for `multiple_map[2][1][2].finalArray[3] = 5` (deeply-nested mapping → struct[5] → dynamic-array index assign) re-puts the box with the wrong (pre-push) size — `wrong size 318 != 190`. Push-loop codegen now works (this commit) but the trailing assignment still encodes against the empty struct layout. Separate fix needed in SolAssignment for nested-storage targets.")
+    pytest.fail("Compiler-side: assignment codegen for `multiple_map[2][1][2].finalArray[3] = 5` (deeply-nested mapping → struct[5] → dynamic-array index assign) re-puts the box with the wrong (pre-push) size — `wrong size 318 != 190`. Push-loop codegen works (commit 5f2085c26) but the trailing assignment still encodes against the empty struct layout. Separate fix needed in SolAssignment for nested-storage targets.")
 
 def test_chop_sign_bits(harness):
     """storage/contracts/chop_sign_bits.sol"""
@@ -687,5 +687,7 @@ def test_storage_packed_array_copy(harness):
     pytest.fail("EVM-specific packed-array copy via storage layout. v243: compilation failed.")
 
 def test_struct_accessor(harness):
-    """storage/contracts/struct_accessor.sol"""
-    pytest.fail("Public getter for struct with mapping member (Data{a; b; c; d}) — compiler-side: mapping member can't be ARC4-encoded in return. v243: 0p/1f.")
+    """storage/contracts/struct_accessor.sol — probe."""
+    app = harness.compile_and_deploy("storage/contracts/struct_accessor.sol", postinit_budget_pool=5)
+    r = harness.call(app, "data(uint256)", 7)
+    assert tuple(as_int(x) if not isinstance(x, bool) else x for x in r.abi_return) == (1, 2, True)
