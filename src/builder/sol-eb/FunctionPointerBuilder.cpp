@@ -369,20 +369,18 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 				+ "': reentrancy is not possible on AVM; self-calls will use "
 				"internal dispatch instead of inner transactions", _loc);
 
-			// Self-reference: appId=0 sentinel means "current application —
-			// use internal dispatch". Selector slot holds the ARC4 method
-			// selector (sha512_256[:4]), same as cross-contract refs. This
-			// makes `.selector` access return a consistent value across
-			// self/cross-call (the AVM-native ARC4 selector — we accept this
-			// as an intentional EVM divergence; tests that compare against
-			// keccak256 selectors are surgically patched). At the call site,
-			// the selector is mapped to an internal fn-ptr id via a
-			// compile-time `__sel_to_id_<sig>` helper before going through
-			// the existing id-based dispatcher.
+			// Self-reference: encode appId as the CURRENT application id (not
+			// a 0 sentinel) so the pointer survives crossing contract
+			// boundaries — when another contract receives the pointer it can
+			// route to a normal inner txn back to us. Within our own contract
+			// the dispatch site compares the captured appId against
+			// `CurrentApplicationID` to take an internal-dispatch shortcut.
 			if (auto const* internalFuncType = _funcDef->functionType(true))
 				registerTarget(_funcDef, internalFuncType, _awstName);
 
-			appIdBytes = makeItobConst("0");
+			auto curApp = awst::makeGlobal(
+				std::string("CurrentApplicationID"), awst::WType::uint64Type(), _loc);
+			appIdBytes = awst::makeItob(std::move(curApp), _loc);
 			auto selectorConst = awst::makeMethodConstant(
 				AbiEncoderBuilder::buildARC4MethodSelector(_ctx, _funcDef),
 				awst::WType::bytesType(), _loc);
@@ -430,10 +428,15 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 			return awst::makeBtoi(extractSlice(_offset, 8), _loc);
 		};
 
-		// Check if self-call: appId == 0 (sentinel for current app).
+		// Check if self-call: appId == CurrentApplicationID. (Captures of
+		// `this.x` encode the appId as the current app's id; a pointer
+		// passed in from outside has the originating contract's id.)
 		auto isSelf = awst::makeNumericCompare(
 			extractU64(0), awst::NumericComparison::Eq,
-			awst::makeIntegerConstant("0", _loc), _loc);
+			awst::makeGlobal(
+				std::string("CurrentApplicationID"),
+				awst::WType::uint64Type(), _loc),
+			_loc);
 
 		// Self-call path: selector slot now holds ARC4 selector (was internal
 		// id; changed for `.selector` accessor consistency with cross-call).
