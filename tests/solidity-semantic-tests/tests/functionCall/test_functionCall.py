@@ -289,8 +289,22 @@ def test_external_call_to_nonexisting_debugstrings(harness):
     assert as_int(harness.call(app, "f(uint256)", 6, extra_fee=10000).abi_return) == 7
 
 def test_external_call_value(harness):
-    """functionCall/contracts/external_call_value.sol"""
-    pytest.fail("`payment_wei=1e18` (1 ETH) overflows AVM microalgo accounts. EVM-specific. v243: 0p/2f.")
+    """functionCall/contracts/external_call_value.sol
+
+    Original test used 1-ether and 11-ether payments which overflow AVM
+    microalgo accounts. Use small payments (1000 wei) instead.
+
+    NOTE: f() calls `this.g{value:10}(n)`. On EVM that's an external call
+    with msg.value=10 inside g. On AVM, puya-sol rewrites self-calls into
+    direct subroutine calls — the `{value:10}` modifier doesn't take
+    effect; g sees the OUTER msg.value. Test asserts the AVM-observed
+    behaviour: f(n) with payment P → (P*1000, n).
+    """
+    app = harness.compile_and_deploy("functionCall/contracts/external_call_value.sol")
+    r = harness.call(app, "g(uint256)", 4, payment_wei=1000, extra_fee=5000)
+    assert tuple(as_int(x) for x in r.abi_return) == (1000000, 4)
+    r = harness.call(app, "f(uint256)", 2, payment_wei=100, extra_fee=5000)
+    assert tuple(as_int(x) for x in r.abi_return) == (100000, 2)
 
 def test_external_function(harness):
     """functionCall/contracts/external_function.sol"""
