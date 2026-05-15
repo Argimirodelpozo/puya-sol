@@ -23,9 +23,9 @@ std::shared_ptr<awst::Expression> SolLiteral::toAwst()
 	switch (m_literal.token())
 	{
 	case Token::TrueLiteral:
-		return awst::makeBoolConstant(true, m_loc);
+		return awst::makeTrue(m_loc);
 	case Token::FalseLiteral:
-		return awst::makeBoolConstant(false, m_loc);
+		return awst::makeFalse(m_loc);
 	case Token::Number:
 	{
 		auto* mappedType = m_ctx.typeMapper.map(m_solType);

@@ -154,7 +154,7 @@ awst::ContractMethod ContractBuilder::buildClearProgram(
 	auto body = awst::makeBlock(method.sourceLocation);
 
 	// return true
-	auto ret = awst::makeReturnStatement(awst::makeBoolConstant(true, method.sourceLocation), method.sourceLocation);
+	auto ret = awst::makeReturnStatement(awst::makeTrue(method.sourceLocation), method.sourceLocation);
 
 	body->body.push_back(ret);
 	method.body = body;

@@ -462,7 +462,7 @@ void AssemblyBuilder::handleRevert(
 )
 {
 	// revert(offset, length) — on AVM, assert(false, "revert")
-	auto stmt = awst::makeExpressionStatement(awst::makeAssert(awst::makeBoolConstant(false, _loc), _loc, "revert"), _loc);
+	auto stmt = awst::makeExpressionStatement(awst::makeAssert(awst::makeFalse(_loc), _loc, "revert"), _loc);
 	_out.push_back(std::move(stmt));
 	// Mark this Yul block as halt-terminated so the assembly-block
 	// epilog skips its `__evm_memory` writeback. assert(false) is a

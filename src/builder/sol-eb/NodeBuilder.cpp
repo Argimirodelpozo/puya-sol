@@ -112,7 +112,7 @@ std::unique_ptr<InstanceBuilder> TypeBuilder::bool_eval(
 	awst::SourceLocation const& _loc, bool /*_negate*/)
 {
 	// Type expressions are always truthy.
-	auto bc = awst::makeBoolConstant(true, _loc);
+	auto bc = awst::makeTrue(_loc);
 	// We can't construct an InstanceBuilder here yet (no concrete bool builder).
 	// This will be wired up in Phase 1 when BoolBuilder exists.
 	return nullptr;

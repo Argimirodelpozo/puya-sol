@@ -258,6 +258,16 @@ inline std::shared_ptr<BoolConstant> makeBoolConstant(
 	return node;
 }
 
+// `true` / `false` shorthands. ~30 sites across the builder layer.
+inline std::shared_ptr<BoolConstant> makeTrue(SourceLocation loc)
+{
+	return makeBoolConstant(true, std::move(loc));
+}
+inline std::shared_ptr<BoolConstant> makeFalse(SourceLocation loc)
+{
+	return makeBoolConstant(false, std::move(loc));
+}
+
 struct BytesConstant: Expression
 {
 	std::string nodeType() const override { return "BytesConstant"; }

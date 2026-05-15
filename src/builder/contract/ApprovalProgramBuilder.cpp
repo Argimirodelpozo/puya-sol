@@ -1303,7 +1303,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		} // end else (no postInit needed)
 
 		// Return true to complete the create transaction
-		auto createReturn = awst::makeReturnStatement(awst::makeBoolConstant(true, method.sourceLocation), method.sourceLocation);
+		auto createReturn = awst::makeReturnStatement(awst::makeTrue(method.sourceLocation), method.sourceLocation);
 		createBlock->body.push_back(createReturn);
 
 		// Initialize the transient-storage blob in scratch slot TRANSIENT_SLOT
@@ -1441,7 +1441,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		};
 
 		auto makeTrueLit = [&]() {
-			return awst::makeBoolConstant(true, method.sourceLocation);
+			return awst::makeTrue(method.sourceLocation);
 		};
 
 		auto makeReturnTrue = [&]() -> std::shared_ptr<awst::Statement> {

@@ -338,7 +338,7 @@ void AssemblyBuilder::handleReturn(
 			flushMemoryToScratch(_loc, _out);
 
 			auto returnOp = awst::makeIntrinsicCall("return", awst::WType::voidType(), _loc);
-			returnOp->stackArgs.push_back(awst::makeBoolConstant(true, _loc));
+			returnOp->stackArgs.push_back(awst::makeTrue(_loc));
 
 			auto exitStmt = awst::makeExpressionStatement(std::move(returnOp), _loc);
 			_out.push_back(std::move(exitStmt));

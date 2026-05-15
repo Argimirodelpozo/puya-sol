@@ -767,7 +767,7 @@ void AssemblyBuilder::buildExpressionStatement(
 		if (funcName == "invalid")
 		{
 			// EVM INVALID opcode — unconditional revert
-			auto stmt = awst::makeExpressionStatement(awst::makeAssert(awst::makeBoolConstant(false, loc), loc, "invalid"), loc);
+			auto stmt = awst::makeExpressionStatement(awst::makeAssert(awst::makeFalse(loc), loc, "invalid"), loc);
 			_out.push_back(std::move(stmt));
 			return;
 		}
@@ -1026,7 +1026,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 		block->body.push_back(awst::makeLoopExit(_loc));
 
 		_out.push_back(awst::makeWhileLoop(
-			awst::makeBoolConstant(true, _loc), std::move(block), _loc));
+			awst::makeTrue(_loc), std::move(block), _loc));
 	}
 	else
 	{

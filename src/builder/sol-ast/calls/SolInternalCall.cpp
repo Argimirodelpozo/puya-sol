@@ -522,7 +522,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 			Logger::instance().warning(
 				"call to function pointer '" + name + "' (state var / unsupported), emitting assert(false)", m_loc);
 			m_ctx.queueStmt(awst::makeAssert(
-				awst::makeBoolConstant(false, m_loc), m_loc, "uninitialized function pointer"), m_loc);
+				awst::makeFalse(m_loc), m_loc, "uninitialized function pointer"), m_loc);
 
 			auto vc = awst::makeVoidConstant(m_loc);
 			return vc;

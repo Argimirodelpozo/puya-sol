@@ -896,7 +896,7 @@ void AWSTBuilder::translateContracts(
 				dummy.returnType = awst::WType::boolType();
 
 				auto body = awst::makeBlock(dummy.sourceLocation);
-				auto ret = awst::makeReturnStatement(awst::makeBoolConstant(true, dummy.sourceLocation), dummy.sourceLocation);
+				auto ret = awst::makeReturnStatement(awst::makeTrue(dummy.sourceLocation), dummy.sourceLocation);
 				body->body.push_back(ret);
 				dummy.body = body;
 

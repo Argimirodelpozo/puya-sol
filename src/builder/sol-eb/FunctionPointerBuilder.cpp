@@ -710,7 +710,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		{
 			// assert(false) — invalid function pointer ID
 			auto stmt = awst::makeExpressionStatement(awst::makeAssert(
-				awst::makeBoolConstant(false, _loc), _loc, "invalid function pointer"), _loc);
+				awst::makeFalse(_loc), _loc, "invalid function pointer"), _loc);
 			defaultBlock->body.push_back(std::move(stmt));
 		}
 
@@ -861,7 +861,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 			auto selDefault = awst::makeBlock(_loc);
 			{
 				auto stmt = awst::makeExpressionStatement(awst::makeAssert(
-					awst::makeBoolConstant(false, _loc), _loc,
+					awst::makeFalse(_loc), _loc,
 					"unknown function selector in self-call dispatch"), _loc);
 				selDefault->body.push_back(std::move(stmt));
 			}

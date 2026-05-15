@@ -30,7 +30,7 @@ std::shared_ptr<awst::Expression> SolRevert::toAwst()
 		errorMessage = ma->memberName();
 	}
 
-	return awst::makeAssert(awst::makeBoolConstant(false, m_loc), m_loc, std::move(errorMessage));
+	return awst::makeAssert(awst::makeFalse(m_loc), m_loc, std::move(errorMessage));
 }
 
 } // namespace puyasol::builder::sol_ast

@@ -108,7 +108,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 
 		if (!bodyTerminated) body->body.push_back(ifBreak);
 		return {awst::makeWhileLoop(
-			awst::makeBoolConstant(true, m_loc), std::move(body), m_loc)};
+			awst::makeTrue(m_loc), std::move(body), m_loc)};
 	}
 	else
 	{
@@ -155,7 +155,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolForStatement::toAwst()
 	auto& bc = m_blk.builderCtx();
 	auto cond = m_node.condition()
 		? bc.build(*m_node.condition())
-		: std::shared_ptr<awst::Expression>(awst::makeBoolConstant(true, m_loc));
+		: std::shared_ptr<awst::Expression>(awst::makeTrue(m_loc));
 
 	std::shared_ptr<awst::Statement> postStmt;
 	if (m_node.loopExpression())

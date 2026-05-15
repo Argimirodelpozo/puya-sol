@@ -332,7 +332,7 @@ void inlineModifiers(
 
 			auto makeFlagSet = [&]() -> std::shared_ptr<awst::Statement> {
 				auto target = awst::makeVarExpression(flagName, awst::WType::boolType(), flagLoc);
-				return awst::makeAssignmentStatement(std::move(target), awst::makeBoolConstant(true, flagLoc), flagLoc);
+				return awst::makeAssignmentStatement(std::move(target), awst::makeTrue(flagLoc), flagLoc);
 			};
 			auto makeBreak = [&]() -> std::shared_ptr<awst::Statement> {
 				return awst::makeLoopExit(flagLoc);
@@ -399,7 +399,7 @@ void inlineModifiers(
 
 			modBody->body.push_back(awst::makeAssignmentStatement(
 				awst::makeVarExpression(flagName, awst::WType::boolType(), flagLoc),
-				awst::makeBoolConstant(false, flagLoc),
+				awst::makeFalse(flagLoc),
 				flagLoc));
 
 			auto loopBody = awst::makeBlock(flagLoc);
@@ -408,7 +408,7 @@ void inlineModifiers(
 			loopBody->body.push_back(makeBreak());
 
 			modBody->body.push_back(awst::makeWhileLoop(
-				awst::makeBoolConstant(true, flagLoc), std::move(loopBody), flagLoc));
+				awst::makeTrue(flagLoc), std::move(loopBody), flagLoc));
 		}
 		else
 		{
@@ -777,7 +777,7 @@ void ContractBuilder::inlineModifiers(
 			// Helper: create flag = true assignment
 			auto makeFlagSet = [&]() -> std::shared_ptr<awst::Statement> {
 				auto target = awst::makeVarExpression(flagName, awst::WType::boolType(), flagLoc);
-				auto assign = awst::makeAssignmentStatement(std::move(target), awst::makeBoolConstant(true, flagLoc), flagLoc);
+				auto assign = awst::makeAssignmentStatement(std::move(target), awst::makeTrue(flagLoc), flagLoc);
 				return assign;
 			};
 
@@ -856,7 +856,7 @@ void ContractBuilder::inlineModifiers(
 			// Initialize flag: __mod_exit_N = false
 			modBody->body.push_back(awst::makeAssignmentStatement(
 				awst::makeVarExpression(flagName, awst::WType::boolType(), flagLoc),
-				awst::makeBoolConstant(false, flagLoc),
+				awst::makeFalse(flagLoc),
 				flagLoc));
 
 			// Wrap in while(true) { ...body...; break; }
@@ -866,7 +866,7 @@ void ContractBuilder::inlineModifiers(
 			loopBody->body.push_back(makeBreak()); // always exit after one pass
 
 			modBody->body.push_back(awst::makeWhileLoop(
-				awst::makeBoolConstant(true, flagLoc), std::move(loopBody), flagLoc));
+				awst::makeTrue(flagLoc), std::move(loopBody), flagLoc));
 		}
 		else
 		{

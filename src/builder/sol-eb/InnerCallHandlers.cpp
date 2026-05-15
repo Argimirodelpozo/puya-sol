@@ -238,7 +238,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleSend(
 	auto stmt = awst::makeExpressionStatement(submit, _loc);
 	_ctx.pendingStatements.push_back(std::move(stmt));
 
-	return std::make_unique<SolBoolBuilder>(_ctx, awst::makeBoolConstant(true, _loc));
+	return std::make_unique<SolBoolBuilder>(_ctx, awst::makeTrue(_loc));
 }
 
 std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithValue(

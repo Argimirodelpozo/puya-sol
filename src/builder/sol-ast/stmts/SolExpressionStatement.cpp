@@ -76,7 +76,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolRevertStatement::toAwst()
 			ASTNode::referencedDeclaration(m_node.errorCall().expression())))
 		errorName = errorDef->name();
 
-	auto stmt = awst::makeExpressionStatement(awst::makeAssert(awst::makeBoolConstant(false, m_loc), m_loc, errorName), m_loc);
+	auto stmt = awst::makeExpressionStatement(awst::makeAssert(awst::makeFalse(m_loc), m_loc, errorName), m_loc);
 	return {stmt};
 }
 

@@ -163,7 +163,7 @@ void AssemblyBuilder::handleEcPairingRT(
 		{
 			// Empty pairing: AVM ec_pairing_check needs at least one pair;
 			// emit `true` directly.
-			storeResultToMemoryRT(awst::makeBoolConstant(true, _loc),
+			storeResultToMemoryRT(awst::makeTrue(_loc),
 				std::move(_outputOffset), 1, _loc, _out, /*isBool=*/true);
 			return;
 		}
@@ -229,7 +229,7 @@ void AssemblyBuilder::handleEcPairingRT(
 	Logger::instance().warning(
 		"ec_pairing with dynamic input size — stubbing as success (no runtime "
 		"pair-count loop yet)", _loc);
-	storeResultToMemoryRT(awst::makeBoolConstant(true, _loc),
+	storeResultToMemoryRT(awst::makeTrue(_loc),
 		std::move(_outputOffset), 1, _loc, _out, /*isBool=*/true);
 }
 
