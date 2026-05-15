@@ -775,7 +775,9 @@ def test_fixed_out_of_bounds_array_access(harness):
 
 def test_function_array_cross_calls(harness):
     """array/contracts/function_array_cross_calls.sol"""
-    pytest.fail("None abi_return on AVM — compiler-side. Function-type arrays used in cross-contract calls.")
+    app = harness.compile_and_deploy("array/contracts/function_array_cross_calls.sol", contract_name="C")
+    r = harness.call(app, "test()")
+    assert tuple(as_int(x) for x in r.abi_return) == (5, 6, 7)
 
 def test_function_memory_array(harness):
     """array/contracts/function_memory_array.sol"""
