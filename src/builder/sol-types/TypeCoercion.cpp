@@ -234,6 +234,18 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 		return awst::makeFalse(_loc);
 	}
 
+	// arc4.bool → 1-byte BytesConstant 0x00. (Without this, arc4Bool falls
+	// through to the bytes-fallback branch and returns *empty* bytes — which
+	// is the wrong wire encoding for an arc4 bool and trips downstream
+	// getbit/length checks. The bool-array and bool-struct-field workarounds
+	// cover their own paths, but a direct arc4Bool local var would surface
+	// this if hit.)
+	if (_type == awst::WType::arc4BoolType())
+	{
+		return awst::makeBytesConstant(
+			std::vector<uint8_t>{0}, _loc, awst::BytesEncoding::Base16, _type);
+	}
+
 	// Integer types → IntegerConstant
 	if (_type == awst::WType::uint64Type())
 	{
