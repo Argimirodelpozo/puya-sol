@@ -24,9 +24,9 @@ def test_accessors_mapping_for_array(harness):
     r = harness.call(app, "dynamicData(uint256,uint256)", 2, 8, expect_revert=True)
     assert r.reverted
 
-def test_array_accessor(harness):  # currently fails
+def test_array_accessor(harness):
     """storage/contracts/array_accessor.sol"""
-    app = harness.compile_and_deploy('storage/contracts/array_accessor.sol')
+    app = harness.compile_and_deploy('storage/contracts/array_accessor.sol', postinit_budget_pool=4)
     r = harness.call(app, 'data(uint256)', 0)
     assert as_int(r.abi_return) == 8
     r = harness.call(app, 'data(uint256)', 8, expect_revert=True)

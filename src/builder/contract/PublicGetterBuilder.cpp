@@ -436,19 +436,19 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					}
 				}
 
-				// If the stored type is a struct but the getter returns a tuple
-				// of selected fields, extract and ARC4-decode each field.
+				// If the stored type is a struct, Solidity's public-accessor
+				// returns only the "value-type" fields flat — skipping mapping
+				// members and non-bytes dynamic arrays. Build the
+				// tuple/single-field projection from `indexed` (the full
+				// ARC4Struct read).
 				if (auto const* structType = dynamic_cast<solidity::frontend::StructType const*>(valueType))
 				{
-					if (solReturnTypes.size() > 1)
+					if (solReturnTypes.size() >= 1)
 					{
-						// indexed returns the full ARC4Struct; extract fields.
 						std::shared_ptr<awst::Expression> fullStruct = std::move(indexed);
-						auto tuple = awst::makeTupleExpression(getter.returnType, loc);
-
-						// Get the ARC4Struct type's field types for FieldExpression
 						auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(fullStruct->wtype);
 
+						std::vector<std::shared_ptr<awst::Expression>> items;
 						for (auto const& member: structType->members(nullptr))
 						{
 							if (member.type->category() == solidity::frontend::Type::Category::Mapping)
@@ -457,7 +457,6 @@ void ContractBuilder::buildPublicStateVariableGetters(
 								if (!at->isByteArrayOrString())
 									continue;
 
-							// Look up the ARC4 field type from the struct type
 							awst::WType const* arc4FieldType = nullptr;
 							if (arc4Struct)
 								for (auto const& [fname, ftype]: arc4Struct->fields())
@@ -467,19 +466,32 @@ void ContractBuilder::buildPublicStateVariableGetters(
 										break;
 									}
 
-							auto fieldExpr = awst::makeFieldExpression(fullStruct, member.name, arc4FieldType ? arc4FieldType : m_typeMapper.map(member.type), loc);
+							auto fieldExpr = awst::makeFieldExpression(
+								fullStruct, member.name,
+								arc4FieldType ? arc4FieldType : m_typeMapper.map(member.type),
+								loc);
 
-							// ARC4Decode to native type if needed
 							auto* nativeType = m_typeMapper.map(member.type);
 							if (arc4FieldType && arc4FieldType != nativeType)
 							{
 								auto decode = awst::makeARC4Decode(std::move(fieldExpr), nativeType, loc);
-								tuple->items.push_back(std::move(decode));
+								items.push_back(std::move(decode));
 							}
 							else
-								tuple->items.push_back(std::move(fieldExpr));
+								items.push_back(std::move(fieldExpr));
 						}
-						readExpr = std::move(tuple);
+
+						if (items.size() == 1)
+						{
+							readExpr = std::move(items[0]);
+						}
+						else
+						{
+							auto tuple = awst::makeTupleExpression(getter.returnType, loc);
+							for (auto& it : items)
+								tuple->items.push_back(std::move(it));
+							readExpr = std::move(tuple);
+						}
 					}
 					else
 					{

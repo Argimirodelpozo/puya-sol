@@ -703,6 +703,10 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 				// box_create yields invalid ARC4 (head offsets all zero).
 				// Pre-populate with the proper default encoding so subsequent
 				// element splices have a valid head/tail layout to work with.
+				// Gate on `!box_exists(key)` so a subsequent assignment after
+				// the box has grown (e.g. via .push() loop) doesn't try to
+				// box_put the smaller default and trip the size mismatch
+				// "wrong size N != M".
 				bool dynamicArc4 = false;
 				if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(bv->wtype))
 					dynamicArc4 = TypeCoercion::arc4IsDynamic(sa);
@@ -717,7 +721,28 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 							putCall->stackArgs.push_back(bv->key);
 							putCall->stackArgs.push_back(awst::makeBytesConstant(
 								std::move(*enc), m_loc));
-							m_ctx.queuePreStmt(std::move(putCall), m_loc);
+
+							// Wrap in `if (!box_exists(key)) { box_put(...) }`.
+							auto* tupleType = m_ctx.typeMapper.template createType<awst::WTuple>(
+								std::vector<awst::WType const*>{
+									awst::WType::uint64Type(), awst::WType::boolType()});
+							auto boxLen = awst::makeIntrinsicCall(
+								"box_len", tupleType, m_loc);
+							boxLen->stackArgs.push_back(bv->key);
+							auto exists = awst::makeTupleItem(
+								std::move(boxLen), 1, awst::WType::boolType(), m_loc);
+							auto notExists = awst::makeNot(std::move(exists), m_loc);
+
+							auto thenBlock = awst::makeBlock(m_loc);
+							thenBlock->body.push_back(awst::makeExpressionStatement(
+								std::move(putCall), m_loc));
+							auto elseBlock = awst::makeBlock(m_loc);
+							auto ifStmt = awst::makeIfElse(
+								std::move(notExists),
+								std::move(thenBlock),
+								std::move(elseBlock),
+								m_loc);
+							m_ctx.queuePrePending(std::move(ifStmt));
 						}
 					}
 				}
