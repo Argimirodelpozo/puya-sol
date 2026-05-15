@@ -263,9 +263,20 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleDelegatecall(
 	solidity::frontend::FunctionCall const& _callNode,
 	awst::SourceLocation const& _loc)
 {
+	// AVM has no DELEGATECALL. The EVM semantics — execute callee code in
+	// caller's storage / address / msg.sender context — has no equivalent on
+	// AVM: every app has its own storage, every inner txn has its own
+	// caller. We can't safely emulate this, so refuse to compile rather
+	// than silently producing a wrong-semantic stub.
+	Logger::instance().error(
+		"`.delegatecall(...)` is not supported on AVM. DELEGATECALL's "
+		"shared-storage / caller-preservation semantics have no equivalent "
+		"on AVM (each app has isolated storage; inner-txn callers are the "
+		"calling app, not its caller). Rewrite the call site, or use "
+		"`.call(...)` if the caller-of-caller distinction isn't load-bearing.",
+		_loc);
 	for (auto const& arg : _callNode.arguments())
 		_ctx.buildExpr(*arg);
-
 	return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTupleEmpty(_loc));
 }
 
@@ -302,13 +313,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 	if (_memberName == "call" && _callValue)
 		return handleCallWithValue(_ctx, std::move(_receiver), std::move(_callValue), _loc);
 
-	// .call(abi.encodeCall/Signature/Selector(...))  AND  .delegatecall(same)
-	// → for self-targets (address(this)), rewrite as a direct subroutine
-	// call. AVM has no DELEGATECALL and no self-recursive inner-txn, but
-	// both patterns reduce to "call the named function in this contract"
-	// when the receiver is self, which is just a callsub on AVM.
-	if ((_memberName == "call" || _memberName == "delegatecall")
-		&& !_callValue && !_callNode.arguments().empty())
+	// .call(abi.encodeCall(...)) → inner app call
+	if (_memberName == "call" && !_callValue && !_callNode.arguments().empty())
 	{
 		auto const& dataArg = *_callNode.arguments()[0];
 
@@ -702,10 +708,10 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 		return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTupleEmpty(_loc));
 	}
 
-	// .delegatecall fallthrough — receiver wasn't address(this) and didn't
-	// match the call(abi.encode*(...)) pattern above. AVM has no
-	// DELEGATECALL between separate apps; emit a warning + (true, empty)
-	// stub for back-compat with code that ignores the return.
+	// .delegatecall(...) — unsupported on AVM. handleDelegatecall logs a
+	// compile-time error and emits a (true, empty) stub so the rest of the
+	// translation can still complete (caller will get the error in the
+	// compiler output before bytecode is ever produced).
 	if (_memberName == "delegatecall")
 		return handleDelegatecall(_ctx, _callNode, _loc);
 

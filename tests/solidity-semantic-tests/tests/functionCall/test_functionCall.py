@@ -179,52 +179,15 @@ def test_creation_function_call_with_salt(harness):
     assert as_int(r.abi_return) == 2
 
 def test_delegatecall_return_value(harness):
-    """functionCall/contracts/delegatecall_return_value.sol
-
-    AVM has no DELEGATECALL between contracts. For self-delegatecall
-    (`address(this).delegatecall(...)`), puya-sol rewrites to a direct
-    subroutine call — same as `.call(...)`. Storage is shared (same app)
-    and msg.sender preservation matches EVM's self-delegatecall.
-
-    The return value is `(true, abi.encoded(returnValue))`. Tests verify
-    success=true and the encoded value matches `get()` state.
-    """
-    app = harness.compile_and_deploy("functionCall/contracts/delegatecall_return_value.sol")
-    # get() initially returns 0.
-    assert as_int(harness.call(app, "get()").abi_return) == 0
-    # get_delegated() returns (true, 32-byte 0).
-    r = harness.call(app, "get_delegated()", extra_fee=5000)
-    assert as_int(r.abi_return[0]) == 1
-    assert int.from_bytes(bytes(r.abi_return[1]), "big") == 0
-    # assert0_delegated returns (true, empty) when value=0 (assert passes).
-    r = harness.call(app, "assert0_delegated()", extra_fee=5000)
-    assert as_int(r.abi_return[0]) == 1
-    # Set value to 1.
-    harness.call(app, "set(uint256)", 1)
-    assert as_int(harness.call(app, "get()").abi_return) == 1
-    # get_delegated() now returns (true, 32-byte 1).
-    r = harness.call(app, "get_delegated()", extra_fee=5000)
-    assert as_int(r.abi_return[0]) == 1
-    assert int.from_bytes(bytes(r.abi_return[1]), "big") == 1
-    # Set 42 and verify again.
-    harness.call(app, "set(uint256)", 42)
-    r = harness.call(app, "get_delegated()", extra_fee=5000)
-    assert as_int(r.abi_return[0]) == 1
-    assert int.from_bytes(bytes(r.abi_return[1]), "big") == 42
+    """functionCall/contracts/delegatecall_return_value.sol"""
+    pytest.fail("`.delegatecall(...)` is unsupported on AVM. DELEGATECALL's "
+        "shared-storage / msg.sender-preservation semantics can't be safely "
+        "emulated (each AVM app has isolated storage; inner-txn callers are "
+        "the calling app, not its caller). puya-sol now errors at compile.")
 
 def test_delegatecall_return_value_pre_byzantium(harness):
-    """functionCall/contracts/delegatecall_return_value_pre_byzantium.sol
-
-    Pre-byzantium semantics: delegatecall returns only `bool` (no
-    returndata). Under puya-sol's self-delegatecall rewrite, this still
-    works since the original contract's `delegatecall(...) returns (bool)`
-    pattern just inspects success.
-    """
-    app = harness.compile_and_deploy("functionCall/contracts/delegatecall_return_value_pre_byzantium.sol", evm_version='spuriousDragon')
-    assert as_int(harness.call(app, "get()").abi_return) == 0
-    # assert0_delegated returns true when value=0; get_delegated returns true.
-    assert bool(as_int(harness.call(app, "assert0_delegated()", extra_fee=5000).abi_return)) is True
-    assert bool(as_int(harness.call(app, "get_delegated()", extra_fee=5000).abi_return)) is True
+    """functionCall/contracts/delegatecall_return_value_pre_byzantium.sol"""
+    pytest.fail("`.delegatecall(...)` is unsupported on AVM — see test_delegatecall_return_value.")
 
 def test_disordered_named_args(harness):
     """functionCall/contracts/disordered_named_args.sol"""
