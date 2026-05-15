@@ -394,11 +394,25 @@ def test_calldata_array_as_argument_internal_function(harness):
 
 def test_calldata_array_dynamic_invalid(harness):
     """array/contracts/calldata_array_dynamic_invalid.sol"""
-    pytest.fail("EVM-flat calldata corruption test; ARC4 encoding is structurally different")
+    import hashlib
+    app = harness.compile_and_deploy("array/contracts/calldata_array_dynamic_invalid.sol")
+    # Valid call works: f([]) → 42
+    r = harness.call(app, "f(uint256[][])", [])
+    assert as_int(r.abi_return) == 42
+    # Malformed: outer length 1 but no head data → revert
+    sel = hashlib.new("sha512_256", b"f(uint256[][])uint256").digest()[:4]
+    r = harness.call_raw(app, selector=sel, extra_args=((1).to_bytes(2, "big"),), expect_revert=True)
+    assert r.reverted
 
 def test_calldata_array_dynamic_invalid_static_middle(harness):
     """array/contracts/calldata_array_dynamic_invalid_static_middle.sol"""
-    pytest.fail("EVM-flat calldata corruption test; ARC4 encoding is structurally different")
+    import hashlib
+    app = harness.compile_and_deploy("array/contracts/calldata_array_dynamic_invalid_static_middle.sol")
+    r = harness.call(app, "f(uint256[][1][])", [])
+    assert as_int(r.abi_return) == 42
+    sel = hashlib.new("sha512_256", b"f(uint256[][1][])uint256").digest()[:4]
+    r = harness.call_raw(app, selector=sel, extra_args=((1).to_bytes(2, "big"),), expect_revert=True)
+    assert r.reverted
 
 def test_calldata_array_of_struct(harness):
     """array/contracts/calldata_array_of_struct.sol"""
