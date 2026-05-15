@@ -314,14 +314,14 @@ void AssemblyBuilder::buildVariableDeclaration(
 			if (!value)
 			{
 				// Expression failed to translate (error already logged), use zero fallback
-				auto zero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
+				auto zero = awst::makeZero(loc, awst::WType::biguintType());
 				value = std::move(zero);
 			}
 		}
 		else
 		{
 			// Default: zero
-			auto zero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
+			auto zero = awst::makeZero(loc, awst::WType::biguintType());
 			value = std::move(zero);
 		}
 
@@ -565,7 +565,7 @@ void AssemblyBuilder::buildAssignment(
 	if (!value)
 	{
 		// Expression failed to translate (error already logged), use zero fallback
-		auto zero = awst::makeIntegerConstant("0", loc, target->wtype);
+		auto zero = awst::makeZero(loc, target->wtype);
 		value = std::move(zero);
 	}
 
@@ -594,7 +594,7 @@ void AssemblyBuilder::buildAssignment(
 				// padTo32Bytes: ensures exactly 32 bytes big-endian
 				auto padded = padTo32Bytes(std::move(biguintVal), loc);
 				// Extract first N bytes (EVM left-aligned)
-				auto zero = awst::makeIntegerConstant("0", loc);
+				auto zero = awst::makeZero(loc);
 				auto lenConst = awst::makeIntegerConstant(n, loc);
 				auto extract = awst::makeExtract3(std::move(padded), std::move(zero), std::move(lenConst), loc);
 				auto cast = awst::makeReinterpretCast(std::move(extract), target->wtype, loc);

@@ -23,7 +23,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 	// code should read global GenesisHash in assembly instead.
 	if (baseName == "block" && member == "chainid")
 	{
-		auto c = awst::makeIntegerConstant("1", m_loc, awst::WType::biguintType());
+		auto c = awst::makeOne(m_loc, awst::WType::biguintType());
 		return c;
 	}
 
@@ -32,7 +32,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 	{
 		Logger::instance().warning(
 			"block.difficulty returns 0 on AVM — Algorand has no proof-of-work.", m_loc);
-		auto zero = awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType());
+		auto zero = awst::makeZero(m_loc, awst::WType::biguintType());
 		return zero;
 	}
 
@@ -45,7 +45,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 	{
 		Logger::instance().warning(
 			"block." + member + " returns 0 on AVM — no EIP-1559 base fee concept.", m_loc);
-		auto zero = awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType());
+		auto zero = awst::makeZero(m_loc, awst::WType::biguintType());
 		return zero;
 	}
 
@@ -90,19 +90,19 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		auto groupIdx = awst::makeIntrinsicCall("txn", awst::WType::uint64Type(), m_loc);
 		groupIdx->immediates = {std::string("GroupIndex")};
 
-		auto zero = awst::makeIntegerConstant("0", m_loc);
+		auto zero = awst::makeZero(m_loc);
 		auto hasPayment = awst::makeNumericCompare(groupIdx, awst::NumericComparison::Gt, std::move(zero), m_loc);
 
 		auto groupIdx2 = awst::makeIntrinsicCall("txn", awst::WType::uint64Type(), m_loc);
 		groupIdx2->immediates = {std::string("GroupIndex")};
-		auto one = awst::makeIntegerConstant("1", m_loc);
+		auto one = awst::makeOne(m_loc);
 		auto payIdx = awst::makeUInt64BinOp(std::move(groupIdx2), awst::UInt64BinaryOperator::Sub, std::move(one), m_loc);
 
 		auto amount = awst::makeIntrinsicCall("gtxns", awst::WType::uint64Type(), m_loc);
 		amount->immediates = {std::string("Amount")};
 		amount->stackArgs.push_back(std::move(payIdx));
 
-		auto zeroVal = awst::makeIntegerConstant("0", m_loc);
+		auto zeroVal = awst::makeZero(m_loc);
 
 		auto cond = awst::makeConditional(
 			std::move(hasPayment), std::move(amount), std::move(zeroVal),
@@ -136,7 +136,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		auto numAppArgs = awst::makeIntrinsicCall("txn", awst::WType::uint64Type(), m_loc);
 		numAppArgs->immediates = {std::string("NumAppArgs")};
 
-		auto zero = awst::makeIntegerConstant("0", m_loc);
+		auto zero = awst::makeZero(m_loc);
 
 		auto hasData = awst::makeNumericCompare(std::move(numAppArgs), awst::NumericComparison::Gt, std::move(zero), m_loc);
 

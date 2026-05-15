@@ -608,7 +608,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			else if (rpType == awst::WType::uint64Type()
 				|| rpType == awst::WType::biguintType())
 			{
-				zeroVal = awst::makeIntegerConstant("0", loc, rpType);
+				zeroVal = awst::makeZero(loc, rpType);
 			}
 			else if (rpType && rpType->kind() == awst::WTypeKind::Bytes)
 			{

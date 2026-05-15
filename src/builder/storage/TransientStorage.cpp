@@ -185,7 +185,7 @@ std::shared_ptr<awst::Expression> TransientStorage::buildRead(
 		// (btoi returns uint64; callers like `!lock` require bool).
 		if (_type == awst::WType::boolType())
 		{
-			auto zero = awst::makeIntegerConstant("0", _loc);
+			auto zero = awst::makeZero(_loc);
 			return awst::makeNumericCompare(
 				std::move(btoi), awst::NumericComparison::Ne, std::move(zero), _loc);
 		}

@@ -191,7 +191,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		}
 
 		// Non-constant unsigned negation: 0 - x
-		auto zero = awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType());
+		auto zero = awst::makeZero(m_loc, awst::WType::biguintType());
 		auto e = awst::makeBigUIntBinOp(std::move(zero), awst::BigUIntBinaryOperator::Sub, std::move(_operand), m_loc);
 		return e;
 	}
@@ -220,7 +220,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			}
 		}
 	}
-	auto zero2 = awst::makeIntegerConstant("0", m_loc, _operand->wtype);
+	auto zero2 = awst::makeZero(m_loc, _operand->wtype);
 	if (_operand->wtype == awst::WType::uint64Type())
 	{
 		auto e = awst::makeUInt64BinOp(std::move(zero2), awst::UInt64BinaryOperator::Sub, std::move(_operand), m_loc);
@@ -292,8 +292,8 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 				auto const* info = m_ctx.transientStorage->getVarInfoById(varDecl->id());
 				auto* wt = info ? info->wtype : _operand->wtype;
 				auto one = (wt == awst::WType::biguintType())
-					? awst::makeIntegerConstant("1", m_loc, awst::WType::biguintType())
-					: awst::makeIntegerConstant("1", m_loc);
+					? awst::makeOne(m_loc, awst::WType::biguintType())
+					: awst::makeOne(m_loc);
 				std::shared_ptr<awst::Expression> newValue;
 				if (wt == awst::WType::biguintType())
 					newValue = awst::makeBigUIntBinOp(_operand,
@@ -452,13 +452,13 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 		}
 		else if (isBigUInt(base->wtype))
 		{
-			auto one = awst::makeIntegerConstant("1", m_loc, awst::WType::biguintType());
+			auto one = awst::makeOne(m_loc, awst::WType::biguintType());
 			auto bin = awst::makeBigUIntBinOp(std::move(base), isInc ? awst::BigUIntBinaryOperator::Add : awst::BigUIntBinaryOperator::Sub, std::move(one), m_loc);
 			return bin;
 		}
 		else
 		{
-			auto one = awst::makeIntegerConstant("1", m_loc);
+			auto one = awst::makeOne(m_loc);
 			auto bin = awst::makeUInt64BinOp(std::move(base), isInc ? awst::UInt64BinaryOperator::Add : awst::UInt64BinaryOperator::Sub, std::move(one), m_loc);
 			return bin;
 		}
@@ -628,7 +628,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 
 			auto btoi = builder::StorageMapper::biguintSlotToBtoi(slotJ, m_loc);
 
-			auto zeroVal = awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType());
+			auto zeroVal = awst::makeZero(m_loc, awst::WType::biguintType());
 
 			auto call = awst::makeSubroutineCall(awst::SubroutineID{"__puyasol___storage_write"}, awst::WType::voidType(), m_loc);
 			awst::pushCallArg(call->args, "__slot", std::move(btoi));

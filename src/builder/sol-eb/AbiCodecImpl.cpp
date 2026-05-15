@@ -135,7 +135,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 	if (wtype == awst::WType::boolType())
 	{
 		auto val = uint64FromAbiWord(std::move(headWord), _loc);
-		auto zero = awst::makeIntegerConstant("0", _loc);
+		auto zero = awst::makeZero(_loc);
 		auto cmp = awst::makeNumericCompare(std::move(val), awst::NumericComparison::Ne, std::move(zero), _loc);
 		return cmp;
 	}

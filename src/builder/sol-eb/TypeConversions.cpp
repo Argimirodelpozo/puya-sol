@@ -192,7 +192,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToBool(
 	// integer → bool: x != 0
 	if (_arg->wtype == awst::WType::uint64Type() || _arg->wtype == awst::WType::biguintType())
 	{
-		auto zero = awst::makeIntegerConstant("0", _loc, _arg->wtype);
+		auto zero = awst::makeZero(_loc, _arg->wtype);
 
 		auto cmp = awst::makeNumericCompare(std::move(_arg), awst::NumericComparison::Ne, std::move(zero), _loc);
 

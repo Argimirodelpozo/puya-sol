@@ -223,7 +223,7 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 			auto bitIdx = awst::makeUInt64BinOp(std::move(twoFiftyFive), awst::UInt64BinaryOperator::Sub, std::move(shiftAmt), _loc);
 
 			// setbit(bzero(32), 255-n, 1) → bytes with only bit n set
-			auto one = awst::makeIntegerConstant("1", _loc);
+			auto one = awst::makeOne(_loc);
 
 			auto setbit = awst::makeIntrinsicCall("setbit", awst::WType::bytesType(), _loc);
 			setbit->stackArgs.push_back(std::move(bzero));
@@ -418,11 +418,11 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 			// Wrap: y == 0 ? 1 : x ** y
 			e->op = awst::UInt64BinaryOperator::Pow;
 
-			auto zero = awst::makeIntegerConstant("0", _loc);
+			auto zero = awst::makeZero(_loc);
 
 			auto cond = awst::makeNumericCompare(e->right, awst::NumericComparison::Eq, std::move(zero), _loc);
 
-			auto one = awst::makeIntegerConstant("1", _loc);
+			auto one = awst::makeOne(_loc);
 
 			return awst::makeConditional(
 				std::move(cond), std::move(one), e, awst::WType::uint64Type(), _loc);

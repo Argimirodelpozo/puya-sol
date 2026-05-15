@@ -276,7 +276,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		auto appIdCheck = awst::makeIntrinsicCall("txn", awst::WType::uint64Type(), method.sourceLocation);
 		appIdCheck->immediates = {std::string("ApplicationID")};
 
-		auto zero = awst::makeIntegerConstant("0", method.sourceLocation);
+		auto zero = awst::makeZero(method.sourceLocation);
 
 		auto isCreate = awst::makeNumericCompare(appIdCheck, awst::NumericComparison::Eq, zero, method.sourceLocation);
 
@@ -369,13 +369,13 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 						method.sourceLocation);
 				else if (wtype == awst::WType::biguintType())
 				{
-					auto val = awst::makeIntegerConstant("0", method.sourceLocation, awst::WType::biguintType());
+					auto val = awst::makeZero(method.sourceLocation, awst::WType::biguintType());
 					defaultVal = val;
 				}
 				else if (wtype == awst::WType::boolType()
 					|| wtype == awst::WType::uint64Type())
 				{
-					auto val = awst::makeIntegerConstant("0", method.sourceLocation);
+					auto val = awst::makeZero(method.sourceLocation);
 					defaultVal = val;
 				}
 				else if (wtype->kind() == awst::WTypeKind::ReferenceArray
@@ -649,7 +649,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			// Set __ctor_pending = 1 in create block.
 			auto pendingKey = awst::makeUtf8BytesConstant("__ctor_pending", method.sourceLocation);
 
-			auto one = awst::makeIntegerConstant("1", method.sourceLocation);
+			auto one = awst::makeOne(method.sourceLocation);
 
 			auto setPending = awst::makeAppGlobalPut(pendingKey, one, method.sourceLocation);
 
@@ -768,7 +768,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			// Clear flag: __ctor_pending = 0
 			auto clearKey = awst::makeUtf8BytesConstant("__ctor_pending", method.sourceLocation);
 
-			auto zeroVal = awst::makeIntegerConstant("0", method.sourceLocation);
+			auto zeroVal = awst::makeZero(method.sourceLocation);
 
 			auto clearPending = awst::makeAppGlobalPut(clearKey, zeroVal, method.sourceLocation);
 
@@ -1455,7 +1455,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			auto numAppArgs = awst::makeIntrinsicCall("txn", awst::WType::uint64Type(), method.sourceLocation);
 			numAppArgs->immediates = {std::string("NumAppArgs")};
 
-			auto zero = awst::makeIntegerConstant("0", method.sourceLocation);
+			auto zero = awst::makeZero(method.sourceLocation);
 
 			auto isBareCall = awst::makeNumericCompare(std::move(numAppArgs), awst::NumericComparison::Eq, std::move(zero), method.sourceLocation);
 

@@ -312,11 +312,11 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					// len - 1
 					auto lenCall = awst::makeLen(readVal, loc);
 
-					auto one = awst::makeIntegerConstant("1", loc);
+					auto one = awst::makeOne(loc);
 					auto newLen = awst::makeUInt64BinOp(std::move(lenCall), awst::UInt64BinaryOperator::Sub, std::move(one), loc);
 
 					// extract3(readVal, 0, len-1)
-					auto zero = awst::makeIntegerConstant("0", loc);
+					auto zero = awst::makeZero(loc);
 
 					auto extract = awst::makeExtract3(readVal, std::move(zero), std::move(newLen), loc);
 					if (kind == awst::AppStorageKind::Box)
@@ -387,7 +387,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 								"extract3", awst::WType::bytesType(), loc);
 							extr->stackArgs.push_back(std::move(itob));
 							extr->stackArgs.push_back(awst::makeIntegerConstant("7", loc));
-							extr->stackArgs.push_back(awst::makeIntegerConstant("1", loc));
+							extr->stackArgs.push_back(awst::makeOne(loc));
 							pushVal = std::move(extr);
 						}
 						else
@@ -714,7 +714,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMemoryArray(
 				auto itob = awst::makeItob(std::move(byteVal), m_loc);
 
 				auto seven = awst::makeIntegerConstant("7", m_loc);
-				auto one = awst::makeIntegerConstant("1", m_loc);
+				auto one = awst::makeOne(m_loc);
 
 				auto extract = awst::makeExtract3(std::move(itob), std::move(seven), std::move(one), m_loc);
 				byteVal = std::move(extract);
@@ -803,14 +803,14 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMappingElementArrayLengt
 		m_loc);
 	auto extractLen = awst::makeIntrinsicCall("extract_uint16", awst::WType::uint64Type(), m_loc);
 	extractLen->stackArgs.push_back(boxRead());
-	extractLen->stackArgs.push_back(awst::makeIntegerConstant("0", m_loc));
+	extractLen->stackArgs.push_back(awst::makeZero(m_loc));
 	auto cur = awst::makeConditional(
 		std::move(isNonEmpty), std::move(extractLen),
 		awst::makeIntegerConstant("0", m_loc),
 		awst::WType::uint64Type(), m_loc);
 
 	// new_len = cur ± 1
-	auto delta = awst::makeIntegerConstant("1", m_loc);
+	auto delta = awst::makeOne(m_loc);
 	auto newLen = awst::makeUInt64BinOp(
 		std::move(cur),
 		_memberName == "push" ? awst::UInt64BinaryOperator::Add

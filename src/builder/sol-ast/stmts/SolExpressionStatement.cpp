@@ -223,7 +223,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 							}
 							else
 							{
-								auto zero = awst::makeIntegerConstant("0", m_loc);
+								auto zero = awst::makeZero(m_loc);
 								auto width = awst::makeIntegerConstant(dstLen, m_loc);
 								auto extract = awst::makeExtract3(std::move(toBytes), std::move(zero), std::move(width), m_loc);
 								result = std::move(extract);
@@ -286,7 +286,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 								}
 								else
 								{
-									auto zero = awst::makeIntegerConstant("0", m_loc);
+									auto zero = awst::makeZero(m_loc);
 									auto width = awst::makeIntegerConstant(dstLen, m_loc);
 									auto extract = awst::makeExtract3(std::move(toBytes), std::move(zero), std::move(width), m_loc);
 									widened = std::move(extract);

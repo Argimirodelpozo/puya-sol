@@ -380,7 +380,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 				m_ctx.queueStmt(std::move(call), m_loc);
 			}
 			// Return a dummy value (void-like, the writes are in pending)
-			auto zero = awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType());
+			auto zero = awst::makeZero(m_loc, awst::WType::biguintType());
 			return zero;
 		}
 	}
@@ -416,7 +416,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 
 		m_ctx.queueStmt(std::move(call), m_loc);
 
-		auto zero = awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType());
+		auto zero = awst::makeZero(m_loc, awst::WType::biguintType());
 		return zero;
 	}
 

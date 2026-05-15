@@ -177,11 +177,11 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 		// AVM `exp` asserts on 0^0. Solidity defines 0**0 = 1.
 		e->op = awst::UInt64BinaryOperator::Pow;
 
-		auto zero = awst::makeIntegerConstant("0", _loc);
+		auto zero = awst::makeZero(_loc);
 
 		auto cond = awst::makeNumericCompare(e->right, awst::NumericComparison::Eq, std::move(zero), _loc);
 
-		auto one = awst::makeIntegerConstant("1", _loc);
+		auto one = awst::makeOne(_loc);
 
 		std::shared_ptr<awst::Expression> powResult = awst::makeConditional(
 			std::move(cond), std::move(one), e, awst::WType::uint64Type(), _loc);
@@ -541,7 +541,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 std::unique_ptr<InstanceBuilder> SolIntegerBuilder::bool_eval(
 	awst::SourceLocation const& _loc, bool _negate)
 {
-	auto zero = awst::makeIntegerConstant("0", _loc, m_isBigUInt ? awst::WType::biguintType() : awst::WType::uint64Type());
+	auto zero = awst::makeZero(_loc, m_isBigUInt ? awst::WType::biguintType() : awst::WType::uint64Type());
 
 	auto cmp = awst::makeNumericCompare(resolve(), _negate ? awst::NumericComparison::Eq : awst::NumericComparison::Ne, std::move(zero), _loc);
 
@@ -614,7 +614,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildBigUIntShift(
 	auto bitIdx = awst::makeUInt64BinOp(std::move(twoFiftyFive), awst::UInt64BinaryOperator::Sub, std::move(_shiftAmt), _loc);
 
 	// setbit(bzero(32), 255-n, 1)
-	auto one = awst::makeIntegerConstant("1", _loc);
+	auto one = awst::makeOne(_loc);
 
 	auto setbit = awst::makeIntrinsicCall("setbit", awst::WType::bytesType(), _loc);
 	setbit->stackArgs.push_back(std::move(bzero));

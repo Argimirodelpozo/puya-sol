@@ -165,9 +165,9 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 	static awst::WInnerTransactionFields s_applFieldsType(TxnTypeAppl);
 	auto create = awst::makeCreateInnerTransaction(&s_applFieldsType, _loc);
 	create->fields["TypeEnum"] = awst::makeIntegerConstant(TxnTypeAppl, _loc);
-	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
+	create->fields["Fee"] = awst::makeZero(_loc);
 	create->fields["ApplicationID"] = std::move(appId);
-	create->fields["OnCompletion"] = awst::makeIntegerConstant("0", _loc);
+	create->fields["OnCompletion"] = awst::makeZero(_loc);
 	create->fields["ApplicationArgs"] = std::move(argsTuple);
 
 	// Submit
@@ -260,9 +260,9 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	static awst::WInnerTransactionFields s_applFieldsType(TxnTypeAppl);
 	auto create = awst::makeCreateInnerTransaction(&s_applFieldsType, _loc);
 	create->fields["TypeEnum"] = awst::makeIntegerConstant(TxnTypeAppl, _loc);
-	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
+	create->fields["Fee"] = awst::makeZero(_loc);
 	create->fields["ApplicationID"] = std::move(appId);
-	create->fields["OnCompletion"] = awst::makeIntegerConstant("0", _loc);
+	create->fields["OnCompletion"] = awst::makeZero(_loc);
 	create->fields["ApplicationArgs"] = std::move(argsTuple);
 
 	static awst::WInnerTransaction s_applTxnType(TxnTypeAppl);
@@ -389,8 +389,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 
 		// Bool → ABI-encoded 32-byte result
 		auto boolToInt = awst::makeIntrinsicCall("select", awst::WType::uint64Type(), _loc);
-		boolToInt->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
-		boolToInt->stackArgs.push_back(awst::makeIntegerConstant("1", _loc));
+		boolToInt->stackArgs.push_back(awst::makeZero(_loc));
+		boolToInt->stackArgs.push_back(awst::makeOne(_loc));
 		boolToInt->stackArgs.push_back(std::move(ecCall));
 
 		auto itob = awst::makeItob(std::move(boolToInt), _loc);

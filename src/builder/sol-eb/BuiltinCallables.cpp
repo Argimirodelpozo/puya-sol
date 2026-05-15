@@ -159,11 +159,11 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleSelfdestruct(
 		static awst::WInnerTransactionFields s_payFieldsType(1); // pay
 		auto create = awst::makeCreateInnerTransaction(&s_payFieldsType, _loc);
 
-		auto typeVal = awst::makeIntegerConstant("1", _loc); // pay
+		auto typeVal = awst::makeOne(_loc); // pay
 
-		auto feeVal = awst::makeIntegerConstant("0", _loc);
+		auto feeVal = awst::makeZero(_loc);
 
-		auto amountVal = awst::makeIntegerConstant("0", _loc); // amount=0, CloseRemainderTo sends everything
+		auto amountVal = awst::makeZero(_loc); // amount=0, CloseRemainderTo sends everything
 
 		create->fields["TypeEnum"] = std::move(typeVal);
 		create->fields["Fee"] = std::move(feeVal);

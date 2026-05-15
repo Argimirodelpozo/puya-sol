@@ -163,7 +163,7 @@ std::unique_ptr<InstanceBuilder> SolAddressBuilder::compare(
 		// `addr` happens to be the zero address) spuriously succeed.
 		// CurrentApplicationID is always > 0 inside an app's program, so
 		// the guard is a no-op there but free to keep for symmetry.
-		auto zeroId = awst::makeIntegerConstant("0", _loc);
+		auto zeroId = awst::makeZero(_loc);
 		auto appIdNonZero = awst::makeNumericCompare(
 			std::move(appIdForCompare), awst::NumericComparison::Ne,
 			std::move(zeroId), _loc);

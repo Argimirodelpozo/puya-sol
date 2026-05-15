@@ -199,7 +199,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 					auto extractCall = awst::makeIntrinsicCall(
 						"extract_uint64", awst::WType::uint64Type(), loc);
 					extractCall->stackArgs.push_back(std::move(baseAsBytes));
-					extractCall->stackArgs.push_back(awst::makeIntegerConstant("0", loc));
+					extractCall->stackArgs.push_back(awst::makeZero(loc));
 					return extractCall;
 				}
 			}
@@ -340,7 +340,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	{
 		// extcodesize(addr) → on AVM, return 1 (treat all addresses as having code)
 		Logger::instance().warning("extcodesize() stubbed as 1 (no AVM equivalent)", loc);
-		auto one = awst::makeIntegerConstant("1", loc, awst::WType::biguintType());
+		auto one = awst::makeOne(loc, awst::WType::biguintType());
 		return one;
 	}
 	if (funcName == "extcodehash")
@@ -358,7 +358,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 
 		if (args.empty())
 		{
-			auto zero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
+			auto zero = awst::makeZero(loc, awst::WType::biguintType());
 			return zero;
 		}
 
@@ -404,7 +404,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		auto addrExprForZero = addrExpr;
 		auto addrExprForLarge = addrExpr;
 
-		auto zero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
+		auto zero = awst::makeZero(loc, awst::WType::biguintType());
 
 		// keccak256 of empty bytes (EVM constant)
 		auto emptyHash = awst::makeBytesConstant(
@@ -418,7 +418,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 
 		auto isLarge = awst::makeNumericCompare(std::move(addrExprForLarge), awst::NumericComparison::Gt, std::move(threshold), loc);
 
-		auto zeroLit = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
+		auto zeroLit = awst::makeZero(loc, awst::WType::biguintType());
 		auto isZero = awst::makeNumericCompare(std::move(addrExprForZero), awst::NumericComparison::Eq, std::move(zeroLit), loc);
 
 		// small (0 < addr <= 100) → emptyHash; large (addr > 100) → hash(self); addr == 0 → 0
@@ -483,7 +483,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 			auto twoLit = awst::makeIntegerConstant("2", loc, awst::WType::biguintType());
 			auto withinRange = awst::makeNumericCompare(std::move(indexArg), awst::NumericComparison::Lt, std::move(twoLit), loc);
 
-			auto zero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
+			auto zero = awst::makeZero(loc, awst::WType::biguintType());
 
 			return awst::makeConditional(
 				std::move(withinRange), std::move(seedBigUint), std::move(zero),
@@ -534,7 +534,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		// Stub: return 0 for EVM-specific block properties with no AVM equivalent
 		Logger::instance().warning(
 			funcName + "() has no AVM equivalent, returning 0", loc);
-		auto zero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
+		auto zero = awst::makeZero(loc, awst::WType::biguintType());
 		return zero;
 	}
 	if (funcName == "chainid")
@@ -545,7 +545,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		// differentiation should use `global GenesisHash` directly in
 		// assembly instead.
 		Logger::instance().debug("chainid() stubbed as 1 for AVM", loc);
-		auto c = awst::makeIntegerConstant("1", loc, awst::WType::biguintType());
+		auto c = awst::makeOne(loc, awst::WType::biguintType());
 		return c;
 	}
 	if (funcName == "codesize")
@@ -632,7 +632,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		Logger::instance().warning(
 			funcName + " in pure expression context; use let/assign form for precompile support", loc
 		);
-		auto one = awst::makeIntegerConstant("1", loc, awst::WType::biguintType());
+		auto one = awst::makeOne(loc, awst::WType::biguintType());
 		return one;
 	}
 
@@ -665,7 +665,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	if (funcName == "delegatecall")
 	{
 		Logger::instance().warning("delegatecall() stubbed as success (1)", loc);
-		auto one = awst::makeIntegerConstant("1", loc, awst::WType::biguintType());
+		auto one = awst::makeOne(loc, awst::WType::biguintType());
 		return one;
 	}
 
@@ -676,7 +676,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 			"create2() has no AVM equivalent (requires inner app creation txn), returning zero address",
 			loc
 		);
-		auto zero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
+		auto zero = awst::makeZero(loc, awst::WType::biguintType());
 		return zero;
 	}
 
@@ -691,7 +691,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 			return awst::makeLen(std::move(blob), loc);
 		}
 		Logger::instance().warning("calldatasize() has no AVM equivalent, returning 0", loc);
-		auto zero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
+		auto zero = awst::makeZero(loc, awst::WType::biguintType());
 		return zero;
 	}
 
@@ -712,18 +712,18 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 			auto destOff = offsetToUint64(args[0], loc);
 			auto replaceCall = awst::makeReplace3(memoryVar(loc), std::move(destOff), std::move(extractCall), loc);
 			assignMemoryVar(std::move(replaceCall), loc, m_pendingStatements);
-			auto zero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
+			auto zero = awst::makeZero(loc, awst::WType::biguintType());
 			return zero;
 		}
 		Logger::instance().warning("calldatacopy() has no AVM equivalent (skipped)", loc);
-		auto zero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
+		auto zero = awst::makeZero(loc, awst::WType::biguintType());
 		return zero;
 	}
 
 	Logger::instance().warning(
 		"unsupported Yul builtin function: " + funcName + ", returning 0", loc
 	);
-	auto fallbackZero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
+	auto fallbackZero = awst::makeZero(loc, awst::WType::biguintType());
 	return fallbackZero;
 }
 

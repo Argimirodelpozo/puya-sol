@@ -93,7 +93,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 				if (slice->startExpression())
 					startExpr = buildExpr(*slice->startExpression());
 				else
-					startExpr = awst::makeIntegerConstant("0", m_loc);
+					startExpr = awst::makeZero(m_loc);
 				startExpr = builder::TypeCoercion::implicitNumericCast(
 					std::move(startExpr), awst::WType::uint64Type(), m_loc);
 
@@ -234,7 +234,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 					auto extractLen = awst::makeIntrinsicCall(
 						"extract_uint16", awst::WType::uint64Type(), m_loc);
 					extractLen->stackArgs.push_back(std::move(contents));
-					extractLen->stackArgs.push_back(awst::makeIntegerConstant("0", m_loc));
+					extractLen->stackArgs.push_back(awst::makeZero(m_loc));
 
 					return awst::makeConditional(
 						std::move(exists), std::move(extractLen),

@@ -140,7 +140,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 
 		auto setbit = awst::makeIntrinsicCall("setbit", awst::WType::bytesType(), m_loc);
 		setbit->stackArgs.push_back(std::move(zeroByte));
-		setbit->stackArgs.push_back(awst::makeIntegerConstant("0", m_loc));
+		setbit->stackArgs.push_back(awst::makeZero(m_loc));
 		setbit->stackArgs.push_back(std::move(_argExpr));
 		return setbit;
 	}
@@ -255,7 +255,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 	{
 		auto getbit = awst::makeIntrinsicCall("getbit", awst::WType::uint64Type(), m_loc);
 		getbit->stackArgs.push_back(std::move(stripPrefix));
-		getbit->stackArgs.push_back(awst::makeIntegerConstant("0", m_loc));
+		getbit->stackArgs.push_back(awst::makeZero(m_loc));
 
 		auto cmp = awst::makeNumericCompare(std::move(getbit), awst::NumericComparison::Ne, awst::makeIntegerConstant("0", m_loc), m_loc);
 		return cmp;
@@ -315,7 +315,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 			{
 				auto getbit = awst::makeIntrinsicCall("getbit", awst::WType::uint64Type(), m_loc);
 				getbit->stackArgs.push_back(std::move(extract));
-				getbit->stackArgs.push_back(awst::makeIntegerConstant("0", m_loc));
+				getbit->stackArgs.push_back(awst::makeZero(m_loc));
 
 				auto cmp = awst::makeNumericCompare(std::move(getbit), awst::NumericComparison::Ne, awst::makeIntegerConstant("0", m_loc), m_loc);
 				decoded = std::move(cmp);
@@ -497,9 +497,9 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 	static awst::WInnerTransactionFields s_applFieldsType(TxnTypeAppl);
 	auto create = awst::makeCreateInnerTransaction(&s_applFieldsType, m_loc);
 	create->fields["TypeEnum"] = awst::makeIntegerConstant(TxnTypeAppl, m_loc);
-	create->fields["Fee"] = awst::makeIntegerConstant("0", m_loc);
+	create->fields["Fee"] = awst::makeZero(m_loc);
 	create->fields["ApplicationID"] = std::move(appId);
-	create->fields["OnCompletion"] = awst::makeIntegerConstant("0", m_loc);
+	create->fields["OnCompletion"] = awst::makeZero(m_loc);
 	create->fields["ApplicationArgs"] = std::move(argsTuple);
 
 	auto* retType = m_ctx.typeMapper.map(m_call.annotation().type);

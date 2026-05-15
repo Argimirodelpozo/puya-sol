@@ -155,7 +155,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		auto h1Int = awst::makeReinterpretCast(std::move(h1), awst::WType::biguintType(), m_loc);
 
 		// minus1 = h1_int - 1
-		auto one = awst::makeIntegerConstant("1", m_loc, awst::WType::biguintType());
+		auto one = awst::makeOne(m_loc, awst::WType::biguintType());
 
 		auto sub = awst::makeBigUIntBinOp(std::move(h1Int), awst::BigUIntBinaryOperator::Sub, std::move(one), m_loc);
 
@@ -172,7 +172,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		auto h2 = awst::makeKeccak256(std::move(minus1Bytes), m_loc);
 
 		// Top 31 bytes of h2
-		auto top31Start = awst::makeIntegerConstant("0", m_loc);
+		auto top31Start = awst::makeZero(m_loc);
 
 		auto top31Len = awst::makeIntegerConstant("31", m_loc);
 

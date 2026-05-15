@@ -160,7 +160,7 @@ std::shared_ptr<awst::Expression> encodeArgForInnerTxn(
 		auto setbit = awst::makeIntrinsicCall("setbit", awst::WType::bytesType(), _loc);
 		std::vector<uint8_t> zero1{0};
 		setbit->stackArgs.push_back(awst::makeBytesConstant(std::move(zero1), _loc));
-		setbit->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
+		setbit->stackArgs.push_back(awst::makeZero(_loc));
 		setbit->stackArgs.push_back(std::move(_argExpr));
 		return setbit;
 	}
@@ -296,7 +296,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 	if (!_funcDef)
 	{
 		// Zero-initialized function pointer
-		auto zero = awst::makeIntegerConstant("0", _loc);
+		auto zero = awst::makeZero(_loc);
 		return zero;
 	}
 
@@ -481,11 +481,11 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		static awst::WInnerTransactionFields s_applFieldsType(6); // TxnTypeAppl
 		auto create = awst::makeCreateInnerTransaction(&s_applFieldsType, _loc);
 		create->fields["TypeEnum"] = awst::makeIntegerConstant("6", _loc);
-		create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
+		create->fields["Fee"] = awst::makeZero(_loc);
 		// ApplicationID: reinterpret uint64 appId to application type
 		create->fields["ApplicationID"] = awst::makeReinterpretCast(
 			extractU64(0), awst::WType::applicationType(), _loc);
-		create->fields["OnCompletion"] = awst::makeIntegerConstant("0", _loc);
+		create->fields["OnCompletion"] = awst::makeZero(_loc);
 		create->fields["ApplicationArgs"] = std::move(argsTuple);
 
 		// Submit + read LastLog (strip 4-byte ARC4 return prefix)
@@ -508,7 +508,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 				// ARC4 bool: byte 0's top bit set → true.
 				auto getbit = awst::makeIntrinsicCall("getbit", awst::WType::uint64Type(), _loc);
 				getbit->stackArgs.push_back(std::move(strip));
-				getbit->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
+				getbit->stackArgs.push_back(awst::makeZero(_loc));
 				return awst::makeNumericCompare(
 					std::move(getbit), awst::NumericComparison::Ne,
 					awst::makeIntegerConstant("0", _loc), _loc);

@@ -225,6 +225,20 @@ inline std::shared_ptr<IntegerConstant> makeBiguintConstant(
 	return makeIntegerConstant(std::move(value), std::move(loc), WType::biguintType());
 }
 
+// Common `0` / `1` shorthands. wtype defaults to uint64Type() to match
+// makeIntegerConstant; pass biguintType() for biguint zero/one (~30 sites
+// across the builder layer respectively).
+inline std::shared_ptr<IntegerConstant> makeZero(
+	SourceLocation loc, WType const* wtype = WType::uint64Type())
+{
+	return makeIntegerConstant("0", std::move(loc), wtype);
+}
+inline std::shared_ptr<IntegerConstant> makeOne(
+	SourceLocation loc, WType const* wtype = WType::uint64Type())
+{
+	return makeIntegerConstant("1", std::move(loc), wtype);
+}
+
 struct BoolConstant: Expression
 {
 	std::string nodeType() const override { return "BoolConstant"; }

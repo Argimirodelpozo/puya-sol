@@ -62,7 +62,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 		auto extract = awst::makeIntrinsicCall("extract3", m_ctx.typeMapper.createType<awst::BytesWType>(1), m_loc);
 		extract->stackArgs.push_back(baseExprForRead);
 		extract->stackArgs.push_back(std::move(idx));
-		auto one = awst::makeIntegerConstant("1", m_loc);
+		auto one = awst::makeOne(m_loc);
 		extract->stackArgs.push_back(std::move(one));
 		return extract;
 	}
@@ -407,7 +407,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 		auto extract = awst::makeIntrinsicCall("extract3", bytes1Type, m_loc);
 		extract->stackArgs.push_back(std::move(base));
 		extract->stackArgs.push_back(std::move(index));
-		auto one = awst::makeIntegerConstant("1", m_loc);
+		auto one = awst::makeOne(m_loc);
 		extract->stackArgs.push_back(std::move(one));
 		return extract;
 	}
@@ -632,7 +632,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 
 	// Initial cumulative offset = 0, length = len(root)
 	std::shared_ptr<awst::Expression> cumOffset
-		= awst::makeIntegerConstant("0", m_loc);
+		= awst::makeZero(m_loc);
 	std::shared_ptr<awst::Expression> cumLength = makeLen(
 		awst::makeVarExpression(rootVarName, rootBase->wtype, m_loc));
 
@@ -655,7 +655,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 		if (rg->startExpression())
 			startExpr = buildExpr(*rg->startExpression());
 		else
-			startExpr = awst::makeIntegerConstant("0", m_loc);
+			startExpr = awst::makeZero(m_loc);
 		startExpr = builder::TypeCoercion::implicitNumericCast(
 			std::move(startExpr), awst::WType::uint64Type(), m_loc);
 

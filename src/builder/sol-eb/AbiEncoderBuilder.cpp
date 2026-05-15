@@ -116,8 +116,8 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::toPackedBytes(
 	else if (_expr->wtype == awst::WType::boolType())
 	{
 		auto boolToInt = awst::makeIntrinsicCall("select", awst::WType::uint64Type(), _loc);
-		boolToInt->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
-		boolToInt->stackArgs.push_back(awst::makeIntegerConstant("1", _loc));
+		boolToInt->stackArgs.push_back(awst::makeZero(_loc));
+		boolToInt->stackArgs.push_back(awst::makeOne(_loc));
 		boolToInt->stackArgs.push_back(std::move(_expr));
 
 		bytesExpr = awst::makeItob(std::move(boolToInt), _loc);
@@ -188,7 +188,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgAsARC4Bytes(
 		// Solidity ABI: bool is 32-byte right-aligned (0x00...00 or 0x00...01)
 		auto setbit = awst::makeIntrinsicCall("setbit", awst::WType::bytesType(), _loc);
 		setbit->stackArgs.push_back(awst::makeBytesConstant({0x00}, _loc));
-		setbit->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
+		setbit->stackArgs.push_back(awst::makeZero(_loc));
 		setbit->stackArgs.push_back(std::move(_argExpr));
 		return leftPadBytes(std::move(setbit), 32, _loc);
 	}
@@ -610,7 +610,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 		}
 		auto btoi = awst::makeBtoi(std::move(bytesExpr), _loc);
 
-		auto zero = awst::makeIntegerConstant("0", _loc);
+		auto zero = awst::makeZero(_loc);
 		auto cmp = awst::makeNumericCompare(std::move(btoi), awst::NumericComparison::Ne, std::move(zero), _loc);
 		return std::make_unique<GenericAbiResult>(_ctx, std::move(cmp));
 	}
@@ -663,7 +663,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 	}
 
 	// Single value decode at offset 0
-	auto offset = awst::makeIntegerConstant("0", _loc);
+	auto offset = awst::makeZero(_loc);
 	auto result = decodeAbiValue(_ctx, dataExpr, std::move(offset), callType, _loc);
 	return std::make_unique<GenericAbiResult>(_ctx, std::move(result));
 }

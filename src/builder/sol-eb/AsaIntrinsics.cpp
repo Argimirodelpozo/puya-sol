@@ -165,7 +165,7 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaCreate(
 	auto create = awst::makeCreateInnerTransaction(&s_acfgFieldsType, _loc);
 
 	create->fields["TypeEnum"] = awst::makeIntegerConstant("3", _loc);
-	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
+	create->fields["Fee"] = awst::makeZero(_loc);
 	create->fields["ConfigAssetTotal"] = std::move(total);
 	create->fields["ConfigAssetDecimals"] = std::move(decimals);
 	create->fields["ConfigAssetUnitName"] = std::move(symbol);
@@ -332,7 +332,7 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaTransfer(
 	auto create = awst::makeCreateInnerTransaction(&s_axferFieldsType, _loc);
 
 	create->fields["TypeEnum"] = awst::makeIntegerConstant("4", _loc);
-	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
+	create->fields["Fee"] = awst::makeZero(_loc);
 	create->fields["XferAsset"] = std::move(assetId);
 	create->fields["AssetSender"] = std::move(from);
 	create->fields["AssetReceiver"] = std::move(to);

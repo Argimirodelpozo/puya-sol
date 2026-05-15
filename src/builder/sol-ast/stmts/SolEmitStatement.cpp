@@ -120,7 +120,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 
 		auto hash = awst::makeKeccak256(std::move(sigBytes), m_loc);
 
-		auto zero = awst::makeIntegerConstant("0", m_loc);
+		auto zero = awst::makeZero(m_loc);
 		auto four = awst::makeIntegerConstant("4", m_loc);
 
 		auto selector = awst::makeExtract3(std::move(hash), std::move(zero), std::move(four), m_loc);

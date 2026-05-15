@@ -219,7 +219,7 @@ bool AssemblyBuilder::tryHandleBytesMemoryWrite(
 	auto padded = padTo32Bytes(ensureBiguint(valueExpr, _loc), _loc);
 
 	// extract3(padded, 0, len(x))
-	auto zero = awst::makeIntegerConstant("0", _loc);
+	auto zero = awst::makeZero(_loc);
 
 	auto extract = awst::makeExtract3(std::move(padded), std::move(zero), std::move(lenCall), _loc);
 	// Cast if needed for string type
@@ -299,7 +299,7 @@ void AssemblyBuilder::handleMstore8(
 	auto padded = padTo32Bytes(ensureBiguint(_args[1], _loc), _loc);
 
 	auto start = awst::makeIntegerConstant("31", _loc);
-	auto len = awst::makeIntegerConstant("1", _loc);
+	auto len = awst::makeOne(_loc);
 
 	auto lowByte = awst::makeExtract3(std::move(padded), std::move(start), std::move(len), _loc);
 	auto replace = awst::makeReplace3(memoryVar(_loc), std::move(offsetU64), std::move(lowByte), _loc);

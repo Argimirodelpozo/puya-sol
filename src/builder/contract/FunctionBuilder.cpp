@@ -1130,7 +1130,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 						? "_param" + std::to_string(pi)
 						: param->name(), awst::WType::uint64Type(), loc);
 
-					auto one = awst::makeIntegerConstant("1", loc);
+					auto one = awst::makeOne(loc);
 
 					auto cmp = awst::makeNumericCompare(paramVar, awst::NumericComparison::Lte, std::move(one), loc);
 
@@ -1255,7 +1255,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		{
 			auto budgetVal = awst::makeIntegerConstant(budgetForFunc, method.sourceLocation);
 
-			auto feeSource = awst::makeIntegerConstant("0", method.sourceLocation);
+			auto feeSource = awst::makeZero(method.sourceLocation);
 
 			auto call = awst::makePuyaLibCall("ensure_budget",
 				{

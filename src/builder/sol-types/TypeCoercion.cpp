@@ -235,7 +235,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 	// Integer types → IntegerConstant
 	if (_type == awst::WType::uint64Type())
 	{
-		auto val = awst::makeIntegerConstant("0", _loc);
+		auto val = awst::makeZero(_loc);
 		return val;
 	}
 	if (_type == awst::WType::biguintType())
@@ -982,7 +982,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 	if (_targetType == awst::WType::boolType()
 		&& _expr->wtype == awst::WType::uint64Type())
 	{
-		auto zero = awst::makeIntegerConstant("0", _loc);
+		auto zero = awst::makeZero(_loc);
 		auto cmp = awst::makeNumericCompare(std::move(_expr), awst::NumericComparison::Ne, std::move(zero), _loc);
 		return cmp;
 	}

@@ -233,7 +233,7 @@ std::shared_ptr<awst::Expression> SolIndexRangeAccess::toAwst()
 		start = buildExpr(*m_rangeAccess.startExpression());
 	else
 	{
-		auto zero = awst::makeIntegerConstant("0", m_loc);
+		auto zero = awst::makeZero(m_loc);
 		start = std::move(zero);
 	}
 

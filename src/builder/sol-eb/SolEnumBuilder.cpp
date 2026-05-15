@@ -50,7 +50,7 @@ std::unique_ptr<InstanceBuilder> SolEnumBuilder::compare(
 std::unique_ptr<InstanceBuilder> SolEnumBuilder::bool_eval(
 	awst::SourceLocation const& _loc, bool _negate)
 {
-	auto zero = awst::makeIntegerConstant("0", _loc);
+	auto zero = awst::makeZero(_loc);
 
 	auto cmp = awst::makeNumericCompare(resolve(), _negate ? awst::NumericComparison::Eq : awst::NumericComparison::Ne, std::move(zero), _loc);
 	return std::make_unique<SolEnumBuilder>(m_ctx, m_enumType, std::move(cmp));

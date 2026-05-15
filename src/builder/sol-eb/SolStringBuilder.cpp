@@ -53,7 +53,7 @@ std::unique_ptr<InstanceBuilder> SolStringBuilder::bool_eval(
 	// string is truthy if len(s) != 0
 	auto len = awst::makeLen(resolve(), _loc);
 
-	auto zero = awst::makeIntegerConstant("0", _loc);
+	auto zero = awst::makeZero(_loc);
 
 	auto cmp = awst::makeNumericCompare(std::move(len), _negate ? awst::NumericComparison::Eq : awst::NumericComparison::Ne, std::move(zero), _loc);
 	return std::make_unique<SolStringBuilder>(m_ctx, m_solType, std::move(cmp));
@@ -103,7 +103,7 @@ std::unique_ptr<InstanceBuilder> SolDynamicBytesBuilder::bool_eval(
 {
 	auto len = awst::makeLen(resolve(), _loc);
 
-	auto zero = awst::makeIntegerConstant("0", _loc);
+	auto zero = awst::makeZero(_loc);
 
 	auto cmp = awst::makeNumericCompare(std::move(len), _negate ? awst::NumericComparison::Eq : awst::NumericComparison::Ne, std::move(zero), _loc);
 	return std::make_unique<SolDynamicBytesBuilder>(m_ctx, m_solType, std::move(cmp));

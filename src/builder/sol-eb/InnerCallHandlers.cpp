@@ -110,7 +110,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 	{
 		auto setbit = awst::makeIntrinsicCall("setbit", awst::WType::bytesType(), _loc);
 		setbit->stackArgs.push_back(awst::makeBytesConstant({0x00}, _loc));
-		setbit->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
+		setbit->stackArgs.push_back(awst::makeZero(_loc));
 		setbit->stackArgs.push_back(std::move(_arg));
 		return setbit;
 	}
@@ -204,7 +204,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::buildPaymentTransaction(
 
 	auto create = awst::makeCreateInnerTransaction(&s_payFieldsType, _loc);
 	create->fields["TypeEnum"] = awst::makeIntegerConstant(TxnTypePay, _loc);
-	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
+	create->fields["Fee"] = awst::makeZero(_loc);
 	create->fields["Receiver"] = std::move(_receiver);
 	create->fields["Amount"] = std::move(_amount);
 	return create;

@@ -844,7 +844,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBool(
 
 	if (_expr->wtype == awst::WType::uint64Type())
 	{
-		auto zero = awst::makeIntegerConstant("0", _loc);
+		auto zero = awst::makeZero(_loc);
 
 		auto cmp = awst::makeNumericCompare(std::move(_expr), awst::NumericComparison::Ne, std::move(zero), _loc);
 		return cmp;
@@ -1010,7 +1010,7 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 	{
 		auto rLoc = makeLoc(r.debugData);
 		auto target = awst::makeVarExpression(r.name.str(), awst::WType::biguintType(), rLoc);
-		auto zero = awst::makeIntegerConstant("0", rLoc, awst::WType::biguintType());
+		auto zero = awst::makeZero(rLoc, awst::WType::biguintType());
 		auto init = awst::makeAssignmentStatement(std::move(target), std::move(zero), rLoc);
 		bodyStmts.push_back(std::move(init));
 	}

@@ -355,9 +355,9 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				static awst::WInnerTransactionFields s_fundFieldsType(1);
 				auto fundCreate = awst::makeCreateInnerTransaction(&s_fundFieldsType, m_loc);
 
-				fundCreate->fields["TypeEnum"] = awst::makeIntegerConstant("1", m_loc); // pay
+				fundCreate->fields["TypeEnum"] = awst::makeOne(m_loc); // pay
 
-				auto fundFee = awst::makeIntegerConstant("0", m_loc);
+				auto fundFee = awst::makeZero(m_loc);
 				fundCreate->fields["Fee"] = std::move(fundFee);
 
 				fundCreate->fields["Receiver"] = std::move(fundAddr);
@@ -441,7 +441,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				// Payment group companion: sets msg.value inside __postInit.
 				std::shared_ptr<awst::Expression> callValue = extractCallValue();
 				if (!callValue)
-					callValue = awst::makeIntegerConstant("0", m_loc);
+					callValue = awst::makeZero(m_loc);
 
 				auto postAppId = awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc);
 
@@ -464,8 +464,8 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				// PaymentTxn (sets msg.value for __postInit)
 				static awst::WInnerTransactionFields s_payFieldsType(1);
 				auto payTxn = awst::makeCreateInnerTransaction(&s_payFieldsType, m_loc);
-				payTxn->fields["TypeEnum"] = awst::makeIntegerConstant("1", m_loc);
-				payTxn->fields["Fee"] = awst::makeIntegerConstant("0", m_loc);
+				payTxn->fields["TypeEnum"] = awst::makeOne(m_loc);
+				payTxn->fields["Fee"] = awst::makeZero(m_loc);
 				payTxn->fields["Receiver"] = std::move(receiver);
 				payTxn->fields["Amount"] = std::move(callValue);
 
@@ -473,8 +473,8 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				static awst::WInnerTransactionFields s_applFieldsType2(6);
 				auto postCall = awst::makeCreateInnerTransaction(&s_applFieldsType2, m_loc);
 				postCall->fields["TypeEnum"] = awst::makeIntegerConstant("6", m_loc);
-				postCall->fields["OnCompletion"] = awst::makeIntegerConstant("0", m_loc);
-				postCall->fields["Fee"] = awst::makeIntegerConstant("0", m_loc);
+				postCall->fields["OnCompletion"] = awst::makeZero(m_loc);
+				postCall->fields["Fee"] = awst::makeZero(m_loc);
 				postCall->fields["ApplicationID"] = std::move(postAppId);
 				postCall->fields["ApplicationArgs"] = std::move(argsTuple);
 
