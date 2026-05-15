@@ -71,7 +71,7 @@ def test_erc7201_layout_specifier_slot_match_comptime(harness):  # currently fai
 def test_erc7201_overflow_expression(harness):  # currently fails
     """builtinFunctions/contracts/erc7201_overflow_expression.sol"""
     app = harness.compile_and_deploy('builtinFunctions/contracts/erc7201_overflow_expression.sol')
-    r = harness.call(app, 'f(, expect_revert=True)')
+    r = harness.call(app, 'f()', expect_revert=True)
     assert r.reverted
 
 def test_erc7201_param_abi_encode(harness):

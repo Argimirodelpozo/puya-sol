@@ -38,13 +38,13 @@ def test_array_3d_new(harness):
 def test_array_function_pointers(harness):  # currently fails
     """array/contracts/array_function_pointers.sol"""
     app = harness.compile_and_deploy('array/contracts/array_function_pointers.sol')
-    r = harness.call(app, 'f(uint256,uint256, expect_revert=True)', 1823621, 12323)
+    r = harness.call(app, 'f(uint256,uint256)', 1823621, 12323, expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'f2(uint256,uint256,uint256,uint256, expect_revert=True)', 18723921, 1823621, 123, 12323)
+    r = harness.call(app, 'f2(uint256,uint256,uint256,uint256)', 18723921, 1823621, 123, 12323, expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'g(uint256,uint256, expect_revert=True)', 1823621, 12323)
+    r = harness.call(app, 'g(uint256,uint256)', 1823621, 12323, expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'g2(uint256,uint256,uint256,uint256, expect_revert=True)', 18723921, 1823621, 123, 12323)
+    r = harness.call(app, 'g2(uint256,uint256,uint256,uint256)', 18723921, 1823621, 123, 12323, expect_revert=True)
     assert r.reverted
 
 def test_array_memory_as_parameter(harness):
@@ -896,88 +896,88 @@ def test_invalid_encoding_for_storage_byte_array(harness):  # currently fails
     r = harness.call(app, 'x()')
     assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x00,)
     r = harness.call(app, 'invalidateXLong()')
-    r = harness.call(app, 'x(, expect_revert=True)')
+    r = harness.call(app, 'x()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'abiEncode(, expect_revert=True)')
+    r = harness.call(app, 'abiEncode()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'abiEncodePacked(, expect_revert=True)')
+    r = harness.call(app, 'abiEncodePacked()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'copyToMemory(, expect_revert=True)')
+    r = harness.call(app, 'copyToMemory()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'indexAccess(, expect_revert=True)')
+    r = harness.call(app, 'indexAccess()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'arrayPushEmpty(, expect_revert=True)')
+    r = harness.call(app, 'arrayPushEmpty()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'arrayPush(, expect_revert=True)')
+    r = harness.call(app, 'arrayPush()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'x(, expect_revert=True)')
+    r = harness.call(app, 'x()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'arrayPop(, expect_revert=True)')
+    r = harness.call(app, 'arrayPop()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'assignToLong(, expect_revert=True)')
+    r = harness.call(app, 'assignToLong()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'x(, expect_revert=True)')
+    r = harness.call(app, 'x()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'assignTo(, expect_revert=True)')
+    r = harness.call(app, 'assignTo()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'x(, expect_revert=True)')
+    r = harness.call(app, 'x()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'copyFromStorageShort(, expect_revert=True)')
+    r = harness.call(app, 'copyFromStorageShort()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'x(, expect_revert=True)')
+    r = harness.call(app, 'x()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'copyFromStorageLong(, expect_revert=True)')
+    r = harness.call(app, 'copyFromStorageLong()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'x(, expect_revert=True)')
+    r = harness.call(app, 'x()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'copyToStorage(, expect_revert=True)')
+    r = harness.call(app, 'copyToStorage()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'x(, expect_revert=True)')
+    r = harness.call(app, 'x()', expect_revert=True)
     assert r.reverted
     r = harness.call(app, 'y()')
     assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x00,)
-    r = harness.call(app, 'del(, expect_revert=True)')
+    r = harness.call(app, 'del()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'x(, expect_revert=True)')
+    r = harness.call(app, 'x()', expect_revert=True)
     assert r.reverted
     r = harness.call(app, 'invalidateXShort()')
-    r = harness.call(app, 'x(, expect_revert=True)')
+    r = harness.call(app, 'x()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'abiEncode(, expect_revert=True)')
+    r = harness.call(app, 'abiEncode()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'abiEncodePacked(, expect_revert=True)')
+    r = harness.call(app, 'abiEncodePacked()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'copyToMemory(, expect_revert=True)')
+    r = harness.call(app, 'copyToMemory()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'indexAccess(, expect_revert=True)')
+    r = harness.call(app, 'indexAccess()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'arrayPushEmpty(, expect_revert=True)')
+    r = harness.call(app, 'arrayPushEmpty()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'arrayPush(, expect_revert=True)')
+    r = harness.call(app, 'arrayPush()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'x(, expect_revert=True)')
+    r = harness.call(app, 'x()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'arrayPop(, expect_revert=True)')
+    r = harness.call(app, 'arrayPop()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'assignToLong(, expect_revert=True)')
+    r = harness.call(app, 'assignToLong()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'x(, expect_revert=True)')
+    r = harness.call(app, 'x()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'assignTo(, expect_revert=True)')
+    r = harness.call(app, 'assignTo()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'x(, expect_revert=True)')
+    r = harness.call(app, 'x()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'copyFromStorageShort(, expect_revert=True)')
+    r = harness.call(app, 'copyFromStorageShort()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'x(, expect_revert=True)')
+    r = harness.call(app, 'x()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'copyFromStorageLong(, expect_revert=True)')
+    r = harness.call(app, 'copyFromStorageLong()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'x(, expect_revert=True)')
+    r = harness.call(app, 'x()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'copyToStorage(, expect_revert=True)')
+    r = harness.call(app, 'copyToStorage()', expect_revert=True)
     assert r.reverted
-    r = harness.call(app, 'x(, expect_revert=True)')
+    r = harness.call(app, 'x()', expect_revert=True)
     assert r.reverted
     r = harness.call(app, 'y()')
     assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x00,)

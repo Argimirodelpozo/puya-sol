@@ -123,13 +123,13 @@ def test_calldata_struct_assign_and_return(harness):  # currently fails
     app = harness.compile_and_deploy('inlineAssembly/contracts/calldata_struct_assign_and_return.sol')
     r = harness.call(app, 'g()', 0xCAFFEE, 0x42, 0x21)
     assert tuple(as_int(x) for x in r.abi_return) == (0x42, 0x21,)
-    r = harness.call(app, 'g(, expect_revert=True)', 0xCAFFEE, 0x4242, 0x2121)
+    r = harness.call(app, 'g()', 0xCAFFEE, 0x4242, 0x2121, expect_revert=True)
     assert r.reverted
     r = harness.call(app, 'g()', 0xCAFFEE, 0x42)
     assert tuple(as_int(x) for x in r.abi_return) == (0x42, 0,)
     r = harness.call(app, 'h()')
     assert as_int(r.abi_return) == 0x42
-    r = harness.call(app, 'i(, expect_revert=True)')
+    r = harness.call(app, 'i()', expect_revert=True)
     assert r.reverted
 
 def test_chainid(harness):
@@ -714,5 +714,5 @@ def test_truefalse(harness):
 def test_tstore_hidden_staticcall(harness):  # currently fails
     """inlineAssembly/contracts/tstore_hidden_staticcall.sol"""
     app = harness.compile_and_deploy('inlineAssembly/contracts/tstore_hidden_staticcall.sol')
-    r = harness.call(app, 'test(, expect_revert=True)')
+    r = harness.call(app, 'test()', expect_revert=True)
     assert r.reverted

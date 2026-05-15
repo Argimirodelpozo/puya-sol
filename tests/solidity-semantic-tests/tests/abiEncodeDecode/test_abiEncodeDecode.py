@@ -283,7 +283,7 @@ def test_contract_array_v2(harness):  # currently fails
     assert tuple(as_int(x) for x in r.abi_return) == (0x20, 3, 0x01, 0x02, 0x03,)
     r = harness.call(app, 'f(bytes)', 0x20, 0x60, 0x20, 1, 0x0102030405060708090a0b0c0d0e0f1011121314)
     assert tuple(as_int(x) for x in r.abi_return) == (0x20, 1, 0x0102030405060708090a0b0c0d0e0f1011121314,)
-    r = harness.call(app, 'f(bytes, expect_revert=True)', 0x20, 0x60, 0x20, 1, 0x0102030405060708090a0b0c0d0e0f101112131415)
+    r = harness.call(app, 'f(bytes)', 0x20, 0x60, 0x20, 1, 0x0102030405060708090a0b0c0d0e0f101112131415, expect_revert=True)
     assert r.reverted
     r = harness.call(app, 'g()')
     assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0xa0, 0x20, 3, 0x42, 0x21, 0x23,)
@@ -298,7 +298,7 @@ def test_offset_overflow_in_array_decoding(harness):
 def test_offset_overflow_in_array_decoding_2(harness):  # currently fails
     """abiEncodeDecode/contracts/offset_overflow_in_array_decoding_2.sol"""
     app = harness.compile_and_deploy('abiEncodeDecode/contracts/offset_overflow_in_array_decoding_2.sol')
-    r = harness.call(app, 'withinArray(, expect_revert=True)')
+    r = harness.call(app, 'withinArray()', expect_revert=True)
     assert r.reverted
 
 def test_offset_overflow_in_array_decoding_3(harness):

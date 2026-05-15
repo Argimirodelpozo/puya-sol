@@ -29,17 +29,17 @@ def test_array_accessor(harness):  # currently fails
     app = harness.compile_and_deploy('storage/contracts/array_accessor.sol')
     r = harness.call(app, 'data(uint256)', 0)
     assert as_int(r.abi_return) == 8
-    r = harness.call(app, 'data(uint256, expect_revert=True)', 8)
+    r = harness.call(app, 'data(uint256)', 8, expect_revert=True)
     assert r.reverted
     r = harness.call(app, 'dynamicData(uint256)', 2)
     assert as_int(r.abi_return) == 8
-    r = harness.call(app, 'dynamicData(uint256, expect_revert=True)', 8)
+    r = harness.call(app, 'dynamicData(uint256)', 8, expect_revert=True)
     assert r.reverted
     r = harness.call(app, 'smallTypeData(uint256)', 1)
     assert as_int(r.abi_return) == 22
     r = harness.call(app, 'smallTypeData(uint256)', 127)
     assert as_int(r.abi_return) == 2
-    r = harness.call(app, 'smallTypeData(uint256, expect_revert=True)', 128)
+    r = harness.call(app, 'smallTypeData(uint256)', 128, expect_revert=True)
     assert r.reverted
     r = harness.call(app, 'multiple_map(uint256,uint256,uint256)', 2, 1, 2)
     assert as_int(r.abi_return) == 3

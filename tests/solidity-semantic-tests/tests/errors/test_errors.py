@@ -254,7 +254,7 @@ def test_simple(harness):
 def test_small_error_optimization(harness):  # currently fails
     """errors/contracts/small_error_optimization.sol"""
     app = harness.compile_and_deploy('errors/contracts/small_error_optimization.sol')
-    r = harness.call(app, 'f(, expect_revert=True)')
+    r = harness.call(app, 'f()', expect_revert=True)
     assert r.reverted
 
 def test_using_structs(harness):

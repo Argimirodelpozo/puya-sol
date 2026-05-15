@@ -476,7 +476,7 @@ def test_precompile_extcodesize_check(harness):  # currently fails
     assert r.abi_return is True
     r = harness.call(app, 'testLowLevel()')
     assert as_int(r.abi_return) == 0xc76596d400000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, 'testHighLevel2(, expect_revert=True)')
+    r = harness.call(app, 'testHighLevel2()', expect_revert=True)
     assert r.reverted
 
 def test_return_size_bigger_than_expected(harness):  # currently fails

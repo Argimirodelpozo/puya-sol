@@ -287,7 +287,7 @@ def test_return_dynamic_types_cross_call_out_of_range_1(harness):
 def test_return_dynamic_types_cross_call_out_of_range_2(harness):  # currently fails
     """abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_2.sol"""
     app = harness.compile_and_deploy('abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_2.sol')
-    r = harness.call(app, 'f(uint256, expect_revert=True)', 0x60)
+    r = harness.call(app, 'f(uint256)', 0x60, expect_revert=True)
     assert r.reverted
     r = harness.call(app, 'f(uint256)', 0x61)
     assert r.abi_return is True

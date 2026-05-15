@@ -273,7 +273,7 @@ def test_dirty_slot(harness):  # currently fails
     assert as_int(r.abi_return) == 0x0400000000000000000000000000000000000000000000000000000000000000
     r = harness.call(app, 'get_b(uint256)', 1)
     assert as_int(r.abi_return) == 0x0100000000000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, 'get_b(uint256, expect_revert=True)', 2)
+    r = harness.call(app, 'get_b(uint256)', 2, expect_revert=True)
     assert r.reverted
     r = harness.call(app, 'write_a()')
     r = harness.call(app, 'a()')
@@ -285,7 +285,7 @@ def test_dirty_slot(harness):  # currently fails
     assert as_int(r.abi_return) == 0x5400000000000000000000000000000000000000000000000000000000000000
     r = harness.call(app, 'get_b(uint256)', 1)
     assert as_int(r.abi_return) == 0x0300000000000000000000000000000000000000000000000000000000000000
-    r = harness.call(app, 'get_b(uint256, expect_revert=True)', 2)
+    r = harness.call(app, 'get_b(uint256)', 2, expect_revert=True)
     assert r.reverted
 
 def test_dirty_uint8_read(harness):  # currently fails

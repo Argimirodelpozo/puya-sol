@@ -37,7 +37,7 @@ def test_block_inside_unchecked(harness):
 def test_check_var_init(harness):  # currently fails
     """arithmetics/contracts/check_var_init.sol"""
     app = harness.compile_and_deploy('arithmetics/contracts/check_var_init.sol')
-    r = harness.call(app, 'f(, expect_revert=True)')
+    r = harness.call(app, 'f()', expect_revert=True)
     assert r.reverted
 
 def test_checked_add_v1(harness):
