@@ -335,7 +335,7 @@ def test_arrays_complex_from_and_to_storage(harness):
     r = harness.call(app, "get()")
     assert [[as_int(y) for y in row] for row in r.abi_return] == data
 
-def test_byte_array_storage_layout(harness):  # currently fails
+def test_byte_array_storage_layout(harness):
     """array/contracts/byte_array_storage_layout.sol"""
     app = harness.compile_and_deploy('array/contracts/byte_array_storage_layout.sol')
 
@@ -359,7 +359,7 @@ def test_bytes_length_member(harness):
     # On AVM msg.data for a bare set() call is the 4-byte ARC4 selector.
     assert as_int(harness.call(app, "getLength()").abi_return) == 4
 
-def test_bytes_to_fixed_bytes_cleanup(harness):  # currently fails
+def test_bytes_to_fixed_bytes_cleanup(harness):
     """array/contracts/bytes_to_fixed_bytes_cleanup.sol"""
     app = harness.compile_and_deploy('array/contracts/bytes_to_fixed_bytes_cleanup.sol')
     r = harness.call(app, 'fromStorage()')
@@ -622,7 +622,7 @@ def test_dynamic_arrays_in_storage(harness):
     r = harness.call(app, "getData(uint256)", 8)
     assert tuple(as_int(x) for x in r.abi_return) == (10, 11)
 
-def test_dynamic_multi_array_cleanup(harness):  # currently fails
+def test_dynamic_multi_array_cleanup(harness):
     """array/contracts/dynamic_multi_array_cleanup.sol"""
     app = harness.compile_and_deploy('array/contracts/dynamic_multi_array_cleanup.sol')
 
