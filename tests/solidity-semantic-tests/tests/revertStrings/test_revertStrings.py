@@ -164,11 +164,15 @@ def test_invalid_abi_decoding_calldata_v1(harness):
 
 def test_invalid_abi_decoding_memory_v1(harness):
     """revertStrings/contracts/invalid_abi_decoding_memory_v1.sol"""
-    pytest.fail("EVM memory abi-decode corruption test; AVM has no analogous memory layout")
+    app = harness.compile_and_deploy('revertStrings/contracts/invalid_abi_decoding_memory_v1.sol')
+    r = harness.call(app, 'f(uint256,uint256,uint256, expect_revert=True)', 0, 0x200, 0x60)
+    assert r.reverted
+    r = harness.call(app, 'f(uint256,uint256,uint256, expect_revert=True)', 0, 0x20, 0x60)
+    assert r.reverted
 
 def test_library_non_view_call(harness):
     """revertStrings/contracts/library_non_view_call.sol"""
-    pytest.fail("EVM-style address(L).call(...) returning encoded revert debug bytes; AVM inlines libs")
+    app = harness.compile_and_deploy('revertStrings/contracts/library_non_view_call.sol')
 
 def test_short_input_array(harness):
     """revertStrings/contracts/short_input_array.sol"""

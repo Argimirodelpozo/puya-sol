@@ -26,7 +26,23 @@ def test_accessors_mapping_for_array(harness):
 
 def test_array_accessor(harness):
     """storage/contracts/array_accessor.sol"""
-    pytest.fail("Compiler-side: assignment codegen for `multiple_map[2][1][2].finalArray[3] = 5` (deeply-nested mapping → struct[5] → dynamic-array index assign) re-puts the box with the wrong (pre-push) size — `wrong size 318 != 190`. Push-loop codegen works (commit 5f2085c26) but the trailing assignment still encodes against the empty struct layout. Separate fix needed in SolAssignment for nested-storage targets.")
+    app = harness.compile_and_deploy('storage/contracts/array_accessor.sol')
+    r = harness.call(app, 'data(uint256)', 0)
+    assert as_int(r.abi_return) == 8
+    r = harness.call(app, 'data(uint256, expect_revert=True)', 8)
+    assert r.reverted
+    r = harness.call(app, 'dynamicData(uint256)', 2)
+    assert as_int(r.abi_return) == 8
+    r = harness.call(app, 'dynamicData(uint256, expect_revert=True)', 8)
+    assert r.reverted
+    r = harness.call(app, 'smallTypeData(uint256)', 1)
+    assert as_int(r.abi_return) == 22
+    r = harness.call(app, 'smallTypeData(uint256)', 127)
+    assert as_int(r.abi_return) == 2
+    r = harness.call(app, 'smallTypeData(uint256, expect_revert=True)', 128)
+    assert r.reverted
+    r = harness.call(app, 'multiple_map(uint256,uint256,uint256)', 2, 1, 2)
+    assert as_int(r.abi_return) == 3
 
 def test_chop_sign_bits(harness):
     """storage/contracts/chop_sign_bits.sol"""
@@ -93,7 +109,13 @@ def test_delete_overlapping_transient_after_storage_array_delete_different_base_
 
 def test_delete_overlapping_transient_after_storage_array_pop_same_base_type(harness):
     """storage/contracts/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol"""
-    pytest.fail("EVM-specific transient/storage slot overlap semantics; AVM box-backed storage has different layout.")
+    app = harness.compile_and_deploy('storage/contracts/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol')
+    r = harness.call(app, 'pushArr()')
+    r = harness.call(app, 'getArr()')
+    assert as_int(r.abi_return) == 1
+    r = harness.call(app, 'setAndClear()')
+    r = harness.call(app, 'getArr()')
+    assert as_int(r.abi_return) == 0
 
 def test_delete_overlapping_transient_after_storage_delete_same_value_type(harness):
     """storage/contracts/delete_overlapping_transient_after_storage_delete_same_value_type.sol"""
@@ -319,7 +341,19 @@ def test_mapping_string_key(harness):
 
 def test_mappings_array2d_pop_delete(harness):
     """storage/contracts/mappings_array2d_pop_delete.sol"""
-    pytest.fail("2D dynamic-array-of-mappings push/pop/delete sequence returns None on AVM (compiler-side).")
+    app = harness.compile_and_deploy('storage/contracts/mappings_array2d_pop_delete.sol')
+    r = harness.call(app, 'n1(uint256,uint256)', 42, 64)
+    r = harness.call(app, 'map(uint256)', 42)
+    assert as_int(r.abi_return) == 64
+    r = harness.call(app, 'p()')
+    r = harness.call(app, 'n2()')
+    r = harness.call(app, 'map(uint256)', 42)
+    assert as_int(r.abi_return) == 64
+    r = harness.call(app, 'd()')
+    assert as_int(r.abi_return) == 0
+    r = harness.call(app, 'n2()')
+    r = harness.call(app, 'map(uint256)', 42)
+    assert as_int(r.abi_return) == 64
 
 def test_mappings_array_pop_delete(harness):
     """storage/contracts/mappings_array_pop_delete.sol"""
@@ -530,7 +564,22 @@ def test_static_array_copy_cleanup(harness):
 
 def test_storage_boundary_array_and_partial_assignment_with_layout(harness):
     """storage/contracts/storage_boundary_array_and_partial_assignment_with_layout.sol"""
-    pytest.fail("EVM-specific storage-layout boundary test (relies on 32-byte slot packing). AVM uses box-keyed storage; was 0p/10f in v243.")
+    app = harness.compile_and_deploy('storage/contracts/storage_boundary_array_and_partial_assignment_with_layout.sol')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0, 0, 0, 0, 0, 0, 0,)
+    r = harness.call(app, 'fillArray()')
+    r = harness.call(app, 'partialAssignArrayBeforeStorageBoundary()')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (11, 12, 13, 0, 0, 0, 0, 0, 0, 0,)
+    r = harness.call(app, 'fillArray()')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (11, 1, 2, 3, 4, 5, 6, 7, 8, 9,)
+    r = harness.call(app, 'partialAssignArrayCrossStorageBoundary()')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (14, 15, 16, 17, 18, 19, 20, 0, 0, 0,)
+    r = harness.call(app, 'clearArray()')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0, 0, 0, 0, 0, 0, 0,)
 
 def test_storage_boundary_array_assignment(harness):
     """storage/contracts/storage_boundary_array_assignment.sol"""
@@ -556,7 +605,26 @@ def test_storage_boundary_array_assignment(harness):
 
 def test_storage_boundary_array_copy(harness):
     """storage/contracts/storage_boundary_array_copy.sol"""
-    pytest.fail("EVM-specific storage-layout boundary test. v243 status: compilation failed (compiler-side).")
+    app = harness.compile_and_deploy('storage/contracts/storage_boundary_array_copy.sol')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3, 4, 5, 6, 7, 8, 9, 10,)
+    r = harness.call(app, 'y()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0, 0, 0, 0, 0, 0, 0,)
+    r = harness.call(app, 'copyXToY()')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3, 4, 5, 6, 7, 8, 9, 10,)
+    r = harness.call(app, 'y()')
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3, 4, 5, 6, 7, 8, 9, 10,)
+    r = harness.call(app, 'clearX()')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0, 0, 0, 0, 0, 0, 0,)
+    r = harness.call(app, 'y()')
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3, 4, 5, 6, 7, 8, 9, 10,)
+    r = harness.call(app, 'copyYToX()')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3, 4, 5, 6, 7, 8, 9, 10,)
+    r = harness.call(app, 'y()')
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3, 4, 5, 6, 7, 8, 9, 10,)
 
 def test_storage_boundary_array_delete(harness):
     """storage/contracts/storage_boundary_array_delete.sol"""
@@ -613,7 +681,26 @@ def test_storage_boundary_array_delete_overlapping_variable(harness):
 
 def test_storage_boundary_array_packing_not_overlapping_variable(harness):
     """storage/contracts/storage_boundary_array_packing_not_overlapping_variable.sol"""
-    pytest.fail("EVM-specific storage-layout packing test (uint128[10] packs 2-per-slot). AVM has no slot packing; was 6p/5f in v243.")
+    app = harness.compile_and_deploy('storage/contracts/storage_boundary_array_packing_not_overlapping_variable.sol')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0, 0, 0, 0, 0, 0, 0,)
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'fillArray()')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 1, 2, 3, 4, 5, 6, 7, 8, 9,)
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'shrinkTo5()')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (11, 12, 13, 14, 15, 0, 0, 0, 0, 0,)
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'clearArray()')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0, 0, 0, 0, 0, 0, 0,)
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 def test_storage_boundary_array_partial_assignment(harness):
     """storage/contracts/storage_boundary_array_partial_assignment.sol"""
@@ -646,7 +733,18 @@ def test_storage_boundary_array_partial_assignment(harness):
 
 def test_storage_boundary_delete_overflow_bug(harness):
     """storage/contracts/storage_boundary_delete_overflow_bug.sol"""
-    pytest.fail("EVM-specific: tests deleting 256-elem packed uint8 array at storage slot boundary. v243: deploy failed.")
+    app = harness.compile_and_deploy('storage/contracts/storage_boundary_delete_overflow_bug.sol')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,)
+    r = harness.call(app, 'fillArray()')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,)
+    r = harness.call(app, 'partialAssignArray()')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (11, 22, 33, 44, 55, 66, 77, 88, 99, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,)
+    r = harness.call(app, 'clearArray()')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,)
 
 def test_storage_boundary_packed_array(harness):
     """storage/contracts/storage_boundary_packed_array.sol"""
@@ -672,19 +770,151 @@ def test_storage_boundary_packed_array(harness):
 
 def test_storage_boundary_struct_array_mixed_types(harness):
     """storage/contracts/storage_boundary_struct_array_mixed_types.sol"""
-    pytest.fail("EVM-specific storage layout / packed-struct array. v243: compilation failed.")
+    app = harness.compile_and_deploy('storage/contracts/storage_boundary_struct_array_mixed_types.sol')
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'boundaryArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,)
+    r = harness.call(app, 'destArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,)
+    r = harness.call(app, 'fillBoundaryArray()')
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'boundaryArray()')
+    assert tuple(r.abi_return) == (1, 2, 3, 4, True, 6, 7, 8, 9, True, 11, 12, 13, 14, True, 16, 17, 18, 19, True, 21, 22, 23, 24, True, 26, 27, 28, 29, True, 31, 32, 33, 34, True, 36, 37, 38, 39, True, 41, 42, 43, 44, True, 46, 47, 48, 49, True,)
+    r = harness.call(app, 'destArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,)
+    r = harness.call(app, 'copyFromBoundary()')
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'boundaryArray()')
+    assert tuple(r.abi_return) == (1, 2, 3, 4, True, 6, 7, 8, 9, True, 11, 12, 13, 14, True, 16, 17, 18, 19, True, 21, 22, 23, 24, True, 26, 27, 28, 29, True, 31, 32, 33, 34, True, 36, 37, 38, 39, True, 41, 42, 43, 44, True, 46, 47, 48, 49, True,)
+    r = harness.call(app, 'destArray()')
+    assert tuple(r.abi_return) == (1, 2, 3, 4, True, 6, 7, 8, 9, True, 11, 12, 13, 14, True, 16, 17, 18, 19, True, 21, 22, 23, 24, True, 26, 27, 28, 29, True, 31, 32, 33, 34, True, 36, 37, 38, 39, True, 41, 42, 43, 44, True, 46, 47, 48, 49, True,)
+    r = harness.call(app, 'fillDestArray()')
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'boundaryArray()')
+    assert tuple(r.abi_return) == (1, 2, 3, 4, True, 6, 7, 8, 9, True, 11, 12, 13, 14, True, 16, 17, 18, 19, True, 21, 22, 23, 24, True, 26, 27, 28, 29, True, 31, 32, 33, 34, True, 36, 37, 38, 39, True, 41, 42, 43, 44, True, 46, 47, 48, 49, True,)
+    r = harness.call(app, 'destArray()')
+    assert tuple(r.abi_return) == (51, 52, 53, 54, True, 56, 57, 58, 59, True, 61, 62, 63, 64, True, 66, 67, 68, 69, True, 71, 72, 73, 74, True, 76, 77, 78, 79, True, 81, 82, 83, 84, True, 86, 87, 88, 89, True, 91, 92, 93, 94, True, 96, 97, 98, 99, True,)
+    r = harness.call(app, 'copyToBoundary()')
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'boundaryArray()')
+    assert tuple(r.abi_return) == (51, 52, 53, 54, True, 56, 57, 58, 59, True, 61, 62, 63, 64, True, 66, 67, 68, 69, True, 71, 72, 73, 74, True, 76, 77, 78, 79, True, 81, 82, 83, 84, True, 86, 87, 88, 89, True, 91, 92, 93, 94, True, 96, 97, 98, 99, True,)
+    r = harness.call(app, 'destArray()')
+    assert tuple(r.abi_return) == (51, 52, 53, 54, True, 56, 57, 58, 59, True, 61, 62, 63, 64, True, 66, 67, 68, 69, True, 71, 72, 73, 74, True, 76, 77, 78, 79, True, 81, 82, 83, 84, True, 86, 87, 88, 89, True, 91, 92, 93, 94, True, 96, 97, 98, 99, True,)
+    r = harness.call(app, 'deleteBoundaryArray()')
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'boundaryArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,)
+    r = harness.call(app, 'destArray()')
+    assert tuple(r.abi_return) == (51, 52, 53, 54, True, 56, 57, 58, 59, True, 61, 62, 63, 64, True, 66, 67, 68, 69, True, 71, 72, 73, 74, True, 76, 77, 78, 79, True, 81, 82, 83, 84, True, 86, 87, 88, 89, True, 91, 92, 93, 94, True, 96, 97, 98, 99, True,)
 
 def test_storage_boundary_struct_array_multislot(harness):
     """storage/contracts/storage_boundary_struct_array_multislot.sol"""
-    pytest.fail("EVM-specific multislot struct array layout. v243: compilation failed.")
+    app = harness.compile_and_deploy('storage/contracts/storage_boundary_struct_array_multislot.sol')
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'boundaryArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,)
+    r = harness.call(app, 'destArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,)
+    r = harness.call(app, 'fillBoundaryArray()')
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'boundaryArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,)
+    r = harness.call(app, 'destArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,)
+    r = harness.call(app, 'copyFromBoundary()')
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'boundaryArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,)
+    r = harness.call(app, 'destArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,)
+    r = harness.call(app, 'fillDestArray()')
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'boundaryArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,)
+    r = harness.call(app, 'destArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60,)
+    r = harness.call(app, 'copyToBoundary()')
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'boundaryArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60,)
+    r = harness.call(app, 'destArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60,)
+    r = harness.call(app, 'deleteBoundaryArray()')
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'boundaryArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,)
+    r = harness.call(app, 'destArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60,)
 
 def test_storage_boundary_struct_array_packed(harness):
     """storage/contracts/storage_boundary_struct_array_packed.sol"""
-    pytest.fail("EVM-specific packed-struct storage layout. v243: compilation failed.")
+    app = harness.compile_and_deploy('storage/contracts/storage_boundary_struct_array_packed.sol')
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'boundaryArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,)
+    r = harness.call(app, 'destArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,)
+    r = harness.call(app, 'fillBoundaryArray()')
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'boundaryArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,)
+    r = harness.call(app, 'destArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,)
+    r = harness.call(app, 'copyFromBoundary()')
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'boundaryArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,)
+    r = harness.call(app, 'destArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,)
+    r = harness.call(app, 'fillDestArray()')
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'boundaryArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,)
+    r = harness.call(app, 'destArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80,)
+    r = harness.call(app, 'copyToBoundary()')
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'boundaryArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80,)
+    r = harness.call(app, 'destArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80,)
+    r = harness.call(app, 'deleteBoundaryArray()')
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'boundaryArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,)
+    r = harness.call(app, 'destArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80,)
 
 def test_storage_packed_array_copy(harness):
     """storage/contracts/storage_packed_array_copy.sol"""
-    pytest.fail("EVM-specific packed-array copy via storage layout. v243: compilation failed.")
+    app = harness.compile_and_deploy('storage/contracts/storage_packed_array_copy.sol')
+    r = harness.call(app, 'getXAsUint()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 1, 2, 3, 4, 5, 6, 7, 8,)
+    r = harness.call(app, 'getYAsUint()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0, 0, 0, 0, 0, 2, 2,)
+    r = harness.call(app, 'copy()')
+    r = harness.call(app, 'getXAsUint()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 1, 2, 3, 4, 5, 6, 7, 8,)
+    r = harness.call(app, 'getYAsUint()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 1, 2, 3, 4, 5, 6, 7, 8, 0,)
 
 def test_struct_accessor(harness):
     """storage/contracts/struct_accessor.sol — probe."""

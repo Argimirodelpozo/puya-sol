@@ -30,7 +30,9 @@ def test_delete_transient_state_variable(harness):
 
 def test_delete_transient_state_variable_non_zero_offset(harness):
     """variables/contracts/delete_transient_state_variable_non_zero_offset.sol"""
-    pytest.fail("EVM-specific: deletes transient storage var at non-zero packed slot offset. AVM transient storage uses scratch slots, not packed slot offsets.")
+    app = harness.compile_and_deploy('variables/contracts/delete_transient_state_variable_non_zero_offset.sol')
+    r = harness.call(app, 'f()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0xffffffffffffffffffffffffffff000000000000000000000000000000000000, 0, 0xffffffffffffffffffffffffffff,)
 
 def test_mapping_local_assignment(harness):
     """variables/contracts/mapping_local_assignment.sol"""
@@ -121,7 +123,7 @@ def test_transient_function_type_state_variable(harness):
 
 def test_transient_state_address_variable_members(harness):
     """variables/contracts/transient_state_address_variable_members.sol"""
-    pytest.fail("EVM-specific: transient storage of address members at packed offsets. AVM addresses are 32-byte; no packing.")
+    app = harness.compile_and_deploy('variables/contracts/transient_state_address_variable_members.sol')
 
 def test_transient_state_enum_variable(harness):
     """variables/contracts/transient_state_enum_variable.sol"""

@@ -64,11 +64,15 @@ def test_erc7201_equivalent_solidity_spec_comptime(harness):
 
 def test_erc7201_layout_specifier_slot_match_comptime(harness):
     """builtinFunctions/contracts/erc7201_layout_specifier_slot_match_comptime.sol"""
-    pytest.fail("ERC-7201 namespaced storage uses EVM 32-byte slot derivation. AVM uses box keys; layout specifier doesn't apply.")
+    app = harness.compile_and_deploy('builtinFunctions/contracts/erc7201_layout_specifier_slot_match_comptime.sol')
+    r = harness.call(app, 'builtinMatchesSolidityImplementation()')
+    assert r.abi_return is True
 
 def test_erc7201_overflow_expression(harness):
     """builtinFunctions/contracts/erc7201_overflow_expression.sol"""
-    pytest.fail("ERC-7201 overflow expression check — depends on EVM slot derivation. Not applicable to AVM box keys.")
+    app = harness.compile_and_deploy('builtinFunctions/contracts/erc7201_overflow_expression.sol')
+    r = harness.call(app, 'f(, expect_revert=True)')
+    assert r.reverted
 
 def test_erc7201_param_abi_encode(harness):
     """builtinFunctions/contracts/erc7201_param_abi_encode.sol"""
@@ -245,7 +249,9 @@ def test_keccak256_packed(harness):
 
 def test_keccak256_packed_complex_types(harness):
     """builtinFunctions/contracts/keccak256_packed_complex_types.sol"""
-    pytest.fail("`keccak256(abi.encodePacked(complex_struct))` — EVM-flat packing layout. AVM ARC4 packs differently.")
+    app = harness.compile_and_deploy('builtinFunctions/contracts/keccak256_packed_complex_types.sol')
+    r = harness.call(app, 'f()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0xba4f20407251e4607cd66b90bfea19ec6971699c03e4a4f3ea737d5818ac27ae, 0xba4f20407251e4607cd66b90bfea19ec6971699c03e4a4f3ea737d5818ac27ae, 0xe7490fade3a8e31113ecb6c0d2635e28a6f5ca8359a57afe914827f41ddf0848,)
 
 def test_keccak256_with_bytes(harness):
     """builtinFunctions/contracts/keccak256_with_bytes.sol"""

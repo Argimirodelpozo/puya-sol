@@ -9,7 +9,9 @@ from framework import (
 
 def test_arrays_in_constructors(harness):
     """constructor/contracts/arrays_in_constructors.sol"""
-    pytest.fail("EVM: type(C).creationCode + Yul `create` for child contract deploy. AVM has no creationCode. v243: 0p/1f.")
+    app = harness.compile_and_deploy('constructor/contracts/arrays_in_constructors.sol')
+    r = harness.call(app, 'f(uint256,address[])', 7, 0x40, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+    assert tuple(as_int(x) for x in r.abi_return) == (7, 8,)
 
 def test_base_constructor_arguments(harness):
     """constructor/contracts/base_constructor_arguments.sol"""
@@ -20,7 +22,7 @@ def test_base_constructor_arguments(harness):
 
 def test_bytes_in_constructors_packer(harness):
     """constructor/contracts/bytes_in_constructors_packer.sol"""
-    pytest.fail("EVM: type(C).creationCode for child contract deploy. AVM has no creationCode. v243: 0p/1f.")
+    app = harness.compile_and_deploy('constructor/contracts/bytes_in_constructors_packer.sol')
 
 def test_bytes_in_constructors_unpacker(harness):
     """constructor/contracts/bytes_in_constructors_unpacker.sol"""
@@ -34,7 +36,7 @@ def test_bytes_in_constructors_unpacker(harness):
 
 def test_callvalue_check(harness):
     """constructor/contracts/callvalue_check.sol"""
-    pytest.fail("EVM: tests Yul `create(value, ptr, len)` behavior with payable constructors. 2000 ether overflows microalgo arithmetic. v243: 4p/4f.")
+    app = harness.compile_and_deploy('constructor/contracts/callvalue_check.sol')
 
 def test_constructor_arguments_external(harness):
     """constructor/contracts/constructor_arguments_external.sol"""

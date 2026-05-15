@@ -8,8 +8,8 @@ from framework import (
 
 def test_stub(harness):
     """experimental/contracts/stub.sol"""
+    app = harness.compile_and_deploy('experimental/contracts/stub.sol')
 
-    pytest.fail("`pragma experimental solidity` — type-class / __builtin instantiation. Compiler-side: not supported in puya-sol.")
 def test_type_class(harness):
     """experimental/contracts/type_class.sol"""
-    pytest.fail("`pragma experimental solidity` — type-class / __builtin instantiation. Compiler-side: not supported in puya-sol.")
+    app = harness.compile_and_deploy('experimental/contracts/type_class.sol')

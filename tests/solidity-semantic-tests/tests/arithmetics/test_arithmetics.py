@@ -36,7 +36,9 @@ def test_block_inside_unchecked(harness):
 
 def test_check_var_init(harness):
     """arithmetics/contracts/check_var_init.sol"""
-    pytest.fail("`new C()` child contract creation with payable ctor + value forwarding. AVM inner-app creation has different value semantics.")
+    app = harness.compile_and_deploy('arithmetics/contracts/check_var_init.sol')
+    r = harness.call(app, 'f(, expect_revert=True)')
+    assert r.reverted
 
 def test_checked_add_v1(harness):
     """arithmetics/contracts/checked_add_v1.sol"""

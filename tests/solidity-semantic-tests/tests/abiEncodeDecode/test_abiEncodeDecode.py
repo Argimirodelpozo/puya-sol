@@ -54,7 +54,9 @@ def test_abi_encode_call(harness):
 
 def test_abi_encode_call_declaration(harness):
     """abiEncodeDecode/contracts/abi_encode_call_declaration.sol"""
-    pytest.fail("`abi.encodeCall(fn, args)` round-trip via staticcall asserts `r == 2` etc. — internal `require` fails after first inner call. Likely puya-sol generates different selector bytes from what the contract's dispatcher expects.")
+    app = harness.compile_and_deploy('abiEncodeDecode/contracts/abi_encode_call_declaration.sol')
+    r = harness.call(app, 'test()')
+    assert as_int(r.abi_return) == 11116
 
 def test_abi_encode_call_is_consistent(harness):
     """abiEncodeDecode/contracts/abi_encode_call_is_consistent.sol"""
@@ -104,24 +106,20 @@ def test_abi_encode_call_memory(harness):
 
 def test_abi_encode_call_special_args(harness):
     """abiEncodeDecode/contracts/abi_encode_call_special_args.sol"""
-    pytest.fail("""Structural keccak256-vs-sha512_256 mismatch.
-
-The contract's `assertConsistentSelectors()` does:
-
-    assert(keccak256(fSignatureFromLiteralNoArgs()) == keccak256(fPointerNoArgs()));
-
-Where `fSignatureFromLiteralNoArgs()` calls `abi.encodeWithSignature("fNoArgs()")` —
-which returns `keccak256("fNoArgs()")[:4]`. And `fPointerNoArgs()` calls
-`abi.encodeCall(this.fNoArgs, ())` — which returns the contract's compiled
-selector. On EVM both are keccak256-based and match. On AVM, puya-sol's
-compiled selectors are `sha512_256("fNoArgs()void")[:4]` while the literal
-path still goes through `keccak256` at runtime, so they don't match. The
-internal assert fails and the contract reverts.
-
-To make this work we'd need either (a) a puya-sol intrinsic that recognizes
-`abi.encodeWithSignature` literal strings at compile time and substitutes
-the AVM selector, or (b) Solidity-level rewrites in the test fixtures.
-Out of scope for the migration; see [selector-divergence](selector-divergence.md).""")
+    app = harness.compile_and_deploy('abiEncodeDecode/contracts/abi_encode_call_special_args.sol')
+    r = harness.call(app, 'assertConsistentSelectors()')
+    r = harness.call(app, 'fSignatureFromLiteralNoArgs()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x04, 12200448252684243758085936796735499259670113115893304444050964496075123064832,)
+    r = harness.call(app, 'fPointerNoArgs()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 4, 12200448252684243758085936796735499259670113115893304444050964496075123064832,)
+    r = harness.call(app, 'fSignatureFromLiteralArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x44, 4612216551196396486909126966576324289294165774260092952932219511233230929920, 862718293348820473429344482784628181556388621521298319395315527974912, 0,)
+    r = harness.call(app, 'fPointerArray()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x44, 4612216551196396486909126966576324289294165774260092952932219511233230929920, 862718293348820473429344482784628181556388621521298319395315527974912, 0,)
+    r = harness.call(app, 'fPointerUint()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x44, 30372892641494467502622535050667754357470287521126424526399600764424271429632, 323519360005807677536004181044235568083645733070486869773243322990592, 350479306672958317330671196131255198757282877493027442254346933239808,)
+    r = harness.call(app, 'fSignatureFromLiteralUint()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x44, 30372892641494467502622535050667754357470287521126424526399600764424271429632, 323519360005807677536004181044235568083645733070486869773243322990592, 350479306672958317330671196131255198757282877493027442254346933239808,)
 
 def test_abi_encode_call_uint_bytes(harness):
     """abiEncodeDecode/contracts/abi_encode_call_uint_bytes.sol"""
@@ -280,7 +278,15 @@ def test_contract_array(harness):
 
 def test_contract_array_v2(harness):
     """abiEncodeDecode/contracts/contract_array_v2.sol"""
-    pytest.fail("`abi.decode(bytes, (C[]))` where C is contract type. Test uses EVM-flat 32-byte-per-element layout; AVM 32-byte addresses don't match the EVM 20-byte address-in-word convention.")
+    app = harness.compile_and_deploy('abiEncodeDecode/contracts/contract_array_v2.sol')
+    r = harness.call(app, 'f(bytes)', 0x20, 0xA0, 0x20, 3, 0x01, 0x02, 0x03)
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 3, 0x01, 0x02, 0x03,)
+    r = harness.call(app, 'f(bytes)', 0x20, 0x60, 0x20, 1, 0x0102030405060708090a0b0c0d0e0f1011121314)
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 1, 0x0102030405060708090a0b0c0d0e0f1011121314,)
+    r = harness.call(app, 'f(bytes, expect_revert=True)', 0x20, 0x60, 0x20, 1, 0x0102030405060708090a0b0c0d0e0f101112131415)
+    assert r.reverted
+    r = harness.call(app, 'g()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0xa0, 0x20, 3, 0x42, 0x21, 0x23,)
 
 def test_offset_overflow_in_array_decoding(harness):
     """abiEncodeDecode/contracts/offset_overflow_in_array_decoding.sol"""
@@ -291,7 +297,9 @@ def test_offset_overflow_in_array_decoding(harness):
 
 def test_offset_overflow_in_array_decoding_2(harness):
     """abiEncodeDecode/contracts/offset_overflow_in_array_decoding_2.sol"""
-    pytest.fail("EVM-flat offset overflow test; deploy fails because the contract uses raw calldata-offset math. AVM has no equivalent layout.")
+    app = harness.compile_and_deploy('abiEncodeDecode/contracts/offset_overflow_in_array_decoding_2.sol')
+    r = harness.call(app, 'withinArray(, expect_revert=True)')
+    assert r.reverted
 
 def test_offset_overflow_in_array_decoding_3(harness):
     """abiEncodeDecode/contracts/offset_overflow_in_array_decoding_3.sol"""

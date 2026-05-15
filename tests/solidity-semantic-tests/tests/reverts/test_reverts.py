@@ -107,7 +107,9 @@ def test_revert(harness):
 
 def test_revert_return_area(harness):
     """reverts/contracts/revert_return_area.sol"""
-    pytest.fail("EVM Yul `call(...)` with mload(0) probe of returndata buffer. AVM has no flat returndata.")
+    app = harness.compile_and_deploy('reverts/contracts/revert_return_area.sol')
+    r = harness.call(app, 'f()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x00, 0x08c379a000000000000000000000000000000000000000000000000000000000,)
 
 def test_simple_throw(harness):
     """reverts/contracts/simple_throw.sol"""

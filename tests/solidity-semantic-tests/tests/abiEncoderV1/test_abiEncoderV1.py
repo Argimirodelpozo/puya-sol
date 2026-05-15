@@ -32,11 +32,15 @@ def _static_2x3_payload() -> bytes:
 
 def test_abi_decode_static_array(harness):
     """abiEncoderV1/contracts/abi_decode_static_array.sol"""
-    pytest.fail("abi.decode of raw bytes into a static uint256[2][3] doesn't surface a return value through AVM dispatcher; compiler-side limitation.")
+    app = harness.compile_and_deploy('abiEncoderV1/contracts/abi_decode_static_array.sol')
+    r = harness.call(app, 'f(bytes)', 0x20, 0xc0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6)
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3, 4, 5, 6,)
 
 def test_abi_decode_static_array_v2(harness):
     """abiEncoderV1/contracts/abi_decode_static_array_v2.sol"""
-    pytest.fail("see test_abi_decode_static_array")
+    app = harness.compile_and_deploy('abiEncoderV1/contracts/abi_decode_static_array_v2.sol')
+    r = harness.call(app, 'f(bytes)', 0x20, 0xc0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6)
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3, 4, 5, 6,)
 
 def test_abi_decode_trivial(harness):
     """abiEncoderV1/contracts/abi_decode_trivial.sol"""
@@ -55,7 +59,9 @@ def test_abi_decode_v2(harness):
 
 def test_abi_decode_v2_calldata(harness):
     """abiEncoderV1/contracts/abi_decode_v2_calldata.sol"""
-    pytest.fail("`abi.decode(bytes, (S))` of EVM-flat struct payload; AVM ARC4 has different layout — selector/offset words don't match.")
+    app = harness.compile_and_deploy('abiEncoderV1/contracts/abi_decode_v2_calldata.sol')
+    r = harness.call(app, 'f(bytes)', 0x20, 0xe0, 0x20, 0x21, 0x40, 0x3, 0xa, 0xb, 0xc)
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x21, 0x40, 0x3, 0xa, 0xb, 0xc,)
 
 def test_abi_decode_v2_storage(harness):
     """abiEncoderV1/contracts/abi_decode_v2_storage.sol"""
@@ -204,7 +210,17 @@ def test_dynamic_arrays(harness):
 
 def test_dynamic_memory_copy(harness):
     """abiEncoderV1/contracts/dynamic_memory_copy.sol"""
-    pytest.fail("EVM Yul inline-assembly checks memory pointer aliasing via raw mload offsets. AVM has no memory pointer concept; not translatable.")
+    app = harness.compile_and_deploy('abiEncoderV1/contracts/dynamic_memory_copy.sol')
+    r = harness.call(app, 'test(bytes)', 0x20, 0x80, 0x40, 0x60, 0, 0)
+    assert tuple(r.abi_return) == (False, False,)
+    r = harness.call(app, 'test(bytes)', 0x20, 0xC0, 0x40, 0x80, 1, 0x42, 1, 0x42)
+    assert tuple(r.abi_return) == (False, False,)
+    r = harness.call(app, 'test(bytes)', 0x20, 0x80, 0x40, 0x40, 1, 0x42)
+    assert tuple(r.abi_return) == (False, False,)
+    r = harness.call(app, 'test(bytes)', 0x20, 0x60, 0x40, 0x40, 0)
+    assert tuple(r.abi_return) == (False, False,)
+    r = harness.call(app, 'test(bytes)', 0x20, 0x80, 0x40, 0x40, 1, 0x42)
+    assert tuple(r.abi_return) == (False, False,)
 
 def test_enums(harness):
     """abiEncoderV1/contracts/enums.sol
@@ -270,7 +286,13 @@ def test_return_dynamic_types_cross_call_out_of_range_1(harness):
 
 def test_return_dynamic_types_cross_call_out_of_range_2(harness):
     """abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_2.sol"""
-    pytest.fail("EVM Yul `return(0, x)` opcode emits raw bytes with caller-side length check. AVM uses ARC4 ApplicationArgs; no equivalent raw-return-length test.")
+    app = harness.compile_and_deploy('abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_2.sol')
+    r = harness.call(app, 'f(uint256, expect_revert=True)', 0x60)
+    assert r.reverted
+    r = harness.call(app, 'f(uint256)', 0x61)
+    assert r.abi_return is True
+    r = harness.call(app, 'f(uint256)', 0x80)
+    assert r.abi_return is True
 
 def test_return_dynamic_types_cross_call_simple(harness):
     """abiEncoderV1/contracts/return_dynamic_types_cross_call_simple.sol"""

@@ -58,7 +58,9 @@ def test_static_base_function_deployed(harness):
 
 def test_subassembly_deduplication(harness):
     """deployedCodeExclusion/contracts/subassembly_deduplication.sol"""
-    pytest.fail("`type(C).creationCode` subassembly deduplication — AVM has no bytecode access.")
+    app = harness.compile_and_deploy('deployedCodeExclusion/contracts/subassembly_deduplication.sol')
+    r = harness.call(app, 'test()')
+    assert r.abi_return is True
 
 def test_super_function(harness):
     """deployedCodeExclusion/contracts/super_function.sol"""

@@ -262,7 +262,9 @@ def test_packed_storage_structs_delete(harness):
 
 def test_recursive_struct_2(harness):
     """structs/contracts/recursive_struct_2.sol"""
-    pytest.fail("Compiler-side: recursive struct with mapping-of-self member; layout codegen exits 2. v243: compilation failed.")
+    app = harness.compile_and_deploy('structs/contracts/recursive_struct_2.sol')
+    r = harness.call(app, 'f()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0,)
 
 def test_recursive_structs(harness):
     """structs/contracts/recursive_structs.sol"""
@@ -363,7 +365,9 @@ def test_struct_delete_storage(harness):
 
 def test_struct_delete_storage_nested_small(harness):
     """structs/contracts/struct_delete_storage_nested_small.sol"""
-    pytest.fail("Compiler-side: struct field delete via via-yul codegen path doesn't fully zero packed slots on AVM.")
+    app = harness.compile_and_deploy('structs/contracts/struct_delete_storage_nested_small.sol')
+    r = harness.call(app, 'f()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0,)
 
 def test_struct_delete_storage_small(harness):
     """structs/contracts/struct_delete_storage_small.sol"""
@@ -384,7 +388,9 @@ def test_struct_delete_storage_with_array(harness):
 
 def test_struct_delete_storage_with_arrays_small(harness):
     """structs/contracts/struct_delete_storage_with_arrays_small.sol"""
-    pytest.fail("`delete` on struct with packed sub-arrays: AVM box-keyed storage doesn't follow EVM slot-packing deletion. v243: 0p/1f.")
+    app = harness.compile_and_deploy('structs/contracts/struct_delete_storage_with_arrays_small.sol')
+    r = harness.call(app, 'f()')
+    assert as_int(r.abi_return) == 0
 
 def test_struct_delete_struct_in_mapping(harness):
     """structs/contracts/struct_delete_struct_in_mapping.sol"""

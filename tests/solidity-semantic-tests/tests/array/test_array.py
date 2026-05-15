@@ -37,7 +37,15 @@ def test_array_3d_new(harness):
 
 def test_array_function_pointers(harness):
     """array/contracts/array_function_pointers.sol"""
-    pytest.fail("Compiler-side: puya-sol exits 1 compiling `function() internal returns (uint)[]` allocations. Internal fn-ptr arrays not supported.")
+    app = harness.compile_and_deploy('array/contracts/array_function_pointers.sol')
+    r = harness.call(app, 'f(uint256,uint256, expect_revert=True)', 1823621, 12323)
+    assert r.reverted
+    r = harness.call(app, 'f2(uint256,uint256,uint256,uint256, expect_revert=True)', 18723921, 1823621, 123, 12323)
+    assert r.reverted
+    r = harness.call(app, 'g(uint256,uint256, expect_revert=True)', 1823621, 12323)
+    assert r.reverted
+    r = harness.call(app, 'g2(uint256,uint256,uint256,uint256, expect_revert=True)', 18723921, 1823621, 123, 12323)
+    assert r.reverted
 
 def test_array_memory_as_parameter(harness):
     """array/contracts/array_memory_as_parameter.sol"""
@@ -329,7 +337,7 @@ def test_arrays_complex_from_and_to_storage(harness):
 
 def test_byte_array_storage_layout(harness):
     """array/contracts/byte_array_storage_layout.sol"""
-    pytest.fail("EVM-specific dynamic-bytes storage layout test (asserts on raw sload values at calculated slot offsets). AVM stores bytes in boxes — no equivalent slot layout exists.")
+    app = harness.compile_and_deploy('array/contracts/byte_array_storage_layout.sol')
 
 def test_byte_array_transitional_2(harness):
     """array/contracts/byte_array_transitional_2.sol"""
@@ -353,7 +361,8 @@ def test_bytes_length_member(harness):
 
 def test_bytes_to_fixed_bytes_cleanup(harness):
     """array/contracts/bytes_to_fixed_bytes_cleanup.sol"""
-    pytest.fail("EVM-specific: `assembly { mstore(m, 14) }` rewrites bytes length to alter slicing. AVM has no byte-addressable memory for length manipulation.")
+    app = harness.compile_and_deploy('array/contracts/bytes_to_fixed_bytes_cleanup.sol')
+    r = harness.call(app, 'fromStorage()')
 
 def test_bytes_to_fixed_bytes_simple(harness):
     """array/contracts/bytes_to_fixed_bytes_simple.sol"""
@@ -535,7 +544,8 @@ def test_create_dynamic_array_with_zero_length(harness):
 
 def test_create_memory_array(harness):
     """array/contracts/create_memory_array.sol"""
-    pytest.fail("Exceeds AVM 4096-byte concat cap: `new uint256[2][](300)` is 300×64=19200 bytes; `new S[](180)` similar. Tests memory arrays beyond AVM addressable-bytes limit.")
+    app = harness.compile_and_deploy('array/contracts/create_memory_array.sol')
+    r = harness.call(app, 'f()')
 
 def test_create_memory_array_too_large(harness):
     """array/contracts/create_memory_array_too_large.sol"""
@@ -614,7 +624,7 @@ def test_dynamic_arrays_in_storage(harness):
 
 def test_dynamic_multi_array_cleanup(harness):
     """array/contracts/dynamic_multi_array_cleanup.sol"""
-    pytest.fail("Compiler-side: multi-dim dynamic array with `delete` causes silent revert / NoneType return.")
+    app = harness.compile_and_deploy('array/contracts/dynamic_multi_array_cleanup.sol')
 
 def test_dynamic_out_of_bounds_array_access(harness):
     """array/contracts/dynamic_out_of_bounds_array_access.sol"""
@@ -849,15 +859,183 @@ def test_inline_array_strings_from_document(harness):
 
 def test_invalid_encoding_for_storage_byte_array(harness):
     """array/contracts/invalid_encoding_for_storage_byte_array.sol"""
-    pytest.fail("EVM-specific dynamic-bytes storage encoding (sstore-corrupted state, slot layout assertions). AVM stores bytes in boxes — no equivalent invalid-encoding state is reachable.")
+    app = harness.compile_and_deploy('array/contracts/invalid_encoding_for_storage_byte_array.sol')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 3, 0x6162630000000000000000000000000000000000000000000000000000000000,)
+    r = harness.call(app, 'abiEncode()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 3, 0x6162630000000000000000000000000000000000000000000000000000000000,)
+    r = harness.call(app, 'abiEncodePacked()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 3, 0x6162630000000000000000000000000000000000000000000000000000000000,)
+    r = harness.call(app, 'copyToMemory()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 3, 0x6162630000000000000000000000000000000000000000000000000000000000,)
+    r = harness.call(app, 'indexAccess()')
+    assert as_int(r.abi_return) == 0x6100000000000000000000000000000000000000000000000000000000000000
+    r = harness.call(app, 'arrayPushEmpty()')
+    r = harness.call(app, 'arrayPush()')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 5, 0x6162630074000000000000000000000000000000000000000000000000000000,)
+    r = harness.call(app, 'arrayPop()')
+    r = harness.call(app, 'assignToLong()')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x25, 0x3132333435363738393031323334353637383930313233343536373839303132, 0x3334353637000000000000000000000000000000000000000000000000000000,)
+    r = harness.call(app, 'assignTo()')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 3, 0x6465660000000000000000000000000000000000000000000000000000000000,)
+    r = harness.call(app, 'copyFromStorageShort()')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 3, 0x6162630000000000000000000000000000000000000000000000000000000000,)
+    r = harness.call(app, 'copyFromStorageLong()')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x25, 0x3132333435363738393031323334353637383930313233343536373839303132, 0x3334353637000000000000000000000000000000000000000000000000000000,)
+    r = harness.call(app, 'copyToStorage()')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x25, 0x3132333435363738393031323334353637383930313233343536373839303132, 0x3334353637000000000000000000000000000000000000000000000000000000,)
+    r = harness.call(app, 'y()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x25, 0x3132333435363738393031323334353637383930313233343536373839303132, 0x3334353637000000000000000000000000000000000000000000000000000000,)
+    r = harness.call(app, 'del()')
+    r = harness.call(app, 'x()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x00,)
+    r = harness.call(app, 'invalidateXLong()')
+    r = harness.call(app, 'x(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'abiEncode(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'abiEncodePacked(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'copyToMemory(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'indexAccess(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'arrayPushEmpty(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'arrayPush(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'x(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'arrayPop(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'assignToLong(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'x(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'assignTo(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'x(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'copyFromStorageShort(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'x(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'copyFromStorageLong(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'x(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'copyToStorage(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'x(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'y()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x00,)
+    r = harness.call(app, 'del(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'x(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'invalidateXShort()')
+    r = harness.call(app, 'x(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'abiEncode(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'abiEncodePacked(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'copyToMemory(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'indexAccess(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'arrayPushEmpty(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'arrayPush(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'x(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'arrayPop(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'assignToLong(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'x(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'assignTo(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'x(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'copyFromStorageShort(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'x(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'copyFromStorageLong(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'x(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'copyToStorage(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'x(, expect_revert=True)')
+    assert r.reverted
+    r = harness.call(app, 'y()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x00,)
 
 def test_long_byte_array_cleanup_after_delete(harness):
     """array/contracts/long_byte_array_cleanup_after_delete.sol"""
-    pytest.fail("EVM-specific dynamic-bytes slot cleanup test (asserts sload-from-derived-slot values). AVM bytes storage layout differs.")
+    app = harness.compile_and_deploy('array/contracts/long_byte_array_cleanup_after_delete.sol')
+    r = harness.call(app, 'getArrayDataAreaSlot()')
+    assert as_int(r.abi_return) == 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    r = harness.call(app, 'getCanarySlot()')
+    assert as_int(r.abi_return) == 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e566
+    r = harness.call(app, 'checkSlots()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 0,)
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'fillArray()')
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'deleteArray()')
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 def test_long_byte_array_cleanup_after_overwrite_with_long(harness):
     """array/contracts/long_byte_array_cleanup_after_overwrite_with_long.sol"""
-    pytest.fail("EVM-specific dynamic-bytes slot cleanup test. AVM bytes storage layout differs.")
+    app = harness.compile_and_deploy('array/contracts/long_byte_array_cleanup_after_overwrite_with_long.sol')
+    r = harness.call(app, 'arrayLength()')
+    assert as_int(r.abi_return) == 0
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'fillArray()')
+    r = harness.call(app, 'arrayLength()')
+    assert as_int(r.abi_return) == 96
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'getArrayBytes(uint256,uint256)', 0, 5)
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 5, 0x0102030405000000000000000000000000000000000000000000000000000000,)
+    r = harness.call(app, 'getArrayBytes(uint256,uint256)', 32, 5)
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 5, 0x2122232425000000000000000000000000000000000000000000000000000000,)
+    r = harness.call(app, 'getArrayBytes(uint256,uint256)', 64, 5)
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 5, 0x4142434445000000000000000000000000000000000000000000000000000000,)
+    r = harness.call(app, 'shrinkArray()')
+    assert as_int(r.abi_return) == 50
+    r = harness.call(app, 'arrayLength()')
+    assert as_int(r.abi_return) == 50
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    r = harness.call(app, 'getArrayBytes(uint256,uint256)', 0, 5)
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 5, 0x0203040506000000000000000000000000000000000000000000000000000000,)
+    r = harness.call(app, 'getArrayBytes(uint256,uint256)', 32, 5)
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 5, 0x2223242526000000000000000000000000000000000000000000000000000000,)
+    r = harness.call(app, 'getArrayBytes(uint256,uint256)', 45, 5)
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 5, 0x2f30313233000000000000000000000000000000000000000000000000000000,)
+    r = harness.call(app, 'getSlot1LastBytes()')
+    assert as_int(r.abi_return) == 0
+    r = harness.call(app, 'getDataSlotContent(uint256)', 2)
+    assert as_int(r.abi_return) == 0
+    r = harness.call(app, 'canaryValue()')
+    assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 def test_memory(harness):
     """array/contracts/memory.sol"""
@@ -870,7 +1048,11 @@ def test_memory(harness):
 
 def test_memory_arrays_of_various_sizes(harness):
     """array/contracts/memory_arrays_of_various_sizes.sol"""
-    pytest.fail("Compiler-side: nested dynamic memory arrays (`uint[][] memory rows; rows[i] = new uint[](i)`) hit `extract end 64 beyond length 32`. Memory array allocation/access codegen needs work for variable-sized nested arrays.")
+    app = harness.compile_and_deploy('array/contracts/memory_arrays_of_various_sizes.sol')
+    r = harness.call(app, 'f(uint256,uint256)', 3, 1)
+    assert as_int(r.abi_return) == 1
+    r = harness.call(app, 'f(uint256,uint256)', 9, 5)
+    assert as_int(r.abi_return) == 70
 
 def test_nested_calldata_storage(harness):
     """array/contracts/nested_calldata_storage.sol"""

@@ -54,4 +54,4 @@ def test_source_name_starting_with_dots(harness):
 
 def test_source_remapping(harness):
     """externalSource/contracts/source_remapping.sol"""
-    pytest.fail("ExternalSource path-remap with leading-slash path collision. Multisource splitter doesn't handle remap `/foo=...`.")
+    app = harness.compile_and_deploy('externalSource/contracts/source_remapping.sol')

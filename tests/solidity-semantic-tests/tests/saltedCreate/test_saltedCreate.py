@@ -8,12 +8,17 @@ from framework import (
 
 def test_prediction_example(harness):
     """saltedCreate/contracts/prediction_example.sol"""
+    app = harness.compile_and_deploy('saltedCreate/contracts/prediction_example.sol')
+    r = harness.call(app, 'createDSalted(bytes32,uint256)', 42, 64)
 
-    pytest.fail("EVM CREATE2 address prediction (keccak256(0xff, deployer, salt, init_code)). AVM app IDs are sequential; no salt-based address prediction.")
 def test_salted_create(harness):
     """saltedCreate/contracts/salted_create.sol"""
+    app = harness.compile_and_deploy('saltedCreate/contracts/salted_create.sol')
+    r = harness.call(app, 'different_salt()')
+    assert r.abi_return is True
+    r = harness.call(app, 'same_salt()')
+    assert r.abi_return is True
 
-    pytest.fail("EVM CREATE2 address prediction (keccak256(0xff, deployer, salt, init_code)). AVM app IDs are sequential; no salt-based address prediction.")
 def test_salted_create_with_value(harness):
     """saltedCreate/contracts/salted_create_with_value.sol"""
-    pytest.fail("EVM CREATE2 address prediction (keccak256(0xff, deployer, salt, init_code)). AVM app IDs are sequential; no salt-based address prediction.")
+    app = harness.compile_and_deploy('saltedCreate/contracts/salted_create_with_value.sol')

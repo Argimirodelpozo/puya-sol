@@ -137,7 +137,11 @@ def test_require_error_condition_evaluated_only_once(harness):
 
 def test_require_error_evaluation_order_1(harness):
     """errors/contracts/require_error_evaluation_order_1.sol"""
-    pytest.fail("`require(cond, Error())` ordering of error-args evaluation. Compiler-side codegen gap.")
+    app = harness.compile_and_deploy('errors/contracts/require_error_evaluation_order_1.sol')
+    r = harness.call(app, 'f()')
+    assert as_int(r.abi_return) == 7
+    r = harness.call(app, 'g()')
+    assert as_int(r.abi_return) == 7
 
 def test_require_error_evaluation_order_2(harness):
     """errors/contracts/require_error_evaluation_order_2.sol"""
@@ -249,7 +253,9 @@ def test_simple(harness):
 
 def test_small_error_optimization(harness):
     """errors/contracts/small_error_optimization.sol"""
-    pytest.fail("Compiler-side: optimizer treats small error as raw 4-byte revert data. AVM revert encoding differs.")
+    app = harness.compile_and_deploy('errors/contracts/small_error_optimization.sol')
+    r = harness.call(app, 'f(, expect_revert=True)')
+    assert r.reverted
 
 def test_using_structs(harness):
     """errors/contracts/using_structs.sol"""

@@ -9,7 +9,11 @@ from framework import (
 
 def test_evmone_support(harness):
     """shanghai/contracts/evmone_support.sol"""
-    pytest.fail("EVM-only: child contract ctor returns raw EVM bytecode via `return(0, 4)`. AVM has no bytecode access.")
+    app = harness.compile_and_deploy('shanghai/contracts/evmone_support.sol')
+    r = harness.call(app, 'bytecode()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 4, 0x60205ff300000000000000000000000000000000000000000000000000000000,)
+    r = harness.call(app, 'isPush0Supported()')
+    assert r.abi_return is True
 
 def test_push0(harness):
     """shanghai/contracts/push0.sol"""

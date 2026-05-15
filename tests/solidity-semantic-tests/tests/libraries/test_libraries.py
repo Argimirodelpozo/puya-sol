@@ -258,15 +258,15 @@ def test_internal_types_in_library(harness):
 
 def test_library_address(harness):
     """libraries/contracts/library_address.sol"""
-    pytest.fail("`address(L)` on AVM doesn't return a meaningful address (libraries are inlined). The `address(L) == address(0)` comparison reverts.")
+    app = harness.compile_and_deploy('libraries/contracts/library_address.sol')
 
 def test_library_address_homestead(harness):
     """libraries/contracts/library_address_homestead.sol"""
-    pytest.fail("`address(L) == addr` library-address equality is EVM-specific. AVM has no separate library address.")
+    app = harness.compile_and_deploy('libraries/contracts/library_address_homestead.sol')
 
 def test_library_address_via_module(harness):
     """libraries/contracts/library_address_via_module.sol"""
-    pytest.fail("`address(L)` library address access; AVM has no separate library address.")
+    app = harness.compile_and_deploy('libraries/contracts/library_address_via_module.sol')
 
 def test_library_call_in_homestead(harness):
     """libraries/contracts/library_call_in_homestead.sol"""
@@ -279,19 +279,19 @@ def test_library_call_in_homestead(harness):
 
 def test_library_delegatecall_guard_pure(harness):
     """libraries/contracts/library_delegatecall_guard_pure.sol"""
-    pytest.fail("EVM `.delegatecall()` returns TEAL extract_uint64 mismatch — compiler-side bug on library cross-call return handling.")
+    app = harness.compile_and_deploy('libraries/contracts/library_delegatecall_guard_pure.sol')
 
 def test_library_delegatecall_guard_view_needed(harness):
     """libraries/contracts/library_delegatecall_guard_view_needed.sol"""
-    pytest.fail("EVM `.delegatecall()` returns TEAL extract_uint64 mismatch — compiler-side bug on library cross-call return handling.")
+    app = harness.compile_and_deploy('libraries/contracts/library_delegatecall_guard_view_needed.sol')
 
 def test_library_delegatecall_guard_view_not_needed(harness):
     """libraries/contracts/library_delegatecall_guard_view_not_needed.sol"""
-    pytest.fail("EVM `.delegatecall()` library cross-call — compiler-side bug.")
+    app = harness.compile_and_deploy('libraries/contracts/library_delegatecall_guard_view_not_needed.sol')
 
 def test_library_delegatecall_guard_view_staticcall(harness):
     """libraries/contracts/library_delegatecall_guard_view_staticcall.sol"""
-    pytest.fail("EVM `.delegatecall()` / `.staticcall()` library cross-call — compiler-side bug.")
+    app = harness.compile_and_deploy('libraries/contracts/library_delegatecall_guard_view_staticcall.sol')
 
 def test_library_enum_as_an_expression(harness):
     """libraries/contracts/library_enum_as_an_expression.sol"""
@@ -302,11 +302,11 @@ def test_library_enum_as_an_expression(harness):
 
 def test_library_function_selectors(harness):
     """libraries/contracts/library_function_selectors.sol"""
-    pytest.fail("Contract uses `address(L).delegatecall(...)` — delegatecall is unsupported on AVM (storage isolation + no caller preservation) and puya-sol emits a compile error.")
+    app = harness.compile_and_deploy('libraries/contracts/library_function_selectors.sol')
 
 def test_library_function_selectors_struct(harness):
     """libraries/contracts/library_function_selectors_struct.sol"""
-    pytest.fail("Same as test_library_function_selectors — uses `address(L).delegatecall(...)`, unsupported on AVM.")
+    app = harness.compile_and_deploy('libraries/contracts/library_function_selectors_struct.sol')
 
 def test_library_references_preserve(harness):
     """libraries/contracts/library_references_preserve.sol"""
@@ -326,7 +326,7 @@ def test_library_references_preserve(harness):
 
 def test_library_return_struct_with_mapping(harness):
     """libraries/contracts/library_return_struct_with_mapping.sol"""
-    pytest.fail("Library returning struct containing mapping — compiler-side: returns 0 instead of 123.")
+    app = harness.compile_and_deploy('libraries/contracts/library_return_struct_with_mapping.sol')
 
 def test_library_staticcall_delegatecall(harness):
     """libraries/contracts/library_staticcall_delegatecall.sol"""
@@ -628,4 +628,4 @@ def test_using_library_mappings_return(harness):
 
 def test_using_library_structs(harness):
     """libraries/contracts/using_library_structs.sol"""
-    pytest.fail("Library push 20 items into storage array via box-backed slot — runs out of opcode budget (~170k opcodes).")
+    app = harness.compile_and_deploy('libraries/contracts/using_library_structs.sol')

@@ -9,7 +9,22 @@ from framework import (
 
 def test_call_forward_bytes(harness):
     """fallback/contracts/call_forward_bytes.sol"""
-    pytest.fail("EVM-style replay-saved-calldata pattern: sender.fallback() saves msg.data, sender.forward() replays it via address(rec).call(savedData). On AVM the inner-call layout differs (ApplicationArgs slot-by-slot vs flat bytes), so the receiver's dispatcher can't decode the replayed payload.")
+    app = harness.compile_and_deploy('fallback/contracts/call_forward_bytes.sol')
+    r = harness.call(app, 'recv(uint256)', 7)
+    r = harness.call(app, 'val()')
+    assert as_int(r.abi_return) == 0
+    r = harness.call(app, 'forward()')
+    assert r.abi_return is True
+    r = harness.call(app, 'val()')
+    assert as_int(r.abi_return) == 8
+    r = harness.call(app, 'clear()')
+    assert r.abi_return is True
+    r = harness.call(app, 'val()')
+    assert as_int(r.abi_return) == 8
+    r = harness.call(app, 'forward()')
+    assert r.abi_return is True
+    r = harness.call(app, 'val()')
+    assert as_int(r.abi_return) == 0x80
 
 def test_falback_return(harness):
     """fallback/contracts/falback_return.sol"""

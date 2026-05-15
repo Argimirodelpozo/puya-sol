@@ -264,11 +264,38 @@ def test_conversion_abicoderv1(harness):
 
 def test_dirty_slot(harness):
     """userDefinedValueType/contracts/dirty_slot.sol"""
-    pytest.fail("EVM-specific storage slot dirty-byte behavior — slot encoding differs on AVM.")
+    app = harness.compile_and_deploy('userDefinedValueType/contracts/dirty_slot.sol')
+    r = harness.call(app, 'a()')
+    assert as_int(r.abi_return) == 13
+    r = harness.call(app, 'b()')
+    assert as_int(r.abi_return) == 0x0401000000000000000000000000000000000000000000000000000000000000
+    r = harness.call(app, 'get_b(uint256)', 0)
+    assert as_int(r.abi_return) == 0x0400000000000000000000000000000000000000000000000000000000000000
+    r = harness.call(app, 'get_b(uint256)', 1)
+    assert as_int(r.abi_return) == 0x0100000000000000000000000000000000000000000000000000000000000000
+    r = harness.call(app, 'get_b(uint256, expect_revert=True)', 2)
+    assert r.reverted
+    r = harness.call(app, 'write_a()')
+    r = harness.call(app, 'a()')
+    assert as_int(r.abi_return) == 0x2001
+    r = harness.call(app, 'write_b()')
+    r = harness.call(app, 'b()')
+    assert as_int(r.abi_return) == 0x5403000000000000000000000000000000000000000000000000000000000000
+    r = harness.call(app, 'get_b(uint256)', 0)
+    assert as_int(r.abi_return) == 0x5400000000000000000000000000000000000000000000000000000000000000
+    r = harness.call(app, 'get_b(uint256)', 1)
+    assert as_int(r.abi_return) == 0x0300000000000000000000000000000000000000000000000000000000000000
+    r = harness.call(app, 'get_b(uint256, expect_revert=True)', 2)
+    assert r.reverted
 
 def test_dirty_uint8_read(harness):
     """userDefinedValueType/contracts/dirty_uint8_read.sol"""
-    pytest.fail("EVM-specific dirty uint8 slot read with sign-extension expectations; AVM int8 doesn't auto sign-extend on read.")
+    app = harness.compile_and_deploy('userDefinedValueType/contracts/dirty_uint8_read.sol')
+    r = harness.call(app, 'x()')
+    assert as_int(r.abi_return) == -5
+    r = harness.call(app, 'create_dirty_slot()')
+    r = harness.call(app, 'read_unclean_value()')
+    assert as_int(r.abi_return) == 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
 
 def test_erc20(harness):
     """userDefinedValueType/contracts/erc20.sol"""
@@ -331,7 +358,11 @@ def test_fixedpoint(harness):
 
 def test_immutable_signed(harness):
     """userDefinedValueType/contracts/immutable_signed.sol"""
-    pytest.fail("See immutable.test_immutable_signed — EVM int8→int256 sign-extension via inline assembly doesn't apply on AVM.")
+    app = harness.compile_and_deploy('userDefinedValueType/contracts/immutable_signed.sol')
+    r = harness.call(app, 'direct()')
+    assert tuple(as_int(x) for x in r.abi_return) == (-2, 0x6162000000000000000000000000000000000000000000000000000000000000,)
+    r = harness.call(app, 'viaasm()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0x6162000000000000000000000000000000000000000000000000000000000000,)
 
 def test_in_parenthesis(harness):
     """userDefinedValueType/contracts/in_parenthesis.sol"""
@@ -464,11 +495,25 @@ def test_storage_layout(harness):
 
 def test_storage_layout_struct(harness):
     """userDefinedValueType/contracts/storage_layout_struct.sol"""
-    pytest.fail("EVM-specific storage packing layout for UDVT struct fields; AVM box storage differs.")
+    app = harness.compile_and_deploy('userDefinedValueType/contracts/storage_layout_struct.sol')
 
 def test_storage_signed(harness):
     """userDefinedValueType/contracts/storage_signed.sol"""
-    pytest.fail("EVM-specific int8 storage representation; bytes-from-int conversion fails on AVM.")
+    app = harness.compile_and_deploy('userDefinedValueType/contracts/storage_signed.sol')
+    r = harness.call(app, 'a()')
+    assert as_int(r.abi_return) == -2
+    r = harness.call(app, 'direct()')
+    assert as_int(r.abi_return) == -2
+    r = harness.call(app, 'indirect()')
+    assert as_int(r.abi_return) == -2
+    r = harness.call(app, 'toMemDirect()')
+    assert as_int(r.abi_return) == -2
+    r = harness.call(app, 'toMemIndirect()')
+    assert as_int(r.abi_return) == -2
+    r = harness.call(app, 'div()')
+    assert as_int(r.abi_return) == -1
+    r = harness.call(app, 'viaasm()')
+    assert as_int(r.abi_return) == 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe
 
 def test_wrap_unwrap(harness):
     """userDefinedValueType/contracts/wrap_unwrap.sol"""

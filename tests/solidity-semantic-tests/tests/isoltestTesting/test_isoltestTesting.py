@@ -19,7 +19,7 @@ def test_account(harness):
 
 def test_balance_other_contract(harness):
     """isoltestTesting/contracts/balance_other_contract.sol"""
-    pytest.fail("ctor does `payable(0x1234).transfer(500)` — EVM raw address 0x1234 not valid as AVM application/account address.")
+    app = harness.compile_and_deploy('isoltestTesting/contracts/balance_other_contract.sol')
 
 def test_balance_with_balance(harness):
     """isoltestTesting/contracts/balance_with_balance.sol"""

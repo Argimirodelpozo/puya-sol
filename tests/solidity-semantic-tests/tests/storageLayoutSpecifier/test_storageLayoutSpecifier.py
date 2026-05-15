@@ -132,7 +132,13 @@ def test_inheritance_from_interface(harness):
 
 def test_inheritance_from_same_base_state_var_slots(harness):
     """storageLayoutSpecifier/contracts/inheritance_from_same_base_state_var_slots.sol"""
-    pytest.fail("EVM storage-slot layout specifier: contracts query own state-var slot numbers. AVM uses box keys; no numeric slot.")
+    app = harness.compile_and_deploy('storageLayoutSpecifier/contracts/inheritance_from_same_base_state_var_slots.sol')
+    r = harness.call(app, 'contractASlots()')
+    assert as_int(r.abi_return) == 0
+    r = harness.call(app, 'contractBSlots()')
+    assert tuple(as_int(x) for x in r.abi_return) == (5, 6,)
+    r = harness.call(app, 'contractCSlots()')
+    assert tuple(as_int(x) for x in r.abi_return) == (9, 10,)
 
 def test_inheritance_simple(harness):
     """storageLayoutSpecifier/contracts/inheritance_simple.sol"""
@@ -449,7 +455,8 @@ def test_variable_cleanup(harness):
 
 def test_variable_cleanup_sstore(harness):
     """storageLayoutSpecifier/contracts/variable_cleanup_sstore.sol"""
-    pytest.fail("EVM-specific cleanup of packed storage slot via Yul sstore. AVM has no packed storage.")
+    app = harness.compile_and_deploy('storageLayoutSpecifier/contracts/variable_cleanup_sstore.sol')
+    r = harness.call(app, 'f()')
 
 def test_virtual_functions(harness):
     """storageLayoutSpecifier/contracts/virtual_functions.sol"""

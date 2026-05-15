@@ -10,11 +10,23 @@ from framework import (
 
 def test_address_code(harness):
     """various/contracts/address_code.sol"""
-    pytest.fail("address(x).code is EVM-specific (contract bytecode access). AVM has no equivalent.")
+    app = harness.compile_and_deploy('various/contracts/address_code.sol')
+    r = harness.call(app, 'initCode()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0,)
+    r = harness.call(app, 'f()')
+    assert r.abi_return is True
+    r = harness.call(app, 'g()')
+    assert as_int(r.abi_return) == 0
+    r = harness.call(app, 'h()')
+    assert as_int(r.abi_return) == 0
 
 def test_address_code_complex(harness):
     """various/contracts/address_code_complex.sol"""
-    pytest.fail("address(x).code is EVM-specific. AVM has no equivalent.")
+    app = harness.compile_and_deploy('various/contracts/address_code_complex.sol')
+    r = harness.call(app, 'f()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x20, 0x48aa5566000000,)
+    r = harness.call(app, 'g()')
+    assert as_int(r.abi_return) == 0x20
 
 def test_assignment_to_const_var_involving_expression(harness):
     """various/contracts/assignment_to_const_var_involving_expression.sol"""
@@ -43,11 +55,17 @@ def test_byte_optimization_bug(harness):
 
 def test_code_access_content(harness):
     """various/contracts/code_access_content.sol"""
-    pytest.fail("address(x).code / type(C).runtimeCode is EVM-specific; AVM has no bytecode access.")
+    app = harness.compile_and_deploy('various/contracts/code_access_content.sol')
+    r = harness.call(app, 'testRuntime()')
+    assert r.abi_return is True
+    r = harness.call(app, 'testCreation()')
+    assert r.abi_return is True
 
 def test_code_access_create(harness):
     """various/contracts/code_access_create.sol"""
-    pytest.fail("address(x).code is EVM-specific; AVM has no bytecode access.")
+    app = harness.compile_and_deploy('various/contracts/code_access_create.sol')
+    r = harness.call(app, 'test()')
+    assert as_int(r.abi_return) == 7
 
 def test_code_access_padding(harness):
     """various/contracts/code_access_padding.sol"""
@@ -59,11 +77,15 @@ def test_code_access_padding(harness):
 
 def test_code_access_runtime(harness):
     """various/contracts/code_access_runtime.sol"""
-    pytest.fail("type(C).runtimeCode is EVM-specific; AVM has no bytecode access.")
+    app = harness.compile_and_deploy('various/contracts/code_access_runtime.sol')
+    r = harness.call(app, 'test()')
+    assert as_int(r.abi_return) == 42
 
 def test_code_length(harness):
     """various/contracts/code_length.sol"""
-    pytest.fail("address(x).code.length is EVM-specific; AVM has no bytecode access.")
+    app = harness.compile_and_deploy('various/contracts/code_length.sol')
+    r = harness.call(app, 'f()', True, True)
+    assert tuple(r.abi_return) == (True, True,)
 
 def test_code_length_contract_member(harness):
     """various/contracts/code_length_contract_member.sol"""
@@ -75,7 +97,7 @@ def test_code_length_contract_member(harness):
 
 def test_codebalance_assembly(harness):
     """various/contracts/codebalance_assembly.sol"""
-    pytest.fail("Yul `balance(1)` returns 1 on EVM testkit (precompile address has 1 wei). AVM addresses don't follow EVM precompile convention.")
+    app = harness.compile_and_deploy('various/contracts/codebalance_assembly.sol')
 
 def test_codehash(harness):
     """various/contracts/codehash.sol"""
@@ -117,7 +139,9 @@ def test_crazy_elementary_typenames_on_stack(harness):
 
 def test_create_calldata(harness):
     """various/contracts/create_calldata.sol"""
-    pytest.fail("ctor stores msg.data which on AVM is just the selector; compiler-side TEAL assert mismatch on calldata layout.")
+    app = harness.compile_and_deploy('various/contracts/create_calldata.sol')
+    r = harness.call(app, 's()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0,)
 
 def test_create_random(harness):
     """various/contracts/create_random.sol — addresses derived from CREATE
@@ -151,7 +175,13 @@ def test_destructuring_assignment(harness):
 
 def test_different_call_type_transient(harness):
     """various/contracts/different_call_type_transient.sol"""
-    pytest.fail("Transient storage across delegatecall/call/staticcall is EVM-specific. AVM doesn't expose distinct call types from Solidity in the inner-txn path.")
+    app = harness.compile_and_deploy('various/contracts/different_call_type_transient.sol')
+    r = harness.call(app, 'testDelegate()')
+    assert tuple(as_int(x) for x in r.abi_return) == (7, 0,)
+    r = harness.call(app, 'testCall()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 8,)
+    r = harness.call(app, 'testStatic()')
+    assert r.abi_return is False
 
 def test_empty_name_return_parameter(harness):
     """various/contracts/empty_name_return_parameter.sol"""
@@ -268,7 +298,8 @@ def test_literal_empty_string(harness):
 
 def test_many_subassemblies(harness):
     """various/contracts/many_subassemblies.sol"""
-    pytest.fail("11 nested salted-CREATE2 deployments; compile-time TEAL bytecblock hex-encoding issue.")
+    app = harness.compile_and_deploy('various/contracts/many_subassemblies.sol')
+    r = harness.call(app, 'run()')
 
 def test_memory_overwrite(harness):
     """various/contracts/memory_overwrite.sol"""
@@ -330,22 +361,28 @@ def test_positive_integers_to_signed(harness):
     assert as_int(r.abi_return) == 250
 
 def test_selfdestruct_post_cancun(harness):
-    pytest.fail("selfdestruct is EVM-specific; AVM has no contract self-destruct.")
+    """various/contracts/selfdestruct_post_cancun.sol"""
+    app = harness.compile_and_deploy("various/contracts/selfdestruct_post_cancun.sol")
 
 def test_selfdestruct_post_cancun_multiple_beneficiaries(harness):
-    pytest.fail("selfdestruct is EVM-specific; AVM has no contract self-destruct.")
+    """various/contracts/selfdestruct_post_cancun_multiple_beneficiaries.sol"""
+    app = harness.compile_and_deploy("various/contracts/selfdestruct_post_cancun_multiple_beneficiaries.sol")
 
 def test_selfdestruct_post_cancun_redeploy(harness):
-    pytest.fail("selfdestruct is EVM-specific; AVM has no contract self-destruct.")
+    """various/contracts/selfdestruct_post_cancun_redeploy.sol"""
+    app = harness.compile_and_deploy("various/contracts/selfdestruct_post_cancun_redeploy.sol")
 
 def test_selfdestruct_pre_cancun(harness):
-    pytest.fail("selfdestruct is EVM-specific; AVM has no contract self-destruct.")
+    """various/contracts/selfdestruct_pre_cancun.sol"""
+    app = harness.compile_and_deploy("various/contracts/selfdestruct_pre_cancun.sol")
 
 def test_selfdestruct_pre_cancun_multiple_beneficiaries(harness):
-    pytest.fail("selfdestruct is EVM-specific; AVM has no contract self-destruct.")
+    """various/contracts/selfdestruct_pre_cancun_multiple_beneficiaries.sol"""
+    app = harness.compile_and_deploy("various/contracts/selfdestruct_pre_cancun_multiple_beneficiaries.sol")
 
 def test_selfdestruct_pre_cancun_redeploy(harness):
-    pytest.fail("selfdestruct is EVM-specific; AVM has no contract self-destruct.")
+    """various/contracts/selfdestruct_pre_cancun_redeploy.sol"""
+    app = harness.compile_and_deploy("various/contracts/selfdestruct_pre_cancun_redeploy.sol")
 
 def test_senders_balance(harness):
     """various/contracts/senders_balance.sol — D.f() calls C.f() which
@@ -377,7 +414,9 @@ def test_skip_dynamic_types(harness):
 
 def test_skip_dynamic_types_for_static_arrays_with_dynamic_elements(harness):
     """various/contracts/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol"""
-    pytest.fail("Compiler-side: getbit out-of-bounds on empty bytes — array initialization codegen bug.")
+    app = harness.compile_and_deploy('various/contracts/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol')
+    r = harness.call(app, 'g()')
+    assert tuple(as_int(x) for x in r.abi_return) == (5, 6,)
 
 def test_skip_dynamic_types_for_structs(harness):
     """various/contracts/skip_dynamic_types_for_structs.sol"""
@@ -416,7 +455,13 @@ def test_staticcall_for_view_and_pure(harness):
 
 def test_staticcall_for_view_and_pure_pre_byzantium(harness):
     """various/contracts/staticcall_for_view_and_pure_pre_byzantium.sol"""
-    pytest.fail("Pre-byzantium STATICCALL semantics on EVM. AVM has no equivalent opcode-version switching.")
+    app = harness.compile_and_deploy('various/contracts/staticcall_for_view_and_pure_pre_byzantium.sol')
+    r = harness.call(app, 'f()')
+    assert as_int(r.abi_return) == 0x1
+    r = harness.call(app, 'fview()')
+    assert as_int(r.abi_return) == 1
+    r = harness.call(app, 'fpure()')
+    assert as_int(r.abi_return) == 1
 
 def test_storage_string_as_mapping_key_without_variable(harness):
     """various/contracts/storage_string_as_mapping_key_without_variable.sol"""

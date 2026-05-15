@@ -180,14 +180,51 @@ def test_creation_function_call_with_salt(harness):
 
 def test_delegatecall_return_value(harness):
     """functionCall/contracts/delegatecall_return_value.sol"""
-    pytest.fail("`.delegatecall(...)` is unsupported on AVM. DELEGATECALL's "
-        "shared-storage / msg.sender-preservation semantics can't be safely "
-        "emulated (each AVM app has isolated storage; inner-txn callers are "
-        "the calling app, not its caller). puya-sol now errors at compile.")
+    app = harness.compile_and_deploy('functionCall/contracts/delegatecall_return_value.sol')
+    r = harness.call(app, 'get()')
+    assert as_int(r.abi_return) == 0x00
+    r = harness.call(app, 'assert0_delegated()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x01, 0x40, 0x0,)
+    r = harness.call(app, 'get_delegated()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x01, 0x40, 0x20, 0x0,)
+    r = harness.call(app, 'set(uint256)', 0x01)
+    r = harness.call(app, 'get()')
+    assert as_int(r.abi_return) == 0x01
+    r = harness.call(app, 'assert0_delegated()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x00, 0x40, 0x24, 0x4e487b7100000000000000000000000000000000000000000000000000000000, 0x0100000000000000000000000000000000000000000000000000000000,)
+    r = harness.call(app, 'get_delegated()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x01, 0x40, 0x20, 0x1,)
+    r = harness.call(app, 'set(uint256)', 0x2a)
+    r = harness.call(app, 'get()')
+    assert as_int(r.abi_return) == 0x2a
+    r = harness.call(app, 'assert0_delegated()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x00, 0x40, 0x24, 0x4e487b7100000000000000000000000000000000000000000000000000000000, 0x0100000000000000000000000000000000000000000000000000000000,)
+    r = harness.call(app, 'get_delegated()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x01, 0x40, 0x20, 0x2a,)
 
 def test_delegatecall_return_value_pre_byzantium(harness):
     """functionCall/contracts/delegatecall_return_value_pre_byzantium.sol"""
-    pytest.fail("`.delegatecall(...)` is unsupported on AVM — see test_delegatecall_return_value.")
+    app = harness.compile_and_deploy('functionCall/contracts/delegatecall_return_value_pre_byzantium.sol')
+    r = harness.call(app, 'get()')
+    assert as_int(r.abi_return) == 0x00
+    r = harness.call(app, 'assert0_delegated()')
+    assert r.abi_return is True
+    r = harness.call(app, 'get_delegated()')
+    assert r.abi_return is True
+    r = harness.call(app, 'set(uint256)', 0x01)
+    r = harness.call(app, 'get()')
+    assert as_int(r.abi_return) == 0x01
+    r = harness.call(app, 'assert0_delegated()')
+    assert r.abi_return is False
+    r = harness.call(app, 'get_delegated()')
+    assert r.abi_return is True
+    r = harness.call(app, 'set(uint256)', 0x2a)
+    r = harness.call(app, 'get()')
+    assert as_int(r.abi_return) == 0x2a
+    r = harness.call(app, 'assert0_delegated()')
+    assert r.abi_return is False
+    r = harness.call(app, 'get_delegated()')
+    assert r.abi_return is True
 
 def test_disordered_named_args(harness):
     """functionCall/contracts/disordered_named_args.sol"""
@@ -288,7 +325,7 @@ def test_external_public_override(harness):
 
 def test_failed_create(harness):
     """functionCall/contracts/failed_create.sol"""
-    pytest.fail("EVM-specific: stack-depth (1023-deep recursion) bounded by EVM call stack. AVM has no equivalent stack-depth limit. v243: 4p/4f.")
+    app = harness.compile_and_deploy('functionCall/contracts/failed_create.sol')
 
 def test_file_level_call_via_module(harness):
     """functionCall/contracts/file_level_call_via_module.sol"""
@@ -315,11 +352,15 @@ def test_gas_and_value_basic(harness):
 
 def test_mapping_array_internal_argument(harness):
     """functionCall/contracts/mapping_array_internal_argument.sol"""
-    pytest.fail("""Compiler-side: set_internal reads old value, writes new, returns old.
-But puya-sol's codegen for `mapping(uint8=>uint8)[2] storage` reordering
-returns the NEW value instead of the OLD — read-after-write of the box-get
-seems to happen after the box-put. Subsequent get() returns correct values
-(set/store works), but the set()'s return tuple shows post-write reads.""")
+    app = harness.compile_and_deploy('functionCall/contracts/mapping_array_internal_argument.sol')
+    r = harness.call(app, 'set(uint8,uint8,uint8,uint8,uint8)', 1, 21, 22, 42, 43)
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0,)
+    r = harness.call(app, 'get(uint8)', 1)
+    assert tuple(as_int(x) for x in r.abi_return) == (21, 22, 42, 43,)
+    r = harness.call(app, 'set(uint8,uint8,uint8,uint8,uint8)', 1, 10, 30, 11, 31)
+    assert tuple(as_int(x) for x in r.abi_return) == (21, 22, 42, 43,)
+    r = harness.call(app, 'get(uint8)', 1)
+    assert tuple(as_int(x) for x in r.abi_return) == (10, 30, 11, 31,)
 
 def test_mapping_internal_argument(harness):
     """functionCall/contracts/mapping_internal_argument.sol"""
@@ -430,15 +471,25 @@ def test_named_args_overload(harness):
 
 def test_precompile_extcodesize_check(harness):
     """functionCall/contracts/precompile_extcodesize_check.sol"""
-    pytest.fail("EVM-specific: extcodesize check before calling precompile addresses. AVM precompiles are routed via opcodes. v243: 1p/2f.")
+    app = harness.compile_and_deploy('functionCall/contracts/precompile_extcodesize_check.sol')
+    r = harness.call(app, 'testHighLevel()')
+    assert r.abi_return is True
+    r = harness.call(app, 'testLowLevel()')
+    assert as_int(r.abi_return) == 0xc76596d400000000000000000000000000000000000000000000000000000000
+    r = harness.call(app, 'testHighLevel2(, expect_revert=True)')
+    assert r.reverted
 
 def test_return_size_bigger_than_expected(harness):
     """functionCall/contracts/return_size_bigger_than_expected.sol"""
-    pytest.fail("EVM-specific: returndatacopy truncation when caller decodes shorter than callee returndata. ARC4 return values are not free-form byte ranges. v243: 0p/1f.")
+    app = harness.compile_and_deploy('functionCall/contracts/return_size_bigger_than_expected.sol')
+    r = harness.call(app, 'test()')
+    assert as_int(r.abi_return) == 0x20
 
 def test_return_size_shorter_than_expected(harness):
     """functionCall/contracts/return_size_shorter_than_expected.sol"""
-    pytest.fail("EVM pre-Byzantium: returndata zero-extended when callee returns less. AVM ARC4 return values are not free-form byte ranges. v243: 0p/1f.")
+    app = harness.compile_and_deploy('functionCall/contracts/return_size_shorter_than_expected.sol')
+    r = harness.call(app, 'test()')
+    assert as_int(r.abi_return) == 0x0500
 
 def test_return_size_shorter_than_expected_evm_version_after_homestead(harness):
     """functionCall/contracts/return_size_shorter_than_expected_evm_version_after_homestead.sol"""

@@ -9,7 +9,23 @@ from framework import (
 
 def test_array_mapping_struct(harness):
     """getters/contracts/array_mapping_struct.sol"""
-    pytest.fail("Compiler-side: auto-getter on mapping(uint=>Struct[]) — codegen exits 1.")
+    app = harness.compile_and_deploy('getters/contracts/array_mapping_struct.sol')
+    r = harness.call(app, 'm(uint256,uint256)', 0, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (0x00, 0x00,)
+    r = harness.call(app, 'm(uint256,uint256)', 1, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 2,)
+    r = harness.call(app, 'm(uint256,uint256)', 1, 1)
+    assert tuple(as_int(x) for x in r.abi_return) == (3, 4,)
+    r = harness.call(app, 'm(uint256,uint256)', 1, 2)
+    assert tuple(as_int(x) for x in r.abi_return) == (0x00, 0x00,)
+    r = harness.call(app, 'n(uint256,uint256)', 0, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (0x00, 0x00,)
+    r = harness.call(app, 'n(uint256,uint256)', 1, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (7, 8,)
+    r = harness.call(app, 'n(uint256,uint256)', 1, 1)
+    assert tuple(as_int(x) for x in r.abi_return) == (9, 0x0a,)
+    r = harness.call(app, 'n(uint256,uint256)', 1, 2)
+    assert tuple(as_int(x) for x in r.abi_return) == (0x00, 0x00,)
 
 def test_arrays(harness):
     """getters/contracts/arrays.sol — `uint8[][2] public a; a[1].push(N)`
@@ -145,7 +161,15 @@ def test_transient_value_types(harness):
 
 def test_transient_value_types_multi_frame_call(harness):
     """getters/contracts/transient_value_types_multi_frame_call.sol"""
-    pytest.fail("EVM transient storage persists across multi-frame external calls within one tx. AVM transient (scratch) wipes between inner app calls — different semantic model.")
+    app = harness.compile_and_deploy('getters/contracts/transient_value_types_multi_frame_call.sol')
+    r = harness.call(app, 'x()')
+    assert as_int(r.abi_return) == 0
+    r = harness.call(app, 'f()')
+    assert as_int(r.abi_return) == -2
+    r = harness.call(app, 'h()')
+    assert as_int(r.abi_return) == -1
+    r = harness.call(app, 'x()')
+    assert as_int(r.abi_return) == 0
 
 def test_value_types(harness):
     """getters/contracts/value_types.sol"""

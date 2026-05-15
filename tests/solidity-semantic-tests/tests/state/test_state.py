@@ -148,7 +148,21 @@ def test_block_timestamp(harness):
 
 def test_blockhash_basic(harness):
     """state/contracts/blockhash_basic.sol"""
-    pytest.fail("EVM blockhash() returns hash of recent blocks. AVM has no equivalent — blocks aren't keccak256-chained. Test framework EVM-specific.")
+    app = harness.compile_and_deploy('state/contracts/blockhash_basic.sol')
+    r = harness.call(app, 'genesisHash()')
+    assert as_int(r.abi_return) == 0x3737373737373737373737373737373737373737373737373737373737373737
+    r = harness.call(app, 'currentHash()')
+    assert as_int(r.abi_return) == 0
+    r = harness.call(app, 'f(uint256)', 0)
+    assert as_int(r.abi_return) == 0x3737373737373737373737373737373737373737373737373737373737373737
+    r = harness.call(app, 'f(uint256)', 1)
+    assert as_int(r.abi_return) == 0x3737373737373737373737373737373737373737373737373737373737373738
+    r = harness.call(app, 'f(uint256)', 255)
+    assert as_int(r.abi_return) == 0x00
+    r = harness.call(app, 'f(uint256)', 256)
+    assert as_int(r.abi_return) == 0x00
+    r = harness.call(app, 'f(uint256)', 257)
+    assert as_int(r.abi_return) == 0x00
 
 def test_gasleft(harness):
     """state/contracts/gasleft.sol"""

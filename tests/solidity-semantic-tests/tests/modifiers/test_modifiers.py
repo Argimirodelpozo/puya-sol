@@ -34,7 +34,21 @@ def test_access_through_contract_name(harness):
 
 def test_access_through_module_name(harness):
     """modifiers/contracts/access_through_module_name.sol"""
-    pytest.fail("`M.M.C.m` modifier access via chained module-name imports — compiler-side parse/lookup gap.")
+    app = harness.compile_and_deploy('modifiers/contracts/access_through_module_name.sol')
+    r = harness.call(app, 'x()')
+    assert as_int(r.abi_return) == 0x00
+    r = harness.call(app, 'f()')
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 9,)
+    r = harness.call(app, 'x()')
+    assert as_int(r.abi_return) == 3
+    r = harness.call(app, 'g()')
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 0x0a,)
+    r = harness.call(app, 'x()')
+    assert as_int(r.abi_return) == 4
+    r = harness.call(app, 'f()')
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 9,)
+    r = harness.call(app, 'x()')
+    assert as_int(r.abi_return) == 3
 
 def test_break_in_modifier(harness):
     """modifiers/contracts/break_in_modifier.sol"""
@@ -298,7 +312,13 @@ def test_return_in_modifier(harness):
 
 def test_stacked_return_with_modifiers(harness):
     """modifiers/contracts/stacked_return_with_modifiers.sol"""
-    pytest.fail("Stacked modifiers `f() public m m m` with early `return` from each — modifier inlining order specific to EVM semantics.")
+    app = harness.compile_and_deploy('modifiers/contracts/stacked_return_with_modifiers.sol')
+    r = harness.call(app, 'x()')
+    assert as_int(r.abi_return) == 0
+    r = harness.call(app, 'f()')
+    assert as_int(r.abi_return) == 42
+    r = harness.call(app, 'x()')
+    assert as_int(r.abi_return) == 4
 
 def test_transient_state_variable_value_type(harness):
     """modifiers/contracts/transient_state_variable_value_type.sol"""

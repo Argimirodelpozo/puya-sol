@@ -32,7 +32,13 @@ def test_bool_conversion_v2(harness):
 
 def test_byte_array_to_storage_cleanup(harness):
     """cleanup/contracts/byte_array_to_storage_cleanup.sol"""
-    pytest.fail("EVM-flat calldata format expected by test. AVM ARC4 has different byte-array encoding.")
+    app = harness.compile_and_deploy('cleanup/contracts/byte_array_to_storage_cleanup.sol')
+    r = harness.call(app, 'h()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x40, 0x00, 0,)
+    r = harness.call(app, 'g()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x40, 0, 0x00,)
+    r = harness.call(app, 'f(bytes)', 0x20, 33, 0, -1)
+    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x22, 0, 0xff00000000000000000000000000000000000000000000000000000000000000,)
 
 def test_cleanup_address_types_shortening(harness):
     """cleanup/contracts/cleanup_address_types_shortening.sol

@@ -62,15 +62,21 @@ def test_getter(harness):
 
 def test_getter_call_in_constructor(harness):
     """immutable/contracts/getter_call_in_constructor.sol"""
-    pytest.fail("try/catch on new A() — EVM-only revert catching. AVM has no try/catch.")
+    app = harness.compile_and_deploy('immutable/contracts/getter_call_in_constructor.sol')
+    r = harness.call(app, 'f()')
+    assert r.abi_return is True
 
 def test_immutable_signed(harness):
     """immutable/contracts/immutable_signed.sol"""
-    pytest.fail("EVM Yul assembly assignment of int8(-2) to bytes32 sign-extends to int256 width. AVM stores int8 in 8 bytes; doesn't sign-extend.")
+    app = harness.compile_and_deploy('immutable/contracts/immutable_signed.sol')
+    r = harness.call(app, 'viaasm()')
+    assert tuple(as_int(x) for x in r.abi_return) == (0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0x6162000000000000000000000000000000000000000000000000000000000000,)
 
 def test_immutable_tag_too_large_bug(harness):
     """immutable/contracts/immutable_tag_too_large_bug.sol"""
-    pytest.fail("EVM Yul-specific: `mload(a)` reads EVM scratchpad memory + signed int256 arithmetic overflows. Compile-via-Yul behavior test.")
+    app = harness.compile_and_deploy('immutable/contracts/immutable_tag_too_large_bug.sol')
+    r = harness.call(app, 'f()')
+    assert tuple(as_int(x) for x in r.abi_return) == (-1, 1,)
 
 def test_increment_decrement(harness):
     """immutable/contracts/increment_decrement.sol"""
@@ -99,11 +105,19 @@ def test_internal_function_pointer(harness):
 
 def test_multi_creation(harness):
     """immutable/contracts/multi_creation.sol"""
-    pytest.fail("`new A{salt:0x00}()` in ctor — child contract creation with salt. AVM has no salted CREATE2; child apps deployed via inner txn with different semantics.")
+    app = harness.compile_and_deploy('immutable/contracts/multi_creation.sol')
+    r = harness.call(app, 'f()')
+    assert tuple(as_int(x) for x in r.abi_return) == (3, 7, 5,)
+    r = harness.call(app, 'x()')
+    assert as_int(r.abi_return) == 7
+    r = harness.call(app, 'y()')
+    assert as_int(r.abi_return) == 5
 
 def test_multiple_initializations(harness):
     """immutable/contracts/multiple_initializations.sol"""
-    pytest.fail("Inheritance specifier args use ctor-arg immutables (A(A.x += 8)). Compiler-side: order-of-initialization not aligned with EVM semantics.")
+    app = harness.compile_and_deploy('immutable/contracts/multiple_initializations.sol')
+    r = harness.call(app, 'get()')
+    assert as_int(r.abi_return) == 0xff
 
 def test_read_in_ctor(harness):
     """immutable/contracts/read_in_ctor.sol"""
