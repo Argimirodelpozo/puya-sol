@@ -209,13 +209,17 @@ def test_dynamic_memory_copy(harness):
 def test_enums(harness):
     """abiEncoderV1/contracts/enums.sol
 
-    The contract takes an enum (encoded as uint8) and yul-reads it as uint.
-    EVM's dirty-bit cases (256-bit calldata in a uint8 slot) aren't reachable
-    via algosdk's ARC4 client — only the in-range values are asserted.
+    ARCH NOTE: EVM abicoder v1 doesn't range-check enum args, so the original
+    test passes 2 to an enum {A,B} and expects it to read through. puya-sol
+    emits an enum range check at the ARC4 router for all abicoder versions
+    (AVM has no separate v1/v2 distinction; the check is always-on), so
+    out-of-range enum args panic. Test the AVM-observable behavior: in-range
+    values pass through; out-of-range reverts.
     """
     app = harness.compile_and_deploy("abiEncoderV1/contracts/enums.sol")
-    for v in (0, 1, 2):
+    for v in (0, 1):
         assert as_int(harness.call(app, "f(uint8)", v).abi_return) == v
+    assert harness.call(app, "f(uint8)", 2, expect_revert=True).reverted
 
 def test_memory_dynamic_array_and_calldata_bytes(harness):
     """abiEncoderV1/contracts/memory_dynamic_array_and_calldata_bytes.sol"""

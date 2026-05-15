@@ -302,35 +302,11 @@ def test_library_enum_as_an_expression(harness):
 
 def test_library_function_selectors(harness):
     """libraries/contracts/library_function_selectors.sol"""
-    # ctor pushes 42 zero values into storage array — needs extra opcode budget.
-    app = harness.compile_and_deploy(
-        "libraries/contracts/library_function_selectors.sol",
-        postinit_budget_pool=15,
-    )
-    # f() -> false, true, 0
-    r = harness.call(app, "f()")
-    # TODO: verify expected: false | true | 0
-    assert not r.reverted
-    # g() -> false, true, 0
-    r = harness.call(app, "g()")
-    # TODO: verify expected: false | true | 0
-    assert not r.reverted
-    # h() -> false, true, 0
-    r = harness.call(app, "h()")
-    # TODO: verify expected: false | true | 0
-    assert not r.reverted
+    pytest.fail("Contract uses `address(L).delegatecall(...)` — delegatecall is unsupported on AVM (storage isolation + no caller preservation) and puya-sol emits a compile error.")
 
 def test_library_function_selectors_struct(harness):
     """libraries/contracts/library_function_selectors_struct.sol"""
-    app = harness.compile_and_deploy("libraries/contracts/library_function_selectors_struct.sol")
-    # f() -> false, true, 0
-    r = harness.call(app, "f()")
-    # TODO: verify expected: false | true | 0
-    assert not r.reverted
-    # g() -> false, true, 0
-    r = harness.call(app, "g()")
-    # TODO: verify expected: false | true | 0
-    assert not r.reverted
+    pytest.fail("Same as test_library_function_selectors — uses `address(L).delegatecall(...)`, unsupported on AVM.")
 
 def test_library_references_preserve(harness):
     """libraries/contracts/library_references_preserve.sol"""
