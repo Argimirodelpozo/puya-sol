@@ -131,7 +131,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					auto ifBranch = awst::makeBlock(m_loc);
 					ifBranch->body.push_back(std::move(createStmt));
 
-					m_ctx.prePendingStatements.push_back(awst::makeIfElse(
+					m_ctx.queuePrePending(awst::makeIfElse(
 						std::move(notExists), std::move(ifBranch), nullptr, m_loc));
 				};
 
@@ -161,11 +161,10 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					if (fromAssign)
 						return e;
 
-					auto stmt = awst::makeExpressionStatement(std::move(e), m_loc);
-					// Use prePendingStatements so the extend runs BEFORE the
+					// Use queuePreStmt so the extend runs BEFORE the
 					// enclosing statement. For `arr.push().field = v` the
 					// field write reads ArrayLength - 1 post-extend.
-					m_ctx.prePendingStatements.push_back(std::move(stmt));
+					m_ctx.queuePreStmt(std::move(e), m_loc);
 
 					// Solidity `arr.push()` returns a reference to the new
 					// element (so `arr.push().field = v` works). Lower it as
@@ -246,10 +245,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 								if (fromAssign)
 									return e;
 
-								auto stmt = awst::makeExpressionStatement(std::move(e), m_loc);
-								m_ctx.pendingStatements.push_back(std::move(stmt));
-								auto vc = awst::makeVoidConstant(m_loc);
-								return vc;
+								m_ctx.queueStmt(std::move(e), m_loc);
+								return awst::makeVoidConstant(m_loc);
 							}
 							if (memberName == "pop")
 								return awst::makeArrayPopDecode(aliasExpr, elemType, rawElemType, m_loc);
@@ -329,32 +326,27 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						std::string tmpName = "__bytes_pop_tmp_" + std::to_string(popTmpCounter++);
 
 						auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
-						auto assignTmp = awst::makeAssignmentStatement(tmpTarget, std::move(extract), loc);
-						m_ctx.pendingStatements.push_back(std::move(assignTmp));
+						m_ctx.queuePending(awst::makeAssignmentStatement(tmpTarget, std::move(extract), loc));
 
 						auto del = awst::makeIntrinsicCall("box_del", awst::WType::boolType(), loc);
 						del->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
-						auto delStmt = awst::makeExpressionStatement(std::move(del), loc);
-						m_ctx.pendingStatements.push_back(std::move(delStmt));
+						m_ctx.queueStmt(std::move(del), loc);
 
 						auto tmpRead = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
 						auto put = awst::makeIntrinsicCall("box_put", awst::WType::voidType(), loc);
 						put->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
 						put->stackArgs.push_back(std::move(tmpRead));
-						auto putStmt = awst::makeExpressionStatement(std::move(put), loc);
-						m_ctx.pendingStatements.push_back(std::move(putStmt));
+						m_ctx.queueStmt(std::move(put), loc);
 					}
 					else
 					{
 						auto put = awst::makeIntrinsicCall("app_global_put", awst::WType::voidType(), loc);
 						put->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
 						put->stackArgs.push_back(std::move(extract));
-						auto stmt = awst::makeExpressionStatement(std::move(put), loc);
-						m_ctx.pendingStatements.push_back(std::move(stmt));
+						m_ctx.queueStmt(std::move(put), loc);
 					}
 
-					auto vc = awst::makeVoidConstant(loc);
-					return vc;
+					return awst::makeVoidConstant(loc);
 				}
 			}
 
@@ -423,33 +415,27 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						std::string tmpName = "__bytes_push_tmp_" + std::to_string(tmpCounter++);
 
 						auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
-
-						auto assignTmp = awst::makeAssignmentStatement(tmpTarget, std::move(cat), loc);
-						m_ctx.pendingStatements.push_back(std::move(assignTmp));
+						m_ctx.queuePending(awst::makeAssignmentStatement(tmpTarget, std::move(cat), loc));
 
 						auto del = awst::makeIntrinsicCall("box_del", awst::WType::boolType(), loc);
 						del->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
-						auto delStmt = awst::makeExpressionStatement(std::move(del), loc);
-						m_ctx.pendingStatements.push_back(std::move(delStmt));
+						m_ctx.queueStmt(std::move(del), loc);
 
 						auto tmpRead = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
 						auto put = awst::makeIntrinsicCall("box_put", awst::WType::voidType(), loc);
 						put->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
 						put->stackArgs.push_back(std::move(tmpRead));
-						auto putStmt = awst::makeExpressionStatement(std::move(put), loc);
-						m_ctx.pendingStatements.push_back(std::move(putStmt));
+						m_ctx.queueStmt(std::move(put), loc);
 					}
 					else
 					{
 						auto put = awst::makeIntrinsicCall("app_global_put", awst::WType::voidType(), loc);
 						put->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
 						put->stackArgs.push_back(std::move(cat));
-						auto stmt = awst::makeExpressionStatement(std::move(put), loc);
-						m_ctx.pendingStatements.push_back(std::move(stmt));
+						m_ctx.queueStmt(std::move(put), loc);
 					}
 
-					auto vc = awst::makeVoidConstant(loc);
-					return vc;
+					return awst::makeVoidConstant(loc);
 				}
 			}
 
@@ -538,9 +524,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					if (fromAssign)
 						return extend;
 
-					auto stmt = awst::makeExpressionStatement(std::move(extend), m_loc);
-					m_ctx.prePendingStatements.push_back(std::move(stmt));
-
+					m_ctx.queuePreStmt(std::move(extend), m_loc);
 					return awst::makeVoidConstant(m_loc);
 				}
 				if (memberName == "pop")
@@ -595,8 +579,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 	static int structPushCounter = 0;
 	std::string tmpName = "__struct_arr_tmp_" + std::to_string(structPushCounter++);
 	auto tmpTarget = awst::makeVarExpression(tmpName, structWType, loc);
-	auto tmpAssign = awst::makeAssignmentStatement(tmpTarget, std::move(structRead), loc);
-	m_ctx.pendingStatements.push_back(std::move(tmpAssign));
+	m_ctx.queuePending(awst::makeAssignmentStatement(tmpTarget, std::move(structRead), loc));
 
 	// tmp.field (FieldExpression)
 	auto tmpRead = awst::makeVarExpression(tmpName, structWType, loc);
@@ -615,27 +598,16 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 				val = builder::TypeCoercion::implicitNumericCast(
 					std::move(val), elemType, loc);
 				if (val->wtype != elemType)
-				{
-					auto encode = awst::makeARC4Encode(std::move(val), elemType, loc);
-					val = std::move(encode);
-				}
+					val = awst::makeARC4Encode(std::move(val), elemType, loc);
 			}
 		}
 		else
-		{
 			val = builder::TypeCoercion::makeDefaultValue(elemType, loc);
-		}
 
-		auto extend = awst::makeArrayPushOne(fieldExpr, std::move(val), rawFieldType, loc);
-		auto extendStmt = awst::makeExpressionStatement(std::move(extend), loc);
-		m_ctx.pendingStatements.push_back(std::move(extendStmt));
+		m_ctx.queueStmt(awst::makeArrayPushOne(fieldExpr, std::move(val), rawFieldType, loc), loc);
 	}
 	else // pop
-	{
-		auto popExpr = awst::makeArrayPop(fieldExpr, elemType ? elemType : rawFieldType, loc);
-		auto popStmt = awst::makeExpressionStatement(std::move(popExpr), loc);
-		m_ctx.pendingStatements.push_back(std::move(popStmt));
-	}
+		m_ctx.queueStmt(awst::makeArrayPop(fieldExpr, elemType ? elemType : rawFieldType, loc), loc);
 
 	// Write the struct back (box_put or app_global_put)
 	auto tmpWriteRead = awst::makeVarExpression(tmpName, structWType, loc);
@@ -643,13 +615,9 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 	auto writeExpr = m_ctx.storageMapper.createStateWrite(
 		varName, std::move(tmpWriteRead), structWType, kind, loc);
 	if (writeExpr)
-	{
-		auto writeStmt = awst::makeExpressionStatement(std::move(writeExpr), loc);
-		m_ctx.pendingStatements.push_back(std::move(writeStmt));
-	}
+		m_ctx.queueStmt(std::move(writeExpr), loc);
 
-	auto vc = awst::makeVoidConstant(loc);
-	return vc;
+	return awst::makeVoidConstant(loc);
 }
 
 std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
@@ -722,11 +690,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 		if (fromAssign)
 			return e;
 
-		auto extendStmt = awst::makeExpressionStatement(std::move(e), m_loc);
-		m_ctx.pendingStatements.push_back(std::move(extendStmt));
-
-		auto vc = awst::makeVoidConstant(m_loc);
-		return vc;
+		m_ctx.queueStmt(std::move(e), m_loc);
+		return awst::makeVoidConstant(m_loc);
 	}
 	else if (_memberName == "pop")
 		return awst::makeArrayPopDecode(writeExpr, elemType, rawElemType, m_loc);
@@ -868,11 +833,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMappingElementArrayLengt
 	put->stackArgs.push_back(boxKey);
 	put->stackArgs.push_back(std::move(extract));
 
-	auto stmt = awst::makeExpressionStatement(std::move(put), m_loc);
-	m_ctx.pendingStatements.push_back(std::move(stmt));
-
-	auto vc = awst::makeVoidConstant(m_loc);
-	return vc;
+	m_ctx.queueStmt(std::move(put), m_loc);
+	return awst::makeVoidConstant(m_loc);
 }
 
 } // namespace puyasol::builder::sol_ast

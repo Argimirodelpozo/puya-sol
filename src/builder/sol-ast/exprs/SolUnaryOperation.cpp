@@ -103,8 +103,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		{
 			auto cmp = awst::makeNumericCompare(operand, awst::NumericComparison::Ne, makeBiguintConst(halfNStr), m_loc);
 
-			auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), m_loc, "signed negation overflow"), m_loc);
-			m_ctx.prePendingStatements.push_back(std::move(assertStmt));
+			m_ctx.queuePreStmt(awst::makeAssert(std::move(cmp), m_loc, "signed negation overflow"), m_loc);
 		}
 
 		// -x = (2^N - x) mod 2^N
@@ -406,8 +405,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 
 				auto cmp = awst::makeNumericCompare(val, awst::NumericComparison::Ne, makeBConst(limitStr), m_loc);
 
-				auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), m_loc, "signed inc/dec overflow"), m_loc);
-				m_ctx.prePendingStatements.push_back(std::move(assertStmt));
+				m_ctx.queuePreStmt(awst::makeAssert(std::move(cmp), m_loc, "signed inc/dec overflow"), m_loc);
 			}
 
 			// Compute: inc → (val + 1) mod 2^N, dec → (val + 2^N - 1) mod 2^N
@@ -554,8 +552,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 	if (dynamic_cast<awst::BoxValueExpression const*>(target.get()))
 	{
 		auto stateDelete = awst::makeStateDelete(target, m_loc);
-		auto stmt = awst::makeExpressionStatement(std::move(stateDelete), m_loc);
-		m_ctx.pendingStatements.push_back(std::move(stmt));
+		m_ctx.queueStmt(std::move(stateDelete), m_loc);
 		return _operand;
 	}
 
@@ -602,8 +599,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 			if (auto const* sg = dynamic_cast<awst::StateGet const*>(base.get()))
 				writeTarget = sg->field;
 
-			auto assignStmt = awst::makeAssignmentStatement(std::move(writeTarget), std::move(newStruct), m_loc);
-			m_ctx.pendingStatements.push_back(std::move(assignStmt));
+			m_ctx.queuePending(awst::makeAssignmentStatement(std::move(writeTarget), std::move(newStruct), m_loc));
 			return _operand;
 		}
 	}
@@ -638,14 +634,12 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 			awst::pushCallArg(call->args, "__slot", std::move(btoi));
 			awst::pushCallArg(call->args, "__value", std::move(zeroVal));
 
-			auto stmt = awst::makeExpressionStatement(std::move(call), m_loc);
-			m_ctx.pendingStatements.push_back(std::move(stmt));
+			m_ctx.queueStmt(std::move(call), m_loc);
 		}
 		return _operand;
 	}
 
-	auto assignStmt = awst::makeAssignmentStatement(target, std::move(defaultVal), m_loc);
-	m_ctx.pendingStatements.push_back(std::move(assignStmt));
+	m_ctx.queuePending(awst::makeAssignmentStatement(target, std::move(defaultVal), m_loc));
 	return _operand;
 }
 

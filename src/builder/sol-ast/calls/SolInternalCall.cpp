@@ -430,8 +430,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 				auto writeBack = awst::makeAssignmentExpression(
 					std::move(writeTarget), std::move(writeValue), m_loc, sr.rootType);
 
-				auto stmt = awst::makeExpressionStatement(std::move(writeBack), m_loc);
-				m_ctx.pendingStatements.push_back(std::move(stmt));
+				m_ctx.queueStmt(std::move(writeBack), m_loc);
 			}
 		}
 
@@ -459,8 +458,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			auto writeBack = awst::makeAssignmentExpression(
 				std::move(target), std::move(modifiedArg), m_loc);
 
-			auto stmt = awst::makeExpressionStatement(std::move(writeBack), m_loc);
-			m_ctx.pendingStatements.push_back(std::move(stmt));
+			m_ctx.queueStmt(std::move(writeBack), m_loc);
 		}
 
 		return origRet;
@@ -523,9 +521,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 			// emit assert(false) to revert (matches EVM behavior for uninitialized pointers)
 			Logger::instance().warning(
 				"call to function pointer '" + name + "' (state var / unsupported), emitting assert(false)", m_loc);
-			auto stmt = awst::makeExpressionStatement(awst::makeAssert(
+			m_ctx.queueStmt(awst::makeAssert(
 				awst::makeBoolConstant(false, m_loc), m_loc, "uninitialized function pointer"), m_loc);
-			m_ctx.pendingStatements.push_back(std::move(stmt));
 
 			auto vc = awst::makeVoidConstant(m_loc);
 			return vc;

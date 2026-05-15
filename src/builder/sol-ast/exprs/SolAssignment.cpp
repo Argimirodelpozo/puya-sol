@@ -311,8 +311,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 
 			auto cmp = awst::makeNumericCompare(val, awst::NumericComparison::Lt, std::move(maxVal), m_loc);
 
-			auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), m_loc, "enum out of range"), m_loc);
-			m_ctx.prePendingStatements.push_back(std::move(assertStmt));
+			m_ctx.queuePreStmt(awst::makeAssert(std::move(cmp), m_loc, "enum out of range"), m_loc);
 
 			value = std::move(val);
 		}
@@ -378,8 +377,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 				awst::pushCallArg(call->args, "__slot", std::move(btoi));
 				awst::pushCallArg(call->args, "__value", std::move(elemVal));
 
-				auto stmt = awst::makeExpressionStatement(std::move(call), m_loc);
-				m_ctx.pendingStatements.push_back(std::move(stmt));
+				m_ctx.queueStmt(std::move(call), m_loc);
 			}
 			// Return a dummy value (void-like, the writes are in pending)
 			auto zero = awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType());
@@ -416,8 +414,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 		awst::pushCallArg(call->args, "__slot", std::move(btoi));
 		awst::pushCallArg(call->args, "__value", std::move(value));
 
-		auto stmt = awst::makeExpressionStatement(std::move(call), m_loc);
-		m_ctx.pendingStatements.push_back(std::move(stmt));
+		m_ctx.queueStmt(std::move(call), m_loc);
 
 		auto zero = awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType());
 		return zero;
@@ -720,8 +717,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 							putCall->stackArgs.push_back(bv->key);
 							putCall->stackArgs.push_back(awst::makeBytesConstant(
 								std::move(*enc), m_loc));
-							auto putStmt = awst::makeExpressionStatement(std::move(putCall), m_loc);
-							m_ctx.prePendingStatements.push_back(std::move(putStmt));
+							m_ctx.queuePreStmt(std::move(putCall), m_loc);
 						}
 					}
 				}
@@ -757,8 +753,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 						createCall->stackArgs.push_back(bv->key);
 						createCall->stackArgs.push_back(
 							awst::makeIntegerConstant(totalSize, m_loc));
-						auto createStmt = awst::makeExpressionStatement(std::move(createCall), m_loc);
-						m_ctx.prePendingStatements.push_back(std::move(createStmt));
+						m_ctx.queuePreStmt(std::move(createCall), m_loc);
 					}
 				}
 			}

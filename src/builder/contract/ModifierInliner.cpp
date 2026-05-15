@@ -40,6 +40,400 @@ public:
 	}
 };
 
+/// Free-function entry. Used by AWSTBuilder for the library /
+/// internalized-lib / free-function translation path that doesn't have a
+/// ContractBuilder instance. Mirrors `ContractBuilder::inlineModifiers`
+/// logic but pulls all state from `_ctx` instead of `m_*` members.
+///
+/// Known regression vs prior session: `test_function_modifier_library` and
+/// `test_function_modifier_library_inheritance` fail with "deserialization
+/// failed: 'ARC4Decode'" — `s.v++` inside a modifier with storage-pointer
+/// args produces an ARC4Decode assignment target that puya rejects. Prior
+/// session had additional fixes (probably an ARC4Decode unwrap somewhere
+/// in the assignment lowering) that were lost when the working tree was
+/// reverted; full member-body parity alone isn't sufficient.
+void inlineModifiers(
+	FunctionTranslationCtx& _ctx,
+	solidity::frontend::FunctionDefinition const& _func,
+	std::shared_ptr<awst::Block>& _body
+)
+{
+	auto& m_typeMapper = _ctx.typeMapper;
+	auto& m_exprBuilder = _ctx.exprBuilder;
+	auto& m_tr = _ctx.tr;
+	auto const* m_currentContract = _ctx.currentContract;
+	auto makeLocFree = [&](solidity::langutil::SourceLocation const& loc) {
+		return makeLoc(_ctx.sourceFile, loc);
+	};
+	std::shared_ptr<awst::Block> __placeholder;
+	auto setPlaceholderBody = [&](std::shared_ptr<awst::Block> p) {
+		__placeholder = std::move(p);
+	};
+	auto buildBlockFree = [&](solidity::frontend::Block const& b) {
+		return buildBlock(_ctx, b, __placeholder);
+	};
+
+	static int modCounter = 0;
+	static int modRetvalCounter = 0;
+
+	// Extract named return var init statements from the body and hoist them
+	// BEFORE modifier arg evaluation.
+	std::set<std::string> returnParamNames;
+	for (auto const& rp : _func.returnParameters())
+		if (!rp->name().empty())
+			returnParamNames.insert(rp->name());
+
+	// Unnamed returns: synthesise return vars so `return expr;` can be
+	// rewritten into `__mod_retval_N = expr;` (in placeholder) + deferred
+	// `return __mod_retval_N;`.
+	std::vector<std::pair<std::string, awst::WType const*>> syntheticRets;
+	bool allUnnamed = !_func.returnParameters().empty();
+	for (auto const& rp: _func.returnParameters())
+		if (!rp->name().empty()) { allUnnamed = false; break; }
+	if (returnParamNames.empty() && allUnnamed)
+	{
+		int baseId = modRetvalCounter++;
+		for (size_t i = 0; i < _func.returnParameters().size(); ++i)
+		{
+			auto* t = m_typeMapper.map(_func.returnParameters()[i]->type());
+			std::string n = "__mod_retval_" + std::to_string(baseId)
+				+ (_func.returnParameters().size() > 1 ? "_" + std::to_string(i) : "");
+			syntheticRets.emplace_back(n, t);
+			returnParamNames.insert(n);
+		}
+	}
+
+	std::vector<std::shared_ptr<awst::Statement>> hoistedInits;
+	if (!returnParamNames.empty() && !_body->body.empty())
+	{
+		std::set<std::string> seen;
+		auto it = _body->body.begin();
+		while (it != _body->body.end())
+		{
+			if (auto* assign = dynamic_cast<awst::AssignmentStatement*>(it->get()))
+			{
+				auto* target = dynamic_cast<awst::VarExpression*>(assign->target.get());
+				bool isZeroInit = false;
+				auto const* val = assign->value.get();
+				if (auto* intConst = dynamic_cast<awst::IntegerConstant const*>(val))
+					isZeroInit = (intConst->value == "0");
+				else if (auto* boolConst = dynamic_cast<awst::BoolConstant const*>(val))
+					isZeroInit = !boolConst->value;
+				else if (dynamic_cast<awst::BytesConstant const*>(val))
+					isZeroInit = true;
+				else if (dynamic_cast<awst::NewStruct const*>(val)
+					|| dynamic_cast<awst::NewArray const*>(val)
+					|| dynamic_cast<awst::TupleExpression const*>(val))
+					isZeroInit = true;
+
+				if (target && returnParamNames.count(target->name) && isZeroInit
+					&& !seen.count(target->name))
+				{
+					seen.insert(target->name);
+					hoistedInits.push_back(std::move(*it));
+					it = _body->body.erase(it);
+					continue;
+				}
+				if (target && !returnParamNames.count(target->name))
+				{
+					++it;
+					continue;
+				}
+				break;
+			}
+			if (dynamic_cast<awst::ExpressionStatement*>(it->get()))
+			{
+				++it;
+				continue;
+			}
+			break;
+		}
+	}
+	for (auto const& [n, t]: syntheticRets)
+	{
+		auto loc = makeLocFree(_func.location());
+		hoistedInits.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(n, t, loc),
+			StorageMapper::makeDefaultValue(t, loc),
+			loc));
+	}
+
+	for (auto const& modInvocation: _func.modifiers())
+	{
+		auto const* modDef = dynamic_cast<solidity::frontend::ModifierDefinition const*>(
+			modInvocation->name().annotation().referencedDeclaration);
+
+		if (!modDef)
+			continue;
+
+		{
+			bool isExplicit = modInvocation->name().path().size() > 1;
+			if (m_currentContract && !isExplicit)
+			{
+				std::string modName = modDef->name();
+				for (auto const* base: m_currentContract->annotation().linearizedBaseContracts)
+					for (auto const* mod: base->functionModifiers())
+						if (mod->name() == modName) { modDef = mod; goto modResolved; }
+				modResolved:;
+			}
+		}
+
+		auto modBody = awst::makeBlock(makeLocFree(modDef->location()));
+
+		if (modDef->body().statements().empty())
+			continue;
+
+		auto const* args = modInvocation->arguments();
+		auto const& params = modDef->parameters();
+		std::vector<int64_t> remappedDeclIds;
+
+		if (args && !args->empty())
+		{
+			auto modLoc = makeLocFree(modInvocation->location());
+			for (size_t i = 0; i < args->size() && i < params.size(); ++i)
+			{
+				auto const& param = params[i];
+				std::string uniqueName = "__mod_" + param->name() + "_" + std::to_string(modCounter++);
+				auto* paramType = m_typeMapper.map(param->type());
+
+				auto argExpr = m_exprBuilder.build(*(*args)[i]);
+				if (!argExpr)
+					continue;
+
+				argExpr = TypeCoercion::implicitNumericCast(
+					std::move(argExpr), paramType, modLoc);
+
+				auto target = awst::makeVarExpression(uniqueName, paramType, modLoc);
+
+				auto assignment = awst::makeAssignmentStatement(target, std::move(argExpr), modLoc);
+				modBody->body.push_back(std::move(assignment));
+
+				m_tr.setParamRemap(param->id(), sol_ast::ParamRemap{uniqueName, paramType});
+				remappedDeclIds.push_back(param->id());
+			}
+		}
+
+		{
+			InlineAssemblyDetector asmDetector;
+			modDef->body().accept(asmDetector);
+			if (!asmDetector.found)
+			{
+				LocalVarDeclCollector localCollector;
+				modDef->body().accept(localCollector);
+				for (auto const* localDecl: localCollector.decls)
+				{
+					std::string uniqueName
+						= "__mod_local_" + localDecl->name() + "_" + std::to_string(modCounter++);
+					auto* localType = m_typeMapper.map(localDecl->type());
+					m_tr.setParamRemap(localDecl->id(), sol_ast::ParamRemap{uniqueName, localType});
+					remappedDeclIds.push_back(localDecl->id());
+				}
+			}
+		}
+
+		auto placeholderBody = awst::makeBlock(_body->sourceLocation);
+		std::shared_ptr<awst::Statement> deferredReturn;
+		std::set<std::string> hoistedReturnVars;
+
+		for (auto const& bodyStmt: _body->body)
+		{
+			if (auto const* retStmt = dynamic_cast<awst::ReturnStatement const*>(bodyStmt.get()))
+			{
+				if (returnParamNames.size() == 1 && retStmt->value)
+				{
+					auto const& retName = *returnParamNames.begin();
+					bool isJustRetVar = false;
+					if (auto const* varRef = dynamic_cast<awst::VarExpression const*>(retStmt->value.get()))
+						isJustRetVar = (varRef->name == retName);
+
+					if (!isJustRetVar)
+					{
+						auto target = awst::makeVarExpression(retName, retStmt->value->wtype, retStmt->sourceLocation);
+						placeholderBody->body.push_back(
+							awst::makeAssignmentStatement(std::move(target), retStmt->value, retStmt->sourceLocation));
+					}
+
+					auto retVar = awst::makeVarExpression(retName, retStmt->value->wtype, retStmt->sourceLocation);
+					deferredReturn = awst::makeReturnStatement(std::move(retVar), retStmt->sourceLocation);
+				}
+				else if (syntheticRets.size() > 1 && retStmt->value)
+				{
+					auto const* tupleVal = dynamic_cast<awst::TupleExpression const*>(retStmt->value.get());
+					if (tupleVal && tupleVal->items.size() == syntheticRets.size())
+					{
+						for (size_t i = 0; i < syntheticRets.size(); ++i)
+						{
+							auto target = awst::makeVarExpression(
+								syntheticRets[i].first, syntheticRets[i].second, retStmt->sourceLocation);
+							placeholderBody->body.push_back(awst::makeAssignmentStatement(
+								std::move(target), tupleVal->items[i], retStmt->sourceLocation));
+						}
+					}
+					else
+					{
+						auto tupleTarget = awst::makeTupleExpression(nullptr, retStmt->sourceLocation);
+						std::vector<awst::WType const*> tupleTypes;
+						for (auto const& [n, t]: syntheticRets)
+						{
+							tupleTarget->items.push_back(
+								awst::makeVarExpression(n, t, retStmt->sourceLocation));
+							tupleTypes.push_back(t);
+						}
+						tupleTarget->wtype = m_typeMapper.createType<awst::WTuple>(
+							std::move(tupleTypes), std::nullopt);
+						placeholderBody->body.push_back(awst::makeAssignmentStatement(
+							std::move(tupleTarget), retStmt->value, retStmt->sourceLocation));
+					}
+
+					auto deferTuple = awst::makeTupleExpression(nullptr, retStmt->sourceLocation);
+					std::vector<awst::WType const*> tupleTypes;
+					for (auto const& [n, t]: syntheticRets)
+					{
+						deferTuple->items.push_back(
+							awst::makeVarExpression(n, t, retStmt->sourceLocation));
+						tupleTypes.push_back(t);
+					}
+					deferTuple->wtype = m_typeMapper.createType<awst::WTuple>(
+						std::move(tupleTypes), std::nullopt);
+					deferredReturn = awst::makeReturnStatement(
+						std::move(deferTuple), retStmt->sourceLocation);
+				}
+				else
+					deferredReturn = bodyStmt;
+			}
+			else if (!returnParamNames.empty())
+			{
+				auto const* assign = dynamic_cast<awst::AssignmentStatement const*>(bodyStmt.get());
+				auto const* targetVar = assign
+					? dynamic_cast<awst::VarExpression const*>(assign->target.get())
+					: nullptr;
+				if (targetVar && returnParamNames.count(targetVar->name)
+					&& !hoistedReturnVars.count(targetVar->name))
+				{
+					modBody->body.push_back(bodyStmt);
+					hoistedReturnVars.insert(targetVar->name);
+				}
+				else
+					placeholderBody->body.push_back(bodyStmt);
+			}
+			else
+				placeholderBody->body.push_back(bodyStmt);
+		}
+
+		setPlaceholderBody(placeholderBody);
+		auto translatedModBody = buildBlockFree(modDef->body());
+		setPlaceholderBody(nullptr);
+
+		if (translatedModBody)
+		{
+			static int modExitCounter = 0;
+			std::string flagName = "__mod_exit_" + std::to_string(modExitCounter++);
+			auto flagLoc = translatedModBody->sourceLocation;
+
+			auto makeFlagSet = [&]() -> std::shared_ptr<awst::Statement> {
+				auto target = awst::makeVarExpression(flagName, awst::WType::boolType(), flagLoc);
+				return awst::makeAssignmentStatement(std::move(target), awst::makeBoolConstant(true, flagLoc), flagLoc);
+			};
+			auto makeBreak = [&]() -> std::shared_ptr<awst::Statement> {
+				return awst::makeLoopExit(flagLoc);
+			};
+			auto makeFlagCheck = [&]() -> std::shared_ptr<awst::Statement> {
+				auto cond = awst::makeVarExpression(flagName, awst::WType::boolType(), flagLoc);
+				auto branchBody = awst::makeBlock(flagLoc);
+				branchBody->body.push_back(makeBreak());
+				return awst::makeIfElse(std::move(cond), std::move(branchBody), nullptr, flagLoc);
+			};
+
+			bool hasReturnInLoop = false;
+			std::function<void(std::vector<std::shared_ptr<awst::Statement>>&, bool)> replaceReturns;
+			replaceReturns = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts, bool inLoop) {
+				for (size_t i = 0; i < stmts.size(); ++i)
+				{
+					auto& s = stmts[i];
+					if (dynamic_cast<awst::ReturnStatement*>(s.get()))
+					{
+						auto block = awst::makeBlock(s->sourceLocation);
+						block->body.push_back(makeFlagSet());
+						block->body.push_back(makeBreak());
+						s = std::move(block);
+						if (inLoop) hasReturnInLoop = true;
+					}
+					else if (auto* ifElse = dynamic_cast<awst::IfElse*>(s.get()))
+					{
+						if (ifElse->ifBranch) replaceReturns(ifElse->ifBranch->body, inLoop);
+						if (ifElse->elseBranch) replaceReturns(ifElse->elseBranch->body, inLoop);
+					}
+					else if (auto* block = dynamic_cast<awst::Block*>(s.get()))
+						replaceReturns(block->body, inLoop);
+					else if (auto* whileLoop = dynamic_cast<awst::WhileLoop*>(s.get()))
+					{
+						if (whileLoop->loopBody)
+							replaceReturns(whileLoop->loopBody->body, /*inLoop=*/true);
+					}
+				}
+			};
+			replaceReturns(translatedModBody->body, false);
+
+			if (hasReturnInLoop)
+			{
+				std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> insertFlagChecks;
+				insertFlagChecks = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts) {
+					for (size_t i = 0; i < stmts.size(); ++i)
+					{
+						if (dynamic_cast<awst::WhileLoop*>(stmts[i].get()))
+						{
+							stmts.insert(stmts.begin() + i + 1, makeFlagCheck());
+							++i;
+						}
+						else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmts[i].get()))
+						{
+							if (ifElse->ifBranch) insertFlagChecks(ifElse->ifBranch->body);
+							if (ifElse->elseBranch) insertFlagChecks(ifElse->elseBranch->body);
+						}
+						else if (auto* block = dynamic_cast<awst::Block*>(stmts[i].get()))
+							insertFlagChecks(block->body);
+					}
+				};
+				insertFlagChecks(translatedModBody->body);
+			}
+
+			modBody->body.push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(flagName, awst::WType::boolType(), flagLoc),
+				awst::makeBoolConstant(false, flagLoc),
+				flagLoc));
+
+			auto loopBody = awst::makeBlock(flagLoc);
+			for (auto& stmt: translatedModBody->body)
+				loopBody->body.push_back(std::move(stmt));
+			loopBody->body.push_back(makeBreak());
+
+			modBody->body.push_back(awst::makeWhileLoop(
+				awst::makeBoolConstant(true, flagLoc), std::move(loopBody), flagLoc));
+		}
+		else
+		{
+			for (auto const& bodyStmt: _body->body)
+				modBody->body.push_back(bodyStmt);
+		}
+
+		if (deferredReturn)
+			modBody->body.push_back(std::move(deferredReturn));
+
+		for (auto declId: remappedDeclIds)
+			m_tr.eraseParamRemap(declId);
+
+		_body = modBody;
+	}
+
+	if (!hoistedInits.empty())
+	{
+		_body->body.insert(
+			_body->body.begin(),
+			std::make_move_iterator(hoistedInits.begin()),
+			std::make_move_iterator(hoistedInits.end()));
+	}
+}
+
 void ContractBuilder::inlineModifiers(
 	solidity::frontend::FunctionDefinition const& _func,
 	std::shared_ptr<awst::Block>& _body

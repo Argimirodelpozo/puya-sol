@@ -124,6 +124,40 @@ public:
 	std::vector<std::shared_ptr<awst::Statement>> pendingStatements;
 	std::vector<std::shared_ptr<awst::Statement>> prePendingStatements;
 
+	/// Queue an expression as a side-effect statement that will run as part
+	/// of the enclosing statement. Wraps `expr` in an ExpressionStatement
+	/// and appends to `pendingStatements`. Use for "do this after the
+	/// current expression evaluates" semantics.
+	void queueStmt(std::shared_ptr<awst::Expression> expr, awst::SourceLocation loc)
+	{
+		pendingStatements.push_back(awst::makeExpressionStatement(std::move(expr), std::move(loc)));
+	}
+
+	/// Queue a statement directly onto `pendingStatements` (no
+	/// ExpressionStatement wrapper). Use when the caller already has a
+	/// Statement (e.g. AssignmentStatement, ExpressionStatement).
+	void queuePending(std::shared_ptr<awst::Statement> stmt)
+	{
+		pendingStatements.push_back(std::move(stmt));
+	}
+
+	/// Queue an expression to run BEFORE the enclosing statement
+	/// (prePending). Use for "do this before the LHS evaluates" semantics
+	/// — e.g. `arr.push().field = v` needs the extend before the field
+	/// write reads `length-1`.
+	void queuePreStmt(std::shared_ptr<awst::Expression> expr, awst::SourceLocation loc)
+	{
+		prePendingStatements.push_back(awst::makeExpressionStatement(std::move(expr), std::move(loc)));
+	}
+
+	/// Like `queuePending` but for prePendingStatements — append a
+	/// Statement directly to the buffer that runs BEFORE the enclosing
+	/// statement.
+	void queuePrePending(std::shared_ptr<awst::Statement> stmt)
+	{
+		prePendingStatements.push_back(std::move(stmt));
+	}
+
 	// ── Per-translation scope state (owned) ──
 
 	/// Innermost active scope. Updated on entry to each

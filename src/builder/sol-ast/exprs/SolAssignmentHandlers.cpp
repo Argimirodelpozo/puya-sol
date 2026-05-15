@@ -418,8 +418,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 
 		auto e = awst::makeAssignmentExpression(
 			std::move(assignTarget), std::move(assignValue), m_loc);
-		auto stmt = awst::makeExpressionStatement(e, m_loc);
-		m_ctx.pendingStatements.push_back(std::move(stmt));
+		m_ctx.queueStmt(e, m_loc);
 	}
 
 	// Reverse the assignments added during this call to get right-to-left order.
@@ -750,8 +749,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 							putCall->stackArgs.push_back(bv->key);
 							putCall->stackArgs.push_back(awst::makeBytesConstant(
 								std::move(*enc), m_loc));
-							auto putStmt = awst::makeExpressionStatement(std::move(putCall), m_loc);
-							m_ctx.prePendingStatements.push_back(std::move(putStmt));
+							m_ctx.queuePreStmt(std::move(putCall), m_loc);
 						}
 					}
 				}
@@ -771,8 +769,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 						createCall->stackArgs.push_back(bv->key);
 						createCall->stackArgs.push_back(
 							awst::makeIntegerConstant(totalSize, m_loc));
-						auto createStmt = awst::makeExpressionStatement(std::move(createCall), m_loc);
-						m_ctx.prePendingStatements.push_back(std::move(createStmt));
+						m_ctx.queuePreStmt(std::move(createCall), m_loc);
 					}
 				}
 			}
