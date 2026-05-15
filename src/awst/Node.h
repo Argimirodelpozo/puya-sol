@@ -1125,6 +1125,19 @@ inline std::shared_ptr<ArrayExtend> makeArrayExtend(
 	return node;
 }
 
+// `base.push(elem)` lowered as a single-element NewArray wrapped in
+// ArrayExtend. `arrWType` is the type of the dynamic array (the type of
+// `base`); the helper wraps `elem` in a single-element NewArray of that
+// type and emits the extend.
+inline std::shared_ptr<ArrayExtend> makeArrayPushOne(
+	std::shared_ptr<Expression> base, std::shared_ptr<Expression> elem,
+	WType const* arrWType, SourceLocation loc)
+{
+	auto singleArr = makeNewArray(arrWType, loc);
+	singleArr->values.push_back(std::move(elem));
+	return makeArrayExtend(std::move(base), std::move(singleArr), std::move(loc));
+}
+
 struct ConvertArray: Expression
 {
 	std::string nodeType() const override { return "ConvertArray"; }

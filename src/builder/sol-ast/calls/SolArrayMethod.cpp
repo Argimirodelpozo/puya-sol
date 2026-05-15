@@ -140,12 +140,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					emitEnsureBox();
 					auto val = buildExpr(*m_call.arguments()[0]);
 					auto encoded = awst::makeARC4Encode(std::move(val), elemType, m_loc);
-
-					auto singleArr = awst::makeNewArray(arrWType, m_loc);
-					singleArr->values.push_back(std::move(encoded));
-
-					auto e = awst::makeArrayExtend(baseAwst, std::move(singleArr), m_loc);
-					return e;
+					return awst::makeArrayPushOne(baseAwst, std::move(encoded), arrWType, m_loc);
 				}
 				if (memberName == "push" && m_call.arguments().empty())
 				{
@@ -156,16 +151,12 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					{
 						auto coerced = builder::TypeCoercion::coerceForAssignment(
 							std::move(m_ctx.pendingArrayPushValue), rawElemType, m_loc);
-						auto encoded = awst::makeARC4Encode(std::move(coerced), elemType, m_loc);
-						elem = std::move(encoded);
+						elem = awst::makeARC4Encode(std::move(coerced), elemType, m_loc);
 					}
 					else
 						elem = builder::TypeCoercion::makeDefaultValue(elemType, m_loc);
 
-					auto singleArr = awst::makeNewArray(arrWType, m_loc);
-					singleArr->values.push_back(std::move(elem));
-
-					auto e = awst::makeArrayExtend(baseAwst, std::move(singleArr), m_loc);
+					auto e = awst::makeArrayPushOne(baseAwst, std::move(elem), arrWType, m_loc);
 
 					if (fromAssign)
 						return e;
@@ -240,12 +231,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 							{
 								auto val = buildExpr(*m_call.arguments()[0]);
 								auto encoded = awst::makeARC4Encode(std::move(val), elemType, m_loc);
-
-								auto singleArr = awst::makeNewArray(arrWType, m_loc);
-								singleArr->values.push_back(std::move(encoded));
-
-								auto e = awst::makeArrayExtend(aliasExpr, std::move(singleArr), m_loc);
-								return e;
+								return awst::makeArrayPushOne(aliasExpr, std::move(encoded), arrWType, m_loc);
 							}
 							if (memberName == "push" && m_call.arguments().empty())
 							{
@@ -255,16 +241,12 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 								{
 									auto coerced = builder::TypeCoercion::coerceForAssignment(
 										std::move(m_ctx.pendingArrayPushValue), rawElemType, m_loc);
-									auto encoded = awst::makeARC4Encode(std::move(coerced), elemType, m_loc);
-									elem = std::move(encoded);
+									elem = awst::makeARC4Encode(std::move(coerced), elemType, m_loc);
 								}
 								else
 									elem = builder::TypeCoercion::makeDefaultValue(elemType, m_loc);
 
-								auto singleArr = awst::makeNewArray(arrWType, m_loc);
-								singleArr->values.push_back(std::move(elem));
-
-								auto e = awst::makeArrayExtend(aliasExpr, std::move(singleArr), m_loc);
+								auto e = awst::makeArrayPushOne(aliasExpr, std::move(elem), arrWType, m_loc);
 
 								if (fromAssign)
 									return e;
@@ -543,12 +525,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				{
 					auto val = buildExpr(*m_call.arguments()[0]);
 					auto encoded = awst::makeARC4Encode(std::move(val), elemType, m_loc);
-
-					auto singleArr = awst::makeNewArray(arrWType, m_loc);
-					singleArr->values.push_back(std::move(encoded));
-
-					return awst::makeArrayExtend(
-						std::move(baseAwst), std::move(singleArr), m_loc);
+					return awst::makeArrayPushOne(
+						std::move(baseAwst), std::move(encoded), arrWType, m_loc);
 				}
 				if (memberName == "push" && m_call.arguments().empty())
 				{
@@ -565,11 +543,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						elem = builder::TypeCoercion::makeDefaultValue(elemType, m_loc);
 					}
 
-					auto singleArr = awst::makeNewArray(arrWType, m_loc);
-					singleArr->values.push_back(std::move(elem));
-
-					auto extend = awst::makeArrayExtend(
-						baseAwst, std::move(singleArr), m_loc);
+					auto extend = awst::makeArrayPushOne(baseAwst, std::move(elem), arrWType, m_loc);
 
 					if (fromAssign)
 						return extend;
@@ -666,10 +640,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 			val = builder::TypeCoercion::makeDefaultValue(elemType, loc);
 		}
 
-		auto singleArr = awst::makeNewArray(rawFieldType, loc);
-		singleArr->values.push_back(std::move(val));
-
-		auto extend = awst::makeArrayExtend(fieldExpr, std::move(singleArr), loc);
+		auto extend = awst::makeArrayPushOne(fieldExpr, std::move(val), rawFieldType, loc);
 		auto extendStmt = awst::makeExpressionStatement(std::move(extend), loc);
 		m_ctx.pendingStatements.push_back(std::move(extendStmt));
 	}
@@ -735,14 +706,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 	if (_memberName == "push" && !m_call.arguments().empty())
 	{
 		auto val = buildExpr(*m_call.arguments()[0]);
-
 		auto encoded = awst::makeARC4Encode(std::move(val), elemType, m_loc);
-
-		auto singleArr = awst::makeNewArray(arrWType, m_loc);
-		singleArr->values.push_back(std::move(encoded));
-
-		auto e = awst::makeArrayExtend(writeExpr, std::move(singleArr), m_loc);
-		return e;
+		return awst::makeArrayPushOne(writeExpr, std::move(encoded), arrWType, m_loc);
 	}
 	else if (_memberName == "push" && m_call.arguments().empty())
 	{
@@ -759,18 +724,14 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 		{
 			auto coerced = builder::TypeCoercion::coerceForAssignment(
 				std::move(m_ctx.pendingArrayPushValue), rawElemType, m_loc);
-			auto encoded = awst::makeARC4Encode(std::move(coerced), elemType, m_loc);
-			elem = std::move(encoded);
+			elem = awst::makeARC4Encode(std::move(coerced), elemType, m_loc);
 		}
 		else
 		{
 			elem = builder::TypeCoercion::makeDefaultValue(elemType, m_loc);
 		}
 
-		auto singleArr = awst::makeNewArray(arrWType, m_loc);
-		singleArr->values.push_back(std::move(elem));
-
-		auto e = awst::makeArrayExtend(writeExpr, std::move(singleArr), m_loc);
+		auto e = awst::makeArrayPushOne(writeExpr, std::move(elem), arrWType, m_loc);
 
 		if (fromAssign)
 			return e;
@@ -859,17 +820,12 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMemoryArray(
 					val = std::move(encode);
 				}
 			}
-			auto singleArr = awst::makeNewArray(baseWtype, m_loc);
-			singleArr->values.push_back(std::move(val));
-
-			auto e = awst::makeArrayExtend(std::move(base), std::move(singleArr), m_loc);
-			return e;
+			return awst::makeArrayPushOne(std::move(base), std::move(val), baseWtype, m_loc);
 		}
 	}
 	else if (_memberName == "pop")
 	{
-		auto e = awst::makeArrayPop(std::move(base), awst::WType::voidType(), m_loc);
-		return e;
+		return awst::makeArrayPop(std::move(base), awst::WType::voidType(), m_loc);
 	}
 
 	auto vc = awst::makeVoidConstant(m_loc);
