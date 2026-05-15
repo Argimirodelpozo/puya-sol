@@ -193,12 +193,30 @@ void inlineModifiers(
 			for (size_t i = 0; i < args->size() && i < params.size(); ++i)
 			{
 				auto const& param = params[i];
-				std::string uniqueName = "__mod_" + param->name() + "_" + std::to_string(modCounter++);
-				auto* paramType = m_typeMapper.map(param->type());
 
 				auto argExpr = m_exprBuilder.build(*(*args)[i]);
 				if (!argExpr)
 					continue;
+
+				// Storage-pointer params (`S storage s`, `mapping(K=>V) storage m`):
+				// don't materialise a local copy. The arg expression itself is the
+				// storage location (BoxValueExpression, FieldExpression on a
+				// state-var-backed struct, etc.) and writes inside the modifier
+				// body must mutate the underlying storage, not a local copy.
+				// Set the storage alias so SolIdentifier resolves the param to
+				// the original storage expression.
+				if (param->referenceLocation()
+					== solidity::frontend::VariableDeclaration::Location::Storage)
+				{
+					m_tr.setStorageAlias(param->id(), std::move(argExpr));
+					// Track for cleanup via the same remappedDeclIds list, so
+					// the post-body sweep removes the alias too.
+					remappedDeclIds.push_back(param->id());
+					continue;
+				}
+
+				std::string uniqueName = "__mod_" + param->name() + "_" + std::to_string(modCounter++);
+				auto* paramType = m_typeMapper.map(param->type());
 
 				argExpr = TypeCoercion::implicitNumericCast(
 					std::move(argExpr), paramType, modLoc);

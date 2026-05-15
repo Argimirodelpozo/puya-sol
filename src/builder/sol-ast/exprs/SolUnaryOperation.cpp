@@ -466,20 +466,39 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 
 	// Re-read the subexpression for the assignment target. State vars come
 	// back wrapped in StateGet, which is a read — unwrap so the assignment
-	// lands on the writable BoxValueExpression / AppStateExpression.
+	// lands on the writable BoxValueExpression / AppStateExpression. Also
+	// peel ARC4Decode (native-typed read of an ARC4-encoded field) so the
+	// write hits the encoded slot — paired with ARC4Encode on the new
+	// value below.
 	auto makeWriteTarget = [&]() -> std::shared_ptr<awst::Expression>
 	{
 		auto target = buildExpr(m_unaryOp.subExpression());
 		if (auto const* sg = dynamic_cast<awst::StateGet const*>(target.get()))
 			target = sg->field;
+		if (auto const* decodeExpr = dynamic_cast<awst::ARC4Decode const*>(target.get()))
+			target = decodeExpr->value;
 		return target;
+	};
+
+	// If the unwrapped write target is ARC4-typed but the new value is
+	// native (biguint/uint64), wrap with ARC4Encode. Pairs with the
+	// ARC4Decode unwrap in makeWriteTarget.
+	auto maybeEncode = [&](std::shared_ptr<awst::Expression> writeTarget,
+		std::shared_ptr<awst::Expression> newValue) -> std::shared_ptr<awst::Expression>
+	{
+		auto const* targetType = writeTarget->wtype;
+		if (auto const* arc4 = dynamic_cast<awst::ARC4UIntN const*>(targetType))
+			if (newValue->wtype != arc4)
+				return awst::makeARC4Encode(std::move(newValue), arc4, m_loc);
+		return newValue;
 	};
 
 	if (isPrefix)
 	{
-		auto newValue = makeNewValue(_operand);
+		auto writeTarget = makeWriteTarget();
+		auto newValue = maybeEncode(writeTarget, makeNewValue(_operand));
 		return awst::makeAssignmentExpression(
-			makeWriteTarget(), std::move(newValue), m_loc, _operand->wtype);
+			std::move(writeTarget), std::move(newValue), m_loc, _operand->wtype);
 	}
 	else
 	{
@@ -502,10 +521,11 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 		m_ctx.prePendingStatements.push_back(std::move(saveStmt));
 
 		// Compute new value from the saved temp (not re-reading a)
-		auto newValue = makeNewValue(tempVar);
+		auto writeTarget = makeWriteTarget();
+		auto newValue = maybeEncode(writeTarget, makeNewValue(tempVar));
 
 		// a = temp + 1 (for inc) or temp - 1 (for dec)
-		auto incrStmt = awst::makeAssignmentStatement(makeWriteTarget(), std::move(newValue), m_loc);
+		auto incrStmt = awst::makeAssignmentStatement(std::move(writeTarget), std::move(newValue), m_loc);
 		m_ctx.prePendingStatements.push_back(std::move(incrStmt));
 
 		return tempVar;

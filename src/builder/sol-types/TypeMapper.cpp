@@ -306,7 +306,11 @@ awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _
 	auto* result = createType<awst::ARC4Struct>(
 		name,
 		std::move(fields),
-		/*_frozen=*/true  // Solidity structs are value types (memory copies)
+		/*_frozen=*/false  // Mutable so struct-field writes don't hit puya's
+		                   // "object is immutable" rejection. Solidity-level
+		                   // value-type semantics (memory copies) are preserved
+		                   // by puya-sol's copy-on-write handlers, not by the
+		                   // ARC4Struct flag.
 	);
 
 	m_cache[cacheKey] = result;
