@@ -678,6 +678,44 @@ inline std::shared_ptr<IntrinsicCall> makeConcat(
 	return node;
 }
 
+// `box_put key value` — write `value` to the box stored at `key`. The
+// box's size must equal `len(value)` (otherwise it fails); callers that
+// resize must `box_del` first.
+inline std::shared_ptr<IntrinsicCall> makeBoxPut(
+	std::shared_ptr<Expression> key,
+	std::shared_ptr<Expression> value,
+	SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("box_put", WType::voidType(), std::move(loc));
+	node->stackArgs.push_back(std::move(key));
+	node->stackArgs.push_back(std::move(value));
+	return node;
+}
+
+// `box_del key` — delete the box at `key`. Returns a bool indicating
+// whether the box existed; most callsites ignore that and discard via a
+// statement.
+inline std::shared_ptr<IntrinsicCall> makeBoxDel(
+	std::shared_ptr<Expression> key, SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("box_del", WType::boolType(), std::move(loc));
+	node->stackArgs.push_back(std::move(key));
+	return node;
+}
+
+// `app_global_put key value` — write `value` to the global state slot at
+// `key`. No size restriction beyond the global-state schema.
+inline std::shared_ptr<IntrinsicCall> makeAppGlobalPut(
+	std::shared_ptr<Expression> key,
+	std::shared_ptr<Expression> value,
+	SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("app_global_put", WType::voidType(), std::move(loc));
+	node->stackArgs.push_back(std::move(key));
+	node->stackArgs.push_back(std::move(value));
+	return node;
+}
+
 // `extract <offset> <length>; <bytesExpr>` — 2-immediate form for constant
 // offset/length; stack arg is the source bytes expression.
 inline std::shared_ptr<IntrinsicCall> makeExtract(

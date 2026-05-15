@@ -328,22 +328,18 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
 						m_ctx.queuePending(awst::makeAssignmentStatement(tmpTarget, std::move(extract), loc));
 
-						auto del = awst::makeIntrinsicCall("box_del", awst::WType::boolType(), loc);
-						del->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
-						m_ctx.queueStmt(std::move(del), loc);
+						m_ctx.queueStmt(awst::makeBoxDel(awst::makeUtf8BytesConstant(varName, loc), loc), loc);
 
 						auto tmpRead = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
-						auto put = awst::makeIntrinsicCall("box_put", awst::WType::voidType(), loc);
-						put->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
-						put->stackArgs.push_back(std::move(tmpRead));
-						m_ctx.queueStmt(std::move(put), loc);
+						m_ctx.queueStmt(awst::makeBoxPut(
+							awst::makeUtf8BytesConstant(varName, loc),
+							std::move(tmpRead), loc), loc);
 					}
 					else
 					{
-						auto put = awst::makeIntrinsicCall("app_global_put", awst::WType::voidType(), loc);
-						put->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
-						put->stackArgs.push_back(std::move(extract));
-						m_ctx.queueStmt(std::move(put), loc);
+						m_ctx.queueStmt(awst::makeAppGlobalPut(
+							awst::makeUtf8BytesConstant(varName, loc),
+							std::move(extract), loc), loc);
 					}
 
 					return awst::makeVoidConstant(loc);
@@ -417,22 +413,18 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
 						m_ctx.queuePending(awst::makeAssignmentStatement(tmpTarget, std::move(cat), loc));
 
-						auto del = awst::makeIntrinsicCall("box_del", awst::WType::boolType(), loc);
-						del->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
-						m_ctx.queueStmt(std::move(del), loc);
+						m_ctx.queueStmt(awst::makeBoxDel(awst::makeUtf8BytesConstant(varName, loc), loc), loc);
 
 						auto tmpRead = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
-						auto put = awst::makeIntrinsicCall("box_put", awst::WType::voidType(), loc);
-						put->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
-						put->stackArgs.push_back(std::move(tmpRead));
-						m_ctx.queueStmt(std::move(put), loc);
+						m_ctx.queueStmt(awst::makeBoxPut(
+							awst::makeUtf8BytesConstant(varName, loc),
+							std::move(tmpRead), loc), loc);
 					}
 					else
 					{
-						auto put = awst::makeIntrinsicCall("app_global_put", awst::WType::voidType(), loc);
-						put->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
-						put->stackArgs.push_back(std::move(cat));
-						m_ctx.queueStmt(std::move(put), loc);
+						m_ctx.queueStmt(awst::makeAppGlobalPut(
+							awst::makeUtf8BytesConstant(varName, loc),
+							std::move(cat), loc), loc);
 					}
 
 					return awst::makeVoidConstant(loc);
@@ -829,11 +821,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMappingElementArrayLengt
 	auto itob = awst::makeItob(std::move(newLen), m_loc);
 	auto extract = awst::makeExtract3(std::move(itob), awst::makeIntegerConstant("6", m_loc), awst::makeIntegerConstant("2", m_loc), m_loc);
 	// box_put(arrayVarName, len_bytes)
-	auto put = awst::makeIntrinsicCall("box_put", awst::WType::voidType(), m_loc);
-	put->stackArgs.push_back(boxKey);
-	put->stackArgs.push_back(std::move(extract));
-
-	m_ctx.queueStmt(std::move(put), m_loc);
+	m_ctx.queueStmt(awst::makeBoxPut(boxKey, std::move(extract), m_loc), m_loc);
 	return awst::makeVoidConstant(m_loc);
 }
 

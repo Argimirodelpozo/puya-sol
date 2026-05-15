@@ -260,9 +260,7 @@ void ContractBuilder::buildStorageDispatch(
 				auto sub32 = awst::makeUInt64BinOp(std::move(lenCall), awst::UInt64BinaryOperator::Sub, makeUint64("32"), loc);
 
 				auto extract = awst::makeExtract3(cat, std::move(sub32), makeUint64("32"), loc);
-				auto put = awst::makeIntrinsicCall("app_global_put", awst::WType::voidType(), loc);
-				put->stackArgs.push_back(makeBytes(sv.name));
-				put->stackArgs.push_back(std::move(extract));
+				auto put = awst::makeAppGlobalPut(makeBytes(sv.name), std::move(extract), loc);
 
 				auto stmt = awst::makeExpressionStatement(std::move(put), loc);
 				ifBlock->body.push_back(std::move(stmt));

@@ -409,9 +409,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				} // end if (!defaultVal)
 
 				// app_global_put(key, defaultVal)
-				auto put = awst::makeIntrinsicCall("app_global_put", awst::WType::voidType(), method.sourceLocation);
-				put->stackArgs.push_back(key);
-				put->stackArgs.push_back(defaultVal);
+				auto put = awst::makeAppGlobalPut(key, defaultVal, method.sourceLocation);
 
 				auto stmt = awst::makeExpressionStatement(put, method.sourceLocation);
 				targetBody.push_back(stmt);
@@ -653,9 +651,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 			auto one = awst::makeIntegerConstant("1", method.sourceLocation);
 
-			auto setPending = awst::makeIntrinsicCall("app_global_put", awst::WType::voidType(), method.sourceLocation);
-			setPending->stackArgs.push_back(pendingKey);
-			setPending->stackArgs.push_back(one);
+			auto setPending = awst::makeAppGlobalPut(pendingKey, one, method.sourceLocation);
 
 			auto setPendingStmt = awst::makeExpressionStatement(setPending, method.sourceLocation);
 			createBlock->body.push_back(std::move(setPendingStmt));
@@ -774,9 +770,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 			auto zeroVal = awst::makeIntegerConstant("0", method.sourceLocation);
 
-			auto clearPending = awst::makeIntrinsicCall("app_global_put", awst::WType::voidType(), method.sourceLocation);
-			clearPending->stackArgs.push_back(clearKey);
-			clearPending->stackArgs.push_back(zeroVal);
+			auto clearPending = awst::makeAppGlobalPut(clearKey, zeroVal, method.sourceLocation);
 
 			auto clearStmt = awst::makeExpressionStatement(clearPending, method.sourceLocation);
 			postInitBody->body.push_back(std::move(clearStmt));
@@ -986,10 +980,8 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				{
 					// box_put(key, default_encoding) — creates the box and
 					// initialises with a valid ARC4 head/tail layout in one op.
-					auto put = awst::makeIntrinsicCall("box_put", awst::WType::voidType(), method.sourceLocation);
-					put->stackArgs.push_back(std::move(boxKey));
-					put->stackArgs.push_back(awst::makeBytesConstant(
-						std::move(*dynArc4Default), method.sourceLocation));
+					auto put = awst::makeBoxPut(std::move(boxKey), awst::makeBytesConstant(
+						std::move(*dynArc4Default), method.sourceLocation), method.sourceLocation);
 					auto putStmt = awst::makeExpressionStatement(std::move(put), method.sourceLocation);
 					postInitBody->body.push_back(std::move(putStmt));
 				}
@@ -1033,9 +1025,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					if (boxInitVal)
 					{
 						auto putKey = awst::makeUtf8BytesConstant(varName, method.sourceLocation);
-						auto put = awst::makeIntrinsicCall("box_put", awst::WType::voidType(), method.sourceLocation);
-						put->stackArgs.push_back(std::move(putKey));
-						put->stackArgs.push_back(std::move(boxInitVal));
+						auto put = awst::makeBoxPut(std::move(putKey), std::move(boxInitVal), method.sourceLocation);
 						auto putStmt = awst::makeExpressionStatement(std::move(put), method.sourceLocation);
 						postInitBody->body.push_back(std::move(putStmt));
 					}
