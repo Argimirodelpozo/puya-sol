@@ -159,7 +159,9 @@ def test_event(harness):
 
 def test_function_type_copy(harness):
     """structs/contracts/function_type_copy.sol"""
-    pytest.fail("Struct field of function-pointer type — currently surfaces None abi_return on AVM (compiler-side).")
+    app = harness.compile_and_deploy("structs/contracts/function_type_copy.sol", contract_name="Test")
+    r = harness.call(app, "test()")
+    assert r.abi_return is True
 
 def test_global_(harness):
     """structs/contracts/global.sol"""

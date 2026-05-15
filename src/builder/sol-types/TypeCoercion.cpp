@@ -174,6 +174,8 @@ std::string TypeCoercion::wtypeToABIName(awst::WType const* _type)
 	case awst::WTypeKind::ARC4StaticArray:
 	{
 		auto const* sa = static_cast<awst::ARC4StaticArray const*>(_type);
+		if (!sa->arc4Alias().empty())
+			return sa->arc4Alias();
 		return wtypeToABIName(sa->elementType()) + "[" + std::to_string(sa->arraySize()) + "]";
 	}
 	case awst::WTypeKind::ARC4DynamicArray:
