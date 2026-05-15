@@ -128,8 +128,15 @@ def test_inline_member_init_inheritence_without_constructor(harness):
     assert as_int(r.abi_return) == 6
 
 def test_no_callvalue_check(harness):
-    """constructor/contracts/no_callvalue_check.sol"""
-    pytest.fail("`new B{value:10, salt:0x00}` deploys child contracts with payment. AVM inner-app creation has different value semantics. 2000 ether overflows microalgo arithmetic.")
+    """constructor/contracts/no_callvalue_check.sol
+
+    Original test sends 2000 ether which overflows AVM microalgos. Just
+    verify `f()` returns true — the point of the test is that `new B{value:10}()`
+    for payable/non-payable child ctors doesn't revert.
+    """
+    app = harness.compile_and_deploy("constructor/contracts/no_callvalue_check.sol", fund_wei=1000)
+    r = harness.call(app, "f()", payment_wei=100, extra_fee=15000)
+    assert bool(as_int(r.abi_return)) is True
 
 def test_order_of_evaluation(harness):
     """constructor/contracts/order_of_evaluation.sol"""
