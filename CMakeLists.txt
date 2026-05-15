@@ -135,7 +135,10 @@ set(SOURCES
 	src/builder/sol-ast/exprs/SolIndexAccess.cpp
 	src/builder/sol-ast/exprs/SolIndexAccessHandlers.cpp
 	src/builder/sol-ast/exprs/SolAssignment.cpp
-	src/builder/sol-ast/exprs/SolAssignmentHandlers.cpp
+	src/builder/sol-ast/exprs/SolAssignmentEarlyOuts.cpp
+	src/builder/sol-ast/exprs/SolAssignmentTuple.cpp
+	src/builder/sol-ast/exprs/SolAssignmentStructField.cpp
+	src/builder/sol-ast/exprs/SolAssignmentBytesElem.cpp
 	src/builder/sol-ast/SolStatement.cpp
 	src/builder/sol-ast/stmts/SolExpressionStatement.cpp
 	src/builder/sol-ast/stmts/SolControlFlow.cpp
