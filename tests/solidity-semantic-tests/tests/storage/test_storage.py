@@ -339,7 +339,7 @@ def test_mapping_string_key(harness):
     harness.call(app, "setFixed(uint256)", 9)
     assert as_int(harness.call(app, "getFixed()").abi_return) == 9
 
-def test_mappings_array2d_pop_delete(harness):  # currently fails
+def test_mappings_array2d_pop_delete(harness):
     """storage/contracts/mappings_array2d_pop_delete.sol"""
     app = harness.compile_and_deploy('storage/contracts/mappings_array2d_pop_delete.sol')
     r = harness.call(app, 'n1(uint256,uint256)', 42, 64)

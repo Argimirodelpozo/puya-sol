@@ -207,13 +207,22 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					if (solArrType && !solArrType->isByteArrayOrString())
 					{
 						std::shared_ptr<awst::Expression> aliasExpr = aliasShared;
-						// Unwrap StateGet to underlying writable target.
+						// Unwrap StateGet (top-level, and any nested in the
+						// access chain) to underlying writable target. Same
+						// transform used by the `m[k].push()` path above.
 						if (auto const* sg = dynamic_cast<awst::StateGet const*>(
 								aliasExpr.get()))
 							aliasExpr = sg->field;
-						// Only proceed if underlying target is a BoxValueExpression
-						// (the typical case for dynamic arrays — mapped to box storage).
-						if (dynamic_cast<awst::BoxValueExpression const*>(aliasExpr.get()))
+						aliasExpr = unwrapStateGetInChain(aliasExpr);
+						// Underlying targets we can write through:
+						//   - BoxValueExpression  (simple `T[] storage p = state;`)
+						//   - IndexExpression  (e.g. `T[] storage p = a[i];` — nested
+						//     element of a state container, write-back via outer
+						//     read-modify-write)
+						//   - FieldExpression  (e.g. `T[] storage p = s.field;`)
+						if (dynamic_cast<awst::BoxValueExpression const*>(aliasExpr.get())
+							|| dynamic_cast<awst::IndexExpression const*>(aliasExpr.get())
+							|| dynamic_cast<awst::FieldExpression const*>(aliasExpr.get()))
 						{
 							auto* rawElemType = m_ctx.typeMapper.map(solArrType->baseType());
 							auto* elemType = m_ctx.typeMapper.mapSolTypeToARC4(solArrType->baseType());

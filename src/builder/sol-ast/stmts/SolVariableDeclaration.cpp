@@ -129,6 +129,20 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				return result;
 			}
 
+			// Indexed / field path into a state container:
+			//   `T storage b = a[i];` or `T storage b = a.field;`
+			// Register the IndexExpression / FieldExpression as the alias so
+			// subsequent operations through `b` (push, pop, indexed write)
+			// route through the underlying state container's read-modify-write
+			// codegen.
+			if (dynamic_cast<awst::IndexExpression const*>(value.get())
+				|| dynamic_cast<awst::FieldExpression const*>(value.get()))
+			{
+				m_blk.setStorageAlias(decl.id(), value);
+				m_blk.builderCtx().appendPendingTo(result);
+				return result;
+			}
+
 			// Slot-based storage reference: initialized from internal function call
 			// that returns a storage reference (typically has .slot := in assembly).
 			// Register as slot ref so IndexAccess translates to sload/sstore.
