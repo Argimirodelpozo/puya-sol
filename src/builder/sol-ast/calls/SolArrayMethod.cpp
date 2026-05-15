@@ -16,6 +16,48 @@ namespace puyasol::builder::sol_ast
 
 using namespace solidity::frontend;
 
+namespace
+{
+// Walk an access chain (IndexExpression / FieldExpression / TupleItemExpression
+// nodes) and rebuild it with any inner `StateGet` unwrapped to its `field`.
+// Used to convert a read expression like
+// `IndexExpression(FieldExpression(StateGet(BoxValueExpression), "f"), i)` into
+// a writable target `IndexExpression(FieldExpression(BoxValueExpression, "f"), i)`.
+// Composes recursively, so the unwrap handles arbitrary chain depth (any
+// combination of indexing and field access).
+std::shared_ptr<awst::Expression> unwrapStateGetInChain(
+	std::shared_ptr<awst::Expression> e)
+{
+	if (auto const* ie = dynamic_cast<awst::IndexExpression const*>(e.get()))
+	{
+		auto newBase = unwrapStateGetInChain(ie->base);
+		if (newBase.get() == ie->base.get())
+			return e;
+		auto ne = std::make_shared<awst::IndexExpression>();
+		ne->sourceLocation = ie->sourceLocation;
+		ne->wtype = ie->wtype;
+		ne->base = std::move(newBase);
+		ne->index = ie->index;
+		return ne;
+	}
+	if (auto const* fe = dynamic_cast<awst::FieldExpression const*>(e.get()))
+	{
+		auto newBase = unwrapStateGetInChain(fe->base);
+		if (newBase.get() == fe->base.get())
+			return e;
+		auto ne = std::make_shared<awst::FieldExpression>();
+		ne->sourceLocation = fe->sourceLocation;
+		ne->wtype = fe->wtype;
+		ne->base = std::move(newBase);
+		ne->name = fe->name;
+		return ne;
+	}
+	if (auto const* sg = dynamic_cast<awst::StateGet const*>(e.get()))
+		return sg->field;
+	return e;
+}
+}
+
 std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 {
 	auto const& funcExpr = funcExpression();
@@ -40,40 +82,15 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 			&& (memberName == "push" || memberName == "pop"))
 		{
 			auto baseAwst = buildExpr(baseExpr);
-			if (auto const* sg = dynamic_cast<awst::StateGet const*>(baseAwst.get()))
-				baseAwst = sg->field;
-			// Nested: `arr[i].push(v)` where arr is a state variable 2D array
-			// stored in a single box → buildExpr returns
-			// `IndexExpression(StateGet(BV), i)`. Puya's IR builder accepts
-			// `IndexExpression(StorageExpression, …)` as a writable target but
-			// rejects `StateGet` inside the chain. Walk down through
-			// IndexExpression chains and rebuild with the StateGet unwrapped.
-			{
-				std::function<std::shared_ptr<awst::Expression>(
-					std::shared_ptr<awst::Expression>)> unwrapChain;
-				unwrapChain = [&](std::shared_ptr<awst::Expression> e)
-					-> std::shared_ptr<awst::Expression> {
-					if (auto const* ie = dynamic_cast<awst::IndexExpression const*>(e.get()))
-					{
-						auto newBase = unwrapChain(ie->base);
-						if (newBase == ie->base)
-							return e;
-						auto ne = std::make_shared<awst::IndexExpression>();
-						ne->sourceLocation = ie->sourceLocation;
-						ne->wtype = ie->wtype;
-						ne->base = std::move(newBase);
-						ne->index = ie->index;
-						return ne;
-					}
-					if (auto const* sg = dynamic_cast<awst::StateGet const*>(e.get()))
-						return sg->field;
-					return e;
-				};
-				baseAwst = unwrapChain(baseAwst);
-			}
+			// Unwrap any StateGet wrapper through the access chain
+			// (IndexExpression / FieldExpression of any depth). The
+			// rewritten chain bottoms out at the BoxValueExpression so
+			// puya's IR accepts it as a writable target.
+			baseAwst = unwrapStateGetInChain(baseAwst);
 
 			if (dynamic_cast<awst::BoxValueExpression const*>(baseAwst.get())
-				|| dynamic_cast<awst::IndexExpression const*>(baseAwst.get()))
+				|| dynamic_cast<awst::IndexExpression const*>(baseAwst.get())
+				|| dynamic_cast<awst::FieldExpression const*>(baseAwst.get()))
 			{
 				auto* rawElemType = m_ctx.typeMapper.map(innerArrType->baseType());
 				auto* elemType = m_ctx.typeMapper.mapSolTypeToARC4(
@@ -491,6 +508,83 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				{
 					return handleStructFieldArrayMethod(
 						memberName, *innerMA, *outerVar);
+				}
+			}
+		}
+
+		// Chained storage path with field access: `m[k].field.push()`,
+		// `arr[i].field.push()`, `s.inner.field.push()` etc. — the base
+		// MemberAccess wraps over IndexAccess / nested MemberAccess.
+		// Same approach as the IndexAccess branch above: build the read,
+		// unwrap any StateGet inside the chain, hand off to ArrayExtend /
+		// ArrayPop on the resulting writable target. handleStructFieldArrayMethod
+		// already covers the simple Identifier inner case, so this only
+		// fires when that didn't match.
+		auto const* maType = dynamic_cast<ArrayType const*>(
+			innerMA->annotation().type);
+		if (maType && maType->isDynamicallySized()
+			&& !maType->isByteArrayOrString()
+			&& (memberName == "push" || memberName == "pop"))
+		{
+			auto baseAwst = buildExpr(baseExpr);
+			baseAwst = unwrapStateGetInChain(baseAwst);
+
+			if (dynamic_cast<awst::BoxValueExpression const*>(baseAwst.get())
+				|| dynamic_cast<awst::IndexExpression const*>(baseAwst.get())
+				|| dynamic_cast<awst::FieldExpression const*>(baseAwst.get()))
+			{
+				auto* rawElemType = m_ctx.typeMapper.map(maType->baseType());
+				auto* elemType = m_ctx.typeMapper.mapSolTypeToARC4(
+					maType->baseType());
+				auto* arrWType = baseAwst->wtype
+					? baseAwst->wtype : m_ctx.typeMapper.map(maType);
+
+				if (memberName == "push" && !m_call.arguments().empty())
+				{
+					auto val = buildExpr(*m_call.arguments()[0]);
+					auto encoded = awst::makeARC4Encode(std::move(val), elemType, m_loc);
+
+					auto singleArr = awst::makeNewArray(arrWType, m_loc);
+					singleArr->values.push_back(std::move(encoded));
+
+					return awst::makeArrayExtend(
+						std::move(baseAwst), std::move(singleArr), m_loc);
+				}
+				if (memberName == "push" && m_call.arguments().empty())
+				{
+					std::shared_ptr<awst::Expression> elem;
+					bool fromAssign = static_cast<bool>(m_ctx.pendingArrayPushValue);
+					if (fromAssign)
+					{
+						auto coerced = builder::TypeCoercion::coerceForAssignment(
+							std::move(m_ctx.pendingArrayPushValue), rawElemType, m_loc);
+						elem = awst::makeARC4Encode(std::move(coerced), elemType, m_loc);
+					}
+					else
+					{
+						elem = builder::TypeCoercion::makeDefaultValue(elemType, m_loc);
+					}
+
+					auto singleArr = awst::makeNewArray(arrWType, m_loc);
+					singleArr->values.push_back(std::move(elem));
+
+					auto extend = awst::makeArrayExtend(
+						baseAwst, std::move(singleArr), m_loc);
+
+					if (fromAssign)
+						return extend;
+
+					auto stmt = awst::makeExpressionStatement(std::move(extend), m_loc);
+					m_ctx.prePendingStatements.push_back(std::move(stmt));
+
+					return awst::makeVoidConstant(m_loc);
+				}
+				if (memberName == "pop")
+				{
+					auto popExpr = awst::makeArrayPop(
+						std::move(baseAwst), elemType, m_loc);
+					return awst::makeARC4Decode(
+						std::move(popExpr), rawElemType, m_loc);
 				}
 			}
 		}

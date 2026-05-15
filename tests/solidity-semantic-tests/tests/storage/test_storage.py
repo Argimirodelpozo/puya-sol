@@ -26,7 +26,7 @@ def test_accessors_mapping_for_array(harness):
 
 def test_array_accessor(harness):
     """storage/contracts/array_accessor.sol"""
-    pytest.fail("Compiler-side: `.finalArray.push()` on nested mapping→struct→dynamic-array path emits empty loop body (VoidConstant) — `multiple_map[2][1][2].finalArray.push();` doesn't generate ArrayExtend. Separate bug from arr[i].push() on 2D state arrays (which is now fixed).")
+    pytest.fail("Compiler-side: assignment codegen for `multiple_map[2][1][2].finalArray[3] = 5` (deeply-nested mapping → struct[5] → dynamic-array index assign) re-puts the box with the wrong (pre-push) size — `wrong size 318 != 190`. Push-loop codegen now works (this commit) but the trailing assignment still encodes against the empty struct layout. Separate fix needed in SolAssignment for nested-storage targets.")
 
 def test_chop_sign_bits(harness):
     """storage/contracts/chop_sign_bits.sol"""
