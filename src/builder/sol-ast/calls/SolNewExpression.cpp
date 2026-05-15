@@ -106,6 +106,30 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 			sizeExpr = builder::TypeCoercion::implicitNumericCast(
 				std::move(sizeExpr), awst::WType::uint64Type(), m_loc);
 
+			// Special case: `new bool[](n)` with runtime n — bypass puya's
+			// bool encoder (same bug as the compile-time path: it starts from
+			// empty bytes and setbit-fails). Emit the ARC4 wire form
+			// directly: uint16(n) ++ bzero((n+7)/8).
+			if (elemType == awst::WType::arc4BoolType()
+				&& resultType->kind() == awst::WTypeKind::ARC4DynamicArray)
+			{
+				auto sizeItob = awst::makeItob(sizeExpr, m_loc);
+				auto lenHeader = awst::makeExtract(std::move(sizeItob), 6, 2, m_loc);
+				auto plus7 = awst::makeUInt64BinOp(
+					sizeExpr, awst::UInt64BinaryOperator::Add,
+					awst::makeIntegerConstant("7", m_loc), m_loc);
+				auto byteLen = awst::makeUInt64BinOp(
+					std::move(plus7), awst::UInt64BinaryOperator::FloorDiv,
+					awst::makeIntegerConstant("8", m_loc), m_loc);
+				auto bzero = awst::makeIntrinsicCall(
+					"bzero", awst::WType::bytesType(), m_loc);
+				bzero->stackArgs.push_back(std::move(byteLen));
+				auto concat = awst::makeConcat(
+					std::move(lenHeader), std::move(bzero), m_loc);
+				return awst::makeReinterpretCast(
+					std::move(concat), resultType, m_loc);
+			}
+
 			// __arr = NewArray()
 			auto arrVar = awst::makeVarExpression(arrName, resultType, m_loc);
 
