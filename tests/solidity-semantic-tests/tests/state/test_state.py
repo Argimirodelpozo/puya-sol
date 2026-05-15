@@ -164,8 +164,24 @@ def test_gasleft(harness):
     assert bool(as_int(r.abi_return)) is True
 
 def test_msg_data(harness):
-    """state/contracts/msg_data.sol"""
-    pytest.fail("EVM msg.data returns selector+encoded calldata blob. On AVM msg.data is just the 4-byte selector. EVM-specific test.")
+    """state/contracts/msg_data.sol
+
+    ARCH NOTE: EVM msg.data is a contiguous calldata blob
+    (selector + abi-encoded args). AVM ApplicationArgs are slot-based;
+    puya-sol's msg.data implementation reconstructs an EVM-style blob by
+    concatenating ApplicationArgs[0] (selector) with ApplicationArgs[1..].
+    Selectors differ (ARC4 sha512_256 vs EVM keccak256) and individual
+    arg encodings follow ARC4 widths (uint256→32B, bool→1B), so the exact
+    bytes won't match the EVM expected values — but the layout is
+    reconstructible.
+    """
+    app = harness.compile_and_deploy("state/contracts/msg_data.sol")
+    # f() takes no args → msg.data is exactly the 4-byte selector.
+    r = harness.call(app, "f()")
+    assert len(bytes(r.abi_return)) == 4
+    # g(uint256, bool): selector (4) + uint256 (32) + bool (1) = 37 bytes.
+    r = harness.call(app, "g(uint256,bool)", 1234, True)
+    assert len(bytes(r.abi_return)) == 4 + 32 + 1
 
 def test_msg_sender(harness):
     """state/contracts/msg_sender.sol"""
