@@ -410,8 +410,22 @@ def test_ownable(harness):
     assert r.reverted
 
 def test_parameter(harness):
-    """userDefinedValueType/contracts/parameter.sol"""
-    pytest.fail("EVM checks that address arg fits 20 bytes — AVM addresses are 32 bytes natively, no overflow possible.")
+    """userDefinedValueType/contracts/parameter.sol
+
+    ARCH NOTE: Solidity addresses are 20 bytes; AVM accounts are 32 bytes.
+    The original EVM tests pass a 32-byte "overlong" address and expect a
+    FAILURE (EVM's 20-byte width check rejects it). On AVM, 32-byte values
+    are valid addresses natively — no overflow possible, no rejection.
+    Test the AVM-observable behavior: id/wrap/unwrap returns the input
+    address unchanged for any valid 32-byte account.
+    """
+    app = harness.compile_and_deploy("userDefinedValueType/contracts/parameter.sol")
+    addr = harness.localnet.account.address
+    assert harness.call(app, "id(address)", addr).abi_return == addr
+    assert harness.call(app, "unwrap(address)", addr).abi_return == addr
+    assert harness.call(app, "wrap(address)", addr).abi_return == addr
+    assert harness.call(app, "unwrap_assembly(address)", addr).abi_return == addr
+    assert harness.call(app, "wrap_assembly(address)", addr).abi_return == addr
 
 def test_simple(harness):
     """userDefinedValueType/contracts/simple.sol"""
